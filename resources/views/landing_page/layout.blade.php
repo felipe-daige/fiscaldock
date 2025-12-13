@@ -29,7 +29,7 @@
     <!-- Header -->
     <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <nav class="flex justify-between items-center py-4">
+            <nav class="flex justify-between items-center py-6">
                 <a href="/inicio" class="flex items-center gap-3" data-link>
                     <div class="w-10 h-10 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center font-bold text-white text-xl">H</div>
                     <span class="text-xl font-bold text-gray-900">HUB Fiscal & Compliance</span>
@@ -42,8 +42,8 @@
                     <li><a href="/beneficios" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Benefícios</a></li>
                     <li><a href="/impactos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Impactos</a></li>
                     <li><a href="/faq" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">FAQ</a></li>
-                    <li><a href="/login" data-link class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg transition-colors">Entrar</a></li>
-                    <li><a href="/agendar" data-link class="border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white font-semibold px-6 py-2 rounded-lg transition-colors">Abrir Conta</a></li>
+                    <li><a href="/login" data-link class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg transition-colors">Login</a></li>
+                    <li><a href="/agendar" data-link class="border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white font-semibold px-6 py-2 rounded-lg transition-colors">Testar Agora</a></li>
                 </ul>
 
                 <!-- Mobile Menu Button -->
@@ -61,8 +61,8 @@
                 <a href="/beneficios" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Benefícios</a>
                 <a href="/impactos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Impactos</a>
                 <a href="/faq" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">FAQ</a>
-                <a href="/login" data-link class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors text-center">Entrar</a>
-                <a href="/agendar" data-link class="border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white font-semibold px-6 py-3 rounded-lg transition-colors text-center">Abrir Conta</a>
+                <a href="/login" data-link class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors text-center">Login</a>
+                <a href="/agendar" data-link class="border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white font-semibold px-6 py-3 rounded-lg transition-colors text-center">Testar Agora</a>
             </div>
         </div>
     </header>
