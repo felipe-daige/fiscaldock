@@ -95,8 +95,8 @@
 }
 
 .solution-card.active {
-    opacity: 1;
-    transform: scale(1);
+    opacity: 1 !important;
+    transform: scale(1) !important;
     z-index: 10;
 }
 
@@ -104,6 +104,18 @@
     opacity: 0.6;
     transform: scale(0.96);
     z-index: 1;
+}
+
+/* Garantir que o primeiro card seja visível mesmo sem classe active inicialmente */
+.solution-card[data-index="0"],
+.solution-card.active[data-index="0"] {
+    opacity: 1 !important;
+}
+
+/* Garantir que cards com classe active sempre sejam visíveis */
+.solutions-cards-track .solution-card.active {
+    opacity: 1 !important;
+    transform: scale(1) !important;
 }
 
 /* Responsividade */
@@ -139,6 +151,12 @@
     
     .solution-card:not(.active) {
         opacity: 0;
+    }
+    
+    /* Garantir que o primeiro card seja sempre visível em mobile */
+    .solution-card[data-index="0"],
+    .solution-card.active {
+        opacity: 1 !important;
     }
     
     .carousel-arrow {
@@ -211,8 +229,8 @@
 .solution-pill.active {
     background-color: var(--color-surface) !important;
     color: var(--color-text) !important;
-    border-color: var(--color-accent) !important;
-    box-shadow: 0 2px 4px rgba(54, 211, 153, 0.2);
+    border-color: var(--color-primary-500) !important;
+    box-shadow: 0 2px 4px rgba(30, 79, 160, 0.25);
 }
 
 .solution-pill:not(.active) {
@@ -255,14 +273,14 @@
             <div class="lg:col-span-5 xl:col-span-6">
                 <!-- Badge -->
                 <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold mb-8">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span class="w-2 h-2 rounded-full bg-blue-400"></span>
                     Centro Operacional Fiscal
                 </div>
 
                 <!-- Título -->
                 <h1 class="font-extrabold leading-tight tracking-tight text-4xl sm:text-5xl xl:text-6xl">
                     O HUB Fiscal & Compliance que transforma
-                    <span class="block text-emerald-400">SPED em Ações e Relatórios</span>
+                    <span class="block text-sped-hero">SPED em Ações e Relatórios</span>
                 </h1>
 
                 <!-- Subtítulo -->
@@ -417,7 +435,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Soluções que <span class="text-emerald-500">transformam</span> a rotina
+                Soluções que <span class="text-brand-gradient">transformam</span> a rotina
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                 Um ecossistema completo para alta performance
@@ -450,7 +468,7 @@
                                     <!-- Logo e Título -->
                                     <div>
                                         <div class="flex items-center justify-center gap-3 mb-8">
-                                            <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
+                                            <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
                                                 <img src="{{ asset('icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-8 h-8 object-contain">
                                             </div>
                                             <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Portal do Cliente</h3>
@@ -471,7 +489,7 @@
                                     
                                     <!-- Call-to-Action -->
                                     <div class="mt-8">
-                                        <a href="#" class="inline-flex items-center gap-2 text-emerald-400 font-semibold hover:text-emerald-300 transition-colors text-lg">
+                                        <a href="#" class="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 font-semibold transition-colors text-lg">
                                             Saiba mais
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -495,13 +513,13 @@
                                             <!-- Header do mockup -->
                                             <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                                                 <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                                    <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
                                                         <img src="{{ asset('icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-5 h-5 object-contain">
                                                     </div>
                                                     <span class="text-sm font-semibold text-gray-900">Portal do Cliente</span>
                                                 </div>
                                                 <div class="flex gap-2">
-                                                    <span class="px-3 py-1 text-xs bg-emerald-50 text-emerald-600 rounded font-semibold">Dashboard</span>
+                                                    <span class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded font-semibold">Dashboard</span>
                                                     <span class="px-3 py-1 text-xs text-gray-600 rounded">Checklist</span>
                                                     <span class="px-3 py-1 text-xs text-gray-600 rounded">Histórico</span>
                                                 </div>
@@ -535,7 +553,7 @@
                     </div>
 
                     <!-- Card 1: Central de Documentos -->
-                    <div class="solution-card flex-shrink-0 w-full px-4" data-index="0" data-solution="documentos">
+                    <div class="solution-card active flex-shrink-0 w-full px-4" data-index="0" data-solution="documentos" style="opacity: 1 !important;">
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
                                 <!-- Coluna Esquerda: Descrição -->
@@ -543,7 +561,7 @@
                                     <!-- Logo e Título -->
                                     <div>
                                         <div class="flex items-center justify-center gap-3 mb-8">
-                                            <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
+                                            <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
                                                 <img src="{{ asset('icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-8 h-8 object-contain">
                                             </div>
                                             <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Central de Documentos</h3>
@@ -564,7 +582,7 @@
                                     
                                     <!-- Call-to-Action -->
                                     <div class="mt-8">
-                                        <a href="#" class="inline-flex items-center gap-2 text-emerald-400 font-semibold hover:text-emerald-300 transition-colors text-lg">
+                                        <a href="#" class="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 font-semibold transition-colors text-lg">
                                             Saiba mais
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -588,13 +606,13 @@
                                             <!-- Header do mockup -->
                                             <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                                                 <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                                    <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
                                                         <img src="{{ asset('icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-5 h-5 object-contain">
                                                     </div>
                                                     <span class="text-sm font-semibold text-gray-900">Central de Documentos</span>
                                                 </div>
                                                 <div class="flex gap-2">
-                                                    <span class="px-3 py-1 text-xs bg-emerald-50 text-emerald-600 rounded font-semibold">Dashboard</span>
+                                                    <span class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded font-semibold">Dashboard</span>
                                                     <span class="px-3 py-1 text-xs text-gray-600 rounded">Documentos</span>
                                                     <span class="px-3 py-1 text-xs text-gray-600 rounded">Relatórios</span>
                                                 </div>
@@ -636,7 +654,7 @@
                                     <!-- Logo e Título -->
                                     <div>
                                         <div class="flex items-center justify-center gap-3 mb-8">
-                                            <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
+                                            <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
                                                 <img src="{{ asset('icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-8 h-8 object-contain">
                                             </div>
                                             <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Leitura e Diagnóstico</h3>
@@ -657,7 +675,7 @@
                                     
                                     <!-- Call-to-Action -->
                                     <div class="mt-8">
-                                        <a href="#" class="inline-flex items-center gap-2 text-emerald-400 font-semibold hover:text-emerald-300 transition-colors text-lg">
+                                        <a href="#" class="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 font-semibold transition-colors text-lg">
                                             Saiba mais
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -681,13 +699,13 @@
                                             <!-- Header do mockup -->
                                             <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                                                 <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                                    <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
                                                         <img src="{{ asset('icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-5 h-5 object-contain">
                                                     </div>
                                                     <span class="text-sm font-semibold text-gray-900">Leitura e Diagnóstico</span>
                                                 </div>
                                                 <div class="flex gap-2">
-                                                    <span class="px-3 py-1 text-xs bg-emerald-50 text-emerald-600 rounded font-semibold">Dashboard</span>
+                                                    <span class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded font-semibold">Dashboard</span>
                                                     <span class="px-3 py-1 text-xs text-gray-600 rounded">SPED</span>
                                                     <span class="px-3 py-1 text-xs text-gray-600 rounded">Alertas</span>
                                                 </div>
@@ -729,7 +747,7 @@
                                     <!-- Logo e Título -->
                                     <div>
                                         <div class="flex items-center justify-center gap-3 mb-8">
-                                            <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
+                                            <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
                                                 <img src="{{ asset('icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-8 h-8 object-contain">
                                             </div>
                                             <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Motor de Regras</h3>
@@ -750,7 +768,7 @@
                                     
                                     <!-- Call-to-Action -->
                                     <div class="mt-8">
-                                        <a href="#" class="inline-flex items-center gap-2 text-emerald-400 font-semibold hover:text-emerald-300 transition-colors text-lg">
+                                        <a href="#" class="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 font-semibold transition-colors text-lg">
                                             Saiba mais
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -774,13 +792,13 @@
                                             <!-- Header do mockup -->
                                             <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                                                 <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                                    <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
                                                         <img src="{{ asset('icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-5 h-5 object-contain">
                                                     </div>
                                                     <span class="text-sm font-semibold text-gray-900">Motor de Regras</span>
                                                 </div>
                                                 <div class="flex gap-2">
-                                                    <span class="px-3 py-1 text-xs bg-emerald-50 text-emerald-600 rounded font-semibold">Dashboard</span>
+                                                    <span class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded font-semibold">Dashboard</span>
                                                     <span class="px-3 py-1 text-xs text-gray-600 rounded">Regras</span>
                                                     <span class="px-3 py-1 text-xs text-gray-600 rounded">Histórico</span>
                                                 </div>
@@ -822,7 +840,7 @@
                                     <!-- Logo e Título -->
                                     <div>
                                         <div class="flex items-center justify-center gap-3 mb-8">
-                                            <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
+                                            <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
                                                 <img src="{{ asset('icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-8 h-8 object-contain">
                                             </div>
                                             <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Compliance e Situação Fiscal</h3>
@@ -843,7 +861,7 @@
                                     
                                     <!-- Call-to-Action -->
                                     <div class="mt-8">
-                                        <a href="#" class="inline-flex items-center gap-2 text-emerald-400 font-semibold hover:text-emerald-300 transition-colors text-lg">
+                                        <a href="#" class="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 font-semibold transition-colors text-lg">
                                             Saiba mais
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -867,13 +885,13 @@
                                             <!-- Header do mockup -->
                                             <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                                                 <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                                    <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
                                                         <img src="{{ asset('icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-5 h-5 object-contain">
                                                     </div>
                                                     <span class="text-sm font-semibold text-gray-900">Compliance e Situação Fiscal</span>
                                                 </div>
                                                 <div class="flex gap-2">
-                                                    <span class="px-3 py-1 text-xs bg-emerald-50 text-emerald-600 rounded font-semibold">Dashboard</span>
+                                                    <span class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded font-semibold">Dashboard</span>
                                                     <span class="px-3 py-1 text-xs text-gray-600 rounded">Situação</span>
                                                     <span class="px-3 py-1 text-xs text-gray-600 rounded">Riscos</span>
                                                 </div>
@@ -915,7 +933,7 @@
                                     <!-- Logo e Título -->
                                     <div>
                                         <div class="flex items-center justify-center gap-3 mb-8">
-                                            <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
+                                            <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
                                                 <img src="{{ asset('icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-8 h-8 object-contain">
                                             </div>
                                             <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Automação de Comunicação</h3>
@@ -936,7 +954,7 @@
                                     
                                     <!-- Call-to-Action -->
                                     <div class="mt-8">
-                                        <a href="#" class="inline-flex items-center gap-2 text-emerald-400 font-semibold hover:text-emerald-300 transition-colors text-lg">
+                                        <a href="#" class="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 font-semibold transition-colors text-lg">
                                             Saiba mais
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -960,13 +978,13 @@
                                             <!-- Header do mockup -->
                                             <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                                                 <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                                    <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
                                                         <img src="{{ asset('icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-5 h-5 object-contain">
                                                     </div>
                                                     <span class="text-sm font-semibold text-gray-900">Automação de Comunicação</span>
                                                 </div>
                                                 <div class="flex gap-2">
-                                                    <span class="px-3 py-1 text-xs bg-emerald-50 text-emerald-600 rounded font-semibold">Dashboard</span>
+                                                    <span class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded font-semibold">Dashboard</span>
                                                     <span class="px-3 py-1 text-xs text-gray-600 rounded">WhatsApp</span>
                                                     <span class="px-3 py-1 text-xs text-gray-600 rounded">Histórico</span>
                                                 </div>
@@ -1008,7 +1026,7 @@
                                     <!-- Logo e Título -->
                                     <div>
                                         <div class="flex items-center justify-center gap-3 mb-8">
-                                            <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
+                                            <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
                                                 <img src="{{ asset('icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-8 h-8 object-contain">
                                             </div>
                                             <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Portal do Cliente</h3>
@@ -1029,7 +1047,7 @@
                                     
                                     <!-- Call-to-Action -->
                                     <div class="mt-8">
-                                        <a href="#" class="inline-flex items-center gap-2 text-emerald-400 font-semibold hover:text-emerald-300 transition-colors text-lg">
+                                        <a href="#" class="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 font-semibold transition-colors text-lg">
                                             Saiba mais
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -1053,13 +1071,13 @@
                                             <!-- Header do mockup -->
                                             <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                                                 <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                                    <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
                                                         <img src="{{ asset('icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-5 h-5 object-contain">
                                                     </div>
                                                     <span class="text-sm font-semibold text-gray-900">Portal do Cliente</span>
                                                 </div>
                                                 <div class="flex gap-2">
-                                                    <span class="px-3 py-1 text-xs bg-emerald-50 text-emerald-600 rounded font-semibold">Dashboard</span>
+                                                    <span class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded font-semibold">Dashboard</span>
                                                     <span class="px-3 py-1 text-xs text-gray-600 rounded">Checklist</span>
                                                     <span class="px-3 py-1 text-xs text-gray-600 rounded">Histórico</span>
                                                 </div>
@@ -1101,7 +1119,7 @@
                                     <!-- Logo e Título -->
                                     <div>
                                         <div class="flex items-center justify-center gap-3 mb-8">
-                                            <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
+                                            <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
                                                 <img src="{{ asset('icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-8 h-8 object-contain">
                                             </div>
                                             <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Central de Documentos</h3>
@@ -1122,7 +1140,7 @@
                                     
                                     <!-- Call-to-Action -->
                                     <div class="mt-8">
-                                        <a href="#" class="inline-flex items-center gap-2 text-emerald-400 font-semibold hover:text-emerald-300 transition-colors text-lg">
+                                        <a href="#" class="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 font-semibold transition-colors text-lg">
                                             Saiba mais
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -1146,13 +1164,13 @@
                                             <!-- Header do mockup -->
                                             <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                                                 <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                                    <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
                                                         <img src="{{ asset('icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-5 h-5 object-contain">
                                                     </div>
                                                     <span class="text-sm font-semibold text-gray-900">Central de Documentos</span>
                                                 </div>
                                                 <div class="flex gap-2">
-                                                    <span class="px-3 py-1 text-xs bg-emerald-50 text-emerald-600 rounded font-semibold">Dashboard</span>
+                                                    <span class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded font-semibold">Dashboard</span>
                                                     <span class="px-3 py-1 text-xs text-gray-600 rounded">Documentos</span>
                                                     <span class="px-3 py-1 text-xs text-gray-600 rounded">Relatórios</span>
                                                 </div>
@@ -1282,84 +1300,42 @@
     </div>
 </section>
 
-<!-- Relatórios Section -->
-<section id="relatorios" class="bg-white pt-20 pb-0">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-            <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Relatórios <span class="text-brand-gradient">prontos para decisão</span>
-            </h2>
-            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                O que você entrega pronto: gerenciais para decisão e técnicos para auditoria e execução
-            </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-            <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Relatórios Gerenciais
-                </h3>
-                <ul class="space-y-3 text-gray-600">
-                    <li class="flex items-start gap-2">
-                        <span class="text-blue-500 mt-1">•</span>
-                        <span><strong>Status Fiscal Mensal:</strong> O que está OK, o que falta, o que é crítico</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                        <span class="text-blue-500 mt-1">•</span>
-                        <span><strong>Mapa de Pendências:</strong> Por empresa, por competência, por responsável</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                        <span class="text-blue-500 mt-1">•</span>
-                        <span><strong>Riscos & Inconsistências:</strong> Com evidências e impacto</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                        <span class="text-blue-500 mt-1">•</span>
-                        <span><strong>Oportunidades:</strong> Créditos, classificações, pontos de atenção</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                        <span class="text-blue-500 mt-1">•</span>
-                        <span><strong>Resumo Executivo:</strong> Para diretoria — linguagem não contábil</span>
-                    </li>
-                </ul>
+<!-- IA Financeira Section -->
+<section id="relatorios" class="bg-white pt-16 pb-0">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div class="space-y-6">
+                <div class="text-sm font-semibold text-blue-600 uppercase tracking-wide">
+                    Gestão financeira assistida por IA
+                </div>
+                <h2 class="text-4xl sm:text-5xl font-bold text-gray-900 leading-tight">
+                    Deixe nossa IA cuidar da gestão do seu negócio
+                </h2>
+                <p class="text-lg text-gray-600">
+                    Sistema simples, intuitivo e poderoso: acompanhe fluxo de caixa, automatize cobranças, organize contas e ganhe agilidade com inteligência artificial integrada.
+                </p>
+                <div class="flex flex-wrap items-center gap-4">
+                    <a href="#"
+                       class="inline-flex items-center justify-center px-6 py-3 rounded-full text-base font-semibold text-blue-900 bg-yellow-400 hover:bg-yellow-300 transition">
+                        Teste grátis
+                    </a>
+                    <a href="#"
+                       class="inline-flex items-center justify-center px-6 py-3 rounded-full text-base font-semibold text-blue-600 border-2 border-blue-500 hover:text-white hover:bg-blue-500 transition">
+                        Saiba mais
+                    </a>
+                </div>
             </div>
-
-            <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                    </svg>
-                    Relatórios Técnicos
-                </h3>
-                <ul class="space-y-3 text-gray-600">
-                    <li class="flex items-start gap-2">
-                        <span class="text-blue-500 mt-1">•</span>
-                        <span><strong>Trilhas de Evidências:</strong> Por item/alerta com histórico completo</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                        <span class="text-blue-500 mt-1">•</span>
-                        <span><strong>Log de Eventos:</strong> Upload, validação, envio, entrega</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                        <span class="text-blue-500 mt-1">•</span>
-                        <span><strong>Exportações:</strong> PDF/Excel/CSV conforme sua estrutura</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                        <span class="text-blue-500 mt-1">•</span>
-                        <span><strong>Auditoria Completa:</strong> Quem fez o quê, quando e por quê</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                        <span class="text-blue-500 mt-1">•</span>
-                        <span><strong>Histórico de Versões:</strong> Rastreabilidade total de documentos</span>
-                    </li>
-                </ul>
+            <div class="relative">
+                <div class="absolute inset-0 -z-10">
+                    <div class="w-48 h-48 bg-blue-100 rounded-full blur-3xl opacity-50 absolute top-0 left-6"></div>
+                    <div class="w-40 h-40 bg-yellow-100 rounded-full blur-3xl opacity-50 absolute bottom-6 right-0"></div>
+                </div>
+                <img src="{{ asset('pictures/macbook-mockup.png') }}" alt="Demonstração de fluxo de caixa em um notebook" class="w-full max-w-2xl mx-auto drop-shadow-2xl">
             </div>
         </div>
     </div>
     <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
-    <div class="pointer-events-none leading-none mt-6 sm:mt-8">
+    <div class="pointer-events-none leading-none">
         <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
             <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
         </svg>
@@ -2133,98 +2109,258 @@
 <script>
 // Inicializador reutilizável para o carrossel da seção "Soluções que transformam a rotina"
 window.initSolucoesCarousel = function() {
-    const track = document.querySelector('.solutions-cards-track');
-    const cards = document.querySelectorAll('.solution-card:not(.solution-card-duplicate)');
-    const pills = document.querySelectorAll('.solution-pill');
-    const prevArrow = document.querySelector('.carousel-arrow-left');
-    const nextArrow = document.querySelector('.carousel-arrow-right');
-    const wrapper = document.querySelector('.solutions-cards-wrapper');
+    console.log('[Carrossel] Função initSolucoesCarousel chamada');
+    
+    // Flag global para evitar múltiplas inicializações
+    if (window._solucoesCarouselInitialized) {
+        console.log('[Carrossel] Já inicializado, ignorando...');
+        return;
+    }
+    
+    try {
+        let retryCount = 0;
+        const maxRetries = 10;
+        
+        function initCarousel() {
+            try {
+                const track = document.querySelector('.solutions-cards-track');
+                const cards = document.querySelectorAll('.solution-card:not(.solution-card-duplicate)');
+                const pills = document.querySelectorAll('.solution-pill');
+                const prevArrow = document.querySelector('.carousel-arrow-left');
+                const nextArrow = document.querySelector('.carousel-arrow-right');
+                const wrapper = document.querySelector('.solutions-cards-wrapper');
 
-    if (!track || !cards.length || !wrapper) return;
+                console.log('[Carrossel] Tentativa', retryCount + 1, '- Elementos encontrados:', {
+                    track: !!track,
+                    cards: cards.length,
+                    pills: pills.length,
+                    prevArrow: !!prevArrow,
+                    nextArrow: !!nextArrow,
+                    wrapper: !!wrapper
+                });
 
-    const totalCards = cards.length;
-    let currentIndex = 0;
-    let cardWidth = 0;
-    let cardSpacing = 0;
-    let firstCardLeftInTrack = 0;
-
-    function updateReferenceValues() {
-        track.style.transform = 'translateX(0px)';
-
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                if (cards.length < 2) return;
-
-                const firstCard = cards[0];
-                const secondCard = cards[1];
-                if (!firstCard || !secondCard) return;
-
-                const firstCardRect = firstCard.getBoundingClientRect();
-                const secondCardRect = secondCard.getBoundingClientRect();
-                const trackRect = track.getBoundingClientRect();
-
-                cardWidth = firstCardRect.width;
-                firstCardLeftInTrack = firstCardRect.left - trackRect.left;
-                cardSpacing = secondCardRect.left - firstCardRect.left;
-
-                if (cardWidth > 0 && cardSpacing > 0 && !isNaN(cardSpacing) && !isNaN(firstCardLeftInTrack)) {
-                    updateCarousel(currentIndex);
+                if (!track || !cards.length || !wrapper) {
+                    if (retryCount < maxRetries) {
+                        retryCount++;
+                        setTimeout(initCarousel, 150);
+                    } else {
+                        console.error('[Carrossel] Elementos não encontrados após', maxRetries, 'tentativas');
+                    }
+                    return;
                 }
+
+                // Marcar como inicializado
+                window._solucoesCarouselInitialized = true;
+                console.log('[Carrossel] Inicializando com', cards.length, 'cards');
+                
+                const totalCards = cards.length;
+                let currentIndex = 0;
+                let cardWidth = 0;
+                let cardSpacing = 0;
+                let firstCardLeftInTrack = 0;
+
+                // Garantir que o primeiro card esteja ativo desde o início
+                cards.forEach((card, i) => {
+                    if (i === 0) {
+                        card.classList.add('active');
+                        // Forçar opacidade via estilo inline para garantir visibilidade
+                        card.style.opacity = '1';
+                        card.style.transform = 'scale(1)';
+                    } else {
+                        card.classList.remove('active');
+                        card.style.opacity = '';
+                        card.style.transform = '';
+                    }
+                });
+
+                // Garantir que o primeiro pill esteja ativo
+                pills.forEach((pill, i) => {
+                    if (i === 0) {
+                        pill.classList.add('active');
+                    } else {
+                        pill.classList.remove('active');
+                    }
+                });
+
+                function updateReferenceValues() {
+                    try {
+                        track.style.transform = 'translateX(0px)';
+
+                        requestAnimationFrame(() => {
+                            requestAnimationFrame(() => {
+                                try {
+                                    if (cards.length < 2) {
+                                        if (cards.length === 1) {
+                                            const firstCard = cards[0];
+                                            const firstCardRect = firstCard.getBoundingClientRect();
+                                            const wrapperRect = wrapper.getBoundingClientRect();
+                                            const wrapperCenter = wrapperRect.width / 2;
+                                            const cardCenter = firstCardRect.width / 2;
+                                            const translateX = wrapperCenter - cardCenter - (firstCardRect.left - wrapperRect.left);
+                                            track.style.transform = `translateX(${translateX}px)`;
+                                        }
+                                        return;
+                                    }
+
+                                    const firstCard = cards[0];
+                                    const secondCard = cards[1];
+                                    if (!firstCard || !secondCard) return;
+
+                                    const firstCardRect = firstCard.getBoundingClientRect();
+                                    const secondCardRect = secondCard.getBoundingClientRect();
+                                    const trackRect = track.getBoundingClientRect();
+
+                                    cardWidth = firstCardRect.width;
+                                    firstCardLeftInTrack = firstCardRect.left - trackRect.left;
+                                    cardSpacing = secondCardRect.left - firstCardRect.left;
+
+                                    if (cardWidth > 0 && cardSpacing > 0 && !isNaN(cardSpacing) && !isNaN(firstCardLeftInTrack)) {
+                                        updateCarousel(currentIndex);
+                                    }
+                                } catch (error) {
+                                    console.error('Erro em updateReferenceValues:', error);
+                                }
+                            });
+                        });
+                    } catch (error) {
+                        console.error('Erro ao atualizar valores de referência:', error);
+                    }
+                }
+
+                function updateCarousel(index) {
+                    try {
+                        if (cardWidth === 0 || cardSpacing === 0) {
+                            setTimeout(() => updateReferenceValues(), 50);
+                            return;
+                        }
+
+                        const wrapperRect = wrapper.getBoundingClientRect();
+                        const activeCardLeftInTrack = firstCardLeftInTrack + (index * cardSpacing);
+                        const wrapperCenter = wrapperRect.width / 2;
+                        const desiredCardLeft = wrapperCenter - (cardWidth / 2);
+                        const translateX = desiredCardLeft - activeCardLeftInTrack;
+
+                        track.style.transform = `translateX(${translateX}px)`;
+
+                        cards.forEach((card, i) => {
+                            if (i === index) {
+                                card.classList.add('active');
+                                // Forçar opacidade via estilo inline
+                                card.style.opacity = '1';
+                                card.style.transform = 'scale(1)';
+                            } else {
+                                card.classList.remove('active');
+                                card.style.opacity = '';
+                                card.style.transform = '';
+                            }
+                        });
+
+                        pills.forEach((pill, i) => {
+                            if (i === index) {
+                                pill.classList.add('active');
+                            } else {
+                                pill.classList.remove('active');
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Erro ao atualizar carrossel:', error);
+                    }
+                }
+
+                // Função para navegar para o próximo
+                function goNext() {
+                    try {
+                        currentIndex = (currentIndex + 1) % totalCards;
+                        updateCarousel(currentIndex);
+                    } catch (error) {
+                        console.error('Erro ao navegar para próximo:', error);
+                    }
+                }
+
+                // Função para navegar para o anterior
+                function goPrev() {
+                    try {
+                        currentIndex = (currentIndex - 1 + totalCards) % totalCards;
+                        updateCarousel(currentIndex);
+                    } catch (error) {
+                        console.error('Erro ao navegar para anterior:', error);
+                    }
+                }
+
+                // Configurar setas de navegação
+                if (prevArrow) {
+                    prevArrow.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        goPrev();
+                    };
+                }
+
+                if (nextArrow) {
+                    nextArrow.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        goNext();
+                    };
+                }
+
+                // Configurar pills
+                pills.forEach((pill, index) => {
+                    pill.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        currentIndex = index;
+                        updateCarousel(currentIndex);
+                    };
+                });
+
+                // Inicializar posicionamento
+                updateReferenceValues();
+
+                // Resize handler
+                let resizeTimer;
+                const resizeHandler = function() {
+                    clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(() => {
+                        updateReferenceValues();
+                    }, 250);
+                };
+                
+                window.removeEventListener('resize', resizeHandler);
+                window.addEventListener('resize', resizeHandler);
+            } catch (error) {
+                console.error('Erro ao inicializar carrossel:', error);
+            }
+        }
+
+        // Executar inicialização imediatamente e também após DOM ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('[Carrossel] DOMContentLoaded - inicializando...');
+                initCarousel();
             });
-        });
+        } else {
+            console.log('[Carrossel] DOM já pronto - inicializando...');
+            setTimeout(initCarousel, 100);
+        }
+        
+        // Também tentar após um pequeno delay para garantir
+        setTimeout(function() {
+            if (!window._solucoesCarouselInitialized) {
+                console.log('[Carrossel] Tentativa adicional após delay...');
+                initCarousel();
+            }
+        }, 500);
+    } catch (error) {
+        console.error('[Carrossel] Erro crítico ao inicializar carrossel de soluções:', error);
     }
-
-    function updateCarousel(index) {
-        if (cardWidth === 0 || cardSpacing === 0) return;
-
-        const wrapperRect = wrapper.getBoundingClientRect();
-        const activeCardLeftInTrack = firstCardLeftInTrack + (index * cardSpacing);
-        const wrapperCenter = wrapperRect.width / 2;
-        const desiredCardLeft = wrapperCenter - (cardWidth / 2);
-        const translateX = desiredCardLeft - activeCardLeftInTrack;
-
-        track.style.transform = `translateX(${translateX}px)`;
-
-        cards.forEach((card, i) => {
-            card.classList.toggle('active', i === index);
-        });
-
-        pills.forEach((pill, i) => {
-            pill.classList.toggle('active', i === index);
-        });
-    }
-
-    updateReferenceValues();
-
-    if (prevArrow) {
-        prevArrow.addEventListener('click', function() {
-            currentIndex = (currentIndex - 1 + totalCards) % totalCards;
-            updateCarousel(currentIndex);
-        });
-    }
-
-    if (nextArrow) {
-        nextArrow.addEventListener('click', function() {
-            currentIndex = (currentIndex + 1) % totalCards;
-            updateCarousel(currentIndex);
-        });
-    }
-
-    pills.forEach((pill, index) => {
-        pill.addEventListener('click', function() {
-            currentIndex = index;
-            updateCarousel(currentIndex);
-        });
-    });
-
-    let resizeTimer;
-    window.addEventListener('resize', function() {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-            updateReferenceValues();
-        }, 250);
-    });
 };
+
+// Tentar inicializar imediatamente se a função já estiver definida
+if (typeof window.initSolucoesCarousel === 'function') {
+    console.log('[Carrossel] Executando inicialização imediata...');
+    window.initSolucoesCarousel();
+}
 </script>
 
 <!-- Scripts carregados no layout -->
