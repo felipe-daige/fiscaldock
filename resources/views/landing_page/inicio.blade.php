@@ -4,12 +4,18 @@
 .solutions-carousel-container {
     min-height: 700px;
     position: relative;
+    width: 100vw;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
 }
 
 .solutions-cards-wrapper {
     position: relative;
     overflow: hidden;
-    margin: 0 8%;
+    margin: 0;
+    width: 100%;
 }
 
 .solutions-cards-track {
@@ -17,12 +23,13 @@
     transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     will-change: transform;
     align-items: stretch;
+    padding: 0;
 }
 
 .solution-card {
     flex-shrink: 0;
-    width: 84%;
-    padding: 0 2%;
+    width: 75%;
+    padding: 0 1%;
     transition: opacity 0.3s, transform 0.3s;
     position: relative;
     height: 700px; /* Altura fixa uniforme */
@@ -38,6 +45,42 @@
     height: 100%;
     display: flex;
     flex-direction: column;
+    background: #111827; /* Fundo escuro padrão */
+}
+
+.solution-card-inner .grid {
+    height: 100%;
+}
+
+/* Coluna esquerda - descrição */
+.solution-card-inner > .grid > div:first-child {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: #111827;
+}
+
+/* Coluna direita - mockup */
+.solution-card-inner > .grid > div:last-child {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    position: relative;
+}
+
+/* Efeito de brilho no mockup */
+.solution-card-inner > .grid > div:last-child::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+/* Ajustar mockup para ter efeito de profundidade */
+.solution-card-inner .bg-white.rounded-xl {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
 .solution-card .bg-gray-50 {
@@ -59,20 +102,28 @@
 
 /* Responsividade */
 @media (max-width: 1024px) {
-    .solutions-cards-wrapper {
-        margin: 0 5%;
+    .solutions-cards-track {
+        padding: 0;
     }
     
     .solution-card {
-        width: 90%;
-        padding: 0 2.5%;
+        width: 85%;
+        padding: 0 1%;
+    }
+    
+    /* Em tablets, colunas podem empilhar */
+    .solution-card-inner .grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .solution-card-inner > .grid > div:first-child {
+        min-height: 300px;
     }
 }
 
 @media (max-width: 768px) {
-    .solutions-cards-wrapper {
-        margin: 0 2%;
-        overflow: hidden;
+    .solutions-cards-track {
+        padding: 0 2%;
     }
     
     .solution-card {
@@ -96,6 +147,45 @@
     
     .solutions-carousel-container {
         min-height: 700px;
+    }
+    
+    /* Em mobile, colunas empilhadas - texto primeiro, depois imagem */
+    .solution-card-inner .grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .solution-card-inner > .grid > div:first-child {
+        min-height: 250px;
+        order: 2;
+        padding: 1rem;
+    }
+    
+    .solution-card-inner > .grid > div:last-child {
+        order: 1;
+        padding: 1.5rem;
+    }
+    
+    /* Ajustar headline do mockup em mobile */
+    .solution-card-inner > .grid > div:first-child .absolute {
+        position: relative;
+        top: auto;
+        right: auto;
+        left: auto;
+        padding: 1rem 0;
+    }
+    
+    .solution-card-inner > .grid > div:first-child .absolute h4 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+    
+    /* Ajustar tamanhos de texto em mobile */
+    .solution-card-inner > .grid > div:last-child h3 {
+        font-size: 1.75rem;
+    }
+    
+    .solution-card-inner > .grid > div:last-child p {
+        font-size: 1rem;
     }
 }
 
@@ -413,7 +503,7 @@
 </section>
 
 <!-- Soluções Section -->
-<section id="solucoes" class="bg-white pt-20 pb-0">
+<section id="solucoes" class="bg-white pt-20 pb-0 overflow-x-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -427,12 +517,12 @@
         <!-- Carrossel de Soluções -->
         <div class="solutions-carousel-container relative">
             <!-- Setas de Navegação -->
-            <button class="carousel-arrow carousel-arrow-left absolute left-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors" data-direction="prev">
+            <button class="carousel-arrow carousel-arrow-left absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors" data-direction="prev">
                 <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
             </button>
-            <button class="carousel-arrow carousel-arrow-right absolute right-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors" data-direction="next">
+            <button class="carousel-arrow carousel-arrow-right absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors" data-direction="next">
                 <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
@@ -443,167 +533,94 @@
                 <div class="solutions-cards-track flex transition-transform duration-500 ease-in-out" style="transform: translateX(0px);">
                     <!-- Card 1: Central de Documentos -->
                     <div class="solution-card flex-shrink-0 w-full px-4" data-index="0" data-solution="documentos">
-                        <div class="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden solution-card-inner">
-                            <!-- Header do Dashboard -->
-                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                                        <img src="{{ asset('icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-6 h-6 object-contain">
-                                    </div>
-                                    <h3 class="text-xl font-bold text-gray-900">Central de Documentos</h3>
-                                </div>
-                                <div class="flex gap-2">
-                                    <button class="px-4 py-2 text-sm font-semibold text-emerald-600 bg-emerald-50 rounded-lg border border-emerald-200">Dashboard</button>
-                                    <button class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg">Documentos</button>
-                                    <button class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg">Relatórios</button>
-                                </div>
-                            </div>
-
-                            <!-- Conteúdo do Dashboard -->
-                            <div class="p-6 bg-gray-50">
-                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                                    <!-- Painel: Documentos por Status -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Documentos por Status</h4>
-                                        <div class="flex items-center justify-center">
-                                            <div class="relative w-48 h-48">
-                                                <svg class="transform -rotate-90" width="192" height="192">
-                                                    <circle cx="96" cy="96" r="80" fill="none" stroke="#e5e7eb" stroke-width="16"/>
-                                                    <circle cx="96" cy="96" r="80" fill="none" stroke="#10b981" stroke-width="16" stroke-dasharray="180 502" stroke-dashoffset="0"/>
-                                                    <circle cx="96" cy="96" r="80" fill="none" stroke="#ef4444" stroke-width="16" stroke-dasharray="251 502" stroke-dashoffset="-180"/>
-                                                    <circle cx="96" cy="96" r="80" fill="none" stroke="#f59e0b" stroke-width="16" stroke-dasharray="71 502" stroke-dashoffset="-431"/>
+                        <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
+                                <!-- Coluna Esquerda: Descrição -->
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-gray-900 text-white">
+                                    <!-- Logo e Título -->
+                                    <div>
+                                        <div class="flex items-center gap-3 mb-8">
+                                            <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
+                                                <img src="{{ asset('icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-8 h-8 object-contain">
+                                            </div>
+                                            <h3 class="text-3xl lg:text-4xl font-bold text-white">Central de Documentos</h3>
+                                        </div>
+                                        
+                                        <!-- Descrição Principal -->
+                                        <p class="text-xl lg:text-2xl text-gray-100 mb-6 leading-relaxed">
+                                            Centralize todos os documentos contábeis da sua carteira de clientes. Tenha organização por pastas, datas e categorias com acesso seguro.
+                                        </p>
+                                        
+                                        <!-- Descrição Secundária (com bullet visual) -->
+                                        <div class="flex items-start gap-4 mb-4">
+                                            <div class="w-6 h-6 flex-shrink-0 mt-1">
+                                                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                                                 </svg>
-                                                <div class="absolute inset-0 flex items-center justify-center">
-                                                    <div class="text-center">
-                                                        <div class="text-3xl font-bold text-gray-900">156</div>
-                                                        <div class="text-sm text-gray-600">Total</div>
+                                            </div>
+                                            <p class="text-lg text-gray-300 leading-relaxed">
+                                                Compartilhamento ágil com sua equipe e com o cliente final. Tudo em nuvem, com backup automático e controle total de acesso.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Call-to-Action -->
+                                    <div class="mt-8">
+                                        <a href="#" class="inline-flex items-center gap-2 text-emerald-400 font-semibold hover:text-emerald-300 transition-colors text-lg">
+                                            Saiba mais
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <!-- Coluna Direita: Mockup/Imagem Interativa -->
+                                <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
+                                    <!-- Headline sobre o mockup -->
+                                    <div class="absolute top-8 right-8 z-10">
+                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4">
+                                            Documentos mais organizados e seguros
+                                        </h4>
+                                    </div>
+                                    
+                                    <!-- Mockup do Dashboard -->
+                                    <div class="relative w-full h-full max-w-5xl mt-16">
+                                        <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-700" style="transform: scale(0.85);">
+                                            <!-- Header do mockup -->
+                                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                                        <img src="{{ asset('icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-5 h-5 object-contain">
+                                                    </div>
+                                                    <span class="text-sm font-semibold text-gray-900">Central de Documentos</span>
+                                                </div>
+                                                <div class="flex gap-2">
+                                                    <span class="px-3 py-1 text-xs bg-emerald-50 text-emerald-600 rounded font-semibold">Dashboard</span>
+                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Documentos</span>
+                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Relatórios</span>
+                                                </div>
+                                            </div>
+                                            <!-- Conteúdo do mockup (simplificado) -->
+                                            <div class="p-6 bg-gray-50">
+                                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                    </div>
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </div>
-                                        <div class="flex justify-center gap-6 mt-4">
-                                            <div class="flex items-center gap-2">
-                                                <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
-                                                <span class="text-sm text-gray-600">Em dia (36)</span>
-                                            </div>
-                                            <div class="flex items-center gap-2">
-                                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                                                <span class="text-sm text-gray-600">Pendentes (48)</span>
-                                            </div>
-                                            <div class="flex items-center gap-2">
-                                                <div class="w-3 h-3 rounded-full bg-amber-500"></div>
-                                                <span class="text-sm text-gray-600">Atenção (4)</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Painel: Uploads Recentes -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Uploads Recentes</h4>
-                                        <div class="space-y-3">
-                                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                    </svg>
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-20 bg-gray-100 rounded"></div>
+                                                    </div>
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-20 bg-gray-100 rounded"></div>
+                                                    </div>
                                                 </div>
-                                                <div class="flex-1">
-                                                    <div class="font-semibold text-gray-900 text-sm">SPED EFD ICMS/IPI</div>
-                                                    <div class="text-xs text-gray-500">Empresa ABC - Jan/2024</div>
-                                                </div>
-                                                <div class="text-xs text-emerald-600 font-semibold">✓</div>
-                                            </div>
-                                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                    </svg>
-                                                </div>
-                                                <div class="flex-1">
-                                                    <div class="font-semibold text-gray-900 text-sm">XML NF-e</div>
-                                                    <div class="text-xs text-gray-500">Empresa XYZ - Jan/2024</div>
-                                                </div>
-                                                <div class="text-xs text-emerald-600 font-semibold">✓</div>
-                                            </div>
-                                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                    </svg>
-                                                </div>
-                                                <div class="flex-1">
-                                                    <div class="font-semibold text-gray-900 text-sm">PDF Declaração</div>
-                                                    <div class="text-xs text-gray-500">Empresa DEF - Jan/2024</div>
-                                                </div>
-                                                <div class="text-xs text-amber-600 font-semibold">⏳</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <!-- Painel: Documentos por Empresa -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Documentos por Empresa</h4>
-                                        <div class="space-y-4">
-                                            <div>
-                                                <div class="flex justify-between mb-2">
-                                                    <span class="text-sm font-medium text-gray-700">Empresa ABC</span>
-                                                    <span class="text-sm font-semibold text-gray-900">45</span>
-                                                </div>
-                                                <div class="w-full bg-gray-200 rounded-full h-3">
-                                                    <div class="bg-emerald-500 h-3 rounded-full" style="width: 75%"></div>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <div class="flex justify-between mb-2">
-                                                    <span class="text-sm font-medium text-gray-700">Empresa XYZ</span>
-                                                    <span class="text-sm font-semibold text-gray-900">32</span>
-                                                </div>
-                                                <div class="w-full bg-gray-200 rounded-full h-3">
-                                                    <div class="bg-blue-500 h-3 rounded-full" style="width: 53%"></div>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <div class="flex justify-between mb-2">
-                                                    <span class="text-sm font-medium text-gray-700">Empresa DEF</span>
-                                                    <span class="text-sm font-semibold text-gray-900">28</span>
-                                                </div>
-                                                <div class="w-full bg-gray-200 rounded-full h-3">
-                                                    <div class="bg-amber-500 h-3 rounded-full" style="width: 47%"></div>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <div class="flex justify-between mb-2">
-                                                    <span class="text-sm font-medium text-gray-700">Empresa GHI</span>
-                                                    <span class="text-sm font-semibold text-gray-900">51</span>
-                                                </div>
-                                                <div class="w-full bg-gray-200 rounded-full h-3">
-                                                    <div class="bg-emerald-500 h-3 rounded-full" style="width: 85%"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Painel: Estatísticas -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Estatísticas</h4>
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <div class="text-center p-4 bg-gray-50 rounded-lg">
-                                                <div class="text-3xl font-bold text-emerald-600 mb-1">156</div>
-                                                <div class="text-sm text-gray-600">Total</div>
-                                            </div>
-                                            <div class="text-center p-4 bg-gray-50 rounded-lg">
-                                                <div class="text-3xl font-bold text-red-600 mb-1">48</div>
-                                                <div class="text-sm text-gray-600">Pendentes</div>
-                                            </div>
-                                            <div class="text-center p-4 bg-gray-50 rounded-lg">
-                                                <div class="text-3xl font-bold text-blue-600 mb-1">108</div>
-                                                <div class="text-sm text-gray-600">Entregues</div>
-                                            </div>
-                                            <div class="text-center p-4 bg-gray-50 rounded-lg">
-                                                <div class="text-3xl font-bold text-amber-600 mb-1">4</div>
-                                                <div class="text-sm text-gray-600">Atenção</div>
                                             </div>
                                         </div>
                                     </div>
@@ -614,171 +631,93 @@
 
                     <!-- Card 2: Leitura e Diagnóstico -->
                     <div class="solution-card flex-shrink-0 w-full px-4" data-index="1" data-solution="diagnostico">
-                        <div class="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden solution-card-inner">
-                            <!-- Header do Dashboard -->
-                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                                        <img src="{{ asset('icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-6 h-6 object-contain">
-                                    </div>
-                                    <h3 class="text-xl font-bold text-gray-900">Leitura e Diagnóstico</h3>
-                                </div>
-                                <div class="flex gap-2">
-                                    <button class="px-4 py-2 text-sm font-semibold text-emerald-600 bg-emerald-50 rounded-lg border border-emerald-200">Dashboard</button>
-                                    <button class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg">SPED</button>
-                                    <button class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg">Alertas</button>
-                                </div>
-                            </div>
-
-                            <!-- Conteúdo do Dashboard -->
-                            <div class="p-6 bg-gray-50">
-                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                                    <!-- Painel: Status SPED -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Status SPED por Competência</h4>
-                                        <div class="space-y-4">
-                                            <div class="flex items-center justify-between p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
-                                                    <span class="font-medium text-gray-900">Jan/2024</span>
-                                                </div>
-                                                <span class="text-sm font-semibold text-emerald-600">OK</span>
+                        <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
+                                <!-- Coluna Esquerda: Descrição -->
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-gray-900 text-white">
+                                    <!-- Logo e Título -->
+                                    <div>
+                                        <div class="flex items-center gap-3 mb-8">
+                                            <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
+                                                <img src="{{ asset('icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-8 h-8 object-contain">
                                             </div>
-                                            <div class="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-3 h-3 rounded-full bg-amber-500"></div>
-                                                    <span class="font-medium text-gray-900">Dez/2023</span>
-                                                </div>
-                                                <span class="text-sm font-semibold text-amber-600">Atenção</span>
+                                            <h3 class="text-3xl lg:text-4xl font-bold text-white">Leitura e Diagnóstico</h3>
+                                        </div>
+                                        
+                                        <!-- Descrição Principal -->
+                                        <p class="text-xl lg:text-2xl text-gray-100 mb-6 leading-relaxed">
+                                            Importação e estruturação automática de SPED. Detecção inteligente de inconsistências e alertas para lacunas e divergências.
+                                        </p>
+                                        
+                                        <!-- Descrição Secundária (com bullet visual) -->
+                                        <div class="flex items-start gap-4 mb-4">
+                                            <div class="w-6 h-6 flex-shrink-0 mt-1">
+                                                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                                </svg>
                                             </div>
-                                            <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                                                    <span class="font-medium text-gray-900">Nov/2023</span>
-                                                </div>
-                                                <span class="text-sm font-semibold text-red-600">Pendência</span>
-                                            </div>
-                                            <div class="flex items-center justify-between p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
-                                                    <span class="font-medium text-gray-900">Out/2023</span>
-                                                </div>
-                                                <span class="text-sm font-semibold text-emerald-600">OK</span>
-                                            </div>
+                                            <p class="text-lg text-gray-300 leading-relaxed">
+                                                Semáforo visual por competência: OK / Atenção / Pendência, com motivo e evidência clara.
+                                            </p>
                                         </div>
                                     </div>
-
-                                    <!-- Painel: Inconsistências Detectadas -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Inconsistências Detectadas</h4>
-                                        <div class="space-y-3">
-                                            <div class="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-200">
-                                                <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                                                    </svg>
-                                                </div>
-                                                <div class="flex-1">
-                                                    <div class="font-semibold text-gray-900 text-sm">Divergência CFOP</div>
-                                                    <div class="text-xs text-gray-500">Empresa ABC - Jan/2024</div>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
-                                                <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                                                    </svg>
-                                                </div>
-                                                <div class="flex-1">
-                                                    <div class="font-semibold text-gray-900 text-sm">Lacuna em Registros</div>
-                                                    <div class="text-xs text-gray-500">Empresa XYZ - Jan/2024</div>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-200">
-                                                <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                                                    </svg>
-                                                </div>
-                                                <div class="flex-1">
-                                                    <div class="font-semibold text-gray-900 text-sm">Padrão Suspeito</div>
-                                                    <div class="text-xs text-gray-500">Empresa DEF - Dez/2023</div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    
+                                    <!-- Call-to-Action -->
+                                    <div class="mt-8">
+                                        <a href="#" class="inline-flex items-center gap-2 text-emerald-400 font-semibold hover:text-emerald-300 transition-colors text-lg">
+                                            Saiba mais
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                            </svg>
+                                        </a>
                                     </div>
                                 </div>
-
-                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <!-- Painel: Análise por Competência -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Análise por Competência</h4>
-                                        <div class="space-y-3">
-                                            <div>
-                                                <div class="flex justify-between mb-2">
-                                                    <span class="text-sm font-medium text-gray-700">Jan/2024</span>
-                                                    <span class="text-sm font-semibold text-emerald-600">100%</span>
-                                                </div>
-                                                <div class="w-full bg-gray-200 rounded-full h-3">
-                                                    <div class="bg-emerald-500 h-3 rounded-full" style="width: 100%"></div>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <div class="flex justify-between mb-2">
-                                                    <span class="text-sm font-medium text-gray-700">Dez/2023</span>
-                                                    <span class="text-sm font-semibold text-amber-600">75%</span>
-                                                </div>
-                                                <div class="w-full bg-gray-200 rounded-full h-3">
-                                                    <div class="bg-amber-500 h-3 rounded-full" style="width: 75%"></div>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <div class="flex justify-between mb-2">
-                                                    <span class="text-sm font-medium text-gray-700">Nov/2023</span>
-                                                    <span class="text-sm font-semibold text-red-600">45%</span>
-                                                </div>
-                                                <div class="w-full bg-gray-200 rounded-full h-3">
-                                                    <div class="bg-red-500 h-3 rounded-full" style="width: 45%"></div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                
+                                <!-- Coluna Direita: Mockup/Imagem Interativa -->
+                                <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
+                                    <!-- Headline sobre o mockup -->
+                                    <div class="absolute top-8 right-8 z-10">
+                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4">
+                                            Diagnóstico automático e inteligente
+                                        </h4>
                                     </div>
-
-                                    <!-- Painel: Diagnósticos Recentes -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Diagnósticos Recentes</h4>
-                                        <div class="space-y-3">
-                                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                                                    </svg>
+                                    
+                                    <!-- Mockup do Dashboard -->
+                                    <div class="relative w-full h-full max-w-5xl mt-16">
+                                        <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-700" style="transform: scale(0.85);">
+                                            <!-- Header do mockup -->
+                                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                                        <img src="{{ asset('icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-5 h-5 object-contain">
+                                                    </div>
+                                                    <span class="text-sm font-semibold text-gray-900">Leitura e Diagnóstico</span>
                                                 </div>
-                                                <div class="flex-1">
-                                                    <div class="font-semibold text-gray-900 text-sm">EFD ICMS/IPI Processado</div>
-                                                    <div class="text-xs text-gray-500">Há 2 horas</div>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                                                    </svg>
-                                                </div>
-                                                <div class="flex-1">
-                                                    <div class="font-semibold text-gray-900 text-sm">EFD Contribuições Validado</div>
-                                                    <div class="text-xs text-gray-500">Há 5 horas</div>
+                                                <div class="flex gap-2">
+                                                    <span class="px-3 py-1 text-xs bg-emerald-50 text-emerald-600 rounded font-semibold">Dashboard</span>
+                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">SPED</span>
+                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Alertas</span>
                                                 </div>
                                             </div>
-                                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                                                    </svg>
+                                            <!-- Conteúdo do mockup (simplificado) -->
+                                            <div class="p-6 bg-gray-50">
+                                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                    </div>
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                    </div>
                                                 </div>
-                                                <div class="flex-1">
-                                                    <div class="font-semibold text-gray-900 text-sm">SPED Analisado</div>
-                                                    <div class="text-xs text-gray-500">Ontem</div>
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-20 bg-gray-100 rounded"></div>
+                                                    </div>
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-20 bg-gray-100 rounded"></div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -790,142 +729,93 @@
 
                     <!-- Card 3: Motor de Regras -->
                     <div class="solution-card flex-shrink-0 w-full px-4" data-index="2" data-solution="regras">
-                        <div class="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden solution-card-inner">
-                            <!-- Header do Dashboard -->
-                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                                        <img src="{{ asset('icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-6 h-6 object-contain">
-                                    </div>
-                                    <h3 class="text-xl font-bold text-gray-900">Motor de Regras</h3>
-                                </div>
-                                <div class="flex gap-2">
-                                    <button class="px-4 py-2 text-sm font-semibold text-emerald-600 bg-emerald-50 rounded-lg border border-emerald-200">Dashboard</button>
-                                    <button class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg">Regras</button>
-                                    <button class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg">Histórico</button>
-                                </div>
-                            </div>
-
-                            <!-- Conteúdo do Dashboard -->
-                            <div class="p-6 bg-gray-50">
-                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                                    <!-- Painel: Regras Ativas -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Regras Ativas</h4>
-                                        <div class="text-center mb-4">
-                                            <div class="text-5xl font-bold text-emerald-600 mb-2">24</div>
-                                            <div class="text-sm text-gray-600">Regras Configuradas</div>
+                        <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
+                                <!-- Coluna Esquerda: Descrição -->
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-gray-900 text-white">
+                                    <!-- Logo e Título -->
+                                    <div>
+                                        <div class="flex items-center gap-3 mb-8">
+                                            <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
+                                                <img src="{{ asset('icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-8 h-8 object-contain">
+                                            </div>
+                                            <h3 class="text-3xl lg:text-4xl font-bold text-white">Motor de Regras</h3>
                                         </div>
-                                        <div class="space-y-3">
-                                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                                <span class="text-sm font-medium text-gray-700">CFOP 5102</span>
-                                                <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">Ativa</span>
-                                            </div>
-                                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                                <span class="text-sm font-medium text-gray-700">CST 00</span>
-                                                <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">Ativa</span>
-                                            </div>
-                                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                                <span class="text-sm font-medium text-gray-700">Cenário Especial</span>
-                                                <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">Ativa</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Painel: Classificações Automáticas -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Classificações Automáticas</h4>
-                                        <div class="flex items-center justify-center mb-4">
-                                            <div class="relative w-40 h-40">
-                                                <svg class="transform -rotate-90" width="160" height="160">
-                                                    <circle cx="80" cy="80" r="65" fill="none" stroke="#e5e7eb" stroke-width="12"/>
-                                                    <circle cx="80" cy="80" r="65" fill="none" stroke="#10b981" stroke-width="12" stroke-dasharray="245 408" stroke-dashoffset="0"/>
-                                                    <circle cx="80" cy="80" r="65" fill="none" stroke="#f59e0b" stroke-width="12" stroke-dasharray="98 408" stroke-dashoffset="-245"/>
-                                                    <circle cx="80" cy="80" r="65" fill="none" stroke="#ef4444" stroke-width="12" stroke-dasharray="65 408" stroke-dashoffset="-343"/>
+                                        
+                                        <!-- Descrição Principal -->
+                                        <p class="text-xl lg:text-2xl text-gray-100 mb-6 leading-relaxed">
+                                            Regras parametrizáveis por operação. Classificação automática que identifica: gera crédito / atenção / não gera.
+                                        </p>
+                                        
+                                        <!-- Descrição Secundária (com bullet visual) -->
+                                        <div class="flex items-start gap-4 mb-4">
+                                            <div class="w-6 h-6 flex-shrink-0 mt-1">
+                                                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                                                 </svg>
-                                                <div class="absolute inset-0 flex items-center justify-center">
-                                                    <div class="text-center">
-                                                        <div class="text-2xl font-bold text-gray-900">408</div>
-                                                        <div class="text-xs text-gray-600">Total</div>
+                                            </div>
+                                            <p class="text-lg text-gray-300 leading-relaxed">
+                                                Regras totalmente auditáveis e evolução contínua: a plataforma aprende seu padrão de escritório.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Call-to-Action -->
+                                    <div class="mt-8">
+                                        <a href="#" class="inline-flex items-center gap-2 text-emerald-400 font-semibold hover:text-emerald-300 transition-colors text-lg">
+                                            Saiba mais
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <!-- Coluna Direita: Mockup/Imagem Interativa -->
+                                <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
+                                    <!-- Headline sobre o mockup -->
+                                    <div class="absolute top-8 right-8 z-10">
+                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4">
+                                            Classificação que aprende seu padrão
+                                        </h4>
+                                    </div>
+                                    
+                                    <!-- Mockup do Dashboard -->
+                                    <div class="relative w-full h-full max-w-5xl mt-16">
+                                        <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-700" style="transform: scale(0.85);">
+                                            <!-- Header do mockup -->
+                                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                                        <img src="{{ asset('icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-5 h-5 object-contain">
+                                                    </div>
+                                                    <span class="text-sm font-semibold text-gray-900">Motor de Regras</span>
+                                                </div>
+                                                <div class="flex gap-2">
+                                                    <span class="px-3 py-1 text-xs bg-emerald-50 text-emerald-600 rounded font-semibold">Dashboard</span>
+                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Regras</span>
+                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Histórico</span>
+                                                </div>
+                                            </div>
+                                            <!-- Conteúdo do mockup (simplificado) -->
+                                            <div class="p-6 bg-gray-50">
+                                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                    </div>
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </div>
-                                        <div class="flex justify-center gap-4 mt-4">
-                                            <div class="flex items-center gap-2">
-                                                <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
-                                                <span class="text-xs text-gray-600">Gera Crédito (245)</span>
-                                            </div>
-                                            <div class="flex items-center gap-2">
-                                                <div class="w-3 h-3 rounded-full bg-amber-500"></div>
-                                                <span class="text-xs text-gray-600">Atenção (98)</span>
-                                            </div>
-                                            <div class="flex items-center gap-2">
-                                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                                                <span class="text-xs text-gray-600">Não Gera (65)</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <!-- Painel: Evolução de Regras -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Evolução de Regras</h4>
-                                        <div class="space-y-3">
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                                <div class="flex-1">
-                                                    <div class="text-sm font-medium text-gray-900">Nova regra aprendida</div>
-                                                    <div class="text-xs text-gray-500">CFOP 5109 - Há 2 dias</div>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                                                <div class="flex-1">
-                                                    <div class="text-sm font-medium text-gray-900">Regra atualizada</div>
-                                                    <div class="text-xs text-gray-500">CST 20 - Há 5 dias</div>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                                <div class="flex-1">
-                                                    <div class="text-sm font-medium text-gray-900">Padrão identificado</div>
-                                                    <div class="text-xs text-gray-500">Cenário Especial - Há 1 semana</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Painel: Regras por Tipo -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Regras por Tipo</h4>
-                                        <div class="space-y-3">
-                                            <div>
-                                                <div class="flex justify-between mb-2">
-                                                    <span class="text-sm font-medium text-gray-700">CFOP</span>
-                                                    <span class="text-sm font-semibold text-gray-900">12</span>
-                                                </div>
-                                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                                    <div class="bg-emerald-500 h-2 rounded-full" style="width: 50%"></div>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <div class="flex justify-between mb-2">
-                                                    <span class="text-sm font-medium text-gray-700">CST</span>
-                                                    <span class="text-sm font-semibold text-gray-900">8</span>
-                                                </div>
-                                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                                    <div class="bg-blue-500 h-2 rounded-full" style="width: 33%"></div>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <div class="flex justify-between mb-2">
-                                                    <span class="text-sm font-medium text-gray-700">Cenários</span>
-                                                    <span class="text-sm font-semibold text-gray-900">4</span>
-                                                </div>
-                                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                                    <div class="bg-amber-500 h-2 rounded-full" style="width: 17%"></div>
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-20 bg-gray-100 rounded"></div>
+                                                    </div>
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-20 bg-gray-100 rounded"></div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -937,138 +827,93 @@
 
                     <!-- Card 4: Compliance e Situação Fiscal -->
                     <div class="solution-card flex-shrink-0 w-full px-4" data-index="3" data-solution="compliance">
-                        <div class="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden solution-card-inner">
-                            <!-- Header do Dashboard -->
-                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                                        <img src="{{ asset('icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-6 h-6 object-contain">
-                                    </div>
-                                    <h3 class="text-xl font-bold text-gray-900">Compliance e Situação Fiscal</h3>
-                                </div>
-                                <div class="flex gap-2">
-                                    <button class="px-4 py-2 text-sm font-semibold text-emerald-600 bg-emerald-50 rounded-lg border border-emerald-200">Dashboard</button>
-                                    <button class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg">Situação</button>
-                                    <button class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg">Riscos</button>
-                                </div>
-                            </div>
-
-                            <!-- Conteúdo do Dashboard -->
-                            <div class="p-6 bg-gray-50">
-                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                                    <!-- Painel: Situação por CNPJ -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Situação por CNPJ</h4>
-                                        <div class="space-y-3">
-                                            <div class="flex items-center justify-between p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                                                <div>
-                                                    <div class="font-semibold text-gray-900 text-sm">12.345.678/0001-90</div>
-                                                    <div class="text-xs text-gray-500">Empresa ABC</div>
-                                                </div>
-                                                <span class="text-xs font-semibold text-emerald-600 bg-white px-3 py-1 rounded-full">Regular</span>
+                        <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
+                                <!-- Coluna Esquerda: Descrição -->
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-gray-900 text-white">
+                                    <!-- Logo e Título -->
+                                    <div>
+                                        <div class="flex items-center gap-3 mb-8">
+                                            <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
+                                                <img src="{{ asset('icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-8 h-8 object-contain">
                                             </div>
-                                            <div class="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200">
-                                                <div>
-                                                    <div class="font-semibold text-gray-900 text-sm">98.765.432/0001-10</div>
-                                                    <div class="text-xs text-gray-500">Empresa XYZ</div>
-                                                </div>
-                                                <span class="text-xs font-semibold text-amber-600 bg-white px-3 py-1 rounded-full">Atenção</span>
+                                            <h3 class="text-3xl lg:text-4xl font-bold text-white">Compliance e Situação Fiscal</h3>
+                                        </div>
+                                        
+                                        <!-- Descrição Principal -->
+                                        <p class="text-xl lg:text-2xl text-gray-100 mb-6 leading-relaxed">
+                                            Painel completo de situação por CNPJ com mapa de regularidade e pendências. Alertas automáticos de vencimento.
+                                        </p>
+                                        
+                                        <!-- Descrição Secundária (com bullet visual) -->
+                                        <div class="flex items-start gap-4 mb-4">
+                                            <div class="w-6 h-6 flex-shrink-0 mt-1">
+                                                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                                </svg>
                                             </div>
-                                            <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
-                                                <div>
-                                                    <div class="font-semibold text-gray-900 text-sm">11.222.333/0001-44</div>
-                                                    <div class="text-xs text-gray-500">Empresa DEF</div>
-                                                </div>
-                                                <span class="text-xs font-semibold text-red-600 bg-white px-3 py-1 rounded-full">Crítico</span>
-                                            </div>
+                                            <p class="text-lg text-gray-300 leading-relaxed">
+                                                Relatório de risco por empresa/fornecedor com evidências e histórico completo.
+                                            </p>
                                         </div>
                                     </div>
-
-                                    <!-- Painel: Alertas de Vencimento -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Alertas de Vencimento</h4>
-                                        <div class="space-y-3">
-                                            <div class="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-200">
-                                                <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                    </svg>
-                                                </div>
-                                                <div class="flex-1">
-                                                    <div class="font-semibold text-gray-900 text-sm">DCTFWeb vence em 2 dias</div>
-                                                    <div class="text-xs text-gray-500">Empresa ABC</div>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
-                                                <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                    </svg>
-                                                </div>
-                                                <div class="flex-1">
-                                                    <div class="font-semibold text-gray-900 text-sm">SPED vence em 5 dias</div>
-                                                    <div class="text-xs text-gray-500">Empresa XYZ</div>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-200">
-                                                <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                    </svg>
-                                                </div>
-                                                <div class="flex-1">
-                                                    <div class="font-semibold text-gray-900 text-sm">Certidão vence hoje</div>
-                                                    <div class="text-xs text-gray-500">Empresa DEF</div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    
+                                    <!-- Call-to-Action -->
+                                    <div class="mt-8">
+                                        <a href="#" class="inline-flex items-center gap-2 text-emerald-400 font-semibold hover:text-emerald-300 transition-colors text-lg">
+                                            Saiba mais
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                            </svg>
+                                        </a>
                                     </div>
                                 </div>
-
-                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <!-- Painel: Mapa de Riscos -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Mapa de Riscos</h4>
-                                        <div class="grid grid-cols-3 gap-3">
-                                            <div class="text-center p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-                                                <div class="text-2xl font-bold text-emerald-600 mb-1">8</div>
-                                                <div class="text-xs text-gray-600">Baixo</div>
-                                            </div>
-                                            <div class="text-center p-4 bg-amber-50 rounded-lg border border-amber-200">
-                                                <div class="text-2xl font-bold text-amber-600 mb-1">3</div>
-                                                <div class="text-xs text-gray-600">Médio</div>
-                                            </div>
-                                            <div class="text-center p-4 bg-red-50 rounded-lg border border-red-200">
-                                                <div class="text-2xl font-bold text-red-600 mb-1">1</div>
-                                                <div class="text-xs text-gray-600">Alto</div>
-                                            </div>
-                                        </div>
+                                
+                                <!-- Coluna Direita: Mockup/Imagem Interativa -->
+                                <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
+                                    <!-- Headline sobre o mockup -->
+                                    <div class="absolute top-8 right-8 z-10">
+                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4">
+                                            Visão completa de compliance
+                                        </h4>
                                     </div>
-
-                                    <!-- Painel: Relatórios de Compliance -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Relatórios de Compliance</h4>
-                                        <div class="space-y-3">
-                                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                    </svg>
+                                    
+                                    <!-- Mockup do Dashboard -->
+                                    <div class="relative w-full h-full max-w-5xl mt-16">
+                                        <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-700" style="transform: scale(0.85);">
+                                            <!-- Header do mockup -->
+                                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                                        <img src="{{ asset('icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-5 h-5 object-contain">
+                                                    </div>
+                                                    <span class="text-sm font-semibold text-gray-900">Compliance e Situação Fiscal</span>
                                                 </div>
-                                                <div class="flex-1">
-                                                    <div class="font-semibold text-gray-900 text-sm">Status Fiscal Mensal</div>
-                                                    <div class="text-xs text-gray-500">Jan/2024</div>
+                                                <div class="flex gap-2">
+                                                    <span class="px-3 py-1 text-xs bg-emerald-50 text-emerald-600 rounded font-semibold">Dashboard</span>
+                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Situação</span>
+                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Riscos</span>
                                                 </div>
                                             </div>
-                                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                    </svg>
+                                            <!-- Conteúdo do mockup (simplificado) -->
+                                            <div class="p-6 bg-gray-50">
+                                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                    </div>
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                    </div>
                                                 </div>
-                                                <div class="flex-1">
-                                                    <div class="font-semibold text-gray-900 text-sm">Riscos & Inconsistências</div>
-                                                    <div class="text-xs text-gray-500">Dez/2023</div>
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-20 bg-gray-100 rounded"></div>
+                                                    </div>
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-20 bg-gray-100 rounded"></div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1080,151 +925,93 @@
 
                     <!-- Card 5: Automação de Comunicação -->
                     <div class="solution-card flex-shrink-0 w-full px-4" data-index="4" data-solution="comunicacao">
-                        <div class="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden solution-card-inner">
-                            <!-- Header do Dashboard -->
-                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                                        <img src="{{ asset('icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-6 h-6 object-contain">
-                                    </div>
-                                    <h3 class="text-xl font-bold text-gray-900">Automação de Comunicação</h3>
-                                </div>
-                                <div class="flex gap-2">
-                                    <button class="px-4 py-2 text-sm font-semibold text-emerald-600 bg-emerald-50 rounded-lg border border-emerald-200">Dashboard</button>
-                                    <button class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg">WhatsApp</button>
-                                    <button class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg">Histórico</button>
-                                </div>
-                            </div>
-
-                            <!-- Conteúdo do Dashboard -->
-                            <div class="p-6 bg-gray-50">
-                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                                    <!-- Painel: Mensagens Enviadas -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Mensagens Enviadas</h4>
-                                        <div class="grid grid-cols-2 gap-4 mb-4">
-                                            <div class="text-center p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-                                                <div class="text-3xl font-bold text-emerald-600 mb-1">342</div>
-                                                <div class="text-xs text-gray-600">Hoje</div>
+                        <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
+                                <!-- Coluna Esquerda: Descrição -->
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-gray-900 text-white">
+                                    <!-- Logo e Título -->
+                                    <div>
+                                        <div class="flex items-center gap-3 mb-8">
+                                            <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
+                                                <img src="{{ asset('icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-8 h-8 object-contain">
                                             </div>
-                                            <div class="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                                <div class="text-3xl font-bold text-blue-600 mb-1">1.248</div>
-                                                <div class="text-xs text-gray-600">Este Mês</div>
-                                            </div>
+                                            <h3 class="text-3xl lg:text-4xl font-bold text-white">Automação de Comunicação</h3>
                                         </div>
-                                        <div class="space-y-2">
-                                            <div class="flex justify-between text-sm">
-                                                <span class="text-gray-600">Taxa de Resposta</span>
-                                                <span class="font-semibold text-gray-900">78%</span>
+                                        
+                                        <!-- Descrição Principal -->
+                                        <p class="text-xl lg:text-2xl text-gray-100 mb-6 leading-relaxed">
+                                            Cobrança automática de documentos por competência via WhatsApp e portal. Mensagens inteligentes com contexto completo.
+                                        </p>
+                                        
+                                        <!-- Descrição Secundária (com bullet visual) -->
+                                        <div class="flex items-start gap-4 mb-4">
+                                            <div class="w-6 h-6 flex-shrink-0 mt-1">
+                                                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                                </svg>
                                             </div>
-                                            <div class="w-full bg-gray-200 rounded-full h-2">
-                                                <div class="bg-emerald-500 h-2 rounded-full" style="width: 78%"></div>
-                                            </div>
+                                            <p class="text-lg text-gray-300 leading-relaxed">
+                                                Entrega automática de relatórios com confirmação e registro completo da conversa com trilha de auditoria.
+                                            </p>
                                         </div>
                                     </div>
-
-                                    <!-- Painel: Conversas Ativas -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Conversas Ativas</h4>
-                                        <div class="space-y-3">
-                                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                                                    </svg>
-                                                </div>
-                                                <div class="flex-1">
-                                                    <div class="font-semibold text-gray-900 text-sm">Empresa ABC</div>
-                                                    <div class="text-xs text-gray-500">Pendência: SPED Jan/2024</div>
-                                                </div>
-                                                <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                                            </div>
-                                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                                                    </svg>
-                                                </div>
-                                                <div class="flex-1">
-                                                    <div class="font-semibold text-gray-900 text-sm">Empresa XYZ</div>
-                                                    <div class="text-xs text-gray-500">Relatório entregue</div>
-                                                </div>
-                                                <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
-                                            </div>
-                                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                                                    </svg>
-                                                </div>
-                                                <div class="flex-1">
-                                                    <div class="font-semibold text-gray-900 text-sm">Empresa DEF</div>
-                                                    <div class="text-xs text-gray-500">Cobrança automática</div>
-                                                </div>
-                                                <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                                            </div>
-                                        </div>
+                                    
+                                    <!-- Call-to-Action -->
+                                    <div class="mt-8">
+                                        <a href="#" class="inline-flex items-center gap-2 text-emerald-400 font-semibold hover:text-emerald-300 transition-colors text-lg">
+                                            Saiba mais
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                            </svg>
+                                        </a>
                                     </div>
                                 </div>
-
-                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <!-- Painel: Taxa de Resposta -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Taxa de Resposta</h4>
-                                        <div class="space-y-4">
-                                            <div>
-                                                <div class="flex justify-between mb-2">
-                                                    <span class="text-sm font-medium text-gray-700">Respondidas</span>
-                                                    <span class="text-sm font-semibold text-emerald-600">78%</span>
-                                                </div>
-                                                <div class="w-full bg-gray-200 rounded-full h-3">
-                                                    <div class="bg-emerald-500 h-3 rounded-full" style="width: 78%"></div>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <div class="flex justify-between mb-2">
-                                                    <span class="text-sm font-medium text-gray-700">Pendentes</span>
-                                                    <span class="text-sm font-semibold text-amber-600">15%</span>
-                                                </div>
-                                                <div class="w-full bg-gray-200 rounded-full h-3">
-                                                    <div class="bg-amber-500 h-3 rounded-full" style="width: 15%"></div>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <div class="flex justify-between mb-2">
-                                                    <span class="text-sm font-medium text-gray-700">Não Respondidas</span>
-                                                    <span class="text-sm font-semibold text-gray-600">7%</span>
-                                                </div>
-                                                <div class="w-full bg-gray-200 rounded-full h-3">
-                                                    <div class="bg-gray-400 h-3 rounded-full" style="width: 7%"></div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                
+                                <!-- Coluna Direita: Mockup/Imagem Interativa -->
+                                <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
+                                    <!-- Headline sobre o mockup -->
+                                    <div class="absolute top-8 right-8 z-10">
+                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4">
+                                            Comunicação automática e contextual
+                                        </h4>
                                     </div>
-
-                                    <!-- Painel: Histórico de Comunicação -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Histórico de Comunicação</h4>
-                                        <div class="space-y-3">
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                                <div class="flex-1">
-                                                    <div class="text-sm font-medium text-gray-900">Mensagem enviada</div>
-                                                    <div class="text-xs text-gray-500">Há 2 horas</div>
+                                    
+                                    <!-- Mockup do Dashboard -->
+                                    <div class="relative w-full h-full max-w-5xl mt-16">
+                                        <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-700" style="transform: scale(0.85);">
+                                            <!-- Header do mockup -->
+                                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                                        <img src="{{ asset('icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-5 h-5 object-contain">
+                                                    </div>
+                                                    <span class="text-sm font-semibold text-gray-900">Automação de Comunicação</span>
+                                                </div>
+                                                <div class="flex gap-2">
+                                                    <span class="px-3 py-1 text-xs bg-emerald-50 text-emerald-600 rounded font-semibold">Dashboard</span>
+                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">WhatsApp</span>
+                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Histórico</span>
                                                 </div>
                                             </div>
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                                                <div class="flex-1">
-                                                    <div class="text-sm font-medium text-gray-900">Relatório entregue</div>
-                                                    <div class="text-xs text-gray-500">Há 5 horas</div>
+                                            <!-- Conteúdo do mockup (simplificado) -->
+                                            <div class="p-6 bg-gray-50">
+                                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                    </div>
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                                <div class="flex-1">
-                                                    <div class="text-sm font-medium text-gray-900">Cobrança automática</div>
-                                                    <div class="text-xs text-gray-500">Ontem</div>
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-20 bg-gray-100 rounded"></div>
+                                                    </div>
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-20 bg-gray-100 rounded"></div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1236,153 +1023,94 @@
 
                     <!-- Card 6: Portal do Cliente -->
                     <div class="solution-card flex-shrink-0 w-full px-4" data-index="5" data-solution="portal">
-                        <div class="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden solution-card-inner">
-                            <!-- Header do Dashboard -->
-                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                                        <img src="{{ asset('icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-6 h-6 object-contain">
-                                    </div>
-                                    <h3 class="text-xl font-bold text-gray-900">Portal do Cliente</h3>
-                                </div>
-                                <div class="flex gap-2">
-                                    <button class="px-4 py-2 text-sm font-semibold text-emerald-600 bg-emerald-50 rounded-lg border border-emerald-200">Dashboard</button>
-                                    <button class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg">Checklist</button>
-                                    <button class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg">Histórico</button>
-                                </div>
-                            </div>
-
-                            <!-- Conteúdo do Dashboard -->
-                            <div class="p-6 bg-gray-50">
-                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                                    <!-- Painel: Checklist do Mês -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Checklist do Mês</h4>
-                                        <div class="space-y-3">
-                                            <div class="flex items-center justify-between p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                                                <div class="flex items-center gap-3">
-                                                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                    </svg>
-                                                    <span class="font-medium text-gray-900">SPED EFD ICMS/IPI</span>
-                                                </div>
-                                                <span class="text-xs font-semibold text-emerald-600">Concluído</span>
+                        <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
+                                <!-- Coluna Esquerda: Descrição -->
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-gray-900 text-white">
+                                    <!-- Logo e Título -->
+                                    <div>
+                                        <div class="flex items-center gap-3 mb-8">
+                                            <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
+                                                <img src="{{ asset('icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-8 h-8 object-contain">
                                             </div>
-                                            <div class="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200">
-                                                <div class="flex items-center gap-3">
-                                                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                    </svg>
-                                                    <span class="font-medium text-gray-900">DCTFWeb</span>
-                                                </div>
-                                                <span class="text-xs font-semibold text-amber-600">Pendente</span>
+                                            <h3 class="text-3xl lg:text-4xl font-bold text-white">Portal do Cliente</h3>
+                                        </div>
+                                        
+                                        <!-- Descrição Principal -->
+                                        <p class="text-xl lg:text-2xl text-gray-100 mb-6 leading-relaxed">
+                                            Área exclusiva do cliente com checklist do mês, pendências e prazos claros. Envio simplificado de documentos.
+                                        </p>
+                                        
+                                        <!-- Descrição Secundária (com bullet visual) -->
+                                        <div class="flex items-start gap-4 mb-4">
+                                            <div class="w-6 h-6 flex-shrink-0 mt-1">
+                                                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                                </svg>
                                             </div>
-                                            <div class="flex items-center justify-between p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                                                <div class="flex items-center gap-3">
-                                                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                    </svg>
-                                                    <span class="font-medium text-gray-900">XML NF-e</span>
-                                                </div>
-                                                <span class="text-xs font-semibold text-emerald-600">Concluído</span>
-                                            </div>
-                                            <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
-                                                <div class="flex items-center gap-3">
-                                                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                                    </svg>
-                                                    <span class="font-medium text-gray-900">Certidões</span>
-                                                </div>
-                                                <span class="text-xs font-semibold text-red-600">Atrasado</span>
-                                            </div>
+                                            <p class="text-lg text-gray-300 leading-relaxed">
+                                                Histórico completo de entregas e relatórios acessíveis. Permissões por perfil garantindo acesso adequado.
+                                            </p>
                                         </div>
                                     </div>
-
-                                    <!-- Painel: Pendências por Cliente -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Pendências por Cliente</h4>
-                                        <div class="space-y-3">
-                                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                                <div>
-                                                    <div class="font-semibold text-gray-900 text-sm">Empresa ABC</div>
-                                                    <div class="text-xs text-gray-500">2 pendências</div>
-                                                </div>
-                                                <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                                                    <span class="text-xs font-bold text-red-600">2</span>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                                <div>
-                                                    <div class="font-semibold text-gray-900 text-sm">Empresa XYZ</div>
-                                                    <div class="text-xs text-gray-500">1 pendência</div>
-                                                </div>
-                                                <div class="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
-                                                    <span class="text-xs font-bold text-amber-600">1</span>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                                <div>
-                                                    <div class="font-semibold text-gray-900 text-sm">Empresa DEF</div>
-                                                    <div class="text-xs text-gray-500">Sem pendências</div>
-                                                </div>
-                                                <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-                                                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    
+                                    <!-- Call-to-Action -->
+                                    <div class="mt-8">
+                                        <a href="#" class="inline-flex items-center gap-2 text-emerald-400 font-semibold hover:text-emerald-300 transition-colors text-lg">
+                                            Saiba mais
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                            </svg>
+                                        </a>
                                     </div>
                                 </div>
-
-                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <!-- Painel: Acessos Recentes -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Acessos Recentes</h4>
-                                        <div class="space-y-3">
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                                <div class="flex-1">
-                                                    <div class="text-sm font-medium text-gray-900">Diretor - Empresa ABC</div>
-                                                    <div class="text-xs text-gray-500">Há 1 hora</div>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                                                <div class="flex-1">
-                                                    <div class="text-sm font-medium text-gray-900">Financeiro - Empresa XYZ</div>
-                                                    <div class="text-xs text-gray-500">Há 3 horas</div>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                                <div class="flex-1">
-                                                    <div class="text-sm font-medium text-gray-900">Analista - Empresa DEF</div>
-                                                    <div class="text-xs text-gray-500">Ontem</div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                
+                                <!-- Coluna Direita: Mockup/Imagem Interativa -->
+                                <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
+                                    <!-- Headline sobre o mockup -->
+                                    <div class="absolute top-8 right-8 z-10">
+                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4">
+                                            Portal transparente e intuitivo
+                                        </h4>
                                     </div>
-
-                                    <!-- Painel: Permissões por Perfil -->
-                                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                        <h4 class="text-lg font-bold text-gray-900 mb-4">Permissões por Perfil</h4>
-                                        <div class="grid grid-cols-2 gap-3">
-                                            <div class="text-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                                <div class="text-2xl font-bold text-blue-600 mb-1">4</div>
-                                                <div class="text-xs text-gray-600">Diretores</div>
+                                    
+                                    <!-- Mockup do Dashboard -->
+                                    <div class="relative w-full h-full max-w-5xl mt-16">
+                                        <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-700" style="transform: scale(0.85);">
+                                            <!-- Header do mockup -->
+                                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                                        <img src="{{ asset('icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-5 h-5 object-contain">
+                                                    </div>
+                                                    <span class="text-sm font-semibold text-gray-900">Portal do Cliente</span>
+                                                </div>
+                                                <div class="flex gap-2">
+                                                    <span class="px-3 py-1 text-xs bg-emerald-50 text-emerald-600 rounded font-semibold">Dashboard</span>
+                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Checklist</span>
+                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Histórico</span>
+                                                </div>
                                             </div>
-                                            <div class="text-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                                <div class="text-2xl font-bold text-emerald-600 mb-1">12</div>
-                                                <div class="text-xs text-gray-600">Financeiros</div>
-                                            </div>
-                                            <div class="text-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                                <div class="text-2xl font-bold text-amber-600 mb-1">8</div>
-                                                <div class="text-xs text-gray-600">Analistas</div>
-                                            </div>
-                                            <div class="text-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                                <div class="text-2xl font-bold text-purple-600 mb-1">6</div>
-                                                <div class="text-xs text-gray-600">Contadores</div>
+                                            <!-- Conteúdo do mockup (simplificado) -->
+                                            <div class="p-6 bg-gray-50">
+                                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                    </div>
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-20 bg-gray-100 rounded"></div>
+                                                    </div>
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-20 bg-gray-100 rounded"></div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -2407,8 +2135,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const prevArrow = document.querySelector('.carousel-arrow-left');
     const nextArrow = document.querySelector('.carousel-arrow-right');
     
-    let currentIndex = 0;
     const totalCards = cards.length;
+    // Começar no card 0 (primeiro card) para dar impressão de loop infinito
+    // O card duplicado (último) aparecerá à esquerda automaticamente
+    let currentIndex = 0;
     
     // Função para atualizar posição do carrossel
     function updateCarousel(index) {
@@ -2419,22 +2149,62 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Aguardar próximo frame para garantir que o layout está atualizado
         requestAnimationFrame(() => {
-            // Obter largura real do primeiro card
+            // Obter o primeiro card para calcular dimensões
             const firstCard = cards[0];
             if (!firstCard) return;
             
+            // Obter dimensões do card
             const cardRect = firstCard.getBoundingClientRect();
             const cardWidth = cardRect.width;
             
-            // Calcular largura do wrapper
-            const wrapperWidth = wrapper.offsetWidth;
+            // Calcular viewport width
+            const viewportWidth = window.innerWidth;
             
-            // Calcular posição para centralizar o card ativo
-            // Cada card ocupa cardWidth, então movemos index * cardWidth para a esquerda
-            // e depois compensamos para centralizar
-            const centerOffset = (wrapperWidth - cardWidth) / 2;
-            const translateX = -(index * cardWidth) + centerOffset;
+            // Obter o wrapper
+            const wrapper = document.querySelector('.solutions-cards-wrapper');
+            if (!wrapper) return;
             
+            // Obter o card ativo
+            const activeCard = cards[index];
+            if (!activeCard) return;
+            
+            // Calcular a posição do primeiro card no track (quando translateX = 0)
+            // Usar offsetLeft que não é afetado por transformações
+            const firstCardLeftInTrack = firstCard.offsetLeft;
+            
+            // Calcular a posição do card ativo no track (sem transformação)
+            const activeCardLeftInTrack = firstCardLeftInTrack + (index * cardWidth);
+            
+            // Obter posição do wrapper para cálculos precisos
+            const wrapperRect = wrapper.getBoundingClientRect();
+            const wrapperLeft = wrapperRect.left;
+            
+            // Calcular onde o card ativo estaria na viewport quando translateX = 0
+            const activeCardLeftInViewport = wrapperLeft + activeCardLeftInTrack;
+            
+            // Calcular onde queremos que o card fique (centro exato da viewport)
+            // Isso garante simetria perfeita: espaço igual à esquerda e direita
+            const viewportCenter = viewportWidth / 2;
+            const desiredCardLeft = viewportCenter - (cardWidth / 2);
+            
+            // Calcular posição normal (centralização padrão)
+            let translateX = desiredCardLeft - activeCardLeftInViewport;
+            
+            // Calcular largura total do track (todos os cards)
+            const totalTrackWidth = cardWidth * totalCards;
+            
+            // Ajustes para ciclo fechado
+            if (index === 0) {
+                // Mostrar último card à esquerda
+                // Mover track para esquerda para que card 5 apareça
+                translateX = translateX - (totalTrackWidth - cardWidth);
+            } else if (index === totalCards - 1) {
+                // Mostrar primeiro card à direita
+                // Mover track para direita para que card 0 apareça
+                translateX = translateX + (totalTrackWidth - cardWidth);
+            }
+            
+            // Aplicar a transformação
             track.style.transform = `translateX(${translateX}px)`;
             
             // Atualizar classes active
@@ -2480,8 +2250,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Inicializar
-    updateCarousel(0);
+    // Inicializar com primeiro card para dar impressão de loop infinito
+    updateCarousel(currentIndex);
     
     // Ajustar ao redimensionar
     let resizeTimer;
