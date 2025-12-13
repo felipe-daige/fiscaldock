@@ -2,7 +2,7 @@
 <style>
 /* Solutions Carousel Styles */
 .solutions-carousel-container {
-    min-height: 700px;
+    min-height: 780px;
     position: relative;
     width: 100vw;
     left: 50%;
@@ -14,8 +14,11 @@
 .solutions-cards-wrapper {
     position: relative;
     overflow: hidden;
+    overflow-x: hidden;
+    padding-bottom: 2.5rem; /* espaço extra para a sombra do card ativo */
     margin: 0;
     width: 100%;
+    z-index: 1;
 }
 
 .solutions-cards-track {
@@ -24,6 +27,7 @@
     will-change: transform;
     align-items: stretch;
     padding: 0;
+    position: relative;
 }
 
 .solution-card {
@@ -32,7 +36,8 @@
     padding: 0 1%;
     transition: opacity 0.3s, transform 0.3s;
     position: relative;
-    height: 700px; /* Altura fixa uniforme */
+    height: 780px; /* Altura fixa uniforme com folga para sombra */
+    z-index: 1;
 }
 
 .solution-card > div {
@@ -45,7 +50,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    background: #111827; /* Fundo escuro padrão */
+    background: linear-gradient(180deg, #f8fbff 0%, #eef3ff 100%); /* Fundo claro alinhado ao tema */
 }
 
 .solution-card-inner .grid {
@@ -57,12 +62,12 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    background: #111827;
+    background: #ffffff;
 }
 
 /* Coluna direita - mockup */
 .solution-card-inner > .grid > div:last-child {
-    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    background: linear-gradient(135deg, #0b1f3a 0%, #1e4fa0 100%);
     position: relative;
 }
 
@@ -98,6 +103,7 @@
 .solution-card:not(.active) {
     opacity: 0.6;
     transform: scale(0.96);
+    z-index: 1;
 }
 
 /* Responsividade */
@@ -146,7 +152,7 @@
     }
     
     .solutions-carousel-container {
-        min-height: 700px;
+        min-height: 780px;
     }
     
     /* Em mobile, colunas empilhadas - texto primeiro, depois imagem */
@@ -243,8 +249,8 @@
 
 <!-- Hero Section (refeito) -->
 <section class="relative bg-gradient-to-br from-[#0b1f3a] via-[#133a73] to-[#1e4fa0] text-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+    <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center justify-center">
             <!-- Coluna Esquerda: Texto -->
             <div class="lg:col-span-5 xl:col-span-6">
                 <!-- Badge -->
@@ -265,15 +271,13 @@
                 </p>
 
                 <!-- CTAs -->
-                <div class="mt-10 flex flex-col sm:flex-row gap-4">
-                    <a href="{{ route('agendar') }}" data-link class="inline-flex items-center justify-center rounded-xl bg-blue-500 hover:bg-blue-600 px-6 py-4 text-base font-semibold shadow-lg shadow-blue-900/30">
-                        Agendar demonstração
-                        <svg class="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-                    </a>
-                    <a href="#relatorios" class="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 px-6 py-4 text-base font-semibold text-white">
-                        <svg class="mr-2 h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M6 4l12 6-12 6V4z"/></svg>
-                        Ver exemplos de relatórios
-                    </a>
+                <div class="mt-10">
+                    <button class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-400 hover:bg-emerald-500 px-8 py-4 text-base font-semibold text-gray-900 shadow-lg hover:shadow-xl transition-all duration-200">
+                        Quero conhecer
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                        </svg>
+                    </button>
                 </div>
 
                 <!-- Frase de apoio -->
@@ -282,7 +286,7 @@
                 </p>
 
                 <!-- Pílulas de features -->
-                <div class="mt-8 flex flex-wrap md:flex-nowrap gap-6 text-white/80">
+                <div class="mt-8 mb-8 lg:mb-12 flex flex-wrap md:flex-nowrap gap-6 text-white/80">
                     <div class="flex items-center gap-2 whitespace-nowrap"><span class="h-5 w-5 rounded-full flex items-center justify-center" style="background-color:#36d399"><span class="text-white text-xs leading-none">✓</span></span> Conformidade Total</div>
                     <div class="flex items-center gap-2 whitespace-nowrap"><span class="h-5 w-5 rounded-full flex items-center justify-center" style="background-color:#36d399"><span class="text-white text-xs leading-none">✓</span></span> Automação Inteligente</div>
                     <div class="flex items-center gap-2 whitespace-nowrap"><span class="h-5 w-5 rounded-full flex items-center justify-center" style="background-color:#36d399"><span class="text-white text-xs leading-none">✓</span></span> Trilha de Evidências</div>
@@ -314,102 +318,8 @@
     </div>
 </section>
 
-<!-- O Problema Section -->
-<section class="bg-white pt-20 pb-0">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-            <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                O que hoje <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">consome tempo e cria risco</span>
-            </h2>
-            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                Os desafios que escritórios contábeis e empresas enfrentam diariamente
-            </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Arquivos Espalhados</h3>
-                <p class="text-gray-600">
-                    SPED, XML, PDFs e planilhas sem histórico confiável. Documentos que "sumem" e ninguém sabe onde estão.
-                </p>
-            </div>
-
-            <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Pendências no Fim do Mês</h3>
-                <p class="text-gray-600">
-                    Corrida desesperada para fechar obrigações. Tudo vira urgência quando o prazo está batendo na porta.
-                </p>
-            </div>
-
-            <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Cliente "Já Enviou"</h3>
-                <p class="text-gray-600">
-                    Cliente jura que enviou, mas ninguém acha. O contador vira o culpado e perde tempo procurando o que não existe.
-                </p>
-            </div>
-
-            <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Falta de Visão</h3>
-                <p class="text-gray-600">
-                    O que está certo? O que falta? O que pode dar multa? O que é oportunidade? Ninguém sabe ao certo.
-                </p>
-            </div>
-
-            <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Comunicação Manual</h3>
-                <p class="text-gray-600">
-                    Cobranças repetitivas, mensagens sem contexto e sem rastreabilidade. Ninguém sabe o que foi enviado e quando.
-                </p>
-            </div>
-
-            <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Planilhas Infinitas</h3>
-                <p class="text-gray-600">
-                    Planilhas que ninguém atualiza, versões desencontradas e dados que não batem. O caos organizado.
-                </p>
-            </div>
-        </div>
-    </div>
-    <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
-    <div class="pointer-events-none leading-none mt-6 sm:mt-8">
-        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
-        </svg>
-    </div>
-</section>
-
 <!-- A Solução Section -->
-<section class="bg-gray-50 pt-20 pb-0">
+<section class="bg-gray-50 pt-8 lg:pt-12 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -531,34 +441,122 @@
             <!-- Cards de Soluções -->
             <div class="solutions-cards-wrapper relative overflow-hidden mx-12">
                 <div class="solutions-cards-track flex transition-transform duration-500 ease-in-out" style="transform: translateX(0px);">
+                    <!-- Card Duplicado: Portal do Cliente (para loop infinito) -->
+                    <div class="solution-card solution-card-duplicate flex-shrink-0 w-full px-4" data-index="duplicate" data-solution="portal">
+                        <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
+                                <!-- Coluna Esquerda: Descrição -->
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900">
+                                    <!-- Logo e Título -->
+                                    <div>
+                                        <div class="flex items-center justify-center gap-3 mb-8">
+                                            <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
+                                                <img src="{{ asset('icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-8 h-8 object-contain">
+                                            </div>
+                                            <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Portal do Cliente</h3>
+                                        </div>
+                                        
+                                        <!-- Descrição Principal -->
+                                        <p class="text-xl lg:text-2xl text-gray-700 mb-6 leading-relaxed">
+                                            Área exclusiva do cliente com checklist do mês, pendências e prazos claros. Envio simplificado de documentos.
+                                        </p>
+                                        
+                                        <!-- Descrição Secundária (com bullet visual) -->
+                                        <div class="mb-4">
+                                            <p class="text-lg text-gray-600 leading-relaxed">
+                                                Histórico completo de entregas e relatórios acessíveis. Permissões por perfil garantindo acesso adequado.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Call-to-Action -->
+                                    <div class="mt-8">
+                                        <a href="#" class="inline-flex items-center gap-2 text-emerald-400 font-semibold hover:text-emerald-300 transition-colors text-lg">
+                                            Saiba mais
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <!-- Coluna Direita: Mockup/Imagem Interativa -->
+                                <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
+                                    <!-- Headline sobre o mockup -->
+                                    <div class="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full px-4">
+                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4 text-center">
+                                            Portal transparente e intuitivo
+                                        </h4>
+                                    </div>
+                                    
+                                    <!-- Mockup do Dashboard -->
+                                    <div class="relative w-full h-full max-w-5xl mt-16">
+                                        <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-700" style="transform: scale(0.85);">
+                                            <!-- Header do mockup -->
+                                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                                        <img src="{{ asset('icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-5 h-5 object-contain">
+                                                    </div>
+                                                    <span class="text-sm font-semibold text-gray-900">Portal do Cliente</span>
+                                                </div>
+                                                <div class="flex gap-2">
+                                                    <span class="px-3 py-1 text-xs bg-emerald-50 text-emerald-600 rounded font-semibold">Dashboard</span>
+                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Checklist</span>
+                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Histórico</span>
+                                                </div>
+                                            </div>
+                                            <!-- Conteúdo do mockup (simplificado) -->
+                                            <div class="p-6 bg-gray-50">
+                                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                    </div>
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-20 bg-gray-100 rounded"></div>
+                                                    </div>
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-20 bg-gray-100 rounded"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Card 1: Central de Documentos -->
                     <div class="solution-card flex-shrink-0 w-full px-4" data-index="0" data-solution="documentos">
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
                                 <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-gray-900 text-white">
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900">
                                     <!-- Logo e Título -->
                                     <div>
-                                        <div class="flex items-center gap-3 mb-8">
+                                        <div class="flex items-center justify-center gap-3 mb-8">
                                             <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
                                                 <img src="{{ asset('icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-8 h-8 object-contain">
                                             </div>
-                                            <h3 class="text-3xl lg:text-4xl font-bold text-white">Central de Documentos</h3>
+                                            <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Central de Documentos</h3>
                                         </div>
                                         
                                         <!-- Descrição Principal -->
-                                        <p class="text-xl lg:text-2xl text-gray-100 mb-6 leading-relaxed">
+                                        <p class="text-xl lg:text-2xl text-gray-700 mb-6 leading-relaxed">
                                             Centralize todos os documentos contábeis da sua carteira de clientes. Tenha organização por pastas, datas e categorias com acesso seguro.
                                         </p>
                                         
                                         <!-- Descrição Secundária (com bullet visual) -->
-                                        <div class="flex items-start gap-4 mb-4">
-                                            <div class="w-6 h-6 flex-shrink-0 mt-1">
-                                                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                                                </svg>
-                                            </div>
-                                            <p class="text-lg text-gray-300 leading-relaxed">
+                                        <div class="mb-4">
+                                            <p class="text-lg text-gray-600 leading-relaxed">
                                                 Compartilhamento ágil com sua equipe e com o cliente final. Tudo em nuvem, com backup automático e controle total de acesso.
                                             </p>
                                         </div>
@@ -578,8 +576,8 @@
                                 <!-- Coluna Direita: Mockup/Imagem Interativa -->
                                 <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
                                     <!-- Headline sobre o mockup -->
-                                    <div class="absolute top-8 right-8 z-10">
-                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4">
+                                    <div class="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full px-4">
+                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4 text-center">
                                             Documentos mais organizados e seguros
                                         </h4>
                                     </div>
@@ -634,29 +632,24 @@
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
                                 <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-gray-900 text-white">
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900">
                                     <!-- Logo e Título -->
                                     <div>
-                                        <div class="flex items-center gap-3 mb-8">
+                                        <div class="flex items-center justify-center gap-3 mb-8">
                                             <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
                                                 <img src="{{ asset('icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-8 h-8 object-contain">
                                             </div>
-                                            <h3 class="text-3xl lg:text-4xl font-bold text-white">Leitura e Diagnóstico</h3>
+                                            <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Leitura e Diagnóstico</h3>
                                         </div>
                                         
                                         <!-- Descrição Principal -->
-                                        <p class="text-xl lg:text-2xl text-gray-100 mb-6 leading-relaxed">
+                                        <p class="text-xl lg:text-2xl text-gray-700 mb-6 leading-relaxed">
                                             Importação e estruturação automática de SPED. Detecção inteligente de inconsistências e alertas para lacunas e divergências.
                                         </p>
                                         
                                         <!-- Descrição Secundária (com bullet visual) -->
-                                        <div class="flex items-start gap-4 mb-4">
-                                            <div class="w-6 h-6 flex-shrink-0 mt-1">
-                                                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                                                </svg>
-                                            </div>
-                                            <p class="text-lg text-gray-300 leading-relaxed">
+                                        <div class="mb-4">
+                                            <p class="text-lg text-gray-600 leading-relaxed">
                                                 Semáforo visual por competência: OK / Atenção / Pendência, com motivo e evidência clara.
                                             </p>
                                         </div>
@@ -676,8 +669,8 @@
                                 <!-- Coluna Direita: Mockup/Imagem Interativa -->
                                 <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
                                     <!-- Headline sobre o mockup -->
-                                    <div class="absolute top-8 right-8 z-10">
-                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4">
+                                    <div class="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full px-4">
+                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4 text-center">
                                             Diagnóstico automático e inteligente
                                         </h4>
                                     </div>
@@ -732,29 +725,24 @@
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
                                 <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-gray-900 text-white">
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900">
                                     <!-- Logo e Título -->
                                     <div>
-                                        <div class="flex items-center gap-3 mb-8">
+                                        <div class="flex items-center justify-center gap-3 mb-8">
                                             <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
                                                 <img src="{{ asset('icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-8 h-8 object-contain">
                                             </div>
-                                            <h3 class="text-3xl lg:text-4xl font-bold text-white">Motor de Regras</h3>
+                                            <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Motor de Regras</h3>
                                         </div>
                                         
                                         <!-- Descrição Principal -->
-                                        <p class="text-xl lg:text-2xl text-gray-100 mb-6 leading-relaxed">
+                                        <p class="text-xl lg:text-2xl text-gray-700 mb-6 leading-relaxed">
                                             Regras parametrizáveis por operação. Classificação automática que identifica: gera crédito / atenção / não gera.
                                         </p>
                                         
                                         <!-- Descrição Secundária (com bullet visual) -->
-                                        <div class="flex items-start gap-4 mb-4">
-                                            <div class="w-6 h-6 flex-shrink-0 mt-1">
-                                                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                                                </svg>
-                                            </div>
-                                            <p class="text-lg text-gray-300 leading-relaxed">
+                                        <div class="mb-4">
+                                            <p class="text-lg text-gray-600 leading-relaxed">
                                                 Regras totalmente auditáveis e evolução contínua: a plataforma aprende seu padrão de escritório.
                                             </p>
                                         </div>
@@ -774,8 +762,8 @@
                                 <!-- Coluna Direita: Mockup/Imagem Interativa -->
                                 <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
                                     <!-- Headline sobre o mockup -->
-                                    <div class="absolute top-8 right-8 z-10">
-                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4">
+                                    <div class="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full px-4">
+                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4 text-center">
                                             Classificação que aprende seu padrão
                                         </h4>
                                     </div>
@@ -830,29 +818,24 @@
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
                                 <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-gray-900 text-white">
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900">
                                     <!-- Logo e Título -->
                                     <div>
-                                        <div class="flex items-center gap-3 mb-8">
+                                        <div class="flex items-center justify-center gap-3 mb-8">
                                             <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
                                                 <img src="{{ asset('icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-8 h-8 object-contain">
                                             </div>
-                                            <h3 class="text-3xl lg:text-4xl font-bold text-white">Compliance e Situação Fiscal</h3>
+                                            <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Compliance e Situação Fiscal</h3>
                                         </div>
                                         
                                         <!-- Descrição Principal -->
-                                        <p class="text-xl lg:text-2xl text-gray-100 mb-6 leading-relaxed">
+                                        <p class="text-xl lg:text-2xl text-gray-700 mb-6 leading-relaxed">
                                             Painel completo de situação por CNPJ com mapa de regularidade e pendências. Alertas automáticos de vencimento.
                                         </p>
                                         
                                         <!-- Descrição Secundária (com bullet visual) -->
-                                        <div class="flex items-start gap-4 mb-4">
-                                            <div class="w-6 h-6 flex-shrink-0 mt-1">
-                                                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                                                </svg>
-                                            </div>
-                                            <p class="text-lg text-gray-300 leading-relaxed">
+                                        <div class="mb-4">
+                                            <p class="text-lg text-gray-600 leading-relaxed">
                                                 Relatório de risco por empresa/fornecedor com evidências e histórico completo.
                                             </p>
                                         </div>
@@ -872,8 +855,8 @@
                                 <!-- Coluna Direita: Mockup/Imagem Interativa -->
                                 <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
                                     <!-- Headline sobre o mockup -->
-                                    <div class="absolute top-8 right-8 z-10">
-                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4">
+                                    <div class="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full px-4">
+                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4 text-center">
                                             Visão completa de compliance
                                         </h4>
                                     </div>
@@ -928,29 +911,24 @@
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
                                 <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-gray-900 text-white">
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900">
                                     <!-- Logo e Título -->
                                     <div>
-                                        <div class="flex items-center gap-3 mb-8">
+                                        <div class="flex items-center justify-center gap-3 mb-8">
                                             <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
                                                 <img src="{{ asset('icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-8 h-8 object-contain">
                                             </div>
-                                            <h3 class="text-3xl lg:text-4xl font-bold text-white">Automação de Comunicação</h3>
+                                            <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Automação de Comunicação</h3>
                                         </div>
                                         
                                         <!-- Descrição Principal -->
-                                        <p class="text-xl lg:text-2xl text-gray-100 mb-6 leading-relaxed">
+                                        <p class="text-xl lg:text-2xl text-gray-700 mb-6 leading-relaxed">
                                             Cobrança automática de documentos por competência via WhatsApp e portal. Mensagens inteligentes com contexto completo.
                                         </p>
                                         
                                         <!-- Descrição Secundária (com bullet visual) -->
-                                        <div class="flex items-start gap-4 mb-4">
-                                            <div class="w-6 h-6 flex-shrink-0 mt-1">
-                                                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                                                </svg>
-                                            </div>
-                                            <p class="text-lg text-gray-300 leading-relaxed">
+                                        <div class="mb-4">
+                                            <p class="text-lg text-gray-600 leading-relaxed">
                                                 Entrega automática de relatórios com confirmação e registro completo da conversa com trilha de auditoria.
                                             </p>
                                         </div>
@@ -970,8 +948,8 @@
                                 <!-- Coluna Direita: Mockup/Imagem Interativa -->
                                 <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
                                     <!-- Headline sobre o mockup -->
-                                    <div class="absolute top-8 right-8 z-10">
-                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4">
+                                    <div class="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full px-4">
+                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4 text-center">
                                             Comunicação automática e contextual
                                         </h4>
                                     </div>
@@ -1026,29 +1004,24 @@
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
                                 <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-gray-900 text-white">
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900">
                                     <!-- Logo e Título -->
                                     <div>
-                                        <div class="flex items-center gap-3 mb-8">
+                                        <div class="flex items-center justify-center gap-3 mb-8">
                                             <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
                                                 <img src="{{ asset('icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-8 h-8 object-contain">
                                             </div>
-                                            <h3 class="text-3xl lg:text-4xl font-bold text-white">Portal do Cliente</h3>
+                                            <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Portal do Cliente</h3>
                                         </div>
                                         
                                         <!-- Descrição Principal -->
-                                        <p class="text-xl lg:text-2xl text-gray-100 mb-6 leading-relaxed">
+                                        <p class="text-xl lg:text-2xl text-gray-700 mb-6 leading-relaxed">
                                             Área exclusiva do cliente com checklist do mês, pendências e prazos claros. Envio simplificado de documentos.
                                         </p>
                                         
                                         <!-- Descrição Secundária (com bullet visual) -->
-                                        <div class="flex items-start gap-4 mb-4">
-                                            <div class="w-6 h-6 flex-shrink-0 mt-1">
-                                                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                                                </svg>
-                                            </div>
-                                            <p class="text-lg text-gray-300 leading-relaxed">
+                                        <div class="mb-4">
+                                            <p class="text-lg text-gray-600 leading-relaxed">
                                                 Histórico completo de entregas e relatórios acessíveis. Permissões por perfil garantindo acesso adequado.
                                             </p>
                                         </div>
@@ -1068,8 +1041,8 @@
                                 <!-- Coluna Direita: Mockup/Imagem Interativa -->
                                 <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
                                     <!-- Headline sobre o mockup -->
-                                    <div class="absolute top-8 right-8 z-10">
-                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4">
+                                    <div class="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full px-4">
+                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4 text-center">
                                             Portal transparente e intuitivo
                                         </h4>
                                     </div>
@@ -1089,6 +1062,99 @@
                                                     <span class="px-3 py-1 text-xs bg-emerald-50 text-emerald-600 rounded font-semibold">Dashboard</span>
                                                     <span class="px-3 py-1 text-xs text-gray-600 rounded">Checklist</span>
                                                     <span class="px-3 py-1 text-xs text-gray-600 rounded">Histórico</span>
+                                                </div>
+                                            </div>
+                                            <!-- Conteúdo do mockup (simplificado) -->
+                                            <div class="p-6 bg-gray-50">
+                                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                    </div>
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-20 bg-gray-100 rounded"></div>
+                                                    </div>
+                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                        <div class="h-20 bg-gray-100 rounded"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Duplicado: Central de Documentos (para loop infinito - fim) -->
+                    <div class="solution-card solution-card-duplicate flex-shrink-0 w-full px-4" data-index="duplicate-end" data-solution="documentos">
+                        <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
+                                <!-- Coluna Esquerda: Descrição -->
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900">
+                                    <!-- Logo e Título -->
+                                    <div>
+                                        <div class="flex items-center justify-center gap-3 mb-8">
+                                            <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
+                                                <img src="{{ asset('icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-8 h-8 object-contain">
+                                            </div>
+                                            <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Central de Documentos</h3>
+                                        </div>
+                                        
+                                        <!-- Descrição Principal -->
+                                        <p class="text-xl lg:text-2xl text-gray-700 mb-6 leading-relaxed">
+                                            Centralize todos os documentos contábeis da sua carteira de clientes. Tenha organização por pastas, datas e categorias com acesso seguro.
+                                        </p>
+                                        
+                                        <!-- Descrição Secundária (com bullet visual) -->
+                                        <div class="mb-4">
+                                            <p class="text-lg text-gray-600 leading-relaxed">
+                                                Compartilhamento ágil com sua equipe e com o cliente final. Tudo em nuvem, com backup automático e controle total de acesso.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Call-to-Action -->
+                                    <div class="mt-8">
+                                        <a href="#" class="inline-flex items-center gap-2 text-emerald-400 font-semibold hover:text-emerald-300 transition-colors text-lg">
+                                            Saiba mais
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <!-- Coluna Direita: Mockup/Imagem Interativa -->
+                                <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
+                                    <!-- Headline sobre o mockup -->
+                                    <div class="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full px-4">
+                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4 text-center">
+                                            Documentos mais organizados e seguros
+                                        </h4>
+                                    </div>
+                                    
+                                    <!-- Mockup do Dashboard -->
+                                    <div class="relative w-full h-full max-w-5xl mt-16">
+                                        <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-700" style="transform: scale(0.85);">
+                                            <!-- Header do mockup -->
+                                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                                        <img src="{{ asset('icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-5 h-5 object-contain">
+                                                    </div>
+                                                    <span class="text-sm font-semibold text-gray-900">Central de Documentos</span>
+                                                </div>
+                                                <div class="flex gap-2">
+                                                    <span class="px-3 py-1 text-xs bg-emerald-50 text-emerald-600 rounded font-semibold">Dashboard</span>
+                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Documentos</span>
+                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Relatórios</span>
                                                 </div>
                                             </div>
                                             <!-- Conteúdo do mockup (simplificado) -->
@@ -1148,68 +1214,6 @@
     <div class="pointer-events-none leading-none mt-6 sm:mt-8">
         <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
             <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
-        </svg>
-    </div>
-</section>
-
-<!-- Como Funciona Section -->
-<section class="bg-white pt-20 pb-0">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-            <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Como <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">Funciona</span>
-            </h2>
-            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                Um fluxo simples que transforma documentos em ações e relatórios prontos para decisão
-            </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
-            <div class="text-center border border-gray-300 rounded-lg p-6 hover:border-blue-500 transition-colors">
-                <div class="w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-2xl mx-auto mb-6">1</div>
-                <h3 class="text-xl font-bold text-gray-900 mb-4">Conecta Empresas</h3>
-                <p class="text-gray-600 text-sm">
-                    CNPJ, responsáveis e permissões configurados. Cada perfil tem acesso ao que precisa.
-                </p>
-            </div>
-
-            <div class="text-center border border-gray-300 rounded-lg p-6 hover:border-blue-500 transition-colors">
-                <div class="w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-2xl mx-auto mb-6">2</div>
-                <h3 class="text-xl font-bold text-gray-900 mb-4">Recebe e Organiza</h3>
-                <p class="text-gray-600 text-sm">
-                    Documentos recebidos com competência automática e checklist. Tudo organizado por empresa e período.
-                </p>
-            </div>
-
-            <div class="text-center border border-gray-300 rounded-lg p-6 hover:border-blue-500 transition-colors">
-                <div class="w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-2xl mx-auto mb-6">3</div>
-                <h3 class="text-xl font-bold text-gray-900 mb-4">Valida e Classifica</h3>
-                <p class="text-gray-600 text-sm">
-                    Semáforo por competência: OK / Atenção / Pendência. Alertas com motivo e evidências.
-                </p>
-            </div>
-
-            <div class="text-center border border-gray-300 rounded-lg p-6 hover:border-blue-500 transition-colors">
-                <div class="w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-2xl mx-auto mb-6">4</div>
-                <h3 class="text-xl font-bold text-gray-900 mb-4">Dispara Operacional</h3>
-                <p class="text-gray-600 text-sm">
-                    Cobranças e entregas automáticas via WhatsApp e portal. Mensagens com contexto e histórico.
-                </p>
-            </div>
-
-            <div class="text-center border border-gray-300 rounded-lg p-6 hover:border-blue-500 transition-colors">
-                <div class="w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-2xl mx-auto mb-6">5</div>
-                <h3 class="text-xl font-bold text-gray-900 mb-4">Gera Relatórios</h3>
-                <p class="text-gray-600 text-sm">
-                    Executivo e técnico prontos para decisão. Tudo registrado no histórico com trilha de evidências.
-                </p>
-            </div>
-        </div>
-    </div>
-    <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
-    <div class="pointer-events-none leading-none mt-6 sm:mt-8">
-        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
         </svg>
     </div>
 </section>
@@ -2130,102 +2134,103 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Carrossel de Soluções
     const track = document.querySelector('.solutions-cards-track');
-    const cards = document.querySelectorAll('.solution-card');
+    // Ignorar o card duplicado nos cálculos
+    const cards = document.querySelectorAll('.solution-card:not(.solution-card-duplicate)');
     const pills = document.querySelectorAll('.solution-pill');
     const prevArrow = document.querySelector('.carousel-arrow-left');
     const nextArrow = document.querySelector('.carousel-arrow-right');
+    const wrapper = document.querySelector('.solutions-cards-wrapper');
     
     const totalCards = cards.length;
     // Começar no card 0 (primeiro card) para dar impressão de loop infinito
     // O card duplicado (último) aparecerá à esquerda automaticamente
     let currentIndex = 0;
     
-    // Função para atualizar posição do carrossel
-    function updateCarousel(index) {
-        if (!track || !cards.length) return;
+    // Valores de referência (medidos uma vez na inicialização)
+    let cardWidth = 0;
+    let cardSpacing = 0; // Espaçamento entre cards (incluindo padding)
+    let firstCardLeftInTrack = 0; // Posição do primeiro card real no track
+    
+    // Função para recalcular valores de referência
+    function updateReferenceValues() {
+        if (!track || !cards.length || !wrapper) return;
         
-        const wrapper = document.querySelector('.solutions-cards-wrapper');
-        if (!wrapper) return;
+        // Resetar transformação para medir posição base
+        track.style.transform = 'translateX(0px)';
         
-        // Aguardar próximo frame para garantir que o layout está atualizado
+        // Aguardar layout se atualizar
         requestAnimationFrame(() => {
-            // Obter o primeiro card para calcular dimensões
-            const firstCard = cards[0];
-            if (!firstCard) return;
-            
-            // Obter dimensões do card
-            const cardRect = firstCard.getBoundingClientRect();
-            const cardWidth = cardRect.width;
-            
-            // Calcular viewport width
-            const viewportWidth = window.innerWidth;
-            
-            // Obter o wrapper
-            const wrapper = document.querySelector('.solutions-cards-wrapper');
-            if (!wrapper) return;
-            
-            // Obter o card ativo
-            const activeCard = cards[index];
-            if (!activeCard) return;
-            
-            // Calcular a posição do primeiro card no track (quando translateX = 0)
-            // Usar offsetLeft que não é afetado por transformações
-            const firstCardLeftInTrack = firstCard.offsetLeft;
-            
-            // Calcular a posição do card ativo no track (sem transformação)
-            const activeCardLeftInTrack = firstCardLeftInTrack + (index * cardWidth);
-            
-            // Obter posição do wrapper para cálculos precisos
-            const wrapperRect = wrapper.getBoundingClientRect();
-            const wrapperLeft = wrapperRect.left;
-            
-            // Calcular onde o card ativo estaria na viewport quando translateX = 0
-            const activeCardLeftInViewport = wrapperLeft + activeCardLeftInTrack;
-            
-            // Calcular onde queremos que o card fique (centro exato da viewport)
-            // Isso garante simetria perfeita: espaço igual à esquerda e direita
-            const viewportCenter = viewportWidth / 2;
-            const desiredCardLeft = viewportCenter - (cardWidth / 2);
-            
-            // Calcular posição normal (centralização padrão)
-            let translateX = desiredCardLeft - activeCardLeftInViewport;
-            
-            // Calcular largura total do track (todos os cards)
-            const totalTrackWidth = cardWidth * totalCards;
-            
-            // Ajustes para ciclo fechado
-            if (index === 0) {
-                // Mostrar último card à esquerda
-                // Mover track para esquerda para que card 5 apareça
-                translateX = translateX - (totalTrackWidth - cardWidth);
-            } else if (index === totalCards - 1) {
-                // Mostrar primeiro card à direita
-                // Mover track para direita para que card 0 apareça
-                translateX = translateX + (totalTrackWidth - cardWidth);
-            }
-            
-            // Aplicar a transformação
-            track.style.transform = `translateX(${translateX}px)`;
-            
-            // Atualizar classes active
-            cards.forEach((card, i) => {
-                if (i === index) {
-                    card.classList.add('active');
-                } else {
-                    card.classList.remove('active');
-                }
-            });
-            
-            // Atualizar pills
-            pills.forEach((pill, i) => {
-                if (i === index) {
-                    pill.classList.add('active');
-                } else {
-                    pill.classList.remove('active');
+            requestAnimationFrame(() => {
+                if (cards.length < 2) return;
+                
+                const firstCard = cards[0];
+                const secondCard = cards[1];
+                if (!firstCard || !secondCard) return;
+                
+                const firstCardRect = firstCard.getBoundingClientRect();
+                const secondCardRect = secondCard.getBoundingClientRect();
+                const trackRect = track.getBoundingClientRect();
+                
+                // Calcular largura do card (incluindo padding)
+                cardWidth = firstCardRect.width;
+                
+                // Calcular posição do primeiro card real no track (relativo ao início do track)
+                firstCardLeftInTrack = firstCardRect.left - trackRect.left;
+                
+                // Calcular espaçamento entre cards (distância do início de um card ao início do próximo)
+                cardSpacing = secondCardRect.left - firstCardRect.left;
+                
+                // Atualizar posição do carrossel com os novos valores
+                if (cardWidth > 0 && cardSpacing > 0 && !isNaN(cardSpacing) && !isNaN(firstCardLeftInTrack)) {
+                    updateCarousel(currentIndex);
                 }
             });
         });
     }
+    
+    // Função para atualizar posição do carrossel
+    function updateCarousel(index) {
+        if (!track || !cards.length || !wrapper || cardWidth === 0 || cardSpacing === 0) return;
+        
+        // Obter posição do wrapper
+        const wrapperRect = wrapper.getBoundingClientRect();
+        
+        // Calcular posição do card ativo no track (relativo ao início do track)
+        // Considerar a posição do primeiro card e o espaçamento uniforme
+        const activeCardLeftInTrack = firstCardLeftInTrack + (index * cardSpacing);
+        
+        // Calcular onde queremos que o card fique (centro do wrapper)
+        const wrapperCenter = wrapperRect.width / 2;
+        const desiredCardLeft = wrapperCenter - (cardWidth / 2);
+        
+        // Calcular translateX necessário para mover o card até o centro
+        // O translateX move o track, então precisamos compensar a posição do card
+        const translateX = desiredCardLeft - activeCardLeftInTrack;
+        
+        // Aplicar transformação
+        track.style.transform = `translateX(${translateX}px)`;
+        
+        // Atualizar classes active
+        cards.forEach((card, i) => {
+            if (i === index) {
+                card.classList.add('active');
+            } else {
+                card.classList.remove('active');
+            }
+        });
+        
+        // Atualizar pills
+        pills.forEach((pill, i) => {
+            if (i === index) {
+                pill.classList.add('active');
+            } else {
+                pill.classList.remove('active');
+            }
+        });
+    }
+    
+    // Inicializar valores de referência
+    updateReferenceValues();
     
     // Navegação por setas com loop infinito
     if (prevArrow) {
@@ -2250,15 +2255,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Inicializar com primeiro card para dar impressão de loop infinito
-    updateCarousel(currentIndex);
-    
     // Ajustar ao redimensionar
     let resizeTimer;
     window.addEventListener('resize', function() {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
-            updateCarousel(currentIndex);
+            // Recalcular valores de referência no resize
+            updateReferenceValues();
         }, 250);
     });
 });
