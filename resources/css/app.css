@@ -9,3 +9,98 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+:root {
+    --color-primary-700: #0b1f3a;
+    --color-primary-600: #133a73;
+    --color-primary-500: #1e4fa0;
+    --color-accent: #36d399;
+    --color-surface: #ffffff;
+    --color-surface-muted: #f8fbff;
+    --color-surface-alt: #f9fafb;
+    --color-border: #e5e7eb;
+    --color-text: #111827;
+    --color-text-muted: #374151;
+}
+
+.theme-default {
+    color-scheme: light;
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+}
+
+.theme-default .bg-blue-500 {
+    background-color: var(--color-primary-500) !important;
+}
+
+.theme-default .bg-blue-600 {
+    background-color: var(--color-primary-600) !important;
+}
+
+.theme-default .text-blue-500 {
+    color: var(--color-primary-500) !important;
+}
+
+.theme-default .border-blue-500 {
+    border-color: var(--color-primary-500) !important;
+}
+
+.theme-default .from-blue-500 {
+    --tw-gradient-from: var(--color-primary-500) var(--tw-gradient-from-position) !important;
+    --tw-gradient-to: color-mix(in srgb, var(--color-primary-500) 0%, transparent) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.theme-default .to-blue-600 {
+    --tw-gradient-to: var(--color-primary-600) var(--tw-gradient-to-position) !important;
+}
+
+.theme-default .via-\[\#133a73\] {
+    --tw-gradient-stops: var(--tw-gradient-from), #133a73 var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+}
+
+.bg-hero-gradient {
+    background: linear-gradient(135deg, var(--color-primary-700) 0%, var(--color-primary-500) 100%);
+}
+
+.bg-surface-muted {
+    background-color: var(--color-surface-muted);
+}
+
+.bg-surface-alt {
+    background-color: var(--color-surface-alt);
+}
+
+.brand-mark {
+    background: linear-gradient(135deg, var(--color-primary-700) 0%, var(--color-primary-500) 100%);
+    color: #fff;
+}
+
+.text-brand-gradient {
+    background: linear-gradient(90deg, var(--color-primary-700) 0%, var(--color-primary-500) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.btn-primary {
+    background-color: var(--color-primary-500);
+    border-color: var(--color-primary-500);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-600);
+    border-color: var(--color-primary-600);
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--color-primary-500);
+    color: var(--color-primary-500);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--color-primary-500);
+    color: #fff;
+}

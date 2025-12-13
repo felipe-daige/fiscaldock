@@ -50,7 +50,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    background: linear-gradient(180deg, #f8fbff 0%, #eef3ff 100%); /* Fundo claro alinhado ao tema */
+    background: linear-gradient(180deg, var(--color-surface-muted) 0%, var(--color-surface-muted) 40%, var(--color-surface-alt) 100%); /* Fundo claro alinhado ao tema */
 }
 
 .solution-card-inner .grid {
@@ -62,12 +62,12 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    background: #ffffff;
+    background: var(--color-surface);
 }
 
 /* Coluna direita - mockup */
 .solution-card-inner > .grid > div:last-child {
-    background: linear-gradient(135deg, #0b1f3a 0%, #1e4fa0 100%);
+    background: linear-gradient(135deg, var(--color-primary-700) 0%, var(--color-primary-500) 100%);
     position: relative;
 }
 
@@ -79,7 +79,7 @@
     right: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--color-accent) 25%, transparent) 0%, transparent 70%);
     pointer-events: none;
 }
 
@@ -209,19 +209,19 @@
 }
 
 .solution-pill.active {
-    background-color: white !important;
-    color: #111827 !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+    background-color: var(--color-surface) !important;
+    color: var(--color-text) !important;
+    border-color: var(--color-accent) !important;
+    box-shadow: 0 2px 4px rgba(54, 211, 153, 0.2);
 }
 
 .solution-pill:not(.active) {
-    background-color: #f3f4f6;
-    color: #374151;
+    background-color: var(--color-surface-alt);
+    color: var(--color-text-muted);
 }
 
 .solution-pill:hover:not(.active) {
-    background-color: #e5e7eb;
+    background-color: var(--color-border);
 }
 
 /* Swiper Styles para Testimonials */
@@ -248,7 +248,7 @@
 </style>
 
 <!-- Hero Section (refeito) -->
-<section class="relative bg-gradient-to-br from-[#0b1f3a] via-[#133a73] to-[#1e4fa0] text-white">
+<section class="relative bg-hero-gradient text-white">
     <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center justify-center">
             <!-- Coluna Esquerda: Texto -->
@@ -272,7 +272,7 @@
 
                 <!-- CTAs -->
                 <div class="mt-10">
-                    <button class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-400 hover:bg-emerald-500 px-8 py-4 text-base font-semibold text-gray-900 shadow-lg hover:shadow-xl transition-all duration-200">
+                    <button class="inline-flex items-center justify-center gap-2 rounded-lg px-8 py-4 text-base font-semibold text-gray-900 shadow-lg hover:shadow-xl transition-all duration-200" style="background-color: var(--color-accent); box-shadow: 0 20px 50px -20px rgba(54, 211, 153, 0.5);">
                         Quero conhecer
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
@@ -287,9 +287,9 @@
 
                 <!-- Pílulas de features -->
                 <div class="mt-8 mb-8 lg:mb-12 flex flex-wrap md:flex-nowrap gap-6 text-white/80">
-                    <div class="flex items-center gap-2 whitespace-nowrap"><span class="h-5 w-5 rounded-full flex items-center justify-center" style="background-color:#36d399"><span class="text-white text-xs leading-none">✓</span></span> Conformidade Total</div>
-                    <div class="flex items-center gap-2 whitespace-nowrap"><span class="h-5 w-5 rounded-full flex items-center justify-center" style="background-color:#36d399"><span class="text-white text-xs leading-none">✓</span></span> Automação Inteligente</div>
-                    <div class="flex items-center gap-2 whitespace-nowrap"><span class="h-5 w-5 rounded-full flex items-center justify-center" style="background-color:#36d399"><span class="text-white text-xs leading-none">✓</span></span> Trilha de Evidências</div>
+                    <div class="flex items-center gap-2 whitespace-nowrap"><span class="h-5 w-5 rounded-full flex items-center justify-center" style="background-color: var(--color-accent)"><span class="text-white text-xs leading-none">✓</span></span> Conformidade Total</div>
+                    <div class="flex items-center gap-2 whitespace-nowrap"><span class="h-5 w-5 rounded-full flex items-center justify-center" style="background-color: var(--color-accent)"><span class="text-white text-xs leading-none">✓</span></span> Automação Inteligente</div>
+                    <div class="flex items-center gap-2 whitespace-nowrap"><span class="h-5 w-5 rounded-full flex items-center justify-center" style="background-color: var(--color-accent)"><span class="text-white text-xs leading-none">✓</span></span> Trilha de Evidências</div>
                 </div>
             </div>
 
@@ -313,7 +313,7 @@
     <div class="pointer-events-none absolute inset-x-0 bottom-[-1px] leading-none">
         <!-- O preenchimento branco cria a sensação de que o azul termina com curvatura -->
         <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
+            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="var(--color-surface-alt)"></path>
         </svg>
     </div>
 </section>
@@ -323,7 +323,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Um centro operacional para o <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">ecossistema contábil</span>
+                Um centro operacional para o <span class="text-brand-gradient">ecossistema contábil</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                 O HUB organiza o fluxo entre cliente ↔ escritório ↔ obrigações, automatiza triagens e entrega relatórios com evidência.
@@ -1223,7 +1223,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Por que escolher <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">nossa solução</span>
+                Por que escolher <span class="text-brand-gradient">nossa solução</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                 Transforme o caos de documentos e pendências em organização, controle e previsibilidade
@@ -1287,7 +1287,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Relatórios <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">prontos para decisão</span>
+                Relatórios <span class="text-brand-gradient">prontos para decisão</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                 O que você entrega pronto: gerenciais para decisão e técnicos para auditoria e execução
@@ -1371,7 +1371,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Para <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">quem é</span>
+                Para <span class="text-brand-gradient">quem é</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                 O HUB atende escritórios contábeis, empresas e BPO financeiro que precisam de controle, conformidade e velocidade
@@ -1462,7 +1462,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Por que o HUB é <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">diferente</span>
+                Por que o HUB é <span class="text-brand-gradient">diferente</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                 Não substitui seu sistema contábil/ERP: integra ao ecossistema e resolve o que ninguém quer fazer manualmente
@@ -1548,7 +1548,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Segurança e <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">LGPD</span>
+                Segurança e <span class="text-brand-gradient">LGPD</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                 Proteção e conformidade para dados fiscais e empresariais sensíveis
@@ -1610,7 +1610,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Números que <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">Impressionam</span>
+                Números que <span class="text-brand-gradient">Impressionam</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                 Resultados reais de empresas que confiaram em nossa solução
@@ -1649,7 +1649,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                O que nossos <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">clientes dizem</span>
+                O que nossos <span class="text-brand-gradient">clientes dizem</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                 Resultados reais de escritórios contábeis e empresas que transformaram seu dia a dia com o HUB
@@ -1932,7 +1932,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Perguntas <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">Frequentes</span>
+                Perguntas <span class="text-brand-gradient">Frequentes</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                 Tire suas dúvidas sobre o HUB Fiscal & Compliance e como ele pode transformar seu dia a dia
@@ -2024,7 +2024,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Fale com <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">nossos especialistas</span>
+                Fale com <span class="text-brand-gradient">nossos especialistas</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                 Agende uma demonstração gratuita e descubra como o HUB pode transformar o dia a dia do seu escritório ou empresa
@@ -2131,140 +2131,100 @@
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Carrossel de Soluções
+// Inicializador reutilizável para o carrossel da seção "Soluções que transformam a rotina"
+window.initSolucoesCarousel = function() {
     const track = document.querySelector('.solutions-cards-track');
-    // Ignorar o card duplicado nos cálculos
     const cards = document.querySelectorAll('.solution-card:not(.solution-card-duplicate)');
     const pills = document.querySelectorAll('.solution-pill');
     const prevArrow = document.querySelector('.carousel-arrow-left');
     const nextArrow = document.querySelector('.carousel-arrow-right');
     const wrapper = document.querySelector('.solutions-cards-wrapper');
-    
+
+    if (!track || !cards.length || !wrapper) return;
+
     const totalCards = cards.length;
-    // Começar no card 0 (primeiro card) para dar impressão de loop infinito
-    // O card duplicado (último) aparecerá à esquerda automaticamente
     let currentIndex = 0;
-    
-    // Valores de referência (medidos uma vez na inicialização)
     let cardWidth = 0;
-    let cardSpacing = 0; // Espaçamento entre cards (incluindo padding)
-    let firstCardLeftInTrack = 0; // Posição do primeiro card real no track
-    
-    // Função para recalcular valores de referência
+    let cardSpacing = 0;
+    let firstCardLeftInTrack = 0;
+
     function updateReferenceValues() {
-        if (!track || !cards.length || !wrapper) return;
-        
-        // Resetar transformação para medir posição base
         track.style.transform = 'translateX(0px)';
-        
-        // Aguardar layout se atualizar
+
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
                 if (cards.length < 2) return;
-                
+
                 const firstCard = cards[0];
                 const secondCard = cards[1];
                 if (!firstCard || !secondCard) return;
-                
+
                 const firstCardRect = firstCard.getBoundingClientRect();
                 const secondCardRect = secondCard.getBoundingClientRect();
                 const trackRect = track.getBoundingClientRect();
-                
-                // Calcular largura do card (incluindo padding)
+
                 cardWidth = firstCardRect.width;
-                
-                // Calcular posição do primeiro card real no track (relativo ao início do track)
                 firstCardLeftInTrack = firstCardRect.left - trackRect.left;
-                
-                // Calcular espaçamento entre cards (distância do início de um card ao início do próximo)
                 cardSpacing = secondCardRect.left - firstCardRect.left;
-                
-                // Atualizar posição do carrossel com os novos valores
+
                 if (cardWidth > 0 && cardSpacing > 0 && !isNaN(cardSpacing) && !isNaN(firstCardLeftInTrack)) {
                     updateCarousel(currentIndex);
                 }
             });
         });
     }
-    
-    // Função para atualizar posição do carrossel
+
     function updateCarousel(index) {
-        if (!track || !cards.length || !wrapper || cardWidth === 0 || cardSpacing === 0) return;
-        
-        // Obter posição do wrapper
+        if (cardWidth === 0 || cardSpacing === 0) return;
+
         const wrapperRect = wrapper.getBoundingClientRect();
-        
-        // Calcular posição do card ativo no track (relativo ao início do track)
-        // Considerar a posição do primeiro card e o espaçamento uniforme
         const activeCardLeftInTrack = firstCardLeftInTrack + (index * cardSpacing);
-        
-        // Calcular onde queremos que o card fique (centro do wrapper)
         const wrapperCenter = wrapperRect.width / 2;
         const desiredCardLeft = wrapperCenter - (cardWidth / 2);
-        
-        // Calcular translateX necessário para mover o card até o centro
-        // O translateX move o track, então precisamos compensar a posição do card
         const translateX = desiredCardLeft - activeCardLeftInTrack;
-        
-        // Aplicar transformação
+
         track.style.transform = `translateX(${translateX}px)`;
-        
-        // Atualizar classes active
+
         cards.forEach((card, i) => {
-            if (i === index) {
-                card.classList.add('active');
-            } else {
-                card.classList.remove('active');
-            }
+            card.classList.toggle('active', i === index);
         });
-        
-        // Atualizar pills
+
         pills.forEach((pill, i) => {
-            if (i === index) {
-                pill.classList.add('active');
-            } else {
-                pill.classList.remove('active');
-            }
+            pill.classList.toggle('active', i === index);
         });
     }
-    
-    // Inicializar valores de referência
+
     updateReferenceValues();
-    
-    // Navegação por setas com loop infinito
+
     if (prevArrow) {
         prevArrow.addEventListener('click', function() {
             currentIndex = (currentIndex - 1 + totalCards) % totalCards;
             updateCarousel(currentIndex);
         });
     }
-    
+
     if (nextArrow) {
         nextArrow.addEventListener('click', function() {
             currentIndex = (currentIndex + 1) % totalCards;
             updateCarousel(currentIndex);
         });
     }
-    
-    // Navegação por pills
+
     pills.forEach((pill, index) => {
         pill.addEventListener('click', function() {
             currentIndex = index;
             updateCarousel(currentIndex);
         });
     });
-    
-    // Ajustar ao redimensionar
+
     let resizeTimer;
     window.addEventListener('resize', function() {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
-            // Recalcular valores de referência no resize
             updateReferenceValues();
         }, 250);
     });
-});
+};
 </script>
 
 <!-- Scripts carregados no layout -->
