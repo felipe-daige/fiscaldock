@@ -98,13 +98,34 @@ document.addEventListener('DOMContentLoaded', () => {
     function executarScripts() {
         const scripts = app.querySelectorAll('script');
         scripts.forEach(script => {
-            const novoScript = document.createElement('script');
-            novoScript.textContent = script.textContent;
-            script.parentNode.replaceChild(novoScript, script);
+            try {
+                const novoScript = document.createElement('script');
+                novoScript.textContent = script.textContent;
+                
+                // Validar se o script tem conteúdo válido antes de executar
+                if (script.textContent && script.textContent.trim() !== '') {
+                    // Adicionar handler de erro para capturar erros de sintaxe
+                    novoScript.onerror = function(error) {
+                        console.error('Erro ao executar script:', error);
+                    };
+                    
+                    script.parentNode.replaceChild(novoScript, script);
+                } else {
+                    // Remover script vazio
+                    script.parentNode.removeChild(script);
+                }
+            } catch (error) {
+                console.error('Erro ao processar script:', error);
+                // Continuar com outros scripts mesmo se um falhar
+            }
         });
         
         // Executar funções específicas de cada página
-        executarFuncoesEspecificas();
+        try {
+            executarFuncoesEspecificas();
+        } catch (error) {
+            console.error('Erro ao executar funções específicas:', error);
+        }
     }
     
     // 4.1. EXECUTAR FUNÇÕES ESPECÍFICAS
