@@ -140,6 +140,11 @@ function initInicio() {
         }
     });
     
+    // Carrossel custom da seção "Soluções que transformam a rotina" (layout)
+    if (typeof window.initSolucoesCarousel === 'function') {
+        window.initSolucoesCarousel();
+    }
+
     // Swiper Testimonials
     const testimonialsSwiper = new Swiper('.inicio-testimonials-swiper', {
         slidesPerView: 'auto',

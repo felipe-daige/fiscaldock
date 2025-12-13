@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
     <script src="{{ asset('js/toast.js') }}"></script>
 </head>
-<body>
+<body class="{{ $themeClass ?? 'theme-default' }}">
     <!-- Header -->
     <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
     </header>

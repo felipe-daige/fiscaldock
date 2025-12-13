@@ -1,4 +1,4 @@
-<section class="relative bg-gradient-to-br from-[#0b1f3a] via-[#133a73] to-[#1e4fa0] text-white">
+<section class="relative bg-hero-gradient text-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
         <div class="text-center max-w-3xl mx-auto">
             <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold mb-6">
@@ -15,7 +15,7 @@
     </div>
     <div class="pointer-events-none absolute inset-x-0 bottom-[-1px] leading-none">
         <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
+            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="var(--color-surface-alt)"></path>
         </svg>
     </div>
   </section>
