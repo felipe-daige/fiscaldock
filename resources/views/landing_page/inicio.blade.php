@@ -267,30 +267,30 @@
 
 <!-- Hero Section (refeito) -->
 <section class="relative bg-hero-gradient text-white">
-    <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center justify-center">
+    <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center justify-center">
             <!-- Coluna Esquerda: Texto -->
             <div class="lg:col-span-5 xl:col-span-6">
                 <!-- Badge -->
-                <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold mb-8">
+                <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold mb-4">
                     <span class="w-2 h-2 rounded-full bg-blue-400"></span>
                     Centro Operacional Fiscal
                 </div>
 
                 <!-- Título -->
-                <h1 class="font-extrabold leading-tight tracking-tight text-4xl sm:text-5xl xl:text-6xl">
+                <h1 class="font-extrabold leading-tight tracking-tight text-3xl sm:text-4xl xl:text-5xl">
                     O HUB Fiscal & Compliance que transforma
                     <span class="block text-sped-hero">SPED em Ações e Relatórios</span>
                 </h1>
 
                 <!-- Subtítulo -->
-                <p class="mt-6 text-lg sm:text-xl text-white/80 max-w-2xl">
+                <p class="mt-4 text-base sm:text-lg text-white/80 max-w-2xl">
                     Centralize arquivos fiscais, identifique pendências e riscos automaticamente, gere relatórios prontos para decisão e automatize cobranças/entregas pelo WhatsApp — com trilha de evidências.
                 </p>
 
                 <!-- CTAs -->
-                <div class="mt-10">
-                    <button class="inline-flex items-center justify-center gap-2 rounded-lg px-8 py-4 text-base font-semibold text-gray-900 shadow-lg hover:shadow-xl transition-all duration-200" style="background-color: var(--color-accent); box-shadow: 0 20px 50px -20px rgba(54, 211, 153, 0.5);">
+                <div class="mt-5">
+                    <button class="inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-gray-900 shadow-lg hover:shadow-xl transition-all duration-200" style="background-color: var(--color-accent); box-shadow: 0 20px 50px -20px rgba(54, 211, 153, 0.5);">
                         Quero conhecer
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
@@ -299,12 +299,12 @@
                 </div>
 
                 <!-- Frase de apoio -->
-                <p class="mt-6 text-sm text-white/70 max-w-2xl">
+                <p class="mt-3 text-sm text-white/70 max-w-2xl">
                     Feito para escritórios contábeis e empresas que precisam de controle, conformidade e velocidade, sem planilhas infinitas.
                 </p>
 
                 <!-- Pílulas de features -->
-                <div class="mt-8 mb-8 lg:mb-12 flex flex-wrap md:flex-nowrap gap-6 text-white/80">
+                <div class="mt-5 mb-10 lg:mb-14 flex flex-wrap md:flex-nowrap gap-6 text-white/80">
                     <div class="flex items-center gap-2 whitespace-nowrap"><span class="h-5 w-5 rounded-full flex items-center justify-center" style="background-color: var(--color-accent)"><span class="text-white text-xs leading-none">✓</span></span> Conformidade Total</div>
                     <div class="flex items-center gap-2 whitespace-nowrap"><span class="h-5 w-5 rounded-full flex items-center justify-center" style="background-color: var(--color-accent)"><span class="text-white text-xs leading-none">✓</span></span> Automação Inteligente</div>
                     <div class="flex items-center gap-2 whitespace-nowrap"><span class="h-5 w-5 rounded-full flex items-center justify-center" style="background-color: var(--color-accent)"><span class="text-white text-xs leading-none">✓</span></span> Trilha de Evidências</div>
@@ -313,7 +313,7 @@
 
             <!-- Coluna Direita: Mockup -->
             <div class="lg:col-span-7 xl:col-span-6">
-                <div class="relative rounded-3xl border border-white/15 bg-white/5 p-4 shadow-lg shadow-blue-950/10">
+                <div class="relative rounded-3xl border border-white/15 bg-white/5 p-2 shadow-lg shadow-blue-950/10">
                     <img
                         src="{{ asset('pictures/dashboard-mockup.jpg') }}"
                         alt="Mockup do dashboard ReformaTax"
@@ -321,7 +321,7 @@
                         fetchpriority="high"
                         decoding="async"
                         width="1280" height="720"
-                        class="rounded-2xl w-full h-auto object-cover"
+                        class="rounded-2xl w-full h-auto object-cover max-h-[400px]"
                     >
                 </div>
             </div>
@@ -337,7 +337,7 @@
 </section>
 
 <!-- A Solução Section -->
-<section class="bg-gray-50 pt-8 lg:pt-12 pb-0">
+<section class="bg-gray-50 pt-4 lg:pt-6 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1301,7 +1301,7 @@
 </section>
 
 <!-- IA Financeira Section -->
-<section id="relatorios" class="bg-white pt-16 pb-0">
+<section id="notebook" class="bg-white pt-16 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div class="space-y-6">
