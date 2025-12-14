@@ -3,10 +3,6 @@ let chartInstances = {};
 
 // Função específica para a página de impactos
 function initImpactos() {
-    console.log('initImpactos chamado');
-    console.log('Chart.js disponível:', typeof Chart !== 'undefined');
-    console.log('Window.Chart:', window.Chart);
-    
     // Verificar se Chart.js está carregado
     if (typeof Chart === 'undefined') {
         console.error('Chart.js não está carregado. Aguardando...');
@@ -15,7 +11,6 @@ function initImpactos() {
         const verificarChart = setInterval(() => {
             tentativas++;
             if (typeof Chart !== 'undefined') {
-                console.log('Chart.js carregado após', tentativas, 'tentativas');
                 clearInterval(verificarChart);
                 initCharts();
             } else if (tentativas >= 10) {
@@ -436,6 +431,9 @@ function createROIChart() {
             }
         }
     });
+    } catch (error) {
+        console.error('Erro ao criar gráfico roiChart:', error);
+    }
 }
 
 // Inicializar todos os gráficos
@@ -680,18 +678,12 @@ function createGrowthChart() {
 
 function createAllCharts() {
     try {
-        console.log('Iniciando criação de gráficos...');
-        console.log('Chart.js disponível:', typeof Chart !== 'undefined');
-        
         createTimeReductionChart();
         createTaxSavingsChart();
         createErrorReductionChart();
         createROIChart();
         createEfficiencyChart();
         createGrowthChart();
-        
-        console.log('Todos os gráficos foram criados com sucesso');
-        console.log('Instâncias criadas:', Object.keys(chartInstances));
     } catch (error) {
         console.error('Erro ao criar gráficos:', error);
         console.error('Stack trace:', error.stack);

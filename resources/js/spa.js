@@ -60,10 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
             window.scrollTo(0, 0);
             
         } catch (erro) {
-            console.error('Erro:', erro);
             // Só mostrar alert se não for erro de rede
             if (erro.message && !erro.message.includes('Failed to fetch')) {
-                console.log('Erro de navegação ignorado');
+                // Erro de navegação ignorado
             }
         } finally {
             esconderLoading();
@@ -106,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (script.textContent && script.textContent.trim() !== '') {
                     // Adicionar handler de erro para capturar erros de sintaxe
                     novoScript.onerror = function(error) {
-                        console.error('Erro ao executar script:', error);
+                        // Erro ao executar script
                     };
                     
                     script.parentNode.replaceChild(novoScript, script);
@@ -115,7 +114,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     script.parentNode.removeChild(script);
                 }
             } catch (error) {
-                console.error('Erro ao processar script:', error);
                 // Continuar com outros scripts mesmo se um falhar
             }
         });
@@ -124,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             executarFuncoesEspecificas();
         } catch (error) {
-            console.error('Erro ao executar funções específicas:', error);
+            // Erro ao executar funções específicas
         }
     }
     
@@ -141,7 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Se a função existe, executa
         if (window[nomeFuncao] && typeof window[nomeFuncao] === 'function') {
-            console.log(`Executando: ${nomeFuncao}()`);
             window[nomeFuncao]();
         }
         
@@ -158,7 +155,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
         if (funcoesEspecificas[caminho] && window[funcoesEspecificas[caminho]]) {
-            console.log(`Executando: ${funcoesEspecificas[caminho]}()`);
             window[funcoesEspecificas[caminho]]();
         }
     }
@@ -173,22 +169,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const scriptExistente = document.querySelector(`script[src="${scriptPath}"]`);
             
             if (!scriptExistente) {
-                console.log(`Carregando JavaScript: ${scriptPath}`);
                 const script = document.createElement('script');
                 script.src = scriptPath;
                 script.onload = function() {
-                    console.log(`JavaScript carregado: ${scriptPath}`);
                     // Aguardar um pouco para garantir que a função foi definida
                     setTimeout(() => {
                         executarFuncaoEspecifica(caminho);
                     }, 100);
                 };
                 script.onerror = function() {
-                    console.log(`Arquivo não encontrado: ${scriptPath} (normal se não tiver JavaScript específico)`);
+                    // Arquivo não encontrado (normal se não tiver JavaScript específico)
                 };
                 document.head.appendChild(script);
             } else {
-                console.log(`JavaScript já carregado: ${scriptPath}`);
                 // Script já carregado, executar função
                 executarFuncaoEspecifica(caminho);
             }
@@ -213,20 +206,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4.4. TENTAR EXECUTAR FUNÇÃO COM RETRY
     function tentarExecutarFuncao(nomeFuncao, tentativas) {
         if (window[nomeFuncao] && typeof window[nomeFuncao] === 'function') {
-            console.log(`Executando: ${nomeFuncao}()`);
             try {
                 window[nomeFuncao]();
             } catch (error) {
-                console.error(`Erro ao executar ${nomeFuncao}:`, error);
+                // Erro ao executar função
             }
         } else if (tentativas < 5) {
             // Função ainda não está disponível, tentar novamente
-            console.log(`Aguardando ${nomeFuncao}... (tentativa ${tentativas + 1})`);
             setTimeout(() => {
                 tentarExecutarFuncao(nomeFuncao, tentativas + 1);
             }, 200);
-        } else {
-            console.warn(`Função ${nomeFuncao} não encontrada após 5 tentativas`);
         }
     }
     
@@ -256,7 +245,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 9. CARREGAR JAVASCRIPT NA PRIMEIRA CARGA
     function carregarJavaScriptInicial() {
         const caminho = window.location.pathname;
-        console.log('Página inicial:', caminho);
         
         // Carregar JavaScript específico da página atual
         carregarJavaScriptEspecifico(caminho);
