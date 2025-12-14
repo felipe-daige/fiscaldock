@@ -145,44 +145,6 @@ function initInicio() {
         window.initSolucoesCarousel();
     }
 
-    // Swiper Testimonials
-    const testimonialsSwiper = new Swiper('.inicio-testimonials-swiper', {
-        slidesPerView: 'auto',
-        spaceBetween: 24,
-        speed: 1, // Transição instantânea no loop
-        autoplay: {
-            delay: 1,
-            disableOnInteraction: false,
-            pauseOnMouseEnter: true,
-            waitForTransition: false,
-        },
-        loop: true,
-        loopedSlides: 5,
-        loopAdditionalSlides: 5,
-        allowTouchMove: false,
-        simulateTouch: false,
-        grabCursor: false,
-        freeMode: false,
-        breakpoints: {
-            320: {
-                slidesPerView: 1.2,
-                spaceBetween: 16,
-            },
-            640: {
-                slidesPerView: 2.2,
-                spaceBetween: 20,
-            },
-            1024: {
-                slidesPerView: 3.2,
-                spaceBetween: 24,
-            },
-            1280: {
-                slidesPerView: 4.2,
-                spaceBetween: 24,
-            }
-        }
-    });
-
     // Contact Form
     const contactForm = document.getElementById('contact-form');
     if (contactForm) {
@@ -195,7 +157,7 @@ function initInicio() {
     
     // Scroll Indicator
     window.scrollToSolucoes = function() {
-        document.getElementById('solucoes').scrollIntoView({behavior: 'smooth'});
+        document.getElementById('funcionalidades').scrollIntoView({behavior: 'smooth'});
     };
 
 }

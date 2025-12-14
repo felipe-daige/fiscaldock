@@ -22,8 +22,6 @@ function initLogin() {
                 return;
             }
             
-            console.log('Token CSRF atual:', token); // Debug
-            
             // Coletar dados do formulário
             const formData = new FormData(e.target);
             
@@ -37,11 +35,9 @@ function initLogin() {
                 }
             })
             .then(response => {
-                console.log('Response status:', response.status); // Debug
                 return response.json();
             })
             .then(data => {
-                console.log('Response data:', data); // Debug
                 if (data.success) {
                     showToast('Login realizado com sucesso!', 'success');
                     setTimeout(() => {

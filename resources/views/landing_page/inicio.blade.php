@@ -242,26 +242,153 @@
     background-color: var(--color-border);
 }
 
-/* Swiper Styles para Testimonials */
-.inicio-testimonials-swiper .swiper-slide {
-    width: 320px;
-    height: 280px;
-    pointer-events: none;
+/* Estilos para cards de depoimentos */
+
+/* Estilos criativos para cards de depoimentos */
+.testimonial-card {
+    transform: translateY(0);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: fadeInUp 0.6s ease-out;
 }
 
-.inicio-testimonials-swiper .swiper-slide > div {
+.testimonial-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: rgb(59, 130, 246);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.quote-decoration {
+    user-select: none;
+    pointer-events: none;
+    opacity: 0.15;
+    animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.15;
+    }
+    50% {
+        opacity: 0.25;
+    }
+}
+
+.avatar-gradient {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.avatar-gradient::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    padding: 2px;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.testimonial-card:hover .avatar-gradient::before {
+    opacity: 1;
+    animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.testimonial-metric span {
+    animation: scaleIn 0.5s ease-out 0.2s both;
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.stars {
+    position: relative;
+    display: inline-block;
+}
+
+.stars::after {
+    content: '★★★★★';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
     height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    overflow: hidden;
+    color: rgb(250, 204, 21);
+    animation: fillStars 1s ease-out 0.5s both;
 }
 
-.inicio-testimonials-swiper .swiper-slide * {
-    pointer-events: none;
+@keyframes fillStars {
+    from {
+        width: 0;
+    }
+    to {
+        width: 100%;
+    }
 }
 
-.inicio-testimonials-swiper .swiper-wrapper {
-    transition-timing-function: linear !important;
+.verified-badge {
+    animation: slideIn 0.4s ease-out 0.3s both;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Responsividade melhorada */
+@media (max-width: 640px) {
+    .testimonial-card {
+        padding: 1.5rem;
+    }
+    
+    .quote-decoration {
+        font-size: 4rem;
+        top: 0.5rem;
+        right: 0.5rem;
+    }
+    
+    .avatar-gradient {
+        width: 3rem;
+        height: 3rem;
+        font-size: 1.125rem;
+    }
 }
 </style>
 
@@ -370,7 +497,7 @@
 </section>
 
 <!-- Soluções Section -->
-<section id="solucoes" class="bg-white pt-8 pb-0 overflow-x-hidden">
+<section id="funcionalidades" class="bg-white pt-8 pb-0 overflow-x-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1175,100 +1302,6 @@
     </div>
 </section>
 
-<!-- A Solução Section -->
-<section id="solucao" class="bg-gray-50 pt-4 lg:pt-6 pb-0">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-            <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Um centro operacional para o <span class="text-brand-gradient">ecossistema contábil</span>
-            </h2>
-            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                O HUB organiza o fluxo entre cliente ↔ escritório ↔ obrigações, automatiza triagens e entrega relatórios com evidência.
-            </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div class="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition-colors">
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Recebe e Organiza</h3>
-                <p class="text-gray-600">
-                    Documentos organizados por CNPJ e competência automaticamente. Você nunca mais perde "qual foi o último arquivo".
-                </p>
-            </div>
-
-            <div class="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition-colors">
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Valida e Classifica</h3>
-                <p class="text-gray-600">
-                    Aponta pendências automaticamente com semáforo por competência: OK / Atenção / Pendência, com motivo e evidência.
-                </p>
-            </div>
-
-            <div class="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition-colors">
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Gera Relatórios</h3>
-                <p class="text-gray-600">
-                    Status fiscal, riscos, inconsistências e oportunidades. Relatórios prontos para decisão, não planilhas para interpretar.
-                </p>
-            </div>
-
-            <div class="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition-colors">
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Automatiza Comunicação</h3>
-                <p class="text-gray-600">
-                    Cobranças e entregas via WhatsApp e portal com contexto. Mensagens com empresa, pendência, prazo e link de envio.
-                </p>
-            </div>
-
-            <div class="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition-colors">
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Trilha de Auditoria</h3>
-                <p class="text-gray-600">
-                    Registro completo: quem enviou, quando, qual arquivo, qual evidência. Você para de "discutir sensação" e mostra fatos.
-                </p>
-            </div>
-
-            <div class="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition-colors">
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Motor de Regras</h3>
-                <p class="text-gray-600">
-                    Regras parametrizáveis que aprendem seu padrão. Classificação automática: gera crédito / atenção / não gera.
-                </p>
-            </div>
-        </div>
-    </div>
-    <!-- Divisor ondulado: transição do cinza (#f9fafb) para o branco -->
-    <div class="pointer-events-none leading-none mt-6 sm:mt-8">
-        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
-        </svg>
-    </div>
-</section>
-
 <!-- Benefícios Section -->
 <section id="beneficios" class="bg-gray-50 pt-20 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1655,275 +1688,128 @@
 
 <!-- Depoimentos Section -->
 <section class="bg-white pt-20 pb-0">
+    <div class="w-full">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">
+                    O que nossos <span class="text-brand-gradient">clientes dizem</span>
+                </h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+                    Resultados reais de escritórios contábeis e empresas que transformaram seu dia a dia com o HUB
+                </p>
+            </div>
+        </div>
+
+        <!-- Grid de Depoimentos -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="testimonial-card bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 p-8 border border-gray-100 hover:border-blue-200 relative overflow-hidden">
+                    <div class="quote-decoration absolute top-4 right-4 text-8xl font-serif text-blue-50 leading-none">"</div>
+                    <div class="testimonial-header flex items-center gap-4 mb-6 relative z-10">
+                        <div class="avatar-gradient w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-full flex items-center justify-center font-bold text-xl shadow-lg ring-4 ring-purple-100">M</div>
+                        <div class="flex-1">
+                            <div class="font-bold text-gray-900 text-lg">Maria Silva</div>
+                            <div class="text-sm text-gray-600">CEO, TechCorp</div>
+                            <div class="verified-badge inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-xs font-semibold">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                Verificado
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-metric mb-4 relative z-10">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md">R$ 500k economizados</span>
+                    </div>
+                    <p class="testimonial-text text-gray-700 mb-6 leading-relaxed relative z-10 text-base">
+                        "A solução nos ajudou a economizar mais de R$ 500 mil em impostos no primeiro ano. O ROI foi impressionante!"
+                    </p>
+                    <div class="testimonial-footer flex items-center justify-between relative z-10">
+                        <div class="stars text-yellow-400 text-xl">★★★★★</div>
+                        <div class="date text-xs text-gray-400">Há 2 meses</div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 p-8 border border-gray-100 hover:border-blue-200 relative overflow-hidden">
+                    <div class="quote-decoration absolute top-4 right-4 text-8xl font-serif text-blue-50 leading-none">"</div>
+                    <div class="testimonial-header flex items-center gap-4 mb-6 relative z-10">
+                        <div class="avatar-gradient w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-500 text-white rounded-full flex items-center justify-center font-bold text-xl shadow-lg ring-4 ring-blue-100">J</div>
+                        <div class="flex-1">
+                            <div class="font-bold text-gray-900 text-lg">João Santos</div>
+                            <div class="text-sm text-gray-600">Diretor Financeiro, Inovação Ltda</div>
+                            <div class="verified-badge inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-xs font-semibold">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                Verificado
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-metric mb-4 relative z-10">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md">70% redução</span>
+                    </div>
+                    <p class="testimonial-text text-gray-700 mb-6 leading-relaxed relative z-10 text-base">
+                        "A automação dos processos fiscais reduziu nosso tempo de trabalho em 70%. Altamente recomendado!"
+                    </p>
+                    <div class="testimonial-footer flex items-center justify-between relative z-10">
+                        <div class="stars text-yellow-400 text-xl">★★★★★</div>
+                        <div class="date text-xs text-gray-400">Há 1 mês</div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 p-8 border border-gray-100 hover:border-blue-200 relative overflow-hidden">
+                    <div class="quote-decoration absolute top-4 right-4 text-8xl font-serif text-blue-50 leading-none">"</div>
+                    <div class="testimonial-header flex items-center gap-4 mb-6 relative z-10">
+                        <div class="avatar-gradient w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-xl shadow-lg ring-4 ring-green-100">A</div>
+                        <div class="flex-1">
+                            <div class="font-bold text-gray-900 text-lg">Ana Costa</div>
+                            <div class="text-sm text-gray-600">Contadora, Empresa ABC</div>
+                            <div class="verified-badge inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-xs font-semibold">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                Verificado
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-metric mb-4 relative z-10">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-md">100% compliance</span>
+                    </div>
+                    <p class="testimonial-text text-gray-700 mb-6 leading-relaxed relative z-10 text-base">
+                        "A plataforma é intuitiva e os especialistas são excepcionais. Nosso compliance está 100% em dia."
+                    </p>
+                    <div class="testimonial-footer flex items-center justify-between relative z-10">
+                        <div class="stars text-yellow-400 text-xl">★★★★★</div>
+                        <div class="date text-xs text-gray-400">Há 3 meses</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
+    <div class="pointer-events-none leading-none mt-6 sm:mt-8">
+        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
+            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
+        </svg>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section id="faq" class="bg-gray-50 pt-20 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                O que nossos <span class="text-brand-gradient">clientes dizem</span>
+                Perguntas <span class="text-brand-gradient">Frequentes</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                Resultados reais de escritórios contábeis e empresas que transformaram seu dia a dia com o HUB
+                Tire suas dúvidas sobre o HUB Fiscal & Compliance e como ele pode transformar seu dia a dia
             </p>
         </div>
 
-        <!-- Swiper Testimonials -->
-        <div class="swiper inicio-testimonials-swiper">
-            <div class="swiper-wrapper">
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">M</div>
-                        <div>
-                                <div class="font-semibold text-gray-900">Maria Silva</div>
-                                <div class="text-sm text-gray-600">CEO, TechCorp</div>
-                        </div>
-                    </div>
-                        <p class="text-gray-600 mb-4 italic">
-                        "A solução nos ajudou a economizar mais de R$ 500 mil em impostos no primeiro ano. O ROI foi impressionante!"
-                    </p>
-                        <div class="text-yellow-500 text-lg">★★★★★</div>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">J</div>
-                        <div>
-                                <div class="font-semibold text-gray-900">João Santos</div>
-                                <div class="text-sm text-gray-600">Diretor Financeiro, Inovação Ltda</div>
-                        </div>
-                    </div>
-                        <p class="text-gray-600 mb-4 italic">
-                        "A automação dos processos fiscais reduziu nosso tempo de trabalho em 70%. Altamente recomendado!"
-                    </p>
-                        <div class="text-yellow-500 text-lg">★★★★★</div>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">A</div>
-                        <div>
-                                <div class="font-semibold text-gray-900">Ana Costa</div>
-                                <div class="text-sm text-gray-600">Contadora, Empresa ABC</div>
-                        </div>
-                    </div>
-                        <p class="text-gray-600 mb-4 italic">
-                        "A plataforma é intuitiva e os especialistas são excepcionais. Nosso compliance está 100% em dia."
-                    </p>
-                        <div class="text-yellow-500 text-lg">★★★★★</div>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">C</div>
-                        <div>
-                                <div class="font-semibold text-gray-900">Carlos Mendes</div>
-                                <div class="text-sm text-gray-600">Gerente Financeiro, Comércio Plus</div>
-                        </div>
-                    </div>
-                        <p class="text-gray-600 mb-4 italic">
-                        "Os relatórios prontos para decisão são um diferencial. Não preciso mais ficar interpretando planilhas. O semáforo por competência mostra na hora o que está OK, o que precisa atenção e o que é crítico."
-                    </p>
-                        <div class="text-yellow-500 text-lg">★★★★★</div>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">L</div>
-                        <div>
-                                <div class="font-semibold text-gray-900">Lucia Ferreira</div>
-                                <div class="text-sm text-gray-600">Diretora, BPO Financeiro Integrado</div>
-                        </div>
-                    </div>
-                        <p class="text-gray-600 mb-4 italic">
-                        "A trilha de evidências é perfeita para nosso trabalho. Conseguimos mostrar aos clientes exatamente o que foi enviado, quando e por quem. Isso eliminou 100% das discussões sobre 'quem enviou o quê'."
-                    </p>
-                        <div class="text-yellow-500 text-lg">★★★★★</div>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">R</div>
-                        <div>
-                                <div class="font-semibold text-gray-900">Roberto Alves</div>
-                                <div class="text-sm text-gray-600">Sócio, Escritório Alves Contabilidade</div>
-                        </div>
-                    </div>
-                        <p class="text-gray-600 mb-4 italic">
-                        "O motor de regras aprendeu nosso padrão e agora classifica automaticamente. Isso nos poupou horas de trabalho manual. E o melhor: não substitui nosso sistema, só adiciona inteligência em cima."
-                    </p>
-                        <div class="text-yellow-500 text-lg">★★★★★</div>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">F</div>
-                        <div>
-                                <div class="font-semibold text-gray-900">Fernanda Lima</div>
-                                <div class="text-sm text-gray-600">CFO, Indústria Moderna</div>
-                        </div>
-                    </div>
-                        <p class="text-gray-600 mb-4 italic">
-                        "A transição para o novo sistema tributário foi muito mais simples com o suporte da equipe. Recomendo!"
-                    </p>
-                        <div class="text-yellow-500 text-lg">★★★★★</div>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">P</div>
-                        <div>
-                                <div class="font-semibold text-gray-900">Paulo Rodrigues</div>
-                                <div class="text-sm text-gray-600">Diretor, Varejo Digital</div>
-                        </div>
-                    </div>
-                        <p class="text-gray-600 mb-4 italic">
-                        "O diagnóstico automático de SPED identifica inconsistências que antes passavam despercebidas. Isso nos ajudou a evitar multas e corrigir problemas antes que virassem dor de cabeça."
-                    </p>
-                        <div class="text-yellow-500 text-lg">★★★★★</div>
-                    </div>
-                </div>
-
-                <!-- Duplicação para loop contínuo -->
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">M</div>
-                        <div>
-                                <div class="font-semibold text-gray-900">Maria Silva</div>
-                                <div class="text-sm text-gray-600">CEO, TechCorp</div>
-                        </div>
-                    </div>
-                        <p class="text-gray-600 mb-4 italic">
-                        "A solução nos ajudou a economizar mais de R$ 500 mil em impostos no primeiro ano. O ROI foi impressionante!"
-                    </p>
-                        <div class="text-yellow-500 text-lg">★★★★★</div>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">J</div>
-                        <div>
-                                <div class="font-semibold text-gray-900">João Santos</div>
-                                <div class="text-sm text-gray-600">Diretor Financeiro, Inovação Ltda</div>
-                        </div>
-                    </div>
-                        <p class="text-gray-600 mb-4 italic">
-                        "A automação dos processos fiscais reduziu nosso tempo de trabalho em 70%. Altamente recomendado!"
-                    </p>
-                        <div class="text-yellow-500 text-lg">★★★★★</div>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">A</div>
-                        <div>
-                                <div class="font-semibold text-gray-900">Ana Costa</div>
-                                <div class="text-sm text-gray-600">Contadora, Empresa ABC</div>
-                        </div>
-                    </div>
-                        <p class="text-gray-600 mb-4 italic">
-                        "A plataforma é intuitiva e os especialistas são excepcionais. Nosso compliance está 100% em dia."
-                    </p>
-                        <div class="text-yellow-500 text-lg">★★★★★</div>
-                    </div>
-                </div>
-
-                <!-- Duplicação para animação CSS contínua -->
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">M</div>
-                        <div>
-                                <div class="font-semibold text-gray-900">Maria Silva</div>
-                                <div class="text-sm text-gray-600">CEO, TechCorp</div>
-                        </div>
-                    </div>
-                        <p class="text-gray-600 mb-4 italic">
-                        "A solução nos ajudou a economizar mais de R$ 500 mil em impostos no primeiro ano. O ROI foi impressionante!"
-                    </p>
-                        <div class="text-yellow-500 text-lg">★★★★★</div>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">J</div>
-                        <div>
-                                <div class="font-semibold text-gray-900">João Santos</div>
-                                <div class="text-sm text-gray-600">Diretor Financeiro, Inovação Ltda</div>
-                        </div>
-                    </div>
-                        <p class="text-gray-600 mb-4 italic">
-                        "A automação dos processos fiscais reduziu nosso tempo de trabalho em 70%. Altamente recomendado!"
-                    </p>
-                        <div class="text-yellow-500 text-lg">★★★★★</div>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">C</div>
-                        <div>
-                                <div class="font-semibold text-gray-900">Carlos Oliveira</div>
-                                <div class="text-sm text-gray-600">Gerente, Comércio & Cia</div>
-                        </div>
-                    </div>
-                        <p class="text-gray-600 mb-4 italic">
-                        "Excelente suporte e resultados comprovados. Nossa empresa está muito mais organizada fiscalmente."
-                    </p>
-                        <div class="text-yellow-500 text-lg">★★★★★</div>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">F</div>
-                        <div>
-                                <div class="font-semibold text-gray-900">Fernanda Lima</div>
-                                <div class="text-sm text-gray-600">CFO, Indústria Moderna</div>
-                        </div>
-                    </div>
-                        <p class="text-gray-600 mb-4 italic">
-                        "A transição para o novo sistema tributário foi muito mais simples com o suporte da equipe. Recomendo!"
-                    </p>
-                        <div class="text-yellow-500 text-lg">★★★★★</div>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">A</div>
-                        <div>
-                                <div class="font-semibold text-gray-900">Ana Costa</div>
-                                <div class="text-sm text-gray-600">Contadora, Empresa ABC</div>
-                        </div>
-                    </div>
-                        <p class="text-gray-600 mb-4 italic">
-                        "A plataforma é intuitiva e os especialistas são excepcionais. Nosso compliance está 100% em dia."
-                    </p>
-                        <div class="text-yellow-500 text-lg">★★★★★</div>
-                    </div>
+        <div class="max-w-3xl mx-auto">
+            <div class="faq-item border border-gray-200 rounded-lg mb-4 hover:border-blue-500 transition-colors overflow-hidden">
+                <button class="faq-question w-full text-left px-6 py-4 font-semibold text-gray-900 hover:text-blue-500 flex justify-between items-center">
+                    <span>Como funciona a integração com sistemas existentes?</span>
+                    <svg class="w-5 h-5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="faq-answer hidden px-6 pb-4 text-gray-600">
+                    <p>O HUB Fiscal & Compliance se integra facilmente com sistemas ERP, contábeis e fiscais através de APIs REST e webhooks, permitindo sincronização em tempo real de dados e documentos.</p>
                 </div>
             </div>
         </div>
@@ -2109,44 +1995,12 @@
     </div>
 </section>
 
-<style>
-.inicio-testimonials-swiper {
-    overflow: hidden;
-}
-
-.inicio-testimonials-swiper .swiper-wrapper {
-    transition-timing-function: linear !important;
-    -webkit-transition-timing-function: linear !important;
-    animation: scrollContinuo 40s linear infinite;
-    animation-play-state: running;
-}
-
-.inicio-testimonials-swiper:hover .swiper-wrapper {
-    animation-play-state: paused;
-}
-
-@keyframes scrollContinuo {
-    0% {
-        transform: translate3d(0, 0, 0);
-    }
-    100% {
-        transform: translate3d(calc(-100% / 2), 0, 0);
-    }
-}
-
-.inicio-testimonials-swiper .swiper-slide {
-    flex-shrink: 0;
-}
-</style>
 
 <script>
 // Inicializador reutilizável para o carrossel da seção "Soluções que transformam a rotina"
 window.initSolucoesCarousel = function() {
-    console.log('[Carrossel] Função initSolucoesCarousel chamada');
-    
     // Flag global para evitar múltiplas inicializações
     if (window._solucoesCarouselInitialized) {
-        console.log('[Carrossel] Já inicializado, ignorando...');
         return;
     }
     
@@ -2163,15 +2017,6 @@ window.initSolucoesCarousel = function() {
                 const nextArrow = document.querySelector('.carousel-arrow-right');
                 const wrapper = document.querySelector('.solutions-cards-wrapper');
 
-                console.log('[Carrossel] Tentativa', retryCount + 1, '- Elementos encontrados:', {
-                    track: !!track,
-                    cards: cards.length,
-                    pills: pills.length,
-                    prevArrow: !!prevArrow,
-                    nextArrow: !!nextArrow,
-                    wrapper: !!wrapper
-                });
-
                 if (!track || !cards.length || !wrapper) {
                     if (retryCount < maxRetries) {
                         retryCount++;
@@ -2184,7 +2029,6 @@ window.initSolucoesCarousel = function() {
 
                 // Marcar como inicializado
                 window._solucoesCarouselInitialized = true;
-                console.log('[Carrossel] Inicializando com', cards.length, 'cards');
                 
                 const totalCards = cards.length;
                 let currentIndex = 0;
@@ -2369,18 +2213,15 @@ window.initSolucoesCarousel = function() {
         // Executar inicialização imediatamente e também após DOM ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function() {
-                console.log('[Carrossel] DOMContentLoaded - inicializando...');
                 initCarousel();
             });
         } else {
-            console.log('[Carrossel] DOM já pronto - inicializando...');
             setTimeout(initCarousel, 100);
         }
         
         // Também tentar após um pequeno delay para garantir
         setTimeout(function() {
             if (!window._solucoesCarouselInitialized) {
-                console.log('[Carrossel] Tentativa adicional após delay...');
                 initCarousel();
             }
         }, 500);
@@ -2391,7 +2232,6 @@ window.initSolucoesCarousel = function() {
 
 // Tentar inicializar imediatamente se a função já estiver definida
 if (typeof window.initSolucoesCarousel === 'function') {
-    console.log('[Carrossel] Executando inicialização imediata...');
     window.initSolucoesCarousel();
 }
 </script>
