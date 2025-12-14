@@ -267,7 +267,7 @@
 
 <!-- Hero Section (refeito) -->
 <section class="relative bg-hero-gradient text-white">
-    <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+    <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center justify-center">
             <!-- Coluna Esquerda: Texto -->
             <div class="lg:col-span-5 xl:col-span-6">
@@ -290,7 +290,7 @@
 
                 <!-- CTAs -->
                 <div class="mt-5">
-                    <button class="inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-gray-900 shadow-lg hover:shadow-xl transition-all duration-200" style="background-color: var(--color-accent); box-shadow: 0 20px 50px -20px rgba(54, 211, 153, 0.5);">
+                    <button class="inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-gray-900 shadow-lg hover:shadow-xl transition-all duration-200" style="background-color: var(--color-accent); box-shadow: 0 20px 50px -20px rgba(6, 182, 212, 0.5);">
                         Quero conhecer
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
@@ -303,11 +303,44 @@
                     Feito para escritórios contábeis e empresas que precisam de controle, conformidade e velocidade, sem planilhas infinitas.
                 </p>
 
-                <!-- Pílulas de features -->
-                <div class="mt-5 mb-10 lg:mb-14 flex flex-wrap md:flex-nowrap gap-6 text-white/80">
-                    <div class="flex items-center gap-2 whitespace-nowrap"><span class="h-5 w-5 rounded-full flex items-center justify-center" style="background-color: var(--color-accent)"><span class="text-white text-xs leading-none">✓</span></span> Conformidade Total</div>
-                    <div class="flex items-center gap-2 whitespace-nowrap"><span class="h-5 w-5 rounded-full flex items-center justify-center" style="background-color: var(--color-accent)"><span class="text-white text-xs leading-none">✓</span></span> Automação Inteligente</div>
-                    <div class="flex items-center gap-2 whitespace-nowrap"><span class="h-5 w-5 rounded-full flex items-center justify-center" style="background-color: var(--color-accent)"><span class="text-white text-xs leading-none">✓</span></span> Trilha de Evidências</div>
+                <!-- Social Proof: Avatares + Avaliação -->
+                <div class="mt-6 mb-6 lg:mb-8 flex items-center gap-4 flex-wrap">
+                    <!-- Grupo de Avatares -->
+                    <div class="flex items-center -space-x-2">
+                        <img src="{{ asset('pictures/random_person-1.jpg') }}" alt="Avaliador" class="w-12 h-12 rounded-full border-2 border-white object-cover">
+                        <img src="{{ asset('pictures/random_person-2.jpg') }}" alt="Avaliador" class="w-12 h-12 rounded-full border-2 border-white object-cover">
+                        <img src="{{ asset('pictures/random_person-3.jpg') }}" alt="Avaliador" class="w-12 h-12 rounded-full border-2 border-white object-cover">
+                        <img src="{{ asset('pictures/random_person-4.jpg') }}" alt="Avaliador" class="w-12 h-12 rounded-full border-2 border-white object-cover">
+                        <img src="{{ asset('pictures/random_person-5.jpg') }}" alt="Avaliador" class="w-12 h-12 rounded-full border-2 border-white object-cover">
+                    </div>
+
+                    <!-- Avaliação -->
+                    <div class="flex flex-col">
+                        <div class="flex items-center gap-2">
+                            <!-- Estrelas -->
+                            <div class="flex items-center gap-0.5">
+                                <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                </svg>
+                                <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                </svg>
+                                <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                </svg>
+                                <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                </svg>
+                                <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                </svg>
+                            </div>
+                            <!-- Nota -->
+                            <span class="text-white font-bold text-lg">5.0</span>
+                        </div>
+                        <!-- Texto de contagem -->
+                        <p class="text-white/80 text-sm mt-1">+ de 440k empresas</p>
+                    </div>
                 </div>
             </div>
 
@@ -330,108 +363,14 @@
     <!-- Curva inferior (côncava) -->
     <div class="pointer-events-none absolute inset-x-0 bottom-[-1px] leading-none">
         <!-- O preenchimento branco cria a sensação de que o azul termina com curvatura -->
-        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="var(--color-surface-alt)"></path>
-        </svg>
-    </div>
-</section>
-
-<!-- A Solução Section -->
-<section class="bg-gray-50 pt-4 lg:pt-6 pb-0">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-            <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Um centro operacional para o <span class="text-brand-gradient">ecossistema contábil</span>
-            </h2>
-            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                O HUB organiza o fluxo entre cliente ↔ escritório ↔ obrigações, automatiza triagens e entrega relatórios com evidência.
-            </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div class="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition-colors">
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Recebe e Organiza</h3>
-                <p class="text-gray-600">
-                    Documentos organizados por CNPJ e competência automaticamente. Você nunca mais perde "qual foi o último arquivo".
-                </p>
-            </div>
-
-            <div class="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition-colors">
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Valida e Classifica</h3>
-                <p class="text-gray-600">
-                    Aponta pendências automaticamente com semáforo por competência: OK / Atenção / Pendência, com motivo e evidência.
-                </p>
-            </div>
-
-            <div class="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition-colors">
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Gera Relatórios</h3>
-                <p class="text-gray-600">
-                    Status fiscal, riscos, inconsistências e oportunidades. Relatórios prontos para decisão, não planilhas para interpretar.
-                </p>
-            </div>
-
-            <div class="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition-colors">
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Automatiza Comunicação</h3>
-                <p class="text-gray-600">
-                    Cobranças e entregas via WhatsApp e portal com contexto. Mensagens com empresa, pendência, prazo e link de envio.
-                </p>
-            </div>
-
-            <div class="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition-colors">
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Trilha de Auditoria</h3>
-                <p class="text-gray-600">
-                    Registro completo: quem enviou, quando, qual arquivo, qual evidência. Você para de "discutir sensação" e mostra fatos.
-                </p>
-            </div>
-
-            <div class="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition-colors">
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Motor de Regras</h3>
-                <p class="text-gray-600">
-                    Regras parametrizáveis que aprendem seu padrão. Classificação automática: gera crédito / atenção / não gera.
-                </p>
-            </div>
-        </div>
-    </div>
-    <!-- Divisor ondulado: transição do cinza (#f9fafb) para o branco -->
-    <div class="pointer-events-none leading-none mt-6 sm:mt-8">
-        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
+        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[60px] sm:h-[80px]">
             <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
         </svg>
     </div>
 </section>
 
 <!-- Soluções Section -->
-<section id="solucoes" class="bg-white pt-20 pb-0 overflow-x-hidden">
+<section id="solucoes" class="bg-white pt-8 pb-0 overflow-x-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1228,7 +1167,101 @@
             </div>
         </div>
     </div>
-    <!-- Divisor ondulado: transição do cinza para o branco -->
+    <!-- Divisor ondulado: transição do cinza (#f9fafb) para o branco -->
+    <div class="pointer-events-none leading-none mt-6 sm:mt-8">
+        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
+            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
+        </svg>
+    </div>
+</section>
+
+<!-- A Solução Section -->
+<section id="solucao" class="bg-gray-50 pt-4 lg:pt-6 pb-0">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">
+                Um centro operacional para o <span class="text-brand-gradient">ecossistema contábil</span>
+            </h2>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+                O HUB organiza o fluxo entre cliente ↔ escritório ↔ obrigações, automatiza triagens e entrega relatórios com evidência.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition-colors">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Recebe e Organiza</h3>
+                <p class="text-gray-600">
+                    Documentos organizados por CNPJ e competência automaticamente. Você nunca mais perde "qual foi o último arquivo".
+                </p>
+            </div>
+
+            <div class="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition-colors">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Valida e Classifica</h3>
+                <p class="text-gray-600">
+                    Aponta pendências automaticamente com semáforo por competência: OK / Atenção / Pendência, com motivo e evidência.
+                </p>
+            </div>
+
+            <div class="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition-colors">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Gera Relatórios</h3>
+                <p class="text-gray-600">
+                    Status fiscal, riscos, inconsistências e oportunidades. Relatórios prontos para decisão, não planilhas para interpretar.
+                </p>
+            </div>
+
+            <div class="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition-colors">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Automatiza Comunicação</h3>
+                <p class="text-gray-600">
+                    Cobranças e entregas via WhatsApp e portal com contexto. Mensagens com empresa, pendência, prazo e link de envio.
+                </p>
+            </div>
+
+            <div class="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition-colors">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Trilha de Auditoria</h3>
+                <p class="text-gray-600">
+                    Registro completo: quem enviou, quando, qual arquivo, qual evidência. Você para de "discutir sensação" e mostra fatos.
+                </p>
+            </div>
+
+            <div class="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition-colors">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Motor de Regras</h3>
+                <p class="text-gray-600">
+                    Regras parametrizáveis que aprendem seu padrão. Classificação automática: gera crédito / atenção / não gera.
+                </p>
+            </div>
+        </div>
+    </div>
+    <!-- Divisor ondulado: transição do cinza (#f9fafb) para o branco -->
     <div class="pointer-events-none leading-none mt-6 sm:mt-8">
         <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
             <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
