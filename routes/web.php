@@ -21,6 +21,8 @@ Route::get('/questionario', [LandingPage::class, 'questionario'])->name('questio
 Route::get('/solucoes/importacao-xml', [LandingPage::class, 'importacaoXml'])->name('solucoes.importacao-xml');
 Route::get('/solucoes/conciliacao-bancaria', [LandingPage::class, 'conciliacaoBancaria'])->name('solucoes.conciliacao-bancaria');
 Route::get('/solucoes/gestao-cnds', [LandingPage::class, 'gestaoCnds'])->name('solucoes.gestao-cnds');
+Route::get('/solucoes/inteligencia-tributaria', [LandingPage::class, 'inteligenciaTributaria'])->name('solucoes.inteligencia-tributaria');
+Route::get('/solucoes/raf', [LandingPage::class, 'raf'])->name('solucoes.raf');
 
 // Rotas de API para importação de XMLs
 Route::prefix('api/xml')->group(function () {

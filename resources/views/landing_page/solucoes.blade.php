@@ -1,44 +1,134 @@
-
 <style>
-.solutions-swiper .swiper-slide {
-    width: 320px;
-    height: 280px;
-    pointer-events: none;
-}
+    /* Estilos existentes do swiper */
+    .solutions-swiper .swiper-slide {
+        width: 320px;
+        height: 280px;
+        pointer-events: none;
+    }
 
-.solutions-swiper .swiper-slide > div {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
+    .solutions-swiper .swiper-slide > div {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
 
-.solutions-swiper .swiper-slide * {
-    pointer-events: none;
-}
+    .solutions-swiper .swiper-slide * {
+        pointer-events: none;
+    }
 
-.solutions-swiper {
-    overflow: hidden;
-}
+    .solutions-swiper {
+        overflow: hidden;
+    }
 
-.solutions-swiper .swiper-wrapper {
-    transition-timing-function: linear !important;
-}
+    .solutions-swiper .swiper-wrapper {
+        transition-timing-function: linear !important;
+    }
+
+    /* Estilos do accordion existentes */
+    .solution-accordion-item {
+        margin-bottom: 1rem;
+    }
+
+    .solution-accordion-header {
+        outline: none;
+    }
+
+    .solution-accordion-header[aria-expanded="true"] svg {
+        transform: rotate(180deg);
+    }
+
+    .solution-accordion-content {
+        transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+    }
+
+    /* Novos estilos do design de Importação XML */
+    .hero-gradient {
+        background: linear-gradient(135deg, #0b1f3a 0%, #1e4fa0 50%, #133a73 100%);
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .section-fade-in {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.6s ease;
+    }
+
+    .section-fade-in.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .feature-card {
+        transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .demo-area {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border-radius: 1rem;
+        padding: 3rem;
+        position: relative;
+    }
+
+    @media (max-width: 640px) {
+        .hero-gradient h1 {
+            font-size: 2rem;
+        }
+        
+        .hero-gradient p {
+            font-size: 1rem;
+        }
+
+        .demo-area {
+            padding: 1.5rem;
+        }
+    }
 </style>
 
-<section id="solucoes-funcionalidades" class="bg-white py-20">
+<!-- Hero Section -->
+<section class="hero-gradient py-12 md:py-20 text-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-            <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Funcionalidades do 
-                <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">HUB</span>
-            </h2>
-            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                Seis funcionalidades principais que transformam o dia a dia do escritório contábil e das empresas
+        <div class="text-center fade-in-up">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6">
+                Soluções que Transformam o Dia a Dia Fiscal
+            </h1>
+            <p class="text-lg sm:text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto mb-6 md:mb-8 px-4">
+                Seis funcionalidades principais que automatizam e otimizam processos fiscais e contábeis
             </p>
         </div>
+    </div>
+</section>
 
-        <!-- Swiper -->
+<!-- Seção 2: Demonstração Visual Interativa -->
+<section id="solucoes-funcionalidades" class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="demo-area">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Veja Nossas Funcionalidades</h2>
+                <p class="text-lg text-gray-600">Seis funcionalidades principais que transformam o dia a dia do escritório contábil e das empresas</p>
+            </div>
+
+            <!-- Swiper -->
         <div class="swiper solutions-swiper">
             <div class="swiper-wrapper">
                 <!-- Primeira sequência -->
@@ -164,11 +254,75 @@
                 </div>
             </div>
         </div>
+        </div>
     </div>
 </section>
 
-<!-- Seção de Soluções Detalhadas com Accordion -->
-<section id="solucoes-detalhadas" class="bg-gray-50 py-20">
+<!-- Seção 3: O que Fazemos -->
+<section class="py-16 bg-gray-50 section-fade-in">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">O que Fazemos</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Seis funcionalidades principais que automatizam e otimizam processos fiscais e contábeis, 
+                transformando o dia a dia do escritório contábil e das empresas.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
+                <div class="text-center mb-4">
+                    <img src="{{ asset('icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-16 h-16 mx-auto object-contain">
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Central de Documentos</h3>
+                <p class="text-gray-600">Upload e organização por empresa, competência e tipo. Versionamento e busca inteligente.</p>
+            </div>
+
+            <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
+                <div class="text-center mb-4">
+                    <img src="{{ asset('icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-16 h-16 mx-auto object-contain">
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Leitura e Diagnóstico</h3>
+                <p class="text-gray-600">Importação e estruturação de SPED, detecção de inconsistências e semáforo por competência.</p>
+            </div>
+
+            <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
+                <div class="text-center mb-4">
+                    <img src="{{ asset('icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-16 h-16 mx-auto object-contain">
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Motor de Regras</h3>
+                <p class="text-gray-600">Regras parametrizáveis por operação. Classificação automática e evolução contínua.</p>
+            </div>
+
+            <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
+                <div class="text-center mb-4">
+                    <img src="{{ asset('icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-16 h-16 mx-auto object-contain">
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Compliance e Situação Fiscal</h3>
+                <p class="text-gray-600">Painel de situação por CNPJ, alertas de vencimento e relatório de risco.</p>
+            </div>
+
+            <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
+                <div class="text-center mb-4">
+                    <img src="{{ asset('icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-16 h-16 mx-auto object-contain">
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Automação de Comunicação</h3>
+                <p class="text-gray-600">Cobrança automática via WhatsApp e portal. Mensagens com contexto e registro completo.</p>
+            </div>
+
+            <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
+                <div class="text-center mb-4">
+                    <img src="{{ asset('icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-16 h-16 mx-auto object-contain">
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Portal do Cliente</h3>
+                <p class="text-gray-600">Checklist do mês, pendências, prazos e histórico. Permissões por perfil.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Seção 4: Soluções Detalhadas com Accordion -->
+<section id="solucoes-detalhadas" class="bg-gray-50 py-20 section-fade-in">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -555,5 +709,58 @@
         </div>
     </div>
 </section>
+
+<!-- Seção 5: Call to Action -->
+<section class="hero-gradient py-12 md:py-20 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center fade-in-up">
+            <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 md:mb-6">
+                Pronto para Transformar seu Escritório?
+            </h2>
+            <p class="text-lg sm:text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto mb-6 md:mb-8 px-4">
+                Descubra como nossas soluções podem automatizar e otimizar seus processos fiscais e contábeis
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="#solucoes-detalhadas" class="bg-white text-blue-600 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-50 transition-colors">
+                    Conheça Nossas Soluções
+                </a>
+                <a href="/contato" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors border-2 border-white">
+                    Fale Conosco
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    // Setup scroll animations
+    function setupScrollAnimations() {
+        const sections = document.querySelectorAll('.section-fade-in');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        });
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+    }
+
+    // Inicializar quando DOM estiver pronto
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setupScrollAnimations();
+        });
+    } else {
+        setupScrollAnimations();
+    }
+</script>
 
 <!-- Scripts carregados no layout -->

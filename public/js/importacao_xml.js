@@ -24,6 +24,10 @@
     const btnFecharModalRegra = document.getElementById('btn-fechar-modal-regra');
     const btnCancelarRegra = document.getElementById('btn-cancelar-regra');
     const regrasList = document.getElementById('regras-list');
+    const processSteps = document.getElementById('process-steps');
+    const timeCounterContainer = document.getElementById('time-counter-container');
+    const timeManual = document.getElementById('time-manual');
+    const timeRubi = document.getElementById('time-rubi');
 
     // Inicialização
     function init() {
@@ -32,6 +36,7 @@
         loadDocumentos();
         loadRegras();
         setupFilters();
+        setupScrollAnimations();
     }
 
     // Setup Upload
@@ -75,7 +80,160 @@
         }
 
         selectedFiles = xmlFiles;
+        
+        // Animação de absorção quando arquivo é solto
+        animateFileAbsorption();
+        
+        // Mostrar animações de processamento
+        setTimeout(() => {
+            showProcessingAnimation();
+        }, 500);
+        
         updateFilesPreview();
+    }
+
+    // Animação de arquivo sendo absorvido
+    function animateFileAbsorption() {
+        const uploadAreaContent = uploadArea.querySelector('p');
+        if (uploadAreaContent) {
+            uploadAreaContent.classList.add('file-absorb');
+            setTimeout(() => {
+                uploadAreaContent.classList.remove('file-absorb');
+            }, 1000);
+        }
+    }
+
+    // Mostrar animação de processamento (checkmarks e contador)
+    function showProcessingAnimation() {
+        // Mostrar container de passos
+        if (processSteps) {
+            processSteps.classList.remove('hidden');
+        }
+
+        // Mostrar container de contador de tempo
+        if (timeCounterContainer) {
+            timeCounterContainer.classList.remove('hidden');
+        }
+
+        // Animar contador de tempo manual para Rubi
+        if (timeManual && timeRubi) {
+            animateTimeCounter();
+        }
+
+        // Animar checkmarks sequencialmente
+        animateCheckmarks();
+    }
+
+    // Variável para controlar o intervalo do contador
+    let timeCounterInterval = null;
+
+    // Animar contador de tempo
+    function animateTimeCounter() {
+        if (!timeManual || !timeRubi) return;
+
+        // Limpar intervalo anterior se existir
+        if (timeCounterInterval) {
+            clearInterval(timeCounterInterval);
+        }
+
+        // Resetar para 4 horas
+        if (timeManual) {
+            timeManual.textContent = '4 horas';
+            timeManual.classList.remove('animating');
+        }
+
+        // Começar com 4 horas
+        let totalSeconds = 4 * 3600; // 4 horas em segundos
+
+        // Animar contagem regressiva rápida (simulação)
+        timeCounterInterval = setInterval(() => {
+            totalSeconds = Math.max(0, totalSeconds - 120); // Decrementar 120 segundos por vez para animação rápida
+            
+            const currentHours = Math.floor(totalSeconds / 3600);
+            const currentMinutes = Math.floor((totalSeconds % 3600) / 60);
+            const currentSeconds = totalSeconds % 60;
+
+            if (timeManual) {
+                if (currentHours > 0) {
+                    timeManual.textContent = `${currentHours}h ${currentMinutes}min`;
+                } else if (currentMinutes > 0) {
+                    timeManual.textContent = `${currentMinutes}min ${currentSeconds}s`;
+                } else {
+                    timeManual.textContent = `${currentSeconds}s`;
+                }
+                timeManual.classList.add('animating');
+            }
+
+            // Quando chegar a 0, mostrar 30 segundos
+            if (totalSeconds <= 0) {
+                clearInterval(timeCounterInterval);
+                timeCounterInterval = null;
+                setTimeout(() => {
+                    if (timeManual) {
+                        timeManual.textContent = '30 segundos';
+                        timeManual.classList.remove('animating');
+                    }
+                    if (timeRubi) {
+                        timeRubi.classList.add('animating');
+                        setTimeout(() => {
+                            timeRubi.classList.remove('animating');
+                        }, 500);
+                    }
+                }, 300);
+            }
+        }, 80); // Atualizar a cada 80ms para animação suave mas rápida
+    }
+
+    // Animar checkmarks sequencialmente
+    function animateCheckmarks() {
+        const stepClassificado = document.getElementById('step-classificado');
+        const stepLancado = document.getElementById('step-lancado');
+        const stepValidado = document.getElementById('step-validado');
+
+        // Resetar checkmarks antes de animar
+        [stepClassificado, stepLancado, stepValidado].forEach(step => {
+            if (step) {
+                step.classList.remove('show');
+            }
+        });
+
+        if (stepClassificado) {
+            setTimeout(() => {
+                stepClassificado.classList.add('show');
+            }, 800);
+        }
+
+        if (stepLancado) {
+            setTimeout(() => {
+                stepLancado.classList.add('show');
+            }, 1500);
+        }
+
+        if (stepValidado) {
+            setTimeout(() => {
+                stepValidado.classList.add('show');
+            }, 2200);
+        }
+    }
+
+    // Setup scroll animations
+    function setupScrollAnimations() {
+        const sections = document.querySelectorAll('.section-fade-in');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        });
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
     }
 
     // Update files preview
@@ -122,6 +280,18 @@
         btnUpload.disabled = true;
         btnUpload.textContent = 'Enviando...';
 
+        // Mostrar animações durante upload
+        if (processSteps) {
+            processSteps.classList.remove('hidden');
+        }
+        if (timeCounterContainer) {
+            timeCounterContainer.classList.remove('hidden');
+        }
+        if (timeManual && timeRubi) {
+            animateTimeCounter();
+        }
+        animateCheckmarks();
+
         const formData = new FormData();
         selectedFiles.forEach(file => {
             formData.append('xmls[]', file);
@@ -145,6 +315,18 @@
                 filesPreview.classList.add('hidden');
                 uploadArea.classList.remove('has-files');
                 fileInput.value = '';
+                
+                // Resetar animações
+                if (processSteps) {
+                    processSteps.classList.add('hidden');
+                    document.querySelectorAll('.process-step').forEach(step => {
+                        step.classList.remove('show');
+                    });
+                }
+                if (timeCounterContainer) {
+                    timeCounterContainer.classList.add('hidden');
+                }
+                
                 loadDocumentos();
             } else {
                 showToast(data.message || 'Erro ao fazer upload', 'error');

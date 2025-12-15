@@ -1,4 +1,53 @@
 <style>
+    /* Estilos para landing page */
+    .hero-gradient {
+        background: linear-gradient(135deg, #0b1f3a 0%, #1e4fa0 50%, #133a73 100%);
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .feature-card {
+        transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .section-fade-in {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.6s ease;
+    }
+
+    .section-fade-in.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .demo-area {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border-radius: 1rem;
+        padding: 3rem;
+        position: relative;
+    }
+
+    /* Estilos específicos de CNDs */
     @keyframes pulse-button {
         0%, 100% {
             transform: scale(1);
@@ -25,18 +74,9 @@
         animation-duration: 2s;
     }
     
-    .feature-card {
-        transition: all 0.3s ease;
-    }
-    
-    .feature-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    }
-    
     .health-card {
         opacity: 0;
-        animation: fadeInUp 0.6s ease forwards;
+        animation: fadeInUpHealth 0.6s ease forwards;
     }
     
     .health-card:nth-child(1) { animation-delay: 0.1s; }
@@ -44,7 +84,7 @@
     .health-card:nth-child(3) { animation-delay: 0.3s; }
     .health-card:nth-child(4) { animation-delay: 0.4s; }
     
-    @keyframes fadeInUp {
+    @keyframes fadeInUpHealth {
         from {
             opacity: 0;
             transform: translateY(20px);
@@ -54,132 +94,139 @@
             transform: translateY(0);
         }
     }
+
+    @media (max-width: 640px) {
+        .hero-gradient h1 {
+            font-size: 2rem;
+        }
+        
+        .hero-gradient p {
+            font-size: 1rem;
+        }
+
+        .demo-area {
+            padding: 2rem 1rem;
+        }
+    }
 </style>
 
 <!-- Hero Section -->
-<section class="bg-gradient-to-br from-blue-50 to-indigo-100 py-20">
+<section class="hero-gradient py-12 md:py-20 text-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center">
-            <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+        <div class="text-center fade-in-up">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6">
                 Radar Fiscal: Monitoramento de CNDs em Tempo Real
             </h1>
-            <p class="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            <p class="text-lg sm:text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto mb-6 md:mb-8 px-4">
                 Antecipe problemas. Nunca mais deixe uma certidão vencida travar os negócios do seu cliente.
             </p>
         </div>
     </div>
 </section>
 
-<!-- Seção: O que fazemos -->
-<section class="py-12 bg-white">
+<!-- Seção 2: Demonstração Visual Interativa -->
+<section class="py-16 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-                <h2 class="text-3xl font-bold text-gray-900 mb-6">
-                    O que fazemos
-                </h2>
-                <div class="space-y-4 text-gray-700 leading-relaxed">
-                    <p class="text-lg">
-                        Nossa solução de <strong class="text-gray-900">Monitoramento Automático de CNDs</strong> transforma 
-                        a gestão de certidões fiscais de um processo reativo e manual em uma operação proativa e automatizada.
-                    </p>
-                    <ul class="space-y-3">
-                        <li class="flex items-start gap-3">
-                            <svg class="w-6 h-6 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <span><strong>Monitoramento automático diário:</strong> Verificação contínua da validade das CNDs de todas as empresas do seu portfólio.</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <svg class="w-6 h-6 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <span><strong>Consulta automática nas bases do governo:</strong> Sistema consulta automaticamente bases Federal, Estadual e Municipal sem intervenção manual.</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <svg class="w-6 h-6 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <span><strong>Eliminação de trabalho manual:</strong> Sem necessidade de resolver captchas ou fazer consultas manuais. Tudo automatizado.</span>
-                        </li>
-                    </ul>
-                </div>
+        <div class="demo-area">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Veja Como Funciona</h2>
+                <p class="text-lg text-gray-600">Monitoramento automático de CNDs em tempo real</p>
             </div>
             <div class="flex justify-center">
                 <div class="relative">
-                    <img src="{{ asset('icone-gif/alerta.gif') }}" alt="Monitoramento de CNDs" class="w-full max-w-md object-contain">
+                    <img src="{{ asset('icone-gif/alerta.gif') }}" alt="Monitoramento de CNDs" class="w-full max-w-md object-contain rounded-lg shadow-lg">
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Seção: Sua Gestão de Risco -->
-<section class="py-20 bg-gray-50">
+<!-- Seção 3: O que Fazemos -->
+<section class="py-16 bg-gray-50 section-fade-in">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-            <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Sua Gestão de <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">Risco</span>
-            </h2>
-            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">O que Fazemos</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Nossa solução de <strong class="text-gray-900">Monitoramento Automático de CNDs</strong> transforma 
+                a gestão de certidões fiscais de um processo reativo e manual em uma operação proativa e automatizada.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div class="bg-white rounded-lg p-6 text-center shadow-sm feature-card">
+                <div class="text-4xl mb-4">🔄</div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Monitoramento Automático</h3>
+                <p class="text-gray-600">Verificação contínua da validade das CNDs de todas as empresas do seu portfólio.</p>
+            </div>
+            <div class="bg-white rounded-lg p-6 text-center shadow-sm feature-card">
+                <div class="text-4xl mb-4">🏛️</div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Consulta Automática</h3>
+                <p class="text-gray-600">Sistema consulta automaticamente bases Federal, Estadual e Municipal sem intervenção manual.</p>
+            </div>
+            <div class="bg-white rounded-lg p-6 text-center shadow-sm feature-card">
+                <div class="text-4xl mb-4">⚡</div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Eliminação de Trabalho Manual</h3>
+                <p class="text-gray-600">Sem necessidade de resolver captchas ou fazer consultas manuais. Tudo automatizado.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Seção 4: Automação Inteligente -->
+<section class="py-16 bg-white section-fade-in">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">Automação Inteligente</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
                 Transforme a gestão de certidões fiscais de reativa para proativa
             </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             <!-- Card 1: Monitoramento 24/7 -->
-            <div class="feature-card bg-white rounded-lg shadow-sm p-8 border border-gray-200">
-                <div class="text-center mb-6">
-                    <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Monitoramento 24/7</h3>
-                </div>
-                <p class="text-gray-600 text-center leading-relaxed">
+            <div class="feature-card bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6 md:p-8 shadow-sm">
+                <div class="text-4xl md:text-5xl mb-4">📊</div>
+                <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">Monitoramento 24/7</h3>
+                <p class="text-gray-700 mb-4 text-sm md:text-base">
                     Verificação contínua da validade das CNDs. Receba alertas imediatos sobre qualquer mudança 
                     no status das certidões, mantendo você sempre um passo à frente.
+                </p>
+                <p class="text-base md:text-lg font-semibold text-blue-600">
+                    Sempre um passo à frente
                 </p>
             </div>
 
             <!-- Card 2: Alertas Preventivos -->
-            <div class="feature-card bg-white rounded-lg shadow-sm p-8 border border-gray-200">
-                <div class="text-center mb-6">
-                    <div class="w-20 h-20 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center mx-auto mb-4 shake-notification">
-                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Alertas Preventivos</h3>
-                </div>
-                <p class="text-gray-600 text-center leading-relaxed">
+            <div class="feature-card bg-gradient-to-br from-yellow-50 to-amber-50 rounded-lg p-6 md:p-8 shadow-sm">
+                <div class="text-4xl md:text-5xl mb-4 shake-notification">🔔</div>
+                <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">Alertas Preventivos</h3>
+                <p class="text-gray-700 mb-4 text-sm md:text-base">
                     Notificações automáticas antes do vencimento das certidões. Renove com um clique e evite 
                     bloqueios que possam impactar os negócios do seu cliente.
+                </p>
+                <p class="text-base md:text-lg font-semibold text-amber-600">
+                    Evite bloqueios antes que aconteçam
                 </p>
             </div>
 
             <!-- Card 3: Painel de Saúde -->
-            <div class="feature-card bg-white rounded-lg shadow-sm p-8 border border-gray-200">
-                <div class="text-center mb-6">
-                    <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Painel de Saúde</h3>
-                </div>
-                <p class="text-gray-600 text-center leading-relaxed">
+            <div class="feature-card bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 md:p-8 shadow-sm">
+                <div class="text-4xl md:text-5xl mb-4">💚</div>
+                <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">Painel de Saúde</h3>
+                <p class="text-gray-700 mb-4 text-sm md:text-base">
                     Visualização única de empresas saudáveis vs. empresas que exigem atenção. Tenha uma visão 
                     completa do status fiscal de todo o seu portfólio em um só lugar.
+                </p>
+                <p class="text-base md:text-lg font-semibold text-green-600">
+                    Visão completa do seu portfólio
                 </p>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Seção: Destaque Visual - Painel de Saúde -->
-<section class="py-20 bg-white">
+<!-- Seção 5: Painel de Saúde Fiscal -->
+<section class="py-20 bg-gray-50 section-fade-in">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -326,8 +373,8 @@
     </div>
 </section>
 
-<!-- Call to Action -->
-<section class="py-20 bg-gradient-to-br from-blue-600 to-indigo-700">
+<!-- Seção 6: Call to Action -->
+<section class="hero-gradient py-20">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">
             Agora temos a proteção do cliente garantida.
@@ -341,3 +388,32 @@
         </a>
     </div>
 </section>
+
+<script>
+    // Setup scroll animations
+    function setupScrollAnimations() {
+        const sections = document.querySelectorAll('.section-fade-in');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        });
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+    }
+
+    // Initialize on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupScrollAnimations);
+    } else {
+        setupScrollAnimations();
+    }
+</script>
