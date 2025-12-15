@@ -32,6 +32,10 @@ class LandingPage extends Controller
         return $this->renderLanding($request, 'faq');
     }
 
+    public function precos(Request $request){
+        return $this->renderLanding($request, 'precos');
+    }
+
     public function questionario(Request $request){
         return $this->renderLanding($request, 'questionario');
     }
