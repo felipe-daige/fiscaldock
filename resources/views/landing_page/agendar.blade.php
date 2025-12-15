@@ -1,5 +1,5 @@
 
-<section class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 py-12 px-4">
+<section id="agendar-demo" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 py-12 px-4">
     <div class="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-5xl border border-gray-100 relative overflow-hidden">
         <!-- Decorative elements -->
         <div class="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-100 to-transparent rounded-full -translate-y-20 translate-x-20"></div>

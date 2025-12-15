@@ -403,7 +403,7 @@
 </style>
 
 <!-- Hero Section (refeito) -->
-<section class="relative bg-hero-gradient text-white">
+<section id="hero" class="relative bg-hero-gradient text-white">
     <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center justify-center">
             <!-- Coluna Esquerda: Texto -->
@@ -1421,7 +1421,7 @@
 </section>
 
 <!-- Para Quem É Section -->
-<section class="bg-gray-50 pt-20 pb-0">
+<section id="para-quem-e" class="bg-gray-50 pt-20 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1512,7 +1512,7 @@
 </section>
 
 <!-- Diferenciais Section -->
-<section class="bg-white pt-20 pb-0">
+<section id="diferenciais" class="bg-white pt-20 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1598,7 +1598,7 @@
 </section>
 
 <!-- Segurança e LGPD Section -->
-<section class="bg-gray-50 pt-20 pb-0">
+<section id="seguranca-lgpd" class="bg-gray-50 pt-20 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1661,7 +1661,7 @@
 
 {{-- Estatísticas Section removida a pedido do cliente --}}
 <!-- Depoimentos Section -->
-<section class="bg-white pt-20 pb-0">
+<section id="depoimentos" class="bg-white pt-20 pb-0">
     <div class="w-full">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
             <div class="text-center mb-16">
