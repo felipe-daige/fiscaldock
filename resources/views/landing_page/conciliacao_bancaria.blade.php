@@ -1,4 +1,52 @@
 <style>
+    /* Estilos para landing page */
+    .hero-gradient {
+        background: linear-gradient(135deg, #0b1f3a 0%, #1e4fa0 50%, #133a73 100%);
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .feature-card {
+        transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .section-fade-in {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.6s ease;
+    }
+
+    .section-fade-in.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .demo-area {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border-radius: 1rem;
+        padding: 3rem;
+        position: relative;
+    }
+
     @keyframes pulse-badge {
         0%, 100% {
             transform: scale(1);
@@ -14,25 +62,16 @@
         animation: pulse-badge 2s ease-in-out infinite;
     }
     
-    .feature-card {
-        transition: all 0.3s ease;
-    }
-    
-    .feature-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    }
-    
     .process-step {
         opacity: 0;
-        animation: fadeInUp 0.6s ease forwards;
+        animation: fadeInUpStep 0.6s ease forwards;
     }
     
     .process-step:nth-child(1) { animation-delay: 0.1s; }
     .process-step:nth-child(2) { animation-delay: 0.3s; }
     .process-step:nth-child(3) { animation-delay: 0.5s; }
     
-    @keyframes fadeInUp {
+    @keyframes fadeInUpStep {
         from {
             opacity: 0;
             transform: translateY(20px);
@@ -42,124 +81,131 @@
             transform: translateY(0);
         }
     }
+
+    @media (max-width: 640px) {
+        .hero-gradient h1 {
+            font-size: 2rem;
+        }
+        
+        .hero-gradient p {
+            font-size: 1rem;
+        }
+
+        .demo-area {
+            padding: 2rem 1rem;
+        }
+    }
 </style>
 
 <!-- Hero Section -->
-<section class="bg-gradient-to-br from-blue-50 to-indigo-100 py-20">
+<section class="hero-gradient py-12 md:py-20 text-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center">
-            <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+        <div class="text-center fade-in-up">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6">
                 Conciliação Bancária que te Devolve o Tempo
             </h1>
-            <p class="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            <p class="text-lg sm:text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto mb-6 md:mb-8 px-4">
                 Diga adeus ao 'bater' extrato. Seu financeiro e sua contabilidade em perfeita sintonia.
             </p>
         </div>
     </div>
 </section>
 
-<!-- Seção: O que fazemos -->
-<section class="py-12 bg-white">
+<!-- Seção 2: Demonstração Visual Interativa -->
+<section class="py-16 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-                <h2 class="text-3xl font-bold text-gray-900 mb-6">
-                    O que fazemos
-                </h2>
-                <div class="space-y-4 text-gray-700 leading-relaxed">
-                    <p class="text-lg">
-                        Nossa solução de <strong class="text-gray-900">Conciliação Bancária Automatizada</strong> transforma 
-                        um processo manual e demorado em uma operação rápida e precisa.
-                    </p>
-                    <ul class="space-y-3">
-                        <li class="flex items-start gap-3">
-                            <svg class="w-6 h-6 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <span><strong>Leitura automática de extratos OFX:</strong> Importe extratos bancários em segundos, sem digitação manual.</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <svg class="w-6 h-6 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <span><strong>Cruzamento inteligente:</strong> Sistema cruza automaticamente com Notas Fiscais e impostos já registrados.</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <svg class="w-6 h-6 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <span><strong>Identificação automática:</strong> Reconhece pagamentos e recebimentos sem intervenção manual.</span>
-                        </li>
-                    </ul>
-                </div>
+        <div class="demo-area">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Veja Como Funciona</h2>
+                <p class="text-lg text-gray-600">Conciliação bancária automatizada em ação</p>
             </div>
             <div class="flex justify-center">
                 <div class="relative">
-                    <img src="{{ asset('icone-gif/process.gif') }}" alt="Processo de Conciliação" class="w-full max-w-md object-contain">
+                    <img src="{{ asset('icone-gif/process.gif') }}" alt="Processo de Conciliação" class="w-full max-w-md object-contain rounded-lg shadow-lg">
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Seção: O Mágico do Match -->
-<section class="py-20 bg-gray-50">
+<!-- Seção 3: O que Fazemos -->
+<section class="py-16 bg-gray-50 section-fade-in">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-            <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                O Mágico do <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">Match</span>
-            </h2>
-            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">O que Fazemos</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Nossa solução de <strong class="text-gray-900">Conciliação Bancária Automatizada</strong> transforma 
+                um processo manual e demorado em uma operação rápida e precisa.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div class="bg-white rounded-lg p-6 text-center shadow-sm feature-card">
+                <div class="text-4xl mb-4">📊</div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Leitura Automática</h3>
+                <p class="text-gray-600">Importe extratos bancários OFX em segundos, sem digitação manual.</p>
+            </div>
+            <div class="bg-white rounded-lg p-6 text-center shadow-sm feature-card">
+                <div class="text-4xl mb-4">🔗</div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Cruzamento Inteligente</h3>
+                <p class="text-gray-600">Sistema cruza automaticamente com Notas Fiscais e impostos já registrados.</p>
+            </div>
+            <div class="bg-white rounded-lg p-6 text-center shadow-sm feature-card">
+                <div class="text-4xl mb-4">✅</div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Identificação Automática</h3>
+                <p class="text-gray-600">Reconhece pagamentos e recebimentos sem intervenção manual.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Seção 4: Automação Inteligente -->
+<section class="py-16 bg-white section-fade-in">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">Automação Inteligente</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
                 Tecnologia de ponta que garante precisão e economia de tempo na conciliação bancária
             </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             <!-- Card 1: Match Inteligente -->
-            <div class="feature-card bg-white rounded-lg shadow-sm p-8 border border-gray-200">
-                <div class="text-center mb-6">
-                    <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Match Inteligente</h3>
-                </div>
-                <p class="text-gray-600 text-center leading-relaxed">
+            <div class="feature-card bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6 md:p-8 shadow-sm">
+                <div class="text-4xl md:text-5xl mb-4">🤖</div>
+                <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">Match Inteligente</h3>
+                <p class="text-gray-700 mb-4 text-sm md:text-base">
                     Machine learning avançado para reconhecer despesas mesmo sem nota fiscal associada. 
                     O sistema aprende com seus padrões e melhora a cada conciliação.
+                </p>
+                <p class="text-base md:text-lg font-semibold text-blue-600">
+                    Aprende e melhora continuamente
                 </p>
             </div>
 
             <!-- Card 2: Integridade Garantida -->
-            <div class="feature-card bg-white rounded-lg shadow-sm p-8 border border-gray-200">
-                <div class="text-center mb-6">
-                    <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Integridade Garantida</h3>
-                </div>
-                <p class="text-gray-600 text-center leading-relaxed">
+            <div class="feature-card bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 md:p-8 shadow-sm">
+                <div class="text-4xl md:text-5xl mb-4">🛡️</div>
+                <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">Integridade Garantida</h3>
+                <p class="text-gray-700 mb-4 text-sm md:text-base">
                     Encontre divergências em segundos. O sistema identifica automaticamente 
                     inconsistências entre extratos e registros contábeis, garantindo precisão total.
+                </p>
+                <p class="text-base md:text-lg font-semibold text-green-600">
+                    Precisão total garantida
                 </p>
             </div>
 
             <!-- Card 3: Foco no Excepcional -->
-            <div class="feature-card bg-white rounded-lg shadow-sm p-8 border border-gray-200">
-                <div class="text-center mb-6">
-                    <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Foco no Excepcional</h3>
-                </div>
-                <p class="text-gray-600 text-center leading-relaxed">
+            <div class="feature-card bg-gradient-to-br from-yellow-50 to-amber-50 rounded-lg p-6 md:p-8 shadow-sm">
+                <div class="text-4xl md:text-5xl mb-4">⚡</div>
+                <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">Foco no Excepcional</h3>
+                <p class="text-gray-700 mb-4 text-sm md:text-base">
                     Revise apenas os 5% que não deram match automático. Economize tempo focando 
                     apenas no que realmente precisa da sua atenção.
+                </p>
+                <p class="text-base md:text-lg font-semibold text-amber-600">
+                    Economize tempo focando no essencial
                 </p>
             </div>
         </div>
@@ -179,8 +225,8 @@
     </div>
 </section>
 
-<!-- Seção: Destaque Visual do Processo -->
-<section class="py-20 bg-white">
+<!-- Seção 5: Como Funciona -->
+<section class="py-20 bg-gray-50 section-fade-in">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -261,8 +307,8 @@
     </div>
 </section>
 
-<!-- Call to Action -->
-<section class="py-20 bg-gradient-to-br from-blue-600 to-indigo-700">
+<!-- Seção 6: Call to Action -->
+<section class="hero-gradient py-20">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">
             Pronto para economizar horas de trabalho?
@@ -276,3 +322,32 @@
         </a>
     </div>
 </section>
+
+<script>
+    // Setup scroll animations
+    function setupScrollAnimations() {
+        const sections = document.querySelectorAll('.section-fade-in');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        });
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+    }
+
+    // Initialize on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupScrollAnimations);
+    } else {
+        setupScrollAnimations();
+    }
+</script>

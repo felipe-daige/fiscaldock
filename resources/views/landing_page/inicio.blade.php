@@ -404,7 +404,7 @@
 
 <!-- Hero Section (refeito) -->
 <section id="hero" class="relative bg-hero-gradient text-white">
-    <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
+    <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center justify-center">
             <!-- Coluna Esquerda: Texto -->
             <div class="lg:col-span-5 xl:col-span-6">

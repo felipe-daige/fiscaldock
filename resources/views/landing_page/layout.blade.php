@@ -38,20 +38,6 @@
                 <!-- Desktop Navigation -->
                 <ul class="hidden md:flex items-center gap-8">
                     <li class="relative group">
-                        <a href="/sobre" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium flex items-center gap-1">
-                            Sobre
-                            <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </a>
-                        <div class="dropdown-menu absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform group-hover:translate-y-0 translate-y-2">
-                            <a href="/sobre" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-t-lg">Conhecer</a>
-                            <a href="/beneficios" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Benefícios</a>
-                            <a href="/impactos" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Impactos</a>
-                            <a href="/faq" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-b-lg">Perguntas</a>
-                        </div>
-                    </li>
-                    <li class="relative group">
                         <a href="/solucoes" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium flex items-center gap-1">
                             Soluções
                             <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,9 +48,23 @@
                             <a href="/solucoes/importacao-xml" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-t-lg">Importação de XMLs</a>
                             <a href="/solucoes/conciliacao-bancaria" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Conciliação Bancária</a>
                             <a href="/solucoes/gestao-cnds" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Gestão de CNDs</a>
-                            <a href="/solucoes#raf" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">RAF</a>
-                            <a href="/solucoes#inteligencia-tributaria" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Inteligência Tributária</a>
+                            <a href="/solucoes/raf" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">RAF</a>
+                            <a href="/solucoes/inteligencia-tributaria" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Inteligência Tributária</a>
                             <a href="/solucoes" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-b-lg">Ver Todas as Soluções</a>
+                        </div>
+                    </li>
+                    <li class="relative group">
+                        <a href="/sobre" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium flex items-center gap-1">
+                            Conhecer
+                            <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </a>
+                        <div class="dropdown-menu absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform group-hover:translate-y-0 translate-y-2">
+                            <a href="/sobre" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-t-lg">Sobre</a>
+                            <a href="/beneficios" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Benefícios</a>
+                            <a href="/impactos" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Impactos</a>
+                            <a href="/faq" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-b-lg">Perguntas</a>
                         </div>
                     </li>
                     <li><a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Preços</a></li>
@@ -82,8 +82,8 @@
 
             <!-- Mobile Menu -->
             <div id="mobile-menu" class="hidden md:hidden flex-col gap-4 py-4 border-t border-gray-200">
-                <a href="/sobre" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Sobre</a>
                 <a href="/solucoes" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Soluções</a>
+                <a href="/sobre" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Conhecer</a>
                 <a href="/beneficios" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Benefícios</a>
                 <a href="/impactos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Impactos</a>
                 <a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Preços</a>
@@ -126,7 +126,7 @@
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Links Rápidos</h3>
                     <ul class="space-y-3">
                         <li><a href="/inicio" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Início</a></li>
-                        <li><a href="/sobre" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Sobre</a></li>
+                        <li><a href="/sobre" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Conhecer</a></li>
                         <li><a href="/beneficios" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Benefícios</a></li>
                         <li><a href="/impactos" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Impactos</a></li>
                         <li><a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Preços</a></li>

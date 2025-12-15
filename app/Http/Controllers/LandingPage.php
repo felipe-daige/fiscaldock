@@ -56,6 +56,14 @@ class LandingPage extends Controller
         return $this->renderLanding($request, 'gestao_cnds');
     }
 
+    public function inteligenciaTributaria(Request $request){
+        return $this->renderLanding($request, 'inteligencia_tributaria');
+    }
+
+    public function raf(Request $request){
+        return $this->renderLanding($request, 'raf');
+    }
+
     /**
      * Renderiza uma view da landing page aplicando o tema padrão e redirecionando
      * usuários autenticados para o dashboard.
