@@ -1,8 +1,8 @@
 <!-- Hero Section -->
-<section class="bg-white pt-20 pb-12">
+<section class="bg-white pt-12 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-            <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+        <div class="text-center mb-4">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-1">
                 Planos e Preços
             </h1>
             <p class="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -10,12 +10,18 @@
             </p>
         </div>
     </div>
+    <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
+    <div class="pointer-events-none leading-none">
+        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
+            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
+        </svg>
+    </div>
 </section>
 
 <!-- Seletor de Período -->
-<section class="bg-gray-50 py-8">
+<section class="bg-gray-50 py-2">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-center mb-8">
+        <div class="flex justify-center mb-2">
             <div class="inline-flex bg-white rounded-lg p-1 shadow-sm border border-gray-200">
                 <button 
                     id="period-anual" 
@@ -44,9 +50,9 @@
 </section>
 
 <!-- Cards de Planos -->
-<section class="bg-gray-50 py-12 pb-20">
+<section class="bg-gray-50 py-4 pb-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Plano Light -->
             <div class="plan-card bg-white rounded-xl shadow-sm border-2 border-gray-200 p-8 hover:shadow-lg transition-all duration-300" data-plan="light">
                 <div class="text-center mb-6">
@@ -290,10 +296,10 @@
 </section>
 
 <!-- Tabela Comparativa -->
-<section id="compare" class="bg-white py-20">
+<section id="compare" class="bg-white py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+        <div class="text-center mb-6">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
                 Compare os planos
             </h2>
         </div>
