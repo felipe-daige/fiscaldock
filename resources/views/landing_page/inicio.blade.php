@@ -219,27 +219,37 @@
     cursor: pointer;
 }
 
-/* Pills de navegação */
+/* Navegação em pills - faixa leve e sutil */
+.solution-pill-group {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+}
+
 .solution-pill {
     cursor: pointer;
-    border: 2px solid transparent;
-    transition: all 0.3s ease;
+    border: 1px solid transparent;
+    transition: all 0.25s ease;
+    color: var(--color-text-muted);
+    background-color: transparent;
+    border-radius: 999px;
 }
 
 .solution-pill.active {
-    background-color: var(--color-surface) !important;
-    color: var(--color-text) !important;
-    border-color: var(--color-primary-500) !important;
-    box-shadow: 0 2px 4px rgba(30, 79, 160, 0.25);
+    background-color: #ffffff !important;
+    color: #0f3d8e !important;
+    border-color: #0f3d8e !important;
+    box-shadow: 0 6px 18px rgba(15, 61, 142, 0.12);
 }
 
 .solution-pill:not(.active) {
-    background-color: var(--color-surface-alt);
     color: var(--color-text-muted);
 }
 
 .solution-pill:hover:not(.active) {
-    background-color: var(--color-border);
+    background-color: #edf2f7;
+    color: var(--color-text);
 }
 
 /* Estilos para cards de depoimentos */
@@ -1272,25 +1282,27 @@
             </div>
 
             <!-- Navegação por Pills -->
-            <div class="flex justify-center gap-3 mt-8 flex-wrap">
-                <button class="solution-pill active px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="documentos">
-                    Central de Documentos
-                </button>
-                <button class="solution-pill px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="diagnostico">
-                    Leitura e Diagnóstico
-                </button>
-                <button class="solution-pill px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="regras">
-                    Motor de Regras
-                </button>
-                <button class="solution-pill px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="compliance">
-                    Compliance Fiscal
-                </button>
-                <button class="solution-pill px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="comunicacao">
-                    Automação WhatsApp
-                </button>
-                <button class="solution-pill px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="portal">
-                    Portal do Cliente
-                </button>
+            <div class="w-full flex justify-center mt-6 overflow-x-auto">
+                <div class="solution-pill-group inline-flex flex-nowrap items-center justify-center whitespace-nowrap gap-1.5 sm:gap-[0.625rem] px-3.5 sm:px-5 py-2.5 rounded-full bg-gray-50 shadow-sm min-w-fit">
+                    <button class="solution-pill active px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="documentos">
+                        Central de Documentos
+                    </button>
+                    <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="diagnostico">
+                        Leitura e Diagnóstico
+                    </button>
+                    <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="regras">
+                        Motor de Regras
+                    </button>
+                    <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="compliance">
+                        Compliance Fiscal
+                    </button>
+                    <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="comunicacao">
+                        Automação WhatsApp
+                    </button>
+                    <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="portal">
+                        Portal do Cliente
+                    </button>
+                </div>
             </div>
         </div>
     </div>
