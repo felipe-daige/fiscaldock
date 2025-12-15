@@ -24,7 +24,6 @@
     <script src="{{ asset('js/login.js') }}"></script>
     <script src="{{ asset('js/agendar.js') }}"></script>
     <script src="{{ asset('js/toast.js') }}"></script>
-    <script src="{{ asset('js/inicio.js') }}"></script>
 </head>
 <body class="{{ $themeClass ?? 'theme-default' }}">
     <!-- Header -->
