@@ -1,28 +1,69 @@
 // Armazenar instâncias dos gráficos para poder destruí-los
 let chartInstances = {};
+let _chartCheckInterval = null;
 
 // Função específica para a página de impactos
 function initImpactos() {
+    // Limpar intervalo anterior se existir
+    if (_chartCheckInterval) {
+        clearInterval(_chartCheckInterval);
+        _chartCheckInterval = null;
+    }
+    
     // Verificar se Chart.js está carregado
     if (typeof Chart === 'undefined') {
         console.error('Chart.js não está carregado. Aguardando...');
         // Tentar novamente após um delay
         let tentativas = 0;
-        const verificarChart = setInterval(() => {
+        _chartCheckInterval = setInterval(() => {
             tentativas++;
             if (typeof Chart !== 'undefined') {
-                clearInterval(verificarChart);
+                clearInterval(_chartCheckInterval);
+                _chartCheckInterval = null;
                 initCharts();
             } else if (tentativas >= 10) {
                 console.error('Chart.js ainda não está disponível após 10 tentativas');
-                clearInterval(verificarChart);
+                clearInterval(_chartCheckInterval);
+                _chartCheckInterval = null;
             }
         }, 200);
+        
+        // Registrar intervalo no sistema de recursos
+        if (window._spaResources && _chartCheckInterval) {
+            window._spaResources.intervals.push(_chartCheckInterval);
+        }
         return;
     }
     
     initCharts();
 }
+
+// Função de limpeza para recursos da página de impactos
+function cleanupImpactos() {
+    // Limpar intervalo de verificação
+    if (_chartCheckInterval) {
+        clearInterval(_chartCheckInterval);
+        _chartCheckInterval = null;
+    }
+    
+    // Destruir todos os gráficos
+    Object.keys(chartInstances).forEach(key => {
+        try {
+            if (chartInstances[key] && typeof chartInstances[key].destroy === 'function') {
+                chartInstances[key].destroy();
+            }
+        } catch (error) {
+            console.error(`Erro ao destruir gráfico ${key}:`, error);
+        }
+    });
+    chartInstances = {};
+}
+
+// Registrar função de cleanup no sistema global
+if (!window._cleanupFunctions) {
+    window._cleanupFunctions = {};
+}
+window._cleanupFunctions.initImpactos = cleanupImpactos;
 
 // Configuração de cores baseada no tema
 function getChartColors() {

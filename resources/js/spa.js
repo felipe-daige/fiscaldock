@@ -1,6 +1,95 @@
 document.addEventListener('DOMContentLoaded', () => {
     const app = document.getElementById('app');
     
+    // Sistema de gerenciamento de recursos globais
+    window._spaResources = {
+        intervals: [],
+        swipers: [],
+        listeners: []
+    };
+    
+    // 0. LIMPAR RECURSOS ANTES DE NAVEGAR
+    function limparRecursos() {
+        // Resetar flags de inicialização ANTES de limpar recursos
+        // Isso garante que as páginas possam ser reinicializadas após navegação
+        
+        // Resetar layout
+        if (window.resetLayout && typeof window.resetLayout === 'function') {
+            try {
+                window.resetLayout();
+            } catch (error) {
+                console.error('Erro ao resetar layout:', error);
+            }
+        }
+        
+        // Resetar flags globais de inicialização se existirem
+        if (typeof window._layoutInitialized !== 'undefined') {
+            window._layoutInitialized = false;
+        }
+        if (typeof window._inicioInitialized !== 'undefined') {
+            window._inicioInitialized = false;
+        }
+        if (typeof window._precosInitialized !== 'undefined') {
+            window._precosInitialized = false;
+        }
+        if (typeof window._solucoesInitialized !== 'undefined') {
+            window._solucoesInitialized = false;
+        }
+        if (typeof window._faqInitialized !== 'undefined') {
+            window._faqInitialized = false;
+        }
+        if (typeof window._impactosInitialized !== 'undefined') {
+            window._impactosInitialized = false;
+        }
+        if (typeof window._solucoesCarouselInitialized !== 'undefined') {
+            window._solucoesCarouselInitialized = false;
+        }
+        
+        // Limpar todos os intervalos
+        window._spaResources.intervals.forEach(intervalId => {
+            clearInterval(intervalId);
+        });
+        window._spaResources.intervals = [];
+        
+        // Destruir todas as instâncias Swiper
+        window._spaResources.swipers.forEach(swiper => {
+            try {
+                if (swiper && typeof swiper.destroy === 'function') {
+                    swiper.destroy(true, true);
+                }
+            } catch (error) {
+                // Ignorar erros ao destruir Swiper
+            }
+        });
+        window._spaResources.swipers = [];
+        
+        // Remover listeners específicos (se necessário)
+        window._spaResources.listeners.forEach(({ element, event, handler }) => {
+            try {
+                if (element && handler) {
+                    element.removeEventListener(event, handler);
+                }
+            } catch (error) {
+                // Ignorar erros ao remover listeners
+            }
+        });
+        window._spaResources.listeners = [];
+        
+        // Limpar recursos de funções init específicas se existirem
+        if (window._cleanupFunctions) {
+            Object.values(window._cleanupFunctions).forEach(cleanup => {
+                try {
+                    if (typeof cleanup === 'function') {
+                        cleanup();
+                    }
+                } catch (error) {
+                    // Ignorar erros de cleanup
+                }
+            });
+            window._cleanupFunctions = {};
+        }
+    }
+    
     // 1. INTERCEPTAR CLIQUES EM LINKS
     document.body.addEventListener('click', async (e) => {
         const link = e.target.closest('[data-link]');
@@ -15,6 +104,9 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // Mostrar loading
             mostrarLoading();
+            
+            // Limpar recursos antes de navegar
+            limparRecursos();
             
             // Buscar conteúdo da nova página
             const resposta = await fetch(url, {
@@ -55,6 +147,15 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Executar scripts da nova página
             executarScripts();
+            
+            // Inicializar layout (menu mobile, etc.)
+            if (window.initLayout && typeof window.initLayout === 'function') {
+                try {
+                    window.initLayout();
+                } catch (error) {
+                    console.error('Erro ao inicializar layout:', error);
+                }
+            }
             
             // Voltar ao topo
             window.scrollTo(0, 0);
@@ -105,25 +206,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (script.textContent && script.textContent.trim() !== '') {
                     // Adicionar handler de erro para capturar erros de sintaxe
                     novoScript.onerror = function(error) {
-                        // Erro ao executar script
+                        console.error('Erro ao executar script:', error);
                     };
                     
-                    script.parentNode.replaceChild(novoScript, script);
+                    // Adicionar ao head para executar
+                    document.head.appendChild(novoScript);
+                    
+                    // Remover script original do app
+                    script.parentNode.removeChild(script);
                 } else {
                     // Remover script vazio
                     script.parentNode.removeChild(script);
                 }
             } catch (error) {
+                console.error('Erro ao processar script:', error);
                 // Continuar com outros scripts mesmo se um falhar
             }
         });
         
-        // Executar funções específicas de cada página
-        try {
-            executarFuncoesEspecificas();
-        } catch (error) {
-            // Erro ao executar funções específicas
-        }
+        // Aguardar um pouco para garantir que scripts foram executados
+        setTimeout(() => {
+            // Executar funções específicas de cada página
+            try {
+                executarFuncoesEspecificas();
+            } catch (error) {
+                console.error('Erro ao executar funções específicas:', error);
+            }
+        }, 50);
     }
     
     // 4.1. EXECUTAR FUNÇÕES ESPECÍFICAS
@@ -151,7 +260,8 @@ document.addEventListener('DOMContentLoaded', () => {
             '/solucoes': 'initSolucoes',
             '/beneficios': 'initBeneficios',
             '/faq': 'initFaq',
-            '/impactos': 'initImpactos'
+            '/impactos': 'initImpactos',
+            '/precos': 'initPrecos'
         };
         
         if (funcoesEspecificas[caminho] && window[funcoesEspecificas[caminho]]) {
@@ -209,13 +319,15 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 window[nomeFuncao]();
             } catch (error) {
-                // Erro ao executar função
+                console.error(`Erro ao executar função ${nomeFuncao}:`, error);
             }
         } else if (tentativas < 5) {
             // Função ainda não está disponível, tentar novamente
             setTimeout(() => {
                 tentarExecutarFuncao(nomeFuncao, tentativas + 1);
             }, 200);
+        } else {
+            console.warn(`Função ${nomeFuncao} não encontrada após ${tentativas} tentativas`);
         }
     }
     
