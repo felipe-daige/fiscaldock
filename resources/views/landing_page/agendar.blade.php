@@ -212,7 +212,7 @@
                 <div class="flex items-start">
                     <input type="checkbox" id="marketing" class="mt-1 mr-3">
                     <label for="marketing" class="text-sm text-gray-600">
-                        Desejo receber novidades, atualizações sobre o HUB Fiscal & Compliance e ofertas por e-mail
+                        Desejo receber novidades, atualizações sobre o FiscalDock e ofertas por e-mail
                     </label>
                 </div>
             </div>

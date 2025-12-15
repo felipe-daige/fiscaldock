@@ -1,5 +1,6 @@
 // Função específica para a página de soluções
 let _solucoesSwiper = null;
+let _solucoesAccordionHandlers = [];
 
 function initSolucoes() {
     // Destruir instância Swiper anterior se existir
@@ -59,6 +60,90 @@ function initSolucoes() {
     if (window._spaResources) {
         window._spaResources.swipers.push(_solucoesSwiper);
     }
+    
+    // Inicializar accordion de soluções
+    initSolucoesAccordion();
+}
+
+// Função para inicializar accordion de soluções
+function initSolucoesAccordion() {
+    const accordionItems = document.querySelectorAll('.solution-accordion-item');
+    
+    if (accordionItems.length === 0) return;
+    
+    // Remover listeners antigos se existirem
+    _solucoesAccordionHandlers.forEach(({ element, handler }) => {
+        if (element && handler) {
+            element.removeEventListener('click', handler);
+        }
+    });
+    _solucoesAccordionHandlers = [];
+    
+    accordionItems.forEach((item) => {
+        const header = item.querySelector('.solution-accordion-header');
+        const content = item.querySelector('.solution-accordion-content');
+        const svg = header?.querySelector('svg');
+        
+        if (!header || !content) return;
+        
+        // Criar handler para este item
+        const handler = function(e) {
+            e.preventDefault();
+            
+            const isActive = item.classList.contains('active');
+            const contentDiv = content.querySelector('div');
+            
+            // Toggle atual
+            if (isActive) {
+                item.classList.remove('active');
+                content.style.maxHeight = '0';
+                content.style.opacity = '0';
+                if (svg) {
+                    svg.style.transform = 'rotate(0deg)';
+                }
+            } else {
+                item.classList.add('active');
+                if (contentDiv) {
+                    content.style.maxHeight = contentDiv.scrollHeight + 'px';
+                } else {
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                }
+                content.style.opacity = '1';
+                if (svg) {
+                    svg.style.transform = 'rotate(180deg)';
+                }
+            }
+        };
+        
+        header.addEventListener('click', handler);
+        _solucoesAccordionHandlers.push({ element: header, handler });
+        
+        // Estado inicial - fechado
+        content.style.maxHeight = '0';
+        content.style.opacity = '0';
+        content.style.transition = 'max-height 0.3s ease, opacity 0.3s ease';
+        if (svg) {
+            svg.style.transition = 'transform 0.3s ease';
+        }
+    });
+    
+    // Expandir accordion se houver hash no URL
+    const hash = window.location.hash;
+    if (hash) {
+        const targetId = hash.substring(1); // Remove o #
+        const targetItem = document.getElementById(targetId);
+        if (targetItem && targetItem.classList.contains('solution-accordion-item')) {
+            const header = targetItem.querySelector('.solution-accordion-header');
+            if (header) {
+                // Simular clique após um pequeno delay para garantir que o DOM está pronto
+                setTimeout(() => {
+                    header.click();
+                    // Scroll suave até o elemento
+                    targetItem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+        }
+    }
 }
 
 // Função de limpeza para recursos da página de soluções
@@ -71,6 +156,14 @@ function cleanupSolucoes() {
         }
         _solucoesSwiper = null;
     }
+    
+    // Limpar handlers do accordion
+    _solucoesAccordionHandlers.forEach(({ element, handler }) => {
+        if (element && handler) {
+            element.removeEventListener('click', handler);
+        }
+    });
+    _solucoesAccordionHandlers = [];
 }
 
 // Registrar função de cleanup no sistema global

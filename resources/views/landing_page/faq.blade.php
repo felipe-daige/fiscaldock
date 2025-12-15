@@ -6,7 +6,7 @@
                 Perguntas <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">Frequentes</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                Tire suas dúvidas sobre o HUB Fiscal & Compliance e como ele pode transformar seu dia a dia
+                Tire suas dúvidas sobre o FiscalDock e como ele pode transformar seu dia a dia
             </p>
         </div>
 

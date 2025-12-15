@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>HUB Fiscal & Compliance | Transforme SPED em Ações e Relatórios</title>
-    <meta name="description" content="O HUB Fiscal & Compliance que transforma SPED e documentos em ações, relatórios e previsibilidade. Centralize arquivos fiscais, identifique pendências e automatize cobranças.">
+    <title>FiscalDock | Transforme SPED em Ações e Relatórios</title>
+    <meta name="description" content="O FiscalDock que transforma SPED e documentos em ações, relatórios e previsibilidade. Centralize arquivos fiscais, identifique pendências e automatize cobranças.">
     
     @vite(['resources/css/app.css', 'resources/js/spa.js'])
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
@@ -32,19 +32,44 @@
             <nav class="flex justify-between items-center py-6">
                 <a href="/inicio" class="flex items-center gap-3" data-link>
                     <div class="w-10 h-10 brand-mark rounded-lg flex items-center justify-center font-bold text-white text-xl">H</div>
-                    <span class="text-xl font-bold text-gray-900">HUB Fiscal & Compliance</span>
+                    <span class="text-xl font-bold text-gray-900">FiscalDock</span>
                 </a>
 
                 <!-- Desktop Navigation -->
                 <ul class="hidden md:flex items-center gap-8">
-                    <li><a href="/inicio" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Início</a></li>
-                    <li><a href="/solucoes" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Soluções</a></li>
-                    <li><a href="/beneficios" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Benefícios</a></li>
-                    <li><a href="/impactos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Impactos</a></li>
+                    <li class="relative group">
+                        <a href="/sobre" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium flex items-center gap-1">
+                            Sobre
+                            <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </a>
+                        <div class="dropdown-menu absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform group-hover:translate-y-0 translate-y-2">
+                            <a href="/sobre" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-t-lg">Conhecer</a>
+                            <a href="/beneficios" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Benefícios</a>
+                            <a href="/impactos" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Impactos</a>
+                            <a href="/faq" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-b-lg">Perguntas</a>
+                        </div>
+                    </li>
+                    <li class="relative group">
+                        <a href="/solucoes" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium flex items-center gap-1">
+                            Soluções
+                            <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </a>
+                        <div class="dropdown-menu absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform group-hover:translate-y-0 translate-y-2">
+                            <a href="/solucoes/importacao-xml" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-t-lg">Importação de XMLs</a>
+                            <a href="/solucoes/conciliacao-bancaria" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Conciliação Bancária</a>
+                            <a href="/solucoes/gestao-cnds" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Gestão de CNDs</a>
+                            <a href="/solucoes#raf" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">RAF</a>
+                            <a href="/solucoes#inteligencia-tributaria" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Inteligência Tributária</a>
+                            <a href="/solucoes" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-b-lg">Ver Todas as Soluções</a>
+                        </div>
+                    </li>
                     <li><a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Preços</a></li>
-                    <li><a href="/faq" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">FAQ</a></li>
-                    <li><a href="/login" data-link class="btn-primary text-white font-semibold px-6 py-2 rounded-lg transition-colors">Login</a></li>
-                    <li><a href="/agendar" data-link class="btn-outline-primary font-semibold px-6 py-2 rounded-lg transition-colors">Testar Agora</a></li>
+                    <li><a href="/login" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Login</a></li>
+                    <li><a href="/agendar" data-link class="btn-accent font-normal px-6 py-2 rounded-lg">Testar Agora</a></li>
                 </ul>
 
                 <!-- Mobile Menu Button -->
@@ -57,14 +82,14 @@
 
             <!-- Mobile Menu -->
             <div id="mobile-menu" class="hidden md:hidden flex-col gap-4 py-4 border-t border-gray-200">
-                <a href="/inicio" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Início</a>
+                <a href="/sobre" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Sobre</a>
                 <a href="/solucoes" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Soluções</a>
                 <a href="/beneficios" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Benefícios</a>
                 <a href="/impactos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Impactos</a>
                 <a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Preços</a>
-                <a href="/faq" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">FAQ</a>
-                <a href="/login" data-link class="btn-primary text-white font-semibold px-6 py-3 rounded-lg transition-colors text-center">Login</a>
-                <a href="/agendar" data-link class="btn-outline-primary font-semibold px-6 py-3 rounded-lg transition-colors text-center">Testar Agora</a>
+                <a href="/faq" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Perguntas</a>
+                <a href="/login" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Login</a>
+                <a href="/agendar" data-link class="btn-accent font-normal px-6 py-3 rounded-lg text-center">Testar Agora</a>
             </div>
         </div>
     </header>
@@ -89,7 +114,7 @@
                 <div>
                     <div class="flex items-center gap-3 mb-4">
                         <div class="w-10 h-10 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center font-bold text-white text-xl">H</div>
-                        <h3 class="text-lg font-semibold text-gray-900">HUB Fiscal & Compliance</h3>
+                        <h3 class="text-lg font-semibold text-gray-900">FiscalDock</h3>
                     </div>
                     <p class="text-gray-600 leading-relaxed">
                         O centro operacional que transforma SPED e documentos em ações, relatórios e previsibilidade para escritórios contábeis e empresas.
@@ -101,11 +126,11 @@
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Links Rápidos</h3>
                     <ul class="space-y-3">
                         <li><a href="/inicio" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Início</a></li>
-                        <li><a href="/solucoes" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Soluções</a></li>
+                        <li><a href="/sobre" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Sobre</a></li>
                         <li><a href="/beneficios" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Benefícios</a></li>
                         <li><a href="/impactos" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Impactos</a></li>
                         <li><a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Preços</a></li>
-                        <li><a href="/faq" data-link class="text-gray-600 hover:text-blue-500 transition-colors">FAQ</a></li>
+                        <li><a href="/faq" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Perguntas</a></li>
                     </ul>
                 </div>
 
@@ -128,7 +153,7 @@
             </div>
 
             <div class="text-center pt-8 border-t border-gray-200 text-gray-600">
-                <p>&copy; <span id="current-year"></span> HUB Fiscal & Compliance. Todos os direitos reservados.</p>
+                <p>&copy; <span id="current-year"></span> FiscalDock. Todos os direitos reservados.</p>
             </div>
         </div>
     </footer>

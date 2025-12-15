@@ -20,6 +20,10 @@ class LandingPage extends Controller
         return $this->renderLanding($request, 'solucoes');
     }
 
+    public function sobre(Request $request){
+        return $this->renderLanding($request, 'sobre');
+    }
+
     public function beneficios(Request $request){
         return $this->renderLanding($request, 'beneficios');
     }
@@ -38,6 +42,18 @@ class LandingPage extends Controller
 
     public function questionario(Request $request){
         return $this->renderLanding($request, 'questionario');
+    }
+
+    public function importacaoXml(Request $request){
+        return $this->renderLanding($request, 'importacao_xml');
+    }
+
+    public function conciliacaoBancaria(Request $request){
+        return $this->renderLanding($request, 'conciliacao_bancaria');
+    }
+
+    public function gestaoCnds(Request $request){
+        return $this->renderLanding($request, 'gestao_cnds');
     }
 
     /**

@@ -258,6 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
             '/login': 'initLogin',
             '/agendar': 'initAgendar',
             '/solucoes': 'initSolucoes',
+            '/sobre': 'initSobre',
             '/beneficios': 'initBeneficios',
             '/faq': 'initFaq',
             '/impactos': 'initImpactos',
