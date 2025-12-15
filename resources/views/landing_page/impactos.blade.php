@@ -1,5 +1,5 @@
 <!-- O que hoje consome tempo e cria risco Section -->
-<section class="bg-white pt-20 pb-0">
+<section id="impactos-riscos" class="bg-white pt-20 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -93,7 +93,7 @@
 </section>
 
 <!-- Stats Section -->
-<section class="bg-gray-50 py-20">
+<section id="impactos-metricas" class="bg-gray-50 py-20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -127,7 +127,7 @@
 </section>
 
 <!-- CTA Section -->
-<section class="bg-gray-50 py-20">
+<section id="impactos-cta" class="bg-gray-50 py-20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">

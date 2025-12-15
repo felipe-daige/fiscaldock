@@ -1,5 +1,5 @@
 <!-- Hero Section -->
-<section class="bg-white pt-12 pb-0">
+<section id="precos-hero" class="bg-white pt-12 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-4">
             <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-1">
@@ -19,7 +19,7 @@
 </section>
 
 <!-- Seletor de Período -->
-<section class="bg-gray-50 py-2">
+<section id="precos-periodo" class="bg-gray-50 py-2">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-center mb-2">
             <div class="inline-flex bg-white rounded-lg p-1 shadow-sm border border-gray-200">
@@ -50,7 +50,7 @@
 </section>
 
 <!-- Cards de Planos -->
-<section class="bg-gray-50 py-4 pb-8">
+<section id="precos-planos" class="bg-gray-50 py-4 pb-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Plano Light -->
@@ -296,7 +296,7 @@
 </section>
 
 <!-- Tabela Comparativa -->
-<section id="compare" class="bg-white py-8">
+<section id="precos-compare" class="bg-white py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-6">
             <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
