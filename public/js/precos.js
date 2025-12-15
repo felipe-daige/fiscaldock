@@ -1,6 +1,19 @@
 // Função específica para a página de preços
+let _precosHandlers = [];
+let _precosInitialized = false;
+
 function initPrecos() {
+    // Limpar listeners anteriores se já foi inicializado
+    if (_precosInitialized) {
+        cleanupPrecos();
+    }
+    
     const periodButtons = document.querySelectorAll('.period-btn');
+    
+    if (periodButtons.length === 0) {
+        return; // Se não existir, não inicializa
+    }
+    
     let currentPeriod = 'anual'; // Período padrão
 
     // Dados dos preços por período e plano
@@ -75,21 +88,44 @@ function initPrecos() {
         });
     }
 
+    // Remover listeners antigos se existirem
+    _precosHandlers.forEach(({ element, handler }) => {
+        if (element && handler) {
+            element.removeEventListener('click', handler);
+        }
+    });
+    _precosHandlers = [];
+
     // Adicionar event listeners aos botões de período
     periodButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        const handler = function() {
             const period = this.dataset.period;
             updatePrices(period);
-        });
+        };
+        
+        button.addEventListener('click', handler);
+        _precosHandlers.push({ element: button, handler });
     });
 
     // Inicializar com período anual
     updatePrices('anual');
+    
+    _precosInitialized = true;
 }
 
-// Inicializar quando o DOM estiver pronto
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initPrecos);
-} else {
-    initPrecos();
+// Função de limpeza para recursos da página de preços
+function cleanupPrecos() {
+    _precosHandlers.forEach(({ element, handler }) => {
+        if (element && handler) {
+            element.removeEventListener('click', handler);
+        }
+    });
+    _precosHandlers = [];
+    _precosInitialized = false;
 }
+
+// Registrar função de cleanup no sistema global
+if (!window._cleanupFunctions) {
+    window._cleanupFunctions = {};
+}
+window._cleanupFunctions.initPrecos = cleanupPrecos;

@@ -1,18 +1,33 @@
 // JavaScript do layout (menu mobile, etc.)
+let _layoutInitialized = false;
+let _mobileMenuHandler = null;
+
 function initLayout() {
+    // Sempre remover listeners antigos antes de adicionar novos
+    // Isso permite reinicialização após navegação quando o DOM é substituído
+    
     // Mobile menu toggle
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
     const mobileMenu = document.getElementById('mobile-menu');
     
     if (mobileMenuBtn && mobileMenu) {
-        mobileMenuBtn.addEventListener('click', function() {
+        // Sempre remover listener antigo se existir
+        if (_mobileMenuHandler) {
+            mobileMenuBtn.removeEventListener('click', _mobileMenuHandler);
+            _mobileMenuHandler = null;
+        }
+        
+        // Criar novo handler
+        _mobileMenuHandler = function() {
             mobileMenu.classList.toggle('hidden');
             if (!mobileMenu.classList.contains('hidden')) {
                 mobileMenu.classList.add('flex');
             } else {
                 mobileMenu.classList.remove('flex');
             }
-        });
+        };
+        
+        mobileMenuBtn.addEventListener('click', _mobileMenuHandler);
     }
     
     // Update year
@@ -23,7 +38,24 @@ function initLayout() {
     
     // Gerenciar link ativo
     updateActiveLink();
+    
+    _layoutInitialized = true;
 }
+
+// Função para resetar inicialização (útil para testes ou re-inicialização)
+function resetLayout() {
+    if (_mobileMenuHandler) {
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        if (mobileMenuBtn) {
+            mobileMenuBtn.removeEventListener('click', _mobileMenuHandler);
+        }
+        _mobileMenuHandler = null;
+    }
+    _layoutInitialized = false;
+}
+
+// Tornar resetLayout acessível globalmente
+window.resetLayout = resetLayout;
 
 // Função para atualizar o link ativo
 function updateActiveLink() {

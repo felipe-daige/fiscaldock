@@ -1,5 +1,16 @@
 // Função específica para a página de início
+let _inicioInitialized = false;
+let _countdownInterval = null;
+let _heroSliderInterval = null;
+let _solutionsSwiper = null;
+let _heroSliderHandlers = [];
+
 function initInicio() {
+    // Limpar recursos anteriores se já foi inicializado
+    if (_inicioInitialized) {
+        cleanupInicio();
+    }
+    
     // Countdown Timer - Atualizado para nova estrutura
     function initCountdown() {
         const daysElement = document.getElementById('days');
@@ -38,7 +49,12 @@ function initInicio() {
         }
 
         updateCountdown();
-        setInterval(updateCountdown, 1000);
+        _countdownInterval = setInterval(updateCountdown, 1000);
+        
+        // Registrar intervalo no sistema de recursos
+        if (window._spaResources) {
+            window._spaResources.intervals.push(_countdownInterval);
+        }
     }
 
     initCountdown();
@@ -53,7 +69,6 @@ function initInicio() {
         if (slides.length === 0) return; // Se não existir, não inicializa
         
         let currentSlide = 0;
-        let slideInterval;
 
         function showSlide(index) {
             slides.forEach(slide => slide.classList.remove('active', 'prev'));
@@ -73,20 +88,41 @@ function initInicio() {
             showSlide(currentSlide);
         }
 
+        // Remover listeners antigos se existirem
+        _heroSliderHandlers.forEach(({ element, event, handler }) => {
+            if (element && handler) {
+                element.removeEventListener(event, handler);
+            }
+        });
+        _heroSliderHandlers = [];
+
         // Event listeners simples
-        if (nextBtn) nextBtn.addEventListener('click', nextSlide);
-        if (prevBtn) prevBtn.addEventListener('click', prevSlide);
+        if (nextBtn) {
+            nextBtn.addEventListener('click', nextSlide);
+            _heroSliderHandlers.push({ element: nextBtn, event: 'click', handler: nextSlide });
+        }
+        if (prevBtn) {
+            prevBtn.addEventListener('click', prevSlide);
+            _heroSliderHandlers.push({ element: prevBtn, event: 'click', handler: prevSlide });
+        }
 
         dots.forEach((dot, index) => {
-            dot.addEventListener('click', () => {
+            const handler = () => {
                 currentSlide = index;
                 showSlide(currentSlide);
-            });
+            };
+            dot.addEventListener('click', handler);
+            _heroSliderHandlers.push({ element: dot, event: 'click', handler });
         });
 
         // Auto-slide simples
         showSlide(0);
-        slideInterval = setInterval(nextSlide, 5000);
+        _heroSliderInterval = setInterval(nextSlide, 5000);
+        
+        // Registrar intervalo no sistema de recursos
+        if (window._spaResources) {
+            window._spaResources.intervals.push(_heroSliderInterval);
+        }
     }
 
     // Initialize slider
@@ -102,43 +138,59 @@ function initInicio() {
         initFaq();
     }
 
-    // Swiper Solutions
-    const solutionsSwiper = new Swiper('.inicio-solutions-swiper', {
-        slidesPerView: 'auto',
-        spaceBetween: 24,
-        speed: 1, // Transição instantânea no loop
-        autoplay: {
-            delay: 1,
-            disableOnInteraction: false,
-            pauseOnMouseEnter: true,
-            waitForTransition: false,
-        },
-        loop: true,
-        loopedSlides: 5,
-        loopAdditionalSlides: 5,
-        allowTouchMove: false,
-        simulateTouch: false,
-        grabCursor: false,
-        freeMode: false,
-        breakpoints: {
-            320: {
-                slidesPerView: 1.2,
-                spaceBetween: 16,
-            },
-            640: {
-                slidesPerView: 2.2,
-                spaceBetween: 20,
-            },
-            1024: {
-                slidesPerView: 3.2,
-                spaceBetween: 24,
-            },
-            1280: {
-                slidesPerView: 4.2,
-                spaceBetween: 24,
-            }
+    // Swiper Solutions - Destruir instância anterior se existir
+    if (_solutionsSwiper && typeof _solutionsSwiper.destroy === 'function') {
+        try {
+            _solutionsSwiper.destroy(true, true);
+        } catch (error) {
+            console.error('Erro ao destruir Swiper anterior:', error);
         }
-    });
+    }
+    
+    const swiperElement = document.querySelector('.inicio-solutions-swiper');
+    if (swiperElement) {
+        _solutionsSwiper = new Swiper('.inicio-solutions-swiper', {
+            slidesPerView: 'auto',
+            spaceBetween: 24,
+            speed: 1, // Transição instantânea no loop
+            autoplay: {
+                delay: 1,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true,
+                waitForTransition: false,
+            },
+            loop: true,
+            loopedSlides: 5,
+            loopAdditionalSlides: 5,
+            allowTouchMove: false,
+            simulateTouch: false,
+            grabCursor: false,
+            freeMode: false,
+            breakpoints: {
+                320: {
+                    slidesPerView: 1.2,
+                    spaceBetween: 16,
+                },
+                640: {
+                    slidesPerView: 2.2,
+                    spaceBetween: 20,
+                },
+                1024: {
+                    slidesPerView: 3.2,
+                    spaceBetween: 24,
+                },
+                1280: {
+                    slidesPerView: 4.2,
+                    spaceBetween: 24,
+                }
+            }
+        });
+        
+        // Registrar Swiper no sistema de recursos
+        if (window._spaResources) {
+            window._spaResources.swipers.push(_solutionsSwiper);
+        }
+    }
     
     // Carrossel custom da seção "Soluções que transformam a rotina" (layout)
     if (typeof window.initSolucoesCarousel === 'function') {
@@ -148,19 +200,79 @@ function initInicio() {
     // Contact Form
     const contactForm = document.getElementById('contact-form');
     if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
+        // Remover listener antigo se existir
+        if (window._contactFormHandler) {
+            contactForm.removeEventListener('submit', window._contactFormHandler);
+        }
+        
+        window._contactFormHandler = function(e) {
             e.preventDefault();
             alert('Mensagem enviada com sucesso! Entraremos em contato em breve.');
             this.reset();
-        });
+        };
+        
+        contactForm.addEventListener('submit', window._contactFormHandler);
     }
     
     // Scroll Indicator
     window.scrollToSolucoes = function() {
-        document.getElementById('funcionalidades').scrollIntoView({behavior: 'smooth'});
+        const funcionalidades = document.getElementById('funcionalidades');
+        if (funcionalidades) {
+            funcionalidades.scrollIntoView({behavior: 'smooth'});
+        }
     };
 
+    _inicioInitialized = true;
 }
+
+// Função de limpeza para recursos da página de início
+function cleanupInicio() {
+    // Limpar intervalos
+    if (_countdownInterval) {
+        clearInterval(_countdownInterval);
+        _countdownInterval = null;
+    }
+    
+    if (_heroSliderInterval) {
+        clearInterval(_heroSliderInterval);
+        _heroSliderInterval = null;
+    }
+    
+    // Remover listeners do hero slider
+    _heroSliderHandlers.forEach(({ element, event, handler }) => {
+        if (element && handler) {
+            element.removeEventListener(event, handler);
+        }
+    });
+    _heroSliderHandlers = [];
+    
+    // Destruir Swiper
+    if (_solutionsSwiper && typeof _solutionsSwiper.destroy === 'function') {
+        try {
+            _solutionsSwiper.destroy(true, true);
+        } catch (error) {
+            console.error('Erro ao destruir Swiper:', error);
+        }
+        _solutionsSwiper = null;
+    }
+    
+    // Remover handler do formulário
+    if (window._contactFormHandler) {
+        const contactForm = document.getElementById('contact-form');
+        if (contactForm) {
+            contactForm.removeEventListener('submit', window._contactFormHandler);
+        }
+        window._contactFormHandler = null;
+    }
+    
+    _inicioInitialized = false;
+}
+
+// Registrar função de cleanup no sistema global
+if (!window._cleanupFunctions) {
+    window._cleanupFunctions = {};
+}
+window._cleanupFunctions.initInicio = cleanupInicio;
 
 // Inicialização é feita pelo spa.js
 

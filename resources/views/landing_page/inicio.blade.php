@@ -1963,11 +1963,70 @@
 
 
 <script>
+// Armazenar referências aos handlers do carrossel para limpeza
+window._solucoesCarouselHandlers = {
+    prevArrowHandler: null,
+    nextArrowHandler: null,
+    pillHandlers: [],
+    resizeHandler: null,
+    resizeTimer: null,
+    prevArrow: null,
+    nextArrow: null,
+    pills: []
+};
+
+// Função de cleanup do carrossel
+window.cleanupSolucoesCarousel = function() {
+    try {
+        // Remover handlers das setas
+        if (window._solucoesCarouselHandlers.prevArrow && window._solucoesCarouselHandlers.prevArrowHandler) {
+            window._solucoesCarouselHandlers.prevArrow.onclick = null;
+        }
+        if (window._solucoesCarouselHandlers.nextArrow && window._solucoesCarouselHandlers.nextArrowHandler) {
+            window._solucoesCarouselHandlers.nextArrow.onclick = null;
+        }
+        
+        // Remover handlers dos pills
+        window._solucoesCarouselHandlers.pills.forEach((pill, index) => {
+            if (pill && window._solucoesCarouselHandlers.pillHandlers[index]) {
+                pill.onclick = null;
+            }
+        });
+        
+        // Remover resize handler
+        if (window._solucoesCarouselHandlers.resizeHandler) {
+            window.removeEventListener('resize', window._solucoesCarouselHandlers.resizeHandler);
+        }
+        
+        // Limpar timer de resize
+        if (window._solucoesCarouselHandlers.resizeTimer) {
+            clearTimeout(window._solucoesCarouselHandlers.resizeTimer);
+        }
+        
+        // Resetar referências
+        window._solucoesCarouselHandlers = {
+            prevArrowHandler: null,
+            nextArrowHandler: null,
+            pillHandlers: [],
+            resizeHandler: null,
+            resizeTimer: null,
+            prevArrow: null,
+            nextArrow: null,
+            pills: []
+        };
+        
+        // Resetar flag
+        window._solucoesCarouselInitialized = false;
+    } catch (error) {
+        console.error('Erro ao limpar carrossel:', error);
+    }
+};
+
 // Inicializador reutilizável para o carrossel da seção "Soluções que transformam a rotina"
 window.initSolucoesCarousel = function() {
-    // Flag global para evitar múltiplas inicializações
+    // Limpar carrossel anterior se existir
     if (window._solucoesCarouselInitialized) {
-        return;
+        window.cleanupSolucoesCarousel();
     }
     
     try {
@@ -1995,6 +2054,11 @@ window.initSolucoesCarousel = function() {
 
                 // Marcar como inicializado
                 window._solucoesCarouselInitialized = true;
+                
+                // Armazenar referências aos elementos
+                window._solucoesCarouselHandlers.prevArrow = prevArrow;
+                window._solucoesCarouselHandlers.nextArrow = nextArrow;
+                window._solucoesCarouselHandlers.pills = Array.from(pills);
                 
                 const totalCards = cards.length;
                 let currentIndex = 0;
@@ -2132,45 +2196,51 @@ window.initSolucoesCarousel = function() {
 
                 // Configurar setas de navegação
                 if (prevArrow) {
-                    prevArrow.onclick = function(e) {
+                    window._solucoesCarouselHandlers.prevArrowHandler = function(e) {
                         e.preventDefault();
                         e.stopPropagation();
                         goPrev();
                     };
+                    prevArrow.onclick = window._solucoesCarouselHandlers.prevArrowHandler;
                 }
 
                 if (nextArrow) {
-                    nextArrow.onclick = function(e) {
+                    window._solucoesCarouselHandlers.nextArrowHandler = function(e) {
                         e.preventDefault();
                         e.stopPropagation();
                         goNext();
                     };
+                    nextArrow.onclick = window._solucoesCarouselHandlers.nextArrowHandler;
                 }
 
                 // Configurar pills
                 pills.forEach((pill, index) => {
-                    pill.onclick = function(e) {
+                    const pillHandler = function(e) {
                         e.preventDefault();
                         e.stopPropagation();
                         currentIndex = index;
                         updateCarousel(currentIndex);
                     };
+                    window._solucoesCarouselHandlers.pillHandlers[index] = pillHandler;
+                    pill.onclick = pillHandler;
                 });
 
                 // Inicializar posicionamento
                 updateReferenceValues();
 
                 // Resize handler
-                let resizeTimer;
-                const resizeHandler = function() {
-                    clearTimeout(resizeTimer);
-                    resizeTimer = setTimeout(() => {
+                window._solucoesCarouselHandlers.resizeHandler = function() {
+                    if (window._solucoesCarouselHandlers.resizeTimer) {
+                        clearTimeout(window._solucoesCarouselHandlers.resizeTimer);
+                    }
+                    window._solucoesCarouselHandlers.resizeTimer = setTimeout(() => {
                         updateReferenceValues();
                     }, 250);
                 };
                 
-                window.removeEventListener('resize', resizeHandler);
-                window.addEventListener('resize', resizeHandler);
+                // Remover handler anterior se existir
+                window.removeEventListener('resize', window._solucoesCarouselHandlers.resizeHandler);
+                window.addEventListener('resize', window._solucoesCarouselHandlers.resizeHandler);
             } catch (error) {
                 console.error('Erro ao inicializar carrossel:', error);
             }
@@ -2195,6 +2265,12 @@ window.initSolucoesCarousel = function() {
         console.error('[Carrossel] Erro crítico ao inicializar carrossel de soluções:', error);
     }
 };
+
+// Registrar função de cleanup no sistema global
+if (!window._cleanupFunctions) {
+    window._cleanupFunctions = {};
+}
+window._cleanupFunctions.initSolucoesCarousel = window.cleanupSolucoesCarousel;
 
 // Tentar inicializar imediatamente se a função já estiver definida
 if (typeof window.initSolucoesCarousel === 'function') {

@@ -1,8 +1,18 @@
 // FAQ Accordion - Otimizado
+let _faqHandlers = [];
+
 function initFaq() {
     const faqItems = document.querySelectorAll('.faq-item');
     
     if (faqItems.length === 0) return;
+    
+    // Remover listeners antigos se existirem
+    _faqHandlers.forEach(({ element, handler }) => {
+        if (element && handler) {
+            element.removeEventListener('click', handler);
+        }
+    });
+    _faqHandlers = [];
     
     faqItems.forEach((item) => {
         const question = item.querySelector('.faq-question');
@@ -10,7 +20,8 @@ function initFaq() {
         
         if (!question || !answer) return;
         
-        question.addEventListener('click', function(e) {
+        // Criar handler para este item
+        const handler = function(e) {
             e.preventDefault();
             
             const isActive = item.classList.contains('active');
@@ -51,7 +62,10 @@ function initFaq() {
                     svg.style.transform = 'rotate(180deg)';
                 }
             }
-        });
+        };
+        
+        question.addEventListener('click', handler);
+        _faqHandlers.push({ element: question, handler });
         
         // Estado inicial
         answer.style.display = 'none';
@@ -60,3 +74,19 @@ function initFaq() {
         answer.style.transition = 'max-height 0.3s ease, opacity 0.3s ease';
     });
 }
+
+// Função de limpeza para recursos da página FAQ
+function cleanupFaq() {
+    _faqHandlers.forEach(({ element, handler }) => {
+        if (element && handler) {
+            element.removeEventListener('click', handler);
+        }
+    });
+    _faqHandlers = [];
+}
+
+// Registrar função de cleanup no sistema global
+if (!window._cleanupFunctions) {
+    window._cleanupFunctions = {};
+}
+window._cleanupFunctions.initFaq = cleanupFaq;
