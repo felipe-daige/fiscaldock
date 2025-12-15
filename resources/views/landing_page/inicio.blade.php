@@ -2,7 +2,7 @@
 <style>
 /* Solutions Carousel Styles */
 .solutions-carousel-container {
-    min-height: 780px;
+    min-height: 600px;
     position: relative;
     width: 100vw;
     left: 50%;
@@ -36,7 +36,7 @@
     padding: 0 1%;
     transition: opacity 0.3s, transform 0.3s;
     position: relative;
-    height: 780px; /* Altura fixa uniforme com folga para sombra */
+    height: 600px; /* Altura fixa uniforme com folga para sombra */
     z-index: 1;
 }
 
@@ -170,7 +170,7 @@
     }
     
     .solutions-carousel-container {
-        min-height: 780px;
+        min-height: 600px;
     }
     
     /* Em mobile, colunas empilhadas - texto primeiro, depois imagem */
@@ -416,7 +416,7 @@
 
                 <!-- Título -->
                 <h1 class="font-extrabold leading-tight tracking-tight text-3xl sm:text-4xl xl:text-5xl">
-                    O HUB Fiscal & Compliance que transforma
+                    O FiscalDock que transforma
                     <span class="block text-sped-hero">SPED em Ações e Relatórios</span>
                 </h1>
 
@@ -427,9 +427,8 @@
 
                 <!-- CTAs -->
                 <div class="mt-5">
-                    <button class="inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-gray-900 shadow-lg hover:shadow-xl transition-all duration-200" style="background-color: var(--color-accent); box-shadow: 0 20px 50px -20px rgba(6, 182, 212, 0.5);">
-                        Quero conhecer
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button class="btn-accent inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-normal" style="white-space: nowrap; flex-wrap: nowrap;">
+                        <span style="white-space: nowrap;">Quero conhecer</span><svg class="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink: 0; display: inline-block;">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                         </svg>
                     </button>
@@ -507,7 +506,7 @@
 </section>
 
 <!-- Soluções Section -->
-<section id="funcionalidades" class="bg-white pt-8 pb-0 overflow-x-hidden">
+<section id="funcionalidades" class="bg-white pt-4 pb-0 overflow-x-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1186,6 +1185,210 @@
                         </div>
                     </div>
 
+                    <!-- Card 7: RAF - Relatório de Risco e Inteligência Fiscal -->
+                    <div class="solution-card flex-shrink-0 w-full px-4" data-index="6" data-solution="raf">
+                        <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
+                                <!-- Coluna Esquerda: Descrição -->
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900">
+                                    <!-- Logo e Título -->
+                                    <div>
+                                        <div class="flex items-center justify-center gap-3 mb-8">
+                                            <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center relative">
+                                                <img src="{{ asset('icone-gif/analyse.gif') }}" alt="RAF" class="w-8 h-8 object-contain">
+                                                <!-- Ícone de lupa sobre gráfico (overlay visual) -->
+                                                <svg class="w-5 h-5 absolute -top-1 -right-1 text-blue-600 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                                </svg>
+                                            </div>
+                                            <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">RAF: Seu Relatório de Risco e Inteligência Fiscal</h3>
+                                        </div>
+                                        
+                                        <!-- Subtítulo -->
+                                        <p class="text-xl lg:text-2xl text-gray-700 mb-6 leading-relaxed font-semibold">
+                                            Transforme dados brutos em análise consultiva e garanta a saúde tributária de todos os seus clientes
+                                        </p>
+                                        
+                                        <!-- Descrição Principal -->
+                                        <p class="text-lg text-gray-600 mb-6 leading-relaxed">
+                                            O Rubi processa as informações coletadas (Notas Fiscais, SPEDs e Consultas na Receita Federal) para gerar o Relatório de Regime Tributário e CND (RAF). Este relatório consolidado oferece, em uma única página, a situação fiscal completa de cada CNPJ.
+                                        </p>
+                                        
+                                        <!-- Destaque Visual Principal - Frase de Poder -->
+                                        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 border-l-4 border-blue-400 p-5 rounded-r-lg mb-6 shadow-lg transform hover:scale-[1.02] transition-transform duration-200">
+                                            <p class="text-xl lg:text-2xl font-bold text-white italic text-center">
+                                                "Use o dado bruto para gerar consultoria."
+                                            </p>
+                                            <p class="text-blue-100 text-sm mt-2 text-center">
+                                                Eleve seu escritório de operacional para consultivo
+                                            </p>
+                                        </div>
+                                        
+                                        <!-- Três Pontos de Poder de Consultoria -->
+                                        <div class="space-y-4 mb-6">
+                                            <div class="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                                <div class="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center mt-0.5">
+                                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <p class="text-lg font-bold text-gray-900 mb-1">Visão 360º</p>
+                                                    <p class="text-gray-700 leading-relaxed">Visualize rapidamente o Regime Tributário, o status da CND e os principais dados de faturamento de cada cliente</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-100">
+                                                <div class="flex-shrink-0 w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center mt-0.5">
+                                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <p class="text-lg font-bold text-gray-900 mb-1">Identificação de Risco</p>
+                                                    <p class="text-gray-700 leading-relaxed">Identifique instantaneamente clientes com pendências fiscais que precisam de ação imediata ou cujo regime tributário pode não ser o mais vantajoso</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="flex items-start gap-3 p-3 bg-green-50 rounded-lg border border-green-100">
+                                                <div class="flex-shrink-0 w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center mt-0.5">
+                                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <p class="text-lg font-bold text-gray-900 mb-1">Atendimento Personalizado</p>
+                                                    <p class="text-gray-700 leading-relaxed">Use o RAF como ferramenta de vendas, mostrando ao seu cliente que você está monitorando a saúde dele com profundidade e tecnologia</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Call-to-Action -->
+                                    <div class="mt-8">
+                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 font-semibold transition-colors text-lg">
+                                            Saiba mais
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <!-- Coluna Direita: Mockup do Relatório RAF -->
+                                <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
+                                    <!-- Headline sobre o mockup -->
+                                    <div class="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full px-4">
+                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-2 text-center">
+                                            Relatório consolidado em uma página
+                                        </h4>
+                                        <p class="text-sm text-white/80 text-center">Inteligência estratégica para consultoria</p>
+                                    </div>
+                                    
+                                    <!-- Mockup do Relatório RAF -->
+                                    <div class="relative w-full h-full max-w-5xl mt-20">
+                                        <div class="bg-white rounded-xl shadow-2xl overflow-hidden border-2 border-blue-400" style="transform: scale(0.9);">
+                                            <!-- Header do mockup -->
+                                            <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between border-b-2 border-blue-500">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                        </svg>
+                                                    </div>
+                                                    <span class="text-base font-bold text-white">Relatório RAF</span>
+                                                </div>
+                                                <span class="px-4 py-1.5 text-xs bg-white bg-opacity-25 text-white rounded-full font-bold border border-white/30">Inteligência Fiscal</span>
+                                            </div>
+                                            
+                                            <!-- Conteúdo do mockup - Destaque das duas colunas -->
+                                            <div class="p-6 bg-gradient-to-br from-gray-50 to-white">
+                                                <!-- Título da seção -->
+                                                <div class="mb-4 pb-3 border-b-2 border-gray-200">
+                                                    <h5 class="text-sm font-bold text-gray-700 uppercase tracking-wide">Análise por CNPJ</h5>
+                                                </div>
+                                                
+                                                <!-- Grid de duas colunas destacadas -->
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <!-- Coluna 1: CNPJ X - OK -->
+                                                    <div class="bg-white rounded-lg p-5 border-2 border-green-400 shadow-lg hover:shadow-xl transition-shadow">
+                                                        <div class="flex items-center justify-between mb-3">
+                                                            <div class="flex items-center gap-3">
+                                                                <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center shadow-sm">
+                                                                    <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                                                                    </svg>
+                                                                </div>
+                                                                <div>
+                                                                    <p class="text-base font-bold text-gray-900">CNPJ X</p>
+                                                                    <p class="text-xs text-gray-500 font-medium">12.345.678/0001-90</p>
+                                                                </div>
+                                                            </div>
+                                                            <span class="px-3 py-1.5 text-xs bg-green-500 text-white rounded-full font-bold shadow-sm">OK</span>
+                                                        </div>
+                                                        <div class="space-y-2 mt-4 pt-3 border-t border-gray-100">
+                                                            <div>
+                                                                <p class="text-xs text-gray-500 mb-1 font-medium">Regime Tributário</p>
+                                                                <p class="text-sm font-bold text-gray-900">Lucro Real</p>
+                                                            </div>
+                                                            <div>
+                                                                <p class="text-xs text-gray-500 mb-1 font-medium">CND</p>
+                                                                <p class="text-sm font-bold text-green-600 flex items-center gap-1">
+                                                                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                                                    Regular
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Coluna 2: CNPJ Y - Alerta -->
+                                                    <div class="bg-white rounded-lg p-5 border-2 border-yellow-400 shadow-lg hover:shadow-xl transition-shadow">
+                                                        <div class="flex items-center justify-between mb-3">
+                                                            <div class="flex items-center gap-3">
+                                                                <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center shadow-sm">
+                                                                    <svg class="w-7 h-7 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                                                    </svg>
+                                                                </div>
+                                                                <div>
+                                                                    <p class="text-base font-bold text-gray-900">CNPJ Y</p>
+                                                                    <p class="text-xs text-gray-500 font-medium">98.765.432/0001-10</p>
+                                                                </div>
+                                                            </div>
+                                                            <span class="px-3 py-1.5 text-xs bg-yellow-500 text-white rounded-full font-bold shadow-sm">Alerta</span>
+                                                        </div>
+                                                        <div class="space-y-2 mt-4 pt-3 border-t border-gray-100">
+                                                            <div>
+                                                                <p class="text-xs text-gray-500 mb-1 font-medium">Regime Tributário</p>
+                                                                <p class="text-sm font-bold text-gray-900">Simples Nacional</p>
+                                                            </div>
+                                                            <div>
+                                                                <p class="text-xs text-gray-500 mb-1 font-medium">CND</p>
+                                                                <p class="text-sm font-bold text-yellow-600 flex items-center gap-1">
+                                                                    <span class="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
+                                                                    Pendência Detectada
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Resumo no rodapé -->
+                                                <div class="mt-5 pt-4 border-t-2 border-gray-200">
+                                                    <div class="flex items-center justify-between text-xs text-gray-600">
+                                                        <span class="font-semibold">Total de CNPJs analisados: <strong class="text-gray-900 text-sm">2</strong></span>
+                                                        <span class="font-semibold">Última atualização: <strong class="text-gray-900 text-sm">Hoje</strong></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Card Duplicado: Central de Documentos (para loop infinito - fim) -->
                     <div class="solution-card solution-card-duplicate flex-shrink-0 w-full px-4" data-index="duplicate-end" data-solution="documentos">
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
@@ -1302,14 +1505,17 @@
                     <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="portal">
                         Portal do Cliente
                     </button>
+                    <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="raf">
+                        RAF: Inteligência Fiscal
+                    </button>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Divisor ondulado: transição do cinza (#f9fafb) para o branco -->
-    <div class="pointer-events-none leading-none mt-6 sm:mt-8">
+    <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
+    <div class="pointer-events-none leading-none mt-4 sm:mt-6">
         <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
+            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
         </svg>
     </div>
 </section>
@@ -1770,7 +1976,7 @@
                 Perguntas <span class="text-brand-gradient">Frequentes</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                Tire suas dúvidas sobre o HUB Fiscal & Compliance e como ele pode transformar seu dia a dia
+                Tire suas dúvidas sobre o FiscalDock e como ele pode transformar seu dia a dia
             </p>
         </div>
 

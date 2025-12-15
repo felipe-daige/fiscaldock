@@ -14,7 +14,7 @@
     --color-primary-700: #0b1f3a;
     --color-primary-600: #133a73;
     --color-primary-500: #1e4fa0;
-    --color-accent: #06b6d4;
+    --color-accent: #facc15;
     --color-surface: #ffffff;
     --color-surface-muted: #f8fbff;
     --color-surface-alt: #f9fafb;
@@ -93,14 +93,48 @@
 }
 
 .btn-primary {
+    display: inline-block;
     background-color: var(--color-primary-500);
-    border-color: var(--color-primary-500);
-    color: #fff;
+    border: none;
+    color: #fff !important;
+    text-decoration: none;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.btn-primary span {
+    color: #fff !important;
+    display: inline-block;
 }
 
 .btn-primary:hover {
     background-color: var(--color-primary-600);
-    border-color: var(--color-primary-600);
+    color: #fff !important;
+}
+
+.btn-primary:hover span {
+    color: #fff !important;
+}
+
+.btn-primary:focus {
+    outline: none;
+    ring: 2px;
+    ring-color: var(--color-primary-500);
+    color: #fff !important;
+}
+
+.btn-primary:focus span {
+    color: #fff !important;
+}
+
+.btn-primary:active {
+    background-color: var(--color-primary-700);
+    color: #fff !important;
+}
+
+.btn-primary:active span {
+    color: #fff !important;
 }
 
 .btn-outline-primary {
@@ -111,4 +145,69 @@
 .btn-outline-primary:hover {
     background-color: var(--color-primary-500);
     color: #fff;
+}
+
+.btn-accent {
+    display: inline-block;
+    background-color: var(--color-accent);
+    border: none;
+    color: var(--color-primary-500) !important;
+    text-decoration: none;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 20px 50px -20px rgba(250, 204, 21, 0.5);
+    white-space: nowrap;
+}
+
+.btn-accent.inline-flex {
+    display: inline-flex !important;
+}
+
+.btn-accent:hover {
+    background-color: #eab308;
+    color: var(--color-primary-500) !important;
+    box-shadow: 0 20px 50px -20px rgba(250, 204, 21, 0.6);
+}
+
+.btn-accent:focus {
+    outline: none;
+    ring: 2px;
+    ring-color: var(--color-accent);
+    color: var(--color-primary-500) !important;
+}
+
+.btn-accent:active {
+    background-color: #ca8a04;
+    color: var(--color-primary-500) !important;
+}
+
+/* Dropdown Menu Styles */
+.dropdown-menu {
+    z-index: 1000;
+    pointer-events: auto;
+}
+
+.group:hover .dropdown-menu {
+    pointer-events: auto;
+}
+
+/* Garantir que o dropdown não interfira com outros elementos */
+.relative.group {
+    z-index: 50;
+}
+
+/* Animação suave para os itens do dropdown */
+.dropdown-menu a {
+    position: relative;
+}
+
+.dropdown-menu a:first-child {
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+}
+
+.dropdown-menu a:last-child {
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
 }

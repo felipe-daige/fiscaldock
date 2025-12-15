@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LandingPage;
 use App\Http\Controllers\PosloginController;
+use App\Http\Controllers\XmlImportController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -11,12 +12,26 @@ Route::get('/', [LandingPage::class, 'inicio'])->name('home');
 
 Route::get('/inicio', [LandingPage::class, 'inicio'])->name('inicio');
 Route::get('/solucoes', [LandingPage::class, 'solucoes'])->name('solucoes');
+Route::get('/sobre', [LandingPage::class, 'sobre'])->name('sobre');
 Route::get('/beneficios', [LandingPage::class, 'beneficios'])->name('beneficios');
 Route::get('/impactos', [LandingPage::class, 'impactos'])->name('impactos');
 Route::get('/precos', [LandingPage::class, 'precos'])->name('precos');
 Route::get('/faq', [LandingPage::class, 'faq'])->name('faq');
 Route::get('/questionario', [LandingPage::class, 'questionario'])->name('questionario');
+Route::get('/solucoes/importacao-xml', [LandingPage::class, 'importacaoXml'])->name('solucoes.importacao-xml');
+Route::get('/solucoes/conciliacao-bancaria', [LandingPage::class, 'conciliacaoBancaria'])->name('solucoes.conciliacao-bancaria');
+Route::get('/solucoes/gestao-cnds', [LandingPage::class, 'gestaoCnds'])->name('solucoes.gestao-cnds');
 
+// Rotas de API para importação de XMLs
+Route::prefix('api/xml')->group(function () {
+    Route::post('/upload', [XmlImportController::class, 'upload'])->name('api.xml.upload');
+    Route::post('/processar', [XmlImportController::class, 'processar'])->name('api.xml.processar');
+    Route::post('/aceitar', [XmlImportController::class, 'aceitarLancamento'])->name('api.xml.aceitar');
+    Route::post('/ajustar', [XmlImportController::class, 'ajustarLancamento'])->name('api.xml.ajustar');
+    Route::get('/regras', [XmlImportController::class, 'listarRegras'])->name('api.xml.regras');
+    Route::post('/regras', [XmlImportController::class, 'criarRegra'])->name('api.xml.regras.create');
+    Route::get('/documentos', [XmlImportController::class, 'listarDocumentos'])->name('api.xml.documentos');
+});
 
 Route::get('/dashboard', [PosloginController::class, 'dashboard'])->name('dashboard');
 

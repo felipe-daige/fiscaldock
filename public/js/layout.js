@@ -1,6 +1,7 @@
 // JavaScript do layout (menu mobile, etc.)
 let _layoutInitialized = false;
 let _mobileMenuHandler = null;
+let _dropdownClickHandler = null;
 
 function initLayout() {
     // Sempre remover listeners antigos antes de adicionar novos
@@ -30,6 +31,30 @@ function initLayout() {
         mobileMenuBtn.addEventListener('click', _mobileMenuHandler);
     }
     
+    // Dropdown menu - fechar ao clicar fora (opcional, melhora UX)
+    // Remover listener antigo se existir
+    if (_dropdownClickHandler) {
+        document.removeEventListener('click', _dropdownClickHandler);
+        _dropdownClickHandler = null;
+    }
+    
+    // Criar novo handler para fechar dropdowns ao clicar fora
+    _dropdownClickHandler = function(e) {
+        const dropdownGroups = document.querySelectorAll('.relative.group');
+        dropdownGroups.forEach(group => {
+            const dropdownMenu = group.querySelector('.dropdown-menu');
+            if (dropdownMenu && !group.contains(e.target)) {
+                // Verificar se o dropdown está visível antes de fechar
+                if (!dropdownMenu.classList.contains('opacity-0')) {
+                    dropdownMenu.classList.add('opacity-0', 'invisible');
+                    dropdownMenu.classList.remove('opacity-100', 'visible');
+                }
+            }
+        });
+    };
+    
+    document.addEventListener('click', _dropdownClickHandler);
+    
     // Update year
     const currentYearElement = document.getElementById('current-year');
     if (currentYearElement) {
@@ -50,6 +75,10 @@ function resetLayout() {
             mobileMenuBtn.removeEventListener('click', _mobileMenuHandler);
         }
         _mobileMenuHandler = null;
+    }
+    if (_dropdownClickHandler) {
+        document.removeEventListener('click', _dropdownClickHandler);
+        _dropdownClickHandler = null;
     }
     _layoutInitialized = false;
 }

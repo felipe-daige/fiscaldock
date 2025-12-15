@@ -1,0 +1,124 @@
+version: "3.8"
+
+services:
+  hub_php:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    image: hub_php:latest
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: ${APP_URL}
+      APP_KEY: ${APP_KEY}
+
+      DB_CONNECTION: pgsql
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      CACHE_STORE: ${CACHE_STORE:-database}
+      SESSION_DRIVER: ${SESSION_DRIVER:-database}
+      SESSION_LIFETIME: ${SESSION_LIFETIME:-120}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-sync}
+
+      # Redis só é usado se você configurar CACHE/SESSION/QUEUE para redis
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-null}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-"*"}
+      TRUSTED_HOSTS: ${TRUSTED_HOSTS:-"hub.meudominio.com"}
+
+      LOG_CHANNEL: ${LOG_CHANNEL:-stack}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+
+    networks:
+      - network_public
+
+  hub_web:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    image: hub_nginx:latest
+    restart: unless-stopped
+    depends_on:
+      - hub_php
+    networks:
+      - traefik
+      - network_public
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.hub-laravel.rule=Host(`hub.meudominio.com`)"
+      - "traefik.http.routers.hub-laravel.entrypoints=websecure"
+      - "traefik.http.routers.hub-laravel.tls=true"
+      - "traefik.http.routers.hub-laravel.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
+      - "traefik.http.services.hub-laravel.loadbalancer.server.port=80"
+      - "traefik.docker.network=traefik"
+
+  hub_scheduler:
+    image: hub_php:latest
+    restart: unless-stopped
+    depends_on:
+      - hub_php
+    command: php artisan schedule:work
+    networks:
+      - network_public
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: ${APP_URL}
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: pgsql
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      CACHE_STORE: ${CACHE_STORE:-database}
+      SESSION_DRIVER: ${SESSION_DRIVER:-database}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-sync}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-null}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-"*"}
+      TRUSTED_HOSTS: ${TRUSTED_HOSTS:-"hub.meudominio.com"}
+
+  hub_worker:
+    image: hub_php:latest
+    restart: unless-stopped
+    depends_on:
+      - hub_php
+    command: php artisan queue:work --verbose --tries=3 --timeout=90
+    networks:
+      - network_public
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: ${APP_URL}
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: pgsql
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      CACHE_STORE: ${CACHE_STORE:-database}
+      SESSION_DRIVER: ${SESSION_DRIVER:-database}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-sync}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-null}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-"*"}
+      TRUSTED_HOSTS: ${TRUSTED_HOSTS:-"hub.meudominio.com"}
+
+networks:
+  traefik:
+    external: true
+    name: traefik
+  network_public:
+    external: true
+    name: network_public
