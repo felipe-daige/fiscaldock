@@ -1659,45 +1659,7 @@
     </div>
 </section>
 
-<!-- Estatísticas Section -->
-<section class="bg-white pt-20 pb-0">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-            <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Números que <span class="text-brand-gradient">Impressionam</span>
-            </h2>
-            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                Resultados reais de empresas que confiaram em nossa solução
-            </p>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div class="bg-gray-50 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-8 border border-gray-200 hover:border-blue-500 text-center">
-                <div class="text-5xl font-bold text-blue-500 mb-4">500+</div>
-                <div class="text-gray-600 font-medium">Empresas Atendidas</div>
-            </div>
-            <div class="bg-gray-50 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-8 border border-gray-200 hover:border-blue-500 text-center">
-                <div class="text-5xl font-bold text-blue-500 mb-4">R$ 2.5M</div>
-                <div class="text-gray-600 font-medium">Economizados</div>
-            </div>
-            <div class="bg-gray-50 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-8 border border-gray-200 hover:border-blue-500 text-center">
-                <div class="text-5xl font-bold text-blue-500 mb-4">98%</div>
-                <div class="text-gray-600 font-medium">Satisfação</div>
-            </div>
-            <div class="bg-gray-50 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-8 border border-gray-200 hover:border-blue-500 text-center">
-                <div class="text-5xl font-bold text-blue-500 mb-4">24/7</div>
-                <div class="text-gray-600 font-medium">Suporte</div>
-            </div>
-        </div>
-    </div>
-    <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
-    <div class="pointer-events-none leading-none mt-6 sm:mt-8">
-        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
-        </svg>
-    </div>
-</section>
-
-
+{{-- Estatísticas Section removida a pedido do cliente --}}
 <!-- Depoimentos Section -->
 <section class="bg-white pt-20 pb-0">
     <div class="w-full">
