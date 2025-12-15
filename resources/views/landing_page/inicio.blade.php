@@ -1706,7 +1706,7 @@
                 <div class="testimonial-card bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 p-8 border border-gray-100 hover:border-blue-200 relative overflow-hidden">
                     <div class="quote-decoration absolute top-4 right-4 text-8xl font-serif text-blue-50 leading-none">"</div>
                     <div class="testimonial-header flex items-center gap-4 mb-6 relative z-10">
-                        <div class="avatar-gradient w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-full flex items-center justify-center font-bold text-xl shadow-lg ring-4 ring-purple-100">M</div>
+                        <img src="{{ asset('pictures/random_person-1.jpg') }}" alt="Maria Silva" class="avatar-gradient w-14 h-14 rounded-full object-cover shadow-lg ring-4 ring-purple-100">
                         <div class="flex-1">
                             <div class="font-bold text-gray-900 text-lg">Maria Silva</div>
                             <div class="text-sm text-gray-600">CEO, TechCorp</div>
@@ -1731,7 +1731,7 @@
                 <div class="testimonial-card bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 p-8 border border-gray-100 hover:border-blue-200 relative overflow-hidden">
                     <div class="quote-decoration absolute top-4 right-4 text-8xl font-serif text-blue-50 leading-none">"</div>
                     <div class="testimonial-header flex items-center gap-4 mb-6 relative z-10">
-                        <div class="avatar-gradient w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-500 text-white rounded-full flex items-center justify-center font-bold text-xl shadow-lg ring-4 ring-blue-100">J</div>
+                        <img src="{{ asset('pictures/random_person-2.jpg') }}" alt="João Santos" class="avatar-gradient w-14 h-14 rounded-full object-cover shadow-lg ring-4 ring-blue-100">
                         <div class="flex-1">
                             <div class="font-bold text-gray-900 text-lg">João Santos</div>
                             <div class="text-sm text-gray-600">Diretor Financeiro, Inovação Ltda</div>
@@ -1742,7 +1742,7 @@
                         </div>
                     </div>
                     <div class="testimonial-metric mb-4 relative z-10">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md">70% redução</span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md">70% redução</span>
                     </div>
                     <p class="testimonial-text text-gray-700 mb-6 leading-relaxed relative z-10 text-base">
                         "A automação dos processos fiscais reduziu nosso tempo de trabalho em 70%. Altamente recomendado!"
@@ -1756,7 +1756,7 @@
                 <div class="testimonial-card bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 p-8 border border-gray-100 hover:border-blue-200 relative overflow-hidden">
                     <div class="quote-decoration absolute top-4 right-4 text-8xl font-serif text-blue-50 leading-none">"</div>
                     <div class="testimonial-header flex items-center gap-4 mb-6 relative z-10">
-                        <div class="avatar-gradient w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-xl shadow-lg ring-4 ring-green-100">A</div>
+                        <img src="{{ asset('pictures/random_person-3.jpg') }}" alt="Ana Costa" class="avatar-gradient w-14 h-14 rounded-full object-cover shadow-lg ring-4 ring-green-100">
                         <div class="flex-1">
                             <div class="font-bold text-gray-900 text-lg">Ana Costa</div>
                             <div class="text-sm text-gray-600">Contadora, Empresa ABC</div>
