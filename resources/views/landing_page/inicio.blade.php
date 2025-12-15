@@ -1521,7 +1521,7 @@
 </section>
 
 <!-- Benefícios Section -->
-<section id="beneficios" class="bg-gray-50 pt-20 pb-0">
+<section id="beneficios" class="bg-gray-50 pt-4 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1585,7 +1585,7 @@
 </section>
 
 <!-- IA Financeira Section -->
-<section id="notebook" class="bg-white pt-16 pb-0">
+<section id="notebook" class="bg-white pt-4 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div class="space-y-6">
@@ -1627,7 +1627,7 @@
 </section>
 
 <!-- Para Quem É Section -->
-<section id="para-quem-e" class="bg-gray-50 pt-20 pb-0">
+<section id="para-quem-e" class="bg-gray-50 pt-4 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1718,7 +1718,7 @@
 </section>
 
 <!-- Diferenciais Section -->
-<section id="diferenciais" class="bg-white pt-20 pb-0">
+<section id="diferenciais" class="bg-white pt-4 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1804,7 +1804,7 @@
 </section>
 
 <!-- Segurança e LGPD Section -->
-<section id="seguranca-lgpd" class="bg-gray-50 pt-20 pb-0">
+<section id="seguranca-lgpd" class="bg-gray-50 pt-4 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1867,7 +1867,7 @@
 
 {{-- Estatísticas Section removida a pedido do cliente --}}
 <!-- Depoimentos Section -->
-<section id="depoimentos" class="bg-white pt-20 pb-0">
+<section id="depoimentos" class="bg-white pt-4 pb-0">
     <div class="w-full">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
             <div class="text-center mb-16">
@@ -1969,7 +1969,7 @@
 </section>
 
 <!-- FAQ Section -->
-<section id="faq" class="bg-gray-50 pt-20 pb-0">
+<section id="faq" class="bg-gray-50 pt-4 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -2061,7 +2061,7 @@
 </section>
 
 <!-- Contato Section -->
-<section id="contato" class="bg-white py-20">
+<section id="contato" class="bg-white pt-4 pb-20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
