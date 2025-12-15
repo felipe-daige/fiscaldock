@@ -55,11 +55,6 @@
 <section class="hero-gradient py-12 md:py-20 text-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center fade-in-up">
-            <div class="flex justify-center mb-6">
-                <div class="w-16 h-16 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                    <img src="{{ asset('icone-gif/accounting.gif') }}" alt="Inteligência Tributária" class="w-12 h-12 object-contain">
-                </div>
-            </div>
             <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6">
                 Inteligência Tributária: Apuração de Impostos no Piloto Automático
             </h1>
