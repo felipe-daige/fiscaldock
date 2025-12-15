@@ -503,20 +503,27 @@ function initCharts() {
             'growthChart'
         ];
         
-        const allExist = canvasElements.every(id => {
-            const element = document.getElementById(id);
-            return element !== null;
-        });
+        const elements = canvasElements.map(id => document.getElementById(id));
+        const allExist = elements.every(element => element !== null);
+        const anyExist = elements.some(element => element !== null);
         
         if (allExist) {
             createAllCharts();
+        } else if (!anyExist && tentativas === 0) {
+            // Nenhum canvas encontrado na primeira tentativa:
+            // provavelmente não estamos na página de impactos.
+            // Saímos silenciosamente, sem retries e sem log de erro.
+            return;
         } else if (tentativas < 10) {
             // Tentar novamente após um delay
             setTimeout(() => {
                 tryCreateCharts(tentativas + 1);
             }, 200);
         } else {
-            console.error('Elementos canvas não foram encontrados após múltiplas tentativas');
+            // Após múltiplas tentativas, ainda não encontramos todos os canvases.
+            // Isso pode indicar carregamento parcial em SPA ou DOM inconsistente.
+            // Mantemos um log mais suave para não poluir o console com erro.
+            console.warn('Alguns elementos canvas não foram encontrados após múltiplas tentativas em initCharts');
         }
     }
     

@@ -1,13 +1,14 @@
 // Função específica para a página de início
-let _inicioInitialized = false;
-let _countdownInterval = null;
-let _heroSliderInterval = null;
-let _solutionsSwiper = null;
-let _heroSliderHandlers = [];
+// Usar propriedades em window para permitir múltiplas execuções do script sem erro de redeclaração
+window._inicioInitialized = window._inicioInitialized || false;
+window._countdownInterval = window._countdownInterval || null;
+window._heroSliderInterval = window._heroSliderInterval || null;
+window._solutionsSwiper = window._solutionsSwiper || null;
+window._heroSliderHandlers = window._heroSliderHandlers || [];
 
 function initInicio() {
     // Limpar recursos anteriores se já foi inicializado
-    if (_inicioInitialized) {
+    if (window._inicioInitialized) {
         cleanupInicio();
     }
     
@@ -49,11 +50,11 @@ function initInicio() {
         }
 
         updateCountdown();
-        _countdownInterval = setInterval(updateCountdown, 1000);
+        window._countdownInterval = setInterval(updateCountdown, 1000);
         
         // Registrar intervalo no sistema de recursos
         if (window._spaResources) {
-            window._spaResources.intervals.push(_countdownInterval);
+            window._spaResources.intervals.push(window._countdownInterval);
         }
     }
 
@@ -89,21 +90,21 @@ function initInicio() {
         }
 
         // Remover listeners antigos se existirem
-        _heroSliderHandlers.forEach(({ element, event, handler }) => {
+        window._heroSliderHandlers.forEach(({ element, event, handler }) => {
             if (element && handler) {
                 element.removeEventListener(event, handler);
             }
         });
-        _heroSliderHandlers = [];
+        window._heroSliderHandlers = [];
 
         // Event listeners simples
         if (nextBtn) {
             nextBtn.addEventListener('click', nextSlide);
-            _heroSliderHandlers.push({ element: nextBtn, event: 'click', handler: nextSlide });
+            window._heroSliderHandlers.push({ element: nextBtn, event: 'click', handler: nextSlide });
         }
         if (prevBtn) {
             prevBtn.addEventListener('click', prevSlide);
-            _heroSliderHandlers.push({ element: prevBtn, event: 'click', handler: prevSlide });
+            window._heroSliderHandlers.push({ element: prevBtn, event: 'click', handler: prevSlide });
         }
 
         dots.forEach((dot, index) => {
@@ -112,16 +113,16 @@ function initInicio() {
                 showSlide(currentSlide);
             };
             dot.addEventListener('click', handler);
-            _heroSliderHandlers.push({ element: dot, event: 'click', handler });
+            window._heroSliderHandlers.push({ element: dot, event: 'click', handler });
         });
 
         // Auto-slide simples
         showSlide(0);
-        _heroSliderInterval = setInterval(nextSlide, 5000);
+        window._heroSliderInterval = setInterval(nextSlide, 5000);
         
         // Registrar intervalo no sistema de recursos
         if (window._spaResources) {
-            window._spaResources.intervals.push(_heroSliderInterval);
+            window._spaResources.intervals.push(window._heroSliderInterval);
         }
     }
 
@@ -139,9 +140,9 @@ function initInicio() {
     }
 
     // Swiper Solutions - Destruir instância anterior se existir
-    if (_solutionsSwiper && typeof _solutionsSwiper.destroy === 'function') {
+    if (window._solutionsSwiper && typeof window._solutionsSwiper.destroy === 'function') {
         try {
-            _solutionsSwiper.destroy(true, true);
+            window._solutionsSwiper.destroy(true, true);
         } catch (error) {
             console.error('Erro ao destruir Swiper anterior:', error);
         }
@@ -149,7 +150,7 @@ function initInicio() {
     
     const swiperElement = document.querySelector('.inicio-solutions-swiper');
     if (swiperElement) {
-        _solutionsSwiper = new Swiper('.inicio-solutions-swiper', {
+        window._solutionsSwiper = new Swiper('.inicio-solutions-swiper', {
             slidesPerView: 'auto',
             spaceBetween: 24,
             speed: 1, // Transição instantânea no loop
@@ -188,7 +189,7 @@ function initInicio() {
         
         // Registrar Swiper no sistema de recursos
         if (window._spaResources) {
-            window._spaResources.swipers.push(_solutionsSwiper);
+            window._spaResources.swipers.push(window._solutionsSwiper);
         }
     }
     
@@ -222,38 +223,38 @@ function initInicio() {
         }
     };
 
-    _inicioInitialized = true;
+    window._inicioInitialized = true;
 }
 
 // Função de limpeza para recursos da página de início
 function cleanupInicio() {
     // Limpar intervalos
-    if (_countdownInterval) {
-        clearInterval(_countdownInterval);
-        _countdownInterval = null;
+    if (window._countdownInterval) {
+        clearInterval(window._countdownInterval);
+        window._countdownInterval = null;
     }
     
-    if (_heroSliderInterval) {
-        clearInterval(_heroSliderInterval);
-        _heroSliderInterval = null;
+    if (window._heroSliderInterval) {
+        clearInterval(window._heroSliderInterval);
+        window._heroSliderInterval = null;
     }
     
     // Remover listeners do hero slider
-    _heroSliderHandlers.forEach(({ element, event, handler }) => {
+    window._heroSliderHandlers.forEach(({ element, event, handler }) => {
         if (element && handler) {
             element.removeEventListener(event, handler);
         }
     });
-    _heroSliderHandlers = [];
+    window._heroSliderHandlers = [];
     
     // Destruir Swiper
-    if (_solutionsSwiper && typeof _solutionsSwiper.destroy === 'function') {
+    if (window._solutionsSwiper && typeof window._solutionsSwiper.destroy === 'function') {
         try {
-            _solutionsSwiper.destroy(true, true);
+            window._solutionsSwiper.destroy(true, true);
         } catch (error) {
             console.error('Erro ao destruir Swiper:', error);
         }
-        _solutionsSwiper = null;
+        window._solutionsSwiper = null;
     }
     
     // Remover handler do formulário
@@ -265,7 +266,7 @@ function cleanupInicio() {
         window._contactFormHandler = null;
     }
     
-    _inicioInitialized = false;
+    window._inicioInitialized = false;
 }
 
 // Registrar função de cleanup no sistema global
