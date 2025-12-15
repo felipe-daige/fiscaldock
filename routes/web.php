@@ -13,6 +13,7 @@ Route::get('/inicio', [LandingPage::class, 'inicio'])->name('inicio');
 Route::get('/solucoes', [LandingPage::class, 'solucoes'])->name('solucoes');
 Route::get('/beneficios', [LandingPage::class, 'beneficios'])->name('beneficios');
 Route::get('/impactos', [LandingPage::class, 'impactos'])->name('impactos');
+Route::get('/precos', [LandingPage::class, 'precos'])->name('precos');
 Route::get('/faq', [LandingPage::class, 'faq'])->name('faq');
 Route::get('/questionario', [LandingPage::class, 'questionario'])->name('questionario');
 

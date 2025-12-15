@@ -20,6 +20,7 @@
     <script src="{{ asset('js/impactos.js') }}"></script>
     <script src="{{ asset('js/solucoes.js') }}"></script>
     <script src="{{ asset('js/beneficios.js') }}"></script>
+    <script src="{{ asset('js/precos.js') }}"></script>
     <script src="{{ asset('js/login.js') }}"></script>
     <script src="{{ asset('js/agendar.js') }}"></script>
     <script src="{{ asset('js/toast.js') }}"></script>
@@ -41,6 +42,7 @@
                     <li><a href="/solucoes" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Soluções</a></li>
                     <li><a href="/beneficios" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Benefícios</a></li>
                     <li><a href="/impactos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Impactos</a></li>
+                    <li><a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Preços</a></li>
                     <li><a href="/faq" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">FAQ</a></li>
                     <li><a href="/login" data-link class="btn-primary text-white font-semibold px-6 py-2 rounded-lg transition-colors">Login</a></li>
                     <li><a href="/agendar" data-link class="btn-outline-primary font-semibold px-6 py-2 rounded-lg transition-colors">Testar Agora</a></li>
@@ -60,6 +62,7 @@
                 <a href="/solucoes" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Soluções</a>
                 <a href="/beneficios" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Benefícios</a>
                 <a href="/impactos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Impactos</a>
+                <a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Preços</a>
                 <a href="/faq" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">FAQ</a>
                 <a href="/login" data-link class="btn-primary text-white font-semibold px-6 py-3 rounded-lg transition-colors text-center">Login</a>
                 <a href="/agendar" data-link class="btn-outline-primary font-semibold px-6 py-3 rounded-lg transition-colors text-center">Testar Agora</a>
@@ -102,6 +105,7 @@
                         <li><a href="/solucoes" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Soluções</a></li>
                         <li><a href="/beneficios" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Benefícios</a></li>
                         <li><a href="/impactos" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Impactos</a></li>
+                        <li><a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Preços</a></li>
                         <li><a href="/faq" data-link class="text-gray-600 hover:text-blue-500 transition-colors">FAQ</a></li>
                     </ul>
                 </div>
