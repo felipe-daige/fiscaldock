@@ -1808,40 +1808,6 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </button>
-                <div class="faq-answer hidden px-6 pb-4 text-gray-600">
-                    <p>O HUB Fiscal & Compliance se integra facilmente com sistemas ERP, contábeis e fiscais através de APIs REST e webhooks, permitindo sincronização em tempo real de dados e documentos.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
-    <div class="pointer-events-none leading-none mt-6 sm:mt-8">
-        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
-        </svg>
-    </div>
-</section>
-
-<!-- FAQ Section -->
-<section id="faq" class="bg-gray-50 pt-20 pb-0">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-            <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Perguntas <span class="text-brand-gradient">Frequentes</span>
-            </h2>
-            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                Tire suas dúvidas sobre o HUB Fiscal & Compliance e como ele pode transformar seu dia a dia
-            </p>
-        </div>
-
-        <div class="max-w-3xl mx-auto">
-            <div class="faq-item border border-gray-200 rounded-lg mb-4 hover:border-blue-500 transition-colors overflow-hidden">
-                <button class="faq-question w-full text-left px-6 py-4 font-semibold text-gray-900 hover:text-blue-500 flex justify-between items-center">
-                    <span>Como funciona a integração com sistemas existentes?</span>
-                    <svg class="w-5 h-5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </button>
                 <div class="faq-answer hidden">
                     <div class="px-6 py-4 text-gray-600 bg-white border-t border-gray-100">
                         O HUB trabalha como uma camada acima dos seus sistemas. Você pode importar dados, documentos e SPEDs de qualquer fonte. Ele organiza, valida e gera relatórios sem precisar substituir ou modificar seus sistemas contábeis atuais.
