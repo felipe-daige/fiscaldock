@@ -194,8 +194,14 @@ function initInicio() {
     }
     
     // Carrossel custom da seção "Soluções que transformam a rotina" (layout)
+    // Verificar se a função existe e se os elementos do carrossel estão disponíveis
     if (typeof window.initSolucoesCarousel === 'function') {
-        window.initSolucoesCarousel();
+        // Verificar se os elementos do carrossel existem antes de inicializar
+        const carouselTrack = document.querySelector('.solutions-cards-track');
+        const carouselWrapper = document.querySelector('.solutions-cards-wrapper');
+        if (carouselTrack && carouselWrapper) {
+            window.initSolucoesCarousel();
+        }
     }
 
     // Contact Form

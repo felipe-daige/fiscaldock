@@ -122,8 +122,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.success && data.redirect) {
                     // Limpar recursos antes de navegar
                     limparRecursos();
-                    // Navegar via SPA
-                    await navegar(data.redirect);
+                    // Recarregar página completa para trocar o header (layout muda entre autenticado/não autenticado)
+                    window.location.href = data.redirect;
                 } else {
                     // Fallback: recarregar página se não for JSON
                     window.location.href = data.redirect || '/inicio';
@@ -139,6 +139,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. FUNÇÃO PRINCIPAL DE NAVEGAÇÃO
     async function navegar(url) {
         try {
+            // Verificar se há mudança de contexto (autenticado <-> não autenticado)
+            // URLs autenticadas: /dashboard
+            // URLs não autenticadas: /inicio, /login, etc.
+            const urlPath = new URL(url, window.location.origin).pathname;
+            const currentPath = window.location.pathname;
+            
+            // Detectar se estamos navegando para/da área autenticada
+            const isDashboardArea = (path) => path === '/dashboard' || path.startsWith('/dashboard');
+            
+            const currentIsDashboard = isDashboardArea(currentPath);
+            const targetIsDashboard = isDashboardArea(urlPath);
+            
+            // Se há mudança entre área autenticada e não autenticada, recarregar página completa
+            // para garantir que o header seja trocado corretamente
+            if (currentIsDashboard !== targetIsDashboard) {
+                window.location.href = url;
+                return;
+            }
+            
             // Mostrar loading
             mostrarLoading();
             
@@ -161,6 +180,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await resposta.json();
                 
                 if (data.redirect) {
+                    // Se a mensagem indica mudança de contexto (login/logout), recarregar página completa
+                    // para garantir que o header seja trocado corretamente
+                    if (data.message && (data.message.includes('logado') || data.message.includes('logout'))) {
+                        window.location.href = data.redirect;
+                        return;
+                    }
                     // Navegar via SPA em vez de recarregar página
                     await navegar(data.redirect);
                     return;

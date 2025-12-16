@@ -121,7 +121,7 @@
             </div>
             <div class="flex justify-center">
                 <div class="relative">
-                    <img src="{{ asset('icone-gif/process.gif') }}" alt="Processo de Conciliação" class="w-full max-w-md object-contain rounded-lg shadow-lg">
+                    <img src="{{ asset('binary_files/icone-gif/process.gif') }}" alt="Processo de Conciliação" class="w-full max-w-md object-contain rounded-lg shadow-lg">
                 </div>
             </div>
         </div>
@@ -242,7 +242,7 @@
             <div class="process-step text-center">
                 <div class="relative mb-6">
                     <div class="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-                        <img src="{{ asset('icone-gif/secure-payment.gif') }}" alt="Upload" class="w-16 h-16 object-contain">
+                        <img src="{{ asset('binary_files/icone-gif/secure-payment.gif') }}" alt="Upload" class="w-16 h-16 object-contain">
                     </div>
                     <div class="absolute -top-2 -right-2 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
                         1
@@ -259,7 +259,7 @@
             <div class="process-step text-center">
                 <div class="relative mb-6">
                     <div class="w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center mx-auto">
-                        <img src="{{ asset('icone-gif/analyse.gif') }}" alt="Processamento" class="w-16 h-16 object-contain">
+                        <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="Processamento" class="w-16 h-16 object-contain">
                     </div>
                     <div class="absolute -top-2 -right-2 w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
                         2
@@ -276,7 +276,7 @@
             <div class="process-step text-center">
                 <div class="relative mb-6">
                     <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                        <img src="{{ asset('icone-gif/accounting.gif') }}" alt="Resultado" class="w-16 h-16 object-contain">
+                        <img src="{{ asset('binary_files/icone-gif/accounting.gif') }}" alt="Resultado" class="w-16 h-16 object-contain">
                     </div>
                     <div class="absolute -top-2 -right-2 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
                         3

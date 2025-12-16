@@ -135,7 +135,7 @@
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-16 h-16 mx-auto object-contain">
                         </div>
                         <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Central de Documentos</h3>
                         <p class="text-gray-600 text-center">Upload e organização por empresa, competência e tipo. Versionamento e busca inteligente com histórico e evidência.</p>
@@ -145,7 +145,7 @@
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-16 h-16 mx-auto object-contain">
                         </div>
                         <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Leitura e Diagnóstico</h3>
                         <p class="text-gray-600 text-center">Importação e estruturação de SPED, detecção de inconsistências e semáforo por competência com alertas.</p>
@@ -155,7 +155,7 @@
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-16 h-16 mx-auto object-contain">
                         </div>
                         <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Motor de Regras</h3>
                         <p class="text-gray-600 text-center">Regras parametrizáveis por operação. Classificação automática e evolução contínua que aprende seu padrão.</p>
@@ -165,7 +165,7 @@
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-16 h-16 mx-auto object-contain">
                         </div>
                         <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Compliance e Situação Fiscal</h3>
                         <p class="text-gray-600 text-center">Painel de situação por CNPJ, alertas de vencimento e relatório de risco com evidências e histórico.</p>
@@ -175,7 +175,7 @@
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-16 h-16 mx-auto object-contain">
                         </div>
                         <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Automação de Comunicação</h3>
                         <p class="text-gray-600 text-center">Cobrança automática via WhatsApp e portal. Mensagens com contexto e registro completo da conversa.</p>
@@ -185,7 +185,7 @@
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-16 h-16 mx-auto object-contain">
                         </div>
                         <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Portal do Cliente</h3>
                         <p class="text-gray-600 text-center">Checklist do mês, pendências, prazos e histórico. Permissões por perfil para menos atrito e mais previsibilidade.</p>
@@ -196,7 +196,7 @@
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-16 h-16 mx-auto object-contain">
                         </div>
                         <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Central de Documentos</h3>
                         <p class="text-gray-600 text-center">Upload e organização por empresa, competência e tipo. Versionamento e busca inteligente com histórico e evidência.</p>
@@ -206,7 +206,7 @@
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-16 h-16 mx-auto object-contain">
                         </div>
                         <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Leitura e Diagnóstico</h3>
                         <p class="text-gray-600 text-center">Importação e estruturação de SPED, detecção de inconsistências e semáforo por competência com alertas.</p>
@@ -216,7 +216,7 @@
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-16 h-16 mx-auto object-contain">
                         </div>
                         <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Motor de Regras</h3>
                         <p class="text-gray-600 text-center">Regras parametrizáveis por operação. Classificação automática e evolução contínua que aprende seu padrão.</p>
@@ -226,7 +226,7 @@
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-16 h-16 mx-auto object-contain">
                         </div>
                         <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Compliance e Situação Fiscal</h3>
                         <p class="text-gray-600 text-center">Painel de situação por CNPJ, alertas de vencimento e relatório de risco com evidências e histórico.</p>
@@ -236,7 +236,7 @@
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-16 h-16 mx-auto object-contain">
                         </div>
                         <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Automação de Comunicação</h3>
                         <p class="text-gray-600 text-center">Cobrança automática via WhatsApp e portal. Mensagens com contexto e registro completo da conversa.</p>
@@ -246,7 +246,7 @@
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-16 h-16 mx-auto object-contain">
                         </div>
                         <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Portal do Cliente</h3>
                         <p class="text-gray-600 text-center">Checklist do mês, pendências, prazos e histórico. Permissões por perfil para menos atrito e mais previsibilidade.</p>
@@ -272,7 +272,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
                 <div class="text-center mb-4">
-                    <img src="{{ asset('icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-16 h-16 mx-auto object-contain">
+                    <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-16 h-16 mx-auto object-contain">
                 </div>
                 <h3 class="text-xl font-bold text-gray-900 mb-2">Central de Documentos</h3>
                 <p class="text-gray-600">Upload e organização por empresa, competência e tipo. Versionamento e busca inteligente.</p>
@@ -280,7 +280,7 @@
 
             <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
                 <div class="text-center mb-4">
-                    <img src="{{ asset('icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-16 h-16 mx-auto object-contain">
+                    <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-16 h-16 mx-auto object-contain">
                 </div>
                 <h3 class="text-xl font-bold text-gray-900 mb-2">Leitura e Diagnóstico</h3>
                 <p class="text-gray-600">Importação e estruturação de SPED, detecção de inconsistências e semáforo por competência.</p>
@@ -288,7 +288,7 @@
 
             <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
                 <div class="text-center mb-4">
-                    <img src="{{ asset('icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-16 h-16 mx-auto object-contain">
+                    <img src="{{ asset('binary_files/icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-16 h-16 mx-auto object-contain">
                 </div>
                 <h3 class="text-xl font-bold text-gray-900 mb-2">Motor de Regras</h3>
                 <p class="text-gray-600">Regras parametrizáveis por operação. Classificação automática e evolução contínua.</p>
@@ -296,7 +296,7 @@
 
             <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
                 <div class="text-center mb-4">
-                    <img src="{{ asset('icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-16 h-16 mx-auto object-contain">
+                    <img src="{{ asset('binary_files/icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-16 h-16 mx-auto object-contain">
                 </div>
                 <h3 class="text-xl font-bold text-gray-900 mb-2">Compliance e Situação Fiscal</h3>
                 <p class="text-gray-600">Painel de situação por CNPJ, alertas de vencimento e relatório de risco.</p>
@@ -304,7 +304,7 @@
 
             <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
                 <div class="text-center mb-4">
-                    <img src="{{ asset('icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-16 h-16 mx-auto object-contain">
+                    <img src="{{ asset('binary_files/icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-16 h-16 mx-auto object-contain">
                 </div>
                 <h3 class="text-xl font-bold text-gray-900 mb-2">Automação de Comunicação</h3>
                 <p class="text-gray-600">Cobrança automática via WhatsApp e portal. Mensagens com contexto e registro completo.</p>
@@ -312,7 +312,7 @@
 
             <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
                 <div class="text-center mb-4">
-                    <img src="{{ asset('icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-16 h-16 mx-auto object-contain">
+                    <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-16 h-16 mx-auto object-contain">
                 </div>
                 <h3 class="text-xl font-bold text-gray-900 mb-2">Portal do Cliente</h3>
                 <p class="text-gray-600">Checklist do mês, pendências, prazos e histórico. Permissões por perfil.</p>
@@ -339,7 +339,7 @@
                 <button class="solution-accordion-header w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition-colors cursor-pointer">
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center relative">
-                            <img src="{{ asset('icone-gif/analyse.gif') }}" alt="RAF" class="w-8 h-8 object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="RAF" class="w-8 h-8 object-contain">
                             <!-- Ícone de lupa sobre gráfico (overlay visual) -->
                             <svg class="w-5 h-5 absolute -top-1 -right-1 text-white opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -544,7 +544,7 @@
                 <button class="solution-accordion-header w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition-colors cursor-pointer">
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                            <img src="{{ asset('icone-gif/accounting.gif') }}" alt="Inteligência Tributária" class="w-8 h-8 object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/accounting.gif') }}" alt="Inteligência Tributária" class="w-8 h-8 object-contain">
                         </div>
                         <div>
                             <h3 class="text-xl font-bold text-gray-900">Inteligência Tributária: Apuração de Impostos no Piloto Automático</h3>
