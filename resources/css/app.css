@@ -182,6 +182,13 @@
     color: var(--color-primary-500) !important;
 }
 
+/* Estilo específico para o botão "Testar Agora" no header - manter fonte fina */
+header nav .btn-accent,
+header #mobile-menu .btn-accent {
+    font-weight: 400 !important;
+    font-size: 0.875rem !important; /* text-sm */
+}
+
 /* Dropdown Menu Styles */
 .dropdown-menu {
     z-index: 1000;

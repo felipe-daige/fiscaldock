@@ -23,8 +23,6 @@
     <main id="app">
         @if(isset($initialView))
             @include("autenticado.$initialView")
-        @else
-            @include('autenticado.inicio')
         @endif
     </main>
 

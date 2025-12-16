@@ -35,10 +35,14 @@ Route::prefix('api/xml')->group(function () {
     Route::get('/documentos', [XmlImportController::class, 'listarDocumentos'])->name('api.xml.documentos');
 });
 
-Route::get('/dashboard', [PosloginController::class, 'dashboard'])->name('dashboard');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::get('/agendar', [AuthController::class, 'showAgendar'])->name('agendar');
 Route::post('/agendar', [AuthController::class, 'agendar'])->name('agendar.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Rotas autenticadas
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [PosloginController::class, 'dashboard'])->name('dashboard');
+});

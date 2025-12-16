@@ -181,16 +181,32 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Fallback: remover destaque de todos
         document.querySelectorAll('[data-link]').forEach(link => {
-            link.classList.remove('text-blue-500', 'font-semibold');
-            link.classList.add('text-gray-600');
+            const isButton = link.classList.contains('btn-accent') || link.classList.contains('btn-primary') || link.classList.contains('btn-secondary');
+            
+            if (isButton) {
+                // Para botões, remover indicadores visuais de ativo
+                link.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+            } else {
+                // Para links normais, remover classes de texto ativo
+                link.classList.remove('text-blue-500', 'font-semibold');
+                link.classList.add('text-gray-600');
+            }
         });
         
         // Destacar link atual
         const caminhoAtual = new URL(url).pathname;
         const linkAtivo = document.querySelector(`[data-link][href="${caminhoAtual}"]`);
         if (linkAtivo) {
-            linkAtivo.classList.remove('text-gray-600');
-            linkAtivo.classList.add('text-blue-500', 'font-semibold');
+            const isButton = linkAtivo.classList.contains('btn-accent') || linkAtivo.classList.contains('btn-primary') || linkAtivo.classList.contains('btn-secondary');
+            
+            if (isButton) {
+                // Para botões, usar ring como indicador visual sem alterar o peso da fonte
+                linkAtivo.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+            } else {
+                // Para links normais, usar classes de texto ativo
+                linkAtivo.classList.remove('text-gray-600');
+                linkAtivo.classList.add('text-blue-500', 'font-semibold');
+            }
         }
     }
     
