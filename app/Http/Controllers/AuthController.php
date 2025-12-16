@@ -181,4 +181,20 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    public function logout(Request $request){
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        
+        if($request->ajax()){
+            return response()->json([
+                'success' => true,
+                'message' => 'Logout realizado com sucesso',
+                'redirect' => '/inicio'
+            ]);
+        }
+        
+        return redirect('/inicio');
+    }
 }
