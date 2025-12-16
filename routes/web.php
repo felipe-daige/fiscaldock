@@ -45,4 +45,10 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Rotas autenticadas
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [PosloginController::class, 'dashboard'])->name('dashboard');
+    Route::get('/solucoes', [PosloginController::class, 'solucoes'])->name('autenticado.solucoes');
+    Route::get('/solucoes/importacao-xml', [PosloginController::class, 'importacaoXml'])->name('autenticado.solucoes.importacao-xml');
+    Route::get('/solucoes/conciliacao-bancaria', [PosloginController::class, 'conciliacaoBancaria'])->name('autenticado.solucoes.conciliacao-bancaria');
+    Route::get('/solucoes/gestao-cnds', [PosloginController::class, 'gestaoCnds'])->name('autenticado.solucoes.gestao-cnds');
+    Route::get('/solucoes/inteligencia-tributaria', [PosloginController::class, 'inteligenciaTributaria'])->name('autenticado.solucoes.inteligencia-tributaria');
+    Route::get('/solucoes/raf', [PosloginController::class, 'raf'])->name('autenticado.solucoes.raf');
 });

@@ -99,6 +99,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
+    // 1.1. INTERCEPTAR FORMULÁRIO DE LOGOUT
+    document.body.addEventListener('submit', async (e) => {
+        const form = e.target;
+        if (form && (form.id === 'logout-form' || form.id === 'logout-form-header' || form.id === 'logout-form-mobile')) {
+            e.preventDefault(); // Não recarregar página
+            
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': formData.get('_token')
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.redirect) {
+                    // Limpar recursos antes de navegar
+                    limparRecursos();
+                    // Navegar via SPA
+                    await navegar(data.redirect);
+                } else {
+                    // Fallback: recarregar página se não for JSON
+                    window.location.href = data.redirect || '/inicio';
+                }
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+                // Fallback: recarregar página em caso de erro
+                window.location.href = '/inicio';
+            }
+        }
+    });
+    
     // 2. FUNÇÃO PRINCIPAL DE NAVEGAÇÃO
     async function navegar(url) {
         try {
@@ -124,8 +161,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await resposta.json();
                 
                 if (data.redirect) {
-                    // Redirecionar para a página especificada (sucesso ou erro)
-                    window.location.href = data.redirect;
+                    // Navegar via SPA em vez de recarregar página
+                    await navegar(data.redirect);
                     return;
                 }
                 
