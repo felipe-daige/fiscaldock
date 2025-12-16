@@ -134,7 +134,7 @@
             </div>
             <div class="flex justify-center">
                 <div class="relative">
-                    <img src="{{ asset('icone-gif/alerta.gif') }}" alt="Monitoramento de CNDs" class="w-full max-w-md object-contain rounded-lg shadow-lg">
+                    <img src="{{ asset('binary_files/icone-gif/alerta.gif') }}" alt="Monitoramento de CNDs" class="w-full max-w-md object-contain rounded-lg shadow-lg">
                 </div>
             </div>
         </div>

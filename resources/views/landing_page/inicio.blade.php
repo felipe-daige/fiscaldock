@@ -443,11 +443,11 @@
                 <div class="mt-6 mb-6 lg:mb-8 flex items-center gap-4 flex-wrap">
                     <!-- Grupo de Avatares -->
                     <div class="flex items-center -space-x-2">
-                        <img src="{{ asset('pictures/random_person-1.jpg') }}" alt="Avaliador" class="w-12 h-12 rounded-full border-2 border-white object-cover">
-                        <img src="{{ asset('pictures/random_person-2.jpg') }}" alt="Avaliador" class="w-12 h-12 rounded-full border-2 border-white object-cover">
-                        <img src="{{ asset('pictures/random_person-3.jpg') }}" alt="Avaliador" class="w-12 h-12 rounded-full border-2 border-white object-cover">
-                        <img src="{{ asset('pictures/random_person-4.jpg') }}" alt="Avaliador" class="w-12 h-12 rounded-full border-2 border-white object-cover">
-                        <img src="{{ asset('pictures/random_person-5.jpg') }}" alt="Avaliador" class="w-12 h-12 rounded-full border-2 border-white object-cover">
+                        <img src="{{ asset('binary_files/people-pictures/random_person-1.jpg') }}" alt="Avaliador" class="w-12 h-12 rounded-full border-2 border-white object-cover">
+                        <img src="{{ asset('binary_files/people-pictures/random_person-2.jpg') }}" alt="Avaliador" class="w-12 h-12 rounded-full border-2 border-white object-cover">
+                        <img src="{{ asset('binary_files/people-pictures/random_person-3.jpg') }}" alt="Avaliador" class="w-12 h-12 rounded-full border-2 border-white object-cover">
+                        <img src="{{ asset('binary_files/people-pictures/random_person-4.jpg') }}" alt="Avaliador" class="w-12 h-12 rounded-full border-2 border-white object-cover">
+                        <img src="{{ asset('binary_files/people-pictures/random_person-5.jpg') }}" alt="Avaliador" class="w-12 h-12 rounded-full border-2 border-white object-cover">
                     </div>
 
                     <!-- Avaliação -->
@@ -484,7 +484,7 @@
             <div class="lg:col-span-7 xl:col-span-6">
                 <div class="relative rounded-3xl border border-white/15 bg-white/5 p-2 shadow-lg shadow-blue-950/10">
                     <img
-                        src="{{ asset('pictures/dashboard-mockup.jpg') }}"
+                        src="{{ asset('binary_files/mockups/dashboard-mockup.jpg') }}"
                         alt="Mockup do dashboard ReformaTax"
                         loading="eager"
                         fetchpriority="high"
@@ -544,7 +544,7 @@
                                     <div>
                                         <div class="flex items-center justify-center gap-3 mb-8">
                                             <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
-                                                <img src="{{ asset('icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-8 h-8 object-contain">
+                                                <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-8 h-8 object-contain">
                                             </div>
                                             <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Portal do Cliente</h3>
                                         </div>
@@ -589,7 +589,7 @@
                                             <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                                                 <div class="flex items-center gap-3">
                                                     <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
-                                                        <img src="{{ asset('icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-5 h-5 object-contain">
+                                                        <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-5 h-5 object-contain">
                                                     </div>
                                                     <span class="text-sm font-semibold text-gray-900">Portal do Cliente</span>
                                                 </div>
@@ -637,7 +637,7 @@
                                     <div>
                                         <div class="flex items-center justify-center gap-3 mb-6">
                                             <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
-                                                <img src="{{ asset('icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-8 h-8 object-contain">
+                                                <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-8 h-8 object-contain">
                                             </div>
                                             <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Central de Documentos</h3>
                                         </div>
@@ -690,7 +690,7 @@
                                             <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                                                 <div class="flex items-center gap-3">
                                                     <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
-                                                        <img src="{{ asset('icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-5 h-5 object-contain">
+                                                        <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-5 h-5 object-contain">
                                                     </div>
                                                     <span class="text-sm font-semibold text-gray-900">Central de Documentos</span>
                                                 </div>
@@ -748,7 +748,7 @@
                                     <div>
                                         <div class="flex items-center justify-center gap-3 mb-6">
                                             <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
-                                                <img src="{{ asset('icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-8 h-8 object-contain">
+                                                <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-8 h-8 object-contain">
                                             </div>
                                             <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Leitura e Diagnóstico</h3>
                                         </div>
@@ -801,7 +801,7 @@
                                             <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                                                 <div class="flex items-center gap-3">
                                                     <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
-                                                        <img src="{{ asset('icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-5 h-5 object-contain">
+                                                        <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-5 h-5 object-contain">
                                                     </div>
                                                     <span class="text-sm font-semibold text-gray-900">Leitura e Diagnóstico</span>
                                                 </div>
@@ -866,7 +866,7 @@
                                     <div>
                                         <div class="flex items-center justify-center gap-3 mb-6">
                                             <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
-                                                <img src="{{ asset('icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-8 h-8 object-contain">
+                                                <img src="{{ asset('binary_files/icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-8 h-8 object-contain">
                                             </div>
                                             <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Motor de Regras</h3>
                                         </div>
@@ -919,7 +919,7 @@
                                             <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                                                 <div class="flex items-center gap-3">
                                                     <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
-                                                        <img src="{{ asset('icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-5 h-5 object-contain">
+                                                        <img src="{{ asset('binary_files/icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-5 h-5 object-contain">
                                                     </div>
                                                     <span class="text-sm font-semibold text-gray-900">Motor de Regras</span>
                                                 </div>
@@ -978,7 +978,7 @@
                                     <div>
                                         <div class="flex items-center justify-center gap-3 mb-6">
                                             <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
-                                                <img src="{{ asset('icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-8 h-8 object-contain">
+                                                <img src="{{ asset('binary_files/icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-8 h-8 object-contain">
                                             </div>
                                             <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Compliance e Situação Fiscal</h3>
                                         </div>
@@ -1031,7 +1031,7 @@
                                             <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                                                 <div class="flex items-center gap-3">
                                                     <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
-                                                        <img src="{{ asset('icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-5 h-5 object-contain">
+                                                        <img src="{{ asset('binary_files/icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-5 h-5 object-contain">
                                                     </div>
                                                     <span class="text-sm font-semibold text-gray-900">Compliance e Situação Fiscal</span>
                                                 </div>
@@ -1099,7 +1099,7 @@
                                     <div>
                                         <div class="flex items-center justify-center gap-3 mb-6">
                                             <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
-                                                <img src="{{ asset('icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-8 h-8 object-contain">
+                                                <img src="{{ asset('binary_files/icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-8 h-8 object-contain">
                                             </div>
                                             <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Automação de Comunicação</h3>
                                         </div>
@@ -1152,7 +1152,7 @@
                                             <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                                                 <div class="flex items-center gap-3">
                                                     <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
-                                                        <img src="{{ asset('icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-5 h-5 object-contain">
+                                                        <img src="{{ asset('binary_files/icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-5 h-5 object-contain">
                                                     </div>
                                                     <span class="text-sm font-semibold text-gray-900">Automação de Comunicação</span>
                                                 </div>
@@ -1208,7 +1208,7 @@
                                     <div>
                                         <div class="flex items-center justify-center gap-3 mb-6">
                                             <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
-                                                <img src="{{ asset('icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-8 h-8 object-contain">
+                                                <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-8 h-8 object-contain">
                                             </div>
                                             <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Portal do Cliente</h3>
                                         </div>
@@ -1261,7 +1261,7 @@
                                             <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                                                 <div class="flex items-center gap-3">
                                                     <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
-                                                        <img src="{{ asset('icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-5 h-5 object-contain">
+                                                        <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-5 h-5 object-contain">
                                                     </div>
                                                     <span class="text-sm font-semibold text-gray-900">Portal do Cliente</span>
                                                 </div>
@@ -1338,7 +1338,7 @@
                                     <div>
                                         <div class="flex items-center justify-center gap-3 mb-6">
                                             <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
-                                                <img src="{{ asset('icone-gif/analyse.gif') }}" alt="RAF" class="w-8 h-8 object-contain">
+                                                <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="RAF" class="w-8 h-8 object-contain">
                                             </div>
                                             <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Relatório de Fornecedores</h3>
                                         </div>
@@ -1391,7 +1391,7 @@
                                             <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                                                 <div class="flex items-center gap-3">
                                                     <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
-                                                        <img src="{{ asset('icone-gif/analyse.gif') }}" alt="RAF" class="w-5 h-5 object-contain">
+                                                        <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="RAF" class="w-5 h-5 object-contain">
                                                     </div>
                                                     <span class="text-sm font-semibold text-gray-900">Relatório de Fornecedores</span>
                                                 </div>
@@ -1474,7 +1474,7 @@
                                     <div>
                                         <div class="flex items-center justify-center gap-3 mb-8">
                                             <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
-                                                <img src="{{ asset('icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-8 h-8 object-contain">
+                                                <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-8 h-8 object-contain">
                                             </div>
                                             <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Central de Documentos</h3>
                                         </div>
@@ -1519,7 +1519,7 @@
                                             <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                                                 <div class="flex items-center gap-3">
                                                     <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
-                                                        <img src="{{ asset('icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-5 h-5 object-contain">
+                                                        <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-5 h-5 object-contain">
                                                     </div>
                                                     <span class="text-sm font-semibold text-gray-900">Central de Documentos</span>
                                                 </div>
@@ -1610,42 +1610,42 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500 text-center">
                 <div class="mb-4">
-                    <img src="{{ asset('icone-gif/financial-decline.gif') }}" alt="Financial Decline" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
+                    <img src="{{ asset('binary_files/icone-gif/financial-decline.gif') }}" alt="Financial Decline" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
                 </div>
                 <p class="text-gray-600 font-medium">Redução de até 30% na carga tributária com planejamento adequado</p>
             </div>
 
             <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500 text-center">
                 <div class="mb-4">
-                    <img src="{{ asset('icone-gif/contract.gif') }}" alt="Contract" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
+                    <img src="{{ asset('binary_files/icone-gif/contract.gif') }}" alt="Contract" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
                 </div>
                 <p class="text-gray-600 font-medium">Conformidade total com rastreabilidade e evidências completas</p>
             </div>
 
             <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500 text-center">
                 <div class="mb-4">
-                    <img src="{{ asset('icone-gif/process.gif') }}" alt="Process" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
+                    <img src="{{ asset('binary_files/icone-gif/process.gif') }}" alt="Process" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
                 </div>
                 <p class="text-gray-600 font-medium">Processos automatizados que economizam tempo e recursos</p>
             </div>
 
             <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500 text-center">
                 <div class="mb-4">
-                    <img src="{{ asset('icone-gif/budgeting.gif') }}" alt="Budgeting" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
+                    <img src="{{ asset('binary_files/icone-gif/budgeting.gif') }}" alt="Budgeting" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
                 </div>
                 <p class="text-gray-600 font-medium">Visibilidade completa dos impactos financeiros em tempo real</p>
             </div>
 
             <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500 text-center">
                 <div class="mb-4">
-                    <img src="{{ asset('icone-gif/customer-service.gif') }}" alt="Customer Service" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
+                    <img src="{{ asset('binary_files/icone-gif/customer-service.gif') }}" alt="Customer Service" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
                 </div>
                 <p class="text-gray-600 font-medium">Equipe de especialistas disponível para suporte contínuo</p>
             </div>
 
             <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500 text-center">
                 <div class="mb-4">
-                    <img src="{{ asset('icone-gif/investment.gif') }}" alt="Investment" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
+                    <img src="{{ asset('binary_files/icone-gif/investment.gif') }}" alt="Investment" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
                 </div>
                 <p class="text-gray-600 font-medium">ROI comprovado em menos de 6 meses</p>
             </div>
@@ -1689,7 +1689,7 @@
                     <div class="w-48 h-48 bg-blue-100 rounded-full blur-3xl opacity-50 absolute top-0 left-6"></div>
                     <div class="w-40 h-40 bg-yellow-100 rounded-full blur-3xl opacity-50 absolute bottom-6 right-0"></div>
                 </div>
-                <img src="{{ asset('pictures/macbook-mockup.png') }}" alt="Demonstração de fluxo de caixa em um notebook" class="w-full max-w-2xl mx-auto drop-shadow-2xl">
+                <img src="{{ asset('binary_files/mockups/macbook-mockup.png') }}" alt="Demonstração de fluxo de caixa em um notebook" class="w-full max-w-2xl mx-auto drop-shadow-2xl">
             </div>
         </div>
     </div>
@@ -1961,7 +1961,7 @@
                 <div class="testimonial-card bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 p-8 border border-gray-100 hover:border-blue-200 relative overflow-hidden">
                     <div class="quote-decoration absolute top-4 right-4 text-8xl font-serif text-blue-50 leading-none">"</div>
                     <div class="testimonial-header flex items-center gap-4 mb-6 relative z-10">
-                        <img src="{{ asset('pictures/random_person-1.jpg') }}" alt="Maria Silva" class="avatar-gradient w-14 h-14 rounded-full object-cover shadow-lg ring-4 ring-purple-100">
+                        <img src="{{ asset('binary_files/people-pictures/random_person-1.jpg') }}" alt="Maria Silva" class="avatar-gradient w-14 h-14 rounded-full object-cover shadow-lg ring-4 ring-purple-100">
                         <div class="flex-1">
                             <div class="font-bold text-gray-900 text-lg">Maria Silva</div>
                             <div class="text-sm text-gray-600">CEO, TechCorp</div>
@@ -1986,7 +1986,7 @@
                 <div class="testimonial-card bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 p-8 border border-gray-100 hover:border-blue-200 relative overflow-hidden">
                     <div class="quote-decoration absolute top-4 right-4 text-8xl font-serif text-blue-50 leading-none">"</div>
                     <div class="testimonial-header flex items-center gap-4 mb-6 relative z-10">
-                        <img src="{{ asset('pictures/random_person-2.jpg') }}" alt="João Santos" class="avatar-gradient w-14 h-14 rounded-full object-cover shadow-lg ring-4 ring-blue-100">
+                        <img src="{{ asset('binary_files/people-pictures/random_person-2.jpg') }}" alt="João Santos" class="avatar-gradient w-14 h-14 rounded-full object-cover shadow-lg ring-4 ring-blue-100">
                         <div class="flex-1">
                             <div class="font-bold text-gray-900 text-lg">João Santos</div>
                             <div class="text-sm text-gray-600">Diretor Financeiro, Inovação Ltda</div>
@@ -2011,7 +2011,7 @@
                 <div class="testimonial-card bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 p-8 border border-gray-100 hover:border-blue-200 relative overflow-hidden">
                     <div class="quote-decoration absolute top-4 right-4 text-8xl font-serif text-blue-50 leading-none">"</div>
                     <div class="testimonial-header flex items-center gap-4 mb-6 relative z-10">
-                        <img src="{{ asset('pictures/random_person-3.jpg') }}" alt="Ana Costa" class="avatar-gradient w-14 h-14 rounded-full object-cover shadow-lg ring-4 ring-green-100">
+                        <img src="{{ asset('binary_files/people-pictures/random_person-3.jpg') }}" alt="Ana Costa" class="avatar-gradient w-14 h-14 rounded-full object-cover shadow-lg ring-4 ring-green-100">
                         <div class="flex-1">
                             <div class="font-bold text-gray-900 text-lg">Ana Costa</div>
                             <div class="text-sm text-gray-600">Contadora, Empresa ABC</div>
@@ -2233,17 +2233,24 @@ window._solucoesCarouselHandlers = {
 // Função de cleanup do carrossel
 window.cleanupSolucoesCarousel = function() {
     try {
-        // Remover handlers das setas
-        if (window._solucoesCarouselHandlers.prevArrow && window._solucoesCarouselHandlers.prevArrowHandler) {
-            window._solucoesCarouselHandlers.prevArrow.onclick = null;
+        // Verificar se os elementos ainda existem no DOM antes de limpar
+        // Remover handlers das setas apenas se os elementos ainda existirem
+        if (window._solucoesCarouselHandlers.prevArrow) {
+            // Verificar se o elemento ainda está no DOM
+            if (document.contains(window._solucoesCarouselHandlers.prevArrow) && window._solucoesCarouselHandlers.prevArrowHandler) {
+                window._solucoesCarouselHandlers.prevArrow.onclick = null;
+            }
         }
-        if (window._solucoesCarouselHandlers.nextArrow && window._solucoesCarouselHandlers.nextArrowHandler) {
-            window._solucoesCarouselHandlers.nextArrow.onclick = null;
+        if (window._solucoesCarouselHandlers.nextArrow) {
+            // Verificar se o elemento ainda está no DOM
+            if (document.contains(window._solucoesCarouselHandlers.nextArrow) && window._solucoesCarouselHandlers.nextArrowHandler) {
+                window._solucoesCarouselHandlers.nextArrow.onclick = null;
+            }
         }
         
-        // Remover handlers dos pills
+        // Remover handlers dos pills apenas se ainda existirem no DOM
         window._solucoesCarouselHandlers.pills.forEach((pill, index) => {
-            if (pill && window._solucoesCarouselHandlers.pillHandlers[index]) {
+            if (pill && document.contains(pill) && window._solucoesCarouselHandlers.pillHandlers[index]) {
                 pill.onclick = null;
             }
         });
@@ -2450,7 +2457,13 @@ window.initSolucoesCarousel = function() {
                 }
 
                 // Configurar setas de navegação
+                // Primeiro, remover handlers antigos se existirem
                 if (prevArrow) {
+                    // Limpar handler anterior se existir
+                    if (window._solucoesCarouselHandlers.prevArrowHandler) {
+                        prevArrow.onclick = null;
+                    }
+                    // Criar novo handler
                     window._solucoesCarouselHandlers.prevArrowHandler = function(e) {
                         e.preventDefault();
                         e.stopPropagation();
@@ -2460,6 +2473,11 @@ window.initSolucoesCarousel = function() {
                 }
 
                 if (nextArrow) {
+                    // Limpar handler anterior se existir
+                    if (window._solucoesCarouselHandlers.nextArrowHandler) {
+                        nextArrow.onclick = null;
+                    }
+                    // Criar novo handler
                     window._solucoesCarouselHandlers.nextArrowHandler = function(e) {
                         e.preventDefault();
                         e.stopPropagation();
@@ -2469,7 +2487,12 @@ window.initSolucoesCarousel = function() {
                 }
 
                 // Configurar pills
+                // Limpar handlers antigos dos pills primeiro
+                window._solucoesCarouselHandlers.pillHandlers = [];
                 pills.forEach((pill, index) => {
+                    // Limpar handler anterior se existir
+                    pill.onclick = null;
+                    // Criar novo handler
                     const pillHandler = function(e) {
                         e.preventDefault();
                         e.stopPropagation();
@@ -2527,10 +2550,7 @@ if (!window._cleanupFunctions) {
 }
 window._cleanupFunctions.initSolucoesCarousel = window.cleanupSolucoesCarousel;
 
-// Tentar inicializar imediatamente se a função já estiver definida
-if (typeof window.initSolucoesCarousel === 'function') {
-    window.initSolucoesCarousel();
-}
+// A inicialização será feita através do sistema de funções específicas do SPA (initInicio)
 </script>
 
 <!-- Scripts carregados no layout -->
