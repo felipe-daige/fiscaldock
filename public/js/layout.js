@@ -93,15 +93,31 @@ function updateActiveLink() {
     
     // Remove classes ativas de todos os links
     allLinks.forEach(link => {
-        link.classList.remove('text-blue-500', 'font-semibold');
-        link.classList.add('text-gray-600');
+        const isButton = link.classList.contains('btn-accent') || link.classList.contains('btn-primary') || link.classList.contains('btn-secondary');
+        
+        if (isButton) {
+            // Para botões, remover indicadores visuais de ativo
+            link.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+        } else {
+            // Para links normais, remover classes de texto ativo
+            link.classList.remove('text-blue-500', 'font-semibold');
+            link.classList.add('text-gray-600');
+        }
     });
     
     // Adiciona classes ativas ao link atual
     allLinks.forEach(link => {
         if (link.getAttribute('href') === currentPath) {
-            link.classList.remove('text-gray-600');
-            link.classList.add('text-blue-500', 'font-semibold');
+            const isButton = link.classList.contains('btn-accent') || link.classList.contains('btn-primary') || link.classList.contains('btn-secondary');
+            
+            if (isButton) {
+                // Para botões, usar ring como indicador visual sem alterar o peso da fonte
+                link.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+            } else {
+                // Para links normais, usar classes de texto ativo
+                link.classList.remove('text-gray-600');
+                link.classList.add('text-blue-500', 'font-semibold');
+            }
         }
     });
 }
@@ -112,15 +128,31 @@ function setActiveLink(path) {
     
     // Remove classes ativas de todos os links
     allLinks.forEach(link => {
-        link.classList.remove('text-blue-500', 'font-semibold');
-        link.classList.add('text-gray-600');
+        const isButton = link.classList.contains('btn-accent') || link.classList.contains('btn-primary') || link.classList.contains('btn-secondary');
+        
+        if (isButton) {
+            // Para botões, remover indicadores visuais de ativo
+            link.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+        } else {
+            // Para links normais, remover classes de texto ativo
+            link.classList.remove('text-blue-500', 'font-semibold');
+            link.classList.add('text-gray-600');
+        }
     });
     
     // Adiciona classes ativas ao link atual
     allLinks.forEach(link => {
         if (link.getAttribute('href') === path) {
-            link.classList.remove('text-gray-600');
-            link.classList.add('text-blue-500', 'font-semibold');
+            const isButton = link.classList.contains('btn-accent') || link.classList.contains('btn-primary') || link.classList.contains('btn-secondary');
+            
+            if (isButton) {
+                // Para botões, usar ring como indicador visual sem alterar o peso da fonte
+                link.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+            } else {
+                // Para links normais, usar classes de texto ativo
+                link.classList.remove('text-gray-600');
+                link.classList.add('text-blue-500', 'font-semibold');
+            }
         }
     });
 }

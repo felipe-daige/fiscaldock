@@ -9,14 +9,14 @@
             <!-- Logo e título centralizados -->
             <div class="text-center mb-6">
                 <!-- Ícone do logo -->
-                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-3xl flex items-center justify-center mx-auto mb-3 shadow-2xl transform hover:scale-105 transition-transform duration-300 ring-4 ring-blue-100 ring-opacity-50">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl transform hover:scale-105 transition-transform duration-300 ring-4 ring-blue-100 ring-opacity-50">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                     </svg>
                 </div>
                 
                 <!-- Nome da marca centralizado -->
-                <div class="flex items-center justify-center gap-2 mb-4">
+                <div class="flex items-center justify-center gap-3 mb-4">
                     <div class="w-8 h-8 brand-mark rounded-lg flex items-center justify-center font-bold text-white text-lg shadow-md">H</div>
                     <span class="text-lg font-bold text-gray-900">FiscalDock</span>
                 </div>

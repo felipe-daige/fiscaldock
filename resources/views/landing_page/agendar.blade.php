@@ -1,35 +1,35 @@
 
 <section id="agendar-demo" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 py-12 px-4">
-    <div class="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-5xl border border-gray-100 relative overflow-hidden">
+    <div class="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-5xl border border-gray-100 relative" style="overflow: visible !important; min-height: auto !important;">
         <!-- Decorative elements -->
-        <div class="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-100 to-transparent rounded-full -translate-y-20 translate-x-20"></div>
-        <div class="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-blue-100 to-transparent rounded-full translate-y-16 -translate-x-16"></div>
+        <div class="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-100 to-transparent rounded-full -translate-y-20 translate-x-20 z-0"></div>
+        <div class="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-blue-100 to-transparent rounded-full translate-y-16 -translate-x-16 z-0"></div>
         
-        <div class="relative z-10">
+        <div class="relative z-10" style="display: block !important; visibility: visible !important;">
             <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
                 </div>
                 <h2 class="text-3xl font-bold text-gray-900 mb-2">Abrir Conta</h2>
                 <p class="text-gray-600">Agende sua consultoria gratuita e comece seu teste de 30 dias</p>
             </div>
 
-        <form id="registerForm" class="space-y-8" method="POST" action="/agendar">
+            <form id="registerForm" class="space-y-8" method="POST" action="/agendar" style="display: block !important; visibility: visible !important;">
             @csrf
             <!-- Seção 1: Dados do Usuário -->
-            <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
-                <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mr-3 shadow-md">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200 block relative z-20" style="display: block !important; visibility: visible !important; min-height: auto !important; margin-bottom: 2rem !important;">
+                <h3 class="text-xl font-bold text-gray-900 mb-8 flex items-center">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mr-5 shadow-md">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                         </svg>
                     </div>
                     Dados do Usuário
                 </h3>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
                         <label for="nome" class="block text-sm font-semibold text-gray-700 mb-2">Nome *</label>
                         <input 
@@ -55,7 +55,7 @@
                     </div>
                 </div>
 
-                <div>
+                <div class="mb-6">
                     <label for="registerEmail" class="block text-sm font-semibold text-gray-700 mb-2">E-mail Corporativo *</label>
                     <input 
                         type="email" 
@@ -67,7 +67,7 @@
                     />
                 </div>
 
-                <div>
+                <div class="mb-6">
                     <label for="telefone" class="block text-sm font-semibold text-gray-700 mb-2">Telefone *</label>
                     <input 
                         type="tel" 
@@ -79,7 +79,7 @@
                     />
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
                         <label for="senha" class="block text-sm font-semibold text-gray-700 mb-2">Senha *</label>
                         <input 
@@ -110,17 +110,17 @@
             </div>
 
             <!-- Seção 2: Dados da Empresa -->
-            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-8 border border-blue-200">
-                <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mr-3 shadow-md">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-8 border border-blue-200 block relative z-20" style="display: block !important; visibility: visible !important; min-height: auto !important; margin-bottom: 2rem !important;">
+                <h3 class="text-xl font-bold text-gray-900 mb-8 flex items-center">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mr-5 shadow-md">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                         </svg>
                     </div>
                     Dados da Empresa
                 </h3>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
                         <label for="empresa" class="block text-sm font-semibold text-gray-700 mb-2">Nome da Empresa *</label>
                         <input 
@@ -146,7 +146,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
                         <label for="cnpj" class="block text-sm font-semibold text-gray-700 mb-2">CNPJ *</label>
                         <input 
@@ -176,7 +176,7 @@
                     </div>
                 </div>
 
-                <div>
+                <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-3">Qual é o principal desafio que você enfrenta hoje? *</label>
                     <div class="space-y-3">
                         <label class="flex items-center">
@@ -200,7 +200,7 @@
             </div>
 
             <!-- Termos e Condições -->
-            <div class="space-y-4">
+            <div class="space-y-4 block relative z-20" style="display: block !important; visibility: visible !important; margin-bottom: 2rem !important;">
                 <div class="flex items-start">
                     <input type="checkbox" id="terms" required class="mt-1 mr-3">
                     <label for="terms" class="text-sm text-gray-600">
@@ -217,11 +217,11 @@
                 </div>
             </div>
 
-            <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl text-lg">
+            <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl text-lg block relative z-20" style="display: block !important; visibility: visible !important; margin-bottom: 2rem !important;">
                 Agendar Consultoria Gratuita
             </button>
 
-            <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+            <div class="bg-green-50 border border-green-200 rounded-lg p-6 block relative z-20" style="display: block !important; visibility: visible !important; margin-bottom: 2rem !important;">
                 <p class="font-semibold text-gray-900 mb-4">✓ Incluído no seu agendamento:</p>
                 <ul class="space-y-2 text-sm text-gray-600">
                     <li class="flex items-center">
@@ -251,7 +251,7 @@
                 </ul>
             </div>
 
-            <div class="text-center text-gray-600">
+            <div class="text-center text-gray-600 block relative z-20" style="display: block !important; visibility: visible !important;">
                 Já tem uma conta? 
                 <a href="/login" data-link class="text-blue-600 hover:text-blue-700 font-semibold transition-colors">Entrar</a>
             </div>
