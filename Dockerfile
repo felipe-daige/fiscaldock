@@ -5,6 +5,7 @@ FROM php:8.3-cli AS vendor
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
+    libzip-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalar extensão zip do PHP (necessária para Composer)
