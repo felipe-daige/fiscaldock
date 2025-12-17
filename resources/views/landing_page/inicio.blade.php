@@ -100,6 +100,7 @@
     z-index: 10;
 }
 
+
 .solution-card:not(.active) {
     opacity: 0.6;
     transform: scale(0.96);
@@ -500,13 +501,13 @@
     <div class="pointer-events-none absolute inset-x-0 bottom-[-1px] leading-none">
         <!-- O preenchimento branco cria a sensação de que o azul termina com curvatura -->
         <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[60px] sm:h-[80px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
+            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
         </svg>
     </div>
 </section>
 
 <!-- Soluções Section -->
-<section id="funcionalidades" class="bg-white pt-4 pb-0 overflow-x-hidden">
+<section id="funcionalidades" class="bg-gray-50 pt-4 pb-0 overflow-x-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -539,13 +540,10 @@
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
                                 <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900">
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900 shadow-md">
                                     <!-- Logo e Título -->
                                     <div>
-                                        <div class="flex items-center justify-center gap-3 mb-8">
-                                            <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
-                                                <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-8 h-8 object-contain">
-                                            </div>
+                                        <div class="text-center mb-8">
                                             <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Portal do Cliente</h3>
                                         </div>
                                         
@@ -632,13 +630,10 @@
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
                                 <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900">
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900 shadow-md">
                                     <!-- Logo e Título -->
                                     <div>
-                                        <div class="flex items-center justify-center gap-3 mb-6">
-                                            <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
-                                                <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-8 h-8 object-contain">
-                                            </div>
+                                        <div class="text-center mb-6">
                                             <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Central de Documentos</h3>
                                         </div>
                                         
@@ -743,13 +738,10 @@
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
                                 <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900">
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900 shadow-md">
                                     <!-- Logo e Título -->
                                     <div>
-                                        <div class="flex items-center justify-center gap-3 mb-6">
-                                            <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
-                                                <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-8 h-8 object-contain">
-                                            </div>
+                                        <div class="text-center mb-6">
                                             <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Leitura e Diagnóstico</h3>
                                         </div>
                                         
@@ -861,13 +853,10 @@
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
                                 <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900">
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900 shadow-md">
                                     <!-- Logo e Título -->
                                     <div>
-                                        <div class="flex items-center justify-center gap-3 mb-6">
-                                            <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
-                                                <img src="{{ asset('binary_files/icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-8 h-8 object-contain">
-                                            </div>
+                                        <div class="text-center mb-6">
                                             <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Motor de Regras</h3>
                                         </div>
                                         
@@ -973,13 +962,10 @@
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
                                 <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900">
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900 shadow-md">
                                     <!-- Logo e Título -->
                                     <div>
-                                        <div class="flex items-center justify-center gap-3 mb-6">
-                                            <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
-                                                <img src="{{ asset('binary_files/icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-8 h-8 object-contain">
-                                            </div>
+                                        <div class="text-center mb-6">
                                             <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Compliance e Situação Fiscal</h3>
                                         </div>
                                         
@@ -1094,13 +1080,10 @@
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
                                 <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900">
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900 shadow-md">
                                     <!-- Logo e Título -->
                                     <div>
-                                        <div class="flex items-center justify-center gap-3 mb-6">
-                                            <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
-                                                <img src="{{ asset('binary_files/icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-8 h-8 object-contain">
-                                            </div>
+                                        <div class="text-center mb-6">
                                             <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Automação de Comunicação</h3>
                                         </div>
                                         
@@ -1203,13 +1186,10 @@
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
                                 <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900">
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900 shadow-md">
                                     <!-- Logo e Título -->
                                     <div>
-                                        <div class="flex items-center justify-center gap-3 mb-6">
-                                            <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
-                                                <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-8 h-8 object-contain">
-                                            </div>
+                                        <div class="text-center mb-6">
                                             <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Portal do Cliente</h3>
                                         </div>
                                         
@@ -1333,13 +1313,10 @@
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
                                 <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900">
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900 shadow-md">
                                     <!-- Logo e Título -->
                                     <div>
-                                        <div class="flex items-center justify-center gap-3 mb-6">
-                                            <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
-                                                <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="RAF" class="w-8 h-8 object-contain">
-                                            </div>
+                                        <div class="text-center mb-6">
                                             <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Relatório de Fornecedores</h3>
                                         </div>
                                         
@@ -1469,13 +1446,10 @@
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
                                 <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900">
+                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900 shadow-md">
                                     <!-- Logo e Título -->
                                     <div>
-                                        <div class="flex items-center justify-center gap-3 mb-8">
-                                            <div class="w-12 h-12 brand-mark rounded-xl flex items-center justify-center">
-                                                <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-8 h-8 object-contain">
-                                            </div>
+                                        <div class="text-center mb-8">
                                             <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Central de Documentos</h3>
                                         </div>
                                         
@@ -1587,16 +1561,16 @@
             </div>
         </div>
     </div>
-    <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
+    <!-- Divisor ondulado: transição do cinza (#f9fafb) para o branco -->
     <div class="pointer-events-none leading-none mt-4 sm:mt-6">
         <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
+            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
         </svg>
     </div>
 </section>
 
 <!-- Benefícios Section -->
-<section id="beneficios" class="bg-gray-50 pt-4 pb-0">
+<section id="beneficios" class="bg-white pt-4 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1651,16 +1625,16 @@
             </div>
         </div>
     </div>
-    <!-- Divisor ondulado: transição do cinza (#f9fafb) para o branco -->
+    <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
     <div class="pointer-events-none leading-none">
         <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
+            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
         </svg>
     </div>
 </section>
 
 <!-- IA Financeira Section -->
-<section id="notebook" class="bg-white pt-4 pb-0">
+<section id="notebook" class="bg-gray-50 pt-4 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div class="space-y-6">
@@ -1693,16 +1667,16 @@
             </div>
         </div>
     </div>
-    <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
+    <!-- Divisor ondulado: transição do cinza (#f9fafb) para o branco -->
     <div class="pointer-events-none leading-none">
         <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
+            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
         </svg>
     </div>
 </section>
 
 <!-- Para Quem É Section -->
-<section id="para-quem-e" class="bg-gray-50 pt-4 pb-0">
+<section id="para-quem-e" class="bg-white pt-4 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1784,16 +1758,16 @@
             </div>
         </div>
     </div>
-    <!-- Divisor ondulado: transição do cinza (#f9fafb) para o branco -->
+    <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
     <div class="pointer-events-none leading-none mt-6 sm:mt-8">
         <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
+            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
         </svg>
     </div>
 </section>
 
 <!-- Diferenciais Section -->
-<section id="diferenciais" class="bg-white pt-4 pb-0">
+<section id="diferenciais" class="bg-gray-50 pt-4 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1870,16 +1844,16 @@
             </div>
         </div>
     </div>
-    <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
+    <!-- Divisor ondulado: transição do cinza (#f9fafb) para o branco -->
     <div class="pointer-events-none leading-none mt-6 sm:mt-8">
         <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
+            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
         </svg>
     </div>
 </section>
 
 <!-- Segurança e LGPD Section -->
-<section id="seguranca-lgpd" class="bg-gray-50 pt-4 pb-0">
+<section id="seguranca-lgpd" class="bg-white pt-4 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1932,17 +1906,17 @@
             </div>
         </div>
     </div>
-    <!-- Divisor ondulado: transição do cinza (#f9fafb) para o branco -->
+    <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
     <div class="pointer-events-none leading-none mt-6 sm:mt-8">
         <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
+            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
         </svg>
     </div>
 </section>
 
 {{-- Estatísticas Section removida a pedido do cliente --}}
 <!-- Depoimentos Section -->
-<section id="depoimentos" class="bg-white pt-4 pb-0">
+<section id="depoimentos" class="bg-gray-50 pt-4 pb-0">
     <div class="w-full">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
             <div class="text-center mb-16">
@@ -2035,16 +2009,16 @@
             </div>
         </div>
     </div>
-    <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
+    <!-- Divisor ondulado: transição do cinza (#f9fafb) para o branco -->
     <div class="pointer-events-none leading-none mt-6 sm:mt-8">
         <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
+            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
         </svg>
     </div>
 </section>
 
 <!-- FAQ Section -->
-<section id="faq" class="bg-gray-50 pt-4 pb-0">
+<section id="faq" class="bg-white pt-4 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -2127,16 +2101,16 @@
             </div>
         </div>
     </div>
-    <!-- Divisor ondulado: transição do cinza (#f9fafb) para o branco -->
+    <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
     <div class="pointer-events-none leading-none mt-6 sm:mt-8">
         <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
+            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
         </svg>
     </div>
 </section>
 
 <!-- Contato Section -->
-<section id="contato" class="bg-white pt-4 pb-20">
+<section id="contato" class="bg-gray-50 pt-4 pb-20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
