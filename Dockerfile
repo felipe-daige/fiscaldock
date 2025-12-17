@@ -1,5 +1,8 @@
 # ===== Stage 1: Dependências Composer =====
-FROM composer:2 AS vendor
+FROM php:8.3-cli AS vendor
+
+# Instalar Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
