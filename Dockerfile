@@ -1,6 +1,15 @@
 # ===== Stage 1: Dependências Composer =====
 FROM php:8.3-cli AS vendor
 
+# Instalar dependências necessárias para Composer
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instalar extensão zip do PHP (necessária para Composer)
+RUN docker-php-ext-install zip
+
 # Instalar Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
