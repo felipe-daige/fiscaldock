@@ -1,9 +1,9 @@
 
 <section id="agendar-demo" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 py-12 px-4">
-    <div class="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-5xl border border-gray-100 relative" style="overflow: visible !important; min-height: auto !important;">
-        <!-- Decorative elements -->
-        <div class="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-100 to-transparent rounded-full -translate-y-20 translate-x-20 z-0"></div>
-        <div class="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-blue-100 to-transparent rounded-full translate-y-16 -translate-x-16 z-0"></div>
+    <div class="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-5xl border border-gray-100 relative overflow-hidden">
+        <!-- Decorative elements (discretos, como no login) -->
+        <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-100 to-transparent rounded-full -translate-y-8 translate-x-8 opacity-70"></div>
+        <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-100 to-transparent rounded-full translate-y-8 -translate-x-8 opacity-70"></div>
         
         <div class="relative z-10" style="display: block !important; visibility: visible !important;">
             <div class="text-center mb-8">
