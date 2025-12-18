@@ -404,7 +404,7 @@
 </style>
 
 <!-- Hero Section (refeito) -->
-<section id="hero" class="relative bg-gradient-to-br from-primary-700 to-primary-500 text-white">
+<section id="hero" class="relative bg-gradient-to-br from-primary-700 to-primary-500 text-white" style="background: linear-gradient(135deg, #0b1f3a 0%, #1e4fa0 100%);">
     <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center justify-center">
             <!-- Coluna Esquerda: Texto -->
@@ -428,11 +428,12 @@
 
                 <!-- CTAs -->
                 <div class="mt-5">
-                    <button class="btn-cta flex-nowrap gap-2 px-6 py-3 text-sm font-normal" data-button="cta">
-                        <span class="whitespace-nowrap">Quero conhecer</span><svg class="h-5 w-5 shrink-0 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <x-cta-button data-button="cta" class="btn-cta--nav">
+                        <span class="whitespace-nowrap">Quero conhecer</span>
+                        <svg class="h-5 w-5 shrink-0 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                         </svg>
-                    </button>
+                    </x-cta-button>
                 </div>
 
                 <!-- Frase de apoio -->

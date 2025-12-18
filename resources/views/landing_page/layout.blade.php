@@ -69,7 +69,7 @@
                     </li>
                     <li><a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Preços</a></li>
                     <li><a href="/login" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Login</a></li>
-                    <li><a href="/agendar" data-link data-button="cta" class="btn-cta px-6 py-2 text-sm font-normal">Testar Agora</a></li>
+                    <li><x-cta-button href="/agendar" size="sm" class="btn-cta--nav" data-link data-button="cta">Testar Agora</x-cta-button></li>
                 </ul>
 
                 <!-- Mobile Menu Button -->
@@ -89,7 +89,7 @@
                 <a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Preços</a>
                 <a href="/faq" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Perguntas</a>
                 <a href="/login" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Login</a>
-                <a href="/agendar" data-link data-button="cta" class="btn-cta px-6 py-3 text-sm font-normal text-center">Testar Agora</a>
+                <x-cta-button href="/agendar" data-link data-button="cta" class="w-full text-center">Testar Agora</x-cta-button>
             </div>
         </div>
     </header>

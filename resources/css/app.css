@@ -41,7 +41,21 @@
 
 @layer components {
     .btn-cta {
-        @apply inline-flex items-center justify-center rounded-lg bg-accent text-primary-700 shadow-[0_20px_50px_-20px_rgba(250,204,21,0.5)] transition hover:bg-[#eab308] hover:shadow-[0_20px_50px_-20px_rgba(250,204,21,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent active:bg-[#ca8a04];
+        @apply inline-flex items-center justify-center rounded-lg bg-[#facc15] text-[#0b1f3a] shadow-[0_20px_50px_-20px_rgba(250,204,21,0.5)] transition hover:bg-[#eab308] hover:shadow-[0_20px_50px_-20px_rgba(250,204,21,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent active:bg-[#ca8a04] font-semibold leading-tight;
+    }
+
+    .btn-cta strong,
+    .btn-cta b {
+        font-weight: inherit;
+    }
+
+    /* Variante estável para o header */
+    .btn-cta--nav {
+        min-height: 40px;
+        padding: 0.5rem 1.1rem;
+        font-size: 0.875rem;
+        line-height: 1.2;
+        font-weight: 600;
     }
 
     .btn-primary-solid {

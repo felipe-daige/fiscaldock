@@ -1,6 +1,6 @@
 
 <section id="login" class="flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 min-h-[calc(100vh-80px)] px-4 py-4">
-    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg border border-gray-100 relative overflow-hidden">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md md:max-w-lg border border-gray-100 relative overflow-hidden">
         <!-- Decorative elements -->
         <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
         <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-100 to-transparent rounded-full translate-y-12 -translate-x-12"></div>
