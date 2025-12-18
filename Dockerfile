@@ -41,7 +41,6 @@ RUN npm run build
 RUN ls -lah /app/public/build/ || (echo "ERRO: Diretório public/build não foi criado" && exit 1)
 RUN test -f /app/public/build/manifest.json || (echo "ERRO: manifest.json não foi criado pelo build do Vite. Conteúdo de /app/public/build:" && ls -lah /app/public/build/ && exit 1)
 RUN echo "✓ Build do Vite concluído com sucesso. manifest.json encontrado."
-
 # ===== Stage 3: PHP-FPM + Nginx + Supervisor =====
 FROM php:8.3-fpm
 

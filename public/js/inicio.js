@@ -195,14 +195,39 @@ function initInicio() {
     
     // Carrossel custom da seção "Soluções que transformam a rotina" (layout)
     // Verificar se a função existe e se os elementos do carrossel estão disponíveis
-    if (typeof window.initSolucoesCarousel === 'function') {
-        // Verificar se os elementos do carrossel existem antes de inicializar
-        const carouselTrack = document.querySelector('.solutions-cards-track');
-        const carouselWrapper = document.querySelector('.solutions-cards-wrapper');
-        if (carouselTrack && carouselWrapper) {
-            window.initSolucoesCarousel();
+    // Adicionar retry logic para garantir que a função esteja disponível
+    let carouselRetryCount = 0;
+    const maxCarouselRetries = 5;
+    
+    function tentarInicializarCarrossel() {
+        if (typeof window.initSolucoesCarousel === 'function') {
+            // Verificar se os elementos do carrossel existem antes de inicializar
+            const carouselTrack = document.querySelector('.solutions-cards-track');
+            const carouselWrapper = document.querySelector('.solutions-cards-wrapper');
+            
+            if (carouselTrack && carouselWrapper) {
+                console.log('[Inicio] Inicializando carrossel de soluções...');
+                window.initSolucoesCarousel();
+            } else if (carouselRetryCount < maxCarouselRetries) {
+                // Elementos ainda não disponíveis, tentar novamente
+                carouselRetryCount++;
+                console.log(`[Inicio] Elementos do carrossel não encontrados, tentativa ${carouselRetryCount}/${maxCarouselRetries}...`);
+                setTimeout(tentarInicializarCarrossel, 200);
+            } else {
+                console.warn('[Inicio] Elementos do carrossel não encontrados após', maxCarouselRetries, 'tentativas');
+            }
+        } else if (carouselRetryCount < maxCarouselRetries) {
+            // Função ainda não disponível, tentar novamente
+            carouselRetryCount++;
+            console.log(`[Inicio] window.initSolucoesCarousel não encontrado, tentativa ${carouselRetryCount}/${maxCarouselRetries}...`);
+            setTimeout(tentarInicializarCarrossel, 200);
+        } else {
+            console.warn('[Inicio] window.initSolucoesCarousel não encontrado após', maxCarouselRetries, 'tentativas');
         }
     }
+    
+    // Aguardar um delay maior antes de verificar elementos do carrossel
+    setTimeout(tentarInicializarCarrossel, 200);
 
     // Contact Form
     const contactForm = document.getElementById('contact-form');
