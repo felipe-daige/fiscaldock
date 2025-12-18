@@ -69,6 +69,10 @@ services:
 
       # Service
       - "traefik.http.services.fiscaldock-service.loadbalancer.server.port=80"
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
 
   scheduler:
     image: fiscaldock-app:latest
@@ -99,6 +103,10 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
     depends_on:
       - app
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
 
   worker:
     image: fiscaldock-app:latest
@@ -131,6 +139,9 @@ services:
       - app
     deploy:
       replicas: 0  # Desabilitado por padrão (habilitar apenas se usar filas Redis)
+      placement:
+        constraints:
+          - node.role == manager
 
 networks:
   traefik:
@@ -142,4 +153,5 @@ networks:
 
 volumes:
   app_storage:
-    driver: local
+    external: true
+    name: app_storage

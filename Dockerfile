@@ -19,7 +19,27 @@ WORKDIR /app
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-scripts --prefer-dist --optimize-autoloader
 
-# ===== Stage 2: PHP-FPM + Nginx + Supervisor =====
+# ===== Stage 2: Build Assets (Vite) =====
+FROM node:20-alpine AS assets
+
+WORKDIR /app
+
+# Copiar arquivos necessários para npm
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Copiar arquivos do projeto necessários para build
+COPY resources ./resources
+COPY public ./public
+COPY vite.config.js ./
+
+# Buildar assets de produção
+RUN npm run build
+
+# Validar que o build foi bem-sucedido
+RUN test -f /app/public/build/manifest.json || (echo "ERRO: manifest.json não foi criado pelo build do Vite" && exit 1)
+
+# ===== Stage 3: PHP-FPM + Nginx + Supervisor =====
 FROM php:8.3-fpm
 
 WORKDIR /var/www/html
@@ -54,6 +74,9 @@ RUN pecl install redis && docker-php-ext-enable redis
 
 # Copiar vendor da etapa anterior
 COPY --from=vendor /app/vendor ./vendor
+
+# Copiar assets buildados do Vite ANTES do COPY . . para evitar sobrescrita
+COPY --from=assets /app/public/build ./public/build
 
 # Copiar o restante do código da aplicação
 COPY . .
