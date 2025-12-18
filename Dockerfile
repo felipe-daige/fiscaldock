@@ -1,4 +1,5 @@
 # ===== Stage 1: Dependências Composer =====
+# Build otimizado com multi-stage para produção
 FROM php:8.3-cli AS vendor
 
 # Instalar dependências necessárias para Composer
