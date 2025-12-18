@@ -63,8 +63,8 @@ services:
       - "traefik.http.routers.fiscaldock-www.service=fiscaldock-service"
 
       # Middleware de redirecionamento www → non-www
-      - "traefik.http.middlewares.www-to-nonwww.redirectregex.regex=^https://www\\.fiscaldock\\.com\\.br(.*)$"
-      - "traefik.http.middlewares.www-to-nonwww.redirectregex.replacement=https://fiscaldock.com.br$$1"
+      - "traefik.http.middlewares.www-to-nonwww.redirectregex.regex=^https://www\\.fiscaldock\\.com\\.br(.*)$$"
+      - "traefik.http.middlewares.www-to-nonwww.redirectregex.replacement=https://fiscaldock.com.br$$$$1"
       - "traefik.http.middlewares.www-to-nonwww.redirectregex.permanent=true"
 
       # Service
