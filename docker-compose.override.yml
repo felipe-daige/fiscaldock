@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  app:
+    networks:
+      - devnet
+    environment:
+      APP_ENV: "local"
+      APP_DEBUG: "true"
+    volumes:
+      - ./:/var/www/html:ro
+      - app_storage:/var/www/html/storage
+      - ./docker/php/opcache-dev.ini:/usr/local/etc/php/conf.d/99-opcache.ini:ro
+
+  scheduler:
+    networks:
+      - devnet
+    environment:
+      APP_ENV: "local"
+      APP_DEBUG: "true"
+
+  worker:
+    networks:
+      - devnet
+    environment:
+      APP_ENV: "local"
+      APP_DEBUG: "true"
+
+networks:
+  devnet:
+    driver: bridge
+  network_public:
+    driver: bridge
+    name: hub_contabil_network_public_dev
