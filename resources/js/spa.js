@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Fallback: remover destaque de todos
         document.querySelectorAll('[data-link]').forEach(link => {
-            const isButton = link.classList.contains('btn-accent') || link.classList.contains('btn-primary') || link.classList.contains('btn-secondary');
+            const isButton = link.dataset.button !== undefined;
             
             if (isButton) {
                 // Para botões, remover indicadores visuais de ativo
@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const caminhoAtual = new URL(url).pathname;
         const linkAtivo = document.querySelector(`[data-link][href="${caminhoAtual}"]`);
         if (linkAtivo) {
-            const isButton = linkAtivo.classList.contains('btn-accent') || linkAtivo.classList.contains('btn-primary') || linkAtivo.classList.contains('btn-secondary');
+            const isButton = linkAtivo.dataset.button !== undefined;
             
             if (isButton) {
                 // Para botões, usar ring como indicador visual sem alterar o peso da fonte

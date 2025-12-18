@@ -25,14 +25,14 @@
     <script src="{{ asset('js/agendar.js') }}"></script>
     <script src="{{ asset('js/toast.js') }}"></script>
 </head>
-<body class="{{ $themeClass ?? 'theme-default' }}">
+<body class="{{ $themeClass ?? 'bg-surface text-slate-900 font-sans antialiased' }}">
     <!-- Header -->
     <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <nav class="flex justify-between items-center py-6">
                 <a href="/inicio" class="flex items-center gap-3" data-link>
                     <img src="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}" alt="FiscalDock" class="h-8 md:h-10 object-contain">
-                    <span class="text-xl font-bold text-brand-gradient">FiscalDock</span>
+                    <span class="text-xl font-bold text-brand">FiscalDock</span>
                 </a>
 
                 <!-- Desktop Navigation -->
@@ -44,7 +44,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </a>
-                        <div class="dropdown-menu absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform group-hover:translate-y-0 translate-y-2">
+                        <div class="pointer-events-none absolute top-full left-0 mt-2 w-48 rounded-lg border border-gray-200 bg-white shadow-lg opacity-0 invisible group-hover:translate-y-0 group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 transform translate-y-2">
                             <a href="/solucoes/importacao-xml" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-t-lg">Importação de XMLs</a>
                             <a href="/solucoes/conciliacao-bancaria" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Conciliação Bancária</a>
                             <a href="/solucoes/gestao-cnds" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Gestão de CNDs</a>
@@ -60,7 +60,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </a>
-                        <div class="dropdown-menu absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform group-hover:translate-y-0 translate-y-2">
+                        <div class="pointer-events-none absolute top-full left-0 mt-2 w-48 rounded-lg border border-gray-200 bg-white shadow-lg opacity-0 invisible group-hover:translate-y-0 group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 transform translate-y-2">
                             <a href="/sobre" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-t-lg">Sobre</a>
                             <a href="/beneficios" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Benefícios</a>
                             <a href="/impactos" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Impactos</a>
@@ -69,7 +69,7 @@
                     </li>
                     <li><a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Preços</a></li>
                     <li><a href="/login" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Login</a></li>
-                    <li><a href="/agendar" data-link class="btn-accent font-normal px-6 py-2 rounded-lg">Testar Agora</a></li>
+                    <li><a href="/agendar" data-link data-button="cta" class="btn-cta px-6 py-2 text-sm font-normal">Testar Agora</a></li>
                 </ul>
 
                 <!-- Mobile Menu Button -->
@@ -89,7 +89,7 @@
                 <a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Preços</a>
                 <a href="/faq" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Perguntas</a>
                 <a href="/login" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Login</a>
-                <a href="/agendar" data-link class="btn-accent font-normal px-6 py-3 rounded-lg text-center">Testar Agora</a>
+                <a href="/agendar" data-link data-button="cta" class="btn-cta px-6 py-3 text-sm font-normal text-center">Testar Agora</a>
             </div>
         </div>
     </header>
@@ -114,7 +114,7 @@
                 <div>
                     <div class="flex items-center gap-3 mb-4">
                         <img src="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}" alt="FiscalDock" class="h-6 md:h-8 object-contain">
-                        <h3 class="text-lg font-semibold text-brand-gradient">FiscalDock</h3>
+                        <h3 class="text-lg font-semibold text-brand">FiscalDock</h3>
                     </div>
                     <p class="text-gray-600 leading-relaxed">
                         O centro operacional que transforma SPED e documentos em ações, relatórios e previsibilidade para escritórios contábeis e empresas.

@@ -246,7 +246,7 @@
                     Arraste e solte arquivos XML aqui
                 </p>
                 <p class="text-sm text-gray-500 mb-4">ou</p>
-                <label for="xml-files" class="btn-accent inline-block cursor-pointer px-8 py-3 rounded-lg text-lg font-semibold">
+                <label for="xml-files" class="btn-cta w-full cursor-pointer justify-center px-8 py-3 text-lg font-semibold" data-button="cta">
                     Selecionar Arquivos
                     <input type="file" id="xml-files" name="xmls[]" multiple accept=".xml" class="hidden">
                 </label>
@@ -281,7 +281,7 @@
             <div id="files-preview" class="mt-6 hidden max-w-2xl mx-auto">
                 <h3 class="text-lg font-semibold text-gray-900 mb-3">Arquivos Selecionados</h3>
                 <div id="files-list" class="space-y-2"></div>
-                <button id="btn-upload" class="mt-4 btn-accent px-8 py-3 rounded-lg text-lg font-semibold w-full">
+                <button id="btn-upload" class="btn-cta mt-4 w-full px-8 py-3 text-lg font-semibold" data-button="cta">
                     Enviar Arquivos
                 </button>
             </div>
@@ -414,7 +414,7 @@
                         <option value="aceito">Aceito</option>
                         <option value="rejeitado">Rejeitado</option>
                     </select>
-                    <button id="btn-processar" class="btn-accent px-4 py-2 rounded-lg text-sm">
+                    <button id="btn-processar" class="btn-cta px-4 py-2 text-sm font-semibold" data-button="cta">
                         Processar Pendentes
                     </button>
                 </div>
@@ -496,7 +496,7 @@
                 <button type="button" id="btn-cancelar-ajuste" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
                     Cancelar
                 </button>
-                <button type="submit" class="btn-accent px-4 py-2 rounded-lg">
+                <button type="submit" class="btn-cta px-4 py-2 text-sm font-semibold" data-button="cta">
                     Salvar Ajuste
                 </button>
             </div>
@@ -564,7 +564,7 @@
                 <button type="button" id="btn-cancelar-regra" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
                     Cancelar
                 </button>
-                <button type="submit" class="btn-accent px-4 py-2 rounded-lg">
+                <button type="submit" class="btn-cta px-4 py-2 text-sm font-semibold" data-button="cta">
                     Criar Regra
                 </button>
             </div>

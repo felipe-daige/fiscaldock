@@ -8,12 +8,18 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
-}
 
-:root {
-    --color-primary-700: #0b1f3a;
-    --color-primary-600: #133a73;
+    --color-primary-50: #eaf1fb;
+    --color-primary-100: #d6e1f6;
+    --color-primary-200: #b3c7ec;
+    --color-primary-300: #8ca9e0;
+    --color-primary-400: #5f84c9;
     --color-primary-500: #1e4fa0;
+    --color-primary-600: #133a73;
+    --color-primary-700: #0b1f3a;
+    --color-primary-800: #08162a;
+    --color-primary-900: #050f1f;
+
     --color-accent: #facc15;
     --color-surface: #ffffff;
     --color-surface-muted: #f8fbff;
@@ -23,198 +29,26 @@
     --color-text-muted: #374151;
 }
 
-.theme-default {
-    color-scheme: light;
-    background-color: var(--color-surface);
-    color: var(--color-text);
-    font-family: var(--font-sans);
+@layer base {
+    :root {
+        color-scheme: light;
+    }
+
+    body {
+        @apply bg-surface text-slate-900 font-sans antialiased;
+    }
 }
 
-.theme-default .bg-blue-500 {
-    background-color: var(--color-primary-500) !important;
-}
+@layer components {
+    .btn-cta {
+        @apply inline-flex items-center justify-center rounded-lg bg-accent text-primary-700 shadow-[0_20px_50px_-20px_rgba(250,204,21,0.5)] transition hover:bg-[#eab308] hover:shadow-[0_20px_50px_-20px_rgba(250,204,21,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent active:bg-[#ca8a04];
+    }
 
-.theme-default .bg-blue-600 {
-    background-color: var(--color-primary-600) !important;
-}
+    .btn-primary-solid {
+        @apply inline-flex items-center justify-center rounded-lg bg-primary-500 text-white transition hover:bg-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 active:bg-primary-700;
+    }
 
-.theme-default .text-blue-500 {
-    color: var(--color-primary-500) !important;
-}
-
-.theme-default .border-blue-500 {
-    border-color: var(--color-primary-500) !important;
-}
-
-.theme-default .from-blue-500 {
-    --tw-gradient-from: var(--color-primary-500) var(--tw-gradient-from-position) !important;
-    --tw-gradient-to: color-mix(in srgb, var(--color-primary-500) 0%, transparent) var(--tw-gradient-to-position) !important;
-    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
-}
-
-.theme-default .to-blue-600 {
-    --tw-gradient-to: var(--color-primary-600) var(--tw-gradient-to-position) !important;
-}
-
-.theme-default .via-\[\#133a73\] {
-    --tw-gradient-stops: var(--tw-gradient-from), #133a73 var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
-}
-
-.bg-hero-gradient {
-    background: linear-gradient(135deg, var(--color-primary-700) 0%, var(--color-primary-500) 100%);
-}
-
-.bg-surface-muted {
-    background-color: var(--color-surface-muted);
-}
-
-.bg-surface-alt {
-    background-color: var(--color-surface-alt);
-}
-
-.brand-mark {
-    background: linear-gradient(135deg, var(--color-primary-700) 0%, var(--color-primary-500) 100%);
-    color: #fff;
-}
-
-.text-brand-gradient {
-    background: linear-gradient(90deg, var(--color-primary-700) 0%, var(--color-primary-500) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-}
-
-.text-sped-hero {
-    color: #ffffff;
-    text-shadow:
-        0 1px 4px rgba(0, 0, 0, 0.45),
-        0 0 1px rgba(0, 0, 0, 0.35),
-        0 0 8px rgba(0, 0, 0, 0.25);
-}
-
-.btn-primary {
-    display: inline-block;
-    background-color: var(--color-primary-500);
-    border: none;
-    color: #fff !important;
-    text-decoration: none;
-    cursor: pointer;
-    border-radius: 0.5rem;
-    transition: all 0.2s ease;
-}
-
-.btn-primary span {
-    color: #fff !important;
-    display: inline-block;
-}
-
-.btn-primary:hover {
-    background-color: var(--color-primary-600);
-    color: #fff !important;
-}
-
-.btn-primary:hover span {
-    color: #fff !important;
-}
-
-.btn-primary:focus {
-    outline: none;
-    ring: 2px;
-    ring-color: var(--color-primary-500);
-    color: #fff !important;
-}
-
-.btn-primary:focus span {
-    color: #fff !important;
-}
-
-.btn-primary:active {
-    background-color: var(--color-primary-700);
-    color: #fff !important;
-}
-
-.btn-primary:active span {
-    color: #fff !important;
-}
-
-.btn-outline-primary {
-    border: 2px solid var(--color-primary-500);
-    color: var(--color-primary-500);
-}
-
-.btn-outline-primary:hover {
-    background-color: var(--color-primary-500);
-    color: #fff;
-}
-
-.btn-accent {
-    display: inline-block;
-    background-color: var(--color-accent);
-    border: none;
-    color: var(--color-primary-500) !important;
-    text-decoration: none;
-    cursor: pointer;
-    border-radius: 0.5rem;
-    transition: all 0.2s ease;
-    box-shadow: 0 20px 50px -20px rgba(250, 204, 21, 0.5);
-    white-space: nowrap;
-}
-
-.btn-accent.inline-flex {
-    display: inline-flex !important;
-}
-
-.btn-accent:hover {
-    background-color: #eab308;
-    color: var(--color-primary-500) !important;
-    box-shadow: 0 20px 50px -20px rgba(250, 204, 21, 0.6);
-}
-
-.btn-accent:focus {
-    outline: none;
-    ring: 2px;
-    ring-color: var(--color-accent);
-    color: var(--color-primary-500) !important;
-}
-
-.btn-accent:active {
-    background-color: #ca8a04;
-    color: var(--color-primary-500) !important;
-}
-
-/* Estilo específico para o botão "Testar Agora" no header - manter fonte fina */
-header nav .btn-accent,
-header #mobile-menu .btn-accent {
-    font-weight: 400 !important;
-    font-size: 0.875rem !important; /* text-sm */
-}
-
-/* Dropdown Menu Styles */
-.dropdown-menu {
-    z-index: 1000;
-    pointer-events: auto;
-}
-
-.group:hover .dropdown-menu {
-    pointer-events: auto;
-}
-
-/* Garantir que o dropdown não interfira com outros elementos */
-.relative.group {
-    z-index: 50;
-}
-
-/* Animação suave para os itens do dropdown */
-.dropdown-menu a {
-    position: relative;
-}
-
-.dropdown-menu a:first-child {
-    border-top-left-radius: 0.5rem;
-    border-top-right-radius: 0.5rem;
-}
-
-.dropdown-menu a:last-child {
-    border-bottom-left-radius: 0.5rem;
-    border-bottom-right-radius: 0.5rem;
+    .text-brand {
+        @apply bg-gradient-to-r from-primary-700 to-primary-500 bg-clip-text text-transparent;
+    }
 }
