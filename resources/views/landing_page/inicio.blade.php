@@ -412,7 +412,7 @@
                 <!-- Badge -->
                 <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold mb-4">
                     <span class="w-2 h-2 rounded-full bg-blue-400"></span>
-                    Centro Operacional Fiscal
+                    Ambiente de desenvolvimento ativo - FiscalDock
                 </div>
 
                 <!-- Título -->
@@ -2199,6 +2199,7 @@ window._solucoesCarouselHandlers = {
     pillHandlers: [],
     resizeHandler: null,
     resizeTimer: null,
+    resizeObserver: null,
     prevArrow: null,
     nextArrow: null,
     pills: []
@@ -2238,6 +2239,14 @@ window.cleanupSolucoesCarousel = function() {
         if (window._solucoesCarouselHandlers.resizeTimer) {
             clearTimeout(window._solucoesCarouselHandlers.resizeTimer);
         }
+        // Desconectar ResizeObserver
+        if (window._solucoesCarouselHandlers.resizeObserver) {
+            try {
+                window._solucoesCarouselHandlers.resizeObserver.disconnect();
+            } catch (error) {
+                console.error('Erro ao desconectar ResizeObserver do carrossel:', error);
+            }
+        }
         
         // Resetar referências
         window._solucoesCarouselHandlers = {
@@ -2246,6 +2255,7 @@ window.cleanupSolucoesCarousel = function() {
             pillHandlers: [],
             resizeHandler: null,
             resizeTimer: null,
+            resizeObserver: null,
             prevArrow: null,
             nextArrow: null,
             pills: []
@@ -2267,7 +2277,7 @@ window.initSolucoesCarousel = function() {
     
     try {
         let retryCount = 0;
-        const maxRetries = 10;
+        const maxRetries = 20;
         
         function initCarousel() {
             try {
@@ -2301,6 +2311,8 @@ window.initSolucoesCarousel = function() {
                 let cardWidth = 0;
                 let cardSpacing = 0;
                 let firstCardLeftInTrack = 0;
+                let measureRetries = 0;
+                const maxMeasureRetries = 8;
 
                 // Garantir que o primeiro card esteja ativo desde o início
                 cards.forEach((card, i) => {
@@ -2357,9 +2369,18 @@ window.initSolucoesCarousel = function() {
                                     firstCardLeftInTrack = firstCardRect.left - trackRect.left;
                                     cardSpacing = secondCardRect.left - firstCardRect.left;
 
-                                    if (cardWidth > 0 && cardSpacing > 0 && !isNaN(cardSpacing) && !isNaN(firstCardLeftInTrack)) {
-                                        updateCarousel(currentIndex);
+                                    if (cardWidth <= 0 || cardSpacing <= 0 || isNaN(cardSpacing) || isNaN(firstCardLeftInTrack)) {
+                                        if (measureRetries < maxMeasureRetries) {
+                                            measureRetries++;
+                                            setTimeout(updateReferenceValues, 120);
+                                        } else {
+                                            console.warn('[Carrossel] Medidas inválidas após', maxMeasureRetries, 'tentativas');
+                                        }
+                                        return;
                                     }
+
+                                    measureRetries = 0;
+                                    updateCarousel(currentIndex);
                                 } catch (error) {
                                     console.error('Erro em updateReferenceValues:', error);
                                 }
@@ -2367,6 +2388,22 @@ window.initSolucoesCarousel = function() {
                         });
                     } catch (error) {
                         console.error('Erro ao atualizar valores de referência:', error);
+                    }
+                }
+
+                // Observer para mudanças de layout que afetem medidas
+                if (typeof ResizeObserver !== 'undefined') {
+                    try {
+                        if (window._solucoesCarouselHandlers.resizeObserver) {
+                            window._solucoesCarouselHandlers.resizeObserver.disconnect();
+                        }
+                        const resizeObserver = new ResizeObserver(() => {
+                            updateReferenceValues();
+                        });
+                        resizeObserver.observe(wrapper);
+                        window._solucoesCarouselHandlers.resizeObserver = resizeObserver;
+                    } catch (error) {
+                        console.error('Erro ao observar redimensionamento do carrossel:', error);
                     }
                 }
 
@@ -2498,25 +2535,55 @@ window.initSolucoesCarousel = function() {
             }
         }
 
-        // Executar inicialização imediatamente e também após DOM ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                initCarousel();
-            });
-        } else {
-            setTimeout(initCarousel, 100);
-        }
-        
-        // Também tentar após um pequeno delay para garantir
+        // Executar inicialização imediatamente e com fallback
+        initCarousel();
         setTimeout(function() {
             if (!window._solucoesCarouselInitialized) {
                 initCarousel();
             }
-        }, 500);
+        }, 300);
+        setTimeout(function() {
+            if (!window._solucoesCarouselInitialized) {
+                initCarousel();
+            }
+        }, 800);
+        setTimeout(function() {
+            if (!window._solucoesCarouselInitialized) {
+                initCarousel();
+            }
+        }, 1500);
     } catch (error) {
         console.error('[Carrossel] Erro crítico ao inicializar carrossel de soluções:', error);
     }
 };
+
+// Garantir inicialização também na carga completa (hard refresh)
+(function garantirInitSolucoesAposLoad() {
+    let attempts = 0;
+    const maxAttempts = 12;
+    
+    function tentar() {
+        const hasInitFn = typeof window.initSolucoesCarousel === 'function';
+        const track = document.querySelector('.solutions-cards-track');
+        const wrapper = document.querySelector('.solutions-cards-wrapper');
+        
+        if (hasInitFn && track && wrapper) {
+            window.initSolucoesCarousel();
+            return;
+        }
+        
+        if (attempts < maxAttempts) {
+            attempts++;
+            setTimeout(tentar, 150 + (attempts * 40));
+        }
+    }
+    
+    if (document.readyState === 'complete') {
+        tentar();
+    } else {
+        window.addEventListener('load', tentar, { once: true });
+    }
+})();
 
 // Registrar função de cleanup no sistema global
 if (!window._cleanupFunctions) {
