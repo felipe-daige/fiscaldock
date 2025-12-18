@@ -404,7 +404,7 @@
 </style>
 
 <!-- Hero Section (refeito) -->
-<section id="hero" class="relative bg-hero-gradient text-white">
+<section id="hero" class="relative bg-gradient-to-br from-primary-700 to-primary-500 text-white">
     <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center justify-center">
             <!-- Coluna Esquerda: Texto -->
@@ -418,7 +418,7 @@
                 <!-- Título -->
                 <h1 class="font-extrabold leading-tight tracking-tight text-3xl sm:text-4xl xl:text-5xl">
                     O FiscalDock que transforma
-                    <span class="block text-sped-hero">SPED em Ações e Relatórios</span>
+                    <span class="block text-white [text-shadow:0_1px_4px_rgba(0,0,0,0.45),0_0_1px_rgba(0,0,0,0.35),0_0_8px_rgba(0,0,0,0.25)]">SPED em Ações e Relatórios</span>
                 </h1>
 
                 <!-- Subtítulo -->
@@ -428,8 +428,8 @@
 
                 <!-- CTAs -->
                 <div class="mt-5">
-                    <button class="btn-accent inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-normal" style="white-space: nowrap; flex-wrap: nowrap;">
-                        <span style="white-space: nowrap;">Quero conhecer</span><svg class="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink: 0; display: inline-block;">
+                    <button class="btn-cta flex-nowrap gap-2 px-6 py-3 text-sm font-normal" data-button="cta">
+                        <span class="whitespace-nowrap">Quero conhecer</span><svg class="h-5 w-5 shrink-0 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                         </svg>
                     </button>
@@ -511,7 +511,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Soluções que <span class="text-brand-gradient">transformam</span> a rotina
+                Soluções que <span class="text-brand">transformam</span> a rotina
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                 Um ecossistema completo para alta performance
@@ -1574,7 +1574,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Por que escolher <span class="text-brand-gradient">nossa solução</span>
+                Por que escolher <span class="text-brand">nossa solução</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                 Transforme o caos de documentos e pendências em organização, controle e previsibilidade
@@ -1680,7 +1680,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Para <span class="text-brand-gradient">quem é</span>
+                Para <span class="text-brand">quem é</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                 O HUB atende escritórios contábeis, empresas e BPO financeiro que precisam de controle, conformidade e velocidade
@@ -1771,7 +1771,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Por que o HUB é <span class="text-brand-gradient">diferente</span>
+                Por que o HUB é <span class="text-brand">diferente</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                 Não substitui seu sistema contábil/ERP: integra ao ecossistema e resolve o que ninguém quer fazer manualmente
@@ -1857,7 +1857,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Segurança e <span class="text-brand-gradient">LGPD</span>
+                Segurança e <span class="text-brand">LGPD</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                 Proteção e conformidade para dados fiscais e empresariais sensíveis
@@ -1921,7 +1921,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
             <div class="text-center mb-16">
                 <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                    O que nossos <span class="text-brand-gradient">clientes dizem</span>
+                    O que nossos <span class="text-brand">clientes dizem</span>
                 </h2>
                 <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                     Resultados reais de escritórios contábeis e empresas que transformaram seu dia a dia com o HUB
@@ -2022,7 +2022,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Perguntas <span class="text-brand-gradient">Frequentes</span>
+                Perguntas <span class="text-brand">Frequentes</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                 Tire suas dúvidas sobre o FiscalDock e como ele pode transformar seu dia a dia
@@ -2114,7 +2114,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Fale com <span class="text-brand-gradient">nossos especialistas</span>
+                Fale com <span class="text-brand">nossos especialistas</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                 Agende uma demonstração gratuita e descubra como o HUB pode transformar o dia a dia do seu escritório ou empresa

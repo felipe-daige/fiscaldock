@@ -78,7 +78,7 @@
                     </div>
                 </div>
                 
-                <a href="/agendar" data-link class="block w-full btn-primary text-white text-center font-semibold px-6 py-3 rounded-lg transition-colors mb-6">
+                <a href="/agendar" data-link data-button="cta" class="btn-primary-solid mb-6 block w-full px-6 py-3 text-center font-semibold">
                     Começar agora
                 </a>
 
@@ -157,7 +157,7 @@
                     </div>
                 </div>
                 
-                <a href="/agendar" data-link class="block w-full btn-primary text-white text-center font-semibold px-6 py-3 rounded-lg transition-colors mb-6">
+                <a href="/agendar" data-link data-button="cta" class="btn-primary-solid mb-6 block w-full px-6 py-3 text-center font-semibold">
                     Começar agora
                 </a>
 
@@ -231,7 +231,7 @@
                     </div>
                 </div>
                 
-                <a href="/agendar" data-link class="block w-full btn-primary text-white text-center font-semibold px-6 py-3 rounded-lg transition-colors mb-6">
+                <a href="/agendar" data-link data-button="cta" class="btn-primary-solid mb-6 block w-full px-6 py-3 text-center font-semibold">
                     Começar agora
                 </a>
 

@@ -1,4 +1,4 @@
-<section class="relative bg-hero-gradient text-white">
+<section class="relative bg-gradient-to-br from-primary-700 to-primary-500 text-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
         <div class="text-center max-w-3xl mx-auto">
             <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold mb-6">
