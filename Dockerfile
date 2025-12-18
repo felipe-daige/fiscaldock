@@ -37,7 +37,9 @@ COPY vite.config.js ./
 RUN npm run build
 
 # Validar que o build foi bem-sucedido
-RUN test -f /app/public/build/manifest.json || (echo "ERRO: manifest.json não foi criado pelo build do Vite" && exit 1)
+RUN ls -lah /app/public/build/ || (echo "ERRO: Diretório public/build não foi criado" && exit 1)
+RUN test -f /app/public/build/manifest.json || (echo "ERRO: manifest.json não foi criado pelo build do Vite. Conteúdo de /app/public/build:" && ls -lah /app/public/build/ && exit 1)
+RUN echo "✓ Build do Vite concluído com sucesso. manifest.json encontrado."
 
 # ===== Stage 3: PHP-FPM + Nginx + Supervisor =====
 FROM php:8.3-fpm
@@ -75,11 +77,17 @@ RUN pecl install redis && docker-php-ext-enable redis
 # Copiar vendor da etapa anterior
 COPY --from=vendor /app/vendor ./vendor
 
-# Copiar assets buildados do Vite ANTES do COPY . . para evitar sobrescrita
-COPY --from=assets /app/public/build ./public/build
-
 # Copiar o restante do código da aplicação
 COPY . .
+
+# Copiar assets buildados do Vite DEPOIS do COPY . . para garantir que sobrescreva
+# Criar o diretório caso não exista
+RUN mkdir -p /var/www/html/public/build
+COPY --from=assets /app/public/build ./public/build
+
+# Validar que o manifest.json foi copiado corretamente
+RUN test -f /var/www/html/public/build/manifest.json || (echo "ERRO CRÍTICO: manifest.json não encontrado após cópia. Conteúdo de public/build:" && ls -lah /var/www/html/public/build/ 2>&1 || echo "Diretório não existe" && exit 1)
+RUN echo "✓ Assets do Vite copiados com sucesso. manifest.json verificado."
 
 # Configurações PHP para produção
 RUN { \
