@@ -5,34 +5,35 @@ services:
     image: fiscaldock-app:latest
     restart: unless-stopped
     networks:
-      - traefik
       - network_public
     volumes:
       - app_storage:/var/www/html/storage
     environment:
       # App
-      APP_ENV: ${APP_ENV:-production}
-      APP_DEBUG: ${APP_DEBUG:-false}
-      APP_URL: ${APP_URL:-https://fiscaldock.com.br}
-      APP_KEY: ${APP_KEY}
+      APP_ENV: "production"
+      APP_DEBUG: "false"
+      APP_URL: "https://fiscaldock.com.br"
+      ASSET_URL: "https://fiscaldock.com.br"
+      APP_KEY: "REMOVED_APP_KEY"
 
       # Database
-      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_DATABASE: ${DB_DATABASE}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_DATABASE: postgres
+      DB_USERNAME: postgres
+      DB_PASSWORD: REMOVED_PASSWORD
 
       # Cache & Session
       CACHE_STORE: ${CACHE_STORE:-database}
       SESSION_DRIVER: ${SESSION_DRIVER:-database}
       SESSION_LIFETIME: ${SESSION_LIFETIME:-120}
+      SESSION_SECURE_COOKIE: "true"
       QUEUE_CONNECTION: ${QUEUE_CONNECTION:-sync}
 
       # Redis (opcional)
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
       REDIS_PASSWORD: ${REDIS_PASSWORD}
 
       # Proxy & Security
@@ -42,34 +43,50 @@ services:
       # Logging
       LOG_CHANNEL: ${LOG_CHANNEL:-stack}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-    labels:
-      # Habilitar Traefik
-      - "traefik.enable=true"
-      - "traefik.docker.network=traefik"
-
-      # Router principal (fiscaldock.com.br)
-      - "traefik.http.routers.fiscaldock-main.rule=Host(`fiscaldock.com.br`)"
-      - "traefik.http.routers.fiscaldock-main.entrypoints=websecure"
-      - "traefik.http.routers.fiscaldock-main.tls=true"
-      - "traefik.http.routers.fiscaldock-main.tls.certresolver=letsencryptresolver"
-      - "traefik.http.routers.fiscaldock-main.service=fiscaldock-service"
-
-      # Router www (www.fiscaldock.com.br) - redireciona para non-www
-      - "traefik.http.routers.fiscaldock-www.rule=Host(`www.fiscaldock.com.br`)"
-      - "traefik.http.routers.fiscaldock-www.entrypoints=websecure"
-      - "traefik.http.routers.fiscaldock-www.tls=true"
-      - "traefik.http.routers.fiscaldock-www.tls.certresolver=letsencryptresolver"
-      - "traefik.http.routers.fiscaldock-www.middlewares=www-to-nonwww"
-      - "traefik.http.routers.fiscaldock-www.service=fiscaldock-service"
-
-      # Middleware de redirecionamento www → non-www
-      - "traefik.http.middlewares.www-to-nonwww.redirectregex.regex=^https://www\\.fiscaldock\\.com\\.br(.*)$$"
-      - "traefik.http.middlewares.www-to-nonwww.redirectregex.replacement=https://fiscaldock.com.br$$$$1"
-      - "traefik.http.middlewares.www-to-nonwww.redirectregex.permanent=true"
-
-      # Service
-      - "traefik.http.services.fiscaldock-service.loadbalancer.server.port=80"
     deploy:
+      labels:
+        # Habilitar Traefik
+        - "traefik.enable=true"
+        - "traefik.docker.network=network_public"
+
+        # Router HTTP principal (redireciona para HTTPS)
+        - "traefik.http.routers.fiscaldock-main-http.rule=Host(`fiscaldock.com.br`)"
+        - "traefik.http.routers.fiscaldock-main-http.entrypoints=web"
+        - "traefik.http.routers.fiscaldock-main-http.middlewares=redirect-to-https"
+        - "traefik.http.routers.fiscaldock-main-http.service=fiscaldock-service"
+
+        # Router HTTP www (redireciona para HTTPS)
+        - "traefik.http.routers.fiscaldock-www-http.rule=Host(`www.fiscaldock.com.br`)"
+        - "traefik.http.routers.fiscaldock-www-http.entrypoints=web"
+        - "traefik.http.routers.fiscaldock-www-http.middlewares=redirect-to-https"
+        - "traefik.http.routers.fiscaldock-www-http.service=fiscaldock-service"
+
+        # Router HTTPS principal (fiscaldock.com.br)
+        - "traefik.http.routers.fiscaldock-main.rule=Host(`fiscaldock.com.br`)"
+        - "traefik.http.routers.fiscaldock-main.entrypoints=websecure"
+        - "traefik.http.routers.fiscaldock-main.tls=true"
+        - "traefik.http.routers.fiscaldock-main.tls.certresolver=letsencryptresolver"
+        - "traefik.http.routers.fiscaldock-main.service=fiscaldock-service"
+
+        # Router HTTPS www (www.fiscaldock.com.br) - redireciona para non-www
+        - "traefik.http.routers.fiscaldock-www.rule=Host(`www.fiscaldock.com.br`)"
+        - "traefik.http.routers.fiscaldock-www.entrypoints=websecure"
+        - "traefik.http.routers.fiscaldock-www.tls=true"
+        - "traefik.http.routers.fiscaldock-www.tls.certresolver=letsencryptresolver"
+        - "traefik.http.routers.fiscaldock-www.middlewares=www-to-nonwww"
+        - "traefik.http.routers.fiscaldock-www.service=fiscaldock-service"
+
+        # Middleware de redirecionamento HTTP → HTTPS
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+
+        # Middleware de redirecionamento www → non-www
+        - "traefik.http.middlewares.www-to-nonwww.redirectregex.regex=^https://www\\.fiscaldock\\.com\\.br(.*)"
+        - "traefik.http.middlewares.www-to-nonwww.redirectregex.replacement=https://fiscaldock.com.br$$1"
+        - "traefik.http.middlewares.www-to-nonwww.redirectregex.permanent=true"
+
+        # Service
+        - "traefik.http.services.fiscaldock-service.loadbalancer.server.port=80"
       placement:
         constraints:
           - node.role == manager
@@ -81,21 +98,21 @@ services:
       - network_public
     command: php artisan schedule:work
     environment:
-      APP_ENV: ${APP_ENV:-production}
-      APP_DEBUG: ${APP_DEBUG:-false}
-      APP_URL: ${APP_URL:-https://fiscaldock.com.br}
-      APP_KEY: ${APP_KEY}
+      APP_ENV: "production"
+      APP_DEBUG: "false"
+      APP_URL: "https://fiscaldock.com.br"
+      APP_KEY: "REMOVED_APP_KEY"
       DB_CONNECTION: ${DB_CONNECTION:-pgsql}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_DATABASE: ${DB_DATABASE}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_DATABASE: postgres
+      DB_USERNAME: postgres
+      DB_PASSWORD: REMOVED_PASSWORD
       CACHE_STORE: ${CACHE_STORE:-database}
       SESSION_DRIVER: ${SESSION_DRIVER:-database}
       QUEUE_CONNECTION: ${QUEUE_CONNECTION:-sync}
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       TRUSTED_PROXIES: ${TRUSTED_PROXIES:-"*"}
       TRUSTED_HOSTS: ${TRUSTED_HOSTS:-fiscaldock.com.br,www.fiscaldock.com.br}
@@ -115,21 +132,21 @@ services:
       - network_public
     command: php artisan queue:work --verbose --tries=3 --timeout=90
     environment:
-      APP_ENV: ${APP_ENV:-production}
-      APP_DEBUG: ${APP_DEBUG:-false}
-      APP_URL: ${APP_URL:-https://fiscaldock.com.br}
-      APP_KEY: ${APP_KEY}
-      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_DATABASE: ${DB_DATABASE}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
+      APP_ENV: "production"
+      APP_DEBUG: "false"
+      APP_URL: "https://fiscaldock.com.br"
+      APP_KEY: "REMOVED_APP_KEY"
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_DATABASE: postgres
+      DB_USERNAME: postgres
+      DB_PASSWORD: REMOVED_PASSWORD
       CACHE_STORE: ${CACHE_STORE:-database}
       SESSION_DRIVER: ${SESSION_DRIVER:-database}
       QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       TRUSTED_PROXIES: ${TRUSTED_PROXIES:-"*"}
       TRUSTED_HOSTS: ${TRUSTED_HOSTS:-fiscaldock.com.br,www.fiscaldock.com.br}
@@ -144,9 +161,6 @@ services:
           - node.role == manager
 
 networks:
-  traefik:
-    external: true
-    name: traefik
   network_public:
     external: true
     name: network_public

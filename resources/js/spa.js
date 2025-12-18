@@ -430,15 +430,104 @@ document.addEventListener('DOMContentLoaded', () => {
     // 7. INICIALIZAR
     destacarLinkAtivo(window.location.href);
     
-    // 8. CARREGAR JAVASCRIPT NA PRIMEIRA CARGA
-    carregarJavaScriptInicial();
+    // 8. PROCESSAR SCRIPTS INLINE NA PRIMEIRA CARGA
+    // Esta função processa scripts inline que já estão no DOM na primeira carga
+    // Garante que funções definidas em scripts inline estejam disponíveis antes de executar funções específicas
+    function processarScriptsInline() {
+        const scripts = app.querySelectorAll('script');
+        scripts.forEach(script => {
+            try {
+                const novoScript = document.createElement('script');
+                novoScript.textContent = script.textContent;
+                
+                // Validar se o script tem conteúdo válido antes de executar
+                if (script.textContent && script.textContent.trim() !== '') {
+                    // Adicionar handler de erro para capturar erros de sintaxe
+                    novoScript.onerror = function(error) {
+                        console.error('Erro ao executar script inline:', error);
+                    };
+                    
+                    // Adicionar ao head para executar
+                    document.head.appendChild(novoScript);
+                    
+                    // Remover script original do app
+                    script.parentNode.removeChild(script);
+                } else {
+                    // Remover script vazio
+                    script.parentNode.removeChild(script);
+                }
+            } catch (error) {
+                console.error('Erro ao processar script inline:', error);
+                // Continuar com outros scripts mesmo se um falhar
+            }
+        });
+    }
     
     // 9. CARREGAR JAVASCRIPT NA PRIMEIRA CARGA
     function carregarJavaScriptInicial() {
         const caminho = window.location.pathname;
         
-        // Carregar JavaScript específico da página atual
-        carregarJavaScriptEspecifico(caminho);
+        // Primeiro, processar scripts inline que já estão no DOM
+        // Isso garante que funções definidas em scripts inline (como window.initSolucoesCarousel)
+        // estejam disponíveis antes de executar funções específicas
+        processarScriptsInline();
+        
+        // Aguardar um delay maior para garantir que todos os scripts foram executados
+        setTimeout(() => {
+            // Verificar se funções críticas estão disponíveis (especialmente para rota raiz)
+            // Para a rota raiz (/), verificar se window.initSolucoesCarousel existe
+            if (caminho === '/' || caminho === '/inicio') {
+                let retryCount = 0;
+                const maxRetries = 5;
+                
+                function verificarEExecutar() {
+                    if (typeof window.initSolucoesCarousel === 'function') {
+                        // Função disponível, prosseguir com carregamento
+                        carregarJavaScriptEspecifico(caminho);
+                        
+                        setTimeout(() => {
+                            try {
+                                executarFuncoesEspecificas();
+                            } catch (error) {
+                                console.error('Erro ao executar funções específicas na primeira carga:', error);
+                            }
+                        }, 100);
+                    } else if (retryCount < maxRetries) {
+                        // Função ainda não disponível, tentar novamente
+                        retryCount++;
+                        setTimeout(verificarEExecutar, 50);
+                    } else {
+                        // Prosseguir mesmo sem a função (pode não ser necessária para todas as páginas)
+                        console.warn('window.initSolucoesCarousel não encontrado após', maxRetries, 'tentativas, prosseguindo...');
+                        carregarJavaScriptEspecifico(caminho);
+                        
+                        setTimeout(() => {
+                            try {
+                                executarFuncoesEspecificas();
+                            } catch (error) {
+                                console.error('Erro ao executar funções específicas na primeira carga:', error);
+                            }
+                        }, 100);
+                    }
+                }
+                
+                verificarEExecutar();
+            } else {
+                // Para outras rotas, comportamento normal
+                carregarJavaScriptEspecifico(caminho);
+                
+                setTimeout(() => {
+                    try {
+                        executarFuncoesEspecificas();
+                    } catch (error) {
+                        console.error('Erro ao executar funções específicas na primeira carga:', error);
+                    }
+                }, 100);
+            }
+        }, 150);
     }
+    
+    // 10. CARREGAR JAVASCRIPT NA PRIMEIRA CARGA
+    carregarJavaScriptInicial();
 });
 

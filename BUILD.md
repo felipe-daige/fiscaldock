@@ -239,6 +239,31 @@ Se algo der errado:
 - Verifique se ambos os routers estão configurados
 - Verifique os logs do Traefik
 
+### Problema: Erro "port is missing" no Traefik
+
+Se você ver erros como `service "traefik-traefik" error: port is missing` nos logs do Traefik, isso significa que o Traefik está tentando se configurar a si mesmo. Para corrigir:
+
+**Opção 1: Via comando (recomendado)**
+```bash
+docker service update --label-add "traefik.enable=false" traefik_traefik
+```
+
+**Opção 2: Via docker-compose.yml do Traefik**
+Adicione no serviço `traefik`:
+```yaml
+deploy:
+  labels:
+    - "traefik.enable=false"
+```
+
+### Problema: "Filtering disabled container" no Traefik
+
+Se o Traefik está filtrando o container do Laravel como "disabled", verifique:
+
+1. **Labels no lugar correto**: No Docker Swarm, as labels do Traefik devem estar em `deploy.labels:` e não em `labels:` diretamente no serviço
+2. **traefik.enable=true**: Certifique-se de que a label `traefik.enable=true` está presente em `deploy.labels:`
+3. **Rede correta**: Verifique se `traefik.docker.network` aponta para a mesma rede que o Traefik usa (geralmente `network_public`)
+
 ## 8. Estrutura de Arquivos
 
 ```
@@ -261,6 +286,8 @@ Se algo der errado:
 - Middleware Traefik redireciona www para non-www (301 permanente)
 - Ambos os domínios (com e sem www) têm certificado SSL via Let's Encrypt
 - O worker está desabilitado por padrão (replicas: 0). Habilite apenas se usar filas Redis
+- **IMPORTANTE**: No Docker Swarm, as labels do Traefik devem estar em `deploy.labels:` e não em `labels:` diretamente no serviço
+- **IMPORTANTE**: O serviço Traefik deve ter `traefik.enable=false` para evitar que ele tente se configurar a si mesmo
 
 ## 10. Suporte
 
