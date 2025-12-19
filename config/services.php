@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'webhook' => [
+        'sped_contribuicoes_url' => env('WEBHOOK_SPED_CONTRIBUICOES_URL', 'https://auto.fiscaldock.com.br/webhook-test/consultar-regime-tributario-sped-contribuicoes'),
+        'username' => env('WEBHOOK_SPED_USERNAME'),
+        'password' => env('WEBHOOK_SPED_PASSWORD'),
+    ],
+
 ];

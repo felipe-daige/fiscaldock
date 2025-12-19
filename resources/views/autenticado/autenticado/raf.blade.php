@@ -130,6 +130,29 @@
                         </div>
                     </div>
 
+                    <div class="flex flex-wrap items-center gap-3 mb-4">
+                        <div id="timer-wrap" class="hidden inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-700">
+                            <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span id="timer-value">00:00</span>
+                        </div>
+
+                        <div id="csv-download-wrap" class="hidden">
+                            <a
+                                id="csv-download-link"
+                                class="inline-flex items-center gap-2 rounded-lg border border-primary-200 bg-primary-50 px-3 py-2 text-xs font-semibold text-primary-700 hover:bg-primary-100 transition"
+                                href="#"
+                                download="resultado.csv"
+                            >
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+                                </svg>
+                                <span id="csv-download-label">Baixar CSV</span>
+                            </a>
+                        </div>
+                    </div>
+
                     <div id="result-empty" class="text-sm text-gray-600">Nenhum resultado ainda.</div>
 
                     <div id="result-table-container" class="hidden overflow-x-auto">
@@ -178,7 +201,16 @@
     const alertTextEl = document.getElementById('sped-alert-text');
     const alertIconWrap = document.getElementById('sped-alert-icon');
 
+    const timerWrap = document.getElementById('timer-wrap');
+    const timerValue = document.getElementById('timer-value');
+    const downloadWrap = document.getElementById('csv-download-wrap');
+    const downloadLink = document.getElementById('csv-download-link');
+    const downloadLabel = document.getElementById('csv-download-label');
+
     let isLoading = false;
+    let timerInterval = null;
+    let timerStart = 0;
+    let currentDownloadUrl = null;
 
     const formatFileSize = (bytes) => {
         if (!Number.isFinite(bytes)) return '';
@@ -226,6 +258,54 @@
                 `;
             }
         }
+    };
+
+    const startTimer = () => {
+        if (!timerWrap || !timerValue) return;
+        timerStart = Date.now();
+        timerValue.textContent = '00:00';
+        timerWrap.classList.remove('hidden');
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - timerStart) / 1000);
+            const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+            const ss = String(elapsed % 60).padStart(2, '0');
+            timerValue.textContent = `${mm}:${ss}`;
+        }, 1000);
+    };
+
+    const stopTimer = () => {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        if (timerWrap && timerValue) {
+            timerWrap.classList.add('hidden');
+            timerValue.textContent = '00:00';
+        }
+    };
+
+    const resetDownload = () => {
+        if (currentDownloadUrl) {
+            URL.revokeObjectURL(currentDownloadUrl);
+            currentDownloadUrl = null;
+        }
+        if (downloadWrap) downloadWrap.classList.add('hidden');
+        if (downloadLink) {
+            downloadLink.href = '#';
+            downloadLink.removeAttribute('download');
+        }
+        if (downloadLabel) downloadLabel.textContent = 'Baixar CSV';
+    };
+
+    const setDownload = (blob, filename = 'resultado.csv') => {
+        if (!downloadWrap || !downloadLink || !downloadLabel) return;
+        resetDownload();
+        currentDownloadUrl = URL.createObjectURL(blob);
+        downloadLink.href = currentDownloadUrl;
+        downloadLink.download = filename;
+        downloadLabel.textContent = `Baixar ${filename}`;
+        downloadWrap.classList.remove('hidden');
     };
 
     const setDropzoneEnabled = (enabled) => {
@@ -400,6 +480,9 @@
 
         showAlert('info', 'Enviando...');
         setLoading(true);
+        stopTimer();
+        resetDownload();
+        startTimer();
 
         const formData = new FormData();
         formData.append('tipo', tipo);
@@ -414,7 +497,45 @@
                 body: formData
             });
 
-            const data = await response.json();
+            // Verifica se a resposta é JSON antes de fazer parse
+            const contentType = response.headers.get('content-type');
+            let data;
+            
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else if (contentType && contentType.includes('text/csv')) {
+                const blob = await response.blob();
+
+                // tenta obter filename do header
+                const disposition = response.headers.get('content-disposition');
+                let filename = 'resultado.csv';
+                const match = disposition && disposition.match(/filename=\"?([^\";]+)\"?/i);
+                if (match && match[1]) {
+                    filename = match[1];
+                }
+
+                if (!response.ok) {
+                    const text = await blob.text();
+                    throw new Error(text || 'Falha ao processar o SPED.');
+                }
+
+                setDownload(blob, filename);
+                showAlert('success', 'Processado com sucesso. O CSV está pronto para download.');
+                resultBadge.classList.remove('hidden');
+                tableContainer.classList.add('hidden');
+                resultEmpty.classList.add('hidden');
+
+                // Reset parcial após sucesso
+                form.reset();
+                updateFileUi();
+                updateEnablement();
+                return;
+            } else {
+                // Se não for JSON, tenta ler como texto para debug
+                const text = await response.text();
+                console.error('Resposta não-JSON/CSV recebida:', text.substring(0, 200));
+                throw new Error('O servidor retornou uma resposta inválida. Verifique os logs do servidor.');
+            }
 
             if (!response.ok || !data.success) {
                 throw new Error(data.message || 'Falha ao processar o SPED.');
@@ -433,8 +554,10 @@
             resultBadge.classList.add('hidden');
             tableContainer.classList.add('hidden');
             resultEmpty.classList.remove('hidden');
+            resetDownload();
         } finally {
             setLoading(false);
+            stopTimer();
         }
     });
 

@@ -2,6 +2,10 @@
 let _layoutInitialized = false;
 let _mobileMenuHandler = null;
 let _dropdownClickHandler = null;
+let _dropdownHoverHandlers = [];
+const _dropdownOpenTimers = new WeakMap();
+const _dropdownCloseTimers = new WeakMap();
+const DROPDOWN_DELAY_MS = 100; // delay adicional para hover do menu Soluções
 
 function initLayout() {
     // Sempre remover listeners antigos antes de adicionar novos
@@ -54,6 +58,70 @@ function initLayout() {
     };
     
     document.addEventListener('click', _dropdownClickHandler);
+
+    // Dropdown com delay de hover (menu Soluções)
+    // Remover handlers anteriores para evitar duplicação
+    if (_dropdownHoverHandlers.length) {
+        _dropdownHoverHandlers.forEach(({ element, enterHandler, leaveHandler }) => {
+            element.removeEventListener('mouseenter', enterHandler);
+            element.removeEventListener('mouseleave', leaveHandler);
+        });
+        _dropdownHoverHandlers = [];
+    }
+
+    const dropdownGroups = document.querySelectorAll('.nav-dropdown-buffer');
+
+    const showPanel = (panel) => {
+        panel.classList.remove('opacity-0', 'invisible', 'pointer-events-none', 'translate-y-2');
+        panel.classList.add('opacity-100', 'visible', 'pointer-events-auto', 'translate-y-0');
+    };
+
+    const hidePanel = (panel) => {
+        panel.classList.add('opacity-0', 'invisible', 'pointer-events-none', 'translate-y-2');
+        panel.classList.remove('opacity-100', 'visible', 'pointer-events-auto', 'translate-y-0');
+    };
+
+    dropdownGroups.forEach(group => {
+        const panel = group.querySelector('.nav-dropdown-panel');
+        if (!panel) return;
+
+        // Remover comportamentos de hover direto (Tailwind) para controlar via JS com delay
+        panel.classList.remove('group-hover:translate-y-0', 'group-hover:visible', 'group-hover:opacity-100', 'group-hover:pointer-events-auto');
+
+        const enterHandler = () => {
+            const closeTimer = _dropdownCloseTimers.get(group);
+            if (closeTimer) {
+                clearTimeout(closeTimer);
+                _dropdownCloseTimers.delete(group);
+            }
+
+            const openTimer = setTimeout(() => {
+                showPanel(panel);
+            }, DROPDOWN_DELAY_MS);
+            _dropdownOpenTimers.set(group, openTimer);
+        };
+
+        const leaveHandler = () => {
+            const openTimer = _dropdownOpenTimers.get(group);
+            if (openTimer) {
+                clearTimeout(openTimer);
+                _dropdownOpenTimers.delete(group);
+            }
+
+            const closeTimer = setTimeout(() => {
+                hidePanel(panel);
+            }, DROPDOWN_DELAY_MS);
+            _dropdownCloseTimers.set(group, closeTimer);
+        };
+
+        // Inicia estado escondido para garantir consistência
+        hidePanel(panel);
+
+        group.addEventListener('mouseenter', enterHandler);
+        group.addEventListener('mouseleave', leaveHandler);
+
+        _dropdownHoverHandlers.push({ element: group, panel, enterHandler, leaveHandler });
+    });
     
     // Update year
     const currentYearElement = document.getElementById('current-year');
@@ -79,6 +147,32 @@ function resetLayout() {
     if (_dropdownClickHandler) {
         document.removeEventListener('click', _dropdownClickHandler);
         _dropdownClickHandler = null;
+    }
+
+    if (_dropdownHoverHandlers.length) {
+        _dropdownHoverHandlers.forEach(({ element, panel, enterHandler, leaveHandler }) => {
+            try {
+                element.removeEventListener('mouseenter', enterHandler);
+                element.removeEventListener('mouseleave', leaveHandler);
+                if (panel) {
+                    panel.classList.add('opacity-0', 'invisible', 'pointer-events-none', 'translate-y-2');
+                    panel.classList.remove('opacity-100', 'visible', 'pointer-events-auto', 'translate-y-0');
+                }
+                const openTimer = _dropdownOpenTimers.get(element);
+                if (openTimer) {
+                    clearTimeout(openTimer);
+                    _dropdownOpenTimers.delete(element);
+                }
+                const closeTimer = _dropdownCloseTimers.get(element);
+                if (closeTimer) {
+                    clearTimeout(closeTimer);
+                    _dropdownCloseTimers.delete(element);
+                }
+            } catch (e) {
+                // ignore
+            }
+        });
+        _dropdownHoverHandlers = [];
     }
     _layoutInitialized = false;
 }
