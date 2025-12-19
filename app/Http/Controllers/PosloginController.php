@@ -14,8 +14,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class PosloginController extends Controller
 {
-    private const AUTH_VIEW_PREFIX = 'autenticado.autenticado.';
-    private const AUTH_LAYOUT_VIEW = 'autenticado.autenticado.layout';
+    private const AUTH_VIEW_PREFIX = 'autenticado.autenticado.autenticado_';
+    private const AUTH_LAYOUT_VIEW = 'autenticado.autenticado.autenticado_layout';
 
     public function dashboard(Request $request){
         $dashboardView = self::AUTH_VIEW_PREFIX . 'dashboard';

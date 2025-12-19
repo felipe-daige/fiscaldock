@@ -434,12 +434,12 @@
 
                 <!-- CTAs -->
                 <div class="mt-5">
-                    <x-cta-button data-button="cta" class="btn-cta--nav">
+                    <a href="/agendar" data-link data-button="cta" class="btn-cta btn-cta--nav inline-flex items-center gap-2 px-5 py-3 rounded-lg border-2 border-[#facc15] bg-[#facc15] text-[#0b1f3a] font-semibold shadow-[0_20px_50px_-20px_rgba(250,204,21,0.5)] hover:bg-[#eab308] hover:border-[#eab308] transition" style="background-color:#facc15; border-color:#facc15; color:#0b1f3a; box-shadow:0 20px 50px -20px rgba(250,204,21,0.5);">
                         <span class="whitespace-nowrap">Quero conhecer</span>
                         <svg class="h-5 w-5 shrink-0 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                         </svg>
-                    </x-cta-button>
+                    </a>
                 </div>
 
                 <!-- Frase de apoio -->
