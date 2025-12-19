@@ -41,7 +41,20 @@
 
 @layer components {
     .btn-cta {
-        @apply inline-flex items-center justify-center rounded-lg bg-[#facc15] text-[#0b1f3a] shadow-[0_20px_50px_-20px_rgba(250,204,21,0.5)] transition hover:bg-[#eab308] hover:shadow-[0_20px_50px_-20px_rgba(250,204,21,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent active:bg-[#ca8a04] font-semibold leading-tight;
+        @apply inline-flex items-center justify-center rounded-lg border-2 border-[#facc15] bg-[#facc15] text-[#0b1f3a] shadow-[0_20px_50px_-20px_rgba(250,204,21,0.5)] transition hover:bg-[#eab308] hover:border-[#eab308] hover:shadow-[0_20px_50px_-20px_rgba(250,204,21,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent active:bg-[#ca8a04] active:border-[#ca8a04] font-semibold leading-tight;
+        background-color: #facc15 !important;
+        border-color: #facc15 !important;
+        color: #0b1f3a !important;
+    }
+
+    .btn-cta:hover {
+        background-color: #eab308 !important;
+        border-color: #eab308 !important;
+    }
+
+    .btn-cta:active {
+        background-color: #ca8a04 !important;
+        border-color: #ca8a04 !important;
     }
 
     .btn-cta strong,
@@ -69,6 +82,14 @@
     .text-brand {
         @apply bg-gradient-to-r from-primary-700 to-primary-500 bg-clip-text text-transparent;
     }
+
+    .text-brand-static {
+        background: linear-gradient(90deg, #0b1f3a, #1e4fa0, #2563eb, #1e4fa0);
+        color: transparent;
+        -webkit-background-clip: text;
+        background-clip: text;
+    }
+
 
     /* Utilitários de UI (cards / formulários / alerts) */
     .card {

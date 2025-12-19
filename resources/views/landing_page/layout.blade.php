@@ -32,7 +32,7 @@
             <nav class="flex justify-between items-center py-6">
                 <a href="/inicio" class="flex items-center gap-3" data-link>
                     <img src="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}" alt="FiscalDock" class="h-8 md:h-10 object-contain">
-                    <span class="text-xl font-bold text-brand">FiscalDock</span>
+                    <span class="text-xl font-bold text-brand-static">FiscalDock</span>
                 </a>
 
                 <!-- Desktop Navigation -->
@@ -69,7 +69,11 @@
                     </li>
                     <li><a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Preços</a></li>
                     <li><a href="/login" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Login</a></li>
-                    <li><x-cta-button href="/agendar" size="sm" class="btn-cta--nav" data-link data-button="cta">Testar Agora</x-cta-button></li>
+                    <li>
+                        <a href="/agendar" data-link data-button="cta" class="btn-cta btn-cta--nav" style="background-color:#facc15; border-color:#facc15; color:#0b1f3a; box-shadow:0 20px 50px -20px rgba(250,204,21,0.5);">
+                            Testar Agora
+                        </a>
+                    </li>
                 </ul>
 
                 <!-- Mobile Menu Button -->
@@ -89,7 +93,7 @@
                 <a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Preços</a>
                 <a href="/faq" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Perguntas</a>
                 <a href="/login" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Login</a>
-                <x-cta-button href="/agendar" data-link data-button="cta" class="w-full text-center">Testar Agora</x-cta-button>
+                <a href="/agendar" data-link data-button="cta" class="btn-cta w-full text-center">Testar Agora</a>
             </div>
         </div>
     </header>
@@ -114,7 +118,7 @@
                 <div>
                     <div class="flex items-center gap-3 mb-4">
                         <img src="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}" alt="FiscalDock" class="h-6 md:h-8 object-contain">
-                        <h3 class="text-lg font-semibold text-brand">FiscalDock</h3>
+                        <h3 class="text-lg font-semibold text-brand-static">FiscalDock</h3>
                     </div>
                     <p class="text-gray-600 leading-relaxed">
                         O centro operacional que transforma SPED e documentos em ações, relatórios e previsibilidade para escritórios contábeis e empresas.
