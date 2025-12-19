@@ -6,12 +6,20 @@ use App\Models\Empresa;
 use App\Models\XmlDocumento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Response;
 
 class PosloginController extends Controller
 {
+    private const AUTH_VIEW_PREFIX = 'autenticado.autenticado.';
+    private const AUTH_LAYOUT_VIEW = 'autenticado.autenticado.layout';
+
     public function dashboard(Request $request){
-        if(!view()->exists("autenticado.dashboard")){
+        $dashboardView = self::AUTH_VIEW_PREFIX . 'dashboard';
+
+        if(!view()->exists($dashboardView)){
             abort(404);
         }
 
@@ -143,18 +151,20 @@ class PosloginController extends Controller
         ];
 
         if($request->ajax()){
-            return view("autenticado.dashboard", $data);
+            return view($dashboardView, $data);
         }
         
         // Para requisições não-AJAX, passar dados para o layout
         // As variáveis serão automaticamente disponíveis na view incluída
-        return view("autenticado.layout", array_merge([
-            'initialView' => 'dashboard'
+        return view(self::AUTH_LAYOUT_VIEW, array_merge([
+            'initialView' => $dashboardView
         ], $data));
     }
 
     private function renderAutenticado(Request $request, string $viewName){
-        if(!view()->exists("autenticado.$viewName")){
+        $autenticadoView = self::AUTH_VIEW_PREFIX . $viewName;
+
+        if(!view()->exists($autenticadoView)){
             abort(404);
         }
 
@@ -170,11 +180,11 @@ class PosloginController extends Controller
         }
 
         if($request->ajax()){
-            return view("autenticado.$viewName");
+            return view($autenticadoView);
         }
         
-        return view("autenticado.layout", [
-            'initialView' => $viewName
+        return view(self::AUTH_LAYOUT_VIEW, [
+            'initialView' => $autenticadoView
         ]);
     }
 
@@ -200,5 +210,77 @@ class PosloginController extends Controller
 
     public function raf(Request $request){
         return $this->renderAutenticado($request, 'raf');
+    }
+
+    /**
+     * Upload de SPED e envio ao webhook n8n.
+     */
+    public function uploadSped(Request $request)
+    {
+        $validated = $request->validate([
+            'tipo' => 'required|in:EFD Contribuições,EFD Fiscal',
+            'sped' => 'required|file|mimes:txt,text/plain|max:10240', // 10 MB
+        ]);
+
+        $file = $request->file('sped');
+        $fileName = $file->getClientOriginalName() ?: ('sped-' . Str::random(6) . '.txt');
+
+        try {
+            $response = Http::timeout(60)
+                ->attach('sped', file_get_contents($file->getRealPath()), $fileName)
+                ->post('https://autowebhook.advdevecchitrigger.site/webhook/consultar-regime-tributario-sped-contribuicoes', [
+                    'tipo' => $validated['tipo'],
+                ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Falha ao contatar o webhook. Tente novamente em instantes.',
+            ], Response::HTTP_BAD_GATEWAY);
+        }
+
+        if (!$response->successful()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Webhook retornou erro (' . $response->status() . ').',
+            ], $response->status());
+        }
+
+        $csv = $response->body();
+        $parsed = $this->parseCsvString($csv);
+
+        return response()->json([
+            'success' => true,
+            'headers' => $parsed['headers'],
+            'rows' => $parsed['rows'],
+        ]);
+    }
+
+    /**
+     * Converte string CSV em headers e rows.
+     */
+    private function parseCsvString(string $csv): array
+    {
+        $lines = preg_split("/\\r\\n|\\r|\\n/", trim($csv));
+        $rows = [];
+        $headers = [];
+
+        foreach ($lines as $index => $line) {
+            if ($line === '') {
+                continue;
+            }
+            $columns = str_getcsv($line, ';');
+
+            if ($index === 0) {
+                $headers = $columns;
+                continue;
+            }
+
+            $rows[] = $columns;
+        }
+
+        return [
+            'headers' => $headers,
+            'rows' => $rows,
+        ];
     }
 }

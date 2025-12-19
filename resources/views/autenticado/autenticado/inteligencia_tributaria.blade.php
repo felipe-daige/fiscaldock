@@ -76,7 +76,7 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+function initInteligenciaTributaria() {
     const uploadArea = document.getElementById('upload-area');
     const fileInput = document.getElementById('doc-files');
     const filesList = document.getElementById('files-list');
@@ -84,6 +84,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const uploadBtn = document.getElementById('upload-btn');
     const clearBtn = document.getElementById('clear-btn');
     let selectedFiles = [];
+
+    if (!uploadArea || !fileInput || !filesList || !filesContainer || !uploadBtn || !clearBtn) {
+        return;
+    }
 
     uploadArea.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -155,6 +159,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (selectedFiles.length === 0) return;
         alert('Funcionalidade de upload será implementada via API/n8n');
     });
-});
+}
+
+// Executar imediatamente ao carregar a view (SPA ou carga completa)
+initInteligenciaTributaria();
 </script>
 

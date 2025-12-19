@@ -401,6 +401,12 @@
         font-size: 1.125rem;
     }
 }
+
+/* Hero fix: força gradiente mesmo se classes tailwind falharem */
+#hero {
+    background: linear-gradient(135deg, #0b1f3a 0%, #1e4fa0 100%) !important;
+    color: #fff;
+}
 </style>
 
 <!-- Hero Section (refeito) -->

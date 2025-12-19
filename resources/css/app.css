@@ -62,7 +62,77 @@
         @apply inline-flex items-center justify-center rounded-lg bg-primary-500 text-white transition hover:bg-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 active:bg-primary-700;
     }
 
+    .btn-secondary {
+        @apply inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 active:bg-gray-100;
+    }
+
     .text-brand {
         @apply bg-gradient-to-r from-primary-700 to-primary-500 bg-clip-text text-transparent;
+    }
+
+    /* Utilitários de UI (cards / formulários / alerts) */
+    .card {
+        @apply bg-white rounded-xl border border-gray-200 shadow-sm;
+    }
+
+    .card-body {
+        @apply p-6;
+    }
+
+    .card-title {
+        @apply text-lg font-semibold text-gray-900;
+    }
+
+    .form-label {
+        @apply block text-sm font-semibold text-gray-800;
+    }
+
+    .form-hint {
+        @apply text-xs text-gray-500;
+    }
+
+    .form-control {
+        @apply w-full rounded-lg border border-gray-300 bg-white text-gray-800 shadow-sm transition
+            focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 focus:ring-offset-gray-50
+            disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed;
+    }
+
+    .dropzone {
+        @apply w-full rounded-xl border-2 border-dashed border-gray-300 bg-white px-4 py-6 text-center transition
+            hover:border-primary-400 hover:bg-primary-50/30
+            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2;
+    }
+
+    .dropzone--disabled {
+        @apply pointer-events-none cursor-not-allowed opacity-60 bg-gray-100 border-gray-300;
+    }
+
+    .dropzone--dragover {
+        @apply border-primary-500 bg-primary-50/50;
+    }
+
+    .alert {
+        @apply rounded-xl border px-4 py-3 text-sm;
+    }
+
+    .alert--info {
+        @apply border-gray-200 bg-white text-gray-700;
+    }
+
+    .alert--success {
+        @apply border-green-200 bg-green-50 text-green-800;
+    }
+
+    .alert--error {
+        @apply border-red-200 bg-red-50 text-red-800;
+    }
+
+    /* Dropdown de Soluções (desktop) */
+    .nav-dropdown-buffer {
+        padding-bottom: 12px;
+    }
+
+    .nav-dropdown-panel {
+        transition-delay: 90ms;
     }
 }

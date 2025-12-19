@@ -19,7 +19,7 @@
         {{-- Grid de Soluções --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {{-- Card: Importação de XMLs --}}
-            <a href="/solucoes/importacao-xml" data-link class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all hover:scale-105 border border-gray-200 group">
+            <a href="/app/solucoes/importacao-xml" data-link class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all hover:scale-105 border border-gray-200 group">
                 <div class="flex flex-col h-full">
                     <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors mb-4">
                         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,7 +42,7 @@
             </a>
 
             {{-- Card: Conciliação Bancária --}}
-            <a href="/solucoes/conciliacao-bancaria" data-link class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all hover:scale-105 border border-gray-200 group">
+            <a href="/app/solucoes/conciliacao-bancaria" data-link class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all hover:scale-105 border border-gray-200 group">
                 <div class="flex flex-col h-full">
                     <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors mb-4">
                         <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -65,7 +65,7 @@
             </a>
 
             {{-- Card: Gestão de CNDs --}}
-            <a href="/solucoes/gestao-cnds" data-link class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all hover:scale-105 border border-gray-200 group">
+            <a href="/app/solucoes/gestao-cnds" data-link class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all hover:scale-105 border border-gray-200 group">
                 <div class="flex flex-col h-full">
                     <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center group-hover:bg-orange-200 transition-colors mb-4">
                         <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,7 +88,7 @@
             </a>
 
             {{-- Card: RAF - Inteligência Fiscal --}}
-            <a href="/solucoes/raf" data-link class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all hover:scale-105 border border-gray-200 group">
+            <a href="/app/solucoes/raf" data-link class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all hover:scale-105 border border-gray-200 group">
                 <div class="flex flex-col h-full">
                     <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors mb-4">
                         <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,7 +111,7 @@
             </a>
 
             {{-- Card: Inteligência Tributária --}}
-            <a href="/solucoes/inteligencia-tributaria" data-link class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all hover:scale-105 border border-gray-200 group">
+            <a href="/app/solucoes/inteligencia-tributaria" data-link class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all hover:scale-105 border border-gray-200 group">
                 <div class="flex flex-col h-full">
                     <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors mb-4">
                         <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

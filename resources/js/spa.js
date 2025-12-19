@@ -7,6 +7,71 @@ document.addEventListener('DOMContentLoaded', () => {
         swipers: [],
         listeners: []
     };
+
+    // Configuração de mapeamento para páginas com nomes de arquivo diferentes
+    const _spaScriptOverrides = {
+        importacaoXml: '/js/importacao_xml.js',
+    };
+
+    // Converte slug (com hífen/underscore) para camelCase
+    function slugToCamel(slug) {
+        return slug
+            .split(/[-_]+/)
+            .filter(Boolean)
+            .map((parte, index) => index === 0 
+                ? parte.toLowerCase() 
+                : parte.charAt(0).toUpperCase() + parte.slice(1).toLowerCase()
+            )
+            .join('');
+    }
+
+    // Resolve nome da página, função init e caminho do script a partir da URL
+    function obterInfoPagina(caminho) {
+        const segmentos = caminho.split('/').filter(Boolean);
+
+        let baseSlug = 'inicio';
+        if (segmentos.length > 0) {
+            if (segmentos[0] === 'app') {
+                // Rotas autenticadas
+                if (segmentos[1] === 'solucoes' && segmentos[2]) {
+                    // Subpáginas de soluções: usar o slug da subpágina
+                    baseSlug = segmentos[2];
+                } else {
+                    baseSlug = segmentos[1] || 'dashboard';
+                }
+            } else {
+                baseSlug = segmentos[0];
+            }
+        }
+
+        const paginaCamel = slugToCamel(baseSlug);
+        const nomePagina = paginaCamel || 'inicio';
+        const nomeFuncao = `init${nomePagina.charAt(0).toUpperCase() + nomePagina.slice(1)}`;
+        const scriptPath = _spaScriptOverrides[nomePagina] || `/js/${nomePagina}.js`;
+
+        return { nomePagina, scriptPath, nomeFuncao };
+    }
+
+    // Mapeamento específico para views
+    const funcoesEspecificas = {
+        '/': 'initInicio',
+        '/inicio': 'initInicio',
+        '/login': 'initLogin',
+        '/agendar': 'initAgendar',
+        '/solucoes': 'initSolucoes',
+        '/app/solucoes': 'initSolucoes',
+        '/app/solucoes/importacao-xml': 'initImportacaoXml',
+        '/app/solucoes/conciliacao-bancaria': 'initConciliacaoBancaria',
+        '/app/solucoes/gestao-cnds': 'initGestaoCnds',
+        '/app/solucoes/inteligencia-tributaria': 'initInteligenciaTributaria',
+        '/app/solucoes/raf': 'initRaf',
+        '/dashboard': 'initDashboard',
+        '/sobre': 'initSobre',
+        '/beneficios': 'initBeneficios',
+        '/faq': 'initFaq',
+        '/impactos': 'initImpactos',
+        '/precos': 'initPrecos'
+    };
     
     // 0. LIMPAR RECURSOS ANTES DE NAVEGAR
     function limparRecursos() {
@@ -140,13 +205,13 @@ document.addEventListener('DOMContentLoaded', () => {
     async function navegar(url) {
         try {
             // Verificar se há mudança de contexto (autenticado <-> não autenticado)
-            // URLs autenticadas: /dashboard
+            // URLs autenticadas: /dashboard, /app/*
             // URLs não autenticadas: /inicio, /login, etc.
             const urlPath = new URL(url, window.location.origin).pathname;
             const currentPath = window.location.pathname;
             
             // Detectar se estamos navegando para/da área autenticada
-            const isDashboardArea = (path) => path === '/dashboard' || path.startsWith('/dashboard');
+            const isDashboardArea = (path) => path === '/dashboard' || path.startsWith('/dashboard') || path.startsWith('/app/');
             
             const currentIsDashboard = isDashboardArea(currentPath);
             const targetIsDashboard = isDashboardArea(urlPath);
@@ -316,47 +381,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4.1. EXECUTAR FUNÇÕES ESPECÍFICAS
     function executarFuncoesEspecificas() {
         const caminho = window.location.pathname;
-        
+
         // Carregar JavaScript específico da página se necessário
         carregarJavaScriptEspecifico(caminho);
-        
-        // Sistema dinâmico: procura por funções init + nome da página
-        const nomePagina = caminho.replace('/', '').replace('-', '');
-        const nomeFuncao = `init${nomePagina.charAt(0).toUpperCase() + nomePagina.slice(1)}`;
-        
-        // Se a função existe, executa
-        if (window[nomeFuncao] && typeof window[nomeFuncao] === 'function') {
-            window[nomeFuncao]();
+
+        const infoPagina = obterInfoPagina(caminho);
+        const funcaoAlvo = Object.prototype.hasOwnProperty.call(funcoesEspecificas, caminho)
+            ? funcoesEspecificas[caminho]
+            : infoPagina.nomeFuncao;
+
+        if (!funcaoAlvo) {
+            return;
         }
-        
-        // Mapeamento específico para as views da landing page
-        const funcoesEspecificas = {
-            '/': 'initInicio',
-            '/inicio': 'initInicio',
-            '/login': 'initLogin',
-            '/agendar': 'initAgendar',
-            '/solucoes': 'initSolucoes',
-            '/sobre': 'initSobre',
-            '/beneficios': 'initBeneficios',
-            '/faq': 'initFaq',
-            '/impactos': 'initImpactos',
-            '/precos': 'initPrecos'
-        };
-        
-        if (funcoesEspecificas[caminho] && window[funcoesEspecificas[caminho]]) {
-            window[funcoesEspecificas[caminho]]();
+
+        if (window[funcaoAlvo] && typeof window[funcaoAlvo] === 'function') {
+            window[funcaoAlvo]();
         }
     }
     
     // 4.2. CARREGAR JAVASCRIPT ESPECÍFICO (SISTEMA DINÂMICO)
     function carregarJavaScriptEspecifico(caminho) {
-        const nomePagina = caminho.replace('/', '').replace('-', '');
-        const scriptPath = `/js/${nomePagina}.js`;
-        
-        // Verificar se arquivo existe (opcional - para debug)
+        const { scriptPath, nomePagina } = obterInfoPagina(caminho);
+
         if (nomePagina && nomePagina !== '') {
             const scriptExistente = document.querySelector(`script[src="${scriptPath}"]`);
-            
+
             if (!scriptExistente) {
                 const script = document.createElement('script');
                 script.src = scriptPath;
@@ -383,10 +432,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // /contato → initContato
         // /sobre → initSobre
         // /dashboard → initDashboard
-        const nomePagina = caminho.replace('/', '').replace('-', '');
-        const nomeFuncao = `init${nomePagina.charAt(0).toUpperCase() + nomePagina.slice(1)}`;
+        const infoPagina = obterInfoPagina(caminho);
+        const nomeFuncao = funcoesEspecificas[caminho] || infoPagina.nomeFuncao;
         
-        if (nomePagina && nomePagina !== '') {
+        if (nomeFuncao && infoPagina.nomePagina !== '') {
             // Tentar executar a função com retry
             tentarExecutarFuncao(nomeFuncao, 0);
         }
@@ -529,5 +578,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 10. CARREGAR JAVASCRIPT NA PRIMEIRA CARGA
     carregarJavaScriptInicial();
+
+    // Funções no-op para rotas sem JS específico
+    window.initRaf = window.initRaf || function() {};
 });
 

@@ -25,20 +25,20 @@
                 <!-- Desktop Navigation -->
                 <div class="hidden md:flex items-center gap-6">
                     <a href="/dashboard" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Dashboard</a>
-                    <li class="relative group">
-                        <a href="/solucoes" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium flex items-center gap-1">
+                    <li class="relative group nav-dropdown-buffer">
+                        <a href="/app/solucoes" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium flex items-center gap-1">
                             Soluções
                             <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </a>
-                        <div class="pointer-events-none absolute top-full left-0 mt-2 w-48 rounded-lg border border-gray-200 bg-white shadow-lg opacity-0 invisible group-hover:translate-y-0 group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 transform translate-y-2">
-                            <a href="/solucoes/importacao-xml" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-t-lg">Importação de XMLs</a>
-                            <a href="/solucoes/conciliacao-bancaria" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Conciliação Bancária</a>
-                            <a href="/solucoes/gestao-cnds" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Gestão de CNDs</a>
-                            <a href="/solucoes/raf" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">RAF</a>
-                            <a href="/solucoes/inteligencia-tributaria" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Inteligência Tributária</a>
-                            <a href="/solucoes" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-b-lg">Ver Todas as Soluções</a>
+                        <div class="nav-dropdown-panel pointer-events-none absolute top-full left-0 mt-0 pt-3 w-48 rounded-lg border border-gray-200 bg-white shadow-lg opacity-0 invisible group-hover:translate-y-0 group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 ease-out transform translate-y-2">
+                            <a href="/app/solucoes/importacao-xml" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-t-lg">Importação de XMLs</a>
+                            <a href="/app/solucoes/conciliacao-bancaria" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Conciliação Bancária</a>
+                            <a href="/app/solucoes/gestao-cnds" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Gestão de CNDs</a>
+                            <a href="/app/solucoes/raf" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">RAF</a>
+                            <a href="/app/solucoes/inteligencia-tributaria" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Inteligência Tributária</a>
+                            <a href="/app/solucoes" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-b-lg">Ver Todas as Soluções</a>
                         </div>
                     </li>
                     <div class="flex items-center gap-4">
@@ -71,13 +71,13 @@
             <!-- Mobile Menu -->
             <div id="mobile-menu" class="hidden md:hidden flex-col gap-4 py-4 border-t border-gray-200">
                 <a href="/dashboard" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Dashboard</a>
-                <a href="/solucoes" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Soluções</a>
+                <a href="/app/solucoes" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Soluções</a>
                 <div class="pl-4 flex flex-col gap-2 border-l-2 border-gray-200">
-                    <a href="/solucoes/importacao-xml" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-1 text-sm">Importação de XMLs</a>
-                    <a href="/solucoes/conciliacao-bancaria" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-1 text-sm">Conciliação Bancária</a>
-                    <a href="/solucoes/gestao-cnds" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-1 text-sm">Gestão de CNDs</a>
-                    <a href="/solucoes/raf" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-1 text-sm">RAF</a>
-                    <a href="/solucoes/inteligencia-tributaria" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-1 text-sm">Inteligência Tributária</a>
+                    <a href="/app/solucoes/importacao-xml" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-1 text-sm">Importação de XMLs</a>
+                    <a href="/app/solucoes/conciliacao-bancaria" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-1 text-sm">Conciliação Bancária</a>
+                    <a href="/app/solucoes/gestao-cnds" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-1 text-sm">Gestão de CNDs</a>
+                    <a href="/app/solucoes/raf" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-1 text-sm">RAF</a>
+                    <a href="/app/solucoes/inteligencia-tributaria" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-1 text-sm">Inteligência Tributária</a>
                 </div>
                 <div class="flex items-center gap-2 text-sm text-gray-600 py-2">
                     <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,7 +104,7 @@
     <!-- Main Content Area -->
     <main id="app">
         @if(isset($initialView))
-            @include("autenticado.$initialView")
+            @include($initialView)
         @endif
     </main>
 

@@ -1,6 +1,6 @@
 // Função específica para a página de soluções
-let _solucoesSwiper = null;
-let _solucoesAccordionHandlers = [];
+window._solucoesSwiper = window._solucoesSwiper || null;
+window._solucoesAccordionHandlers = window._solucoesAccordionHandlers || [];
 
 function initSolucoes() {
     // Destruir instância Swiper anterior se existir

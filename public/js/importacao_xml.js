@@ -691,6 +691,9 @@
     // Expor função global para paginação
     window.loadDocumentos = loadDocumentos;
 
+    // Expor função init para o SPA
+    window.initImportacaoXml = init;
+
     // Inicializar quando DOM estiver pronto
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
