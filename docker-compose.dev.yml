@@ -34,6 +34,20 @@ services:
     networks:
       - devnet
 
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fiscaldock
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: REMOVED_PASSWORD
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - devnet
+
 networks:
   devnet:
     driver: bridge
@@ -41,3 +55,6 @@ networks:
 volumes:
   app_storage:
     external: true
+
+  pg_data:
+    driver: local
