@@ -14,6 +14,7 @@ services:
     volumes:
       - ./resources:/var/www/html/resources
       - ./public/js:/var/www/html/public/js
+      - ./routes:/var/www/html/routes
       - ./app:/var/www/html/app
       - app_storage:/var/www/html/storage
       - ./docker/php/opcache-dev.ini:/usr/local/etc/php/conf.d/99-opcache.ini:ro

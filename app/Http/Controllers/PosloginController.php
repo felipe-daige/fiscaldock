@@ -7,6 +7,7 @@ use App\Models\XmlDocumento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
@@ -217,18 +218,61 @@ class PosloginController extends Controller
      */
     public function uploadSped(Request $request)
     {
-        $validated = $request->validate([
-            'tipo' => 'required|in:EFD Contribuições,EFD Fiscal',
-            'sped' => 'required|file|mimes:txt,text/plain|max:10240', // 10 MB
-        ]);
+        try {
+            $validated = $request->validate([
+                'tipo' => 'required|in:EFD Contribuições,EFD Fiscal',
+                'sped' => 'required|file|mimes:txt,text/plain|max:10240', // 10 MB
+            ]);
+        } catch (ValidationException $e) {
+            $errors = $e->errors();
+            $errorMessages = [];
+            
+            if (isset($errors['sped'])) {
+                $errorMessages = array_merge($errorMessages, $errors['sped']);
+            }
+            if (isset($errors['tipo'])) {
+                $errorMessages = array_merge($errorMessages, $errors['tipo']);
+            }
+            
+            $message = !empty($errorMessages) 
+                ? implode(', ', $errorMessages) 
+                : 'Dados inválidos';
+            
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+                'errors' => $errors,
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
 
         $file = $request->file('sped');
-        $fileName = $file->getClientOriginalName() ?: ('sped-' . Str::random(6) . '.txt');
+        $fileName = match ($validated['tipo']) {
+            'EFD Contribuições' => 'sped_contribuicoes.txt',
+            'EFD Fiscal' => 'sped_fiscal.txt',
+            default => 'sped.txt',
+        };
+
+        $webhookUrl = config('services.webhook.sped_contribuicoes_url')
+            ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-regime-tributario-sped-contribuicoes';
+        $webhookUser = config('services.webhook.username');
+        $webhookPass = config('services.webhook.password');
+
+        if (empty($webhookUrl)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Webhook não configurado.',
+            ], Response::HTTP_BAD_GATEWAY);
+        }
+
+        $http = Http::timeout(60);
+
+        if (!empty($webhookUser) && !empty($webhookPass)) {
+            $http = $http->withBasicAuth($webhookUser, $webhookPass);
+        }
 
         try {
-            $response = Http::timeout(60)
-                ->attach('sped', file_get_contents($file->getRealPath()), $fileName)
-                ->post('https://autowebhook.advdevecchitrigger.site/webhook/consultar-regime-tributario-sped-contribuicoes', [
+            $response = $http->attach('sped', file_get_contents($file->getRealPath()), $fileName)
+                ->post($webhookUrl, [
                     'tipo' => $validated['tipo'],
                 ]);
         } catch (\Throwable $e) {
