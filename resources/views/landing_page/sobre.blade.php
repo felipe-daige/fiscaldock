@@ -3,7 +3,7 @@
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
                 Sobre o 
-                <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">FiscalDock</span>
+                <span class="text-brand">FiscalDock</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
                 Conheça mais sobre nossa plataforma e nossa missão
