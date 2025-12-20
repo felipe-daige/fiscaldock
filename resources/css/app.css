@@ -41,20 +41,50 @@
 
 @layer components {
     .btn-cta {
-        @apply inline-flex items-center justify-center rounded-lg border-2 border-[#facc15] bg-[#facc15] text-[#0b1f3a] shadow-[0_20px_50px_-20px_rgba(250,204,21,0.5)] transition hover:bg-[#eab308] hover:border-[#eab308] hover:shadow-[0_20px_50px_-20px_rgba(250,204,21,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent active:bg-[#ca8a04] active:border-[#ca8a04] font-semibold leading-tight;
-        background-color: #facc15 !important;
-        border-color: #facc15 !important;
-        color: #0b1f3a !important;
+        /* Fonte da verdade do CTA (funciona bem mesmo sem utilities) */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border-radius: 0.5rem; /* rounded-lg */
+        padding: 0.75rem 1.25rem; /* py-3 px-5 (hero-friendly) */
+        min-height: 48px;
+        font-size: 1rem;
+        border: 2px solid var(--color-accent, #facc15);
+        background-color: var(--color-accent, #facc15);
+        color: var(--color-primary-700, #0b1f3a);
+        font-weight: 600;
+        line-height: 1.1;
+        text-decoration: none;
+        transform: translateY(0);
+        box-shadow: 0 20px 50px -20px rgba(250, 204, 21, 0.55);
+        transition:
+            transform 160ms ease,
+            box-shadow 160ms ease,
+            background-color 160ms ease,
+            border-color 160ms ease;
+        -webkit-tap-highlight-color: transparent;
     }
 
     .btn-cta:hover {
-        background-color: #eab308 !important;
-        border-color: #eab308 !important;
+        background-color: #eab308;
+        border-color: #eab308;
+        transform: translateY(-1px);
+        box-shadow: 0 26px 60px -22px rgba(250, 204, 21, 0.65);
     }
 
     .btn-cta:active {
-        background-color: #ca8a04 !important;
-        border-color: #ca8a04 !important;
+        background-color: #ca8a04;
+        border-color: #ca8a04;
+        transform: translateY(0);
+        box-shadow: 0 14px 35px -22px rgba(250, 204, 21, 0.55);
+    }
+
+    .btn-cta:focus-visible {
+        outline: none;
+        box-shadow:
+            0 0 0 4px rgba(250, 204, 21, 0.35),
+            0 20px 50px -20px rgba(250, 204, 21, 0.55);
     }
 
     .btn-cta strong,
@@ -69,6 +99,18 @@
         font-size: 0.875rem;
         line-height: 1.2;
         font-weight: 600;
+    }
+
+    /* CTA em largura total (ex.: menu mobile) */
+    .btn-cta--block {
+        width: 100%;
+        justify-content: center;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .btn-cta {
+            transition: none;
+        }
     }
 
     .btn-primary-solid {
