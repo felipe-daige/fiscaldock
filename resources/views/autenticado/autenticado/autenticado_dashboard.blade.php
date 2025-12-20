@@ -9,7 +9,13 @@
                         Olá, {{ Auth::user()->name ?? 'Contador' }}!
                     </h1>
                     <p class="text-sm text-gray-500 mt-2">
-                        {{ now()->format('d/m/Y') }} - {{ now()->format('H:i') }}
+                        @if(isset($ultima_sincronizacao))
+                            {{ now()->format('d/m/Y') }} - {{ now()->format('H:i') }}
+                            <span class="text-gray-400 mx-2">•</span>
+                            Sincronizado há {{ $ultima_sincronizacao->diffForHumans() }}
+                        @else
+                            Não sincronizado
+                        @endif
                     </p>
                 </div>
                 <div class="mt-4 sm:mt-0">
@@ -32,12 +38,20 @@
             <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-8 hover:shadow-md transition-all">
                 <div class="flex items-center justify-between">
                     <div class="flex-1">
+                        @php
+                            $valorRisco = $kpi_cnd_risco ?? null;
+                            $temRisco = is_numeric($valorRisco) && $valorRisco > 0;
+                        @endphp
                         <p class="text-sm font-medium text-gray-500 mb-3">Risco Fiscal</p>
-                        <p class="text-4xl font-bold {{ ($kpi_cnd_risco ?? 0) > 0 ? 'text-yellow-500' : 'text-blue-900' }} mb-2">{{ $kpi_cnd_risco ?? 0 }}</p>
-                        <p class="text-xs text-gray-500">CNDs vencidas ou vencendo</p>
+                        <p class="text-4xl font-bold {{ $temRisco ? 'text-yellow-500' : 'text-gray-700' }} mb-2">
+                            {{ $valorRisco === null ? '--' : $valorRisco }}
+                        </p>
+                        <p class="text-xs text-gray-500">
+                            {{ $valorRisco === null ? 'Sem dados de CNDs' : 'CNDs vencidas ou vencendo' }}
+                        </p>
                     </div>
-                    <div class="w-14 h-14 {{ ($kpi_cnd_risco ?? 0) > 0 ? 'bg-yellow-50' : 'bg-blue-50' }} rounded-xl flex items-center justify-center ml-4">
-                        <svg class="w-7 h-7 {{ ($kpi_cnd_risco ?? 0) > 0 ? 'text-yellow-500' : 'text-blue-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-14 h-14 {{ $temRisco ? 'bg-yellow-50' : 'bg-gray-100' }} rounded-xl flex items-center justify-center ml-4">
+                        <svg class="w-7 h-7 {{ $temRisco ? 'text-yellow-500' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                         </svg>
                     </div>
@@ -48,12 +62,19 @@
             <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-8 hover:shadow-md transition-all">
                 <div class="flex items-center justify-between">
                     <div class="flex-1">
+                        @php
+                            $valorPend = $kpi_xml_pendentes ?? null;
+                        @endphp
                         <p class="text-sm font-medium text-gray-500 mb-3">Pendência XML</p>
-                        <p class="text-4xl font-bold text-blue-900 mb-2">{{ $kpi_xml_pendentes ?? 0 }}</p>
-                        <p class="text-xs text-gray-500">Documentos não processados</p>
+                        <p class="text-4xl font-bold {{ is_numeric($valorPend) ? 'text-blue-900' : 'text-gray-700' }} mb-2">
+                            {{ $valorPend === null ? '--' : $valorPend }}
+                        </p>
+                        <p class="text-xs text-gray-500">
+                            {{ $valorPend === null ? 'Sem dados de documentos' : 'Documentos não processados' }}
+                        </p>
                     </div>
-                    <div class="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center ml-4">
-                        <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-14 h-14 {{ is_numeric($valorPend) ? 'bg-blue-50' : 'bg-gray-100' }} rounded-xl flex items-center justify-center ml-4">
+                        <svg class="w-7 h-7 {{ is_numeric($valorPend) ? 'text-blue-600' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
                     </div>
@@ -64,12 +85,19 @@
             <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-8 hover:shadow-md transition-all">
                 <div class="flex items-center justify-between">
                     <div class="flex-1">
+                        @php
+                            $valorSped = $kpi_sped_pendentes ?? null;
+                        @endphp
                         <p class="text-sm font-medium text-gray-500 mb-3">Obrigações SPED</p>
-                        <p class="text-4xl font-bold text-blue-900 mb-2">{{ $kpi_sped_pendentes ?? 0 }}</p>
-                        <p class="text-xs text-gray-500">Pendentes no mês</p>
+                        <p class="text-4xl font-bold {{ is_numeric($valorSped) ? 'text-blue-900' : 'text-gray-700' }} mb-2">
+                            {{ $valorSped === null ? '--' : $valorSped }}
+                        </p>
+                        <p class="text-xs text-gray-500">
+                            {{ $valorSped === null ? 'Sem dados de SPED' : 'Pendentes no mês' }}
+                        </p>
                     </div>
-                    <div class="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center ml-4">
-                        <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-14 h-14 {{ is_numeric($valorSped) ? 'bg-blue-50' : 'bg-gray-100' }} rounded-xl flex items-center justify-center ml-4">
+                        <svg class="w-7 h-7 {{ is_numeric($valorSped) ? 'text-blue-600' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                         </svg>
                     </div>
@@ -80,12 +108,19 @@
             <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-8 hover:shadow-md transition-all">
                 <div class="flex items-center justify-between">
                     <div class="flex-1">
+                        @php
+                            $valorCarteira = $total_empresas ?? null;
+                        @endphp
                         <p class="text-sm font-medium text-gray-500 mb-3">Carteira Ativa</p>
-                        <p class="text-4xl font-bold text-blue-900 mb-2">{{ $total_empresas ?? 0 }}</p>
-                        <p class="text-xs text-gray-500">Empresas monitoradas</p>
+                        <p class="text-4xl font-bold {{ is_numeric($valorCarteira) ? 'text-blue-900' : 'text-gray-700' }} mb-2">
+                            {{ $valorCarteira === null ? '--' : $valorCarteira }}
+                        </p>
+                        <p class="text-xs text-gray-500">
+                            {{ $valorCarteira === null ? 'Sem dados de empresas' : 'Empresas monitoradas' }}
+                        </p>
                     </div>
-                    <div class="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center ml-4">
-                        <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-14 h-14 {{ is_numeric($valorCarteira) ? 'bg-blue-50' : 'bg-gray-100' }} rounded-xl flex items-center justify-center ml-4">
+                        <svg class="w-7 h-7 {{ is_numeric($valorCarteira) ? 'text-blue-600' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                         </svg>
                     </div>

@@ -41,9 +41,9 @@
     <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <nav class="flex justify-between items-center py-6">
-                <a href="/inicio" class="flex items-center gap-3" data-link>
+                <a href="/inicio" class="flex items-center gap-3" data-link data-no-active>
                     <img src="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}" alt="FiscalDock" class="h-8 md:h-10 object-contain">
-                    <span class="text-xl font-bold text-brand-static">FiscalDock</span>
+                    <span class="text-xl font-bold text-brand">FiscalDock</span>
                 </a>
 
                 <!-- Desktop Navigation -->
@@ -129,7 +129,7 @@
                 <div>
                     <div class="flex items-center gap-3 mb-4">
                         <img src="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}" alt="FiscalDock" class="h-6 md:h-8 object-contain">
-                        <h3 class="text-lg font-semibold text-brand-static">FiscalDock</h3>
+                        <h3 class="text-lg font-semibold text-brand">FiscalDock</h3>
                     </div>
                     <p class="text-gray-600 leading-relaxed">
                         O centro operacional que transforma SPED e documentos em ações, relatórios e previsibilidade para escritórios contábeis e empresas.
