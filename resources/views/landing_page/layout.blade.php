@@ -6,6 +6,17 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>FiscalDock | Transforme SPED em Ações e Relatórios</title>
     <meta name="description" content="O FiscalDock que transforma SPED e documentos em ações, relatórios e previsibilidade. Centralize arquivos fiscais, identifique pendências e automatize cobranças.">
+
+    <!-- Fallback crítico do CTA (caso o CSS do Vite não carregue) -->
+    <style>
+        .btn-cta{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border-radius:.5rem;padding:.75rem 1.25rem;min-height:48px;font-size:1rem;border:2px solid #facc15;background:#facc15;color:#0b1f3a;font-weight:600;line-height:1.1;text-decoration:none;transform:translateY(0);box-shadow:0 20px 50px -20px rgba(250,204,21,.55);transition:transform .16s ease,box-shadow .16s ease,background-color .16s ease,border-color .16s ease;-webkit-tap-highlight-color:transparent}
+        .btn-cta:hover{background:#eab308;border-color:#eab308;transform:translateY(-1px);box-shadow:0 26px 60px -22px rgba(250,204,21,.65)}
+        .btn-cta:active{background:#ca8a04;border-color:#ca8a04;transform:translateY(0);box-shadow:0 14px 35px -22px rgba(250,204,21,.55)}
+        .btn-cta:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(250,204,21,.35),0 20px 50px -20px rgba(250,204,21,.55)}
+        .btn-cta--nav{min-height:40px;padding:.5rem 1.1rem;font-size:.875rem;line-height:1.2;font-weight:600}
+        .btn-cta--block{width:100%;justify-content:center}
+        @media (prefers-reduced-motion:reduce){.btn-cta{transition:none}}
+    </style>
     
     @vite(['resources/css/app.css', 'resources/js/spa.js'])
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
@@ -70,7 +81,7 @@
                     <li><a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Preços</a></li>
                     <li><a href="/login" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium">Login</a></li>
                     <li>
-                        <a href="/agendar" data-link data-button="cta" class="btn-cta btn-cta--nav" style="background-color:#facc15; border-color:#facc15; color:#0b1f3a; box-shadow:0 20px 50px -20px rgba(250,204,21,0.5);">
+                        <a href="/agendar" data-link data-button="cta" class="btn-cta btn-cta--nav">
                             Testar Agora
                         </a>
                     </li>
@@ -93,7 +104,7 @@
                 <a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Preços</a>
                 <a href="/faq" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Perguntas</a>
                 <a href="/login" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Login</a>
-                <a href="/agendar" data-link data-button="cta" class="btn-cta w-full text-center">Testar Agora</a>
+                <a href="/agendar" data-link data-button="cta" class="btn-cta btn-cta--block w-full">Testar Agora</a>
             </div>
         </div>
     </header>
