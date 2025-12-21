@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Xml;
 
+use App\Http\Controllers\Controller;
 use App\Models\XmlDocumento;
 use App\Models\XmlRegraClassificacao;
 use App\Models\XmlLancamento;
@@ -359,3 +360,4 @@ class XmlImportController extends Controller
         ]);
     }
 }
+
