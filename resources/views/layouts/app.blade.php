@@ -21,7 +21,7 @@
     <div class="min-h-screen flex">
         @include('autenticado.partials.sidebar')
 
-        <div class="layout-shell flex-1 min-w-0 flex flex-col md:pl-56">
+        <div class="layout-shell flex-1 min-w-0 flex flex-col">
             <!-- Mobile Topbar (abre a sidebar como drawer) -->
             <div class="md:hidden sticky top-0 z-30 bg-white border-b border-gray-200">
                 <div class="flex items-center gap-3 px-4 py-3">
