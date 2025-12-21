@@ -41,6 +41,9 @@ COPY --from=vendor /app/vendor ./vendor
 # Copia o restante do código da aplicação
 COPY . .
 
+# Copiar configuração PHP-FPM customizada para timeout de 1 hora
+COPY deployment/php-fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom-pool.conf
+
 # Configurações de PHP e opcache (produção básica)
 RUN { \
       echo "display_errors=Off"; \
@@ -50,7 +53,7 @@ RUN { \
       echo "memory_limit=256M"; \
       echo "post_max_size=100M"; \
       echo "upload_max_filesize=100M"; \
-      echo "max_execution_time=60"; \
+      echo "max_execution_time=3600"; \
     } > /usr/local/etc/php/conf.d/99-laravel.ini \
   && { \
       echo "opcache.enable=1"; \

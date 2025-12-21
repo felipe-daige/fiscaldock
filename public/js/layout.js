@@ -6,9 +6,7 @@ let _dropdownHoverHandlers = [];
 let _sidebarOpenHandler = null;
 let _sidebarCloseHandler = null;
 let _sidebarOverlayHandler = null;
-let _sidebarCollapseHandler = null;
 let _sidebarLinkClickHandler = null;
-let _sidebarResizeHandler = null;
 const _dropdownOpenTimers = new WeakMap();
 const _dropdownCloseTimers = new WeakMap();
 const DROPDOWN_DELAY_MS = 100; // delay adicional para hover do menu Soluções
@@ -46,12 +44,9 @@ function initLayout() {
     const sidebarOverlay = document.getElementById('sidebar-overlay');
     const sidebarOpenBtn = document.getElementById('sidebar-open-btn');
     const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
-    const sidebarCollapseBtn = document.getElementById('sidebar-collapse-btn');
     const root = document.body;
 
     const isDesktop = () => window.matchMedia('(min-width: 768px)').matches;
-    const SIDEBAR_COLLAPSE_KEY = 'fd_sidebar_collapsed';
-    let sidebarCollapsedState = false;
 
     const openSidebarDrawer = () => {
         if (!sidebar || !sidebarOverlay) return;
@@ -68,84 +63,6 @@ function initLayout() {
         sidebarOverlay.classList.add('hidden');
         document.body.classList.remove('overflow-hidden');
     };
-
-    const applySidebarCollapsed = (collapsed) => {
-        if (!sidebar) return;
-
-        // Nunca forçar colapso em mobile (os rótulos são úteis no drawer)
-        if (!isDesktop()) {
-            root.classList.remove('sidebar-collapsed');
-            root.classList.add('sidebar-expanded');
-            sidebar.classList.remove('md:w-20');
-            const labelsMobile = sidebar.querySelectorAll('.sidebar-label');
-            labelsMobile.forEach(el => el.classList.remove('md:hidden'));
-            const arrowsMobile = sidebar.querySelectorAll('.sidebar-arrow');
-            arrowsMobile.forEach(el => el.classList.remove('md:hidden'));
-            const summariesMobile = sidebar.querySelectorAll('.sidebar-summary');
-            summariesMobile.forEach(el => {
-                el.classList.remove('md:justify-center');
-                el.classList.add('md:justify-between');
-            });
-            return;
-        }
-
-        if (collapsed) {
-            root.classList.add('sidebar-collapsed');
-            root.classList.remove('sidebar-expanded');
-            sidebar.classList.add('md:w-20');
-            const labels = sidebar.querySelectorAll('.sidebar-label');
-            labels.forEach(el => el.classList.add('md:hidden'));
-
-            const arrows = sidebar.querySelectorAll('.sidebar-arrow');
-            arrows.forEach(el => el.classList.add('md:hidden'));
-
-            const summaries = sidebar.querySelectorAll('.sidebar-summary');
-            summaries.forEach(el => {
-                el.classList.add('md:justify-center');
-                el.classList.remove('md:justify-between');
-            });
-
-            const links = sidebar.querySelectorAll('.sidebar-link, summary');
-            links.forEach(el => {
-                el.classList.add('md:justify-center');
-                el.classList.add('md:px-2');
-            });
-        } else {
-            root.classList.add('sidebar-expanded');
-            root.classList.remove('sidebar-collapsed');
-            sidebar.classList.remove('md:w-20');
-            const labels = sidebar.querySelectorAll('.sidebar-label');
-            labels.forEach(el => el.classList.remove('md:hidden'));
-
-            const arrows = sidebar.querySelectorAll('.sidebar-arrow');
-            arrows.forEach(el => el.classList.remove('md:hidden'));
-
-            const summaries = sidebar.querySelectorAll('.sidebar-summary');
-            summaries.forEach(el => {
-                el.classList.remove('md:justify-center');
-                el.classList.add('md:justify-between');
-            });
-
-            const links = sidebar.querySelectorAll('.sidebar-link, summary');
-            links.forEach(el => {
-                el.classList.remove('md:justify-center');
-                el.classList.remove('md:px-2');
-            });
-        }
-    };
-
-    // Restaurar estado do colapso (desktop)
-    if (sidebar) {
-        const collapsedSaved = (() => {
-            try {
-                return localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === '1';
-            } catch (e) {
-                return false;
-            }
-        })();
-        sidebarCollapsedState = collapsedSaved;
-        applySidebarCollapsed(collapsedSaved);
-    }
 
     // Abrir (mobile)
     if (sidebarOpenBtn && sidebar) {
@@ -182,33 +99,6 @@ function initLayout() {
         };
         sidebarOverlay.addEventListener('click', _sidebarOverlayHandler);
     }
-
-    // Colapsar/expandir (desktop)
-    if (sidebarCollapseBtn && sidebar) {
-        if (_sidebarCollapseHandler) {
-            sidebarCollapseBtn.removeEventListener('click', _sidebarCollapseHandler);
-            _sidebarCollapseHandler = null;
-        }
-        _sidebarCollapseHandler = function () {
-            const next = !sidebarCollapsedState;
-            sidebarCollapsedState = next;
-            try {
-                localStorage.setItem(SIDEBAR_COLLAPSE_KEY, next ? '1' : '0');
-            } catch (e) {
-                // ignore falha de storage, segue visualmente
-            }
-            applySidebarCollapsed(next);
-        };
-        sidebarCollapseBtn.addEventListener('click', _sidebarCollapseHandler);
-    }
-
-    // Reaplicar estado ao alterar breakpoint
-    if (_sidebarResizeHandler) {
-        window.removeEventListener('resize', _sidebarResizeHandler);
-        _sidebarResizeHandler = null;
-    }
-    _sidebarResizeHandler = () => applySidebarCollapsed(sidebarCollapsedState);
-    window.addEventListener('resize', _sidebarResizeHandler, { passive: true });
 
     // Fechar drawer ao clicar em link (mobile)
     if (sidebar) {
@@ -357,13 +247,6 @@ function resetLayout() {
             sidebarOverlay.removeEventListener('click', _sidebarOverlayHandler);
         }
         _sidebarOverlayHandler = null;
-    }
-    if (_sidebarCollapseHandler) {
-        const sidebarCollapseBtn = document.getElementById('sidebar-collapse-btn');
-        if (sidebarCollapseBtn) {
-            sidebarCollapseBtn.removeEventListener('click', _sidebarCollapseHandler);
-        }
-        _sidebarCollapseHandler = null;
     }
     if (_sidebarLinkClickHandler) {
         const sidebar = document.getElementById('app-sidebar');

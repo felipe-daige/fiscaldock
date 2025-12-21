@@ -108,6 +108,9 @@ class DashboardController extends Controller
      */
     public function uploadSped(Request $request)
     {
+        // Define timeout de 1 hora (3600 segundos) para processamento SPED
+        set_time_limit(3600);
+        
         try {
             $validated = $request->validate([
                 'tipo' => 'required|in:EFD Contribuições,EFD Fiscal',

@@ -7,18 +7,15 @@
     <title>Reforma Tributária 2026 | Soluções Inteligentes</title>
     <meta name="description" content="Prepare sua empresa para a Reforma Tributária de 2026 com soluções inteligentes. Otimize créditos, automatize processos e garanta conformidade fiscal.">
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+    
     @vite(['resources/css/app.css', 'resources/js/spa.js'])
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
     <script src="{{ asset('js/layout.js') }}"></script>
     <script src="{{ asset('js/toast.js') }}"></script>
-    <style>
-        @media (min-width: 768px) {
-            body.sidebar-collapsed #app-sidebar { width: 5rem; }
-            body.sidebar-collapsed .layout-shell { padding-left: 5rem; }
-            body.sidebar-expanded #app-sidebar { width: 14rem; }
-            body.sidebar-expanded .layout-shell { padding-left: 14rem; }
-        }
-    </style>
 </head>
 <body class="{{ $themeClass ?? 'bg-surface text-slate-900 font-sans antialiased' }}">
     <div class="min-h-screen flex">

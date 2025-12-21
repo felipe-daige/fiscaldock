@@ -43,6 +43,23 @@ php artisan route:cache
 php artisan view:cache
 
 echo "=== Caches gerados com sucesso ==="
+
+# Configurar PHP-FPM timeout para 1 hora
+echo "Configurando PHP-FPM timeout para 1 hora..."
+if [ -f /usr/local/etc/php-fpm.d/www.conf ]; then
+    # Remove linha antiga se existir (com ou sem comentário)
+    sed -i '/^[; ]*request_terminate_timeout/d' /usr/local/etc/php-fpm.d/www.conf
+    # Adiciona nova configuração após [www]
+    sed -i '/^\[www\]/a request_terminate_timeout = 3600' /usr/local/etc/php-fpm.d/www.conf
+    echo "✓ PHP-FPM timeout configurado para 3600 segundos (1 hora)"
+elif [ -f /usr/local/etc/php-fpm.d/zz-custom-pool.conf ]; then
+    # Se usar arquivo customizado, garantir que está correto
+    sed -i 's/^[; ]*request_terminate_timeout.*/request_terminate_timeout = 3600/' /usr/local/etc/php-fpm.d/zz-custom-pool.conf
+    grep -q "^request_terminate_timeout" /usr/local/etc/php-fpm.d/zz-custom-pool.conf || \
+        sed -i '/^\[www\]/a request_terminate_timeout = 3600' /usr/local/etc/php-fpm.d/zz-custom-pool.conf
+    echo "✓ PHP-FPM timeout configurado no arquivo customizado"
+fi
+
 echo "=== Iniciando Supervisor (Nginx + PHP-FPM) ==="
 
 # Iniciar Supervisor
