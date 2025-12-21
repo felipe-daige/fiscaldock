@@ -53,8 +53,8 @@
 
                 <!-- Desktop Navigation -->
                 <ul class="hidden md:flex items-center gap-8">
-                    <li class="relative group nav-dropdown-buffer">
-                        <a href="/solucoes" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium inline-flex items-center gap-1" style="min-height: 40px;">
+                    <li class="relative group nav-dropdown-buffer flex items-center">
+                        <a href="/solucoes" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium inline-flex items-center gap-1" style="min-height: 40px; line-height: 1.2;">
                             Soluções
                             <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -69,8 +69,8 @@
                             <a href="/solucoes" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-b-lg">Ver Todas as Soluções</a>
                         </div>
                     </li>
-                    <li class="relative group nav-dropdown-buffer">
-                        <a href="/sobre" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium inline-flex items-center gap-1" style="min-height: 40px;">
+                    <li class="relative group nav-dropdown-buffer flex items-center">
+                        <a href="/sobre" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium inline-flex items-center gap-1" style="min-height: 40px; line-height: 1.2;">
                             Conhecer
                             <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -83,9 +83,9 @@
                             <a href="/faq" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-b-lg">Perguntas</a>
                         </div>
                     </li>
-                    <li><a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium inline-flex items-center" style="min-height: 40px;">Preços</a></li>
-                    <li><a href="/login" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium inline-flex items-center" style="min-height: 40px;">Login</a></li>
-                    <li>
+                    <li class="flex items-center"><a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium inline-flex items-center" style="min-height: 40px; line-height: 1.2;">Preços</a></li>
+                    <li class="flex items-center"><a href="/login" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium inline-flex items-center" style="min-height: 40px; line-height: 1.2;">Login</a></li>
+                    <li class="flex items-center">
                         <a href="/agendar" data-link data-button="cta" class="btn-cta btn-cta--nav inline-flex items-center" style="min-height: 40px;">
                             Testar Agora
                         </a>

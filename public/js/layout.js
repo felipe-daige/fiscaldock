@@ -8,6 +8,7 @@ let _sidebarCloseHandler = null;
 let _sidebarOverlayHandler = null;
 let _sidebarLinkClickHandler = null;
 let _sidebarCollapsibleHandler = null;
+let _sidebarToggleHandler = null;
 const _dropdownOpenTimers = new WeakMap();
 const _dropdownCloseTimers = new WeakMap();
 const DROPDOWN_DELAY_MS = 100; // delay adicional para hover do menu Soluções
@@ -280,6 +281,49 @@ function initLayout() {
         sidebarSummary.addEventListener('click', _sidebarCollapsibleHandler);
     }
     
+    // Sidebar toggle (desktop) - encolher/expandir
+    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+    
+    // Função para restaurar estado do localStorage
+    const restoreSidebarState = () => {
+        if (!sidebar) return;
+        // Só restaurar no desktop
+        if (window.matchMedia('(min-width: 768px)').matches) {
+            const savedState = localStorage.getItem('sidebar-collapsed');
+            if (savedState === 'true') {
+                sidebar.classList.add('sidebar-collapsed');
+            } else {
+                sidebar.classList.remove('sidebar-collapsed');
+            }
+        }
+    };
+    
+    // Restaurar estado ao carregar
+    restoreSidebarState();
+    
+    // Handler para toggle
+    if (sidebarToggleBtn && sidebar) {
+        // Remover handler antigo se existir
+        if (_sidebarToggleHandler) {
+            sidebarToggleBtn.removeEventListener('click', _sidebarToggleHandler);
+            _sidebarToggleHandler = null;
+        }
+        
+        _sidebarToggleHandler = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Chamar a função global toggleSidebar que já tem toda a lógica
+            if (window.toggleSidebar && typeof window.toggleSidebar === 'function') {
+                window.toggleSidebar();
+            }
+        };
+        
+        sidebarToggleBtn.addEventListener('click', _sidebarToggleHandler);
+        
+        // Não sobrescrever o onclick do HTML, apenas garantir que o event listener funcione
+    }
+    
     _layoutInitialized = true;
 }
 
@@ -361,11 +405,75 @@ function resetLayout() {
         }
         _sidebarCollapsibleHandler = null;
     }
+    if (_sidebarToggleHandler) {
+        const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+        if (sidebarToggleBtn) {
+            sidebarToggleBtn.removeEventListener('click', _sidebarToggleHandler);
+        }
+        _sidebarToggleHandler = null;
+    }
     _layoutInitialized = false;
 }
 
-// Tornar resetLayout acessível globalmente
+// Função global para toggle da sidebar (chamada diretamente do HTML)
+window.toggleSidebar = function() {
+    const sidebar = document.getElementById('app-sidebar');
+    if (!sidebar) {
+        console.warn('Sidebar não encontrada');
+        return;
+    }
+    
+    // Só funciona no desktop
+    if (!window.matchMedia('(min-width: 768px)').matches) {
+        return;
+    }
+    
+    const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
+    
+    if (isCollapsed) {
+        sidebar.classList.remove('sidebar-collapsed');
+        localStorage.setItem('sidebar-collapsed', 'false');
+    } else {
+        sidebar.classList.add('sidebar-collapsed');
+        localStorage.setItem('sidebar-collapsed', 'true');
+    }
+};
+
+// Inicializar toggle da sidebar imediatamente quando o DOM estiver pronto (fallback)
+(function initSidebarToggle() {
+    function attachToggleListener() {
+        const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+        
+        if (sidebarToggleBtn && !sidebarToggleBtn.hasAttribute('data-toggle-attached')) {
+            sidebarToggleBtn.setAttribute('data-toggle-attached', 'true');
+            
+            // Adicionar listener que chama a função global
+            sidebarToggleBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (window.toggleSidebar && typeof window.toggleSidebar === 'function') {
+                    window.toggleSidebar();
+                }
+            });
+        }
+    }
+    
+    // Tentar imediatamente
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', attachToggleListener);
+    } else {
+        attachToggleListener();
+    }
+    
+    // Também tentar após um pequeno delay para garantir que o DOM está totalmente renderizado
+    setTimeout(attachToggleListener, 100);
+    setTimeout(attachToggleListener, 500);
+})();
+
+// Tornar resetLayout e initLayout acessíveis globalmente
 window.resetLayout = resetLayout;
+window.initLayout = initLayout;
 
 // Função para atualizar o link ativo
 function updateActiveLink() {

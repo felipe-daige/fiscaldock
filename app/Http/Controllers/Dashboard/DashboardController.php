@@ -18,7 +18,7 @@ class DashboardController extends Controller
     ) {}
 
     private const AUTH_VIEW_PREFIX = 'autenticado.';
-    private const AUTH_LAYOUT_VIEW = 'layouts.app';
+    private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
 
     public function dashboard(Request $request){
         $dashboardView = self::AUTH_VIEW_PREFIX . 'dashboard';
