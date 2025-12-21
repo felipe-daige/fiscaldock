@@ -309,13 +309,15 @@
 
                     <div class="space-y-2">
                         <label class="block text-sm font-semibold text-gray-800">Arquivo (.txt)</label>
-                        <input type="file" id="raf-sped" name="sped" accept=".txt,text/plain" class="sr-only">
+                        <div class="sr-only" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;">
+                            <input type="file" id="raf-sped" name="sped" accept=".txt,text/plain" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; opacity: 0;">
+                        </div>
                         <div id="raf-dropzone" class="border-2 border-dashed border-gray-300 rounded-lg px-4 py-6 text-center cursor-pointer bg-white hover:border-blue-400 hover:bg-blue-50/40 transition">
-                            <p class="text-sm font-semibold text-gray-900" id="raf-dropzone-title">Arraste o arquivo ou clique para selecionar</p>
+                            <p class="text-sm font-semibold text-gray-900 truncate w-full px-2 min-w-0" id="raf-dropzone-title" title="" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Arraste o arquivo ou clique para selecionar</p>
                             <p class="text-xs text-gray-500" id="raf-dropzone-subtitle">Máximo 10 MB - somente .txt</p>
                         </div>
                         <div id="raf-file-meta" class="hidden rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-                            <p class="text-sm font-semibold text-gray-900 truncate" id="raf-file-name"></p>
+                            <p class="text-sm font-semibold text-gray-900 truncate" id="raf-file-name" title="" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></p>
                             <p class="text-xs text-gray-500" id="raf-file-size"></p>
                         </div>
                     </div>
@@ -507,16 +509,21 @@
             const file = fileInput.files?.[0];
             if (!file) {
                 dropzoneTitle.textContent = 'Arraste o arquivo ou clique para selecionar';
+                dropzoneTitle.removeAttribute('title');
                 fileMeta.classList.add('hidden');
                 fileNameEl.textContent = '';
+                fileNameEl.removeAttribute('title');
                 fileSizeEl.textContent = '';
                 submitBtn.disabled = true;
                 return;
             }
 
-            dropzoneTitle.textContent = file.name;
+            const fileName = file.name;
+            dropzoneTitle.textContent = fileName;
+            dropzoneTitle.setAttribute('title', fileName);
             fileMeta.classList.remove('hidden');
-            fileNameEl.textContent = file.name;
+            fileNameEl.textContent = fileName;
+            fileNameEl.setAttribute('title', fileName);
             fileSizeEl.textContent = `${formatFileSize(file.size)} • ${file.type || 'text/plain'}`;
             submitBtn.disabled = false;
         };
@@ -603,14 +610,40 @@
                         ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
                     },
                     body: formData,
+                }).catch((fetchError) => {
+                    // Trata erros de rede/timeout do fetch
+                    if (fetchError.name === 'TypeError' && fetchError.message.includes('fetch')) {
+                        throw new Error('Erro de conexão. O processamento pode estar demorando mais que o esperado. Aguarde alguns minutos e verifique novamente.');
+                    }
+                    throw fetchError;
                 });
+
+                // Trata erro 504 antes de fazer parse
+                if (response.status === 504) {
+                    throw new Error('O processamento está demorando mais que o esperado. O SPED pode estar sendo processado em segundo plano. Aguarde alguns minutos e verifique novamente.');
+                }
 
                 const contentType = response.headers.get('content-type') || '';
                 const isJson = contentType.includes('application/json');
-                const data = isJson ? await response.json() : { success: false, message: await response.text() };
+                let data;
+                
+                try {
+                    data = isJson ? await response.json() : { success: false, message: await response.text() };
+                } catch (parseError) {
+                    // Se não conseguir fazer parse e for 504, já tratamos acima
+                    if (response.status === 504) {
+                        throw new Error('O processamento está demorando mais que o esperado. O SPED pode estar sendo processado em segundo plano. Aguarde alguns minutos e verifique novamente.');
+                    }
+                    throw new Error('Erro ao processar resposta do servidor. Por favor, tente novamente.');
+                }
 
                 if (!response.ok || !data.success) {
-                    throw new Error(data.message || 'Falha ao processar o SPED.');
+                    // Verifica se a mensagem contém referência a timeout/gateway
+                    const errorMsg = data.message || 'Falha ao processar o SPED.';
+                    if (errorMsg.includes('504') || errorMsg.includes('Gateway Timeout') || errorMsg.includes('Gateway Time-out') || errorMsg.includes('timeout')) {
+                        throw new Error('O processamento está demorando mais que o esperado. O SPED pode estar sendo processado em segundo plano. Aguarde alguns minutos e verifique novamente.');
+                    }
+                    throw new Error(errorMsg);
                 }
 
                 renderTable(data.headers || [], data.rows || []);
@@ -619,7 +652,12 @@
                 form.reset();
                 updateFileUi();
             } catch (err) {
-                showAlert('error', err.message || 'Erro inesperado.');
+                // Trata especificamente erros de timeout/gateway
+                let errorMessage = err.message || 'Erro inesperado.';
+                if (errorMessage.includes('504') || errorMessage.includes('Gateway Timeout') || errorMessage.includes('Gateway Time-out') || errorMessage.includes('timeout') || errorMessage.includes('demorando')) {
+                    errorMessage = 'O processamento está demorando mais que o esperado. O SPED pode estar sendo processado em segundo plano. Aguarde alguns minutos e verifique novamente.';
+                }
+                showAlert('error', errorMessage);
                 clearDownload();
                 tableContainer.classList.add('hidden');
                 resultEmpty.classList.remove('hidden');

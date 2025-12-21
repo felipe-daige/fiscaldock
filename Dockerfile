@@ -98,7 +98,7 @@ RUN { \
       echo "memory_limit=256M"; \
       echo "post_max_size=100M"; \
       echo "upload_max_filesize=100M"; \
-      echo "max_execution_time=60"; \
+      echo "max_execution_time=3600"; \
       echo "date.timezone=America/Sao_Paulo"; \
     } > /usr/local/etc/php/conf.d/99-laravel.ini \
     && { \
@@ -115,6 +115,7 @@ RUN { \
 # Copiar configurações
 COPY deployment/nginx.conf /etc/nginx/sites-available/default
 COPY deployment/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY deployment/php-fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom-pool.conf
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 # Ajustar permissões

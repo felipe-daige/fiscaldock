@@ -7,6 +7,11 @@
     <title>FiscalDock | Transforme SPED em Ações e Relatórios</title>
     <meta name="description" content="O FiscalDock que transforma SPED e documentos em ações, relatórios e previsibilidade. Centralize arquivos fiscais, identifique pendências e automatize cobranças.">
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+
     <!-- Fallback crítico do CTA (caso o CSS do Vite não carregue) -->
     <style>
         .btn-cta{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border-radius:.5rem;padding:.75rem 1.25rem;min-height:48px;font-size:1rem;border:2px solid #facc15;background:#facc15;color:#0b1f3a;font-weight:600;line-height:1.1;text-decoration:none;transform:translateY(0);box-shadow:0 20px 50px -20px rgba(250,204,21,.55);transition:transform .16s ease,box-shadow .16s ease,background-color .16s ease,border-color .16s ease;-webkit-tap-highlight-color:transparent}

@@ -36,8 +36,15 @@ class SpedUploadService
             default => 'sped.txt',
         };
 
-        $webhookUrl = config('services.webhook.sped_contribuicoes_url')
-            ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-regime-tributario-sped-contribuicoes';
+        // Seleciona a URL do webhook baseado no tipo de SPED
+        $webhookUrl = match ($tipo) {
+            'EFD Fiscal' => config('services.webhook.sped_fiscal_url')
+                ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-regime-tributario-sped-fiscal',
+            'EFD Contribuições' => config('services.webhook.sped_contribuicoes_url')
+                ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-regime-tributario-sped-contribuicoes',
+            default => config('services.webhook.sped_contribuicoes_url')
+                ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-regime-tributario-sped-contribuicoes',
+        };
         $webhookUser = config('services.webhook.username');
         $webhookPass = config('services.webhook.password');
 
@@ -48,7 +55,8 @@ class SpedUploadService
             ];
         }
 
-        $timeout = $isAuthenticated ? 60 : 120;
+        // Timeout de 1 hora (3600 segundos) para processamento que pode demorar até 1 hora
+        $timeout = 3600;
         $http = Http::timeout($timeout);
 
         if (!empty($webhookUser) && !empty($webhookPass)) {
@@ -63,6 +71,7 @@ class SpedUploadService
         } catch (\Throwable $e) {
             $logContext = [
                 'exception' => $e->getMessage(),
+                'exception_class' => get_class($e),
                 'tipo' => $tipo,
                 'original_name' => $originalName,
             ];
@@ -71,9 +80,18 @@ class SpedUploadService
                 Log::error('Falha ao contatar webhook SPED (auth)', $logContext);
             }
 
+            // Verifica se é um erro de timeout
+            $isTimeout = str_contains($e->getMessage(), 'timeout') 
+                || str_contains($e->getMessage(), 'Connection timed out')
+                || str_contains($e->getMessage(), 'timed out');
+
+            $message = $isTimeout
+                ? 'O processamento está demorando mais que o esperado. O SPED pode estar sendo processado em segundo plano. Aguarde alguns minutos e verifique novamente.'
+                : 'Falha ao contatar o webhook. Tente novamente em instantes.';
+
             return [
                 'success' => false,
-                'message' => 'Falha ao contatar o webhook. Tente novamente em instantes.',
+                'message' => $message,
             ];
         }
 

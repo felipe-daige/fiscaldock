@@ -15,19 +15,6 @@
         </a>
 
         <div class="flex items-center gap-2">
-            <!-- Collapse (desktop) -->
-            <button
-                id="sidebar-collapse-btn"
-                type="button"
-                class="hidden md:inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors"
-                aria-label="Recolher/expandir menu"
-                title="Recolher/expandir"
-            >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                </svg>
-            </button>
-
             <!-- Close (mobile) -->
             <button
                 id="sidebar-close-btn"

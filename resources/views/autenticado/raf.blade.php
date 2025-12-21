@@ -59,14 +59,16 @@
                             <div class="space-y-2">
                                 <label for="sped" class="block text-sm font-semibold text-gray-800">Arquivo SPED (.txt)</label>
 
-                                <input
-                                    type="file"
-                                    id="sped"
-                                    name="sped"
-                                    accept=".txt,text/plain"
-                                    class="sr-only"
-                                    disabled
-                                >
+                                <div class="sr-only" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;">
+                                    <input
+                                        type="file"
+                                        id="sped"
+                                        name="sped"
+                                        accept=".txt,text/plain"
+                                        style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; opacity: 0;"
+                                        disabled
+                                    >
+                                </div>
 
                                 <div
                                     id="sped-dropzone"
@@ -80,8 +82,8 @@
                                         <svg class="h-7 w-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                         </svg>
-                                        <div class="space-y-0.5">
-                                            <p class="text-sm font-semibold text-gray-900" id="sped-dropzone-title">Nenhum arquivo selecionado</p>
+                                        <div class="space-y-0.5 w-full px-2 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-900 truncate max-w-full" id="sped-dropzone-title" title="" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Nenhum arquivo selecionado</p>
                                             <p class="text-xs text-gray-500" id="sped-dropzone-subtitle">Selecione o tipo de SPED para liberar o upload.</p>
                                         </div>
                                     </div>
@@ -89,14 +91,14 @@
 
                                 <div id="sped-file-meta" class="hidden rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
                                     <div class="flex items-start justify-between gap-3">
-                                        <div class="min-w-0">
-                                            <p class="text-sm font-semibold text-gray-900 truncate" id="sped-file-name"></p>
+                                        <div class="min-w-0 flex-1 overflow-hidden">
+                                            <p class="text-sm font-semibold text-gray-900 truncate" id="sped-file-name" title="" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></p>
                                             <p class="text-xs text-gray-500" id="sped-file-size"></p>
                                         </div>
                                         <button 
                                             type="button" 
                                             id="sped-change-file" 
-                                            class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 active:bg-gray-100 px-3 py-1.5 text-sm"
+                                            class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 active:bg-gray-100 px-3 py-1.5 text-sm flex-shrink-0"
                                         >
                                             Trocar arquivo
                                         </button>
@@ -575,15 +577,20 @@
         const file = fileInput.files?.[0];
         if (!file) {
             dropzoneTitle.textContent = 'Nenhum arquivo selecionado';
+            dropzoneTitle.removeAttribute('title');
             fileMeta.classList.add('hidden');
             fileNameEl.textContent = '';
+            fileNameEl.removeAttribute('title');
             fileSizeEl.textContent = '';
             return;
         }
 
-        dropzoneTitle.textContent = file.name;
+        const fileName = file.name;
+        dropzoneTitle.textContent = fileName;
+        dropzoneTitle.setAttribute('title', fileName);
         fileMeta.classList.remove('hidden');
-        fileNameEl.textContent = file.name;
+        fileNameEl.textContent = fileName;
+        fileNameEl.setAttribute('title', fileName);
         fileSizeEl.textContent = `${formatFileSize(file.size)} • ${file.type || 'text/plain'}`;
     };
 
@@ -697,7 +704,7 @@
             return;
         }
 
-        showAlert('info', '');  // Esconde o alerta durante o envio
+        showAlert('info', 'Enviado corretamente e sendo processado');
         setLoading(true);
         stopTimer();
         resetDownload();
@@ -719,6 +726,12 @@
                     'X-CSRF-TOKEN': currentCsrf
                 },
                 body: formData
+            }).catch((fetchError) => {
+                // Trata erros de rede/timeout do fetch
+                if (fetchError.name === 'TypeError' && fetchError.message.includes('fetch')) {
+                    throw new Error('Erro de conexão. O processamento pode estar demorando mais que o esperado. Aguarde alguns minutos e verifique novamente.');
+                }
+                throw fetchError;
             });
 
             // Verifica se a resposta é JSON antes de fazer parse
@@ -738,6 +751,8 @@
                             throw new Error('Sua sessão expirou. Por favor, recarregue a página e tente novamente.');
                         } else if (response.status === 500) {
                             throw new Error('Erro interno do servidor. Por favor, tente novamente mais tarde.');
+                        } else if (response.status === 504 || text.includes('504') || text.includes('Gateway Timeout') || text.includes('Gateway Time-out')) {
+                            throw new Error('O processamento está demorando mais que o esperado. O SPED pode estar sendo processado em segundo plano. Aguarde alguns minutos e verifique novamente.');
                         } else {
                             throw new Error(`Erro ${response.status}: ${response.statusText}. Por favor, tente novamente.`);
                         }
@@ -776,6 +791,8 @@
                         throw new Error('Token de segurança expirado. Por favor, recarregue a página e tente novamente.');
                     } else if (response.status === 500) {
                         throw new Error('Erro interno do servidor. Por favor, tente novamente mais tarde.');
+                    } else if (response.status === 504) {
+                        throw new Error('O processamento está demorando mais que o esperado. O SPED pode estar sendo processado em segundo plano. Aguarde alguns minutos e verifique novamente.');
                     } else if (response.status === 404) {
                         throw new Error('Página não encontrada. Verifique se a URL está correta.');
                     } else if (!response.ok) {
@@ -811,7 +828,12 @@
             updateFileUi();
             updateEnablement();
         } catch (err) {
-            showAlert('error', err.message || 'Erro inesperado.');
+            // Trata especificamente erros de timeout/gateway
+            let errorMessage = err.message || 'Erro inesperado.';
+            if (errorMessage.includes('504') || errorMessage.includes('Gateway Timeout') || errorMessage.includes('Gateway Time-out') || errorMessage.includes('timeout') || errorMessage.includes('demorando')) {
+                errorMessage = 'O processamento está demorando mais que o esperado. O SPED pode estar sendo processado em segundo plano. Aguarde alguns minutos e verifique novamente.';
+            }
+            showAlert('error', errorMessage);
             resultBadge.classList.add('hidden');
             resetDownload();
         } finally {
