@@ -56,7 +56,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center fade-in-up">
             <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6">
-                RAF: Relatório de Risco e Inteligência Fiscal
+                RAF: Relatório de Auditoria de Fornecedores
             </h1>
             <p class="text-lg sm:text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto mb-6 md:mb-8 px-4">
                 Transforme dados brutos em análise consultiva
@@ -73,7 +73,7 @@
                 Transforme dados brutos em análise consultiva e garanta a saúde tributária de todos os seus clientes
             </h2>
             <p class="text-lg md:text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
-                O Rubi processa as informações coletadas (Notas Fiscais, SPEDs e Consultas na Receita Federal) para gerar o Relatório de Regime Tributário e CND (RAF). Este relatório consolidado oferece, em uma única página, a situação fiscal completa de cada CNPJ.
+                O Rubi processa as informações coletadas (Notas Fiscais, SPEDs e Consultas na Receita Federal) para gerar o Relatório de Auditoria de Fornecedores (RAF). Este relatório consolidado oferece, em uma única página, a situação fiscal completa de cada CNPJ.
             </p>
         </div>
     </div>
@@ -288,7 +288,82 @@
     </div>
 </section>
 
-<!-- Seção 7: Call to Action -->
+<!-- Seção 7: Upload do SPED e Visualização do CSV -->
+<section class="py-16 bg-gray-50 section-fade-in" id="raf-upload">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="mb-10 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-3">Envie o EFD Contribuições e veja o CSV</h2>
+            <p class="text-lg text-gray-600">O arquivo é enviado para a inteligência fiscal e o CSV retornado é exibido e disponível para download.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <form id="raf-upload-form" class="space-y-5">
+                    <div class="space-y-2">
+                        <label for="raf-tipo" class="block text-sm font-semibold text-gray-800">Tipo de SPED</label>
+                        <select id="raf-tipo" name="tipo" class="w-full rounded-lg border border-gray-300 bg-white text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
+                            <option value="EFD Contribuições" selected>EFD Contribuições</option>
+                            <option value="EFD Fiscal">EFD Fiscal</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-gray-800">Arquivo (.txt)</label>
+                        <input type="file" id="raf-sped" name="sped" accept=".txt,text/plain" class="sr-only">
+                        <div id="raf-dropzone" class="border-2 border-dashed border-gray-300 rounded-lg px-4 py-6 text-center cursor-pointer bg-white hover:border-blue-400 hover:bg-blue-50/40 transition">
+                            <p class="text-sm font-semibold text-gray-900" id="raf-dropzone-title">Arraste o arquivo ou clique para selecionar</p>
+                            <p class="text-xs text-gray-500" id="raf-dropzone-subtitle">Máximo 10 MB - somente .txt</p>
+                        </div>
+                        <div id="raf-file-meta" class="hidden rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                            <p class="text-sm font-semibold text-gray-900 truncate" id="raf-file-name"></p>
+                            <p class="text-xs text-gray-500" id="raf-file-size"></p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <button type="submit" id="raf-submit" class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 text-white font-semibold px-4 py-2.5 shadow-sm hover:bg-blue-700 transition disabled:opacity-60 disabled:cursor-not-allowed">
+                            <svg id="raf-submit-spinner" class="hidden h-5 w-5 animate-spin" viewBox="0 0 24 24" aria-hidden="true">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>
+                            <span id="raf-submit-label">Enviar SPED</span>
+                        </button>
+                        <p class="text-xs text-gray-500 text-center" id="raf-status-hint">O CSV será exibido abaixo quando o processamento terminar.</p>
+                    </div>
+
+                    <div id="raf-alert" class="hidden rounded-lg border px-3 py-2 text-sm"></div>
+                </form>
+            </div>
+
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between gap-3 mb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Resultado do CSV</h3>
+                        <p class="text-sm text-gray-600">Será preenchido após o processamento.</p>
+                    </div>
+                    <div id="raf-download-wrap" class="hidden">
+                        <a id="raf-download-link" class="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition" href="#" download="resultado.csv">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+                            </svg>
+                            <span id="raf-download-label">Baixar CSV</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="raf-result-empty" class="text-sm text-gray-600">Nenhum resultado ainda.</div>
+                <div id="raf-table-container" class="hidden overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50" id="raf-thead"></thead>
+                        <tbody class="divide-y divide-gray-200" id="raf-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Seção 8: Call to Action -->
 <section class="hero-gradient py-20">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">
@@ -330,5 +405,239 @@
         document.addEventListener('DOMContentLoaded', setupScrollAnimations);
     } else {
         setupScrollAnimations();
+    }
+
+    // Upload RAF (público)
+    function initRafUpload() {
+        const form = document.getElementById('raf-upload-form');
+        if (!form || form.dataset.initRafUpload === '1') return;
+        form.dataset.initRafUpload = '1';
+
+        const tipoSelect = document.getElementById('raf-tipo');
+        const fileInput = document.getElementById('raf-sped');
+        const dropzone = document.getElementById('raf-dropzone');
+        const dropzoneTitle = document.getElementById('raf-dropzone-title');
+        const dropzoneSubtitle = document.getElementById('raf-dropzone-subtitle');
+        const fileMeta = document.getElementById('raf-file-meta');
+        const fileNameEl = document.getElementById('raf-file-name');
+        const fileSizeEl = document.getElementById('raf-file-size');
+        const submitBtn = document.getElementById('raf-submit');
+        const submitLabel = document.getElementById('raf-submit-label');
+        const submitSpinner = document.getElementById('raf-submit-spinner');
+        const alertEl = document.getElementById('raf-alert');
+        const statusHint = document.getElementById('raf-status-hint');
+        const resultEmpty = document.getElementById('raf-result-empty');
+        const tableContainer = document.getElementById('raf-table-container');
+        const theadEl = document.getElementById('raf-thead');
+        const tbodyEl = document.getElementById('raf-tbody');
+        const downloadWrap = document.getElementById('raf-download-wrap');
+        const downloadLink = document.getElementById('raf-download-link');
+        const downloadLabel = document.getElementById('raf-download-label');
+        const csrf = document.querySelector('meta[name=\"csrf-token\"]')?.getAttribute('content');
+
+        let currentDownloadUrl = null;
+        let isLoading = false;
+
+        const formatFileSize = (bytes) => {
+            if (!Number.isFinite(bytes)) return '';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return `${Math.round((bytes / Math.pow(k, i)) * 10) / 10} ${sizes[i]}`;
+        };
+
+        const showAlert = (type, message) => {
+            if (!alertEl) return;
+            const base = 'rounded-lg border px-3 py-2 text-sm';
+            const map = {
+                info: 'border-gray-200 bg-gray-50 text-gray-800',
+                success: 'border-green-200 bg-green-50 text-green-800',
+                error: 'border-red-200 bg-red-50 text-red-800',
+            };
+            alertEl.className = `${base} ${map[type] || map.info}`;
+            alertEl.textContent = message || '';
+            alertEl.classList.toggle('hidden', !message);
+        };
+
+        const setDownload = (csvString, filename = 'resultado.csv') => {
+            if (!downloadWrap || !downloadLink || !downloadLabel) return;
+            if (currentDownloadUrl) {
+                URL.revokeObjectURL(currentDownloadUrl);
+            }
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            currentDownloadUrl = URL.createObjectURL(blob);
+            downloadLink.href = currentDownloadUrl;
+            downloadLink.download = filename;
+            downloadLabel.textContent = `Baixar ${filename}`;
+            downloadWrap.classList.remove('hidden');
+        };
+
+        const clearDownload = () => {
+            if (currentDownloadUrl) {
+                URL.revokeObjectURL(currentDownloadUrl);
+                currentDownloadUrl = null;
+            }
+            downloadWrap?.classList.add('hidden');
+        };
+
+        const renderTable = (headers, rows) => {
+            if (!headers?.length || !rows?.length) {
+                tableContainer.classList.add('hidden');
+                resultEmpty.classList.remove('hidden');
+                return;
+            }
+
+            theadEl.innerHTML = `
+                <tr>
+                    ${headers.map(h => `<th class=\"px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 whitespace-nowrap\">${h}</th>`).join('')}
+                </tr>
+            `;
+
+            tbodyEl.innerHTML = rows.map(row => `
+                <tr class=\"odd:bg-white even:bg-gray-50/50\">
+                    ${row.map(cell => `<td class=\"px-4 py-3 text-gray-700 whitespace-normal break-words align-top\">${cell ?? ''}</td>`).join('')}
+                </tr>
+            `).join('');
+
+            resultEmpty.classList.add('hidden');
+            tableContainer.classList.remove('hidden');
+        };
+
+        const updateFileUi = () => {
+            const file = fileInput.files?.[0];
+            if (!file) {
+                dropzoneTitle.textContent = 'Arraste o arquivo ou clique para selecionar';
+                fileMeta.classList.add('hidden');
+                fileNameEl.textContent = '';
+                fileSizeEl.textContent = '';
+                submitBtn.disabled = true;
+                return;
+            }
+
+            dropzoneTitle.textContent = file.name;
+            fileMeta.classList.remove('hidden');
+            fileNameEl.textContent = file.name;
+            fileSizeEl.textContent = `${formatFileSize(file.size)} • ${file.type || 'text/plain'}`;
+            submitBtn.disabled = false;
+        };
+
+        const setLoading = (loading) => {
+            isLoading = !!loading;
+            submitLabel.textContent = isLoading ? 'Enviando...' : 'Enviar SPED';
+            submitSpinner.classList.toggle('hidden', !isLoading);
+            submitBtn.disabled = isLoading || !fileInput.files?.length;
+            tipoSelect.disabled = isLoading;
+            if (statusHint) statusHint.textContent = isLoading ? 'Processando arquivo...' : 'O CSV será exibido abaixo quando o processamento terminar.';
+        };
+
+        const openPicker = () => {
+            if (isLoading) return;
+            fileInput.click();
+        };
+
+        if (dropzone) {
+            dropzone.addEventListener('click', openPicker);
+            dropzone.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openPicker();
+                }
+            });
+
+            const setDragOver = (on) => {
+                if (!dropzone) return;
+                if (on) {
+                    dropzone.classList.add('border-blue-500', 'bg-blue-50/60');
+                } else {
+                    dropzone.classList.remove('border-blue-500', 'bg-blue-50/60');
+                }
+            };
+
+            dropzone.addEventListener('dragenter', (e) => { e.preventDefault(); if (!isLoading) setDragOver(true); });
+            dropzone.addEventListener('dragover', (e) => { e.preventDefault(); if (!isLoading) setDragOver(true); });
+            dropzone.addEventListener('dragleave', () => setDragOver(false));
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                setDragOver(false);
+                if (isLoading) return;
+                const file = e.dataTransfer?.files?.[0];
+                if (!file) return;
+                const isTxt = file.name?.toLowerCase().endsWith('.txt') || file.type === 'text/plain';
+                if (!isTxt) {
+                    showAlert('error', 'Selecione um arquivo .txt');
+                    return;
+                }
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                fileInput.files = dt.files;
+                fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+        }
+
+        fileInput.addEventListener('change', updateFileUi);
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = fileInput.files?.[0];
+            const tipo = tipoSelect.value || 'EFD Contribuições';
+
+            if (!file) {
+                showAlert('error', 'Selecione um arquivo .txt');
+                return;
+            }
+
+            showAlert('info', 'Enviando arquivo...');
+            clearDownload();
+            tableContainer.classList.add('hidden');
+            resultEmpty.classList.remove('hidden');
+            setLoading(true);
+
+            const formData = new FormData();
+            formData.append('tipo', tipo);
+            formData.append('sped', file);
+
+            try {
+                const response = await fetch('/raf/upload-public', {
+                    method: 'POST',
+                    headers: {
+                        ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                    },
+                    body: formData,
+                });
+
+                const contentType = response.headers.get('content-type') || '';
+                const isJson = contentType.includes('application/json');
+                const data = isJson ? await response.json() : { success: false, message: await response.text() };
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Falha ao processar o SPED.');
+                }
+
+                renderTable(data.headers || [], data.rows || []);
+                setDownload(data.csv || '', data.filename || 'resultado.csv');
+                showAlert('success', 'Processado com sucesso. CSV disponível.');
+                form.reset();
+                updateFileUi();
+            } catch (err) {
+                showAlert('error', err.message || 'Erro inesperado.');
+                clearDownload();
+                tableContainer.classList.add('hidden');
+                resultEmpty.classList.remove('hidden');
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        // Estado inicial
+        updateFileUi();
+        clearDownload();
+        tableContainer.classList.add('hidden');
+        resultEmpty.classList.remove('hidden');
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initRafUpload);
+    } else {
+        initRafUpload();
     }
 </script>
