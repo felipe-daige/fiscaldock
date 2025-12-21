@@ -23,6 +23,7 @@ Route::get('/solucoes/conciliacao-bancaria', [LandingPage::class, 'conciliacaoBa
 Route::get('/solucoes/gestao-cnds', [LandingPage::class, 'gestaoCnds'])->name('solucoes.gestao-cnds');
 Route::get('/solucoes/inteligencia-tributaria', [LandingPage::class, 'inteligenciaTributaria'])->name('solucoes.inteligencia-tributaria');
 Route::get('/solucoes/raf', [LandingPage::class, 'raf'])->name('solucoes.raf');
+Route::post('/raf/upload-public', [LandingPage::class, 'uploadSpedPublic'])->name('raf.upload.public');
 
 // Rotas de API para importação de XMLs
 Route::prefix('api/xml')->group(function () {

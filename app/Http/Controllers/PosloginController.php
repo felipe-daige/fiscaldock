@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Empresa;
 use App\Models\XmlDocumento;
 use Illuminate\Http\Request;
+use Illuminate\Http\Client\Response as ClientResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
@@ -246,6 +248,7 @@ class PosloginController extends Controller
         }
 
         $file = $request->file('sped');
+        $originalName = $file->getClientOriginalName();
         $fileName = match ($validated['tipo']) {
             'EFD Contribuições' => 'sped_contribuicoes.txt',
             'EFD Fiscal' => 'sped_fiscal.txt',
@@ -276,27 +279,124 @@ class PosloginController extends Controller
                     'tipo' => $validated['tipo'],
                 ]);
         } catch (\Throwable $e) {
+            Log::error('Falha ao contatar webhook SPED (auth)', [
+                'exception' => $e->getMessage(),
+                'tipo' => $validated['tipo'],
+                'original_name' => $originalName,
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Falha ao contatar o webhook. Tente novamente em instantes.',
             ], Response::HTTP_BAD_GATEWAY);
         }
 
+        $csv = $response->body();
+        $filenameFromHeader = $this->extractFilenameFromResponse($response);
+        $finalFilename = $this->normalizeCsvFilename(
+            $filenameFromHeader
+                ?? $originalName
+                ?? ($fileName ? ('resultado_' . $fileName) : 'resultado.csv')
+        );
+
         if (!$response->successful()) {
+            $detail = '';
+            $decoded = json_decode($csv, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $detail = $decoded['message'] ?? $decoded['error'] ?? '';
+            } else {
+                $detail = trim($csv);
+            }
+
+            $detail = $detail ? ' Detalhe: ' . mb_substr($detail, 0, 500) : '';
+
+            Log::warning('Webhook SPED falhou (auth)', [
+                'status' => $response->status(),
+                'detail' => $detail,
+                'tipo' => $validated['tipo'],
+                'original_name' => $originalName,
+                'content_disposition' => $response->header('Content-Disposition'),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Webhook retornou erro (' . $response->status() . ').',
+                'message' => 'Webhook retornou erro (' . $response->status() . ').' . $detail,
             ], $response->status());
         }
 
-        $csv = $response->body();
         $parsed = $this->parseCsvString($csv);
+
+        Log::info('Webhook SPED sucesso (auth)', [
+            'tipo' => $validated['tipo'],
+            'original_name' => $originalName,
+            'status' => $response->status(),
+            'header_name' => $response->header('name'),
+            'content_disposition' => $response->header('Content-Disposition'),
+            'filename_returned' => $filenameFromHeader,
+            'filename_final' => $finalFilename,
+        ]);
 
         return response()->json([
             'success' => true,
             'headers' => $parsed['headers'],
             'rows' => $parsed['rows'],
+            'csv' => $csv,
+            'filename' => $finalFilename,
         ]);
+    }
+
+    /**
+     * Extrai nome de arquivo da resposta do webhook.
+     * Prioridade: header 'name' (API EFD), depois Content-Disposition (RFC 6266).
+     */
+    private function extractFilenameFromResponse(ClientResponse $response): ?string
+    {
+        // Prioridade: header 'name' da API EFD Contribuicoes
+        $nameHeader = $response->header('name');
+        if ($nameHeader && trim($nameHeader) !== '') {
+            return trim($nameHeader);
+        }
+
+        // Fallback: Content-Disposition (RFC 6266)
+        $disposition = $response->header('Content-Disposition');
+        if (!$disposition) {
+            return null;
+        }
+
+        // filename*=UTF-8''nome.csv
+        if (preg_match("/filename\\*=UTF-8''([^;]+)/i", $disposition, $matches)) {
+            $raw = trim($matches[1], " \t\n\r\0\x0B\"'");
+            return urldecode($raw);
+        }
+
+        // filename="nome.csv" ou filename=nome.csv
+        if (preg_match('/filename=\"?([^\";]+)\"?/i', $disposition, $matches)) {
+            return trim($matches[1]);
+        }
+
+        return null;
+    }
+
+    /**
+     * Garante extensão .csv no nome final.
+     */
+    private function normalizeCsvFilename(string $name): string
+    {
+        $trimmed = trim($name);
+        if ($trimmed === '') {
+            return 'resultado.csv';
+        }
+
+        // Remove query/fragment se vier junto
+        $base = preg_split('/[?#]/', $trimmed, 2)[0];
+
+        // Se já termina com .csv (case-insensitive), mantém
+        if (preg_match('/\\.csv$/i', $base)) {
+            return $base;
+        }
+
+        // Caso contrário, troca extensão existente ou adiciona .csv
+        $withoutExt = preg_replace('/\\.[^.]+$/', '', $base);
+        return ($withoutExt ?: 'resultado') . '.csv';
     }
 
     /**
