@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Controller;
 use App\Models\Empresa;
 use App\Models\User;
 use Exception;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 class AuthController extends Controller
 {
     public function showLogin(Request $request){
-        if(!view()->exists("landing_page.login")){
+        if(!view()->exists("landing_page.login_public")){
             abort(404);
         }
 
@@ -30,12 +31,12 @@ class AuthController extends Controller
         }
         
         if($request->ajax()){
-            return view("landing_page.login");
+            return view("landing_page.login_public");
         }
-        return view("landing_page.layout", ['initialView' => 'login']);
+        return view("landing_page.layout_public", ['initialView' => 'login_public']);
     }
     public function showAgendar(Request $request){
-        if(!view()->exists("landing_page.agendar")){
+        if(!view()->exists("landing_page.agendar_public")){
             abort(404);
         }
 
@@ -51,9 +52,9 @@ class AuthController extends Controller
         }
         
         if($request->ajax()){
-            return view("landing_page.agendar");
+            return view("landing_page.agendar_public");
         }
-        return view("landing_page.layout", ['initialView' => 'agendar']);
+        return view("landing_page.layout_public", ['initialView' => 'agendar_public']);
     }
 
     public function login(Request $request){
@@ -198,3 +199,4 @@ class AuthController extends Controller
         return redirect('/inicio');
     }
 }
+

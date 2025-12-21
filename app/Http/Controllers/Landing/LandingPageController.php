@@ -1,16 +1,19 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Landing;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
+use App\Services\Sped\SpedUploadService;
 
-class LandingPage extends Controller
+class LandingPageController extends Controller
 {
+    public function __construct(
+        protected SpedUploadService $spedUploadService
+    ) {}
     /**
      * Tema padrão usado nas páginas públicas.
      */
@@ -102,104 +105,31 @@ class LandingPage extends Controller
         }
 
         $file = $request->file('sped');
-        $fileName = match ($validated['tipo']) {
-            'EFD Contribuições' => 'sped_contribuicoes.txt',
-            'EFD Fiscal' => 'sped_fiscal.txt',
-            default => 'sped.txt',
-        };
+        $originalName = $file->getClientOriginalName();
+        
+        $result = $this->spedUploadService->uploadAndProcess(
+            $file,
+            $validated['tipo'],
+            $originalName,
+            false // isAuthenticated = false para endpoint público
+        );
 
-        $webhookUrl = config('services.webhook.sped_contribuicoes_url')
-            ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-regime-tributario-sped-contribuicoes';
-        $webhookUser = config('services.webhook.username');
-        $webhookPass = config('services.webhook.password');
-
-        if (empty($webhookUrl)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Webhook não configurado.',
-            ], Response::HTTP_BAD_GATEWAY);
-        }
-
-        $http = Http::timeout(120);
-
-        if (!empty($webhookUser) && !empty($webhookPass)) {
-            $http = $http->withBasicAuth($webhookUser, $webhookPass);
-        }
-
-        try {
-            $response = $http->attach('sped', file_get_contents($file->getRealPath()), $fileName)
-                ->post($webhookUrl, [
-                    'tipo' => $validated['tipo'],
-                ]);
-        } catch (\Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Falha ao contatar o webhook. Tente novamente em instantes.',
-            ], Response::HTTP_BAD_GATEWAY);
-        }
-
-        $csv = $response->body();
-
-        if (!$response->successful()) {
-            $detail = '';
-            $decoded = json_decode($csv, true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                $detail = $decoded['message'] ?? $decoded['error'] ?? '';
-            } else {
-                $detail = trim($csv);
+        if (!$result['success']) {
+            $statusCode = $result['message'] === 'Webhook não configurado.' 
+                ? Response::HTTP_BAD_GATEWAY 
+                : (str_contains($result['message'] ?? '', 'erro') 
+                    ? Response::HTTP_BAD_GATEWAY 
+                    : Response::HTTP_BAD_GATEWAY);
+            
+            // Se o resultado contém status code, usar ele
+            if (isset($result['status'])) {
+                $statusCode = $result['status'];
             }
-
-            $detail = $detail ? ' Detalhe: ' . mb_substr($detail, 0, 500) : '';
-
-            Log::warning('Webhook SPED falhou', [
-                'status' => $response->status(),
-                'detail' => $detail,
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Webhook retornou erro (' . $response->status() . ').' . $detail,
-            ], $response->status());
+            
+            return response()->json($result, $statusCode);
         }
 
-        $parsed = $this->parseCsvString($csv);
-
-        return response()->json([
-            'success' => true,
-            'headers' => $parsed['headers'],
-            'rows' => $parsed['rows'],
-            'csv' => $csv,
-            'filename' => $fileName ? ('resultado_' . $fileName) : 'resultado.csv',
-        ]);
-    }
-
-    /**
-     * Converte string CSV (separador ;) em headers e rows.
-     */
-    private function parseCsvString(string $csv): array
-    {
-        $lines = preg_split("/\\r\\n|\\r|\\n/", trim($csv));
-        $rows = [];
-        $headers = [];
-
-        foreach ($lines as $index => $line) {
-            if ($line === '') {
-                continue;
-            }
-            $columns = str_getcsv($line, ';');
-
-            if ($index === 0) {
-                $headers = $columns;
-                continue;
-            }
-
-            $rows[] = $columns;
-        }
-
-        return [
-            'headers' => $headers,
-            'rows' => $rows,
-        ];
+        return response()->json($result);
     }
 
     /**
@@ -207,7 +137,9 @@ class LandingPage extends Controller
      * usuários autenticados para o dashboard.
      */
     private function renderLanding(Request $request, string $viewName){
-        $fullViewName = "landing_page.$viewName";
+        // Todas as views da landing page agora têm sufixo _public
+        $actualViewName = $viewName . '_public';
+        $fullViewName = "landing_page.$actualViewName";
 
         if(!view()->exists($fullViewName)){
             abort(404);
@@ -229,9 +161,10 @@ class LandingPage extends Controller
             return view($fullViewName);
         }
 
-        return view("landing_page.layout", [
-            'initialView' => $viewName,
+        return view("landing_page.layout_public", [
+            'initialView' => $actualViewName,
             'themeClass' => $this->themeClass
         ]);
     }
 }
+

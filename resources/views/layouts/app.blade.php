@@ -22,7 +22,7 @@
 </head>
 <body class="{{ $themeClass ?? 'bg-surface text-slate-900 font-sans antialiased' }}">
     <div class="min-h-screen flex">
-        @include('autenticado.autenticado.partials.sidebar')
+        @include('autenticado.partials.sidebar')
 
         <div class="layout-shell flex-1 min-w-0 flex flex-col md:pl-56">
             <!-- Mobile Topbar (abre a sidebar como drawer) -->
@@ -55,3 +55,5 @@
     </div>
 </body>
 </html>
+
+

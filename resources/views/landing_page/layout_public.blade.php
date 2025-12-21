@@ -117,7 +117,7 @@
         @if(isset($initialView))
             @include("landing_page.$initialView")
         @else
-            @include('landing_page.inicio')
+            @include('landing_page.inicio_public')
         @endif
     </main>
 
