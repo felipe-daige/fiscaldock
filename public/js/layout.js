@@ -7,6 +7,7 @@ let _sidebarOpenHandler = null;
 let _sidebarCloseHandler = null;
 let _sidebarOverlayHandler = null;
 let _sidebarLinkClickHandler = null;
+let _sidebarCollapsibleHandler = null;
 const _dropdownOpenTimers = new WeakMap();
 const _dropdownCloseTimers = new WeakMap();
 const DROPDOWN_DELAY_MS = 100; // delay adicional para hover do menu Soluções
@@ -212,6 +213,73 @@ function initLayout() {
     // Gerenciar link ativo
     updateActiveLink();
     
+    // Sidebar collapsible (menu Soluções)
+    // Remover handler antigo se existir
+    if (_sidebarCollapsibleHandler) {
+        const oldCollapsible = document.querySelector('.sidebar-collapsible');
+        const oldSummary = oldCollapsible?.querySelector('.sidebar-summary');
+        if (oldSummary && _sidebarCollapsibleHandler) {
+            oldSummary.removeEventListener('click', _sidebarCollapsibleHandler);
+        }
+        _sidebarCollapsibleHandler = null;
+    }
+    
+    const sidebarCollapsible = document.querySelector('.sidebar-collapsible');
+    const sidebarSummary = sidebarCollapsible?.querySelector('.sidebar-summary');
+    const sidebarSubmenuWrapper = sidebarCollapsible?.querySelector('.sidebar-submenu-wrapper');
+    const sidebarArrow = sidebarCollapsible?.querySelector('.sidebar-arrow');
+    
+    if (sidebarCollapsible && sidebarSummary && sidebarSubmenuWrapper) {
+        // Inicializar estado expandido
+        // Usar requestAnimationFrame para garantir que o DOM está renderizado
+        requestAnimationFrame(() => {
+            if (sidebarCollapsible.classList.contains('expanded')) {
+                const height = sidebarSubmenuWrapper.scrollHeight;
+                sidebarSubmenuWrapper.style.maxHeight = height + 'px';
+                sidebarSubmenuWrapper.style.opacity = '1';
+                sidebarSubmenuWrapper.style.visibility = 'visible';
+            } else {
+                sidebarSubmenuWrapper.style.maxHeight = '0';
+                sidebarSubmenuWrapper.style.opacity = '0';
+                sidebarSubmenuWrapper.style.visibility = 'hidden';
+            }
+        });
+        
+        // Handler de clique
+        _sidebarCollapsibleHandler = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const isExpanded = sidebarCollapsible.classList.contains('expanded');
+            
+            if (isExpanded) {
+                // Retrair
+                sidebarCollapsible.classList.remove('expanded');
+                sidebarCollapsible.classList.add('collapsed');
+                sidebarSubmenuWrapper.style.maxHeight = '0';
+                sidebarSubmenuWrapper.style.opacity = '0';
+                sidebarSubmenuWrapper.style.visibility = 'hidden';
+                if (sidebarArrow) {
+                    sidebarArrow.style.transform = 'rotate(0deg)';
+                }
+            } else {
+                // Expandir
+                sidebarCollapsible.classList.remove('collapsed');
+                sidebarCollapsible.classList.add('expanded');
+                // Calcular altura e aplicar
+                const height = sidebarSubmenuWrapper.scrollHeight;
+                sidebarSubmenuWrapper.style.maxHeight = height + 'px';
+                sidebarSubmenuWrapper.style.opacity = '1';
+                sidebarSubmenuWrapper.style.visibility = 'visible';
+                if (sidebarArrow) {
+                    sidebarArrow.style.transform = 'rotate(180deg)';
+                }
+            }
+        };
+        
+        sidebarSummary.addEventListener('click', _sidebarCollapsibleHandler);
+    }
+    
     _layoutInitialized = true;
 }
 
@@ -284,6 +352,14 @@ function resetLayout() {
             }
         });
         _dropdownHoverHandlers = [];
+    }
+    if (_sidebarCollapsibleHandler) {
+        const sidebarCollapsible = document.querySelector('.sidebar-collapsible');
+        const sidebarSummary = sidebarCollapsible?.querySelector('.sidebar-summary');
+        if (sidebarSummary) {
+            sidebarSummary.removeEventListener('click', _sidebarCollapsibleHandler);
+        }
+        _sidebarCollapsibleHandler = null;
     }
     _layoutInitialized = false;
 }

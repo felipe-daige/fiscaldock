@@ -203,10 +203,33 @@
 
     /* Dropdown de Soluções (desktop) */
     .nav-dropdown-buffer {
-        padding-bottom: 12px;
+        /* padding-bottom removido para manter altura consistente */
     }
 
     .nav-dropdown-panel {
         transition-delay: 90ms;
+    }
+
+    /* Sidebar collapsible (menu Soluções) */
+    .sidebar-submenu-wrapper {
+        overflow: hidden;
+        transition: max-height 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .sidebar-collapsible.collapsed .sidebar-submenu-wrapper {
+        max-height: 0 !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none;
+    }
+
+    .sidebar-collapsible.expanded .sidebar-submenu-wrapper {
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto;
+    }
+
+    .sidebar-collapsible.expanded .sidebar-arrow {
+        transform: rotate(180deg);
     }
 }

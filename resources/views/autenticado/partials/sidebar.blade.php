@@ -41,20 +41,20 @@
         <div class="mt-4">
             <div class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sidebar-label leading-4">Soluções</div>
 
-            <div class="group">
-                <div class="sidebar-summary flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-gray-700 leading-5">
+            <div class="sidebar-collapsible group expanded">
+                <div class="sidebar-summary flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-gray-700 leading-5 cursor-pointer hover:bg-gray-50 transition-colors">
                     <div class="flex items-center gap-3 min-w-0">
                         <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                         </svg>
                         <span class="sidebar-label font-medium truncate">Soluções</span>
                     </div>
-                    <svg class="sidebar-arrow sidebar-label w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="sidebar-arrow sidebar-label w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </div>
 
-                <div class="mt-1 ml-3 pl-3 border-l border-gray-200 space-y-1">
+                <div class="sidebar-submenu-wrapper mt-1 ml-3 pl-3 border-l border-gray-200 space-y-1">
                     <a href="/app/solucoes" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">Visão geral</span>
                     </a>
