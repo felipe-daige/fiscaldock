@@ -15,18 +15,6 @@
         </a>
 
         <div class="flex items-center gap-2">
-            <!-- Toggle (desktop) -->
-            <button
-                id="sidebar-toggle-btn"
-                type="button"
-                onclick="window.toggleSidebar && window.toggleSidebar()"
-                class="hidden md:inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors cursor-pointer"
-                aria-label="Recolher/Expandir menu"
-            >
-                <svg id="sidebar-toggle-icon" class="w-5 h-5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
-                </svg>
-            </button>
             <!-- Close (mobile) -->
             <button
                 id="sidebar-close-btn"

@@ -13,6 +13,29 @@ const _dropdownOpenTimers = new WeakMap();
 const _dropdownCloseTimers = new WeakMap();
 const DROPDOWN_DELAY_MS = 100; // delay adicional para hover do menu Soluções
 
+function applySidebarState(isCollapsed) {
+    const sidebar = document.getElementById('app-sidebar');
+    const layoutShell = document.getElementById('layout-shell');
+
+    if (!sidebar) return;
+
+    if (isCollapsed) {
+        sidebar.classList.add('sidebar-collapsed');
+        if (layoutShell) {
+            layoutShell.classList.add('layout-sidebar-collapsed');
+            layoutShell.classList.remove('layout-sidebar-expanded');
+        }
+        localStorage.setItem('sidebar-collapsed', 'true');
+    } else {
+        sidebar.classList.remove('sidebar-collapsed');
+        if (layoutShell) {
+            layoutShell.classList.remove('layout-sidebar-collapsed');
+            layoutShell.classList.add('layout-sidebar-expanded');
+        }
+        localStorage.setItem('sidebar-collapsed', 'false');
+    }
+}
+
 function initLayout() {
     // Sempre remover listeners antigos antes de adicionar novos
     // Isso permite reinicialização após navegação quando o DOM é substituído
@@ -287,15 +310,9 @@ function initLayout() {
     // Função para restaurar estado do localStorage
     const restoreSidebarState = () => {
         if (!sidebar) return;
-        // Só restaurar no desktop
-        if (window.matchMedia('(min-width: 768px)').matches) {
-            const savedState = localStorage.getItem('sidebar-collapsed');
-            if (savedState === 'true') {
-                sidebar.classList.add('sidebar-collapsed');
-            } else {
-                sidebar.classList.remove('sidebar-collapsed');
-            }
-        }
+        const savedState = localStorage.getItem('sidebar-collapsed');
+        const shouldCollapse = savedState === 'true';
+        applySidebarState(shouldCollapse);
     };
     
     // Restaurar estado ao carregar
@@ -418,25 +435,41 @@ function resetLayout() {
 // Função global para toggle da sidebar (chamada diretamente do HTML)
 window.toggleSidebar = function() {
     const sidebar = document.getElementById('app-sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const isDesktop = window.matchMedia('(min-width: 768px)').matches;
+
     if (!sidebar) {
         console.warn('Sidebar não encontrada');
         return;
     }
-    
-    // Só funciona no desktop
-    if (!window.matchMedia('(min-width: 768px)').matches) {
+
+    // Mobile: alterna o drawer
+    if (!isDesktop) {
+        const isOpen = sidebar.classList.contains('translate-x-0') && !sidebar.classList.contains('-translate-x-full');
+        
+        if (isOpen) {
+            sidebar.classList.add('-translate-x-full');
+            sidebar.classList.remove('translate-x-0');
+            if (sidebarOverlay) sidebarOverlay.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        } else {
+            sidebar.classList.remove('-translate-x-full');
+            sidebar.classList.add('translate-x-0');
+            if (sidebarOverlay) sidebarOverlay.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
         return;
     }
-    
+
+    // Desktop: resetar estado de drawer móvel e alternar colapso/expansão
+    sidebar.classList.remove('-translate-x-full');
+    sidebar.classList.add('translate-x-0');
+    if (sidebarOverlay) sidebarOverlay.classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+
     const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
-    
-    if (isCollapsed) {
-        sidebar.classList.remove('sidebar-collapsed');
-        localStorage.setItem('sidebar-collapsed', 'false');
-    } else {
-        sidebar.classList.add('sidebar-collapsed');
-        localStorage.setItem('sidebar-collapsed', 'true');
-    }
+
+    applySidebarState(!isCollapsed);
 };
 
 // Inicializar toggle da sidebar imediatamente quando o DOM estiver pronto (fallback)
@@ -510,9 +543,9 @@ function updateActiveLink() {
                 // Para botões, usar ring como indicador visual sem alterar o peso da fonte
                 link.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
             } else {
-                // Para links normais, usar classes de texto ativo
+                // Para links normais, usar classes de texto ativo sem alterar a largura
                 link.classList.remove('text-gray-600');
-                link.classList.add('text-blue-500', 'font-semibold');
+                link.classList.add('text-blue-500');
             }
         }
     });
@@ -552,9 +585,9 @@ function setActiveLink(path) {
                 // Para botões, usar ring como indicador visual sem alterar o peso da fonte
                 link.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
             } else {
-                // Para links normais, usar classes de texto ativo
+                // Para links normais, usar classes de texto ativo sem alterar a largura
                 link.classList.remove('text-gray-600');
-                link.classList.add('text-blue-500', 'font-semibold');
+                link.classList.add('text-blue-500');
             }
         }
     });

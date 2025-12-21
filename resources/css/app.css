@@ -262,6 +262,21 @@
         transform: rotate(180deg);
     }
 
+    /* Layout offsets para acomodar sidebar fixa (desktop) */
+    @media (min-width: 768px) {
+        .layout-with-sidebar {
+            padding-left: 224px; /* largura expandida padrão */
+        }
+
+        .layout-sidebar-expanded {
+            padding-left: 224px;
+        }
+
+        .layout-sidebar-collapsed {
+            padding-left: 64px; /* largura colapsada */
+        }
+    }
+
     /* Sidebar scroll styling */
     #app-sidebar {
         max-height: 100vh;
