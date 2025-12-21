@@ -58,6 +58,9 @@
                     <a href="/app/solucoes" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">Visão geral</span>
                     </a>
+                    <a href="/app/solucoes/raf" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
+                        <span class="sidebar-label font-medium">RAF</span>
+                    </a>
                     <a href="/app/solucoes/importacao-xml" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">Importação de XMLs</span>
                     </a>
@@ -69,9 +72,6 @@
                     </a>
                     <a href="/app/solucoes/inteligencia-tributaria" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">Inteligência Tributária</span>
-                    </a>
-                    <a href="/app/solucoes/raf" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
-                        <span class="sidebar-label font-medium">RAF</span>
                     </a>
                 </div>
             </div>
