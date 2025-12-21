@@ -3,18 +3,30 @@
 <aside
     id="app-sidebar"
     class="fixed inset-y-0 left-0 z-50 w-56 bg-white border-r border-gray-200 transform -translate-x-full transition-all duration-200 ease-out
-           flex flex-col
-           md:static md:translate-x-0 md:z-auto md:shrink-0"
+           flex flex-col h-screen max-h-screen
+           md:relative md:inset-y-auto md:left-auto md:transform-none md:translate-x-0 md:sticky md:top-0 md:z-auto md:shrink-0 md:h-screen md:max-h-screen"
     aria-label="Menu lateral"
 >
     <!-- Top / Brand -->
-    <div class="flex items-center justify-between gap-2 px-4 py-4 border-b border-gray-200">
+    <div class="flex-shrink-0 flex items-center justify-between gap-2 px-4 py-4 border-b border-gray-200">
         <a href="/dashboard" class="flex items-center gap-3 min-w-0" data-link data-no-active>
             <img src="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}" alt="FiscalDock" class="h-8 object-contain shrink-0">
             <span class="sidebar-label truncate text-lg font-bold text-brand">FiscalDock</span>
         </a>
 
         <div class="flex items-center gap-2">
+            <!-- Toggle (desktop) -->
+            <button
+                id="sidebar-toggle-btn"
+                type="button"
+                onclick="window.toggleSidebar && window.toggleSidebar()"
+                class="hidden md:inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors cursor-pointer"
+                aria-label="Recolher/Expandir menu"
+            >
+                <svg id="sidebar-toggle-icon" class="w-5 h-5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+                </svg>
+            </button>
             <!-- Close (mobile) -->
             <button
                 id="sidebar-close-btn"
@@ -30,7 +42,7 @@
     </div>
 
     <!-- Nav -->
-    <nav class="flex-1 min-h-0 px-3 py-4 overflow-y-auto space-y-2">
+    <nav class="flex-1 min-h-0 px-3 py-4 overflow-y-auto overflow-x-hidden space-y-2">
         <a href="/dashboard" data-link class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors w-full leading-5">
             <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6"></path>
