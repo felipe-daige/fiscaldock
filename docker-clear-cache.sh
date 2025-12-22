@@ -36,3 +36,4 @@ echo ""
 echo "Se o problema persistir, tente reiniciar o container:"
 echo "  docker-compose restart app"
 
+

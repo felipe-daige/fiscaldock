@@ -40,6 +40,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('app/credits')->name('app.credits.')->group(function () {
         Route::get('/balance', [CreditController::class, 'balance'])->name('balance');
         Route::post('/confirm', [CreditController::class, 'confirm'])->name('confirm');
+        Route::post('/cancel', [CreditController::class, 'cancel'])->name('cancel');
     });
 
     Route::prefix('app/solucoes')->name('app.solucoes.')->group(function () {
@@ -52,3 +53,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/raf/upload', [DashboardController::class, 'uploadSped'])->name('raf.upload');
     });
 });
+
+// Rota intermediária sem middleware auth - aceita token API ou sessão
+// A autenticação é validada no controller RelatorioCompletoController
+// Esta rota está fora do middleware auth para permitir autenticação via token API
+Route::post('/app/solucoes/raf/confirmar', [DashboardController::class, 'confirmarRelatorio'])
+    ->name('app.solucoes.raf.confirmar');

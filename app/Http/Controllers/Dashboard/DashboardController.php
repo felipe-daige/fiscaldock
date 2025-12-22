@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\RelatorioCompletoController;
 use App\Services\Dashboard\DashboardDataService;
 use App\Services\Sped\SpedUploadService;
 use Illuminate\Http\Request;
@@ -175,13 +176,18 @@ class DashboardController extends Controller
         $file = $request->file('sped');
         $originalName = $file->getClientOriginalName();
         
+        // Obter user_id do usuário autenticado
+        $user = Auth::user();
+        $userId = $user ? $user->id : null;
+        
         try {
             $result = $this->spedUploadService->uploadAndProcess(
                 $file,
                 $validated['tipo'],
                 $originalName,
                 true, // isAuthenticated
-                $validated['modalidade']
+                $validated['modalidade'],
+                $userId // user_id
             );
         } catch (\InvalidArgumentException $e) {
             return response()->json([
@@ -199,6 +205,19 @@ class DashboardController extends Controller
         }
 
         return response()->json($result);
+    }
+
+    /**
+     * Recebe payload do frontend e chama internamente a API para confirmar relatório completo.
+     * Retorna dados formatados para o frontend exibir.
+     */
+    public function confirmarRelatorio(Request $request)
+    {
+        // Instancia o controller da API e chama o método diretamente
+        $apiController = app(RelatorioCompletoController::class);
+        
+        // Chama o método da API passando a requisição atual
+        return $apiController->confirmarRelatorioCompleto($request);
     }
 }
 

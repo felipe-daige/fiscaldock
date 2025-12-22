@@ -114,7 +114,9 @@ class LandingPageController extends Controller
             $file,
             $validated['tipo'],
             $originalName,
-            false // isAuthenticated = false para endpoint público
+            false, // isAuthenticated = false para endpoint público
+            'regime', // modalidade padrão
+            null // user_id = null para endpoint público
         );
 
         if (!$result['success']) {

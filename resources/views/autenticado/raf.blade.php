@@ -35,9 +35,12 @@
             {{-- Formulário de Upload --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-md">
                 <div class="p-6 space-y-4">
-                    <div>
-                        <h2 class="text-lg font-semibold text-gray-900">Processar SPED</h2>
-                        <p class="mt-1 text-sm text-gray-600">1) Escolha o tipo de SPED. 2) Escolha o tipo de consulta. 3) Selecione/arraste o arquivo .txt. 4) Envie.</p>
+                    {{-- Formulário normal (visível por padrão) --}}
+                    <div id="sped-form-section">
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-900">Processar SPED</h2>
+                            <p class="mt-1 text-sm text-gray-600">1) Escolha o tipo de SPED. 2) Escolha o tipo de consulta. 3) Selecione/arraste o arquivo .txt. 4) Envie.</p>
+                        </div>
                     </div>
 
                     <form id="sped-form" class="space-y-5">
@@ -218,6 +221,71 @@
 
                 </div>
             </div>
+
+            {{-- Card de Confirmação de Créditos (aparece quando needs_confirmation) --}}
+            <div id="credits-confirmation-card" class="hidden col-span-1 lg:col-span-2 bg-white rounded-xl border-2 border-amber-300 shadow-lg">
+                <div class="p-6 space-y-5">
+                    {{-- Header --}}
+                    <div class="flex items-start gap-4">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 flex-shrink-0">
+                            <svg class="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Confirmar uso de créditos</h3>
+                            <p class="mt-1 text-sm text-gray-600">Revise os detalhes da consulta antes de processar.</p>
+                        </div>
+                    </div>
+
+                    {{-- Info Grid: CNPJs e Créditos --}}
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="rounded-xl bg-gray-50 border border-gray-200 p-4 text-center">
+                            <span class="block text-3xl font-bold text-gray-900" id="credits-cnpj-count">--</span>
+                            <span class="text-sm text-gray-500">CNPJs encontrados</span>
+                        </div>
+                        <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 text-center">
+                            <span class="block text-3xl font-bold text-amber-700" id="credits-total">--</span>
+                            <span class="text-sm text-gray-500">Créditos necessários</span>
+                        </div>
+                    </div>
+
+                    {{-- Alerta de créditos insuficientes --}}
+                    <div id="credits-insufficient-alert" class="hidden rounded-xl border border-red-200 bg-red-50 p-4">
+                        <div class="flex gap-3">
+                            <svg class="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <div>
+                                <p class="text-sm font-semibold text-red-800">Créditos insuficientes</p>
+                                <p class="text-sm text-red-700 mt-1">Entre em contato pelo telefone <a href="tel:+5569999999999" class="font-semibold underline hover:no-underline">(69) 99999-9999</a> para adquirir mais créditos.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Botões de ação --}}
+                    <div class="flex flex-col-reverse sm:flex-row gap-3">
+                        <button
+                            type="button"
+                            id="credits-cancel-btn"
+                            class="flex-1 sm:flex-none inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="button"
+                            id="credits-confirm-btn"
+                            class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <svg id="credits-confirm-spinner" class="hidden h-5 w-5 animate-spin" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>
+                            <span id="credits-confirm-text">Confirmar e processar</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
         </div>
         {{-- Fim Aba: Processar SPED --}}
@@ -356,92 +424,6 @@
     </div>
 </div>
 
-{{-- Modal de Confirmação de Créditos --}}
-<div id="credits-modal" class="fixed inset-0 z-50 hidden" aria-labelledby="credits-modal-title" role="dialog" aria-modal="true">
-    {{-- Backdrop --}}
-    <div id="credits-modal-backdrop" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"></div>
-    
-    {{-- Modal Container --}}
-    <div class="fixed inset-0 z-10 overflow-y-auto">
-        <div class="flex min-h-full items-center justify-center p-4">
-            {{-- Modal Panel --}}
-            <div id="credits-modal-panel" class="relative w-full max-w-md transform rounded-2xl bg-white shadow-2xl transition-all">
-                {{-- Header --}}
-                <div class="border-b border-gray-100 px-6 py-4">
-                    <div class="flex items-center gap-3">
-                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
-                            <svg class="h-5 w-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 id="credits-modal-title" class="text-lg font-semibold text-gray-900">Confirmar uso de créditos</h3>
-                            <p class="text-sm text-gray-500">Esta operação consumirá créditos da sua conta</p>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Body --}}
-                <div class="px-6 py-5 space-y-4">
-                    {{-- Resumo de créditos --}}
-                    <div class="rounded-xl bg-gray-50 p-4 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Seu saldo atual</span>
-                            <span id="credits-modal-balance" class="text-sm font-semibold text-gray-900">-- créditos</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Custo desta operação</span>
-                            <span id="credits-modal-cost" class="text-sm font-semibold text-amber-600">-- créditos</span>
-                        </div>
-                        <hr class="border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm font-medium text-gray-700">Saldo após operação</span>
-                            <span id="credits-modal-remaining" class="text-sm font-bold text-gray-900">-- créditos</span>
-                        </div>
-                    </div>
-
-                    {{-- Alerta de créditos insuficientes (hidden por padrão) --}}
-                    <div id="credits-modal-insufficient" class="hidden rounded-xl border border-red-200 bg-red-50 p-4">
-                        <div class="flex gap-3">
-                            <svg class="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                            <div>
-                                <p class="text-sm font-semibold text-red-800">Créditos insuficientes</p>
-                                <p class="text-sm text-red-700 mt-1">Entre em contato pelo telefone <a href="tel:+5569999999999" class="font-semibold underline hover:no-underline">(69) 99999-9999</a> para adquirir mais créditos.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Footer --}}
-                <div class="border-t border-gray-100 px-6 py-4">
-                    <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
-                        <button
-                            type="button"
-                            id="credits-modal-cancel"
-                            class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            type="button"
-                            id="credits-modal-confirm"
-                            class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <svg id="credits-modal-spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                            </svg>
-                            <span id="credits-modal-confirm-text">Confirmar e processar</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
 (() => {
     function initRafTabs() {
@@ -536,17 +518,15 @@
         success: 'border-blue-200 bg-blue-50 text-blue-600',
     };
 
-    // Elementos do modal de créditos
-    const creditsModal = document.getElementById('credits-modal');
-    const creditsModalBackdrop = document.getElementById('credits-modal-backdrop');
-    const creditsModalBalance = document.getElementById('credits-modal-balance');
-    const creditsModalCost = document.getElementById('credits-modal-cost');
-    const creditsModalRemaining = document.getElementById('credits-modal-remaining');
-    const creditsModalInsufficient = document.getElementById('credits-modal-insufficient');
-    const creditsModalCancel = document.getElementById('credits-modal-cancel');
-    const creditsModalConfirm = document.getElementById('credits-modal-confirm');
-    const creditsModalSpinner = document.getElementById('credits-modal-spinner');
-    const creditsModalConfirmText = document.getElementById('credits-modal-confirm-text');
+    // Elementos do card de confirmação de créditos
+    const creditsCard = document.getElementById('credits-confirmation-card');
+    const creditsCnpjCount = document.getElementById('credits-cnpj-count');
+    const creditsTotal = document.getElementById('credits-total');
+    const creditsInsufficientAlert = document.getElementById('credits-insufficient-alert');
+    const creditsCancelBtn = document.getElementById('credits-cancel-btn');
+    const creditsConfirmBtn = document.getElementById('credits-confirm-btn');
+    const creditsConfirmSpinner = document.getElementById('credits-confirm-spinner');
+    const creditsConfirmText = document.getElementById('credits-confirm-text');
 
     let isLoading = false;
     let timerInterval = null;
@@ -690,10 +670,16 @@
         downloadWrap.classList.remove('hidden');
     };
 
-    // ========== Funções do Modal de Créditos ==========
+    // ========== Funções do Card de Confirmação de Créditos ==========
     
-    const openCreditsModal = async (resumeUrl, valorTotalConsulta) => {
-        if (!creditsModal) return;
+    const showCreditsConfirmation = async (resumeUrl, valorTotalConsulta, qtdParticipantesUnicos, custoUnitario) => {
+        console.log('[RAF] showCreditsConfirmation chamada:', { resumeUrl, valorTotalConsulta, qtdParticipantesUnicos, custoUnitario });
+        console.log('[RAF] creditsCard element:', creditsCard);
+        
+        if (!creditsCard) {
+            console.error('[RAF] ERRO: creditsCard não encontrado!');
+            return;
+        }
 
         pendingConfirmation = { resumeUrl, valorTotalConsulta };
 
@@ -716,55 +702,90 @@
             console.error('Erro ao buscar saldo de créditos:', e);
         }
 
-        const remaining = userBalance - valorTotalConsulta;
-        const hasEnough = remaining >= 0;
+        // Arredondar para cima o valor total
+        const valorArredondado = Math.ceil(valorTotalConsulta);
+        const hasEnough = userBalance >= valorArredondado;
 
-        // Atualizar UI do modal
-        creditsModalBalance.textContent = `${userBalance} crédito${userBalance !== 1 ? 's' : ''}`;
-        creditsModalCost.textContent = `${valorTotalConsulta} crédito${valorTotalConsulta !== 1 ? 's' : ''}`;
-        creditsModalRemaining.textContent = `${Math.max(0, remaining)} crédito${remaining !== 1 ? 's' : ''}`;
-
-        // Mostrar/esconder alerta de créditos insuficientes
-        creditsModalInsufficient.classList.toggle('hidden', hasEnough);
+        // Atualizar UI do card
+        console.log('[RAF] Atualizando dados do card:', {
+            qtdParticipantesUnicos,
+            valorTotalConsulta,
+            creditsCnpjCount: !!creditsCnpjCount,
+            creditsTotal: !!creditsTotal
+        });
         
-        // Habilitar/desabilitar botão de confirmar
-        creditsModalConfirm.disabled = !hasEnough;
-        creditsModalConfirmText.textContent = hasEnough ? 'Confirmar e processar' : 'Créditos insuficientes';
-
-        // Estilo do saldo restante
-        if (hasEnough) {
-            creditsModalRemaining.classList.remove('text-red-600');
-            creditsModalRemaining.classList.add('text-gray-900');
+        if (creditsCnpjCount) {
+            // Trata valores null/undefined, mas permite 0
+            const cnpjValue = (qtdParticipantesUnicos !== null && qtdParticipantesUnicos !== undefined) 
+                ? qtdParticipantesUnicos.toString() 
+                : '--';
+            creditsCnpjCount.textContent = cnpjValue;
+            console.log('[RAF] CNPJs atualizado para:', cnpjValue);
         } else {
-            creditsModalRemaining.classList.remove('text-gray-900');
-            creditsModalRemaining.classList.add('text-red-600');
+            console.error('[RAF] creditsCnpjCount não encontrado!');
+        }
+        
+        if (creditsTotal) {
+            // Garante que valorTotalConsulta seja um número válido
+            const creditValue = (valorTotalConsulta !== null && valorTotalConsulta !== undefined && !isNaN(valorTotalConsulta))
+                ? Math.ceil(valorTotalConsulta).toString()
+                : '--';
+            creditsTotal.textContent = creditValue;
+            console.log('[RAF] Créditos atualizado para:', creditValue);
+        } else {
+            console.error('[RAF] creditsTotal não encontrado!');
         }
 
-        // Mostrar modal
-        creditsModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
+        // Mostrar/esconder alerta de créditos insuficientes
+        if (creditsInsufficientAlert) {
+            creditsInsufficientAlert.classList.toggle('hidden', hasEnough);
+        }
+        
+        // Habilitar/desabilitar botão de confirmar
+        if (creditsConfirmBtn) {
+            creditsConfirmBtn.disabled = !hasEnough;
+        }
+        if (creditsConfirmText) {
+            creditsConfirmText.textContent = hasEnough ? 'Confirmar e processar' : 'Créditos insuficientes';
+        }
+
+        // Mostrar o card
+        console.log('[RAF] Removendo classe hidden do card');
+        creditsCard.classList.remove('hidden');
+        
+        // Forçar reflow do DOM para garantir que a mudança seja aplicada
+        void creditsCard.offsetHeight;
+        
+        console.log('[RAF] Card classes após remover hidden:', creditsCard.className);
+        console.log('[RAF] Card está visível?', !creditsCard.classList.contains('hidden'));
+        console.log('[RAF] Card display style:', window.getComputedStyle(creditsCard).display);
+        
+        // Scroll para o card após um pequeno delay para garantir que está visível
+        setTimeout(() => {
+            if (!creditsCard.classList.contains('hidden')) {
+                creditsCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
     };
 
-    const closeCreditsModal = () => {
-        if (!creditsModal) return;
-        creditsModal.classList.add('hidden');
-        document.body.style.overflow = '';
+    const hideCreditsConfirmation = () => {
+        if (!creditsCard) return;
+        creditsCard.classList.add('hidden');
         pendingConfirmation = null;
     };
 
-    const setCreditsModalLoading = (loading) => {
-        if (!creditsModalConfirm || !creditsModalSpinner || !creditsModalConfirmText) return;
-        creditsModalConfirm.disabled = loading;
-        creditsModalCancel.disabled = loading;
-        creditsModalSpinner.classList.toggle('hidden', !loading);
-        creditsModalConfirmText.textContent = loading ? 'Processando...' : 'Confirmar e processar';
+    const setCreditsLoading = (loading) => {
+        if (creditsConfirmBtn) creditsConfirmBtn.disabled = loading;
+        if (creditsCancelBtn) creditsCancelBtn.disabled = loading;
+        if (creditsConfirmSpinner) creditsConfirmSpinner.classList.toggle('hidden', !loading);
+        if (creditsConfirmText) creditsConfirmText.textContent = loading ? 'Processando...' : 'Confirmar e processar';
     };
 
     const confirmCreditsAndProcess = async () => {
         if (!pendingConfirmation) return;
 
         const { resumeUrl, valorTotalConsulta } = pendingConfirmation;
-        setCreditsModalLoading(true);
+        setCreditsLoading(true);
 
         try {
             const currentCsrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrf || '';
@@ -788,7 +809,7 @@
                 // Créditos insuficientes
                 const data = await response.json();
                 showAlert('error', data.message || 'Créditos insuficientes. Entre em contato pelo telefone (69) 99999-9999.');
-                closeCreditsModal();
+                hideCreditsConfirmation();
                 stopTimer();
                 setLoading(false);
                 return;
@@ -828,55 +849,72 @@
                 throw new Error('Resposta inesperada do servidor.');
             }
 
-            closeCreditsModal();
+            hideCreditsConfirmation();
         } catch (err) {
             showAlert('error', err.message || 'Erro ao processar. Tente novamente.');
-            closeCreditsModal();
+            hideCreditsConfirmation();
             stopTimer();
         } finally {
-            setCreditsModalLoading(false);
+            setCreditsLoading(false);
             setLoading(false);
         }
     };
 
-    // Event listeners do modal de créditos
-    if (creditsModalCancel) {
-        creditsModalCancel.addEventListener('click', () => {
-            closeCreditsModal();
+    // Event listeners do card de confirmação de créditos
+    const handleCancelCredits = async () => {
+        if (!pendingConfirmation || !pendingConfirmation.resumeUrl) {
+            hideCreditsConfirmation();
             stopTimer();
             setLoading(false);
             showAlert('info', 'Operação cancelada.');
-        });
-    }
-
-    if (creditsModalConfirm) {
-        creditsModalConfirm.addEventListener('click', confirmCreditsAndProcess);
-    }
-
-    if (creditsModalBackdrop) {
-        creditsModalBackdrop.addEventListener('click', () => {
-            if (!creditsModalConfirm.disabled) {
-                closeCreditsModal();
-                stopTimer();
-                setLoading(false);
-                showAlert('info', 'Operação cancelada.');
-            }
-        });
-    }
-
-    // Fechar modal com ESC
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && creditsModal && !creditsModal.classList.contains('hidden')) {
-            if (!creditsModalConfirm.disabled) {
-                closeCreditsModal();
-                stopTimer();
-                setLoading(false);
-                showAlert('info', 'Operação cancelada.');
-            }
+            return;
         }
-    });
 
-    // ========== Fim Funções do Modal de Créditos ==========
+        const resumeUrl = pendingConfirmation.resumeUrl;
+
+        try {
+            const currentCsrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrf || '';
+            
+            const response = await fetch('/app/credits/cancel', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': currentCsrf,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    resume_url: resumeUrl,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                console.error('[RAF] Erro ao cancelar:', data.message || 'Erro desconhecido');
+                showAlert('error', data.message || 'Erro ao cancelar operação. Tente novamente.');
+            } else {
+                console.log('[RAF] Operação cancelada com sucesso');
+                showAlert('info', 'Operação cancelada.');
+            }
+        } catch (err) {
+            console.error('[RAF] Erro ao cancelar:', err);
+            showAlert('error', 'Erro ao cancelar operação. Tente novamente.');
+        } finally {
+            hideCreditsConfirmation();
+            stopTimer();
+            setLoading(false);
+        }
+    };
+
+    if (creditsCancelBtn) {
+        creditsCancelBtn.addEventListener('click', handleCancelCredits);
+    }
+
+    if (creditsConfirmBtn) {
+        creditsConfirmBtn.addEventListener('click', confirmCreditsAndProcess);
+    }
+
+    // ========== Fim Funções do Card de Confirmação de Créditos ==========
 
     const setDropzoneEnabled = (enabled, hasTipo = false, hasModalidade = false) => {
         if (!dropzone) return;
@@ -1087,14 +1125,45 @@
             const contentType = response.headers.get('content-type');
             let data;
             
+            console.log('[RAF] Content-Type:', contentType);
+            console.log('[RAF] Response status:', response.status);
+            
             if (contentType && contentType.includes('application/json')) {
                 data = await response.json();
+                console.log('[RAF] JSON Response:', data);
 
                 // Verifica se precisa de confirmação de créditos
                 if (data.success && data.needs_confirmation && data.resume_url && data.valor_total_consulta !== undefined) {
+                    console.log('[RAF] Mostrando card de confirmação de créditos');
+                    console.log('[RAF] Dados recebidos:', {
+                        resume_url: data.resume_url,
+                        valor_total_consulta: data.valor_total_consulta,
+                        qtd_participantes_unicos: data.qtd_participantes_unicos,
+                        custo_unitario: data.custo_unitario
+                    });
                     showAlert('info', 'Aguardando confirmação de créditos...');
-                    openCreditsModal(data.resume_url, data.valor_total_consulta);
-                    return; // Não continua o fluxo normal, o modal vai gerenciar
+                    
+                    // Aguarda a função async completar
+                    await showCreditsConfirmation(
+                        data.resume_url, 
+                        data.valor_total_consulta,
+                        data.qtd_participantes_unicos || 0,
+                        data.custo_unitario || 0
+                    );
+                    
+                    console.log('[RAF] showCreditsConfirmation completada');
+                    
+                    // IMPORTANTE: Para o loading e timer, mas NÃO continua o processamento
+                    setLoading(false);
+                    // Não chama stopTimer() aqui porque o timer deve continuar até a confirmação
+                    return; // Não continua o fluxo normal, a seção de confirmação vai gerenciar
+                } else {
+                    console.log('[RAF] Não precisa de confirmação. Condições:', {
+                        success: data.success,
+                        needs_confirmation: data.needs_confirmation,
+                        resume_url: data.resume_url,
+                        valor_total_consulta: data.valor_total_consulta
+                    });
                 }
             } else if (contentType && contentType.includes('text/csv')) {
                 const blob = await response.blob();
@@ -1160,8 +1229,14 @@
                 throw new Error('O servidor retornou uma resposta inesperada. Por favor, tente novamente.');
             }
 
-            if (!response.ok || !data.success) {
-                throw new Error(data.message || 'Falha ao processar o SPED.');
+            // Se chegou aqui e data existe, verifica se precisa de confirmação (caso não tenha sido detectado antes)
+            if (data && data.success && data.needs_confirmation) {
+                console.log('[RAF] needs_confirmation detectado no final do fluxo - não deveria chegar aqui');
+                return; // Já foi tratado acima, mas garante que não continua
+            }
+
+            if (!response.ok || !data || !data.success) {
+                throw new Error(data?.message || 'Falha ao processar o SPED.');
             }
 
             showAlert('success', 'Processado com sucesso.');
