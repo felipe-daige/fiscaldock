@@ -114,6 +114,7 @@ class DashboardController extends Controller
         try {
             $validated = $request->validate([
                 'tipo' => 'required|in:EFD Contribuições,EFD Fiscal',
+                'modalidade' => 'required|in:regime,completa',
                 'sped' => 'required|file|mimes:txt,text/plain|max:10240', // 10 MB
             ]);
         } catch (ValidationException $e) {
@@ -125,6 +126,9 @@ class DashboardController extends Controller
             }
             if (isset($errors['tipo'])) {
                 $errorMessages = array_merge($errorMessages, $errors['tipo']);
+            }
+            if (isset($errors['modalidade'])) {
+                $errorMessages = array_merge($errorMessages, $errors['modalidade']);
             }
             
             $message = !empty($errorMessages) 
@@ -141,12 +145,20 @@ class DashboardController extends Controller
         $file = $request->file('sped');
         $originalName = $file->getClientOriginalName();
         
-        $result = $this->spedUploadService->uploadAndProcess(
-            $file,
-            $validated['tipo'],
-            $originalName,
-            true // isAuthenticated
-        );
+        try {
+            $result = $this->spedUploadService->uploadAndProcess(
+                $file,
+                $validated['tipo'],
+                $originalName,
+                true, // isAuthenticated
+                $validated['modalidade']
+            );
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Parâmetros inválidos: ' . $e->getMessage(),
+            ], Response::HTTP_BAD_REQUEST);
+        }
 
         if (!$result['success']) {
             $statusCode = $result['message'] === 'Webhook não configurado.' 

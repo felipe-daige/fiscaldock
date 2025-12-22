@@ -3,7 +3,6 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Landing\LandingPageController;
 use App\Http\Controllers\Dashboard\DashboardController;
-use App\Http\Controllers\Xml\XmlImportController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -24,18 +23,6 @@ Route::get('/solucoes/gestao-cnds', [LandingPageController::class, 'gestaoCnds']
 Route::get('/solucoes/inteligencia-tributaria', [LandingPageController::class, 'inteligenciaTributaria'])->name('solucoes.inteligencia-tributaria');
 Route::get('/solucoes/raf', [LandingPageController::class, 'raf'])->name('solucoes.raf');
 Route::post('/raf/upload-public', [LandingPageController::class, 'uploadSpedPublic'])->name('raf.upload.public');
-
-// Rotas de API para importação de XMLs
-Route::prefix('api/xml')->group(function () {
-    Route::post('/upload', [XmlImportController::class, 'upload'])->name('api.xml.upload');
-    Route::post('/processar', [XmlImportController::class, 'processar'])->name('api.xml.processar');
-    Route::post('/aceitar', [XmlImportController::class, 'aceitarLancamento'])->name('api.xml.aceitar');
-    Route::post('/ajustar', [XmlImportController::class, 'ajustarLancamento'])->name('api.xml.ajustar');
-    Route::get('/regras', [XmlImportController::class, 'listarRegras'])->name('api.xml.regras');
-    Route::post('/regras', [XmlImportController::class, 'criarRegra'])->name('api.xml.regras.create');
-    Route::get('/documentos', [XmlImportController::class, 'listarDocumentos'])->name('api.xml.documentos');
-});
-
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');

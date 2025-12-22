@@ -37,75 +37,112 @@
                 <div class="p-6 space-y-4">
                     <div>
                         <h2 class="text-lg font-semibold text-gray-900">Processar SPED</h2>
-                        <p class="mt-1 text-sm text-gray-600">1) Escolha o tipo de SPED. 2) Selecione/arraste o arquivo .txt. 3) Envie.</p>
+                        <p class="mt-1 text-sm text-gray-600">1) Escolha o tipo de SPED. 2) Escolha o tipo de consulta. 3) Selecione/arraste o arquivo .txt. 4) Envie.</p>
                     </div>
 
                     <form id="sped-form" class="space-y-5">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:items-end">
-                            <div class="space-y-2">
-                                <label for="tipo" class="block text-sm font-semibold text-gray-800">Tipo de SPED</label>
-                                <select 
-                                    id="tipo" 
-                                    name="tipo" 
-                                    class="w-full rounded-lg border border-gray-300 bg-white text-gray-800 shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 focus:ring-offset-gray-50 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
-                                >
-                                    <option value="" selected disabled>Selecione o tipo</option>
-                                    <option value="EFD Contribuições">EFD Contribuições</option>
-                                    <option value="EFD Fiscal">EFD Fiscal</option>
-                                </select>
-                                <p id="tipo-hint" class="text-xs text-gray-500">Selecione para liberar o upload.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                            {{-- Coluna Esquerda: Tipo de SPED + Arquivo SPED --}}
+                            <div class="space-y-4">
+                                <div class="space-y-2">
+                                    <label for="tipo" class="block text-sm font-semibold text-gray-800">Tipo de SPED</label>
+                                    <select 
+                                        id="tipo" 
+                                        name="tipo" 
+                                        class="w-full rounded-lg border border-gray-300 bg-white text-gray-800 shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 focus:ring-offset-gray-50 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
+                                    >
+                                        <option value="" selected disabled>Selecione o tipo</option>
+                                        <option value="EFD Contribuições">EFD Contribuições</option>
+                                        <option value="EFD Fiscal">EFD Fiscal</option>
+                                    </select>
+                                    <p id="tipo-hint" class="text-xs text-gray-500">Selecione o tipo de SPED e a consulta para liberar o upload.</p>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label for="sped" class="block text-sm font-semibold text-gray-800">Arquivo SPED (.txt)</label>
+
+                                    <div class="sr-only" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;">
+                                        <input
+                                            type="file"
+                                            id="sped"
+                                            name="sped"
+                                            accept=".txt,text/plain"
+                                            style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; opacity: 0;"
+                                            disabled
+                                        >
+                                    </div>
+
+                                    <div
+                                        id="sped-dropzone"
+                                        class="w-full rounded-xl border-2 border-dashed px-4 py-6 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+                                        role="button"
+                                        tabindex="0"
+                                        aria-disabled="true"
+                                        aria-describedby="sped-file-help"
+                                    >
+                                        <div class="flex flex-col items-center gap-2">
+                                            <svg class="h-7 w-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                            </svg>
+                                            <div class="space-y-0.5 w-full px-2 min-w-0">
+                                                <p class="text-sm font-semibold text-gray-900 truncate max-w-full" id="sped-dropzone-title" title="" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Nenhum arquivo selecionado</p>
+                                                <p class="text-xs text-gray-500" id="sped-dropzone-subtitle">Selecione o tipo de SPED e o tipo de consulta para liberar o upload.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="sped-file-meta" class="hidden rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div class="min-w-0 flex-1 overflow-hidden">
+                                                <p class="text-sm font-semibold text-gray-900 truncate" id="sped-file-name" title="" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></p>
+                                                <p class="text-xs text-gray-500" id="sped-file-size"></p>
+                                            </div>
+                                            <button 
+                                                type="button" 
+                                                id="sped-change-file" 
+                                                class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 active:bg-gray-100 px-3 py-1.5 text-sm flex-shrink-0"
+                                            >
+                                                Trocar arquivo
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <p id="sped-file-help" class="text-xs text-gray-500">Máximo 10 MB.</p>
+                                </div>
                             </div>
 
-                            <div class="space-y-2">
-                                <label for="sped" class="block text-sm font-semibold text-gray-800">Arquivo SPED (.txt)</label>
-
-                                <div class="sr-only" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;">
-                                    <input
-                                        type="file"
-                                        id="sped"
-                                        name="sped"
-                                        accept=".txt,text/plain"
-                                        style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; opacity: 0;"
-                                        disabled
-                                    >
-                                </div>
-
-                                <div
-                                    id="sped-dropzone"
-                                    class="w-full rounded-xl border-2 border-dashed px-4 py-6 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
-                                    role="button"
-                                    tabindex="0"
-                                    aria-disabled="true"
-                                    aria-describedby="sped-file-help"
-                                >
-                                    <div class="flex flex-col items-center gap-2">
-                                        <svg class="h-7 w-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                        </svg>
-                                        <div class="space-y-0.5 w-full px-2 min-w-0">
-                                            <p class="text-sm font-semibold text-gray-900 truncate max-w-full" id="sped-dropzone-title" title="" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Nenhum arquivo selecionado</p>
-                                            <p class="text-xs text-gray-500" id="sped-dropzone-subtitle">Selecione o tipo de SPED para liberar o upload.</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div id="sped-file-meta" class="hidden rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-                                    <div class="flex items-start justify-between gap-3">
-                                        <div class="min-w-0 flex-1 overflow-hidden">
-                                            <p class="text-sm font-semibold text-gray-900 truncate" id="sped-file-name" title="" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></p>
-                                            <p class="text-xs text-gray-500" id="sped-file-size"></p>
-                                        </div>
-                                        <button 
-                                            type="button" 
-                                            id="sped-change-file" 
-                                            class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 active:bg-gray-100 px-3 py-1.5 text-sm flex-shrink-0"
+                            {{-- Coluna Direita: Tipo de consulta --}}
+                            <div class="space-y-3">
+                                <span class="block text-sm font-semibold text-gray-800">Tipo de consulta</span>
+                                <div class="space-y-2" role="radiogroup" aria-labelledby="raf-modalidade-label">
+                                    <div class="flex items-start gap-3">
+                                        <input 
+                                            id="modalidade-regime" 
+                                            name="modalidade" 
+                                            type="radio" 
+                                            value="regime"
+                                            class="mt-1 h-4 w-4 border-gray-300 text-primary-600 focus:ring-primary-500"
                                         >
-                                            Trocar arquivo
-                                        </button>
+                                        <label for="modalidade-regime" class="flex-1">
+                                            <span class="block text-sm font-semibold text-gray-900">Gratuita — Regime Tributário</span>
+                                            <span class="block text-xs text-gray-600">Consulta apenas o regime tributário (Simples, Presumido ou Real).</span>
+                                        </label>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <input 
+                                            id="modalidade-completa" 
+                                            name="modalidade" 
+                                            type="radio" 
+                                            value="completa"
+                                            class="mt-1 h-4 w-4 border-gray-300 text-primary-600 focus:ring-primary-500"
+                                        >
+                                        <label for="modalidade-completa" class="flex-1">
+                                            <span class="block text-sm font-semibold text-gray-900">Completa — Regime + CND (Receita Federal)</span>
+                                            <span class="block text-xs text-gray-600">Consulta o regime tributário e a Certidão de Regularidade Fiscal (CND).</span>
+                                        </label>
                                     </div>
                                 </div>
-
-                                <p id="sped-file-help" class="text-xs text-gray-500">Máximo 10 MB.</p>
+                                <p class="text-xs text-gray-500">Selecione a modalidade antes de enviar.</p>
                             </div>
                         </div>
 
@@ -386,6 +423,7 @@
 
     const tipoSelect = document.getElementById('tipo');
     const fileInput = document.getElementById('sped');
+    const modalidadeRadios = document.querySelectorAll('input[name="modalidade"]');
     const submitLabel = document.getElementById('sped-submit-label');
     const submitSpinner = document.getElementById('sped-submit-spinner');
     const submitIcon = document.getElementById('sped-submit-icon');
@@ -552,7 +590,7 @@
         downloadWrap.classList.remove('hidden');
     };
 
-    const setDropzoneEnabled = (enabled) => {
+    const setDropzoneEnabled = (enabled, hasTipo = false, hasModalidade = false) => {
         if (!dropzone) return;
         
         // Classes base da dropzone
@@ -562,15 +600,21 @@
             // Dropzone habilitada
             dropzone.className = `${baseClasses} border-gray-300 bg-white hover:border-primary-400 hover:bg-primary-50/30 cursor-pointer`;
             dropzone.setAttribute('aria-disabled', 'false');
+            dropzoneSubtitle.textContent = 'Arraste e solte aqui, ou clique para selecionar.';
         } else {
             // Dropzone desabilitada
             dropzone.className = `${baseClasses} border-gray-300 bg-gray-100 pointer-events-none cursor-not-allowed opacity-60`;
             dropzone.setAttribute('aria-disabled', 'true');
+            
+            // Mensagem específica baseada no que está faltando
+            if (!hasTipo && !hasModalidade) {
+                dropzoneSubtitle.textContent = 'Selecione o tipo de SPED e o tipo de consulta para liberar o upload.';
+            } else if (!hasTipo) {
+                dropzoneSubtitle.textContent = 'Selecione o tipo de SPED para liberar o upload.';
+            } else if (!hasModalidade) {
+                dropzoneSubtitle.textContent = 'Selecione o tipo de consulta para liberar o upload.';
+            }
         }
-        
-        dropzoneSubtitle.textContent = enabled
-            ? 'Arraste e solte aqui, ou clique para selecionar.'
-            : 'Selecione o tipo de SPED para liberar o upload.';
     };
 
     const updateFileUi = () => {
@@ -594,16 +638,26 @@
         fileSizeEl.textContent = `${formatFileSize(file.size)} • ${file.type || 'text/plain'}`;
     };
 
+    const getSelectedModalidade = () => {
+        const checked = Array.from(modalidadeRadios).find(r => r.checked);
+        return checked?.value || '';
+    };
+
     const updateEnablement = () => {
         const hasTipo = tipoSelect.value !== '';
-        const fileEnabled = hasTipo && !isLoading;
+        const modalidade = getSelectedModalidade();
+        const hasModalidade = modalidade !== '';
+        const fileEnabled = hasTipo && hasModalidade && !isLoading;
         fileInput.disabled = !fileEnabled;
-        setDropzoneEnabled(fileEnabled);
+        setDropzoneEnabled(fileEnabled, hasTipo, hasModalidade);
         const hasFile = fileInput.files?.length > 0;
-        submitBtn.disabled = !(hasTipo && hasFile) || isLoading;
+        submitBtn.disabled = !(hasTipo && hasFile && hasModalidade) || isLoading;
     };
 
     tipoSelect.addEventListener('change', updateEnablement);
+    modalidadeRadios.forEach(radio => {
+        radio.addEventListener('change', updateEnablement);
+    });
     fileInput.addEventListener('change', () => {
         updateFileUi();
         updateEnablement();
@@ -693,9 +747,15 @@
 
         const tipo = tipoSelect.value;
         const file = fileInput.files[0];
+        const modalidade = getSelectedModalidade();
 
         if (!tipo) {
             showAlert('error', 'Selecione o tipo de SPED.');
+            return;
+        }
+
+        if (!modalidade) {
+            showAlert('error', 'Selecione o tipo de consulta (gratuita ou completa).');
             return;
         }
 
@@ -712,6 +772,7 @@
 
         const formData = new FormData();
         formData.append('tipo', tipo);
+        formData.append('modalidade', modalidade);
         formData.append('sped', file);
 
         let hasDownloadSuccess = false;

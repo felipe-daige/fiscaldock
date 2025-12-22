@@ -39,6 +39,8 @@
                                 id="email" 
                                 name="email" 
                                 required
+                                oninvalid="this.setCustomValidity('Inclua um @ e insira um e-mail válido.')"
+                                oninput="this.setCustomValidity('')"
                                 class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
                                 placeholder="seu@empresa.com"
                             >

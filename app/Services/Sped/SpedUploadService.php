@@ -22,13 +22,15 @@ class SpedUploadService
      * @param string $tipo Tipo do SPED (EFD Contribuições ou EFD Fiscal)
      * @param string|null $originalName Nome original do arquivo (opcional)
      * @param bool $isAuthenticated Se é requisição autenticada (afeta timeout e logs)
+     * @param string $modalidade Modalidade da consulta: 'regime' ou 'completa'
      * @return array{success: bool, headers?: array, rows?: array, csv?: string, filename?: string, message?: string, errors?: array}
      */
     public function uploadAndProcess(
         UploadedFile $file,
         string $tipo,
         ?string $originalName = null,
-        bool $isAuthenticated = false
+        bool $isAuthenticated = false,
+        string $modalidade = 'regime'
     ): array {
         $fileName = match ($tipo) {
             'EFD Contribuições' => 'sped_contribuicoes.txt',
@@ -36,15 +38,8 @@ class SpedUploadService
             default => 'sped.txt',
         };
 
-        // Seleciona a URL do webhook baseado no tipo de SPED
-        $webhookUrl = match ($tipo) {
-            'EFD Fiscal' => config('services.webhook.sped_fiscal_url')
-                ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-regime-tributario-sped-fiscal',
-            'EFD Contribuições' => config('services.webhook.sped_contribuicoes_url')
-                ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-regime-tributario-sped-contribuicoes',
-            default => config('services.webhook.sped_contribuicoes_url')
-                ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-regime-tributario-sped-contribuicoes',
-        };
+        // Seleciona a URL do webhook baseado no tipo de SPED e modalidade
+        $webhookUrl = $this->getWebhookUrl($tipo, $modalidade);
         $webhookUser = config('services.webhook.username');
         $webhookPass = config('services.webhook.password');
 
@@ -212,6 +207,41 @@ class SpedUploadService
         // Caso contrário, troca extensão existente ou adiciona .csv
         $withoutExt = preg_replace('/\\.[^.]+$/', '', $base);
         return ($withoutExt ?: 'resultado') . '.csv';
+    }
+
+    /**
+     * Retorna a URL do webhook baseado no tipo de SPED e modalidade.
+     *
+     * @throws \InvalidArgumentException Se a modalidade for inválida
+     */
+    private function getWebhookUrl(string $tipo, string $modalidade): string
+    {
+        // Validação de segurança - apenas modalidades permitidas
+        if (!in_array($modalidade, ['regime', 'completa'], true)) {
+            throw new \InvalidArgumentException('Modalidade inválida: ' . $modalidade);
+        }
+
+        // Modalidade completa: CND + Regime Tributário
+        if ($modalidade === 'completa') {
+            return match ($tipo) {
+                'EFD Fiscal' => config('services.webhook.sped_fiscal_completa_url')
+                    ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-cnd-e-regime-tributario-sped-fiscal',
+                'EFD Contribuições' => config('services.webhook.sped_contribuicoes_completa_url')
+                    ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-cnd-e-regime-tributario-sped-contribuicoes',
+                default => config('services.webhook.sped_contribuicoes_completa_url')
+                    ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-cnd-e-regime-tributario-sped-contribuicoes',
+            };
+        }
+
+        // Modalidade regime (padrão): apenas Regime Tributário
+        return match ($tipo) {
+            'EFD Fiscal' => config('services.webhook.sped_fiscal_url')
+                ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-regime-tributario-sped-fiscal',
+            'EFD Contribuições' => config('services.webhook.sped_contribuicoes_url')
+                ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-regime-tributario-sped-contribuicoes',
+            default => config('services.webhook.sped_contribuicoes_url')
+                ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-regime-tributario-sped-contribuicoes',
+        };
     }
 }
 
