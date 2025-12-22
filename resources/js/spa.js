@@ -1,3 +1,5 @@
+import './bootstrap';
+
 document.addEventListener('DOMContentLoaded', () => {
     const app = document.getElementById('app');
     
@@ -65,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         '/app/solucoes/gestao-cnds': 'initGestaoCnds',
         '/app/solucoes/inteligencia-tributaria': 'initInteligenciaTributaria',
         '/app/solucoes/raf': 'initRaf',
+        '/app/perfil': 'initPerfil',
         '/dashboard': 'initDashboard',
         '/sobre': 'initSobre',
         '/beneficios': 'initBeneficios',
@@ -236,6 +239,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
                 }
             });
+            
+            // Verificar se é erro de autenticação (sessão expirada)
+            if (resposta.status === 401 || resposta.status === 419) {
+                window.location.href = '/login';
+                return;
+            }
             
             if (!resposta.ok) throw new Error('Erro ao carregar');
             

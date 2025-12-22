@@ -103,6 +103,36 @@ class DashboardController extends Controller
         return $this->renderAutenticado($request, 'raf');
     }
 
+    public function perfil(Request $request){
+        $perfilView = self::AUTH_VIEW_PREFIX . 'perfil';
+
+        if(!view()->exists($perfilView)){
+            abort(404);
+        }
+
+        if(!Auth::check()){
+            if($request->ajax()){
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Você não está logado',
+                    'redirect' => '/login'
+                ]);
+            }
+            return redirect('/login');
+        }
+
+        $user = Auth::user();
+
+        if($request->ajax()){
+            return view($perfilView, ['user' => $user]);
+        }
+        
+        return view(self::AUTH_LAYOUT_VIEW, [
+            'initialView' => $perfilView,
+            'user' => $user
+        ]);
+    }
+
     /**
      * Upload de SPED e envio ao webhook n8n.
      */
