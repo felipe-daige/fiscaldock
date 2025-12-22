@@ -36,8 +36,12 @@ return [
     ],
 
     'webhook' => [
+        // Webhooks para modalidade "regime" (apenas regime tributário)
         'sped_contribuicoes_url' => env('WEBHOOK_SPED_CONTRIBUICOES_URL', 'https://auto.fiscaldock.com.br/webhook-test/consultar-regime-tributario-sped-contribuicoes'),
         'sped_fiscal_url' => env('WEBHOOK_SPED_FISCAL_URL', 'https://auto.fiscaldock.com.br/webhook-test/consultar-regime-tributario-sped-fiscal'),
+        // Webhooks para modalidade "completa" (CND + regime tributário)
+        'sped_contribuicoes_completa_url' => env('WEBHOOK_SPED_CONTRIBUICOES_COMPLETA_URL', 'https://auto.fiscaldock.com.br/webhook-test/consultar-cnd-e-regime-tributario-sped-contribuicoes'),
+        'sped_fiscal_completa_url' => env('WEBHOOK_SPED_FISCAL_COMPLETA_URL', 'https://auto.fiscaldock.com.br/webhook-test/consultar-cnd-e-regime-tributario-sped-fiscal'),
         'username' => env('WEBHOOK_SPED_USERNAME'),
         'password' => env('WEBHOOK_SPED_PASSWORD'),
     ],
