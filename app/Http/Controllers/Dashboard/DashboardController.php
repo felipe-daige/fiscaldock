@@ -29,7 +29,7 @@ class DashboardController extends Controller
         }
 
         if(!Auth::check()){
-            if($request->ajax()){
+            if($this->isAjaxRequest($request)){
                 return response()->json([
                     'success' => false,
                     'message' => 'Você não está logado',
@@ -42,7 +42,7 @@ class DashboardController extends Controller
         $user = Auth::user();
         $data = $this->dashboardDataService->getDashboardData($user->id);
 
-        if($request->ajax()){
+        if($this->isAjaxRequest($request)){
             return view($dashboardView, $data);
         }
         
@@ -53,6 +53,22 @@ class DashboardController extends Controller
         ], $data));
     }
 
+    /**
+     * Verifica se a requisição é AJAX de forma compatível com Laravel 11 e 12
+     */
+    private function isAjaxRequest(Request $request): bool
+    {
+        // Verifica se o método ajax() existe (Laravel 11)
+        if (method_exists($request, 'ajax') && $request->ajax()) {
+            return true;
+        }
+        
+        // Verifica o header X-Requested-With diretamente (compatível com Laravel 12)
+        return $request->header('X-Requested-With') === 'XMLHttpRequest' ||
+               $request->wantsJson() ||
+               $request->expectsJson();
+    }
+
     private function renderAutenticado(Request $request, string $viewName){
         $autenticadoView = self::AUTH_VIEW_PREFIX . $viewName;
 
@@ -61,7 +77,7 @@ class DashboardController extends Controller
         }
 
         if(!Auth::check()){
-            if($request->ajax()){
+            if($this->isAjaxRequest($request)){
                 return response()->json([
                     'success' => false,
                     'message' => 'Você não está logado',
@@ -71,7 +87,7 @@ class DashboardController extends Controller
             return redirect('/login');
         }
 
-        if($request->ajax()){
+        if($this->isAjaxRequest($request)){
             return view($autenticadoView);
         }
         
@@ -112,7 +128,7 @@ class DashboardController extends Controller
         }
 
         if(!Auth::check()){
-            if($request->ajax()){
+            if($this->isAjaxRequest($request)){
                 return response()->json([
                     'success' => false,
                     'message' => 'Você não está logado',
@@ -124,7 +140,7 @@ class DashboardController extends Controller
 
         $user = Auth::user();
 
-        if($request->ajax()){
+        if($this->isAjaxRequest($request)){
             return view($perfilView, ['user' => $user]);
         }
         

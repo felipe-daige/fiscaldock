@@ -12,8 +12,13 @@ class Authenticate extends Middleware
      */
     protected function redirectTo(Request $request): ?string
     {
-        // Sempre retorna a rota de login para garantir redirecionamento
-        // O JavaScript do SPA intercepta status 401/419 e redireciona
+        // Se a requisição espera JSON (AJAX/API), retornar null
+        // Isso faz o Laravel retornar JSON 401 em vez de redirecionar
+        if ($request->expectsJson()) {
+            return null;
+        }
+        
+        // Para requisições web normais, redirecionar para login
         return route('login');
     }
 }

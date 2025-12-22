@@ -6,6 +6,7 @@ services:
       - network_public
     volumes:
       - app_storage:/var/www/html/storage
+      - ./storage/logs:/var/www/html/storage/logs  # Mapeia logs para o host
     environment:
       # App
       APP_ENV: "production"

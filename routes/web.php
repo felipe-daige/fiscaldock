@@ -55,7 +55,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // Rota intermediária sem middleware auth - aceita token API ou sessão
-// A autenticação é validada no controller RelatorioCompletoController
+// A autenticação é validada no controller DashboardController
 // Esta rota está fora do middleware auth para permitir autenticação via token API
 Route::post('/app/solucoes/raf/confirmar', [DashboardController::class, 'confirmarRelatorio'])
     ->name('app.solucoes.raf.confirmar');

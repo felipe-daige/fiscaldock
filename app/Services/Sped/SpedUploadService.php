@@ -209,12 +209,13 @@ class SpedUploadService
             $http = $http->withBasicAuth($webhookUser, $webhookPass);
         }
 
-        // Converte status antigo para novo formato se necessário
+        // Converte status para formato esperado pelo webhook
         $answer = match($status) {
-            'confirmado' => 'confirm',
-            'negado' => 'decline',
-            'confirm', 'decline' => $status,
-            default => 'decline',
+            'confirmado', 'confirmed' => 'confirmed',
+            'negado', 'denied' => 'denied',
+            'confirm' => 'confirmed', // Compatibilidade com formato antigo
+            'decline' => 'denied', // Compatibilidade com formato antigo
+            default => 'denied',
         };
 
         try {
@@ -239,8 +240,8 @@ class SpedUploadService
             ];
         }
 
-        // Se o status foi negado/decline, não espera CSV de volta
-        if ($status === 'negado' || $answer === 'decline') {
+        // Se o status foi negado/denied, não espera CSV de volta
+        if ($status === 'negado' || $answer === 'denied') {
             return [
                 'success' => false,
                 'message' => 'Operação cancelada pelo usuário.',

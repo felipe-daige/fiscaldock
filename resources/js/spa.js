@@ -163,7 +163,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const link = e.target.closest('[data-link]');
         if (link) {
             e.preventDefault(); // Não recarregar página
-            await navegar(link.href); // Navegar via JavaScript
+            e.stopPropagation(); // Evitar propagação
+            console.log('[SPA] Link clicado:', link.href, 'Target:', e.target);
+            try {
+                await navegar(link.href); // Navegar via JavaScript
+            } catch (error) {
+                console.error('[SPA] Erro ao navegar:', error);
+                // Fallback: recarregar página completa
+                window.location.href = link.href;
+            }
         }
     });
     
@@ -237,26 +245,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-                }
+                },
+                credentials: 'same-origin'
+            });
+            
+            console.log('[SPA] Resposta recebida:', {
+                url,
+                status: resposta.status,
+                ok: resposta.ok,
+                contentType: resposta.headers.get('content-type'),
+                redirected: resposta.redirected
             });
             
             // Verificar se é erro de autenticação (sessão expirada)
             if (resposta.status === 401 || resposta.status === 419) {
+                console.warn('[SPA] Erro de autenticação, redirecionando para login');
                 window.location.href = '/login';
                 return;
             }
             
-            if (!resposta.ok) throw new Error('Erro ao carregar');
+            if (!resposta.ok) {
+                console.error('[SPA] Resposta não OK:', resposta.status, resposta.statusText);
+                throw new Error(`Erro ao carregar: ${resposta.status} ${resposta.statusText}`);
+            }
             
             // Verificar se é JSON (erro de autenticação, etc.)
             const contentType = resposta.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 const data = await resposta.json();
                 
-                if (data.redirect) {
+                // Só processar redirects se:
+                // 1. A URL solicitada não for uma rota de API (/api/*)
+                // 2. A resposta contém redirect E indica explicitamente que é um redirect de navegação
+                const isApiRoute = urlPath.startsWith('/api/');
+                
+                if (data.redirect && !isApiRoute) {
                     // Se a mensagem indica mudança de contexto (login/logout), recarregar página completa
                     // para garantir que o header seja trocado corretamente
-                    if (data.message && (data.message.includes('logado') || data.message.includes('logout'))) {
+                    if (data.message && (data.message.includes('logado') || data.message.includes('logout') || data.message.includes('não está logado'))) {
                         window.location.href = data.redirect;
                         return;
                     }
@@ -265,7 +291,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 
-                // Se for JSON mas não tem redirect, tratar como erro
+                // Se for JSON mas não tem redirect ou é uma rota de API, tratar como erro de navegação
+                // (requisições de API não devem ser processadas pela função navegar)
+                if (isApiRoute) {
+                    throw new Error('Resposta JSON de API recebida em requisição de navegação');
+                }
+                
                 throw new Error('Resposta JSON inesperada');
             }
             
@@ -297,9 +328,19 @@ document.addEventListener('DOMContentLoaded', () => {
             window.scrollTo(0, 0);
             
         } catch (erro) {
+            // Log do erro para debug
+            console.error('[SPA] Erro ao navegar:', {
+                url,
+                error: erro.message,
+                stack: erro.stack
+            });
+            
             // Só mostrar alert se não for erro de rede
             if (erro.message && !erro.message.includes('Failed to fetch')) {
-                // Erro de navegação ignorado
+                // Erro de navegação - tentar recarregar a página completa como fallback
+                console.warn('[SPA] Erro na navegação SPA, recarregando página completa:', url);
+                window.location.href = url;
+                return;
             }
         } finally {
             esconderLoading();

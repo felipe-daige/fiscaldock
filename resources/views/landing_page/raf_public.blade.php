@@ -337,8 +337,29 @@
                 </form>
             </div>
 
-            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center justify-between gap-3 mb-4">
+            <div class="lg:col-span-2 space-y-6">
+                {{-- Card de informações do processamento --}}
+                <div id="raf-info-card" class="hidden bg-blue-50 rounded-xl border border-blue-200 shadow-sm p-6">
+                    <h4 class="font-semibold text-gray-900 mb-4">Informações do Processamento</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="bg-white rounded-lg p-4 border border-blue-100">
+                            <p class="text-xs text-gray-600 mb-1">CNPJs encontrados</p>
+                            <p id="raf-info-cnpjs" class="text-2xl font-bold text-gray-900">--</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-blue-100">
+                            <p class="text-xs text-gray-600 mb-1">Valor total</p>
+                            <p id="raf-info-valor" class="text-2xl font-bold text-gray-900">--</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-blue-100">
+                            <p class="text-xs text-gray-600 mb-1">Custo unitário</p>
+                            <p id="raf-info-custo" class="text-2xl font-bold text-gray-900">--</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Área de resultados do CSV --}}
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div class="flex items-center justify-between gap-3 mb-4">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900">Resultado do CSV</h3>
                         <p class="text-sm text-gray-600">Será preenchido após o processamento.</p>
@@ -353,12 +374,13 @@
                     </div>
                 </div>
 
-                <div id="raf-result-empty" class="text-sm text-gray-600">Nenhum resultado ainda.</div>
-                <div id="raf-table-container" class="hidden overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50" id="raf-thead"></thead>
-                        <tbody class="divide-y divide-gray-200" id="raf-tbody"></tbody>
-                    </table>
+                    <div id="raf-result-empty" class="text-sm text-gray-600">Nenhum resultado ainda.</div>
+                    <div id="raf-table-container" class="hidden overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-gray-50" id="raf-thead"></thead>
+                            <tbody class="divide-y divide-gray-200" id="raf-tbody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -435,10 +457,16 @@
         const downloadWrap = document.getElementById('raf-download-wrap');
         const downloadLink = document.getElementById('raf-download-link');
         const downloadLabel = document.getElementById('raf-download-label');
+        const infoCard = document.getElementById('raf-info-card');
+        const infoCnpjs = document.getElementById('raf-info-cnpjs');
+        const infoValor = document.getElementById('raf-info-valor');
+        const infoCusto = document.getElementById('raf-info-custo');
         const csrf = document.querySelector('meta[name=\"csrf-token\"]')?.getAttribute('content');
 
         let currentDownloadUrl = null;
         let isLoading = false;
+        let pollingInterval = null;
+        let currentResumeUrl = null;
 
         const formatFileSize = (bytes) => {
             if (!Number.isFinite(bytes)) return '';
@@ -480,6 +508,85 @@
                 currentDownloadUrl = null;
             }
             downloadWrap?.classList.add('hidden');
+        };
+
+        const stopPolling = () => {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+            currentResumeUrl = null;
+        };
+
+        const startPolling = (resumeUrl) => {
+            stopPolling();
+            
+            if (!resumeUrl) return;
+            
+            currentResumeUrl = resumeUrl;
+            console.log('[RAF Public] Iniciando polling para:', resumeUrl);
+            
+            // Mostrar card de informações
+            if (infoCard) {
+                infoCard.classList.remove('hidden');
+            }
+            
+            // Função que busca dados atualizados
+            const fetchUpdatedData = async () => {
+                try {
+                    const encodedUrl = encodeURIComponent(resumeUrl);
+                    const response = await fetch(`/api/data/receive-public/${encodedUrl}`, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                        },
+                        credentials: 'same-origin',
+                    });
+                    
+                    if (response.status === 404) {
+                        // Dados ainda não recebidos, continua tentando
+                        console.log('[RAF Public] Dados ainda não disponíveis no cache');
+                        return;
+                    }
+                    
+                    if (!response.ok) {
+                        console.warn('[RAF Public] Erro ao buscar dados atualizados:', response.status);
+                        return;
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.success && data.data) {
+                        const updatedData = data.data;
+                        console.log('[RAF Public] Dados atualizados recebidos:', updatedData);
+                        
+                        // Atualizar valores no card
+                        const qtdParticipantes = updatedData.qtd_participantes_unicos ?? updatedData.qnt_participantes ?? 0;
+                        const valorTotal = updatedData.valor_total_consulta ?? 0;
+                        const custoUnitario = updatedData.custo_unitario ?? 0;
+                        
+                        if (infoCnpjs) {
+                            infoCnpjs.textContent = qtdParticipantes.toString();
+                        }
+                        
+                        if (infoValor) {
+                            infoValor.textContent = `R$ ${valorTotal.toFixed(2)}`;
+                        }
+                        
+                        if (infoCusto) {
+                            infoCusto.textContent = `R$ ${custoUnitario.toFixed(2)}`;
+                        }
+                    }
+                } catch (err) {
+                    console.error('[RAF Public] Erro no polling:', err);
+                }
+            };
+            
+            // Buscar imediatamente
+            fetchUpdatedData();
+            
+            // Configurar polling a cada 4 segundos
+            pollingInterval = setInterval(fetchUpdatedData, 4000);
         };
 
         const renderTable = (headers, rows) => {
@@ -594,6 +701,10 @@
             }
 
             showAlert('info', 'Enviando arquivo...');
+            stopPolling();
+            if (infoCard) {
+                infoCard.classList.add('hidden');
+            }
             clearDownload();
             tableContainer.classList.add('hidden');
             resultEmpty.classList.remove('hidden');
@@ -646,6 +757,24 @@
                     throw new Error(errorMsg);
                 }
 
+                // Verifica se precisa de confirmação e tem resume_url para polling
+                if (data.needs_confirmation && data.resume_url) {
+                    console.log('[RAF Public] Processamento em andamento, iniciando polling');
+                    showAlert('info', 'Processamento em andamento. Aguarde...');
+                    
+                    // Iniciar polling para buscar dados atualizados
+                    startPolling(data.resume_url);
+                    
+                    // Não renderizar tabela ainda, aguardar CSV final
+                    return;
+                }
+
+                // Se chegou aqui, tem CSV pronto
+                stopPolling();
+                if (infoCard) {
+                    infoCard.classList.add('hidden');
+                }
+                
                 renderTable(data.headers || [], data.rows || []);
                 setDownload(data.csv || '', data.filename || 'resultado.csv');
                 showAlert('success', 'Processado com sucesso. CSV disponível.');
@@ -658,6 +787,10 @@
                     errorMessage = 'O processamento está demorando mais que o esperado. O SPED pode estar sendo processado em segundo plano. Aguarde alguns minutos e verifique novamente.';
                 }
                 showAlert('error', errorMessage);
+                stopPolling();
+                if (infoCard) {
+                    infoCard.classList.add('hidden');
+                }
                 clearDownload();
                 tableContainer.classList.add('hidden');
                 resultEmpty.classList.remove('hidden');

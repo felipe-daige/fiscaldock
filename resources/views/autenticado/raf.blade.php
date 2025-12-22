@@ -33,7 +33,7 @@
         <div id="tab-processar" class="raf-tab-content">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
             {{-- Formulário de Upload --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-md">
+            <div id="sped-upload-card" class="bg-white rounded-xl border border-gray-200 shadow-md">
                 <div class="p-6 space-y-4">
                     {{-- Formulário normal (visível por padrão) --}}
                     <div id="sped-form-section">
@@ -183,44 +183,96 @@
                 </div>
             </div>
 
-            {{-- Resultado simplificado: apenas download --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-md">
-                <div class="p-6 space-y-4">
-                    <div class="flex items-start justify-between gap-4">
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900">CSV gerado</h3>
-                            <p class="mt-1 text-sm text-gray-600">Após o processamento, o download ficará disponível.</p>
-                        </div>
-                        <div id="result-badge" class="hidden px-3 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
-                            Processado
-                        </div>
-                    </div>
-
-                    <div class="flex flex-wrap items-center gap-3">
-                        <div id="timer-wrap" class="hidden inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-700">
-                            <svg id="timer-icon" class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span id="timer-value">00:00</span>
+            {{-- Coluna direita: Cards empilhados --}}
+            <div class="space-y-6">
+                {{-- Resultado simplificado: apenas download --}}
+                <div id="csv-generated-card" class="bg-white rounded-xl border border-gray-200 shadow-md">
+                    <div class="p-6 space-y-4">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">CSV gerado</h3>
+                                <p class="mt-1 text-sm text-gray-600">Após o processamento, o download ficará disponível.</p>
+                            </div>
+                            <div id="result-badge" class="hidden px-3 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+                                Processado
+                            </div>
                         </div>
 
-                        <div id="csv-download-wrap" class="hidden">
-                            <a
-                                id="csv-download-link"
-                                class="inline-flex items-center gap-2 rounded-lg bg-blue-600 text-white px-3 py-2 text-xs font-semibold shadow-sm hover:bg-blue-700 transition"
-                                href="#"
-                                download="resultado.csv"
-                            >
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div id="timer-wrap" class="hidden inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-700">
+                                <svg id="timer-icon" class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                <span id="csv-download-label">Baixar CSV</span>
-                            </a>
-                        </div>
-                    </div>
+                                <span id="timer-value">00:00</span>
+                            </div>
 
+                            <div id="csv-download-wrap" class="hidden">
+                                <a
+                                    id="csv-download-link"
+                                    class="inline-flex items-center gap-2 rounded-lg bg-blue-600 text-white px-3 py-2 text-xs font-semibold shadow-sm hover:bg-blue-700 transition"
+                                    href="#"
+                                    download="resultado.csv"
+                                >
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+                                    </svg>
+                                    <span id="csv-download-label">Baixar CSV</span>
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                {{-- Card de Informações da Consulta --}}
+                <div id="info-consulta-card" class="bg-white rounded-xl border border-gray-200 shadow-md">
+            <div class="p-6 space-y-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Informações da Consulta</h3>
+                    <p class="mt-1 text-sm text-gray-600">Detalhes do processamento da consulta.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Quantidade de participantes</p>
+                        <p class="text-2xl font-bold text-gray-900" id="info-qtd-participantes">--</p>
+                    </div>
+                    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Valor total da consulta</p>
+                        <p class="text-2xl font-bold text-gray-900" id="info-valor-total">--</p>
+                    </div>
+                    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Custo unitário da consulta</p>
+                        <p class="text-2xl font-bold text-gray-900" id="info-custo-unitario">--</p>
+                    </div>
+                </div>
+
+                {{-- Botão de confirmar créditos (aparece quando necessário) --}}
+                <div id="info-confirm-credits-wrap" class="hidden pt-4 border-t border-gray-200">
+                    <div class="flex flex-col-reverse sm:flex-row gap-3">
+                        <button
+                            type="button"
+                            id="info-credits-cancel-btn"
+                            class="flex-1 sm:flex-none inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="button"
+                            id="info-credits-confirm-btn"
+                            class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <svg id="info-credits-confirm-spinner" class="hidden h-5 w-5 animate-spin" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>
+                            <span id="info-credits-confirm-text">Confirmar e processar</span>
+                        </button>
+                    </div>
+                    </div>
                 </div>
             </div>
+        </div>
 
             {{-- Card de Confirmação de Créditos (aparece quando needs_confirmation) --}}
             <div id="credits-confirmation-card" class="hidden col-span-1 lg:col-span-2 bg-white rounded-xl border-2 border-amber-300 shadow-lg">
@@ -528,6 +580,17 @@
     const creditsConfirmSpinner = document.getElementById('credits-confirm-spinner');
     const creditsConfirmText = document.getElementById('credits-confirm-text');
 
+    // Elementos do card de informações da consulta
+    const infoConsultaCard = document.getElementById('info-consulta-card');
+    const infoQtdParticipantes = document.getElementById('info-qtd-participantes');
+    const infoValorTotal = document.getElementById('info-valor-total');
+    const infoCustoUnitario = document.getElementById('info-custo-unitario');
+    const infoConfirmCreditsWrap = document.getElementById('info-confirm-credits-wrap');
+    const infoCreditsCancelBtn = document.getElementById('info-credits-cancel-btn');
+    const infoCreditsConfirmBtn = document.getElementById('info-credits-confirm-btn');
+    const infoCreditsConfirmSpinner = document.getElementById('info-credits-confirm-spinner');
+    const infoCreditsConfirmText = document.getElementById('info-credits-confirm-text');
+
     let isLoading = false;
     let timerInterval = null;
     let timerStart = 0;
@@ -535,6 +598,12 @@
 
     // Dados de confirmação pendente
     let pendingConfirmation = null;
+    
+    // Controle de polling para dados atualizados
+    let pollingInterval = null;
+    
+    // Controle de intervalos de verificação de cache
+    let cacheCheckIntervals = [];
 
     const formatFileSize = (bytes) => {
         if (!Number.isFinite(bytes)) return '';
@@ -542,6 +611,60 @@
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return `${Math.round((bytes / Math.pow(k, i)) * 10) / 10} ${sizes[i]}`;
+    };
+
+    const formatCurrency = (value) => {
+        if (value === null || value === undefined || isNaN(value)) return '--';
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(value);
+    };
+
+    const updateInfoCard = (data, needsConfirmation = false) => {
+        if (!infoConsultaCard) return;
+
+        const qtdParticipantes = data.qtd_participantes_unicos ?? data.qnt_participantes ?? null;
+        const valorTotal = data.valor_total_consulta ?? null;
+        const custoUnitario = data.custo_unitario ?? null;
+
+        // Verificar se há dados válidos para exibir
+        const hasValidData = (qtdParticipantes !== null && qtdParticipantes !== undefined) ||
+                             (valorTotal !== null && valorTotal !== undefined) ||
+                             (custoUnitario !== null && custoUnitario !== undefined);
+
+        // Atualizar valores (sempre atualiza, mesmo se for null/undefined)
+        if (infoQtdParticipantes) {
+            infoQtdParticipantes.textContent = (qtdParticipantes !== null && qtdParticipantes !== undefined)
+                ? qtdParticipantes.toString()
+                : '--';
+        }
+
+        if (infoValorTotal) {
+            infoValorTotal.textContent = formatCurrency(valorTotal);
+        }
+
+        if (infoCustoUnitario) {
+            infoCustoUnitario.textContent = formatCurrency(custoUnitario);
+        }
+
+        // Sempre mostrar o card quando houver dados válidos
+        if (hasValidData) {
+            infoConsultaCard.classList.remove('hidden');
+        }
+
+        // Mostrar/esconder botão de confirmar créditos
+        // O botão aparece quando needsConfirmation é true OU quando há dados válidos com valor total
+        if (infoConfirmCreditsWrap) {
+            const shouldShowButton = needsConfirmation || (hasValidData && (valorTotal !== null && valorTotal !== undefined));
+            if (shouldShowButton) {
+                infoConfirmCreditsWrap.classList.remove('hidden');
+            } else {
+                infoConfirmCreditsWrap.classList.add('hidden');
+            }
+        }
     };
 
     const setTimerState = (state) => {
@@ -668,6 +791,10 @@
         downloadLink.download = filename;
         downloadLabel.textContent = `Baixar ${filename}`;
         downloadWrap.classList.remove('hidden');
+        
+        // Garantir que o link não cause redirecionamento
+        downloadLink.setAttribute('target', '_self');
+        console.log('[RAF] Download configurado:', { filename, blobSize: blob.size, url: currentDownloadUrl.substring(0, 50) + '...' });
     };
 
     // ========== Funções do Card de Confirmação de Créditos ==========
@@ -748,6 +875,19 @@
         if (creditsConfirmText) {
             creditsConfirmText.textContent = hasEnough ? 'Confirmar e processar' : 'Créditos insuficientes';
         }
+        
+        // Atualizar também os botões do card de informações
+        if (infoCreditsConfirmBtn) {
+            infoCreditsConfirmBtn.disabled = !hasEnough;
+        }
+        if (infoCreditsConfirmText) {
+            infoCreditsConfirmText.textContent = hasEnough ? 'Confirmar e processar' : 'Créditos insuficientes';
+        }
+        
+        // Mostrar botão de confirmação no card de informações
+        if (infoConfirmCreditsWrap) {
+            infoConfirmCreditsWrap.classList.remove('hidden');
+        }
 
         // Mostrar o card
         console.log('[RAF] Removendo classe hidden do card');
@@ -766,12 +906,201 @@
                 creditsCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }, 100);
+        
+        // Iniciar polling para buscar dados atualizados
+        if (resumeUrl) {
+            startPolling(resumeUrl);
+        }
     };
 
     const hideCreditsConfirmation = () => {
         if (!creditsCard) return;
         creditsCard.classList.add('hidden');
         pendingConfirmation = null;
+        stopPolling();
+        
+        // Esconder botão de confirmação no card de informações também
+        if (infoConfirmCreditsWrap) {
+            infoConfirmCreditsWrap.classList.add('hidden');
+        }
+    };
+    
+    // Função para fazer polling dos dados atualizados da API
+    // IMPORTANTE: Esta função apenas atualiza o card de informações e NÃO causa reset/redirecionamento do SPA
+    const startPolling = (resumeUrl) => {
+        // Para qualquer polling anterior
+        stopPolling();
+        
+        if (!resumeUrl) return;
+        
+        console.log('[RAF] Iniciando polling para:', resumeUrl);
+        
+        // Função que busca dados atualizados
+        // IMPORTANTE: Esta função apenas atualiza dados no card, não causa navegação ou reset
+        const fetchUpdatedData = async () => {
+            try {
+                const encodedUrl = encodeURIComponent(resumeUrl);
+                console.log('[RAF] Polling: buscando dados para resume_url:', resumeUrl);
+                // IMPORTANTE: Usar redirect: 'manual' para prevenir que redirects do Laravel (401 -> /login -> /dashboard) sejam seguidos
+                // Também garantir que o header Accept seja application/json para que o Laravel retorne JSON em vez de redirect HTML
+                const response = await fetch(`/api/data/receive/${encodedUrl}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest', // Garantir que o Laravel trate como AJAX
+                    },
+                    credentials: 'same-origin',
+                    redirect: 'manual', // Prevenir que redirects sejam seguidos automaticamente
+                });
+                
+                console.log('[RAF] Polling: resposta recebida:', {
+                    status: response.status,
+                    ok: response.ok,
+                    statusText: response.statusText,
+                });
+                
+                if (response.status === 404) {
+                    // Dados ainda não recebidos, continua tentando
+                    console.log('[RAF] Dados ainda não disponíveis no cache (404)');
+                    return;
+                }
+                
+                if (response.status === 401 || response.status === 0) {
+                    // Não autenticado ou redirect bloqueado (status 0 = redirect bloqueado com redirect: 'manual')
+                    // IMPORTANTE: Não causar redirecionamento ou reset do SPA - apenas parar o polling silenciosamente
+                    console.warn('[RAF] Não autenticado ao buscar dados atualizados (401) - parando polling silenciosamente');
+                    stopPolling();
+                    return;
+                }
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.warn('[RAF] Erro ao buscar dados atualizados:', response.status, errorData);
+                    return;
+                }
+                
+                const data = await response.json();
+                console.log('[RAF] Polling: dados recebidos:', data);
+                
+                if (data.success && data.data) {
+                    const updatedData = data.data;
+                    console.log('[RAF] Dados atualizados recebidos:', updatedData);
+                    
+                    // Atualizar valores no card
+                    const qtdParticipantes = updatedData.qtd_participantes_unicos ?? updatedData.qnt_participantes ?? 0;
+                    const valorTotal = updatedData.valor_total_consulta ?? 0;
+                    const custoUnitario = updatedData.custo_unitario ?? 0;
+                    
+                    // Sempre atualizar o card de informações da consulta quando dados chegarem
+                    // Se há pendingConfirmation, significa que precisa de confirmação
+                    // Mas mesmo sem pendingConfirmation, se houver dados válidos, mostrar o card
+                    const hasValidData = (qtdParticipantes !== null && qtdParticipantes !== undefined && qtdParticipantes > 0) ||
+                                       (valorTotal !== null && valorTotal !== undefined && valorTotal > 0) ||
+                                       (custoUnitario !== null && custoUnitario !== undefined && custoUnitario > 0);
+                    
+                    // Atualizar card de informações da consulta sempre que houver dados
+                    updateInfoCard(updatedData, !!pendingConfirmation || hasValidData);
+                    
+                    // Se o card não está visível, mostrar agora com os dados recebidos
+                    const isCardVisible = creditsCard && !creditsCard.classList.contains('hidden');
+                    if (!isCardVisible && creditsCard) {
+                        console.log('[RAF] Card não estava visível, mostrando agora com dados recebidos');
+                        // Inicializar pendingConfirmation se não existir
+                        if (!pendingConfirmation) {
+                            pendingConfirmation = {
+                                resumeUrl: resumeUrl,
+                                valorTotalConsulta: valorTotal
+                            };
+                        }
+                        // Chamar showCreditsConfirmation para mostrar o card com os dados
+                        await showCreditsConfirmation(
+                            resumeUrl,
+                            valorTotal,
+                            qtdParticipantes,
+                            custoUnitario
+                        );
+                    } else {
+                        // Card já está visível, apenas atualizar valores
+                        // Atualizar pendingConfirmation com os novos valores
+                        if (pendingConfirmation) {
+                            pendingConfirmation.valorTotalConsulta = valorTotal;
+                        }
+                        
+                        // Atualizar UI
+                        if (creditsCnpjCount) {
+                            creditsCnpjCount.textContent = qtdParticipantes.toString();
+                        }
+                        
+                        if (creditsTotal) {
+                            creditsTotal.textContent = Math.ceil(valorTotal).toString();
+                        }
+                        
+                        // Revalidar créditos suficientes
+                        const currentCsrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrf || '';
+                        const balanceResponse = await fetch('/app/credits/balance', {
+                            method: 'GET',
+                            headers: {
+                                'X-CSRF-TOKEN': currentCsrf,
+                                'Accept': 'application/json',
+                            }
+                        });
+                        
+                        if (balanceResponse.ok) {
+                            const balanceData = await balanceResponse.json();
+                            const userBalance = balanceData.credits || 0;
+                            const valorArredondado = Math.ceil(valorTotal);
+                            const hasEnough = userBalance >= valorArredondado;
+                            
+                            // Atualizar estado do botão e alerta
+                            if (creditsInsufficientAlert) {
+                                creditsInsufficientAlert.classList.toggle('hidden', hasEnough);
+                            }
+                            
+                            if (creditsConfirmBtn) {
+                                creditsConfirmBtn.disabled = !hasEnough;
+                            }
+                            
+                            if (creditsConfirmText) {
+                                creditsConfirmText.textContent = hasEnough ? 'Confirmar e processar' : 'Créditos insuficientes';
+                            }
+                            
+                            // Atualizar também os botões do card de informações
+                            if (infoCreditsConfirmBtn) {
+                                infoCreditsConfirmBtn.disabled = !hasEnough;
+                            }
+                            
+                            if (infoCreditsConfirmText) {
+                                infoCreditsConfirmText.textContent = hasEnough ? 'Confirmar e processar' : 'Créditos insuficientes';
+                            }
+                        }
+                    }
+                    
+                    // Parar polling após receber dados (opcional - pode continuar se quiser atualizações contínuas)
+                    // stopPolling();
+                }
+            } catch (err) {
+                console.error('[RAF] Erro no polling:', err);
+            }
+        };
+        
+        // Buscar imediatamente
+        fetchUpdatedData();
+        
+        // Configurar polling a cada 4 segundos
+        pollingInterval = setInterval(fetchUpdatedData, 4000);
+    };
+    
+    const stopPolling = () => {
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+            console.log('[RAF] Polling parado');
+        }
+        // Parar todos os intervalos de verificação de cache
+        cacheCheckIntervals.forEach(interval => {
+            clearInterval(interval);
+        });
+        cacheCheckIntervals = [];
     };
 
     const setCreditsLoading = (loading) => {
@@ -779,6 +1108,12 @@
         if (creditsCancelBtn) creditsCancelBtn.disabled = loading;
         if (creditsConfirmSpinner) creditsConfirmSpinner.classList.toggle('hidden', !loading);
         if (creditsConfirmText) creditsConfirmText.textContent = loading ? 'Processando...' : 'Confirmar e processar';
+        
+        // Atualizar também os botões do card de informações
+        if (infoCreditsConfirmBtn) infoCreditsConfirmBtn.disabled = loading;
+        if (infoCreditsCancelBtn) infoCreditsCancelBtn.disabled = loading;
+        if (infoCreditsConfirmSpinner) infoCreditsConfirmSpinner.classList.toggle('hidden', !loading);
+        if (infoCreditsConfirmText) infoCreditsConfirmText.textContent = loading ? 'Processando...' : 'Confirmar e processar';
     };
 
     const confirmCreditsAndProcess = async () => {
@@ -850,9 +1185,11 @@
             }
 
             hideCreditsConfirmation();
+            stopPolling();
         } catch (err) {
             showAlert('error', err.message || 'Erro ao processar. Tente novamente.');
             hideCreditsConfirmation();
+            stopPolling();
             stopTimer();
         } finally {
             setCreditsLoading(false);
@@ -901,6 +1238,7 @@
             showAlert('error', 'Erro ao cancelar operação. Tente novamente.');
         } finally {
             hideCreditsConfirmation();
+            stopPolling();
             stopTimer();
             setLoading(false);
         }
@@ -912,6 +1250,31 @@
 
     if (creditsConfirmBtn) {
         creditsConfirmBtn.addEventListener('click', confirmCreditsAndProcess);
+    }
+
+    // Event listeners para os botões do card de informações
+    if (infoCreditsCancelBtn) {
+        infoCreditsCancelBtn.addEventListener('click', handleCancelCredits);
+    }
+
+    if (infoCreditsConfirmBtn) {
+        infoCreditsConfirmBtn.addEventListener('click', confirmCreditsAndProcess);
+    }
+    
+    // Prevenir comportamento padrão do link de download para evitar redirecionamentos
+    if (downloadLink) {
+        downloadLink.addEventListener('click', (e) => {
+            // Se o href for '#' ou vazio, prevenir comportamento padrão
+            const href = downloadLink.getAttribute('href');
+            if (!href || href === '#' || href === window.location.href + '#') {
+                e.preventDefault();
+                e.stopPropagation();
+                console.warn('[RAF] Tentativa de download com link inválido, prevenindo redirecionamento');
+                return false;
+            }
+            // Permitir download normal se o href for um blob URL válido
+            console.log('[RAF] Iniciando download do CSV');
+        });
     }
 
     // ========== Fim Funções do Card de Confirmação de Créditos ==========
@@ -1141,6 +1504,14 @@
                         qtd_participantes_unicos: data.qtd_participantes_unicos,
                         custo_unitario: data.custo_unitario
                     });
+                    
+                    // Atualizar card de informações da consulta
+                    updateInfoCard({
+                        qtd_participantes_unicos: data.qtd_participantes_unicos,
+                        valor_total_consulta: data.valor_total_consulta,
+                        custo_unitario: data.custo_unitario
+                    }, true); // needsConfirmation = true
+                    
                     showAlert('info', 'Aguardando confirmação de créditos...');
                     
                     // Aguarda a função async completar
@@ -1164,6 +1535,288 @@
                         resume_url: data.resume_url,
                         valor_total_consulta: data.valor_total_consulta
                     });
+                    
+                    // Mesmo sem needs_confirmation, se houver resume_url, iniciar polling
+                    // para buscar dados que podem chegar depois
+                    if (data.success && data.resume_url) {
+                        console.log('[RAF] Iniciando polling mesmo sem needs_confirmation para resume_url:', data.resume_url);
+                        startPolling(data.resume_url);
+                    } else if (data.success) {
+                        // Se não tem resume_url mas o upload foi bem-sucedido,
+                        // verificar imediatamente se há dados recentes no cache
+                        // e depois iniciar verificação periódica
+                        console.log('[RAF] Upload bem-sucedido sem resume_url, verificando dados recentes no cache...');
+                        
+                        // Verificar imediatamente se há dados recentes
+                        const checkLatestData = async () => {
+                            try {
+                                console.log('[RAF] Verificando dados recentes no cache...');
+                                const currentCsrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrf || '';
+                                // IMPORTANTE: Usar redirect: 'manual' para prevenir que redirects do Laravel (401 -> /login -> /dashboard) sejam seguidos
+                                // Também garantir que o header Accept seja application/json para que o Laravel retorne JSON em vez de redirect HTML
+                                const latestResponse = await fetch('/api/data/receive-latest', {
+                                    method: 'GET',
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'X-Requested-With': 'XMLHttpRequest', // Garantir que o Laravel trate como AJAX
+                                    },
+                                    credentials: 'same-origin',
+                                    redirect: 'manual', // Prevenir que redirects sejam seguidos automaticamente
+                                });
+                                
+                                console.log('[RAF] Resposta do /api/data/receive-latest:', {
+                                    status: latestResponse.status,
+                                    statusText: latestResponse.statusText,
+                                    ok: latestResponse.ok,
+                                });
+                                
+                                if (latestResponse.ok) {
+                                    const latestData = await latestResponse.json();
+                                    console.log('[RAF] Dados recebidos do endpoint:', latestData);
+                                    
+                                    if (latestData.success && latestData.data) {
+                                        console.log('[RAF] Dados recentes encontrados imediatamente:', latestData);
+                                        
+                                        const updatedData = latestData.data;
+                                        
+                                        // Sempre atualizar o card de informações quando dados chegarem
+                                        updateInfoCard(updatedData, true);
+                                        
+                                        const resumeUrl = latestData.resume_url || updatedData.resume_url;
+                                        
+                                        if (resumeUrl) {
+                                            // Inicializar pendingConfirmation
+                                            if (!pendingConfirmation) {
+                                                pendingConfirmation = {
+                                                    resumeUrl: resumeUrl,
+                                                    valorTotalConsulta: updatedData.valor_total_consulta ?? 0
+                                                };
+                                            }
+                                            
+                                            // Mostrar card com os dados
+                                            await showCreditsConfirmation(
+                                                resumeUrl,
+                                                updatedData.valor_total_consulta ?? 0,
+                                                updatedData.qtd_participantes_unicos ?? updatedData.qnt_participantes ?? 0,
+                                                updatedData.custo_unitario ?? 0
+                                            );
+                                            
+                                            // Iniciar polling para este resume_url
+                                            startPolling(resumeUrl);
+                                            
+                                            return true; // Dados encontrados, não precisa continuar verificação
+                                        } else {
+                                            console.warn('[RAF] Dados recebidos mas sem resume_url:', latestData);
+                                            // Mesmo sem resume_url, o card já foi atualizado acima
+                                            return true; // Dados encontrados e exibidos
+                                        }
+                                    } else {
+                                        console.log('[RAF] Resposta sem dados válidos:', latestData);
+                                    }
+                                } else if (latestResponse.status === 404) {
+                                    // 404 é esperado quando não há dados ainda
+                                    const errorData = await latestResponse.json().catch(() => ({}));
+                                    console.log('[RAF] Nenhum dado recente encontrado (404):', errorData.message || 'Nenhum dado recente encontrado.');
+                                } else if (latestResponse.status === 401 || latestResponse.status === 0) {
+                                    // Não autenticado ou redirect bloqueado (status 0 = redirect bloqueado com redirect: 'manual')
+                                    // IMPORTANTE: Não causar redirecionamento ou reset do SPA - apenas parar a verificação silenciosamente
+                                    console.warn('[RAF] Não autenticado ao buscar dados recentes (401) - parando verificação silenciosamente');
+                                    return true; // Parar verificação quando não autenticado
+                                } else {
+                                    // Outro erro
+                                    const errorData = await latestResponse.json().catch(() => ({}));
+                                    console.warn('[RAF] Erro ao buscar dados recentes:', latestResponse.status, errorData);
+                                }
+                            } catch (e) {
+                                console.error('[RAF] Erro ao verificar dados recentes:', e);
+                            }
+                            return false; // Dados não encontrados, continuar verificação periódica
+                        };
+                        
+                        // Verificar imediatamente
+                        const foundData = await checkLatestData();
+                        
+                        if (!foundData) {
+                            // Se não encontrou dados imediatamente, iniciar verificação periódica
+                            console.log('[RAF] Dados não encontrados imediatamente, iniciando verificação periódica de dados recentes');
+                            
+                            // Criar um intervalo que verifica se há dados novos no cache
+                            let cacheCheckAttempts = 0;
+                            const maxCacheChecks = 30;
+                            
+                            const checkCacheForData = async () => {
+                            if (cacheCheckAttempts >= maxCacheChecks) {
+                                console.log('[RAF] Parando verificação de cache após', maxCacheChecks, 'tentativas');
+                                return;
+                            }
+                            
+                            cacheCheckAttempts++;
+                            
+                            try {
+                                // Se o card já está visível, parar verificação
+                                if (creditsCard && !creditsCard.classList.contains('hidden')) {
+                                    return;
+                                }
+                                
+                                // Buscar dados mais recentes do cache
+                                const currentCsrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrf || '';
+                                // IMPORTANTE: Usar redirect: 'manual' para prevenir que redirects do Laravel (401 -> /login -> /dashboard) sejam seguidos
+                                // Também garantir que o header Accept seja application/json para que o Laravel retorne JSON em vez de redirect HTML
+                                const latestResponse = await fetch('/api/data/receive-latest', {
+                                    method: 'GET',
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'X-Requested-With': 'XMLHttpRequest', // Garantir que o Laravel trate como AJAX
+                                    },
+                                    credentials: 'same-origin',
+                                    redirect: 'manual', // Prevenir que redirects sejam seguidos automaticamente
+                                });
+                                
+                                console.log('[RAF] Verificação periódica #' + cacheCheckAttempts + ':', {
+                                    status: latestResponse.status,
+                                    ok: latestResponse.ok,
+                                });
+                                
+                                if (latestResponse.status === 404) {
+                                    // Dados ainda não recebidos, continua tentando
+                                    if (cacheCheckAttempts === 1) {
+                                        console.log('[RAF] Aguardando dados no cache...');
+                                    } else if (cacheCheckAttempts % 5 === 0) {
+                                        // Log a cada 5 tentativas
+                                        console.log('[RAF] Ainda aguardando dados no cache (tentativa ' + cacheCheckAttempts + ')...');
+                                    }
+                                    return false;
+                                }
+                                
+                                if (latestResponse.status === 401 || latestResponse.status === 0) {
+                                    // Não autenticado ou redirect bloqueado (status 0 = redirect bloqueado com redirect: 'manual')
+                                    // IMPORTANTE: Não causar redirecionamento ou reset do SPA - apenas parar a verificação silenciosamente
+                                    console.warn('[RAF] Não autenticado ao buscar dados recentes (401) - parando verificação silenciosamente');
+                                    return true; // Parar verificação se não autenticado
+                                }
+                                
+                                if (!latestResponse.ok) {
+                                    const errorData = await latestResponse.json().catch(() => ({}));
+                                    console.warn('[RAF] Erro ao buscar dados recentes:', latestResponse.status, errorData);
+                                    return false;
+                                }
+                                
+                                const latestData = await latestResponse.json();
+                                console.log('[RAF] Dados recebidos na verificação periódica:', latestData);
+                                
+                                if (latestData.success && latestData.data) {
+                                    console.log('[RAF] Dados recentes encontrados no cache:', latestData);
+                                    
+                                    const updatedData = latestData.data;
+                                    
+                                    // Sempre atualizar o card de informações quando dados chegarem
+                                    updateInfoCard(updatedData, true);
+                                    
+                                    const resumeUrl = latestData.resume_url || updatedData.resume_url;
+                                    
+                                    if (resumeUrl) {
+                                        // Inicializar pendingConfirmation
+                                        if (!pendingConfirmation) {
+                                            pendingConfirmation = {
+                                                resumeUrl: resumeUrl,
+                                                valorTotalConsulta: updatedData.valor_total_consulta ?? 0
+                                            };
+                                        }
+                                        
+                                        // Mostrar card com os dados
+                                        await showCreditsConfirmation(
+                                            resumeUrl,
+                                            updatedData.valor_total_consulta ?? 0,
+                                            updatedData.qtd_participantes_unicos ?? updatedData.qnt_participantes ?? 0,
+                                            updatedData.custo_unitario ?? 0
+                                        );
+                                        
+                                        // Iniciar polling para este resume_url
+                                        startPolling(resumeUrl);
+                                        
+                                        // Parar verificação genérica
+                                        console.log('[RAF] Dados encontrados, parando verificação periódica');
+                                        return true;
+                                    } else {
+                                        console.warn('[RAF] Dados recebidos mas sem resume_url:', latestData);
+                                        // Mesmo sem resume_url, o card já foi atualizado acima
+                                        return true; // Dados encontrados e exibidos
+                                    }
+                                } else {
+                                    console.log('[RAF] Resposta sem dados válidos na verificação periódica:', latestData);
+                                }
+                            } catch (e) {
+                                console.log('[RAF] Erro ao verificar cache:', e);
+                            }
+                            
+                                return false;
+                            };
+                            
+                            // Verificar imediatamente e depois a cada 4 segundos
+                            const cacheCheckInterval = setInterval(async () => {
+                                const shouldStop = await checkCacheForData();
+                                if (shouldStop || (creditsCard && !creditsCard.classList.contains('hidden'))) {
+                                    clearInterval(cacheCheckInterval);
+                                    // Remover do array de intervalos
+                                    const index = cacheCheckIntervals.indexOf(cacheCheckInterval);
+                                    if (index > -1) {
+                                        cacheCheckIntervals.splice(index, 1);
+                                    }
+                                }
+                            }, 4000);
+                            
+                            // Adicionar ao array de intervalos para poder parar depois
+                            cacheCheckIntervals.push(cacheCheckInterval);
+                            
+                            // Verificar imediatamente também
+                            checkCacheForData().then(shouldStop => {
+                                if (shouldStop) {
+                                    clearInterval(cacheCheckInterval);
+                                    // Remover do array de intervalos
+                                    const index = cacheCheckIntervals.indexOf(cacheCheckInterval);
+                                    if (index > -1) {
+                                        cacheCheckIntervals.splice(index, 1);
+                                    }
+                                }
+                            });
+                            
+                            // Parar após 2 minutos
+                            setTimeout(() => {
+                                clearInterval(cacheCheckInterval);
+                                // Remover do array de intervalos
+                                const index = cacheCheckIntervals.indexOf(cacheCheckInterval);
+                                if (index > -1) {
+                                    cacheCheckIntervals.splice(index, 1);
+                                }
+                            }, 120000);
+                        }
+                    }
+                    
+                    // Se tem CSV nos dados, processar normalmente
+                    if (data.csv && data.csv.trim() !== '') {
+                        const blob = new Blob([data.csv], { type: 'text/csv;charset=utf-8;' });
+                        const filename = data.filename && data.filename.trim() !== '' 
+                            ? data.filename 
+                            : 'resultado.csv';
+                        setDownload(blob, filename);
+                        hasDownloadSuccess = true;
+                        freezeTimer();
+                        showAlert('success', 'Processado com sucesso. O CSV está pronto para download.');
+                        resultBadge.classList.remove('hidden');
+
+                        // Parar qualquer polling ou verificação ativa quando já temos o resultado
+                        stopPolling();
+
+                        // Reset parcial após sucesso
+                        form.reset();
+                        updateFileUi();
+                        updateEnablement();
+                    } else {
+                        // CSV vazio ou não presente - apenas mostrar sucesso e aguardar dados
+                        setLoading(false);
+                        showAlert('info', 'Processamento concluído. Aguardando dados adicionais...');
+                        // A verificação periódica já foi iniciada acima
+                    }
                 }
             } else if (contentType && contentType.includes('text/csv')) {
                 const blob = await response.blob();
@@ -1198,6 +1851,13 @@
                 freezeTimer();
                 showAlert('success', 'Processado com sucesso. O CSV está pronto para download.');
                 resultBadge.classList.remove('hidden');
+
+                // Parar qualquer polling ou verificação ativa quando já temos o resultado
+                stopPolling();
+                
+                // Não iniciar verificação de cache quando já temos o CSV - o resultado já foi processado
+                // A verificação de cache só é necessária quando ainda estamos aguardando dados
+                console.log('[RAF] CSV recebido com sucesso, não iniciando verificação de cache adicional');
 
                 // Reset parcial após sucesso
                 form.reset();

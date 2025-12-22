@@ -134,6 +134,19 @@ class LandingPageController extends Controller
             return response()->json($result, $statusCode);
         }
 
+        // Se precisa de confirmação, incluir resume_url na resposta para permitir polling
+        if (isset($result['needs_confirmation']) && $result['needs_confirmation'] && isset($result['resume_url'])) {
+            return response()->json([
+                'success' => true,
+                'needs_confirmation' => true,
+                'resume_url' => $result['resume_url'],
+                'valor_total_consulta' => $result['valor_total_consulta'] ?? 0,
+                'qtd_participantes_unicos' => $result['qtd_participantes_unicos'] ?? 0,
+                'custo_unitario' => $result['custo_unitario'] ?? 0,
+                'message' => 'Processamento em andamento. Aguarde...',
+            ]);
+        }
+
         return response()->json($result);
     }
 
