@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\CreditController;
 use App\Http\Controllers\Landing\LandingPageController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,13 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Rotas autenticadas
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
+    Route::get('/app/perfil', [DashboardController::class, 'perfil'])->name('app.perfil');
+
+    // Rotas de créditos
+    Route::prefix('app/credits')->name('app.credits.')->group(function () {
+        Route::get('/balance', [CreditController::class, 'balance'])->name('balance');
+        Route::post('/confirm', [CreditController::class, 'confirm'])->name('confirm');
+    });
 
     Route::prefix('app/solucoes')->name('app.solucoes.')->group(function () {
         Route::get('/', [DashboardController::class, 'solucoes'])->name('index');

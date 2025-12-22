@@ -1,53 +1,64 @@
-version: "3.8"
-
 services:
   app:
     image: fiscaldock-app:latest
+    restart: unless-stopped
+    networks:
+      - devnet
+    volumes:
+      - ./:/var/www/html
+      - app_storage:/var/www/html/storage
+      - vendor_cache:/var/www/html/vendor
+      - ./docker/php/opcache-dev.ini:/usr/local/etc/php/conf.d/99-opcache.ini:ro
     environment:
       APP_ENV: "local"
       APP_DEBUG: "true"
-      SESSION_DRIVER: "file"
-      CACHE_STORE: "array"
-      QUEUE_CONNECTION: "sync"
+      APP_URL: "http://localhost:8080"
+      ASSET_URL: "http://localhost:8080"
+      APP_KEY: "REMOVED_APP_KEY"
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_DATABASE: postgres
+      DB_USERNAME: postgres
+      DB_PASSWORD: REMOVED_PASSWORD
+      CACHE_STORE: database
+      SESSION_DRIVER: database
+      SESSION_LIFETIME: "120"
+      QUEUE_CONNECTION: sync
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      TRUSTED_PROXIES: "*"
+      LOG_CHANNEL: stack
+      LOG_LEVEL: debug
     ports:
       - "8080:80"
-    volumes:
-      - ./resources:/var/www/html/resources
-      - ./public/js:/var/www/html/public/js
-      - ./routes:/var/www/html/routes
-      - ./app:/var/www/html/app
-      - app_storage:/var/www/html/storage
-      - ./docker/php/opcache-dev.ini:/usr/local/etc/php/conf.d/99-opcache.ini:ro
-    networks:
-      - devnet
 
   scheduler:
     image: fiscaldock-app:latest
+    restart: unless-stopped
+    networks:
+      - devnet
     command: php artisan schedule:work
     environment:
       APP_ENV: "local"
       APP_DEBUG: "true"
-      SESSION_DRIVER: "file"
-      CACHE_STORE: "array"
-      QUEUE_CONNECTION: "sync"
+      APP_URL: "http://localhost:8080"
+      APP_KEY: "REMOVED_APP_KEY"
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_DATABASE: postgres
+      DB_USERNAME: postgres
+      DB_PASSWORD: REMOVED_PASSWORD
+      CACHE_STORE: database
+      SESSION_DRIVER: database
+      QUEUE_CONNECTION: sync
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      LOG_CHANNEL: stack
+      LOG_LEVEL: debug
     depends_on:
       - app
-    networks:
-      - devnet
-
-  postgres:
-    image: postgres:16
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: fiscaldock
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: REMOVED_PASSWORD
-    ports:
-      - "5433:5432"
-    volumes:
-      - pg_data:/var/lib/postgresql/data
-    networks:
-      - devnet
 
 networks:
   devnet:
@@ -56,6 +67,7 @@ networks:
 volumes:
   app_storage:
     external: true
-
-  pg_data:
-    driver: local
+    name: app_storage
+  vendor_cache:
+    external: true
+    name: hub_contabil_vendor_cache

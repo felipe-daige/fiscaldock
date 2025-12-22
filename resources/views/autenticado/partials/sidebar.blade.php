@@ -80,12 +80,12 @@
 
     <!-- User / Logout -->
     <div class="flex-shrink-0 px-4 py-4 border-t border-gray-200">
-        <div class="flex items-center gap-3 text-sm text-gray-600 mb-3 leading-5">
-            <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <a href="/app/perfil" data-link class="flex items-center gap-3 text-sm text-gray-600 mb-3 leading-5 px-2 py-2 -mx-2 rounded-lg hover:bg-gray-50 transition-colors group">
+            <svg class="w-5 h-5 text-gray-400 shrink-0 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
             </svg>
-            <span class="sidebar-label font-medium truncate">{{ Auth::user()->name ?? 'Usuário' }}</span>
-        </div>
+            <span class="sidebar-label font-medium truncate group-hover:text-blue-600 transition-colors">{{ Auth::user()->name ?? 'Usuário' }}</span>
+        </a>
 
         <form action="{{ route('logout') }}" method="POST" id="logout-form-header">
             @csrf

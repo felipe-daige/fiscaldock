@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   app:
     networks:
@@ -31,4 +29,8 @@ services:
 
 networks:
   devnet:
+    driver: bridge
+  # Sobrescrever network_public para não ser externa em dev
+  network_public:
+    external: false
     driver: bridge

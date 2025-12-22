@@ -90,7 +90,29 @@ class SpedUploadService
             ];
         }
 
-        $csv = $response->body();
+        $body = $response->body();
+
+        // Verifica se a resposta é JSON com resume_url (fluxo de confirmação de créditos)
+        $decoded = json_decode($body, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            if (isset($decoded['resume_url']) && isset($decoded['valor_total_consulta'])) {
+                Log::info('Webhook SPED aguardando confirmação de créditos', [
+                    'tipo' => $tipo,
+                    'original_name' => $originalName,
+                    'valor_total_consulta' => $decoded['valor_total_consulta'],
+                ]);
+
+                return [
+                    'success' => true,
+                    'needs_confirmation' => true,
+                    'resume_url' => $decoded['resume_url'],
+                    'valor_total_consulta' => (int) $decoded['valor_total_consulta'],
+                    'message' => 'Confirmação de créditos necessária.',
+                ];
+            }
+        }
+
+        $csv = $body;
 
         if (!$response->successful()) {
             $detail = '';
@@ -144,6 +166,98 @@ class SpedUploadService
                 'filename_final' => $finalFilename,
             ]);
         }
+
+        return [
+            'success' => true,
+            'headers' => $parsed['headers'],
+            'rows' => $parsed['rows'],
+            'csv' => $csv,
+            'filename' => $finalFilename,
+        ];
+    }
+
+    /**
+     * Envia confirmação ou negação para o webhook de resumo do n8n.
+     *
+     * @param string $resumeUrl URL de callback do n8n
+     * @param string $status 'confirmado' ou 'negado'
+     * @return array{success: bool, headers?: array, rows?: array, csv?: string, filename?: string, message?: string}
+     */
+    public function confirmAndResume(string $resumeUrl, string $status): array
+    {
+        $webhookUser = config('services.webhook.username');
+        $webhookPass = config('services.webhook.password');
+
+        // Timeout de 1 hora para processamento
+        $timeout = 3600;
+        $http = Http::timeout($timeout);
+
+        if (!empty($webhookUser) && !empty($webhookPass)) {
+            $http = $http->withBasicAuth($webhookUser, $webhookPass);
+        }
+
+        try {
+            $response = $http->post($resumeUrl, [
+                'status' => $status,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Falha ao enviar confirmação para webhook', [
+                'resume_url' => $resumeUrl,
+                'status' => $status,
+                'exception' => $e->getMessage(),
+            ]);
+
+            $isTimeout = str_contains($e->getMessage(), 'timeout') 
+                || str_contains($e->getMessage(), 'timed out');
+
+            return [
+                'success' => false,
+                'message' => $isTimeout
+                    ? 'O processamento está demorando mais que o esperado. Aguarde alguns minutos.'
+                    : 'Falha ao contatar o servidor. Tente novamente.',
+            ];
+        }
+
+        // Se o status foi negado, não espera CSV de volta
+        if ($status === 'negado') {
+            return [
+                'success' => false,
+                'message' => 'Operação cancelada pelo usuário.',
+            ];
+        }
+
+        $csv = $response->body();
+
+        if (!$response->successful()) {
+            $detail = '';
+            $decoded = json_decode($csv, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $detail = $decoded['message'] ?? $decoded['error'] ?? '';
+            } else {
+                $detail = trim($csv);
+            }
+
+            Log::warning('Webhook confirmação falhou', [
+                'resume_url' => $resumeUrl,
+                'status_code' => $response->status(),
+                'detail' => mb_substr($detail, 0, 500),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Erro ao processar (' . $response->status() . '). ' . mb_substr($detail, 0, 200),
+            ];
+        }
+
+        $parsed = $this->csvParser->parse($csv);
+
+        $filenameFromHeader = $this->extractFilenameFromResponse($response);
+        $finalFilename = $this->normalizeCsvFilename($filenameFromHeader ?? 'resultado.csv');
+
+        Log::info('Webhook confirmação sucesso', [
+            'resume_url' => $resumeUrl,
+            'filename' => $finalFilename,
+        ]);
 
         return [
             'success' => true,
