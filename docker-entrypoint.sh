@@ -17,8 +17,17 @@ fi
 
 # Corrigir permissões do storage e bootstrap/cache
 echo "Ajustando permissões..."
+# Garantir que os diretórios existam
+mkdir -p /var/www/html/storage/framework/views
+mkdir -p /var/www/html/storage/framework/sessions
+mkdir -p /var/www/html/storage/framework/cache
+mkdir -p /var/www/html/bootstrap/cache
+# Ajustar permissões (usar find para evitar problemas com volumes montados)
+find /var/www/html/storage -type d -exec chmod 775 {} \;
+find /var/www/html/storage -type f -exec chmod 664 {} \;
+find /var/www/html/bootstrap/cache -type d -exec chmod 775 {} \;
+find /var/www/html/bootstrap/cache -type f -exec chmod 664 {} \;
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Criar symlink de storage se não existir
 if [ ! -L /var/www/html/public/storage ]; then

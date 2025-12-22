@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,8 +19,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // Logar todas as requisições HTTP recebidas
         $middleware->append(\App\Http\Middleware\LogHttpRequests::class);
         
-        // Excluir rota de API do CSRF para permitir chamadas externas (n8n)
+        // Excluir rotas de API do CSRF para permitir chamadas externas (n8n)
+        // No Laravel 12, rotas em api.php não têm CSRF por padrão, mas garantimos aqui
+        // Usando array com padrões para garantir que todas as rotas /api/* sejam excluídas
         $middleware->validateCsrfTokens(except: [
+            'api/*',
+            '/api/*',
+            'api/data/receive',
+            '/api/data/receive',
             '/app/solucoes/raf/confirmar',
         ]);
     })
