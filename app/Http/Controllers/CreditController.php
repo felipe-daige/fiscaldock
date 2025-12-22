@@ -46,7 +46,7 @@ class CreditController extends Controller
 
         $validated = $request->validate([
             'resume_url' => 'required|url',
-            'valor_total_consulta' => 'required|integer|min:0',
+            'valor_total_consulta' => 'required|numeric|min:0',
         ]);
 
         $user = Auth::user();
@@ -59,7 +59,8 @@ class CreditController extends Controller
         }
 
         $resumeUrl = $validated['resume_url'];
-        $valorCreditos = (int) $validated['valor_total_consulta'];
+        // Arredonda para cima para garantir que tenha créditos suficientes
+        $valorCreditos = (int) ceil((float) $validated['valor_total_consulta']);
         $saldoAtual = $this->creditService->getBalance($user);
 
         Log::info('Tentativa de confirmação de créditos', [
@@ -134,6 +135,48 @@ class CreditController extends Controller
             'Content-Type' => 'text/csv; charset=utf-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
             'X-Credits-Remaining' => $this->creditService->getBalance($user),
+        ]);
+    }
+
+    /**
+     * Cancela a operação e envia 'answer: decline' para o webhook n8n.
+     */
+    public function cancel(Request $request)
+    {
+        $validated = $request->validate([
+            'resume_url' => 'required|url',
+        ]);
+
+        $user = Auth::user();
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usuário não autenticado.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $resumeUrl = $validated['resume_url'];
+
+        Log::info('Cancelamento de confirmação de créditos', [
+            'user_id' => $user->id,
+            'resume_url' => $resumeUrl,
+        ]);
+
+        // Envia 'answer: decline' para o webhook
+        $result = $this->spedUploadService->confirmAndResume($resumeUrl, 'decline');
+
+        if (!$result['success'] && $result['message'] !== 'Operação cancelada pelo usuário.') {
+            Log::warning('Falha ao enviar cancelamento para webhook', [
+                'user_id' => $user->id,
+                'resume_url' => $resumeUrl,
+                'error' => $result['message'] ?? 'Erro desconhecido',
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Operação cancelada com sucesso.',
         ]);
     }
 }

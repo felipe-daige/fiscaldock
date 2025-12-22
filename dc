@@ -2,3 +2,4 @@
 # Helper script para usar docker-compose.dev.yml facilmente
 docker compose -f docker-compose.dev.yml "$@"
 
+

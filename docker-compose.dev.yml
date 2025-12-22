@@ -1,12 +1,29 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    networks:
+      - devnet
+    environment:
+      POSTGRES_DB: fiscaldock
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: REMOVED_PASSWORD
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
   app:
     image: fiscaldock-app:latest
     restart: unless-stopped
     networks:
       - devnet
+    depends_on:
+      - postgres
     volumes:
       - ./:/var/www/html
       - app_storage:/var/www/html/storage
+      - ./storage/logs:/var/www/html/storage/logs  # Mapeia logs para o host
       - vendor_cache:/var/www/html/vendor
       - ./docker/php/opcache-dev.ini:/usr/local/etc/php/conf.d/99-opcache.ini:ro
     environment:
@@ -18,7 +35,7 @@ services:
       DB_CONNECTION: pgsql
       DB_HOST: postgres
       DB_PORT: "5432"
-      DB_DATABASE: postgres
+      DB_DATABASE: fiscaldock
       DB_USERNAME: postgres
       DB_PASSWORD: REMOVED_PASSWORD
       CACHE_STORE: database
@@ -32,12 +49,15 @@ services:
       LOG_LEVEL: debug
     ports:
       - "8080:80"
+    deploy: null
 
   scheduler:
     image: fiscaldock-app:latest
     restart: unless-stopped
     networks:
       - devnet
+    depends_on:
+      - app
     command: php artisan schedule:work
     environment:
       APP_ENV: "local"
@@ -47,7 +67,7 @@ services:
       DB_CONNECTION: pgsql
       DB_HOST: postgres
       DB_PORT: "5432"
-      DB_DATABASE: postgres
+      DB_DATABASE: fiscaldock
       DB_USERNAME: postgres
       DB_PASSWORD: REMOVED_PASSWORD
       CACHE_STORE: database
@@ -57,14 +77,44 @@ services:
       REDIS_PORT: "6379"
       LOG_CHANNEL: stack
       LOG_LEVEL: debug
+    deploy: null
+
+  worker:
+    image: fiscaldock-app:latest
+    restart: unless-stopped
+    networks:
+      - devnet
     depends_on:
       - app
+    command: php artisan queue:work --verbose --tries=3 --timeout=90
+    environment:
+      APP_ENV: "local"
+      APP_DEBUG: "true"
+      APP_URL: "http://localhost:8080"
+      APP_KEY: "REMOVED_APP_KEY"
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_DATABASE: fiscaldock
+      DB_USERNAME: postgres
+      DB_PASSWORD: REMOVED_PASSWORD
+      CACHE_STORE: database
+      SESSION_DRIVER: database
+      QUEUE_CONNECTION: sync
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      LOG_CHANNEL: stack
+      LOG_LEVEL: debug
+    profiles:
+      - worker  # Só sobe se usar: docker compose --profile worker up
 
 networks:
   devnet:
     driver: bridge
 
 volumes:
+  postgres_data:
+    name: hub_contabil_postgres_data
   app_storage:
     external: true
     name: app_storage

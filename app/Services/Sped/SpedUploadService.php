@@ -23,6 +23,7 @@ class SpedUploadService
      * @param string|null $originalName Nome original do arquivo (opcional)
      * @param bool $isAuthenticated Se é requisição autenticada (afeta timeout e logs)
      * @param string $modalidade Modalidade da consulta: 'regime' ou 'completa'
+     * @param int|null $userId ID do usuário (opcional, para requisições autenticadas)
      * @return array{success: bool, headers?: array, rows?: array, csv?: string, filename?: string, message?: string, errors?: array}
      */
     public function uploadAndProcess(
@@ -30,7 +31,8 @@ class SpedUploadService
         string $tipo,
         ?string $originalName = null,
         bool $isAuthenticated = false,
-        string $modalidade = 'regime'
+        string $modalidade = 'regime',
+        ?int $userId = null
     ): array {
         $fileName = match ($tipo) {
             'EFD Contribuições' => 'sped_contribuicoes.txt',
@@ -59,10 +61,14 @@ class SpedUploadService
         }
 
         try {
+            // Preparar payload com tipo e user_id (se fornecido)
+            $payload = ['tipo' => $tipo];
+            if ($userId !== null) {
+                $payload['user_id'] = $userId;
+            }
+            
             $response = $http->attach('sped', file_get_contents($file->getRealPath()), $fileName)
-                ->post($webhookUrl, [
-                    'tipo' => $tipo,
-                ]);
+                ->post($webhookUrl, $payload);
         } catch (\Throwable $e) {
             $logContext = [
                 'exception' => $e->getMessage(),
@@ -95,18 +101,25 @@ class SpedUploadService
         // Verifica se a resposta é JSON com resume_url (fluxo de confirmação de créditos)
         $decoded = json_decode($body, true);
         if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            if (isset($decoded['resume_url']) && isset($decoded['valor_total_consulta'])) {
+            // O webhook pode retornar um array com um objeto, então pega o primeiro elemento
+            $data = isset($decoded[0]) && is_array($decoded[0]) ? $decoded[0] : $decoded;
+            
+            if (isset($data['resume_url']) && isset($data['valor_total_consulta'])) {
                 Log::info('Webhook SPED aguardando confirmação de créditos', [
                     'tipo' => $tipo,
                     'original_name' => $originalName,
-                    'valor_total_consulta' => $decoded['valor_total_consulta'],
+                    'valor_total_consulta' => $data['valor_total_consulta'],
+                    'qtd_participantes_unicos' => $data['qtd_participantes_unicos'] ?? null,
+                    'custo_unitario' => $data['custo_unitario'] ?? null,
                 ]);
 
                 return [
                     'success' => true,
                     'needs_confirmation' => true,
-                    'resume_url' => $decoded['resume_url'],
-                    'valor_total_consulta' => (int) $decoded['valor_total_consulta'],
+                    'resume_url' => $data['resume_url'],
+                    'valor_total_consulta' => (float) $data['valor_total_consulta'],
+                    'qtd_participantes_unicos' => (int) ($data['qtd_participantes_unicos'] ?? 0),
+                    'custo_unitario' => (float) ($data['custo_unitario'] ?? 0),
                     'message' => 'Confirmação de créditos necessária.',
                 ];
             }
@@ -180,7 +193,7 @@ class SpedUploadService
      * Envia confirmação ou negação para o webhook de resumo do n8n.
      *
      * @param string $resumeUrl URL de callback do n8n
-     * @param string $status 'confirmado' ou 'negado'
+     * @param string $status 'confirmado' ou 'negado' (aceita também 'confirm'/'decline' para compatibilidade)
      * @return array{success: bool, headers?: array, rows?: array, csv?: string, filename?: string, message?: string}
      */
     public function confirmAndResume(string $resumeUrl, string $status): array
@@ -196,9 +209,17 @@ class SpedUploadService
             $http = $http->withBasicAuth($webhookUser, $webhookPass);
         }
 
+        // Converte status antigo para novo formato se necessário
+        $answer = match($status) {
+            'confirmado' => 'confirm',
+            'negado' => 'decline',
+            'confirm', 'decline' => $status,
+            default => 'decline',
+        };
+
         try {
             $response = $http->post($resumeUrl, [
-                'status' => $status,
+                'answer' => $answer,
             ]);
         } catch (\Throwable $e) {
             Log::error('Falha ao enviar confirmação para webhook', [
@@ -218,8 +239,8 @@ class SpedUploadService
             ];
         }
 
-        // Se o status foi negado, não espera CSV de volta
-        if ($status === 'negado') {
+        // Se o status foi negado/decline, não espera CSV de volta
+        if ($status === 'negado' || $answer === 'decline') {
             return [
                 'success' => false,
                 'message' => 'Operação cancelada pelo usuário.',
@@ -339,11 +360,11 @@ class SpedUploadService
         if ($modalidade === 'completa') {
             return match ($tipo) {
                 'EFD Fiscal' => config('services.webhook.sped_fiscal_completa_url')
-                    ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-cnd-e-regime-tributario-sped-fiscal',
+                    ?: 'https://autowebhook.fiscaldock.com.br/webhook/consultar-cnd-e-regime-tributario-sped-fiscal',
                 'EFD Contribuições' => config('services.webhook.sped_contribuicoes_completa_url')
-                    ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-cnd-e-regime-tributario-sped-contribuicoes',
+                    ?: 'https://autowebhook.fiscaldock.com.br/webhook/consultar-cnd-e-regime-tributario-sped-contribuicoes',
                 default => config('services.webhook.sped_contribuicoes_completa_url')
-                    ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-cnd-e-regime-tributario-sped-contribuicoes',
+                    ?: 'https://autowebhook.fiscaldock.com.br/webhook/consultar-cnd-e-regime-tributario-sped-contribuicoes',
             };
         }
 
