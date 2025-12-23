@@ -48,4 +48,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(SolicitacaoSocio::class);
     }
+
+    public function rafConsultasPendentes()
+    {
+        return $this->hasMany(RafConsultaPendente::class);
+    }
 }

@@ -3,8 +3,24 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {{-- Page title (o layout já tem header global) --}}
         <div class="mb-6">
-            <h1 class="text-2xl font-bold text-gray-900">Auditoria de Fornecedores</h1>
-            <p class="mt-1 text-sm text-gray-600">Analise seus fornecedores a partir do SPED e obtenha um relatório completo de regime tributário e situação fiscal.</p>
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Auditoria de Fornecedores</h1>
+                    <p class="mt-1 text-sm text-gray-600">Analise seus fornecedores a partir do SPED e obtenha um relatório completo de regime tributário e situação fiscal.</p>
+                </div>
+                <a 
+                    href="/app/solucoes/raf/historico" 
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
+                    data-link
+                    id="raf-historico-link"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Ver relatórios pendentes</span>
+                    <span id="raf-pendentes-badge" class="hidden ml-1 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-amber-500 rounded-full"></span>
+                </a>
+            </div>
         </div>
 
         {{-- Navegação por Pills --}}
@@ -706,10 +722,10 @@
     const infoRefreshText = document.getElementById('info-refresh-text');
 
     /**
-     * Busca dados do cache e atualiza a UI.
-     * Chamado quando o usuário clica no botão "Atualizar" ou após upload.
+     * Busca dados do banco de dados e atualiza a UI.
+     * Chamado quando o usuário clica no botão "Atualizar".
      */
-    const refreshDataFromCache = async () => {
+    const refreshDataFromDatabase = async () => {
         if (!infoRefreshBtn) return;
 
         // Desabilitar botão durante a busca
@@ -731,8 +747,7 @@
             });
 
             if (response.status === 401) {
-                // Erro de autenticação
-                handleAuthError('refreshDataFromCache', false);
+                handleAuthError('refreshDataFromDatabase', false);
                 return;
             }
 
@@ -740,10 +755,16 @@
                 const data = await response.json().catch(() => ({}));
                 const errorMessage = data.message || `Erro ${response.status}`;
                 
-                // Se for 404, pode ser que os dados ainda não chegaram
+                // Tratamento específico por status
                 if (response.status === 404) {
-                    console.log('[RAF] Dados ainda não disponíveis no cache (404)');
-                    showAlert('info', 'Dados ainda não estão disponíveis. O processamento pode estar em andamento. Tente novamente em alguns segundos usando o botão "Atualizar".');
+                    console.log('[RAF] Dados ainda não disponíveis no banco de dados (404)');
+                    showAlert('info', 'Dados ainda não estão disponíveis. O processamento pode estar em andamento. Use o botão "Atualizar" para verificar novamente.');
+                    return;
+                } else if (response.status === 403) {
+                    showAlert('error', 'Acesso negado.');
+                    return;
+                } else if (response.status === 500) {
+                    showAlert('error', 'Erro ao buscar dados. Tente novamente.');
                     return;
                 }
                 
@@ -753,21 +774,21 @@
             const result = await response.json();
 
             if (!result.success || !result.data) {
-                console.log('[RAF] Nenhum dado encontrado no cache');
-                showAlert('info', 'Nenhum dado disponível no cache. Aguarde o processamento ou faça um novo upload. Use o botão "Atualizar" para verificar novamente.');
+                console.log('[RAF] Nenhum dado encontrado no banco de dados');
+                showAlert('info', 'Nenhum dado disponível. Aguarde o processamento ou faça um novo upload. Use o botão "Atualizar" para verificar novamente.');
                 return;
             }
 
-            const cacheData = result.data;
-            console.log('[RAF] Dados recuperados do cache:', cacheData);
+            const dbData = result.data;
+            console.log('[RAF] Dados recuperados do banco de dados:', dbData);
 
             // Atualizar card de informações
-            updateInfoCard(cacheData, !!pendingConfirmation);
+            updateInfoCard(dbData, !!pendingConfirmation);
 
-            // Se tem CSV no cache, disponibilizar para download
-            if (cacheData.has_csv && cacheData.csv) {
-                const blob = new Blob([cacheData.csv], { type: 'text/csv;charset=utf-8;' });
-                const filename = cacheData.csv_filename || 'resultado.csv';
+            // Se tem CSV, disponibilizar para download
+            if (dbData.has_csv && dbData.csv) {
+                const blob = new Blob([dbData.csv], { type: 'text/csv;charset=utf-8;' });
+                const filename = dbData.csv_filename || 'resultado.csv';
                 setDownload(blob, filename);
                 freezeTimer();
                 showAlert('success', 'CSV disponível para download.');
@@ -776,25 +797,25 @@
             }
 
             // Se tem resume_url e valor_total_consulta, mostrar card de confirmação
-            if (cacheData.resume_url && cacheData.valor_total_consulta && creditsCard?.classList.contains('hidden')) {
+            if (dbData.resume_url && dbData.valor_total_consulta && creditsCard?.classList.contains('hidden')) {
                 await showCreditsConfirmation(
-                    cacheData.resume_url,
-                    cacheData.valor_total_consulta,
-                    cacheData.qtd_participantes_unicos || cacheData.qnt_participantes || 0,
-                    cacheData.custo_unitario || 0
+                    dbData.resume_url,
+                    dbData.valor_total_consulta,
+                    dbData.qtd_participantes_unicos || 0,
+                    dbData.custo_unitario || 0
                 );
-            } else if (cacheData.resume_url && cacheData.valor_total_consulta && !pendingConfirmation) {
+            } else if (dbData.resume_url && dbData.valor_total_consulta && !pendingConfirmation) {
                 // Atualizar pendingConfirmation se ainda não estiver definido
                 pendingConfirmation = {
-                    resumeUrl: cacheData.resume_url,
-                    valorTotalConsulta: cacheData.valor_total_consulta,
+                    resumeUrl: dbData.resume_url,
+                    valorTotalConsulta: dbData.valor_total_consulta,
                 };
             }
 
             showAlert('success', 'Dados atualizados com sucesso.');
 
         } catch (err) {
-            console.error('[RAF] Erro ao buscar dados do cache:', err);
+            console.error('[RAF] Erro ao buscar dados do banco de dados:', err);
             showAlert('error', err.message || 'Erro ao atualizar dados. Tente novamente.');
         } finally {
             // Reabilitar botão
@@ -1301,7 +1322,7 @@
 
     // Event listener para o botão de atualizar
     if (infoRefreshBtn) {
-        infoRefreshBtn.addEventListener('click', refreshDataFromCache);
+        infoRefreshBtn.addEventListener('click', refreshDataFromDatabase);
     }
     
     // Prevenir comportamento padrão do link de download para evitar redirecionamentos
@@ -1622,65 +1643,16 @@
                         updateFileUi();
                         updateEnablement();
                     } else {
-                        // CSV vazio ou não presente - aguardar recebimento de dados
-                        console.log('[RAF] CSV vazio ou não presente, aguardando recebimento de dados...');
+                        // CSV vazio ou não presente - dados serão salvos no banco pelo n8n
+                        console.log('[RAF] CSV vazio ou não presente. Dados serão salvos no banco pelo n8n.');
                         setLoading(false);
                         
-                        // Se tem resume_url na resposta, os dados podem já estar no cache
-                        // Tentar buscar imediatamente
-                        if (data.resume_url) {
-                            console.log('[RAF] Resume URL presente, buscando dados do cache imediatamente...');
-                            
-                            // Tentar buscar do cache imediatamente
-                            refreshDataFromCache().catch(err => {
-                                console.warn('[RAF] Erro ao buscar dados imediatamente, tentando novamente...', err);
-                                
-                                // Se falhar, tentar novamente após 2 segundos
-                                setTimeout(() => {
-                                    refreshDataFromCache();
-                                }, 2000);
-                            });
-                            
-                            showAlert('info', 'Processamento concluído. Buscando dados adicionais...');
-                        } else {
-                            // Sem resume_url, fazer polling agressivo
-                            // Isso permite que o n8n tenha tempo de enviar os dados
-                            console.log('[RAF] Sem resume_url, iniciando polling agressivo...');
-                            
-                            let pollAttempts = 0;
-                            const maxPollAttempts = 10; // Tentar até 10 vezes
-                            const pollInterval = 2000; // A cada 2 segundos
-                            
-                            const pollForData = () => {
-                                pollAttempts++;
-                                console.log(`[RAF] Tentativa de polling ${pollAttempts}/${maxPollAttempts}`);
-                                
-                                refreshDataFromCache().then(() => {
-                                    // Se encontrou dados, o refreshDataFromCache já atualizou a UI
-                                    console.log('[RAF] Dados encontrados via polling');
-                                }).catch(err => {
-                                    console.warn(`[RAF] Polling tentativa ${pollAttempts} falhou:`, err);
-                                    
-                                    if (pollAttempts < maxPollAttempts) {
-                                        // Continuar polling
-                                        setTimeout(pollForData, pollInterval);
-                                    } else {
-                                        // Parar polling após max tentativas
-                                        console.log('[RAF] Polling encerrado após máximo de tentativas');
-                                        showAlert('info', 'Processamento concluído. Use o botão "Atualizar" para verificar se os dados já estão disponíveis.');
-                                    }
-                                });
-                            };
-                            
-                            // Iniciar polling após 2 segundos
-                            setTimeout(pollForData, 2000);
-                            
-                            showAlert('info', 'Processamento concluído. Buscando dados adicionais...');
-                        }
+                        // Mostrar mensagem para o usuário usar o botão "Atualizar"
+                        showAlert('info', 'Processamento concluído. Use o botão "Atualizar" para verificar se os dados já estão disponíveis.');
                         
                         // Mostrar botão de atualização se estiver oculto
                         if (infoRefreshBtn && infoRefreshBtn.parentElement) {
-                            const infoCard = infoRefreshBtn.closest('.bg-white.rounded-lg.shadow');
+                            const infoCard = infoRefreshBtn.closest('.bg-white.rounded-xl');
                             if (infoCard) {
                                 infoCard.classList.remove('hidden');
                             }
@@ -1818,6 +1790,48 @@
         document.addEventListener('DOMContentLoaded', initRaf, { once: true });
     } else {
         initRaf();
+    }
+
+    // Atualizar badge de pendentes no botão do histórico
+    async function updatePendentesBadge() {
+        const badge = document.getElementById('raf-pendentes-badge');
+        if (!badge) return;
+
+        try {
+            const response = await fetch('/app/solucoes/raf/historico', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'text/html',
+                },
+                credentials: 'same-origin',
+            });
+
+            if (response.ok) {
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const totalPendentes = doc.querySelector('[data-relatorio-id]') 
+                    ? doc.querySelectorAll('[data-relatorio-id]').length 
+                    : 0;
+
+                if (totalPendentes > 0) {
+                    badge.textContent = totalPendentes;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        } catch (err) {
+            console.error('Erro ao atualizar badge de pendentes:', err);
+        }
+    }
+
+    // Atualizar badge ao carregar a página
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', updatePendentesBadge, { once: true });
+    } else {
+        updatePendentesBadge();
     }
 })();
 </script>
