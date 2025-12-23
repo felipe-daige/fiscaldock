@@ -52,6 +52,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/raf', [DashboardController::class, 'raf'])->name('raf');
         Route::post('/raf/upload', [DashboardController::class, 'uploadSped'])->name('raf.upload');
     });
+    
+    // Rota para buscar os dados mais recentes do cache do usuário
+    // Requer autenticação via sessão (stateful) para funcionar com frontend
+    Route::get('/api/data/receive-latest', [\App\Http\Controllers\Api\DataReceiverController::class, 'getLatestData'])
+        ->name('api.data.get.latest');
 });
 
 // Rota intermediária sem middleware auth - aceita token API ou sessão

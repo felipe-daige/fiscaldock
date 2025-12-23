@@ -5,6 +5,7 @@ namespace App\Services\Sped;
 use App\Services\CsvParserService;
 use Illuminate\Http\Client\Response as ClientResponse;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
@@ -97,12 +98,43 @@ class SpedUploadService
         }
 
         $body = $response->body();
+        $contentType = $response->header('Content-Type') ?? '';
+        $isJsonContentType = str_contains($contentType, 'application/json') || str_contains($contentType, 'text/json');
 
         // Verifica se a resposta é JSON com resume_url (fluxo de confirmação de créditos)
-        $decoded = json_decode($body, true);
-        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+        // Primeiro tenta detectar pelo Content-Type, depois pelo conteúdo
+        $decoded = null;
+        $isJson = false;
+        
+        if ($isJsonContentType) {
+            // Se o Content-Type indica JSON, tenta decodificar
+            $decoded = json_decode($body, true);
+            $isJson = json_last_error() === JSON_ERROR_NONE && is_array($decoded);
+        } else {
+            // Se não é JSON pelo Content-Type, ainda tenta decodificar (pode ser JSON sem header correto)
+            $decoded = json_decode($body, true);
+            $isJson = json_last_error() === JSON_ERROR_NONE && is_array($decoded);
+            
+            // Se decodificou como JSON mas o Content-Type não indica JSON, verifica se é realmente JSON
+            // (pode ser CSV que começa com { ou [)
+            if ($isJson) {
+                // Verifica se o body parece ser realmente JSON (começa com { ou [)
+                $trimmedBody = trim($body);
+                $isJson = ($trimmedBody[0] ?? '') === '{' || ($trimmedBody[0] ?? '') === '[';
+            }
+        }
+
+        if ($isJson && is_array($decoded)) {
             // O webhook pode retornar um array com um objeto, então pega o primeiro elemento
             $data = isset($decoded[0]) && is_array($decoded[0]) ? $decoded[0] : $decoded;
+            
+            Log::debug('Webhook SPED resposta JSON detectada', [
+                'tipo' => $tipo,
+                'content_type' => $contentType,
+                'has_resume_url' => isset($data['resume_url']),
+                'has_valor_total' => isset($data['valor_total_consulta']),
+                'data_keys' => array_keys($data),
+            ]);
             
             if (isset($data['resume_url']) && isset($data['valor_total_consulta'])) {
                 Log::info('Webhook SPED aguardando confirmação de créditos', [
@@ -111,8 +143,9 @@ class SpedUploadService
                     'valor_total_consulta' => $data['valor_total_consulta'],
                     'qtd_participantes_unicos' => $data['qtd_participantes_unicos'] ?? null,
                     'custo_unitario' => $data['custo_unitario'] ?? null,
+                    'resume_url' => $data['resume_url'],
                 ]);
-
+                
                 return [
                     'success' => true,
                     'needs_confirmation' => true,
@@ -122,10 +155,192 @@ class SpedUploadService
                     'custo_unitario' => (float) ($data['custo_unitario'] ?? 0),
                     'message' => 'Confirmação de créditos necessária.',
                 ];
+            } else {
+                // JSON válido mas sem resume_url - pode ser resposta de erro ou outro formato
+                Log::debug('Webhook SPED retornou JSON mas sem resume_url/valor_total_consulta', [
+                    'tipo' => $tipo,
+                    'data_keys' => array_keys($data),
+                ]);
             }
         }
 
         $csv = $body;
+        
+        // Log quando o CSV está vazio (pode indicar que deveria ser JSON)
+        if (trim($csv) === '' && $response->successful()) {
+            Log::warning('Webhook SPED retornou resposta vazia', [
+                'tipo' => $tipo,
+                'original_name' => $originalName,
+                'status' => $response->status(),
+                'content_type' => $contentType,
+                'is_authenticated' => $isAuthenticated,
+                'user_id' => $userId,
+            ]);
+            
+            // Se a resposta está vazia mas o status é 200, pode ser que o webhook n8n
+            // já tenha enviado os dados via /api/data/receive. Verificar cache do usuário.
+            if ($isAuthenticated && $userId) {
+                $cachedData = null;
+                $recentListKey = "raf_recent_list:{$userId}";
+                $recentList = Cache::get($recentListKey, []);
+                
+                // #region agent log
+                try {
+                    $debugLogPath = '/opt/hub_contabil/.cursor/debug.log';
+                    $debugLogDir = dirname($debugLogPath);
+                    if (!is_dir($debugLogDir)) {
+                        @mkdir($debugLogDir, 0755, true);
+                    }
+                    if (is_dir($debugLogDir) && is_writable($debugLogDir)) {
+                        file_put_contents($debugLogPath, json_encode([
+                            'sessionId' => 'debug-session',
+                            'runId' => 'run1',
+                            'hypothesisId' => 'C',
+                            'location' => 'SpedUploadService.php:198',
+                            'message' => 'Buscando lista de recentes - SpedUploadService',
+                            'data' => [
+                                'user_id' => $userId,
+                                'user_id_type' => gettype($userId),
+                                'user_id_string' => (string)$userId,
+                                'recent_list_key' => $recentListKey,
+                                'cache_driver' => config('cache.default'),
+                                'cache_store' => config('cache.stores.' . config('cache.default') . '.driver') ?? 'unknown',
+                                'app_env' => config('app.env'),
+                                'recent_list_count' => count($recentList),
+                                'recent_list_keys' => array_map(fn($item) => $item['resume_url'] ?? null, $recentList ?? []),
+                            ],
+                            'timestamp' => time() * 1000
+                        ]) . "\n", FILE_APPEND);
+                    }
+                } catch (\Throwable $e) {
+                    // Ignorar erros de log de debug - não são críticos
+                }
+                // #endregion
+                
+                Log::debug('Webhook SPED resposta vazia - buscando no cache', [
+                    'tipo' => $tipo,
+                    'user_id' => $userId,
+                    'recent_list_count' => count($recentList),
+                ]);
+                
+                // 1. Buscar primeiro no cache privado usando a lista de recentes
+                if (!empty($recentList)) {
+                    // Pegar o mais recente (último da lista)
+                    $latest = end($recentList);
+                    $resumeUrlHash = $latest['resume_url_hash'] ?? md5($latest['resume_url'] ?? '');
+                    $cacheKey = "raf_confirmation:{$userId}:{$resumeUrlHash}";
+                    $cachedData = Cache::get($cacheKey);
+                    
+                    if ($cachedData && isset($cachedData['resume_url'])) {
+                        Log::info('Webhook SPED resposta vazia - dados encontrados no cache privado', [
+                            'tipo' => $tipo,
+                            'original_name' => $originalName,
+                            'resume_url' => $cachedData['resume_url'],
+                            'valor_total_consulta' => $cachedData['valor_total_consulta'] ?? null,
+                        ]);
+                    }
+                }
+                
+                // 2. Se não encontrou no cache privado, tentar cache público usando a lista de recentes
+                if ((!$cachedData || !isset($cachedData['resume_url'])) && !empty($recentList)) {
+                    Log::debug('Webhook SPED resposta vazia - tentando buscar no cache público via lista de recentes', [
+                        'tipo' => $tipo,
+                        'user_id' => $userId,
+                        'recent_list_count' => count($recentList),
+                    ]);
+                    
+                    // Tentar cada resume_url da lista (do mais recente para o mais antigo)
+                    foreach (array_reverse($recentList) as $item) {
+                        $resumeUrlHash = $item['resume_url_hash'] ?? md5($item['resume_url'] ?? '');
+                        $publicCacheKey = "raf_confirmation_public:{$resumeUrlHash}";
+                        $publicCachedData = Cache::get($publicCacheKey);
+                        
+                        if ($publicCachedData && isset($publicCachedData['resume_url'])) {
+                            $cachedData = $publicCachedData;
+                            Log::info('Webhook SPED resposta vazia - dados encontrados no cache público via lista', [
+                                'tipo' => $tipo,
+                                'original_name' => $originalName,
+                                'resume_url' => $cachedData['resume_url'],
+                                'valor_total_consulta' => $cachedData['valor_total_consulta'] ?? null,
+                            ]);
+                            break;
+                        }
+                    }
+                }
+                
+                // 3. Se ainda não encontrou e a lista está vazia, aguardar um pouco e tentar novamente
+                // Isso pode acontecer se os dados ainda não chegaram via webhook
+                // OU se há um problema de cache compartilhado entre ambientes
+                if ((!$cachedData || !isset($cachedData['resume_url'])) && empty($recentList)) {
+                    Log::debug('Webhook SPED resposta vazia - lista de recentes vazia, tentando estratégias alternativas', [
+                        'tipo' => $tipo,
+                        'user_id' => $userId,
+                        'app_env' => config('app.env'),
+                        'cache_driver' => config('cache.default'),
+                    ]);
+                    
+                    // Estratégia 1: Aguardar 1 segundo e tentar buscar novamente (dados podem estar chegando)
+                    sleep(1);
+                    $recentList = Cache::get($recentListKey, []);
+                    
+                    if (!empty($recentList)) {
+                        $latest = end($recentList);
+                        $resumeUrlHash = $latest['resume_url_hash'] ?? md5($latest['resume_url'] ?? '');
+                        
+                        // Tentar cache privado
+                        $cacheKey = "raf_confirmation:{$userId}:{$resumeUrlHash}";
+                        $cachedData = Cache::get($cacheKey);
+                        
+                        // Se não encontrou, tentar cache público
+                        if (!$cachedData || !isset($cachedData['resume_url'])) {
+                            $publicCacheKey = "raf_confirmation_public:{$resumeUrlHash}";
+                            $cachedData = Cache::get($publicCacheKey);
+                        }
+                        
+                        if ($cachedData && isset($cachedData['resume_url'])) {
+                            Log::info('Webhook SPED resposta vazia - dados encontrados após aguardar', [
+                                'tipo' => $tipo,
+                                'original_name' => $originalName,
+                                'resume_url' => $cachedData['resume_url'],
+                                'valor_total_consulta' => $cachedData['valor_total_consulta'] ?? null,
+                            ]);
+                        }
+                    } else {
+                        // Estratégia 2: Se a lista ainda está vazia, pode ser problema de cache compartilhado
+                        // Tentar buscar diretamente no cache público usando uma busca mais ampla
+                        // Como não temos o resume_url, não podemos buscar diretamente
+                        // Mas podemos logar isso para debug
+                        Log::warning('Webhook SPED resposta vazia - lista de recentes continua vazia após aguardar', [
+                            'tipo' => $tipo,
+                            'user_id' => $userId,
+                            'app_env' => config('app.env'),
+                            'cache_driver' => config('cache.default'),
+                            'possible_issue' => 'Cache não compartilhado entre ambientes ou lista não foi salva corretamente',
+                        ]);
+                    }
+                }
+                
+                // Retornar dados encontrados
+                if ($cachedData && isset($cachedData['resume_url']) && isset($cachedData['valor_total_consulta'])) {
+                    Log::info('Webhook SPED resposta vazia - retornando dados do cache', [
+                        'tipo' => $tipo,
+                        'original_name' => $originalName,
+                        'resume_url' => $cachedData['resume_url'],
+                        'valor_total_consulta' => $cachedData['valor_total_consulta'],
+                    ]);
+                    
+                    return [
+                        'success' => true,
+                        'needs_confirmation' => true,
+                        'resume_url' => $cachedData['resume_url'],
+                        'valor_total_consulta' => (float) ($cachedData['valor_total_consulta'] ?? 0),
+                        'qtd_participantes_unicos' => (int) ($cachedData['qtd_participantes_unicos'] ?? $cachedData['qnt_participantes'] ?? 0),
+                        'custo_unitario' => (float) ($cachedData['custo_unitario'] ?? 0),
+                        'message' => 'Confirmação de créditos necessária.',
+                    ];
+                }
+            }
+        }
 
         if (!$response->successful()) {
             $detail = '';
@@ -209,18 +424,19 @@ class SpedUploadService
             $http = $http->withBasicAuth($webhookUser, $webhookPass);
         }
 
-        // Converte status para formato esperado pelo webhook
-        $answer = match($status) {
-            'confirmado', 'confirmed' => 'confirmed',
-            'negado', 'denied' => 'denied',
-            'confirm' => 'confirmed', // Compatibilidade com formato antigo
-            'decline' => 'denied', // Compatibilidade com formato antigo
-            default => 'denied',
+        // Converte status para formato esperado pelo webhook n8n
+        // Formato esperado: {"status": "approved"} ou {"status": "declined"}
+        $webhookStatus = match($status) {
+            'confirmado', 'confirmed', 'approved' => 'approved',
+            'negado', 'denied', 'declined' => 'declined',
+            'confirm' => 'approved', // Compatibilidade com formato antigo
+            'decline' => 'declined', // Compatibilidade com formato antigo
+            default => 'declined',
         };
 
         try {
             $response = $http->post($resumeUrl, [
-                'answer' => $answer,
+                'status' => $webhookStatus,
             ]);
         } catch (\Throwable $e) {
             Log::error('Falha ao enviar confirmação para webhook', [
@@ -240,8 +456,8 @@ class SpedUploadService
             ];
         }
 
-        // Se o status foi negado/denied, não espera CSV de volta
-        if ($status === 'negado' || $answer === 'denied') {
+        // Se o status foi negado/declined, não espera CSV de volta
+        if ($status === 'negado' || $webhookStatus === 'declined') {
             return [
                 'success' => false,
                 'message' => 'Operação cancelada pelo usuário.',
@@ -372,11 +588,11 @@ class SpedUploadService
         // Modalidade regime (padrão): apenas Regime Tributário
         return match ($tipo) {
             'EFD Fiscal' => config('services.webhook.sped_fiscal_url')
-                ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-regime-tributario-sped-fiscal',
+                ?: 'https://autowebhook.fiscaldock.com.br/webhook/consultar-regime-tributario-sped-fiscal',
             'EFD Contribuições' => config('services.webhook.sped_contribuicoes_url')
-                ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-regime-tributario-sped-contribuicoes',
+                ?: 'https://autowebhook.fiscaldock.com.br/webhook/consultar-regime-tributario-sped-contribuicoes',
             default => config('services.webhook.sped_contribuicoes_url')
-                ?: 'https://auto.fiscaldock.com.br/webhook-test/consultar-regime-tributario-sped-contribuicoes',
+                ?: 'https://autowebhook.fiscaldock.com.br/webhook/consultar-regime-tributario-sped-contribuicoes',
         };
     }
 }

@@ -271,6 +271,11 @@ function initLayout() {
         
         // Handler de clique
         _sidebarCollapsibleHandler = function(e) {
+            // Se o clique foi em um link, permitir navegação normal (SPA processa)
+            if (e.target.closest('[data-link]')) {
+                return; // Deixa o SPA processar o clique
+            }
+            
             e.preventDefault();
             e.stopPropagation();
             

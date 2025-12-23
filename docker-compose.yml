@@ -19,7 +19,7 @@ services:
       DB_CONNECTION: pgsql
       DB_HOST: postgres
       DB_PORT: "5432"
-      DB_DATABASE: postgres
+      DB_DATABASE: fiscaldock
       DB_USERNAME: postgres
       DB_PASSWORD: REMOVED_PASSWORD
 
@@ -95,6 +95,9 @@ services:
     restart: unless-stopped
     networks:
       - network_public
+    volumes:
+      - app_storage:/var/www/html/storage
+      - ./storage/logs:/var/www/html/storage/logs  # Mapeia logs para o host
     command: php artisan schedule:work
     environment:
       APP_ENV: "production"
@@ -129,6 +132,9 @@ services:
     restart: unless-stopped
     networks:
       - network_public
+    volumes:
+      - app_storage:/var/www/html/storage
+      - ./storage/logs:/var/www/html/storage/logs  # Mapeia logs para o host
     command: php artisan queue:work --verbose --tries=3 --timeout=90
     environment:
       APP_ENV: "production"
@@ -138,7 +144,7 @@ services:
       DB_CONNECTION: pgsql
       DB_HOST: postgres
       DB_PORT: "5432"
-      DB_DATABASE: postgres
+      DB_DATABASE: fiscaldock
       DB_USERNAME: postgres
       DB_PASSWORD: REMOVED_PASSWORD
       CACHE_STORE: ${CACHE_STORE:-database}
