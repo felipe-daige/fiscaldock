@@ -64,16 +64,14 @@
                                 <div class="space-y-2">
                                     <label for="sped" class="block text-sm font-semibold text-gray-800">Arquivo SPED (.txt)</label>
 
-                                    <div class="sr-only" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;">
-                                        <input
-                                            type="file"
-                                            id="sped"
-                                            name="sped"
-                                            accept=".txt,text/plain"
-                                            style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; opacity: 0;"
-                                            disabled
-                                        >
-                                    </div>
+                                    <input
+                                        type="file"
+                                        id="sped"
+                                        name="sped"
+                                        accept=".txt"
+                                        class="sr-only"
+                                        disabled
+                                    >
 
                                     <div
                                         id="sped-dropzone"
@@ -227,9 +225,26 @@
                 {{-- Card de Informações da Consulta --}}
                 <div id="info-consulta-card" class="bg-white rounded-xl border border-gray-200 shadow-md">
             <div class="p-6 space-y-4">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-900">Informações da Consulta</h3>
-                    <p class="mt-1 text-sm text-gray-600">Detalhes do processamento da consulta.</p>
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Informações da Consulta</h3>
+                        <p class="mt-1 text-sm text-gray-600">Detalhes do processamento da consulta.</p>
+                    </div>
+                    <button
+                        type="button"
+                        id="info-refresh-btn"
+                        class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Atualizar dados do cache"
+                    >
+                        <svg id="info-refresh-icon" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <svg id="info-refresh-spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+                        <span id="info-refresh-text">Atualizar</span>
+                    </button>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -598,12 +613,6 @@
 
     // Dados de confirmação pendente
     let pendingConfirmation = null;
-    
-    // Controle de polling para dados atualizados
-    let pollingInterval = null;
-    
-    // Controle de intervalos de verificação de cache
-    let cacheCheckIntervals = [];
 
     const formatFileSize = (bytes) => {
         if (!Number.isFinite(bytes)) return '';
@@ -614,56 +623,185 @@
     };
 
     const formatCurrency = (value) => {
-        if (value === null || value === undefined || isNaN(value)) return '--';
-        return new Intl.NumberFormat('pt-BR', {
+        if (value === null || value === undefined || isNaN(value)) {
+            return '--';
+        }
+        const formatted = new Intl.NumberFormat('pt-BR', {
             style: 'currency',
             currency: 'BRL',
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
         }).format(value);
+        return formatted;
     };
 
     const updateInfoCard = (data, needsConfirmation = false) => {
-        if (!infoConsultaCard) return;
+        if (!infoConsultaCard) {
+            return;
+        }
 
         const qtdParticipantes = data.qtd_participantes_unicos ?? data.qnt_participantes ?? null;
         const valorTotal = data.valor_total_consulta ?? null;
         const custoUnitario = data.custo_unitario ?? null;
 
         // Verificar se há dados válidos para exibir
-        const hasValidData = (qtdParticipantes !== null && qtdParticipantes !== undefined) ||
-                             (valorTotal !== null && valorTotal !== undefined) ||
-                             (custoUnitario !== null && custoUnitario !== undefined);
+        // Considera válido se pelo menos um dos valores não for null/undefined
+        const hasValidData = (qtdParticipantes !== null && qtdParticipantes !== undefined && qtdParticipantes > 0) ||
+                             (valorTotal !== null && valorTotal !== undefined && valorTotal > 0) ||
+                             (custoUnitario !== null && custoUnitario !== undefined && custoUnitario > 0);
+
+
+        console.log('[RAF] updateInfoCard chamado:', {
+            qtdParticipantes,
+            valorTotal,
+            custoUnitario,
+            hasValidData,
+            needsConfirmation,
+            dataKeys: Object.keys(data),
+        });
 
         // Atualizar valores (sempre atualiza, mesmo se for null/undefined)
         if (infoQtdParticipantes) {
-            infoQtdParticipantes.textContent = (qtdParticipantes !== null && qtdParticipantes !== undefined)
+            const qtdText = (qtdParticipantes !== null && qtdParticipantes !== undefined)
                 ? qtdParticipantes.toString()
                 : '--';
+            infoQtdParticipantes.textContent = qtdText;
         }
 
         if (infoValorTotal) {
-            infoValorTotal.textContent = formatCurrency(valorTotal);
+            const valorFormatted = formatCurrency(valorTotal);
+            infoValorTotal.textContent = valorFormatted;
         }
 
         if (infoCustoUnitario) {
-            infoCustoUnitario.textContent = formatCurrency(custoUnitario);
+            const custoFormatted = formatCurrency(custoUnitario);
+            infoCustoUnitario.textContent = custoFormatted;
         }
 
         // Sempre mostrar o card quando houver dados válidos
         if (hasValidData) {
             infoConsultaCard.classList.remove('hidden');
+            console.log('[RAF] Card de informações exibido com dados válidos');
+        } else {
+            console.log('[RAF] Nenhum dado válido para exibir no card');
         }
 
         // Mostrar/esconder botão de confirmar créditos
         // O botão aparece quando needsConfirmation é true OU quando há dados válidos com valor total
         if (infoConfirmCreditsWrap) {
-            const shouldShowButton = needsConfirmation || (hasValidData && (valorTotal !== null && valorTotal !== undefined));
+            const shouldShowButton = needsConfirmation || (hasValidData && (valorTotal !== null && valorTotal !== undefined && valorTotal > 0));
             if (shouldShowButton) {
                 infoConfirmCreditsWrap.classList.remove('hidden');
+                console.log('[RAF] Botão de confirmação de créditos exibido');
             } else {
                 infoConfirmCreditsWrap.classList.add('hidden');
             }
+        }
+    };
+
+    // Elementos do botão de atualizar
+    const infoRefreshBtn = document.getElementById('info-refresh-btn');
+    const infoRefreshIcon = document.getElementById('info-refresh-icon');
+    const infoRefreshSpinner = document.getElementById('info-refresh-spinner');
+    const infoRefreshText = document.getElementById('info-refresh-text');
+
+    /**
+     * Busca dados do cache e atualiza a UI.
+     * Chamado quando o usuário clica no botão "Atualizar" ou após upload.
+     */
+    const refreshDataFromCache = async () => {
+        if (!infoRefreshBtn) return;
+
+        // Desabilitar botão durante a busca
+        infoRefreshBtn.disabled = true;
+        if (infoRefreshIcon) infoRefreshIcon.classList.add('hidden');
+        if (infoRefreshSpinner) infoRefreshSpinner.classList.remove('hidden');
+        if (infoRefreshText) infoRefreshText.textContent = 'Atualizando...';
+
+        try {
+            const currentCsrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrf || '';
+            
+            const response = await fetch('/api/data/receive-latest', {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': currentCsrf,
+                    'Accept': 'application/json',
+                },
+                credentials: 'same-origin',
+            });
+
+            if (response.status === 401) {
+                // Erro de autenticação
+                handleAuthError('refreshDataFromCache', false);
+                return;
+            }
+
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                const errorMessage = data.message || `Erro ${response.status}`;
+                
+                // Se for 404, pode ser que os dados ainda não chegaram
+                if (response.status === 404) {
+                    console.log('[RAF] Dados ainda não disponíveis no cache (404)');
+                    showAlert('info', 'Dados ainda não estão disponíveis. O processamento pode estar em andamento. Tente novamente em alguns segundos usando o botão "Atualizar".');
+                    return;
+                }
+                
+                throw new Error(errorMessage);
+            }
+
+            const result = await response.json();
+
+            if (!result.success || !result.data) {
+                console.log('[RAF] Nenhum dado encontrado no cache');
+                showAlert('info', 'Nenhum dado disponível no cache. Aguarde o processamento ou faça um novo upload. Use o botão "Atualizar" para verificar novamente.');
+                return;
+            }
+
+            const cacheData = result.data;
+            console.log('[RAF] Dados recuperados do cache:', cacheData);
+
+            // Atualizar card de informações
+            updateInfoCard(cacheData, !!pendingConfirmation);
+
+            // Se tem CSV no cache, disponibilizar para download
+            if (cacheData.has_csv && cacheData.csv) {
+                const blob = new Blob([cacheData.csv], { type: 'text/csv;charset=utf-8;' });
+                const filename = cacheData.csv_filename || 'resultado.csv';
+                setDownload(blob, filename);
+                freezeTimer();
+                showAlert('success', 'CSV disponível para download.');
+                if (resultBadge) resultBadge.classList.remove('hidden');
+                setLoading(false);
+            }
+
+            // Se tem resume_url e valor_total_consulta, mostrar card de confirmação
+            if (cacheData.resume_url && cacheData.valor_total_consulta && creditsCard?.classList.contains('hidden')) {
+                await showCreditsConfirmation(
+                    cacheData.resume_url,
+                    cacheData.valor_total_consulta,
+                    cacheData.qtd_participantes_unicos || cacheData.qnt_participantes || 0,
+                    cacheData.custo_unitario || 0
+                );
+            } else if (cacheData.resume_url && cacheData.valor_total_consulta && !pendingConfirmation) {
+                // Atualizar pendingConfirmation se ainda não estiver definido
+                pendingConfirmation = {
+                    resumeUrl: cacheData.resume_url,
+                    valorTotalConsulta: cacheData.valor_total_consulta,
+                };
+            }
+
+            showAlert('success', 'Dados atualizados com sucesso.');
+
+        } catch (err) {
+            console.error('[RAF] Erro ao buscar dados do cache:', err);
+            showAlert('error', err.message || 'Erro ao atualizar dados. Tente novamente.');
+        } finally {
+            // Reabilitar botão
+            infoRefreshBtn.disabled = false;
+            if (infoRefreshIcon) infoRefreshIcon.classList.remove('hidden');
+            if (infoRefreshSpinner) infoRefreshSpinner.classList.add('hidden');
+            if (infoRefreshText) infoRefreshText.textContent = 'Atualizar';
         }
     };
 
@@ -712,6 +850,35 @@
                 `;
             }
         }
+    };
+
+    /**
+     * Trata erros de autenticação 401 de forma centralizada.
+     * Garante que não cause redirecionamento do SPA e mostra mensagem apropriada.
+     * @param {string} context - Contexto da requisição (para logs)
+     * @param {boolean} silent - Se true, não mostra alerta ao usuário (apenas para polling)
+     * @returns {boolean} - true se deve parar a operação, false caso contrário
+     */
+    const handleAuthError = (context = 'requisição', silent = false) => {
+        console.warn(`[RAF] Erro de autenticação (401) em ${context} - parando operação silenciosamente`);
+        
+        // TODO: Desconectar recebimento de dados (SSE/WebSocket) em caso de erro de autenticação
+        // disconnectDataReceiver();
+        
+        // Parar timer se estiver rodando
+        stopTimer();
+        
+        // Resetar estado de loading
+        setLoading(false);
+        
+        // Mostrar mensagem apenas se não for silencioso
+        if (!silent) {
+            showAlert('error', 'Sua sessão expirou. Por favor, recarregue a página e faça login novamente.');
+        }
+        
+        // IMPORTANTE: Não causar redirecionamento ou reset do SPA
+        // O usuário pode recarregar manualmente se necessário
+        return true; // Indica que a operação deve ser parada
     };
 
     const startTimer = () => {
@@ -819,7 +986,8 @@
                 headers: {
                     'X-CSRF-TOKEN': currentCsrf,
                     'Accept': 'application/json',
-                }
+                },
+                credentials: 'same-origin', // Garantir que cookies de sessão sejam enviados
             });
             if (balanceResponse.ok) {
                 const balanceData = await balanceResponse.json();
@@ -907,200 +1075,71 @@
             }
         }, 100);
         
-        // Iniciar polling para buscar dados atualizados
-        if (resumeUrl) {
-            startPolling(resumeUrl);
-        }
+        // TODO: Conectar recebimento de dados (SSE/WebSocket) quando card for exibido
+        // if (resumeUrl) {
+        //     connectDataReceiver(resumeUrl);
+        // }
     };
 
-    const hideCreditsConfirmation = () => {
+        const hideCreditsConfirmation = () => {
         if (!creditsCard) return;
         creditsCard.classList.add('hidden');
         pendingConfirmation = null;
-        stopPolling();
+        // TODO: Desconectar recebimento de dados (SSE/WebSocket) quando card for escondido
+        // disconnectDataReceiver();
         
         // Esconder botão de confirmação no card de informações também
         if (infoConfirmCreditsWrap) {
             infoConfirmCreditsWrap.classList.add('hidden');
         }
     };
-    
-    // Função para fazer polling dos dados atualizados da API
-    // IMPORTANTE: Esta função apenas atualiza o card de informações e NÃO causa reset/redirecionamento do SPA
-    const startPolling = (resumeUrl) => {
-        // Para qualquer polling anterior
-        stopPolling();
+
+    // ========== Função Stub para Recebimento de Dados Futuro ==========
+    // TODO: Implementar recebimento de dados (SSE/WebSocket)
+    // Esta função será chamada quando dados chegarem do n8n via SSE/WebSocket
+    const onDataReceived = (data) => {
+        // Receber dados do n8n e atualizar UI
+        // Exemplo de estrutura esperada:
+        // {
+        //     resume_url: string,
+        //     qtd_participantes_unicos: number,
+        //     valor_total_consulta: number,
+        //     custo_unitario: number,
+        //     csv?: string,
+        //     filename?: string,
+        //     headers?: array,
+        //     rows?: array
+        // }
         
-        if (!resumeUrl) return;
+        console.log('[RAF] Dados recebidos:', data);
         
-        console.log('[RAF] Iniciando polling para:', resumeUrl);
-        
-        // Função que busca dados atualizados
-        // IMPORTANTE: Esta função apenas atualiza dados no card, não causa navegação ou reset
-        const fetchUpdatedData = async () => {
-            try {
-                const encodedUrl = encodeURIComponent(resumeUrl);
-                console.log('[RAF] Polling: buscando dados para resume_url:', resumeUrl);
-                // IMPORTANTE: Usar redirect: 'manual' para prevenir que redirects do Laravel (401 -> /login -> /dashboard) sejam seguidos
-                // Também garantir que o header Accept seja application/json para que o Laravel retorne JSON em vez de redirect HTML
-                const response = await fetch(`/api/data/receive/${encodedUrl}`, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest', // Garantir que o Laravel trate como AJAX
-                    },
-                    credentials: 'same-origin',
-                    redirect: 'manual', // Prevenir que redirects sejam seguidos automaticamente
-                });
-                
-                console.log('[RAF] Polling: resposta recebida:', {
-                    status: response.status,
-                    ok: response.ok,
-                    statusText: response.statusText,
-                });
-                
-                if (response.status === 404) {
-                    // Dados ainda não recebidos, continua tentando
-                    console.log('[RAF] Dados ainda não disponíveis no cache (404)');
-                    return;
-                }
-                
-                if (response.status === 401 || response.status === 0) {
-                    // Não autenticado ou redirect bloqueado (status 0 = redirect bloqueado com redirect: 'manual')
-                    // IMPORTANTE: Não causar redirecionamento ou reset do SPA - apenas parar o polling silenciosamente
-                    console.warn('[RAF] Não autenticado ao buscar dados atualizados (401) - parando polling silenciosamente');
-                    stopPolling();
-                    return;
-                }
-                
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    console.warn('[RAF] Erro ao buscar dados atualizados:', response.status, errorData);
-                    return;
-                }
-                
-                const data = await response.json();
-                console.log('[RAF] Polling: dados recebidos:', data);
-                
-                if (data.success && data.data) {
-                    const updatedData = data.data;
-                    console.log('[RAF] Dados atualizados recebidos:', updatedData);
-                    
-                    // Atualizar valores no card
-                    const qtdParticipantes = updatedData.qtd_participantes_unicos ?? updatedData.qnt_participantes ?? 0;
-                    const valorTotal = updatedData.valor_total_consulta ?? 0;
-                    const custoUnitario = updatedData.custo_unitario ?? 0;
-                    
-                    // Sempre atualizar o card de informações da consulta quando dados chegarem
-                    // Se há pendingConfirmation, significa que precisa de confirmação
-                    // Mas mesmo sem pendingConfirmation, se houver dados válidos, mostrar o card
-                    const hasValidData = (qtdParticipantes !== null && qtdParticipantes !== undefined && qtdParticipantes > 0) ||
-                                       (valorTotal !== null && valorTotal !== undefined && valorTotal > 0) ||
-                                       (custoUnitario !== null && custoUnitario !== undefined && custoUnitario > 0);
-                    
-                    // Atualizar card de informações da consulta sempre que houver dados
-                    updateInfoCard(updatedData, !!pendingConfirmation || hasValidData);
-                    
-                    // Se o card não está visível, mostrar agora com os dados recebidos
-                    const isCardVisible = creditsCard && !creditsCard.classList.contains('hidden');
-                    if (!isCardVisible && creditsCard) {
-                        console.log('[RAF] Card não estava visível, mostrando agora com dados recebidos');
-                        // Inicializar pendingConfirmation se não existir
-                        if (!pendingConfirmation) {
-                            pendingConfirmation = {
-                                resumeUrl: resumeUrl,
-                                valorTotalConsulta: valorTotal
-                            };
-                        }
-                        // Chamar showCreditsConfirmation para mostrar o card com os dados
-                        await showCreditsConfirmation(
-                            resumeUrl,
-                            valorTotal,
-                            qtdParticipantes,
-                            custoUnitario
-                        );
-                    } else {
-                        // Card já está visível, apenas atualizar valores
-                        // Atualizar pendingConfirmation com os novos valores
-                        if (pendingConfirmation) {
-                            pendingConfirmation.valorTotalConsulta = valorTotal;
-                        }
-                        
-                        // Atualizar UI
-                        if (creditsCnpjCount) {
-                            creditsCnpjCount.textContent = qtdParticipantes.toString();
-                        }
-                        
-                        if (creditsTotal) {
-                            creditsTotal.textContent = Math.ceil(valorTotal).toString();
-                        }
-                        
-                        // Revalidar créditos suficientes
-                        const currentCsrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrf || '';
-                        const balanceResponse = await fetch('/app/credits/balance', {
-                            method: 'GET',
-                            headers: {
-                                'X-CSRF-TOKEN': currentCsrf,
-                                'Accept': 'application/json',
-                            }
-                        });
-                        
-                        if (balanceResponse.ok) {
-                            const balanceData = await balanceResponse.json();
-                            const userBalance = balanceData.credits || 0;
-                            const valorArredondado = Math.ceil(valorTotal);
-                            const hasEnough = userBalance >= valorArredondado;
-                            
-                            // Atualizar estado do botão e alerta
-                            if (creditsInsufficientAlert) {
-                                creditsInsufficientAlert.classList.toggle('hidden', hasEnough);
-                            }
-                            
-                            if (creditsConfirmBtn) {
-                                creditsConfirmBtn.disabled = !hasEnough;
-                            }
-                            
-                            if (creditsConfirmText) {
-                                creditsConfirmText.textContent = hasEnough ? 'Confirmar e processar' : 'Créditos insuficientes';
-                            }
-                            
-                            // Atualizar também os botões do card de informações
-                            if (infoCreditsConfirmBtn) {
-                                infoCreditsConfirmBtn.disabled = !hasEnough;
-                            }
-                            
-                            if (infoCreditsConfirmText) {
-                                infoCreditsConfirmText.textContent = hasEnough ? 'Confirmar e processar' : 'Créditos insuficientes';
-                            }
-                        }
-                    }
-                    
-                    // Parar polling após receber dados (opcional - pode continuar se quiser atualizações contínuas)
-                    // stopPolling();
-                }
-            } catch (err) {
-                console.error('[RAF] Erro no polling:', err);
-            }
-        };
-        
-        // Buscar imediatamente
-        fetchUpdatedData();
-        
-        // Configurar polling a cada 4 segundos
-        pollingInterval = setInterval(fetchUpdatedData, 4000);
-    };
-    
-    const stopPolling = () => {
-        if (pollingInterval) {
-            clearInterval(pollingInterval);
-            pollingInterval = null;
-            console.log('[RAF] Polling parado');
+        // Atualizar card de informações
+        if (data.qtd_participantes_unicos || data.valor_total_consulta || data.custo_unitario) {
+            updateInfoCard(data, !!pendingConfirmation);
         }
-        // Parar todos os intervalos de verificação de cache
-        cacheCheckIntervals.forEach(interval => {
-            clearInterval(interval);
-        });
-        cacheCheckIntervals = [];
+        
+        // Se tem CSV, processar e disponibilizar download
+        if (data.csv || (data.headers && data.rows)) {
+            if (data.csv) {
+                const blob = new Blob([data.csv], { type: 'text/csv;charset=utf-8;' });
+                const filename = data.filename || 'resultado.csv';
+                setDownload(blob, filename);
+            }
+            freezeTimer();
+            showAlert('success', 'Processado com sucesso. CSV disponível.');
+            resultBadge.classList.remove('hidden');
+            setLoading(false);
+        }
+        
+        // Se precisa de confirmação e ainda não foi mostrado o card
+        if (data.resume_url && data.valor_total_consulta && creditsCard?.classList.contains('hidden')) {
+            showCreditsConfirmation(
+                data.resume_url,
+                data.valor_total_consulta,
+                data.qtd_participantes_unicos || 0,
+                data.custo_unitario || 0
+            );
+        }
     };
 
     const setCreditsLoading = (loading) => {
@@ -1132,6 +1171,7 @@
                     'Content-Type': 'application/json',
                     'Accept': 'application/json, text/csv',
                 },
+                credentials: 'same-origin', // Garantir que cookies de sessão sejam enviados
                 body: JSON.stringify({
                     resume_url: resumeUrl,
                     valor_total_consulta: valorTotalConsulta,
@@ -1185,11 +1225,9 @@
             }
 
             hideCreditsConfirmation();
-            stopPolling();
         } catch (err) {
             showAlert('error', err.message || 'Erro ao processar. Tente novamente.');
             hideCreditsConfirmation();
-            stopPolling();
             stopTimer();
         } finally {
             setCreditsLoading(false);
@@ -1219,6 +1257,7 @@
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
                 },
+                credentials: 'same-origin', // Garantir que cookies de sessão sejam enviados
                 body: JSON.stringify({
                     resume_url: resumeUrl,
                 }),
@@ -1238,7 +1277,6 @@
             showAlert('error', 'Erro ao cancelar operação. Tente novamente.');
         } finally {
             hideCreditsConfirmation();
-            stopPolling();
             stopTimer();
             setLoading(false);
         }
@@ -1259,6 +1297,11 @@
 
     if (infoCreditsConfirmBtn) {
         infoCreditsConfirmBtn.addEventListener('click', confirmCreditsAndProcess);
+    }
+
+    // Event listener para o botão de atualizar
+    if (infoRefreshBtn) {
+        infoRefreshBtn.addEventListener('click', refreshDataFromCache);
     }
     
     // Prevenir comportamento padrão do link de download para evitar redirecionamentos
@@ -1348,6 +1391,23 @@
         radio.addEventListener('change', updateEnablement);
     });
     fileInput.addEventListener('change', () => {
+        const file = fileInput.files?.[0];
+        
+        // Validar se o arquivo é .txt
+        if (file) {
+            const fileName = file.name.toLowerCase();
+            const isTxt = fileName.endsWith('.txt') || file.type === 'text/plain';
+            
+            if (!isTxt) {
+                showAlert('error', 'Apenas arquivos .txt são permitidos. Por favor, selecione um arquivo .txt.');
+                // Limpar o input
+                fileInput.value = '';
+                updateFileUi();
+                updateEnablement();
+                return;
+            }
+        }
+        
         updateFileUi();
         updateEnablement();
         if (fileInput.files?.length) {
@@ -1403,7 +1463,7 @@
             if (!file) return;
             const isTxt = file.name?.toLowerCase().endsWith('.txt') || file.type === 'text/plain';
             if (!isTxt) {
-                showAlert('error', 'Selecione um arquivo .txt');
+                showAlert('error', 'Apenas arquivos .txt são permitidos. Por favor, selecione um arquivo .txt.');
                 return;
             }
 
@@ -1453,6 +1513,14 @@
             return;
         }
 
+        // Validar se o arquivo é .txt
+        const fileName = file.name.toLowerCase();
+        const isTxt = fileName.endsWith('.txt') || file.type === 'text/plain';
+        if (!isTxt) {
+            showAlert('error', 'Apenas arquivos .txt são permitidos. Por favor, selecione um arquivo .txt.');
+            return;
+        }
+
         showAlert('info', 'Enviado corretamente e sendo processado');
         setLoading(true);
         stopTimer();
@@ -1475,6 +1543,7 @@
                 headers: {
                     'X-CSRF-TOKEN': currentCsrf
                 },
+                credentials: 'same-origin', // Garantir que cookies de sessão sejam enviados
                 body: formData
             }).catch((fetchError) => {
                 // Trata erros de rede/timeout do fetch
@@ -1529,268 +1598,12 @@
                     // Não chama stopTimer() aqui porque o timer deve continuar até a confirmação
                     return; // Não continua o fluxo normal, a seção de confirmação vai gerenciar
                 } else {
-                    console.log('[RAF] Não precisa de confirmação. Condições:', {
+                    console.log('[RAF] Upload bem-sucedido sem necessidade de confirmação:', {
                         success: data.success,
                         needs_confirmation: data.needs_confirmation,
                         resume_url: data.resume_url,
                         valor_total_consulta: data.valor_total_consulta
                     });
-                    
-                    // Mesmo sem needs_confirmation, se houver resume_url, iniciar polling
-                    // para buscar dados que podem chegar depois
-                    if (data.success && data.resume_url) {
-                        console.log('[RAF] Iniciando polling mesmo sem needs_confirmation para resume_url:', data.resume_url);
-                        startPolling(data.resume_url);
-                    } else if (data.success) {
-                        // Se não tem resume_url mas o upload foi bem-sucedido,
-                        // verificar imediatamente se há dados recentes no cache
-                        // e depois iniciar verificação periódica
-                        console.log('[RAF] Upload bem-sucedido sem resume_url, verificando dados recentes no cache...');
-                        
-                        // Verificar imediatamente se há dados recentes
-                        const checkLatestData = async () => {
-                            try {
-                                console.log('[RAF] Verificando dados recentes no cache...');
-                                const currentCsrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrf || '';
-                                // IMPORTANTE: Usar redirect: 'manual' para prevenir que redirects do Laravel (401 -> /login -> /dashboard) sejam seguidos
-                                // Também garantir que o header Accept seja application/json para que o Laravel retorne JSON em vez de redirect HTML
-                                const latestResponse = await fetch('/api/data/receive-latest', {
-                                    method: 'GET',
-                                    headers: {
-                                        'Accept': 'application/json',
-                                        'X-Requested-With': 'XMLHttpRequest', // Garantir que o Laravel trate como AJAX
-                                    },
-                                    credentials: 'same-origin',
-                                    redirect: 'manual', // Prevenir que redirects sejam seguidos automaticamente
-                                });
-                                
-                                console.log('[RAF] Resposta do /api/data/receive-latest:', {
-                                    status: latestResponse.status,
-                                    statusText: latestResponse.statusText,
-                                    ok: latestResponse.ok,
-                                });
-                                
-                                if (latestResponse.ok) {
-                                    const latestData = await latestResponse.json();
-                                    console.log('[RAF] Dados recebidos do endpoint:', latestData);
-                                    
-                                    if (latestData.success && latestData.data) {
-                                        console.log('[RAF] Dados recentes encontrados imediatamente:', latestData);
-                                        
-                                        const updatedData = latestData.data;
-                                        
-                                        // Sempre atualizar o card de informações quando dados chegarem
-                                        updateInfoCard(updatedData, true);
-                                        
-                                        const resumeUrl = latestData.resume_url || updatedData.resume_url;
-                                        
-                                        if (resumeUrl) {
-                                            // Inicializar pendingConfirmation
-                                            if (!pendingConfirmation) {
-                                                pendingConfirmation = {
-                                                    resumeUrl: resumeUrl,
-                                                    valorTotalConsulta: updatedData.valor_total_consulta ?? 0
-                                                };
-                                            }
-                                            
-                                            // Mostrar card com os dados
-                                            await showCreditsConfirmation(
-                                                resumeUrl,
-                                                updatedData.valor_total_consulta ?? 0,
-                                                updatedData.qtd_participantes_unicos ?? updatedData.qnt_participantes ?? 0,
-                                                updatedData.custo_unitario ?? 0
-                                            );
-                                            
-                                            // Iniciar polling para este resume_url
-                                            startPolling(resumeUrl);
-                                            
-                                            return true; // Dados encontrados, não precisa continuar verificação
-                                        } else {
-                                            console.warn('[RAF] Dados recebidos mas sem resume_url:', latestData);
-                                            // Mesmo sem resume_url, o card já foi atualizado acima
-                                            return true; // Dados encontrados e exibidos
-                                        }
-                                    } else {
-                                        console.log('[RAF] Resposta sem dados válidos:', latestData);
-                                    }
-                                } else if (latestResponse.status === 404) {
-                                    // 404 é esperado quando não há dados ainda
-                                    const errorData = await latestResponse.json().catch(() => ({}));
-                                    console.log('[RAF] Nenhum dado recente encontrado (404):', errorData.message || 'Nenhum dado recente encontrado.');
-                                } else if (latestResponse.status === 401 || latestResponse.status === 0) {
-                                    // Não autenticado ou redirect bloqueado (status 0 = redirect bloqueado com redirect: 'manual')
-                                    // IMPORTANTE: Não causar redirecionamento ou reset do SPA - apenas parar a verificação silenciosamente
-                                    console.warn('[RAF] Não autenticado ao buscar dados recentes (401) - parando verificação silenciosamente');
-                                    return true; // Parar verificação quando não autenticado
-                                } else {
-                                    // Outro erro
-                                    const errorData = await latestResponse.json().catch(() => ({}));
-                                    console.warn('[RAF] Erro ao buscar dados recentes:', latestResponse.status, errorData);
-                                }
-                            } catch (e) {
-                                console.error('[RAF] Erro ao verificar dados recentes:', e);
-                            }
-                            return false; // Dados não encontrados, continuar verificação periódica
-                        };
-                        
-                        // Verificar imediatamente
-                        const foundData = await checkLatestData();
-                        
-                        if (!foundData) {
-                            // Se não encontrou dados imediatamente, iniciar verificação periódica
-                            console.log('[RAF] Dados não encontrados imediatamente, iniciando verificação periódica de dados recentes');
-                            
-                            // Criar um intervalo que verifica se há dados novos no cache
-                            let cacheCheckAttempts = 0;
-                            const maxCacheChecks = 30;
-                            
-                            const checkCacheForData = async () => {
-                            if (cacheCheckAttempts >= maxCacheChecks) {
-                                console.log('[RAF] Parando verificação de cache após', maxCacheChecks, 'tentativas');
-                                return;
-                            }
-                            
-                            cacheCheckAttempts++;
-                            
-                            try {
-                                // Se o card já está visível, parar verificação
-                                if (creditsCard && !creditsCard.classList.contains('hidden')) {
-                                    return;
-                                }
-                                
-                                // Buscar dados mais recentes do cache
-                                const currentCsrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrf || '';
-                                // IMPORTANTE: Usar redirect: 'manual' para prevenir que redirects do Laravel (401 -> /login -> /dashboard) sejam seguidos
-                                // Também garantir que o header Accept seja application/json para que o Laravel retorne JSON em vez de redirect HTML
-                                const latestResponse = await fetch('/api/data/receive-latest', {
-                                    method: 'GET',
-                                    headers: {
-                                        'Accept': 'application/json',
-                                        'X-Requested-With': 'XMLHttpRequest', // Garantir que o Laravel trate como AJAX
-                                    },
-                                    credentials: 'same-origin',
-                                    redirect: 'manual', // Prevenir que redirects sejam seguidos automaticamente
-                                });
-                                
-                                console.log('[RAF] Verificação periódica #' + cacheCheckAttempts + ':', {
-                                    status: latestResponse.status,
-                                    ok: latestResponse.ok,
-                                });
-                                
-                                if (latestResponse.status === 404) {
-                                    // Dados ainda não recebidos, continua tentando
-                                    if (cacheCheckAttempts === 1) {
-                                        console.log('[RAF] Aguardando dados no cache...');
-                                    } else if (cacheCheckAttempts % 5 === 0) {
-                                        // Log a cada 5 tentativas
-                                        console.log('[RAF] Ainda aguardando dados no cache (tentativa ' + cacheCheckAttempts + ')...');
-                                    }
-                                    return false;
-                                }
-                                
-                                if (latestResponse.status === 401 || latestResponse.status === 0) {
-                                    // Não autenticado ou redirect bloqueado (status 0 = redirect bloqueado com redirect: 'manual')
-                                    // IMPORTANTE: Não causar redirecionamento ou reset do SPA - apenas parar a verificação silenciosamente
-                                    console.warn('[RAF] Não autenticado ao buscar dados recentes (401) - parando verificação silenciosamente');
-                                    return true; // Parar verificação se não autenticado
-                                }
-                                
-                                if (!latestResponse.ok) {
-                                    const errorData = await latestResponse.json().catch(() => ({}));
-                                    console.warn('[RAF] Erro ao buscar dados recentes:', latestResponse.status, errorData);
-                                    return false;
-                                }
-                                
-                                const latestData = await latestResponse.json();
-                                console.log('[RAF] Dados recebidos na verificação periódica:', latestData);
-                                
-                                if (latestData.success && latestData.data) {
-                                    console.log('[RAF] Dados recentes encontrados no cache:', latestData);
-                                    
-                                    const updatedData = latestData.data;
-                                    
-                                    // Sempre atualizar o card de informações quando dados chegarem
-                                    updateInfoCard(updatedData, true);
-                                    
-                                    const resumeUrl = latestData.resume_url || updatedData.resume_url;
-                                    
-                                    if (resumeUrl) {
-                                        // Inicializar pendingConfirmation
-                                        if (!pendingConfirmation) {
-                                            pendingConfirmation = {
-                                                resumeUrl: resumeUrl,
-                                                valorTotalConsulta: updatedData.valor_total_consulta ?? 0
-                                            };
-                                        }
-                                        
-                                        // Mostrar card com os dados
-                                        await showCreditsConfirmation(
-                                            resumeUrl,
-                                            updatedData.valor_total_consulta ?? 0,
-                                            updatedData.qtd_participantes_unicos ?? updatedData.qnt_participantes ?? 0,
-                                            updatedData.custo_unitario ?? 0
-                                        );
-                                        
-                                        // Iniciar polling para este resume_url
-                                        startPolling(resumeUrl);
-                                        
-                                        // Parar verificação genérica
-                                        console.log('[RAF] Dados encontrados, parando verificação periódica');
-                                        return true;
-                                    } else {
-                                        console.warn('[RAF] Dados recebidos mas sem resume_url:', latestData);
-                                        // Mesmo sem resume_url, o card já foi atualizado acima
-                                        return true; // Dados encontrados e exibidos
-                                    }
-                                } else {
-                                    console.log('[RAF] Resposta sem dados válidos na verificação periódica:', latestData);
-                                }
-                            } catch (e) {
-                                console.log('[RAF] Erro ao verificar cache:', e);
-                            }
-                            
-                                return false;
-                            };
-                            
-                            // Verificar imediatamente e depois a cada 4 segundos
-                            const cacheCheckInterval = setInterval(async () => {
-                                const shouldStop = await checkCacheForData();
-                                if (shouldStop || (creditsCard && !creditsCard.classList.contains('hidden'))) {
-                                    clearInterval(cacheCheckInterval);
-                                    // Remover do array de intervalos
-                                    const index = cacheCheckIntervals.indexOf(cacheCheckInterval);
-                                    if (index > -1) {
-                                        cacheCheckIntervals.splice(index, 1);
-                                    }
-                                }
-                            }, 4000);
-                            
-                            // Adicionar ao array de intervalos para poder parar depois
-                            cacheCheckIntervals.push(cacheCheckInterval);
-                            
-                            // Verificar imediatamente também
-                            checkCacheForData().then(shouldStop => {
-                                if (shouldStop) {
-                                    clearInterval(cacheCheckInterval);
-                                    // Remover do array de intervalos
-                                    const index = cacheCheckIntervals.indexOf(cacheCheckInterval);
-                                    if (index > -1) {
-                                        cacheCheckIntervals.splice(index, 1);
-                                    }
-                                }
-                            });
-                            
-                            // Parar após 2 minutos
-                            setTimeout(() => {
-                                clearInterval(cacheCheckInterval);
-                                // Remover do array de intervalos
-                                const index = cacheCheckIntervals.indexOf(cacheCheckInterval);
-                                if (index > -1) {
-                                    cacheCheckIntervals.splice(index, 1);
-                                }
-                            }, 120000);
-                        }
-                    }
                     
                     // Se tem CSV nos dados, processar normalmente
                     if (data.csv && data.csv.trim() !== '') {
@@ -1804,18 +1617,74 @@
                         showAlert('success', 'Processado com sucesso. O CSV está pronto para download.');
                         resultBadge.classList.remove('hidden');
 
-                        // Parar qualquer polling ou verificação ativa quando já temos o resultado
-                        stopPolling();
-
                         // Reset parcial após sucesso
                         form.reset();
                         updateFileUi();
                         updateEnablement();
                     } else {
-                        // CSV vazio ou não presente - apenas mostrar sucesso e aguardar dados
+                        // CSV vazio ou não presente - aguardar recebimento de dados
+                        console.log('[RAF] CSV vazio ou não presente, aguardando recebimento de dados...');
                         setLoading(false);
-                        showAlert('info', 'Processamento concluído. Aguardando dados adicionais...');
-                        // A verificação periódica já foi iniciada acima
+                        
+                        // Se tem resume_url na resposta, os dados podem já estar no cache
+                        // Tentar buscar imediatamente
+                        if (data.resume_url) {
+                            console.log('[RAF] Resume URL presente, buscando dados do cache imediatamente...');
+                            
+                            // Tentar buscar do cache imediatamente
+                            refreshDataFromCache().catch(err => {
+                                console.warn('[RAF] Erro ao buscar dados imediatamente, tentando novamente...', err);
+                                
+                                // Se falhar, tentar novamente após 2 segundos
+                                setTimeout(() => {
+                                    refreshDataFromCache();
+                                }, 2000);
+                            });
+                            
+                            showAlert('info', 'Processamento concluído. Buscando dados adicionais...');
+                        } else {
+                            // Sem resume_url, fazer polling agressivo
+                            // Isso permite que o n8n tenha tempo de enviar os dados
+                            console.log('[RAF] Sem resume_url, iniciando polling agressivo...');
+                            
+                            let pollAttempts = 0;
+                            const maxPollAttempts = 10; // Tentar até 10 vezes
+                            const pollInterval = 2000; // A cada 2 segundos
+                            
+                            const pollForData = () => {
+                                pollAttempts++;
+                                console.log(`[RAF] Tentativa de polling ${pollAttempts}/${maxPollAttempts}`);
+                                
+                                refreshDataFromCache().then(() => {
+                                    // Se encontrou dados, o refreshDataFromCache já atualizou a UI
+                                    console.log('[RAF] Dados encontrados via polling');
+                                }).catch(err => {
+                                    console.warn(`[RAF] Polling tentativa ${pollAttempts} falhou:`, err);
+                                    
+                                    if (pollAttempts < maxPollAttempts) {
+                                        // Continuar polling
+                                        setTimeout(pollForData, pollInterval);
+                                    } else {
+                                        // Parar polling após max tentativas
+                                        console.log('[RAF] Polling encerrado após máximo de tentativas');
+                                        showAlert('info', 'Processamento concluído. Use o botão "Atualizar" para verificar se os dados já estão disponíveis.');
+                                    }
+                                });
+                            };
+                            
+                            // Iniciar polling após 2 segundos
+                            setTimeout(pollForData, 2000);
+                            
+                            showAlert('info', 'Processamento concluído. Buscando dados adicionais...');
+                        }
+                        
+                        // Mostrar botão de atualização se estiver oculto
+                        if (infoRefreshBtn && infoRefreshBtn.parentElement) {
+                            const infoCard = infoRefreshBtn.closest('.bg-white.rounded-lg.shadow');
+                            if (infoCard) {
+                                infoCard.classList.remove('hidden');
+                            }
+                        }
                     }
                 }
             } else if (contentType && contentType.includes('text/csv')) {
@@ -1852,12 +1721,10 @@
                 showAlert('success', 'Processado com sucesso. O CSV está pronto para download.');
                 resultBadge.classList.remove('hidden');
 
-                // Parar qualquer polling ou verificação ativa quando já temos o resultado
-                stopPolling();
+                // TODO: Desconectar recebimento de dados (SSE/WebSocket) quando CSV for recebido
+                // disconnectDataReceiver();
                 
-                // Não iniciar verificação de cache quando já temos o CSV - o resultado já foi processado
-                // A verificação de cache só é necessária quando ainda estamos aguardando dados
-                console.log('[RAF] CSV recebido com sucesso, não iniciando verificação de cache adicional');
+                console.log('[RAF] CSV recebido com sucesso');
 
                 // Reset parcial após sucesso
                 form.reset();
@@ -1910,6 +1777,9 @@
                 setDownload(blob, filename);
                 hasDownloadSuccess = true;
                 freezeTimer();
+                
+                // TODO: Desconectar recebimento de dados (SSE/WebSocket) quando CSV for recebido
+                // disconnectDataReceiver();
             } else {
                 resetDownload();
             }

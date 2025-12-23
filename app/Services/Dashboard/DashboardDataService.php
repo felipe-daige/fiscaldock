@@ -3,7 +3,6 @@
 namespace App\Services\Dashboard;
 
 use App\Models\Empresa;
-use App\Models\XmlDocumento;
 use Carbon\Carbon;
 
 class DashboardDataService
@@ -19,11 +18,7 @@ class DashboardDataService
         $empresasIds = Empresa::where('user_id', $userId)->pluck('id')->toArray();
 
         // KPIs - Calculando dados reais quando possível
-        $kpi_xml_pendentes = !empty($empresasIds) 
-            ? XmlDocumento::where('status', 'pendente')
-                ->whereIn('empresa_id', $empresasIds)
-                ->count()
-            : 0;
+        $kpi_xml_pendentes = 0; // Funcionalidade removida
 
         $total_empresas = Empresa::where('user_id', $userId)->count();
 
@@ -59,15 +54,8 @@ class DashboardDataService
         $monitoramento_empresas = [];
 
         foreach ($empresas as $empresa) {
-            // Buscar último XML importado
-            $ultimoXml = XmlDocumento::where('empresa_id', $empresa->id)
-                ->orderBy('created_at', 'desc')
-                ->first();
-
-            // Contar XMLs pendentes
-            $xmlPendentes = XmlDocumento::where('empresa_id', $empresa->id)
-                ->where('status', 'pendente')
-                ->count();
+            // Funcionalidade de XML removida
+            $xmlPendentes = 0;
 
             // Dados mock para CND e regime tributário (até implementação completa)
             $regimes = ['Simples Nacional', 'Lucro Presumido', 'Lucro Real'];
@@ -83,12 +71,8 @@ class DashboardDataService
                 default => Carbon::now()->addDays(rand(30, 365)) // Regular
             };
 
-            // Calcular conciliação (mock - baseado em XMLs processados)
-            $xmlProcessados = XmlDocumento::where('empresa_id', $empresa->id)
-                ->where('status', '!=', 'pendente')
-                ->count();
-            $totalXmls = XmlDocumento::where('empresa_id', $empresa->id)->count();
-            $conciliacaoPct = $totalXmls > 0 ? round(($xmlProcessados / $totalXmls) * 100) : 0;
+            // Calcular conciliação (mock - funcionalidade de XML removida)
+            $conciliacaoPct = 0;
 
             $monitoramento_empresas[] = [
                 'id' => $empresa->id,
@@ -98,7 +82,7 @@ class DashboardDataService
                 'cnd_status' => $cndStatus,
                 'cnd_vencimento' => $cndVencimento->format('Y-m-d'),
                 'xml_pendentes' => $xmlPendentes,
-                'ultima_importacao' => $ultimoXml ? $ultimoXml->created_at : null,
+                'ultima_importacao' => null,
                 'conciliacao_pct' => $conciliacaoPct,
             ];
         }

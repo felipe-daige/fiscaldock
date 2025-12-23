@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Fornecedor;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Exception;
@@ -31,34 +30,11 @@ class RegimeTributarioService
             return $regime;
         }
 
-        // Verifica no banco de dados
-        $fornecedor = Fornecedor::where('cnpj', $cnpj)->first();
-        
-        if ($fornecedor && $fornecedor->regime_tributario) {
-            // Cacheia por 30 dias
-            Cache::put($cacheKey, $fornecedor->regime_tributario, now()->addDays(30));
-            return $fornecedor->regime_tributario;
-        }
-
         // Consulta API externa
         try {
             $regime = $this->consultarApiExterna($cnpj);
             
             if ($regime) {
-                // Salva no banco
-                if ($fornecedor) {
-                    $fornecedor->update([
-                        'regime_tributario' => $regime,
-                        'ultima_consulta_regime' => now(),
-                    ]);
-                } else {
-                    Fornecedor::create([
-                        'cnpj' => $cnpj,
-                        'regime_tributario' => $regime,
-                        'ultima_consulta_regime' => now(),
-                    ]);
-                }
-
                 // Cacheia por 30 dias
                 Cache::put($cacheKey, $regime, now()->addDays(30));
                 
@@ -109,26 +85,14 @@ class RegimeTributarioService
     }
 
     /**
-     * Atualiza o regime tributário de um fornecedor manualmente
+     * Atualiza o regime tributário manualmente (apenas cache)
      */
     public function atualizarRegimeTributario(string $cnpj, string $regime): bool
     {
         $cnpj = preg_replace('/[^0-9]/', '', $cnpj);
 
-        $fornecedor = Fornecedor::firstOrCreate(
-            ['cnpj' => $cnpj],
-            ['regime_tributario' => $regime, 'ultima_consulta_regime' => now()]
-        );
-
-        if ($fornecedor->regime_tributario !== $regime) {
-            $fornecedor->update([
-                'regime_tributario' => $regime,
-                'ultima_consulta_regime' => now(),
-            ]);
-        }
-
-        // Limpa cache
-        Cache::forget("regime_tributario_{$cnpj}");
+        // Atualiza apenas o cache
+        Cache::put("regime_tributario_{$cnpj}", $regime, now()->addDays(30));
 
         return true;
     }

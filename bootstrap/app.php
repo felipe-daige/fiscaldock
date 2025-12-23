@@ -31,5 +31,33 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Tratar exceções de autenticação para rotas API
+        // Garantir que sempre retornem JSON 401 em vez de redirecionar
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, \Illuminate\Http\Request $request) {
+            // Verificar se é rota API ou requisição que aceita JSON
+            $isApiRoute = $request->is('api/*') 
+                || str_starts_with($request->path(), 'api/')
+                || str_starts_with($request->url(), $request->getSchemeAndHttpHost() . '/api/');
+            
+            $acceptsJson = $request->header('Accept') && str_contains($request->header('Accept'), 'application/json');
+            $isAjax = $request->header('X-Requested-With') === 'XMLHttpRequest';
+            
+            // Se for rota API ou requisição que aceita JSON, retornar JSON 401
+            if ($isApiRoute || $acceptsJson || $isAjax || $request->expectsJson()) {
+                \Illuminate\Support\Facades\Log::info('[DEBUG] AuthenticationException tratada - retornando JSON 401', [
+                    'path' => $request->path(),
+                    'isApiRoute' => $isApiRoute,
+                    'acceptsJson' => $acceptsJson,
+                    'isAjax' => $isAjax,
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuário não autenticado.',
+                ], 401);
+            }
+            
+            // Para requisições web normais, deixar o Laravel tratar (redirecionar)
+            return null;
+        });
     })->create();

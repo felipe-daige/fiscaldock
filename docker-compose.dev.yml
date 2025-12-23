@@ -58,6 +58,9 @@ services:
       - devnet
     depends_on:
       - app
+    volumes:
+      - app_storage:/var/www/html/storage
+      - ./storage/logs:/var/www/html/storage/logs  # Mapeia logs para o host
     command: php artisan schedule:work
     environment:
       APP_ENV: "local"
@@ -86,6 +89,9 @@ services:
       - devnet
     depends_on:
       - app
+    volumes:
+      - app_storage:/var/www/html/storage
+      - ./storage/logs:/var/www/html/storage/logs  # Mapeia logs para o host
     command: php artisan queue:work --verbose --tries=3 --timeout=90
     environment:
       APP_ENV: "local"
