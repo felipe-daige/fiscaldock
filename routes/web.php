@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CreditController;
 use App\Http\Controllers\Landing\LandingPageController;
 use App\Http\Controllers\Dashboard\DashboardController;
+use App\Http\Controllers\Dashboard\RafController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -51,6 +52,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/inteligencia-tributaria', [DashboardController::class, 'inteligenciaTributaria'])->name('inteligencia-tributaria');
         Route::get('/raf', [DashboardController::class, 'raf'])->name('raf');
         Route::post('/raf/upload', [DashboardController::class, 'uploadSped'])->name('raf.upload');
+        
+        // Rotas de histórico de relatórios RAF
+        Route::get('/raf/historico', [RafController::class, 'historico'])->name('raf.historico');
+        Route::get('/raf/detalhes/{id}', [RafController::class, 'detalhes'])->name('raf.detalhes');
+        Route::post('/raf/confirmar/{id}', [RafController::class, 'confirmar'])->name('raf.confirmar');
+        Route::post('/raf/cancelar/{id}', [RafController::class, 'cancelar'])->name('raf.cancelar');
     });
     
     // Rota para buscar os dados mais recentes do cache do usuário
