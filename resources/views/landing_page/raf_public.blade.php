@@ -340,7 +340,23 @@
             <div class="lg:col-span-2 space-y-6">
                 {{-- Card de informações do processamento --}}
                 <div id="raf-info-card" class="hidden bg-blue-50 rounded-xl border border-blue-200 shadow-sm p-6">
-                    <h4 class="font-semibold text-gray-900 mb-4">Informações do Processamento</h4>
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="font-semibold text-gray-900">Informações do Processamento</h4>
+                        <button
+                            type="button"
+                            id="raf-cancel-process-btn"
+                            class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-red-300 bg-white text-red-700 text-sm font-semibold shadow-sm transition hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            <span id="raf-cancel-process-text">Cancelar</span>
+                            <svg id="raf-cancel-process-spinner" class="hidden w-4 h-4 animate-spin" viewBox="0 0 24 24" aria-hidden="true">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>
+                        </button>
+                    </div>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div class="bg-white rounded-lg p-4 border border-blue-100">
                             <p class="text-xs text-gray-600 mb-1">CNPJs encontrados</p>
@@ -461,6 +477,9 @@
         const infoCnpjs = document.getElementById('raf-info-cnpjs');
         const infoValor = document.getElementById('raf-info-valor');
         const infoCusto = document.getElementById('raf-info-custo');
+        const cancelProcessBtn = document.getElementById('raf-cancel-process-btn');
+        const cancelProcessText = document.getElementById('raf-cancel-process-text');
+        const cancelProcessSpinner = document.getElementById('raf-cancel-process-spinner');
         const csrf = document.querySelector('meta[name=\"csrf-token\"]')?.getAttribute('content');
 
         let currentDownloadUrl = null;
@@ -516,6 +535,71 @@
                 pollingInterval = null;
             }
             currentResumeUrl = null;
+        };
+
+        const cancelProcess = async () => {
+            if (!currentResumeUrl) {
+                // Se não há resume_url, apenas parar polling e esconder card
+                stopPolling();
+                if (infoCard) {
+                    infoCard.classList.add('hidden');
+                }
+                showAlert('info', 'Processamento cancelado.');
+                return;
+            }
+
+            if (!confirm('Tem certeza que deseja cancelar o processamento?')) {
+                return;
+            }
+
+            if (cancelProcessBtn) {
+                cancelProcessBtn.disabled = true;
+                if (cancelProcessText) cancelProcessText.classList.add('hidden');
+                if (cancelProcessSpinner) cancelProcessSpinner.classList.remove('hidden');
+            }
+
+            try {
+                const response = await fetch('/raf/cancel-public', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        resume_url: currentResumeUrl,
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showAlert('info', 'Processamento cancelado com sucesso.');
+                } else {
+                    // Mesmo se houver erro, parar polling e esconder card
+                    showAlert('info', 'Processamento cancelado.');
+                }
+            } catch (err) {
+                console.error('[RAF Public] Erro ao cancelar:', err);
+                // Mesmo se houver erro, parar polling e esconder card
+                showAlert('info', 'Processamento cancelado.');
+            } finally {
+                // Sempre parar polling e esconder card
+                stopPolling();
+                if (infoCard) {
+                    infoCard.classList.add('hidden');
+                }
+                if (cancelProcessBtn) {
+                    cancelProcessBtn.disabled = false;
+                    if (cancelProcessText) cancelProcessText.classList.remove('hidden');
+                    if (cancelProcessSpinner) cancelProcessSpinner.classList.add('hidden');
+                }
+                // Limpar estado
+                clearDownload();
+                tableContainer.classList.add('hidden');
+                resultEmpty.classList.remove('hidden');
+            }
         };
 
         const startPolling = (resumeUrl) => {
@@ -689,6 +773,11 @@
         }
 
         fileInput.addEventListener('change', updateFileUi);
+
+        // Event listener para botão de cancelar processamento
+        if (cancelProcessBtn) {
+            cancelProcessBtn.addEventListener('click', cancelProcess);
+        }
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();

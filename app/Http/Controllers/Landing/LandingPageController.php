@@ -151,6 +151,45 @@ class LandingPageController extends Controller
     }
 
     /**
+     * Endpoint público para cancelar processamento de SPED.
+     * Não requer autenticação, apenas resume_url.
+     */
+    public function cancelSpedPublic(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'resume_url' => 'required|url',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'URL de retomada (resume_url) é obrigatória.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $resumeUrl = $validated['resume_url'];
+
+        \Illuminate\Support\Facades\Log::info('Cancelamento de processamento público', [
+            'resume_url' => $resumeUrl,
+        ]);
+
+        // Envia 'answer: decline' para o webhook
+        $result = $this->spedUploadService->confirmAndResume($resumeUrl, 'decline');
+
+        if (!$result['success'] && $result['message'] !== 'Operação cancelada pelo usuário.') {
+            \Illuminate\Support\Facades\Log::warning('Falha ao enviar cancelamento para webhook (público)', [
+                'resume_url' => $resumeUrl,
+                'error' => $result['message'] ?? 'Erro desconhecido',
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Operação cancelada com sucesso.',
+        ]);
+    }
+
+    /**
      * Renderiza uma view da landing page aplicando o tema padrão e redirecionando
      * usuários autenticados para o dashboard.
      */

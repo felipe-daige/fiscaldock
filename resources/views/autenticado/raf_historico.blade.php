@@ -184,9 +184,131 @@
     </div>
 </div>
 
+{{-- Modal de Confirmação de Cancelamento --}}
+<div id="raf-cancelar-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="cancelar-modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="flex items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
+                        <h3 class="text-lg font-semibold text-gray-900" id="cancelar-modal-title">Confirmar Cancelamento</h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500">Tem certeza que deseja cancelar este relatório? Esta ação não pode ser desfeita.</p>
+                        </div>
+                    </div>
+                    <button type="button" class="raf-cancelar-modal-close text-gray-400 hover:text-gray-500 ml-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" id="raf-cancelar-confirm-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                    Confirmar
+                </button>
+                <button type="button" class="raf-cancelar-modal-close mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 (() => {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    // Função auxiliar para remover card com animação e atualizar contador
+    const removerCard = (relatorioIdOrCard) => {
+        // Se receber relatorioId (string ou number), buscar o card no DOM
+        let card = null;
+        if (typeof relatorioIdOrCard === 'string' || typeof relatorioIdOrCard === 'number') {
+            const relatorioId = String(relatorioIdOrCard);
+            // Usar seletor direto pelo atributo data-relatorio-id
+            card = document.querySelector(`[data-relatorio-id="${relatorioId}"]`);
+            
+            // Se não encontrou, tentar com seletor mais específico incluindo classes
+            if (!card) {
+                card = document.querySelector(`div[data-relatorio-id="${relatorioId}"]`);
+            }
+        } else {
+            // Se receber o elemento diretamente, usar ele
+            card = relatorioIdOrCard;
+        }
+
+        if (!card) {
+            console.warn('Card não encontrado para remoção:', relatorioIdOrCard);
+            return;
+        }
+
+        // Garantir que o card existe no DOM
+        if (!card.parentNode) {
+            console.warn('Card já foi removido do DOM');
+            return;
+        }
+
+        // Aplicar animação de fade out
+        card.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out, max-height 0.3s ease-out';
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(-10px)';
+        card.style.overflow = 'hidden';
+        const originalHeight = card.offsetHeight;
+        card.style.maxHeight = originalHeight + 'px';
+
+        // Forçar reflow para garantir que a animação comece
+        void card.offsetHeight;
+
+        // Remover do DOM após animação
+        setTimeout(() => {
+            // Verificar novamente se o card ainda existe no DOM antes de remover
+            if (card && card.parentNode) {
+                try {
+                    card.remove();
+                } catch (err) {
+                    // Se remove() falhar, tentar removeChild
+                    if (card.parentNode) {
+                        card.parentNode.removeChild(card);
+                    }
+                }
+            }
+
+            // Atualizar contador de pendentes - contar apenas cards principais (divs), não botões
+            // Filtrar apenas os cards principais (não botões ou outros elementos)
+            const allCards = document.querySelectorAll('[data-relatorio-id]');
+            const cardsRestantes = Array.from(allCards).filter(el => {
+                // Verificar se é um card principal (div com classes bg-white rounded-xl)
+                return el.tagName === 'DIV' && el.classList.contains('bg-white') && el.classList.contains('rounded-xl');
+            });
+            const totalPendentes = cardsRestantes.length;
+
+            // Atualizar o contador na interface se existir
+            const contadorElement = document.querySelector('.text-lg.font-bold.text-amber-600');
+            if (contadorElement) {
+                if (totalPendentes === 0) {
+                    // Se não houver mais cards, recarregar a página para mostrar estado vazio
+                    window.location.reload();
+                } else {
+                    contadorElement.textContent = totalPendentes;
+                }
+            } else if (totalPendentes === 0) {
+                // Se não houver contador mas não houver mais cards, recarregar
+                window.location.reload();
+            }
+
+            // Limpar cache e atualizar badge de pendentes na página principal RAF
+            if (typeof window.updatePendentesBadge === 'function') {
+                window.updatePendentesBadge();
+            }
+        }, 300);
+    };
 
     // Modal de detalhes
     const detalhesModal = document.getElementById('raf-detalhes-modal');
@@ -210,6 +332,37 @@
     detalhesModal.addEventListener('click', (e) => {
         if (e.target === detalhesModal || e.target.classList.contains('bg-gray-500')) {
             closeModal();
+        }
+    });
+
+    // Modal de confirmação de cancelamento
+    const cancelarModal = document.getElementById('raf-cancelar-modal');
+    const cancelarModalCloseBtns = document.querySelectorAll('.raf-cancelar-modal-close');
+    const cancelarConfirmBtn = document.getElementById('raf-cancelar-confirm-btn');
+    let pendingCancelData = null; // Armazena apenas relatorioId quando o modal é aberto
+
+    const openCancelarModal = (relatorioId) => {
+        pendingCancelData = { relatorioId };
+        cancelarModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        // Configurar listener do botão de confirmação após abrir o modal
+        setTimeout(setupConfirmButtonListener, 50);
+    };
+
+    const closeCancelarModal = () => {
+        cancelarModal.classList.add('hidden');
+        document.body.style.overflow = '';
+        pendingCancelData = null;
+    };
+
+    cancelarModalCloseBtns.forEach(btn => {
+        btn.addEventListener('click', closeCancelarModal);
+    });
+
+    cancelarModal.addEventListener('click', (e) => {
+        if (e.target === cancelarModal || e.target.classList.contains('bg-gray-500')) {
+            closeCancelarModal();
         }
     });
 
@@ -276,7 +429,6 @@
                 openModal();
             } catch (err) {
                 console.error('Erro ao buscar detalhes:', err);
-                alert('Erro ao carregar detalhes do relatório. Tente novamente.');
             }
         });
     });
@@ -288,6 +440,11 @@
             const card = btn.closest('[data-relatorio-id]');
             const confirmarText = btn.querySelector('.raf-confirmar-text');
             const confirmarSpinner = btn.querySelector('.raf-confirmar-spinner');
+
+            if (!card) {
+                console.error('Card não encontrado para confirmação');
+                return;
+            }
 
             if (!confirm('Tem certeza que deseja confirmar e pagar este relatório?')) {
                 return;
@@ -311,7 +468,7 @@
 
                 if (response.status === 402) {
                     const data = await response.json();
-                    alert(data.message || 'Créditos insuficientes.');
+                    console.error('Créditos insuficientes:', data.message);
                     btn.disabled = false;
                     confirmarText.classList.remove('hidden');
                     confirmarSpinner.classList.add('hidden');
@@ -320,7 +477,11 @@
 
                 if (!response.ok) {
                     const data = await response.json().catch(() => ({}));
-                    throw new Error(data.message || `Erro ${response.status}`);
+                    console.error('Erro ao confirmar:', data.message || `Erro ${response.status}`);
+                    btn.disabled = false;
+                    confirmarText.classList.remove('hidden');
+                    confirmarSpinner.classList.add('hidden');
+                    return;
                 }
 
                 // Se a resposta é CSV, fazer download
@@ -342,24 +503,16 @@
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
 
-                    // Remover card da lista
-                    card.style.transition = 'opacity 0.3s';
-                    card.style.opacity = '0';
-                    setTimeout(() => {
-                        card.remove();
-                        // Recarregar página se não houver mais relatórios
-                        if (document.querySelectorAll('[data-relatorio-id]').length === 0) {
-                            window.location.reload();
-                        }
-                    }, 300);
-
-                    alert('Relatório processado com sucesso! O CSV foi baixado.');
+                    // Remover card da lista usando função auxiliar - passar relatorioId
+                    removerCard(relatorioId);
                 } else {
-                    throw new Error('Resposta inesperada do servidor.');
+                    console.error('Resposta inesperada do servidor:', contentType);
+                    btn.disabled = false;
+                    confirmarText.classList.remove('hidden');
+                    confirmarSpinner.classList.add('hidden');
                 }
             } catch (err) {
                 console.error('Erro ao confirmar:', err);
-                alert(err.message || 'Erro ao processar. Tente novamente.');
                 btn.disabled = false;
                 confirmarText.classList.remove('hidden');
                 confirmarSpinner.classList.add('hidden');
@@ -367,22 +520,59 @@
         });
     });
 
-    // Botão Cancelar
+    // Botão Cancelar - abre modal de confirmação
     document.querySelectorAll('.raf-cancelar-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', () => {
             const relatorioId = btn.dataset.relatorioId;
-            const card = btn.closest('[data-relatorio-id]');
-            const cancelarText = btn.querySelector('.raf-cancelar-text');
-            const cancelarSpinner = btn.querySelector('.raf-cancelar-spinner');
-
-            if (!confirm('Tem certeza que deseja cancelar este relatório?')) {
+            if (!relatorioId) {
+                console.error('Relatório ID não encontrado');
                 return;
             }
 
-            btn.disabled = true;
-            cancelarText.classList.add('hidden');
-            cancelarSpinner.classList.remove('hidden');
+            // Abre o modal de confirmação
+            openCancelarModal(relatorioId);
+        });
+    });
 
+    // Botão Confirmar do modal de cancelamento - usar listener direto no botão
+    // Adicionar listener quando o modal é aberto para garantir que o botão existe
+    const setupConfirmButtonListener = () => {
+        const confirmBtn = document.getElementById('raf-cancelar-confirm-btn');
+        if (!confirmBtn) return;
+        
+        // Remover listener anterior se existir (evitar múltiplos listeners)
+        const newConfirmBtn = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+        
+        // Adicionar listener no novo botão
+        newConfirmBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (!pendingCancelData || !pendingCancelData.relatorioId) {
+                console.error('Dados de cancelamento não encontrados');
+                return;
+            }
+
+            const { relatorioId } = pendingCancelData;
+            const btn = document.querySelector(`.raf-cancelar-btn[data-relatorio-id="${relatorioId}"]`);
+            const cancelarText = btn?.querySelector('.raf-cancelar-text');
+            const cancelarSpinner = btn?.querySelector('.raf-cancelar-spinner');
+
+            // Fecha o modal imediatamente
+            closeCancelarModal();
+
+            // Remover card imediatamente da interface (sem depender da resposta do servidor)
+            removerCard(relatorioId);
+
+            // Desabilita o botão e mostra spinner
+            if (btn) {
+                btn.disabled = true;
+                if (cancelarText) cancelarText.classList.add('hidden');
+                if (cancelarSpinner) cancelarSpinner.classList.remove('hidden');
+            }
+
+            // Tentar cancelar no servidor em background (não bloqueia a remoção do card)
             try {
                 const response = await fetch(`/app/solucoes/raf/cancelar/${relatorioId}`, {
                     method: 'POST',
@@ -395,31 +585,16 @@
 
                 const data = await response.json();
 
+                // Log apenas para debug, não afeta a remoção do card
                 if (!response.ok || !data.success) {
-                    throw new Error(data.message || 'Erro ao cancelar');
+                    console.warn('Aviso: Erro ao cancelar no servidor, mas card já foi removido:', data.message || 'Erro desconhecido');
                 }
-
-                // Remover card da lista
-                card.style.transition = 'opacity 0.3s';
-                card.style.opacity = '0';
-                setTimeout(() => {
-                    card.remove();
-                    // Recarregar página se não houver mais relatórios
-                    if (document.querySelectorAll('[data-relatorio-id]').length === 0) {
-                        window.location.reload();
-                    }
-                }, 300);
-
-                alert('Relatório cancelado com sucesso.');
             } catch (err) {
-                console.error('Erro ao cancelar:', err);
-                alert(err.message || 'Erro ao cancelar. Tente novamente.');
-                btn.disabled = false;
-                cancelarText.classList.remove('hidden');
-                cancelarSpinner.classList.add('hidden');
+                // Log apenas para debug, não afeta a remoção do card
+                console.warn('Aviso: Erro ao cancelar no servidor, mas card já foi removido:', err);
             }
         });
-    });
+    };
 })();
 </script>
 
