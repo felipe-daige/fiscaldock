@@ -125,7 +125,7 @@
                                 <div class="flex items-center gap-4">
                                     <span>Custo unitário: <strong class="text-gray-700">R$ {{ number_format($relatorio->custo_unitario, 2, ',', '.') }}</strong></span>
                                 </div>
-                                <span>Criado em: {{ $relatorio->created_at ? $relatorio->created_at->format('d/m/Y H:i') : 'N/A' }}</span>
+                                <span>Criado em: <strong class="text-gray-700">{{ $relatorio->created_at ? $relatorio->created_at->format('d/m/Y \à\s H:i') : 'N/A' }}</strong></span>
                             </div>
                         </div>
                     </div>
@@ -266,8 +266,8 @@
                                 <p class="text-lg font-bold text-amber-600 mt-1">R$ ${data.valor_total_consulta.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                             </div>
                             <div class="col-span-2">
-                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Data de Criação</p>
-                                <p class="text-sm text-gray-700 mt-1">${data.created_at ? new Date(data.created_at).toLocaleString('pt-BR') : 'N/A'}</p>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Data e Horário de Criação</p>
+                                <p class="text-sm text-gray-700 mt-1">${data.created_at ? new Date(data.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}</p>
                             </div>
                         </div>
                     </div>
