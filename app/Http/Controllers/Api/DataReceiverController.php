@@ -97,10 +97,10 @@ class DataReceiverController extends Controller
                 'authenticated_user_id' => $user?->id,
             ]);
 
-            // Buscar dados do banco
-            $formattedData = $this->getRafConsultaFromDatabase($id, $userId);
-
-            if (!$formattedData) {
+            // Buscar registro do banco de dados
+            $registro = RafConsultaPendente::find($id);
+            
+            if (!$registro) {
                 Log::warning('Registro RAF não encontrado no banco de dados', [
                     'id' => $id,
                     'user_id' => $userId,
@@ -111,12 +111,87 @@ class DataReceiverController extends Controller
                     'message' => 'Registro não encontrado.',
                 ], Response::HTTP_NOT_FOUND);
             }
+            
+            // Validar que o user_id corresponde
+            if ((int) $registro->user_id !== $userId) {
+                Log::warning('Tentativa de acesso a registro de outro usuário', [
+                    'id' => $id,
+                    'expected_user_id' => $userId,
+                    'actual_user_id' => $registro->user_id,
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acesso negado.',
+                ], Response::HTTP_FORBIDDEN);
+            }
+            
+            // Marcar que o n8n enviou os dados (orquestrador)
+            if (!$registro->n8n_received_at) {
+                $registro->n8n_received_at = now();
+                $saved = $registro->save();
+                
+                // Recarregar do banco para confirmar que foi salvo
+                $registro->refresh();
+                
+                Log::info('n8n_received_at marcado no registro RAF', [
+                    'id' => $id,
+                    'user_id' => $userId,
+                    'n8n_received_at' => $registro->n8n_received_at,
+                    'saved' => $saved,
+                ]);
+            }
+
+            // Buscar dados formatados
+            $formattedData = $this->getRafConsultaFromDatabase($id, $userId);
+
+            if (!$formattedData) {
+                Log::error('Erro ao formatar dados após marcar n8n_received_at', [
+                    'id' => $id,
+                    'user_id' => $userId,
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao processar dados.',
+                ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
 
             Log::info('Dados RAF recuperados do banco de dados com sucesso', [
                 'id' => $id,
                 'user_id' => $userId,
                 'has_resume_url' => isset($formattedData['resume_url']),
                 'has_valor_total' => isset($formattedData['valor_total_consulta']),
+                'n8n_received_at' => $registro->n8n_received_at?->toIso8601String(),
+            ]);
+
+            // Notificar frontend via cache que dados estão prontos
+            // O frontend está escutando via SSE e verificará este cache
+            $notificationKey = "raf_data_ready:{$userId}:{$id}";
+            $notification = [
+                'id' => $id,
+                'user_id' => $userId,
+                'resume_url' => $formattedData['resume_url'],
+                'valor_total_consulta' => $formattedData['valor_total_consulta'],
+                'qtd_participantes_unicos' => $formattedData['qtd_participantes_unicos'],
+                'custo_unitario' => $formattedData['custo_unitario'],
+                'timestamp' => now()->toIso8601String(),
+            ];
+            
+            Cache::put($notificationKey, $notification, 300); // 5 minutos de TTL
+            
+            // Adicionar ao índice de notificações do usuário
+            $indexKey = "raf_notifications_index:{$userId}";
+            $notificationIds = Cache::get($indexKey, []);
+            if (!in_array($id, $notificationIds)) {
+                $notificationIds[] = $id;
+                Cache::put($indexKey, $notificationIds, 300);
+            }
+            
+            Log::info('Notificação SSE salva no cache', [
+                'user_id' => $userId,
+                'id' => $id,
+                'notification_key' => $notificationKey,
             ]);
 
             // Preparar resposta
@@ -438,10 +513,22 @@ class DataReceiverController extends Controller
                 ], Response::HTTP_UNAUTHORIZED);
             }
 
-            // Buscar registro mais recente do usuário na tabela
+            // Primeiro, tentar buscar registro com n8n_received_at (processado pelo n8n)
             $registro = RafConsultaPendente::where('user_id', $user->id)
-                ->orderBy('created_at', 'desc')
+                ->whereNotNull('n8n_received_at')
+                ->orderBy('n8n_received_at', 'desc')
                 ->first();
+
+            // Se não encontrou, buscar o registro mais recente que tenha resume_url e valor_total_consulta
+            // (mesmo sem n8n_received_at, pode ter sido processado mas n8n_received_at não foi salvo)
+            if (!$registro) {
+                $registro = RafConsultaPendente::where('user_id', $user->id)
+                    ->whereNotNull('resume_url')
+                    ->whereNotNull('valor_total_consulta')
+                    ->where('created_at', '>=', now()->subHours(24)) // Últimas 24 horas
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+            }
 
             if (!$registro) {
                 Log::info('getLatestData: nenhum registro encontrado para o usuário', [
@@ -450,8 +537,20 @@ class DataReceiverController extends Controller
                 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Nenhum dado recente encontrado. Use o botão "Atualizar" para verificar novamente.',
+                    'message' => 'Dados ainda não disponíveis. Aguarde o processamento do n8n.',
+                    'n8n_received' => false,
                 ], Response::HTTP_NOT_FOUND);
+            }
+            
+            // Se encontrou registro sem n8n_received_at mas com dados, ainda retornar
+            // (pode ter sido processado mas n8n_received_at não foi salvo por algum motivo)
+            if (!$registro->n8n_received_at && $registro->resume_url && !is_null($registro->valor_total_consulta)) {
+                Log::info('getLatestData: retornando registro sem n8n_received_at mas com dados válidos', [
+                    'user_id' => $user->id,
+                    'registro_id' => $registro->id,
+                    'has_resume_url' => !empty($registro->resume_url),
+                    'has_valor_total' => !is_null($registro->valor_total_consulta),
+                ]);
             }
 
             // Formatar dados no formato esperado pelo frontend
@@ -486,12 +585,14 @@ class DataReceiverController extends Controller
                 'registro_id' => $registro->id,
                 'resume_url' => $registro->resume_url,
                 'has_csv' => $formattedData['has_csv'] ?? false,
+                'n8n_received_at' => $registro->n8n_received_at?->toIso8601String(),
             ]);
             
             return response()->json([
                 'success' => true,
                 'data' => $formattedData,
                 'resume_url' => $registro->resume_url,
+                'n8n_received' => true,
             ], Response::HTTP_OK);
 
         } catch (\Exception $e) {
@@ -684,6 +785,119 @@ class DataReceiverController extends Controller
                 'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /**
+     * Endpoint SSE para notificar o frontend quando dados estiverem prontos.
+     * O frontend se conecta a este endpoint e recebe notificações em tempo real.
+     * Verifica apenas o cache, sem fazer queries no banco.
+     */
+    public function streamNotifications(Request $request)
+    {
+        $user = Auth::user();
+        
+        Log::info('SSE streamNotifications chamado', [
+            'user_id' => $user?->id,
+            'authenticated' => Auth::check(),
+        ]);
+        
+        if (!$user) {
+            Log::warning('SSE: usuário não autenticado');
+            return response('Unauthorized', 401);
+        }
+
+        // Enviar comentário inicial para manter conexão viva
+        return response()->stream(function () use ($user) {
+            // Enviar comentário inicial
+            echo ": SSE connection established\n\n";
+            
+            if (ob_get_level() > 0) {
+                ob_flush();
+            }
+            flush();
+            
+            try {
+                Log::info('SSE: conexão estabelecida', ['user_id' => $user->id]);
+            } catch (\Exception $e) {
+                // Ignorar erros de log
+            }
+            
+            $lastNotificationTime = null;
+            
+            while (true) {
+                try {
+                    // Verificar apenas o cache - buscar notificações do usuário
+                    // Usar uma chave de índice para rastrear notificações
+                    $indexKey = "raf_notifications_index:{$user->id}";
+                    $notificationIds = Cache::get($indexKey, []);
+                    
+                    foreach ($notificationIds as $notificationId) {
+                        $key = "raf_data_ready:{$user->id}:{$notificationId}";
+                        $notification = Cache::get($key);
+                        
+                        if ($notification && isset($notification['timestamp'])) {
+                            $notificationTime = \Carbon\Carbon::parse($notification['timestamp']);
+                            
+                            // Se é uma notificação nova (mais recente que a última processada)
+                            if (!$lastNotificationTime || $notificationTime->isAfter($lastNotificationTime)) {
+                                // Enviar evento SSE
+                                $data = json_encode([
+                                    'type' => 'data_ready',
+                                    'data' => $notification,
+                                ]);
+                                echo "data: {$data}\n\n";
+                                
+                                if (ob_get_level() > 0) {
+                                    ob_flush();
+                                }
+                                flush();
+                                
+                                // Remover notificação do cache após enviar
+                                Cache::forget($key);
+                                
+                                // Atualizar índice
+                                $notificationIds = array_filter($notificationIds, fn($id) => $id !== $notificationId);
+                                Cache::put($indexKey, $notificationIds, 300);
+                                
+                                // Atualizar lastNotificationTime
+                                $lastNotificationTime = $notificationTime;
+                                
+                                // Sair do loop após enviar notificação
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Aguardar 1 segundo antes da próxima verificação (mais responsivo)
+                    usleep(1000000); // 1 segundo em microsegundos
+                    
+                    // Verificar se a conexão ainda está ativa
+                    if (connection_aborted()) {
+                        break;
+                    }
+                } catch (\Exception $e) {
+                    // Log do erro mas não quebrar a conexão
+                    try {
+                        Log::error('SSE: erro no loop', [
+                            'user_id' => $user->id,
+                            'message' => $e->getMessage(),
+                        ]);
+                    } catch (\Exception $logError) {
+                        // Ignorar erros de log
+                    }
+                    // Continuar o loop mesmo com erro
+                    usleep(1000000);
+                    if (connection_aborted()) {
+                        break;
+                    }
+                }
+            }
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache',
+            'X-Accel-Buffering' => 'no',
+            'Connection' => 'keep-alive',
+        ]);
     }
 }
 

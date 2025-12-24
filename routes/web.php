@@ -64,10 +64,8 @@ Route::middleware('auth')->group(function () {
     // Requer autenticação via sessão (stateful) para funcionar com frontend
     Route::get('/api/data/receive-latest', [\App\Http\Controllers\Api\DataReceiverController::class, 'getLatestData'])
         ->name('api.data.get.latest');
+    
+    // Rota SSE para notificações em tempo real
+    Route::get('/api/data/notifications/stream', [\App\Http\Controllers\Api\DataReceiverController::class, 'streamNotifications'])
+        ->name('api.data.notifications.stream');
 });
-
-// Rota intermediária sem middleware auth - aceita token API ou sessão
-// A autenticação é validada no controller DashboardController
-// Esta rota está fora do middleware auth para permitir autenticação via token API
-Route::post('/app/solucoes/raf/confirmar', [DashboardController::class, 'confirmarRelatorio'])
-    ->name('app.solucoes.raf.confirmar');
