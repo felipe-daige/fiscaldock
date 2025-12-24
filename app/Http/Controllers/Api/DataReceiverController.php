@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\RafConsultaPendente;
+use App\Models\RafRelatorioProcessado;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -567,15 +568,42 @@ class DataReceiverController extends Controller
                 'updated_at' => $registro->updated_at?->toIso8601String(),
             ];
 
-            // Buscar CSV do cache se disponível (usando resume_url como chave)
-            $resumeUrlHash = md5($registro->resume_url);
-            $csvCacheKey = "raf_csv:{$resumeUrlHash}";
-            $csvCacheData = Cache::get($csvCacheKey);
+            // Buscar CSV da tabela raf_relatorio_processado
+            $relatorioProcessado = RafRelatorioProcessado::where('user_id', $user->id)
+                ->where('resume_url', $registro->resume_url)
+                ->first();
             
-            if ($csvCacheData) {
-                $formattedData['csv'] = $csvCacheData['csv'];
-                $formattedData['csv_filename'] = $csvCacheData['filename'] ?? 'resultado.csv';
-                $formattedData['has_csv'] = true;
+            if ($relatorioProcessado && !empty($relatorioProcessado->report_csv_base64)) {
+                try {
+                    // Decodificar BASE64 para CSV
+                    $csvContent = base64_decode($relatorioProcessado->report_csv_base64, true);
+                    if ($csvContent !== false && !empty(trim($csvContent))) {
+                        $formattedData['csv'] = $csvContent;
+                        $formattedData['csv_filename'] = 'resultado.csv';
+                        $formattedData['has_csv'] = true;
+                        
+                        Log::info('CSV recuperado da tabela raf_relatorio_processado', [
+                            'user_id' => $user->id,
+                            'resume_url' => $registro->resume_url,
+                            'relatorio_id' => $relatorioProcessado->id,
+                            'csv_size' => strlen($csvContent),
+                        ]);
+                    } else {
+                        $formattedData['has_csv'] = false;
+                        Log::warning('CSV base64 inválido ou vazio na tabela raf_relatorio_processado', [
+                            'user_id' => $user->id,
+                            'resume_url' => $registro->resume_url,
+                            'relatorio_id' => $relatorioProcessado->id,
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Erro ao decodificar CSV base64 da tabela', [
+                        'user_id' => $user->id,
+                        'resume_url' => $registro->resume_url,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $formattedData['has_csv'] = false;
+                }
             } else {
                 $formattedData['has_csv'] = false;
             }
@@ -609,8 +637,10 @@ class DataReceiverController extends Controller
     }
 
     /**
-     * Recebe CSV em base64 do n8n e armazena no cache.
+     * Recebe notificação do n8n indicando que o CSV está disponível na tabela raf_relatorio_processado.
+     * Recebe id e user_id, faz query na tabela e retorna o CSV decodificado.
      * Aceita autenticação via token (header X-API-Token) ou sessão (para frontend).
+     * NÃO armazena nada no cache.
      */
     public function receiveCsv(Request $request)
     {
@@ -643,6 +673,9 @@ class DataReceiverController extends Controller
                         if (isset($nestedData['user_id']) && !isset($receivedData['user_id'])) {
                             $receivedData['user_id'] = $nestedData['user_id'];
                         }
+                        if (isset($nestedData['id']) && !isset($receivedData['id'])) {
+                            $receivedData['id'] = $nestedData['id'];
+                        }
                     } else {
                         $receivedData = $nestedData;
                     }
@@ -655,110 +688,116 @@ class DataReceiverController extends Controller
                     if (isset($rawData['data']['user_id']) && !isset($receivedData['user_id'])) {
                         $receivedData['user_id'] = $rawData['data']['user_id'];
                     }
+                    if (isset($rawData['data']['id']) && !isset($receivedData['id'])) {
+                        $receivedData['id'] = $rawData['data']['id'];
+                    }
                 } else {
                     $receivedData = $rawData['data'];
                 }
             }
 
-            // Validar campos obrigatórios
-            if (empty($receivedData['csv']) || empty($receivedData['resume_url'])) {
-                Log::warning('Dados CSV incompletos', [
-                    'has_csv' => !empty($receivedData['csv']),
-                    'has_resume_url' => !empty($receivedData['resume_url']),
-                    'has_filename' => !empty($receivedData['filename']),
+            // Validar campos obrigatórios: id e user_id
+            if (empty($receivedData['id']) || empty($receivedData['user_id'])) {
+                Log::warning('Dados incompletos em receiveCsv', [
+                    'has_id' => !empty($receivedData['id']),
+                    'has_user_id' => !empty($receivedData['user_id']),
                 ]);
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Campos obrigatórios ausentes: csv e resume_url são necessários.',
+                    'message' => 'Campos obrigatórios ausentes: id e user_id são necessários.',
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-            $csvBase64 = $receivedData['csv'];
-            $resumeUrl = $receivedData['resume_url'];
-            $filename = $receivedData['filename'] ?? 'resultado.csv';
-            $userId = $user?->id ?? $receivedData['user_id'] ?? null;
+            $relatorioId = (int) $receivedData['id'];
+            $userId = (int) ($user?->id ?? $receivedData['user_id']);
 
-            // Decodificar base64 para string CSV
+            // Buscar registro na tabela raf_relatorio_processado usando id e validar user_id
+            $relatorioProcessado = RafRelatorioProcessado::where('id', $relatorioId)
+                ->where('user_id', $userId)
+                ->first();
+
+            if (!$relatorioProcessado) {
+                Log::warning('Relatório não encontrado em raf_relatorio_processado', [
+                    'id' => $relatorioId,
+                    'user_id' => $userId,
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Relatório não encontrado ou não pertence ao usuário informado.',
+                ], Response::HTTP_NOT_FOUND);
+            }
+
+            // Verificar se tem report_csv_base64
+            if (empty($relatorioProcessado->report_csv_base64)) {
+                Log::warning('Relatório encontrado mas sem CSV base64', [
+                    'id' => $relatorioId,
+                    'user_id' => $userId,
+                    'relatorio_id' => $relatorioProcessado->id,
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Relatório encontrado mas CSV ainda não está disponível.',
+                ], Response::HTTP_NOT_FOUND);
+            }
+
+            // Decodificar BASE64 para CSV
             try {
-                $csvContent = base64_decode($csvBase64, true);
-                if ($csvContent === false) {
-                    throw new \Exception('Falha ao decodificar base64');
+                $csvContent = base64_decode($relatorioProcessado->report_csv_base64, true);
+                if ($csvContent === false || empty(trim($csvContent))) {
+                    throw new \Exception('Falha ao decodificar base64 ou CSV vazio');
                 }
             } catch (\Exception $e) {
                 Log::error('Erro ao decodificar CSV base64', [
+                    'id' => $relatorioId,
+                    'user_id' => $userId,
                     'error' => $e->getMessage(),
-                    'resume_url' => $resumeUrl,
                 ]);
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Erro ao decodificar CSV base64. Verifique o formato.',
+                    'message' => 'Erro ao decodificar CSV base64.',
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-            // Validar que o conteúdo decodificado não está vazio
-            if (empty(trim($csvContent))) {
-                Log::warning('CSV decodificado está vazio', [
-                    'resume_url' => $resumeUrl,
-                ]);
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'CSV decodificado está vazio.',
-                ], Response::HTTP_BAD_REQUEST);
-            }
-
-            // Normalizar resume_url para usar como parte da chave
-            $resumeUrlHash = md5($resumeUrl);
-
-            // Armazenar CSV no cache
-            $csvCacheKey = "raf_csv:{$resumeUrlHash}";
-            $csvCacheData = [
-                'csv' => $csvContent,
-                'filename' => $filename,
-                'resume_url' => $resumeUrl,
-                'user_id' => $userId ? (int) $userId : null,
-                'received_at' => now()->toIso8601String(),
-            ];
-
-            Cache::put($csvCacheKey, $csvCacheData, 3600);
-
-            Log::info('CSV armazenado em cache', [
+            Log::info('Relatório processado encontrado e CSV decodificado com sucesso', [
+                'id' => $relatorioId,
                 'user_id' => $userId,
-                'resume_url' => $resumeUrl,
-                'filename' => $filename,
+                'relatorio_id' => $relatorioProcessado->id,
                 'csv_size' => strlen($csvContent),
-                'cache_key' => $csvCacheKey,
+                'resume_url' => $relatorioProcessado->resume_url,
             ]);
 
-            // Atualizar dados de confirmação se existirem, adicionando referência ao CSV
-            if ($userId) {
-                $confirmationCacheKey = "raf_confirmation:{$userId}:{$resumeUrlHash}";
-                $confirmationData = Cache::get($confirmationCacheKey);
-                if ($confirmationData) {
-                    $confirmationData['has_csv'] = true;
-                    $confirmationData['csv_filename'] = $filename;
-                    Cache::put($confirmationCacheKey, $confirmationData, 3600);
-                }
-            }
+            // Criar notificação no cache para SSE notificar o frontend
+            $notificationId = uniqid('csv_ready_', true);
+            $notificationKey = "raf_notification:{$userId}:{$notificationId}";
+            $notification = [
+                'type' => 'csv_ready',
+                'user_id' => $userId,
+                'relatorio_id' => $relatorioProcessado->id,
+                'resume_url' => $relatorioProcessado->resume_url,
+                'timestamp' => now()->toIso8601String(),
+            ];
+            Cache::put($notificationKey, $notification, 300); // 5 minutos
 
-            // Atualizar também cache público
-            $publicConfirmationCacheKey = "raf_confirmation_public:{$resumeUrlHash}";
-            $publicConfirmationData = Cache::get($publicConfirmationCacheKey);
-            if ($publicConfirmationData) {
-                $publicConfirmationData['has_csv'] = true;
-                $publicConfirmationData['csv_filename'] = $filename;
-                Cache::put($publicConfirmationCacheKey, $publicConfirmationData, 3600);
-            }
+            // Adicionar ao índice de notificações do usuário
+            $indexKey = "raf_notifications_index:{$userId}";
+            $notificationIds = Cache::get($indexKey, []);
+            $notificationIds[] = $notificationId;
+            Cache::put($indexKey, $notificationIds, 300);
 
+            // Retornar CSV decodificado sem armazenar no cache
             return response()->json([
                 'success' => true,
-                'message' => 'CSV recebido e armazenado com sucesso.',
+                'message' => 'CSV disponível e decodificado com sucesso.',
                 'data' => [
-                    'resume_url' => $resumeUrl,
-                    'filename' => $filename,
-                    'csv_size' => strlen($csvContent),
+                    'id' => $relatorioProcessado->id,
+                    'user_id' => $userId,
+                    'resume_url' => $relatorioProcessado->resume_url,
+                    'csv' => $csvContent,
+                    'csv_filename' => 'resultado.csv',
                     'received_at' => now()->toIso8601String(),
                 ],
             ], Response::HTTP_OK);
@@ -832,6 +871,7 @@ class DataReceiverController extends Controller
                     $notificationIds = Cache::get($indexKey, []);
                     
                     foreach ($notificationIds as $notificationId) {
+                        // Verificar notificações de data_ready
                         $key = "raf_data_ready:{$user->id}:{$notificationId}";
                         $notification = Cache::get($key);
                         
@@ -854,6 +894,44 @@ class DataReceiverController extends Controller
                                 
                                 // Remover notificação do cache após enviar
                                 Cache::forget($key);
+                                
+                                // Atualizar índice
+                                $notificationIds = array_filter($notificationIds, fn($id) => $id !== $notificationId);
+                                Cache::put($indexKey, $notificationIds, 300);
+                                
+                                // Atualizar lastNotificationTime
+                                $lastNotificationTime = $notificationTime;
+                                
+                                // Sair do loop após enviar notificação
+                                break;
+                            }
+                        }
+                        
+                        // Verificar notificações de csv_ready
+                        $csvKey = "raf_notification:{$user->id}:{$notificationId}";
+                        $csvNotification = Cache::get($csvKey);
+                        
+                        if ($csvNotification && isset($csvNotification['type']) && $csvNotification['type'] === 'csv_ready') {
+                            $notificationTime = isset($csvNotification['timestamp']) 
+                                ? \Carbon\Carbon::parse($csvNotification['timestamp']) 
+                                : now();
+                            
+                            // Se é uma notificação nova (mais recente que a última processada)
+                            if (!$lastNotificationTime || $notificationTime->isAfter($lastNotificationTime)) {
+                                // Enviar evento SSE
+                                $data = json_encode([
+                                    'type' => 'csv_ready',
+                                    'data' => $csvNotification,
+                                ]);
+                                echo "data: {$data}\n\n";
+                                
+                                if (ob_get_level() > 0) {
+                                    ob_flush();
+                                }
+                                flush();
+                                
+                                // Remover notificação do cache após enviar
+                                Cache::forget($csvKey);
                                 
                                 // Atualizar índice
                                 $notificationIds = array_filter($notificationIds, fn($id) => $id !== $notificationId);

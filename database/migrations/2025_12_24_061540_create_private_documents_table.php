@@ -11,17 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('raf_consulta_pendente', function (Blueprint $table) {
+        Schema::create('private_documents', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('tipo_efd');
-            $table->string('tipo_consulta');
-            $table->integer('qtd_participantes');
-            $table->decimal('valor_total_consulta', 10, 2);
-            $table->decimal('custo_unitario', 10, 2);
-            $table->string('resume_url');
+            $table->string('document_type');
+            $table->text('final_report_base64')->nullable();
+            $table->longText('document_text')->nullable();
             $table->timestamps();
-            $table->timestamp('n8n_received_at')->nullable();
         });
     }
 
@@ -30,7 +26,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('raf_consulta_pendente');
+        Schema::dropIfExists('private_documents');
     }
 };
 

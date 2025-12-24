@@ -761,16 +761,38 @@
             updateInfoCard(dbData, !!pendingConfirmation);
 
             // Se tem CSV, disponibilizar para download
-            if (dbData.has_csv && dbData.csv) {
+            // O CSV já vem decodificado do backend (convertido de BASE64)
+            // Validar rigorosamente antes de mostrar o botão
+            const hasCsvFlag = dbData.has_csv === true;
+            const hasCsvContent = dbData.csv && typeof dbData.csv === 'string' && dbData.csv.trim().length > 0;
+            
+            if (hasCsvFlag && hasCsvContent) {
+                // Criar Blob a partir do CSV já decodificado
                 const blob = new Blob([dbData.csv], { type: 'text/csv;charset=utf-8;' });
                 const filename = dbData.csv_filename || 'resultado.csv';
-                setDownload(blob, filename);
-                freezeTimer();
-                showAlert('success', 'CSV disponível para download.');
-                if (resultBadge) resultBadge.classList.remove('hidden');
-                setLoading(false);
-                // Desconectar SSE quando CSV estiver disponível
-                disconnectSSE();
+                
+                // Validar que o blob não está vazio antes de mostrar o botão
+                if (blob.size > 0) {
+                    setDownload(blob, filename);
+                    freezeTimer();
+                    showAlert('success', 'CSV disponível para download.');
+                    if (resultBadge) resultBadge.classList.remove('hidden');
+                    setLoading(false);
+                    
+                    // Confirmar recebimento do CSV no resume_url se existir
+                    if (dbData.resume_url && dbData.resume_url.trim() !== '') {
+                        await confirmCsvReceived(dbData.resume_url);
+                    }
+                    
+                    // Desconectar SSE quando CSV estiver disponível
+                    disconnectSSE();
+                } else {
+                    console.warn('[RAF] CSV recebido mas blob está vazio. Aguardando próxima verificação...');
+                }
+            } else if (hasCsvFlag && !hasCsvContent) {
+                // Se has_csv é true mas csv não está presente ou está vazio, aguardar próxima verificação
+                // O relógio continua contando
+                console.log('[RAF] CSV marcado como disponível mas conteúdo ainda não recebido ou está vazio. Aguardando...');
             }
 
             // Se tem resume_url e valor_total_consulta, mostrar modal de confirmação
@@ -956,6 +978,13 @@
                 try {
                     const notification = JSON.parse(event.data);
                     
+                    if (notification.type === 'csv_ready' && notification.data) {
+                        // CSV está disponível - fazer verificação única no banco para buscar o CSV
+                        console.log('[RAF] Notificação de CSV disponível recebida', notification.data);
+                        await checkAndUpdateDataFromDatabase();
+                        return;
+                    }
+                    
                     if (notification.type === 'data_ready' && notification.data) {
                         // Se a notificação já tem os dados necessários, usar diretamente
                         if (notification.data.resume_url && notification.data.valor_total_consulta !== null && notification.data.valor_total_consulta !== undefined) {
@@ -1040,6 +1069,13 @@
 
     const setDownload = (blob, filename = 'resultado.csv') => {
         if (!downloadWrap || !downloadLink || !downloadLabel) return;
+        
+        // Validar que o blob existe e não está vazio antes de mostrar o botão
+        if (!blob || blob.size === 0) {
+            console.warn('[RAF] Tentativa de exibir download com blob vazio ou inválido');
+            return;
+        }
+        
         resetDownload();
         currentDownloadUrl = URL.createObjectURL(blob);
         downloadLink.href = currentDownloadUrl;
@@ -1049,6 +1085,49 @@
         
         // Garantir que o link não cause redirecionamento
         downloadLink.setAttribute('target', '_self');
+    };
+
+    // ========== Função para Confirmar Recebimento do CSV ==========
+    
+    /**
+     * Confirma o recebimento do CSV no resume_url após o download estar disponível.
+     * Esta função é chamada quando o CSV é recebido via SSE/polling.
+     */
+    const confirmCsvReceived = async (resumeUrl) => {
+        if (!resumeUrl || resumeUrl.trim() === '') {
+            console.warn('[RAF] resume_url vazio, não é possível confirmar recebimento do CSV');
+            return;
+        }
+
+        try {
+            const currentCsrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrf || '';
+            
+            const response = await fetch('/app/credits/confirm', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': currentCsrf,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    resume_url: resumeUrl,
+                    valor_total_consulta: 0, // Valor zero pois já foi confirmado anteriormente
+                    confirm_receipt: true, // Flag para indicar que é apenas confirmação de recebimento
+                }),
+            });
+
+            if (response.ok) {
+                console.log('[RAF] Confirmação de recebimento do CSV enviada com sucesso');
+            } else {
+                const data = await response.json().catch(() => ({}));
+                console.warn('[RAF] Erro ao confirmar recebimento do CSV:', data.message || `Erro ${response.status}`);
+                // Não mostrar erro ao usuário, apenas logar
+            }
+        } catch (err) {
+            console.error('[RAF] Erro ao confirmar recebimento do CSV:', err);
+            // Não mostrar erro ao usuário, apenas logar
+        }
     };
 
     // ========== Funções do Card de Confirmação de Créditos ==========
@@ -1063,6 +1142,9 @@
             console.error('[RAF] ERRO: creditsCard não encontrado!');
             return;
         }
+
+        // PAUSAR o relógio quando o modal for exibido
+        stopTimer();
 
         pendingConfirmation = { resumeUrl, valorTotalConsulta };
 
@@ -1208,16 +1290,34 @@
         }
         
         // Se tem CSV, processar e disponibilizar download
-        if (data.csv || (data.headers && data.rows)) {
-            if (data.csv) {
+        // Validar rigorosamente antes de mostrar o botão
+        const hasCsvData = data.csv && typeof data.csv === 'string' && data.csv.trim().length > 0;
+        const hasRowsData = data.headers && data.rows && Array.isArray(data.rows) && data.rows.length > 0;
+        
+        if (hasCsvData || hasRowsData) {
+            if (hasCsvData) {
                 const blob = new Blob([data.csv], { type: 'text/csv;charset=utf-8;' });
                 const filename = data.filename || 'resultado.csv';
-                setDownload(blob, filename);
+                
+                // Validar que o blob não está vazio antes de mostrar o botão
+                if (blob.size > 0) {
+                    setDownload(blob, filename);
+                    
+                    // Confirmar recebimento do CSV no resume_url se existir
+                    if (data.resume_url && data.resume_url.trim() !== '') {
+                        confirmCsvReceived(data.resume_url).catch(err => {
+                            console.error('[RAF] Erro ao confirmar recebimento do CSV em onDataReceived:', err);
+                        });
+                    }
+                    
+                    freezeTimer();
+                    showAlert('success', 'Processado com sucesso. CSV disponível.');
+                    resultBadge.classList.remove('hidden');
+                    setLoading(false);
+                } else {
+                    console.warn('[RAF] CSV recebido em onDataReceived mas blob está vazio');
+                }
             }
-            freezeTimer();
-            showAlert('success', 'Processado com sucesso. CSV disponível.');
-            resultBadge.classList.remove('hidden');
-            setLoading(false);
         }
         
         // Se precisa de confirmação e ainda não foi mostrado o modal
@@ -1284,6 +1384,9 @@
                 throw new Error(data.message || `Erro ${response.status}`);
             }
 
+            // REINICIAR o relógio após confirmar créditos
+            startTimer();
+
             // Sucesso - resposta é CSV
             if (contentType && contentType.includes('text/csv')) {
                 const blob = await response.blob();
@@ -1307,7 +1410,16 @@
                 updateFileUi();
                 updateEnablement();
             } else {
-                throw new Error('Resposta inesperada do servidor.');
+                // Se não for CSV imediatamente, aguardar notificação do n8n via SSE
+                // O relógio já foi reiniciado acima e continuará até o CSV estar disponível
+                
+                // Esconder botão de download até o CSV estar realmente disponível
+                resetDownload();
+                
+                showAlert('info', 'Créditos confirmados. Aguardando processamento do relatório...');
+                
+                // Conectar SSE para receber notificação quando CSV estiver disponível
+                connectSSE();
             }
 
             hideCreditsConfirmation();
@@ -1907,6 +2019,9 @@
             console.error('Erro ao atualizar badge de pendentes:', err);
         }
     }
+
+    // Expor função globalmente para ser chamada de outras páginas
+    window.updatePendentesBadge = updatePendentesBadge;
 
     // Atualizar badge ao carregar a página
     if (document.readyState === 'loading') {

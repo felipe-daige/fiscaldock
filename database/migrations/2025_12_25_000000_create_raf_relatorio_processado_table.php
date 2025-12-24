@@ -11,17 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('raf_consulta_pendente', function (Blueprint $table) {
+        Schema::create('raf_relatorio_processado', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('tipo_efd');
-            $table->string('tipo_consulta');
-            $table->integer('qtd_participantes');
-            $table->decimal('valor_total_consulta', 10, 2);
-            $table->decimal('custo_unitario', 10, 2);
-            $table->string('resume_url');
+            $table->string('document_type');
+            $table->string('consultant_type');
+            $table->text('report_csv_base64');
+            $table->string('resume_url')->nullable();
+            $table->integer('total_participants');
+            $table->decimal('total_price', 10, 2);
             $table->timestamps();
-            $table->timestamp('n8n_received_at')->nullable();
         });
     }
 
@@ -30,7 +29,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('raf_consulta_pendente');
+        Schema::dropIfExists('raf_relatorio_processado');
     }
 };
 

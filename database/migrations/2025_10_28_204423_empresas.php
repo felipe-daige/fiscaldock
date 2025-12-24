@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('nome_empresa');
             $table->string('cnpj');
             $table->string('cargo');
+            $table->string('faturamento_anual')->nullable();
             $table->string('preparacao_reforma');
             $table->string('telefone_empresa')->nullable();
             $table->string('email_empresa')->nullable();

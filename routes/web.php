@@ -25,6 +25,7 @@ Route::get('/solucoes/gestao-cnds', [LandingPageController::class, 'gestaoCnds']
 Route::get('/solucoes/inteligencia-tributaria', [LandingPageController::class, 'inteligenciaTributaria'])->name('solucoes.inteligencia-tributaria');
 Route::get('/solucoes/raf', [LandingPageController::class, 'raf'])->name('solucoes.raf');
 Route::post('/raf/upload-public', [LandingPageController::class, 'uploadSpedPublic'])->name('raf.upload.public');
+Route::post('/raf/cancel-public', [LandingPageController::class, 'cancelSpedPublic'])->name('raf.cancel.public');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
