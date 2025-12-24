@@ -8,6 +8,7 @@ use App\Services\CreditService;
 use App\Services\Sped\SpedUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -44,18 +45,257 @@ class RafController extends Controller
         }
 
         $user = Auth::user();
-        $relatorios = RafConsultaPendente::pendentes()
-            ->doUsuario($user->id)
+        $userId = (int) $user->id;
+        
+        // #region agent log
+        try {
+            $debugLogPath = '/opt/hub_contabil/.cursor/debug.log';
+            $debugLogDir = dirname($debugLogPath);
+            if (!is_dir($debugLogDir)) {
+                @mkdir($debugLogDir, 0755, true);
+            }
+            if (is_dir($debugLogDir) && is_writable($debugLogDir)) {
+                file_put_contents($debugLogPath, json_encode([
+                    'sessionId' => 'debug-session',
+                    'runId' => 'run1',
+                    'hypothesisId' => 'A',
+                    'location' => 'RafController.php:46',
+                    'message' => 'Function entry - historico method',
+                    'data' => [
+                        'user_id' => $userId,
+                        'user_id_type' => gettype($userId),
+                        'user_authenticated' => $user !== null,
+                        'user_email' => $user?->email ?? null,
+                    ],
+                    'timestamp' => time() * 1000
+                ]) . "\n", FILE_APPEND);
+            }
+        } catch (\Throwable $e) {
+            // Ignorar erros de log de debug - não são críticos
+        }
+        // #endregion
+        
+        Log::debug('RafController::historico - Buscando relatórios pendentes', [
+            'user_id' => $userId,
+            'user_id_type' => gettype($userId),
+            'user_authenticated' => $user !== null,
+        ]);
+        
+        // Verificar TODOS os registros na tabela (independente de user_id)
+        $todosRegistros = RafConsultaPendente::all();
+        $totalGeral = $todosRegistros->count();
+        $registrosPorUserId = $todosRegistros->groupBy('user_id')->map->count();
+        
+        // #region agent log
+        try {
+            if (is_dir($debugLogDir) && is_writable($debugLogDir)) {
+                file_put_contents($debugLogPath, json_encode([
+                    'sessionId' => 'debug-session',
+                    'runId' => 'run1',
+                    'hypothesisId' => 'C',
+                    'location' => 'RafController.php:56',
+                    'message' => 'Before query - all records check',
+                    'data' => [
+                        'total_geral' => $totalGeral,
+                        'registros_por_user_id' => $registrosPorUserId->toArray(),
+                        'todos_user_ids' => $todosRegistros->pluck('user_id')->unique()->toArray(),
+                    ],
+                    'timestamp' => time() * 1000
+                ]) . "\n", FILE_APPEND);
+            }
+        } catch (\Throwable $e) {}
+        // #endregion
+        
+        // Query alternativa direta para verificar se há registros no banco
+        $totalNoBanco = RafConsultaPendente::where('user_id', $userId)->count();
+        
+        // #region agent log
+        try {
+            if (is_dir($debugLogDir) && is_writable($debugLogDir)) {
+                file_put_contents($debugLogPath, json_encode([
+                    'sessionId' => 'debug-session',
+                    'runId' => 'run1',
+                    'hypothesisId' => 'B',
+                    'location' => 'RafController.php:62',
+                    'message' => 'After direct query - before scope query',
+                    'data' => [
+                        'user_id' => $userId,
+                        'total_no_banco_direto' => $totalNoBanco,
+                        'query_sql' => RafConsultaPendente::where('user_id', $userId)->toSql(),
+                    ],
+                    'timestamp' => time() * 1000
+                ]) . "\n", FILE_APPEND);
+            }
+        } catch (\Throwable $e) {}
+        // #endregion
+        
+        Log::debug('RafController::historico - Total de registros no banco (query direta)', [
+            'user_id' => $userId,
+            'total_no_banco' => $totalNoBanco,
+        ]);
+        
+        // #region agent log
+        try {
+            if (is_dir($debugLogDir) && is_writable($debugLogDir)) {
+                file_put_contents($debugLogPath, json_encode([
+                    'sessionId' => 'debug-session',
+                    'runId' => 'run1',
+                    'hypothesisId' => 'B',
+                    'location' => 'RafController.php:68',
+                    'message' => 'Before scope query execution',
+                    'data' => [
+                        'user_id' => $userId,
+                        'scope_method' => 'doUsuario',
+                    ],
+                    'timestamp' => time() * 1000
+                ]) . "\n", FILE_APPEND);
+            }
+        } catch (\Throwable $e) {}
+        // #endregion
+        
+        // Query de teste direta usando DB::table() para verificar se os dados existem
+        $testQuery = DB::table('raf_consulta_pendente')
+            ->where('user_id', $userId)
+            ->get();
+        
+        Log::debug('RafController::historico - Query de teste direta (DB::table)', [
+            'user_id' => $userId,
+            'total_encontrados_teste' => $testQuery->count(),
+            'registros_teste' => $testQuery->toArray(),
+        ]);
+        
+        // Query principal corrigida - removendo scope pendentes() que não faz nada
+        // e usando where diretamente para garantir que funciona
+        $relatorios = RafConsultaPendente::where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->get();
+        
+        // #region agent log
+        try {
+            if (is_dir($debugLogDir) && is_writable($debugLogDir)) {
+                file_put_contents($debugLogPath, json_encode([
+                    'sessionId' => 'debug-session',
+                    'runId' => 'run1',
+                    'hypothesisId' => 'B',
+                    'location' => 'RafController.php:75',
+                    'message' => 'After scope query execution',
+                    'data' => [
+                        'user_id' => $userId,
+                        'total_encontrados' => $relatorios->count(),
+                        'relatorios_ids' => $relatorios->pluck('id')->toArray(),
+                        'relatorios_user_ids' => $relatorios->pluck('user_id')->unique()->toArray(),
+                        'is_collection' => $relatorios instanceof \Illuminate\Database\Eloquent\Collection,
+                    ],
+                    'timestamp' => time() * 1000
+                ]) . "\n", FILE_APPEND);
+            }
+        } catch (\Throwable $e) {}
+        // #endregion
+        
+        $totalEncontrados = $relatorios->count();
+        
+        Log::info('RafController::historico - Relatórios encontrados', [
+            'user_id' => $userId,
+            'total_relatorios' => $totalEncontrados,
+            'total_no_banco' => $totalNoBanco,
+            'total_geral' => $totalGeral,
+            'relatorios_ids' => $relatorios->pluck('id')->toArray(),
+        ]);
 
         $data = [
             'relatorios' => $relatorios,
-            'total_pendentes' => $relatorios->count(),
+            'total_pendentes' => $totalEncontrados,
         ];
+        
+        // #region agent log
+        try {
+            if (is_dir($debugLogDir) && is_writable($debugLogDir)) {
+                file_put_contents($debugLogPath, json_encode([
+                    'sessionId' => 'debug-session',
+                    'runId' => 'run1',
+                    'hypothesisId' => 'D',
+                    'location' => 'RafController.php:120',
+                    'message' => 'Data prepared for view',
+                    'data' => [
+                        'user_id' => $userId,
+                        'total_pendentes' => $totalEncontrados,
+                        'relatorios_count' => $relatorios->count(),
+                        'relatorios_is_collection' => $relatorios instanceof \Illuminate\Database\Eloquent\Collection,
+                        'data_keys' => array_keys($data),
+                        'data_relatorios_count' => isset($data['relatorios']) ? $data['relatorios']->count() : 0,
+                    ],
+                    'timestamp' => time() * 1000
+                ]) . "\n", FILE_APPEND);
+            }
+        } catch (\Throwable $e) {}
+        // #endregion
+        
+        // Verificação adicional: garantir que os dados estão sendo passados corretamente
+        Log::debug('RafController::historico - Dados preparados para view', [
+            'user_id' => $userId,
+            'total_pendentes' => $totalEncontrados,
+            'relatorios_count' => $relatorios->count(),
+            'relatorios_is_collection' => $relatorios instanceof \Illuminate\Database\Eloquent\Collection,
+            'data_keys' => array_keys($data),
+        ]);
+
+        // #region agent log
+        try {
+            if (is_dir($debugLogDir) && is_writable($debugLogDir)) {
+                file_put_contents($debugLogPath, json_encode([
+                    'sessionId' => 'debug-session',
+                    'runId' => 'run1',
+                    'hypothesisId' => 'D',
+                    'location' => 'RafController.php:229',
+                    'message' => 'Before returning view',
+                    'data' => [
+                        'is_ajax' => $this->isAjaxRequest($request),
+                        'total_pendentes' => $totalEncontrados,
+                        'relatorios_count' => $relatorios->count(),
+                        'view_name' => $historicoView,
+                    ],
+                    'timestamp' => time() * 1000
+                ]) . "\n", FILE_APPEND);
+            }
+        } catch (\Throwable $e) {}
+        // #endregion
+        
+        Log::debug('RafController::historico - Retornando view', [
+            'is_ajax' => $this->isAjaxRequest($request),
+            'total_pendentes' => $totalEncontrados,
+            'relatorios_count' => $relatorios->count(),
+        ]);
 
         if ($this->isAjaxRequest($request)) {
-            return view($historicoView, $data);
+            $renderedView = view($historicoView, $data)->render();
+            
+            // #region agent log
+            try {
+                if (is_dir($debugLogDir) && is_writable($debugLogDir)) {
+                    file_put_contents($debugLogPath, json_encode([
+                        'sessionId' => 'debug-session',
+                        'runId' => 'run1',
+                        'hypothesisId' => 'D',
+                        'location' => 'RafController.php:250',
+                        'message' => 'View rendered for AJAX',
+                        'data' => [
+                            'html_length' => strlen($renderedView),
+                            'contains_relatorios' => strpos($renderedView, 'data-relatorio-id') !== false,
+                            'relatorios_count_in_html' => substr_count($renderedView, 'data-relatorio-id'),
+                        ],
+                        'timestamp' => time() * 1000
+                    ]) . "\n", FILE_APPEND);
+                }
+            } catch (\Throwable $e) {}
+            // #endregion
+            
+            Log::debug('RafController::historico - View renderizada para AJAX', [
+                'html_length' => strlen($renderedView),
+                'contains_relatorios' => strpos($renderedView, 'data-relatorio-id') !== false,
+                'relatorios_count_in_html' => substr_count($renderedView, 'data-relatorio-id'),
+            ]);
+            
+            return response($renderedView)->header('Content-Type', 'text/html');
         }
 
         return view(self::AUTH_LAYOUT_VIEW, array_merge([
@@ -277,13 +517,32 @@ class RafController extends Controller
     {
         // Verifica se o método ajax() existe (Laravel 11)
         if (method_exists($request, 'ajax')) {
-            return $request->ajax();
+            $isAjax = $request->ajax();
+            Log::debug('RafController::isAjaxRequest - método ajax()', [
+                'is_ajax' => $isAjax,
+                'x_requested_with' => $request->header('X-Requested-With'),
+                'accept' => $request->header('Accept'),
+            ]);
+            return $isAjax;
         }
 
         // Fallback para Laravel 12: verifica headers
-        return $request->wantsJson() 
-            || $request->expectsJson()
-            || $request->header('X-Requested-With') === 'XMLHttpRequest';
+        $xRequestedWith = $request->header('X-Requested-With');
+        $wantsJson = $request->wantsJson();
+        $expectsJson = $request->expectsJson();
+        $isAjax = $wantsJson 
+            || $expectsJson
+            || $xRequestedWith === 'XMLHttpRequest';
+        
+        Log::debug('RafController::isAjaxRequest - fallback', [
+            'is_ajax' => $isAjax,
+            'x_requested_with' => $xRequestedWith,
+            'wants_json' => $wantsJson,
+            'expects_json' => $expectsJson,
+            'accept' => $request->header('Accept'),
+        ]);
+        
+        return $isAjax;
     }
 }
 

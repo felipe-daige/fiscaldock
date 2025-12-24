@@ -241,26 +241,9 @@
                 {{-- Card de Informações da Consulta --}}
                 <div id="info-consulta-card" class="bg-white rounded-xl border border-gray-200 shadow-md">
             <div class="p-6 space-y-4">
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900">Informações da Consulta</h3>
-                        <p class="mt-1 text-sm text-gray-600">Detalhes do processamento da consulta.</p>
-                    </div>
-                    <button
-                        type="button"
-                        id="info-refresh-btn"
-                        class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Atualizar dados do cache"
-                    >
-                        <svg id="info-refresh-icon" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        <svg id="info-refresh-spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                        </svg>
-                        <span id="info-refresh-text">Atualizar</span>
-                    </button>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Informações da Consulta</h3>
+                    <p class="mt-1 text-sm text-gray-600">Detalhes do processamento da consulta.</p>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -305,70 +288,6 @@
             </div>
         </div>
 
-            {{-- Card de Confirmação de Créditos (aparece quando needs_confirmation) --}}
-            <div id="credits-confirmation-card" class="hidden col-span-1 lg:col-span-2 bg-white rounded-xl border-2 border-amber-300 shadow-lg">
-                <div class="p-6 space-y-5">
-                    {{-- Header --}}
-                    <div class="flex items-start gap-4">
-                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 flex-shrink-0">
-                            <svg class="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900">Confirmar uso de créditos</h3>
-                            <p class="mt-1 text-sm text-gray-600">Revise os detalhes da consulta antes de processar.</p>
-                        </div>
-                    </div>
-
-                    {{-- Info Grid: CNPJs e Créditos --}}
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="rounded-xl bg-gray-50 border border-gray-200 p-4 text-center">
-                            <span class="block text-3xl font-bold text-gray-900" id="credits-cnpj-count">--</span>
-                            <span class="text-sm text-gray-500">CNPJs encontrados</span>
-                        </div>
-                        <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 text-center">
-                            <span class="block text-3xl font-bold text-amber-700" id="credits-total">--</span>
-                            <span class="text-sm text-gray-500">Créditos necessários</span>
-                        </div>
-                    </div>
-
-                    {{-- Alerta de créditos insuficientes --}}
-                    <div id="credits-insufficient-alert" class="hidden rounded-xl border border-red-200 bg-red-50 p-4">
-                        <div class="flex gap-3">
-                            <svg class="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                            <div>
-                                <p class="text-sm font-semibold text-red-800">Créditos insuficientes</p>
-                                <p class="text-sm text-red-700 mt-1">Entre em contato pelo telefone <a href="tel:+5569999999999" class="font-semibold underline hover:no-underline">(69) 99999-9999</a> para adquirir mais créditos.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Botões de ação --}}
-                    <div class="flex flex-col-reverse sm:flex-row gap-3">
-                        <button
-                            type="button"
-                            id="credits-cancel-btn"
-                            class="flex-1 sm:flex-none inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            type="button"
-                            id="credits-confirm-btn"
-                            class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <svg id="credits-confirm-spinner" class="hidden h-5 w-5 animate-spin" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                            </svg>
-                            <span id="credits-confirm-text">Confirmar e processar</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
         </div>
         </div>
         {{-- Fim Aba: Processar SPED --}}
@@ -507,6 +426,83 @@
     </div>
 </div>
 
+{{-- Modal de Confirmação de Créditos (Overlay) --}}
+<div id="credits-modal-backdrop" class="hidden fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4">
+    <div id="credits-confirmation-card" class="bg-white rounded-xl border-2 border-amber-300 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6 space-y-5">
+            {{-- Header --}}
+            <div class="flex items-start gap-4">
+                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 flex-shrink-0">
+                    <svg class="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-gray-900">Confirmar uso de créditos</h3>
+                    <p class="mt-1 text-sm text-gray-600">Revise os detalhes da consulta antes de processar.</p>
+                </div>
+                <button
+                    type="button"
+                    id="credits-modal-close-btn"
+                    class="flex-shrink-0 rounded-lg p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition focus:outline-none focus:ring-2 focus:ring-gray-300"
+                    aria-label="Fechar modal"
+                >
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Info Grid: CNPJs e Créditos --}}
+            <div class="grid grid-cols-2 gap-4">
+                <div class="rounded-xl bg-gray-50 border border-gray-200 p-4 text-center">
+                    <span class="block text-3xl font-bold text-gray-900" id="credits-cnpj-count">--</span>
+                    <span class="text-sm text-gray-500">CNPJs encontrados</span>
+                </div>
+                <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 text-center">
+                    <span class="block text-3xl font-bold text-amber-700" id="credits-total">--</span>
+                    <span class="text-sm text-gray-500">Créditos necessários</span>
+                </div>
+            </div>
+
+            {{-- Alerta de créditos insuficientes --}}
+            <div id="credits-insufficient-alert" class="hidden rounded-xl border border-red-200 bg-red-50 p-4">
+                <div class="flex gap-3">
+                    <svg class="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                        <p class="text-sm font-semibold text-red-800">Créditos insuficientes</p>
+                        <p class="text-sm text-red-700 mt-1">Entre em contato pelo telefone <a href="tel:+5569999999999" class="font-semibold underline hover:no-underline">(69) 99999-9999</a> para adquirir mais créditos.</p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Botões de ação --}}
+            <div class="flex flex-col-reverse sm:flex-row gap-3">
+                <button
+                    type="button"
+                    id="credits-cancel-btn"
+                    class="flex-1 sm:flex-none inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                >
+                    Cancelar
+                </button>
+                <button
+                    type="button"
+                    id="credits-confirm-btn"
+                    class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <svg id="credits-confirm-spinner" class="hidden h-5 w-5 animate-spin" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                    <span id="credits-confirm-text">Confirmar e processar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 (() => {
     function initRafTabs() {
@@ -601,8 +597,10 @@
         success: 'border-blue-200 bg-blue-50 text-blue-600',
     };
 
-    // Elementos do card de confirmação de créditos
+    // Elementos do modal de confirmação de créditos
+    const creditsModalBackdrop = document.getElementById('credits-modal-backdrop');
     const creditsCard = document.getElementById('credits-confirmation-card');
+    const creditsModalCloseBtn = document.getElementById('credits-modal-close-btn');
     const creditsCnpjCount = document.getElementById('credits-cnpj-count');
     const creditsTotal = document.getElementById('credits-total');
     const creditsInsufficientAlert = document.getElementById('credits-insufficient-alert');
@@ -629,6 +627,10 @@
 
     // Dados de confirmação pendente
     let pendingConfirmation = null;
+    
+    // Controle de conexão SSE
+    let eventSource = null;
+    let isConnectingSSE = false;
 
     const formatFileSize = (bytes) => {
         if (!Number.isFinite(bytes)) return '';
@@ -667,15 +669,6 @@
                              (custoUnitario !== null && custoUnitario !== undefined && custoUnitario > 0);
 
 
-        console.log('[RAF] updateInfoCard chamado:', {
-            qtdParticipantes,
-            valorTotal,
-            custoUnitario,
-            hasValidData,
-            needsConfirmation,
-            dataKeys: Object.keys(data),
-        });
-
         // Atualizar valores (sempre atualiza, mesmo se for null/undefined)
         if (infoQtdParticipantes) {
             const qtdText = (qtdParticipantes !== null && qtdParticipantes !== undefined)
@@ -697,9 +690,6 @@
         // Sempre mostrar o card quando houver dados válidos
         if (hasValidData) {
             infoConsultaCard.classList.remove('hidden');
-            console.log('[RAF] Card de informações exibido com dados válidos');
-        } else {
-            console.log('[RAF] Nenhum dado válido para exibir no card');
         }
 
         // Mostrar/esconder botão de confirmar créditos
@@ -708,32 +698,17 @@
             const shouldShowButton = needsConfirmation || (hasValidData && (valorTotal !== null && valorTotal !== undefined && valorTotal > 0));
             if (shouldShowButton) {
                 infoConfirmCreditsWrap.classList.remove('hidden');
-                console.log('[RAF] Botão de confirmação de créditos exibido');
             } else {
                 infoConfirmCreditsWrap.classList.add('hidden');
             }
         }
     };
 
-    // Elementos do botão de atualizar
-    const infoRefreshBtn = document.getElementById('info-refresh-btn');
-    const infoRefreshIcon = document.getElementById('info-refresh-icon');
-    const infoRefreshSpinner = document.getElementById('info-refresh-spinner');
-    const infoRefreshText = document.getElementById('info-refresh-text');
-
     /**
-     * Busca dados do banco de dados e atualiza a UI.
-     * Chamado quando o usuário clica no botão "Atualizar".
+     * Busca dados do banco de dados e atualiza a UI automaticamente.
+     * Chamado automaticamente pelo polling quando n8n envia dados.
      */
-    const refreshDataFromDatabase = async () => {
-        if (!infoRefreshBtn) return;
-
-        // Desabilitar botão durante a busca
-        infoRefreshBtn.disabled = true;
-        if (infoRefreshIcon) infoRefreshIcon.classList.add('hidden');
-        if (infoRefreshSpinner) infoRefreshSpinner.classList.remove('hidden');
-        if (infoRefreshText) infoRefreshText.textContent = 'Atualizando...';
-
+    const checkAndUpdateDataFromDatabase = async () => {
         try {
             const currentCsrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrf || '';
             
@@ -747,7 +722,7 @@
             });
 
             if (response.status === 401) {
-                handleAuthError('refreshDataFromDatabase', false);
+                handleAuthError('checkAndUpdateDataFromDatabase', false);
                 return;
             }
 
@@ -757,9 +732,14 @@
                 
                 // Tratamento específico por status
                 if (response.status === 404) {
-                    console.log('[RAF] Dados ainda não disponíveis no banco de dados (404)');
-                    showAlert('info', 'Dados ainda não estão disponíveis. O processamento pode estar em andamento. Use o botão "Atualizar" para verificar novamente.');
-                    return;
+                    // Verificar se é porque n8n ainda não enviou
+                    if (data.n8n_received === false) {
+                        // Não mostrar alerta, apenas continuar o polling silenciosamente
+                        return;
+                    } else {
+                        // Não mostrar alerta, apenas continuar o polling silenciosamente
+                        return;
+                    }
                 } else if (response.status === 403) {
                     showAlert('error', 'Acesso negado.');
                     return;
@@ -774,13 +754,13 @@
             const result = await response.json();
 
             if (!result.success || !result.data) {
-                console.log('[RAF] Nenhum dado encontrado no banco de dados');
-                showAlert('info', 'Nenhum dado disponível. Aguarde o processamento ou faça um novo upload. Use o botão "Atualizar" para verificar novamente.');
+                showAlert('info', 'Nenhum dado disponível. Aguarde o processamento ou faça um novo upload.');
                 return;
             }
 
             const dbData = result.data;
-            console.log('[RAF] Dados recuperados do banco de dados:', dbData);
+
+            // n8n já confirmou - dados disponíveis
 
             // Atualizar card de informações
             updateInfoCard(dbData, !!pendingConfirmation);
@@ -794,35 +774,36 @@
                 showAlert('success', 'CSV disponível para download.');
                 if (resultBadge) resultBadge.classList.remove('hidden');
                 setLoading(false);
+                // Desconectar SSE quando CSV estiver disponível
+                disconnectSSE();
             }
 
-            // Se tem resume_url e valor_total_consulta, mostrar card de confirmação
-            if (dbData.resume_url && dbData.valor_total_consulta && creditsCard?.classList.contains('hidden')) {
+            // Se tem resume_url e valor_total_consulta, mostrar modal de confirmação
+            // Sempre mostrar o modal quando houver dados de confirmação do banco de dados
+            // Verificar se valor_total_consulta existe (pode ser 0, mas não null/undefined)
+            const hasResumeUrl = dbData.resume_url && dbData.resume_url.trim() !== '';
+            const hasValorTotal = dbData.valor_total_consulta !== null && dbData.valor_total_consulta !== undefined;
+            
+            if (hasResumeUrl && hasValorTotal) {
                 await showCreditsConfirmation(
                     dbData.resume_url,
                     dbData.valor_total_consulta,
                     dbData.qtd_participantes_unicos || 0,
                     dbData.custo_unitario || 0
                 );
-            } else if (dbData.resume_url && dbData.valor_total_consulta && !pendingConfirmation) {
-                // Atualizar pendingConfirmation se ainda não estiver definido
-                pendingConfirmation = {
-                    resumeUrl: dbData.resume_url,
-                    valorTotalConsulta: dbData.valor_total_consulta,
-                };
+                
+                // Desconectar SSE quando modal de confirmação for exibido
+                disconnectSSE();
+                // Não mostrar alerta de sucesso quando modal for exibido
+                return;
             }
 
+            // Mostrar alerta de sucesso apenas se não exibiu o modal
             showAlert('success', 'Dados atualizados com sucesso.');
 
         } catch (err) {
             console.error('[RAF] Erro ao buscar dados do banco de dados:', err);
-            showAlert('error', err.message || 'Erro ao atualizar dados. Tente novamente.');
-        } finally {
-            // Reabilitar botão
-            infoRefreshBtn.disabled = false;
-            if (infoRefreshIcon) infoRefreshIcon.classList.remove('hidden');
-            if (infoRefreshSpinner) infoRefreshSpinner.classList.add('hidden');
-            if (infoRefreshText) infoRefreshText.textContent = 'Atualizar';
+            // Não mostrar alerta de erro no polling automático, apenas logar
         }
     };
 
@@ -881,8 +862,6 @@
      * @returns {boolean} - true se deve parar a operação, false caso contrário
      */
     const handleAuthError = (context = 'requisição', silent = false) => {
-        console.warn(`[RAF] Erro de autenticação (401) em ${context} - parando operação silenciosamente`);
-        
         // TODO: Desconectar recebimento de dados (SSE/WebSocket) em caso de erro de autenticação
         // disconnectDataReceiver();
         
@@ -939,6 +918,8 @@
             timerWrap.classList.add('hidden');
             timerValue.textContent = '00:00';
         }
+        
+        // NÃO parar polling quando timer parar - polling é independente
     };
 
     const freezeTimer = () => {
@@ -956,6 +937,97 @@
             setTimerState('success');
             timerWrap.classList.remove('hidden');
         }
+    };
+
+    /**
+     * Conecta ao endpoint SSE para receber notificações em tempo real.
+     */
+    const connectSSE = () => {
+        // Verificar se já existe uma conexão ativa ou se já está conectando
+        if (isConnectingSSE || (eventSource && (eventSource.readyState === EventSource.OPEN || eventSource.readyState === EventSource.CONNECTING))) {
+            return;
+        }
+        
+        // Fechar conexão anterior se existir (estado CLOSED)
+        disconnectSSE();
+        
+        // Setar flag imediatamente para evitar múltiplas chamadas simultâneas
+        isConnectingSSE = true;
+        
+        try {
+            eventSource = new EventSource('/api/data/notifications/stream');
+            
+            eventSource.onmessage = async (event) => {
+                try {
+                    const notification = JSON.parse(event.data);
+                    
+                    if (notification.type === 'data_ready' && notification.data) {
+                        // Se a notificação já tem os dados necessários, usar diretamente
+                        if (notification.data.resume_url && notification.data.valor_total_consulta !== null && notification.data.valor_total_consulta !== undefined) {
+                            // Usar dados da notificação diretamente
+                            const dbData = {
+                                resume_url: notification.data.resume_url,
+                                valor_total_consulta: notification.data.valor_total_consulta,
+                                qtd_participantes_unicos: notification.data.qtd_participantes_unicos || 0,
+                                custo_unitario: notification.data.custo_unitario || 0,
+                            };
+                            
+                            // Verificar condições para exibir modal
+                            const hasResumeUrl = dbData.resume_url && dbData.resume_url.trim() !== '';
+                            const hasValorTotal = dbData.valor_total_consulta !== null && dbData.valor_total_consulta !== undefined;
+                            
+                            if (hasResumeUrl && hasValorTotal) {
+                                await showCreditsConfirmation(
+                                    dbData.resume_url,
+                                    dbData.valor_total_consulta,
+                                    dbData.qtd_participantes_unicos,
+                                    dbData.custo_unitario
+                                );
+                                disconnectSSE();
+                                return;
+                            }
+                        }
+                        
+                        // Se não tem dados completos na notificação, buscar do banco
+                        await checkAndUpdateDataFromDatabase();
+                    }
+                } catch (err) {
+                    console.error('[RAF] Erro ao processar notificação SSE:', err);
+                }
+            };
+            
+            eventSource.onerror = (error) => {
+                // Verificar o estado da conexão
+                if (eventSource.readyState === EventSource.CLOSED) {
+                    // Conexão foi fechada - o EventSource não reconecta automaticamente neste caso
+                    // Limpar flag, sem tentar reconectar manualmente
+                    isConnectingSSE = false;
+                }
+                // Para estados CONNECTING ou OPEN com erro temporário, o EventSource reconecta automaticamente
+                // Não precisamos fazer nada - o EventSource gerencia isso automaticamente
+            };
+            
+            eventSource.onopen = () => {
+                // Limpar flag quando conexão for estabelecida
+                isConnectingSSE = false;
+            };
+        } catch (err) {
+            // Limpar flag em caso de erro fatal
+            isConnectingSSE = false;
+            console.error('[RAF] Erro ao criar conexão SSE:', err);
+        }
+    };
+
+    /**
+     * Desconecta do endpoint SSE.
+     */
+    const disconnectSSE = () => {
+        if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+        }
+        // Limpar flag de conexão
+        isConnectingSSE = false;
     };
 
     const resetDownload = () => {
@@ -982,14 +1054,15 @@
         
         // Garantir que o link não cause redirecionamento
         downloadLink.setAttribute('target', '_self');
-        console.log('[RAF] Download configurado:', { filename, blobSize: blob.size, url: currentDownloadUrl.substring(0, 50) + '...' });
     };
 
     // ========== Funções do Card de Confirmação de Créditos ==========
     
     const showCreditsConfirmation = async (resumeUrl, valorTotalConsulta, qtdParticipantesUnicos, custoUnitario) => {
-        console.log('[RAF] showCreditsConfirmation chamada:', { resumeUrl, valorTotalConsulta, qtdParticipantesUnicos, custoUnitario });
-        console.log('[RAF] creditsCard element:', creditsCard);
+        if (!creditsModalBackdrop) {
+            console.error('[RAF] ERRO: creditsModalBackdrop não encontrado!');
+            return;
+        }
         
         if (!creditsCard) {
             console.error('[RAF] ERRO: creditsCard não encontrado!');
@@ -1023,20 +1096,12 @@
         const hasEnough = userBalance >= valorArredondado;
 
         // Atualizar UI do card
-        console.log('[RAF] Atualizando dados do card:', {
-            qtdParticipantesUnicos,
-            valorTotalConsulta,
-            creditsCnpjCount: !!creditsCnpjCount,
-            creditsTotal: !!creditsTotal
-        });
-        
         if (creditsCnpjCount) {
             // Trata valores null/undefined, mas permite 0
             const cnpjValue = (qtdParticipantesUnicos !== null && qtdParticipantesUnicos !== undefined) 
                 ? qtdParticipantesUnicos.toString() 
                 : '--';
             creditsCnpjCount.textContent = cnpjValue;
-            console.log('[RAF] CNPJs atualizado para:', cnpjValue);
         } else {
             console.error('[RAF] creditsCnpjCount não encontrado!');
         }
@@ -1047,7 +1112,6 @@
                 ? Math.ceil(valorTotalConsulta).toString()
                 : '--';
             creditsTotal.textContent = creditValue;
-            console.log('[RAF] Créditos atualizado para:', creditValue);
         } else {
             console.error('[RAF] creditsTotal não encontrado!');
         }
@@ -1078,35 +1142,46 @@
             infoConfirmCreditsWrap.classList.remove('hidden');
         }
 
-        // Mostrar o card
-        console.log('[RAF] Removendo classe hidden do card');
-        creditsCard.classList.remove('hidden');
+        // Mostrar o modal overlay
+        if (!creditsModalBackdrop) {
+            console.error('[RAF] ERRO: creditsModalBackdrop não encontrado! Verifique se o elemento existe no DOM.');
+            return;
+        }
         
-        // Forçar reflow do DOM para garantir que a mudança seja aplicada
-        void creditsCard.offsetHeight;
+        if (!creditsCard) {
+            console.error('[RAF] ERRO: creditsCard não encontrado! Verifique se o elemento existe no DOM.');
+            return;
+        }
         
-        console.log('[RAF] Card classes após remover hidden:', creditsCard.className);
-        console.log('[RAF] Card está visível?', !creditsCard.classList.contains('hidden'));
-        console.log('[RAF] Card display style:', window.getComputedStyle(creditsCard).display);
+        // Remover classe hidden do backdrop para exibir o modal
+        creditsModalBackdrop.classList.remove('hidden');
         
-        // Scroll para o card após um pequeno delay para garantir que está visível
-        setTimeout(() => {
-            if (!creditsCard.classList.contains('hidden')) {
-                creditsCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        }, 100);
+        // Prevenir scroll do body quando o modal estiver aberto
+        document.body.style.overflow = 'hidden';
         
-        // TODO: Conectar recebimento de dados (SSE/WebSocket) quando card for exibido
-        // if (resumeUrl) {
-        //     connectDataReceiver(resumeUrl);
-        // }
+        // Forçar reflow para garantir que o modal seja renderizado
+        void creditsModalBackdrop.offsetHeight;
+        
+        // Se ainda estiver escondido, tentar forçar exibição
+        if (creditsModalBackdrop.classList.contains('hidden')) {
+            console.error('[RAF] ERRO: Modal ainda está escondido após remover classe hidden!');
+            creditsModalBackdrop.style.display = 'flex';
+            creditsModalBackdrop.style.visibility = 'visible';
+        }
     };
 
-        const hideCreditsConfirmation = () => {
-        if (!creditsCard) return;
-        creditsCard.classList.add('hidden');
+    const hideCreditsConfirmation = () => {
+        // Esconder o backdrop do modal
+        if (creditsModalBackdrop) {
+            creditsModalBackdrop.classList.add('hidden');
+        }
+        
+        // Restaurar scroll do body
+        document.body.style.overflow = '';
+        
         pendingConfirmation = null;
-        // TODO: Desconectar recebimento de dados (SSE/WebSocket) quando card for escondido
+        
+        // TODO: Desconectar recebimento de dados (SSE/WebSocket) quando modal for escondido
         // disconnectDataReceiver();
         
         // Esconder botão de confirmação no card de informações também
@@ -1132,8 +1207,6 @@
         //     rows?: array
         // }
         
-        console.log('[RAF] Dados recebidos:', data);
-        
         // Atualizar card de informações
         if (data.qtd_participantes_unicos || data.valor_total_consulta || data.custo_unitario) {
             updateInfoCard(data, !!pendingConfirmation);
@@ -1152,8 +1225,8 @@
             setLoading(false);
         }
         
-        // Se precisa de confirmação e ainda não foi mostrado o card
-        if (data.resume_url && data.valor_total_consulta && creditsCard?.classList.contains('hidden')) {
+        // Se precisa de confirmação e ainda não foi mostrado o modal
+        if (data.resume_url && data.valor_total_consulta && creditsModalBackdrop?.classList.contains('hidden')) {
             showCreditsConfirmation(
                 data.resume_url,
                 data.valor_total_consulta,
@@ -1233,9 +1306,6 @@
 
                 // Atualizar saldo exibido se existir
                 const remainingCredits = response.headers.get('X-Credits-Remaining');
-                if (remainingCredits !== null) {
-                    console.log('Créditos restantes:', remainingCredits);
-                }
 
                 // Reset parcial após sucesso
                 form.reset();
@@ -1290,7 +1360,6 @@
                 console.error('[RAF] Erro ao cancelar:', data.message || 'Erro desconhecido');
                 showAlert('error', data.message || 'Erro ao cancelar operação. Tente novamente.');
             } else {
-                console.log('[RAF] Operação cancelada com sucesso');
                 showAlert('info', 'Operação cancelada.');
             }
         } catch (err) {
@@ -1311,6 +1380,31 @@
         creditsConfirmBtn.addEventListener('click', confirmCreditsAndProcess);
     }
 
+    // Event listeners para fechar o modal
+    // Fechar ao clicar no backdrop (mas não no conteúdo do modal)
+    if (creditsModalBackdrop) {
+        creditsModalBackdrop.addEventListener('click', (e) => {
+            // Só fechar se o clique foi diretamente no backdrop, não no conteúdo do modal
+            if (e.target === creditsModalBackdrop) {
+                hideCreditsConfirmation();
+            }
+        });
+    }
+
+    // Fechar ao clicar no botão X
+    if (creditsModalCloseBtn) {
+        creditsModalCloseBtn.addEventListener('click', () => {
+            hideCreditsConfirmation();
+        });
+    }
+
+    // Fechar ao pressionar ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && creditsModalBackdrop && !creditsModalBackdrop.classList.contains('hidden')) {
+            hideCreditsConfirmation();
+        }
+    });
+
     // Event listeners para os botões do card de informações
     if (infoCreditsCancelBtn) {
         infoCreditsCancelBtn.addEventListener('click', handleCancelCredits);
@@ -1320,10 +1414,6 @@
         infoCreditsConfirmBtn.addEventListener('click', confirmCreditsAndProcess);
     }
 
-    // Event listener para o botão de atualizar
-    if (infoRefreshBtn) {
-        infoRefreshBtn.addEventListener('click', refreshDataFromDatabase);
-    }
     
     // Prevenir comportamento padrão do link de download para evitar redirecionamentos
     if (downloadLink) {
@@ -1333,11 +1423,8 @@
             if (!href || href === '#' || href === window.location.href + '#') {
                 e.preventDefault();
                 e.stopPropagation();
-                console.warn('[RAF] Tentativa de download com link inválido, prevenindo redirecionamento');
                 return false;
             }
-            // Permitir download normal se o href for um blob URL válido
-            console.log('[RAF] Iniciando download do CSV');
         });
     }
 
@@ -1578,23 +1665,11 @@
             const contentType = response.headers.get('content-type');
             let data;
             
-            console.log('[RAF] Content-Type:', contentType);
-            console.log('[RAF] Response status:', response.status);
-            
             if (contentType && contentType.includes('application/json')) {
                 data = await response.json();
-                console.log('[RAF] JSON Response:', data);
 
                 // Verifica se precisa de confirmação de créditos
                 if (data.success && data.needs_confirmation && data.resume_url && data.valor_total_consulta !== undefined) {
-                    console.log('[RAF] Mostrando card de confirmação de créditos');
-                    console.log('[RAF] Dados recebidos:', {
-                        resume_url: data.resume_url,
-                        valor_total_consulta: data.valor_total_consulta,
-                        qtd_participantes_unicos: data.qtd_participantes_unicos,
-                        custo_unitario: data.custo_unitario
-                    });
-                    
                     // Atualizar card de informações da consulta
                     updateInfoCard({
                         qtd_participantes_unicos: data.qtd_participantes_unicos,
@@ -1612,20 +1687,11 @@
                         data.custo_unitario || 0
                     );
                     
-                    console.log('[RAF] showCreditsConfirmation completada');
-                    
                     // IMPORTANTE: Para o loading e timer, mas NÃO continua o processamento
                     setLoading(false);
                     // Não chama stopTimer() aqui porque o timer deve continuar até a confirmação
                     return; // Não continua o fluxo normal, a seção de confirmação vai gerenciar
                 } else {
-                    console.log('[RAF] Upload bem-sucedido sem necessidade de confirmação:', {
-                        success: data.success,
-                        needs_confirmation: data.needs_confirmation,
-                        resume_url: data.resume_url,
-                        valor_total_consulta: data.valor_total_consulta
-                    });
-                    
                     // Se tem CSV nos dados, processar normalmente
                     if (data.csv && data.csv.trim() !== '') {
                         const blob = new Blob([data.csv], { type: 'text/csv;charset=utf-8;' });
@@ -1644,19 +1710,31 @@
                         updateEnablement();
                     } else {
                         // CSV vazio ou não presente - dados serão salvos no banco pelo n8n
-                        console.log('[RAF] CSV vazio ou não presente. Dados serão salvos no banco pelo n8n.');
                         setLoading(false);
                         
-                        // Mostrar mensagem para o usuário usar o botão "Atualizar"
-                        showAlert('info', 'Processamento concluído. Use o botão "Atualizar" para verificar se os dados já estão disponíveis.');
+                        // Mostrar mensagem para o usuário aguardar o n8n
+                        showAlert('info', 'Processamento concluído. Aguarde o processamento do n8n e use o botão "Atualizar" quando estiver disponível.');
                         
-                        // Mostrar botão de atualização se estiver oculto
-                        if (infoRefreshBtn && infoRefreshBtn.parentElement) {
-                            const infoCard = infoRefreshBtn.closest('.bg-white.rounded-xl');
+                        // Mostrar card de informações se estiver oculto
+                        if (infoConsultaCard && infoConsultaCard.parentElement) {
+                            const infoCard = infoConsultaCard.closest('.bg-white.rounded-xl');
                             if (infoCard) {
                                 infoCard.classList.remove('hidden');
                             }
                         }
+                        
+                        // Conectar ao SSE para receber notificações quando o n8n enviar os dados
+                        connectSSE();
+                        
+                        // Verificar imediatamente se já há dados no banco (pode ter sido processado rapidamente)
+                        checkAndUpdateDataFromDatabase().catch(err => {
+                            console.error('[RAF] Erro na verificação imediata:', err);
+                        });
+                        
+                        // Verificar novamente após um delay para casos onde o n8n ainda está processando
+                        setTimeout(async () => {
+                            await checkAndUpdateDataFromDatabase();
+                        }, 3000); // Aguardar 3 segundos para dar tempo ao n8n processar
                     }
                 }
             } else if (contentType && contentType.includes('text/csv')) {
@@ -1695,8 +1773,6 @@
 
                 // TODO: Desconectar recebimento de dados (SSE/WebSocket) quando CSV for recebido
                 // disconnectDataReceiver();
-                
-                console.log('[RAF] CSV recebido com sucesso');
 
                 // Reset parcial após sucesso
                 form.reset();
@@ -1730,7 +1806,6 @@
 
             // Se chegou aqui e data existe, verifica se precisa de confirmação (caso não tenha sido detectado antes)
             if (data && data.success && data.needs_confirmation) {
-                console.log('[RAF] needs_confirmation detectado no final do fluxo - não deveria chegar aqui');
                 return; // Já foi tratado acima, mas garante que não continua
             }
 
@@ -1780,6 +1855,15 @@
     // Estado inicial
     updateFileUi();
     updateEnablement();
+    
+    // Conectar ao SSE quando a página carregar para receber notificações em tempo real
+    // O frontend apenas escuta - não faz nenhuma verificação ou polling
+    connectSSE();
+    
+    // Desconectar SSE quando a página for fechada
+    window.addEventListener('beforeunload', () => {
+        disconnectSSE();
+    });
     }
 
     // Expor para o SPA (resources/js/spa.js chama initRaf ao navegar)
@@ -1811,9 +1895,11 @@
                 const html = await response.text();
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
-                const totalPendentes = doc.querySelector('[data-relatorio-id]') 
-                    ? doc.querySelectorAll('[data-relatorio-id]').length 
-                    : 0;
+                
+                // Contar apenas os cards principais (divs com data-relatorio-id que são containers)
+                // Os cards principais têm as classes bg-white rounded-xl e são divs diretos
+                const cardsPrincipais = doc.querySelectorAll('div[data-relatorio-id].bg-white.rounded-xl');
+                const totalPendentes = cardsPrincipais.length;
 
                 if (totalPendentes > 0) {
                     badge.textContent = totalPendentes;

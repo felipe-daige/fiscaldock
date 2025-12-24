@@ -37,6 +37,7 @@
         @endif
 
         {{-- Lista de Relatórios --}}
+        {{-- Debug: total_pendentes={{ $total_pendentes }}, relatorios_count={{ $relatorios->count() }} --}}
         @if($relatorios->count() > 0)
             <div class="space-y-4">
                 @foreach($relatorios as $relatorio)
@@ -124,7 +125,7 @@
                                 <div class="flex items-center gap-4">
                                     <span>Custo unitário: <strong class="text-gray-700">R$ {{ number_format($relatorio->custo_unitario, 2, ',', '.') }}</strong></span>
                                 </div>
-                                <span>Criado em: {{ $relatorio->created_at->format('d/m/Y H:i') }}</span>
+                                <span>Criado em: {{ $relatorio->created_at ? $relatorio->created_at->format('d/m/Y H:i') : 'N/A' }}</span>
                             </div>
                         </div>
                     </div>
@@ -266,7 +267,7 @@
                             </div>
                             <div class="col-span-2">
                                 <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Data de Criação</p>
-                                <p class="text-sm text-gray-700 mt-1">${new Date(data.created_at).toLocaleString('pt-BR')}</p>
+                                <p class="text-sm text-gray-700 mt-1">${data.created_at ? new Date(data.created_at).toLocaleString('pt-BR') : 'N/A'}</p>
                             </div>
                         </div>
                     </div>

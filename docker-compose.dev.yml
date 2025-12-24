@@ -1,25 +1,11 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    networks:
-      - devnet
-    environment:
-      POSTGRES_DB: fiscaldock
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: REMOVED_PASSWORD
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
-
   app:
     image: fiscaldock-app:latest
     restart: unless-stopped
     networks:
       - devnet
-    depends_on:
-      - postgres
+    extra_hosts:
+      - "postgres:172.19.0.1"
     volumes:
       - ./:/var/www/html
       - app_storage:/var/www/html/storage
@@ -56,6 +42,8 @@ services:
     restart: unless-stopped
     networks:
       - devnet
+    extra_hosts:
+      - "postgres:172.19.0.1"
     depends_on:
       - app
     volumes:
@@ -87,6 +75,8 @@ services:
     restart: unless-stopped
     networks:
       - devnet
+    extra_hosts:
+      - "postgres:172.19.0.1"
     depends_on:
       - app
     volumes:
@@ -119,8 +109,6 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:
-    name: hub_contabil_postgres_data
   app_storage:
     external: true
     name: app_storage
