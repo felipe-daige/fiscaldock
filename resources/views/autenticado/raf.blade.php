@@ -428,15 +428,10 @@
 
 {{-- Modal de Confirmação de Créditos (Overlay) --}}
 <div id="credits-modal-backdrop" class="hidden fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4">
-    <div id="credits-confirmation-card" class="bg-white rounded-xl border-2 border-amber-300 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div id="credits-confirmation-card" class="bg-white rounded-xl border border-gray-200 shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div class="p-6 space-y-5">
             {{-- Header --}}
             <div class="flex items-start gap-4">
-                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 flex-shrink-0">
-                    <svg class="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
                 <div class="flex-1">
                     <h3 class="text-lg font-semibold text-gray-900">Confirmar uso de créditos</h3>
                     <p class="mt-1 text-sm text-gray-600">Revise os detalhes da consulta antes de processar.</p>
@@ -459,8 +454,8 @@
                     <span class="block text-3xl font-bold text-gray-900" id="credits-cnpj-count">--</span>
                     <span class="text-sm text-gray-500">CNPJs encontrados</span>
                 </div>
-                <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 text-center">
-                    <span class="block text-3xl font-bold text-amber-700" id="credits-total">--</span>
+                <div class="rounded-xl bg-gray-50 border border-gray-200 p-4 text-center">
+                    <span class="block text-3xl font-bold text-gray-900" id="credits-total">--</span>
                     <span class="text-sm text-gray-500">Créditos necessários</span>
                 </div>
             </div>
