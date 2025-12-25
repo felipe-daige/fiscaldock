@@ -2,6 +2,7 @@
 
 namespace App\Services\Sped;
 
+use App\Models\RafConsultaPendente;
 use App\Services\CsvParserService;
 use Illuminate\Http\Client\Response as ClientResponse;
 use Illuminate\Http\UploadedFile;
@@ -137,6 +138,17 @@ class SpedUploadService
             ]);
             
             if (isset($data['resume_url']) && isset($data['valor_total_consulta'])) {
+                // Buscar o registro no banco de dados para obter o relatorio_id
+                $relatorioId = null;
+                if ($userId && isset($data['resume_url'])) {
+                    $relatorio = RafConsultaPendente::where('resume_url', $data['resume_url'])
+                        ->where('user_id', $userId)
+                        ->first();
+                    if ($relatorio) {
+                        $relatorioId = $relatorio->id;
+                    }
+                }
+                
                 Log::info('Webhook SPED aguardando confirmação de créditos', [
                     'tipo' => $tipo,
                     'original_name' => $originalName,
@@ -144,9 +156,10 @@ class SpedUploadService
                     'qtd_participantes_unicos' => $data['qtd_participantes_unicos'] ?? null,
                     'custo_unitario' => $data['custo_unitario'] ?? null,
                     'resume_url' => $data['resume_url'],
+                    'relatorio_id' => $relatorioId,
                 ]);
                 
-                return [
+                $result = [
                     'success' => true,
                     'needs_confirmation' => true,
                     'resume_url' => $data['resume_url'],
@@ -155,6 +168,13 @@ class SpedUploadService
                     'custo_unitario' => (float) ($data['custo_unitario'] ?? 0),
                     'message' => 'Confirmação de créditos necessária.',
                 ];
+                
+                // Adicionar relatorio_id se encontrado
+                if ($relatorioId) {
+                    $result['relatorio_id'] = $relatorioId;
+                }
+                
+                return $result;
             } else {
                 // JSON válido mas sem resume_url - pode ser resposta de erro ou outro formato
                 Log::debug('Webhook SPED retornou JSON mas sem resume_url/valor_total_consulta', [
@@ -183,39 +203,6 @@ class SpedUploadService
                 $cachedData = null;
                 $recentListKey = "raf_recent_list:{$userId}";
                 $recentList = Cache::get($recentListKey, []);
-                
-                // #region agent log
-                try {
-                    $debugLogPath = '/opt/hub_contabil/.cursor/debug.log';
-                    $debugLogDir = dirname($debugLogPath);
-                    if (!is_dir($debugLogDir)) {
-                        @mkdir($debugLogDir, 0755, true);
-                    }
-                    if (is_dir($debugLogDir) && is_writable($debugLogDir)) {
-                        file_put_contents($debugLogPath, json_encode([
-                            'sessionId' => 'debug-session',
-                            'runId' => 'run1',
-                            'hypothesisId' => 'C',
-                            'location' => 'SpedUploadService.php:198',
-                            'message' => 'Buscando lista de recentes - SpedUploadService',
-                            'data' => [
-                                'user_id' => $userId,
-                                'user_id_type' => gettype($userId),
-                                'user_id_string' => (string)$userId,
-                                'recent_list_key' => $recentListKey,
-                                'cache_driver' => config('cache.default'),
-                                'cache_store' => config('cache.stores.' . config('cache.default') . '.driver') ?? 'unknown',
-                                'app_env' => config('app.env'),
-                                'recent_list_count' => count($recentList),
-                                'recent_list_keys' => array_map(fn($item) => $item['resume_url'] ?? null, $recentList ?? []),
-                            ],
-                            'timestamp' => time() * 1000
-                        ]) . "\n", FILE_APPEND);
-                    }
-                } catch (\Throwable $e) {
-                    // Ignorar erros de log de debug - não são críticos
-                }
-                // #endregion
                 
                 Log::debug('Webhook SPED resposta vazia - buscando no cache', [
                     'tipo' => $tipo,
@@ -339,6 +326,62 @@ class SpedUploadService
                         'message' => 'Confirmação de créditos necessária.',
                     ];
                 }
+                
+                // Estratégia 3: Se não encontrou no cache, buscar diretamente no banco de dados
+                // Isso resolve o problema de cache não compartilhado entre ambientes (local/produção)
+                // O banco de dados é compartilhado, então podemos buscar os dados de confirmação pendentes
+                if (!$cachedData || !isset($cachedData['resume_url'])) {
+                    Log::debug('Webhook SPED resposta vazia - buscando no banco de dados como fallback', [
+                        'tipo' => $tipo,
+                        'user_id' => $userId,
+                        'app_env' => config('app.env'),
+                    ]);
+                    
+                    try {
+                        // Buscar a consulta mais recente do usuário que tenha resume_url e n8n_received_at
+                        // n8n_received_at indica que o n8n já enviou os dados e está aguardando confirmação
+                        $pendingQuery = RafConsultaPendente::where('user_id', $userId)
+                            ->whereNotNull('resume_url')
+                            ->whereNotNull('n8n_received_at')
+                            ->whereNotNull('valor_total_consulta')
+                            ->orderBy('created_at', 'desc')
+                            ->first();
+                        
+                        if ($pendingQuery && $pendingQuery->resume_url) {
+                            Log::info('Webhook SPED resposta vazia - dados encontrados no banco de dados', [
+                                'tipo' => $tipo,
+                                'original_name' => $originalName,
+                                'registro_id' => $pendingQuery->id,
+                                'resume_url' => $pendingQuery->resume_url,
+                                'valor_total_consulta' => $pendingQuery->valor_total_consulta,
+                                'qtd_participantes' => $pendingQuery->qtd_participantes,
+                            ]);
+                            
+                            return [
+                                'success' => true,
+                                'needs_confirmation' => true,
+                                'resume_url' => $pendingQuery->resume_url,
+                                'valor_total_consulta' => (float) $pendingQuery->valor_total_consulta,
+                                'qtd_participantes_unicos' => (int) $pendingQuery->qtd_participantes,
+                                'custo_unitario' => (float) $pendingQuery->custo_unitario,
+                                'relatorio_id' => $pendingQuery->id,
+                                'message' => 'Confirmação de créditos necessária.',
+                            ];
+                        } else {
+                            Log::debug('Webhook SPED resposta vazia - nenhuma consulta pendente encontrada no banco de dados', [
+                                'tipo' => $tipo,
+                                'user_id' => $userId,
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Erro ao buscar dados no banco de dados (fallback)', [
+                            'tipo' => $tipo,
+                            'user_id' => $userId,
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                        ]);
+                    }
+                }
             }
         }
 
@@ -405,6 +448,89 @@ class SpedUploadService
     }
 
     /**
+     * Envia apenas o status (approved/denied) para o webhook sem aguardar CSV.
+     * Usado quando o usuário confirma o uso de créditos.
+     *
+     * @param string $resumeUrl URL de callback do n8n
+     * @param string $status 'approved' ou 'denied'
+     * @return array{success: bool, message?: string}
+     */
+    public function sendWebhookStatus(string $resumeUrl, string $status): array
+    {
+        $webhookUser = config('services.webhook.username');
+        $webhookPass = config('services.webhook.password');
+
+        // Timeout curto (30s) - não precisa aguardar processamento longo
+        $timeout = 30;
+        $http = Http::timeout($timeout);
+
+        if (!empty($webhookUser) && !empty($webhookPass)) {
+            $http = $http->withBasicAuth($webhookUser, $webhookPass);
+        }
+
+        // Garantir que o status está no formato correto
+        $webhookStatus = match($status) {
+            'approved', 'confirmado', 'confirmed' => 'approved',
+            'denied', 'negado', 'declined' => 'denied',
+            default => 'denied',
+        };
+
+        try {
+            $response = $http->post($resumeUrl, [
+                'status' => $webhookStatus,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Falha ao enviar status para webhook', [
+                'resume_url' => $resumeUrl,
+                'status' => $webhookStatus,
+                'exception' => $e->getMessage(),
+            ]);
+
+            $isTimeout = str_contains($e->getMessage(), 'timeout') 
+                || str_contains($e->getMessage(), 'timed out');
+
+            return [
+                'success' => false,
+                'message' => $isTimeout
+                    ? 'Timeout ao enviar confirmação. Tente novamente.'
+                    : 'Falha ao contatar o servidor. Tente novamente.',
+            ];
+        }
+
+        if (!$response->successful()) {
+            $detail = '';
+            $body = $response->body();
+            $decoded = json_decode($body, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $detail = $decoded['message'] ?? $decoded['error'] ?? '';
+            } else {
+                $detail = trim($body);
+            }
+
+            Log::warning('Webhook status falhou', [
+                'resume_url' => $resumeUrl,
+                'status_code' => $response->status(),
+                'status_sent' => $webhookStatus,
+                'detail' => mb_substr($detail, 0, 500),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Erro ao enviar confirmação (' . $response->status() . '). ' . mb_substr($detail, 0, 200),
+            ];
+        }
+
+        Log::info('Webhook status enviado com sucesso', [
+            'resume_url' => $resumeUrl,
+            'status' => $webhookStatus,
+        ]);
+
+        return [
+            'success' => true,
+        ];
+    }
+
+    /**
      * Envia confirmação ou negação para o webhook de resumo do n8n.
      *
      * @param string $resumeUrl URL de callback do n8n
@@ -465,6 +591,7 @@ class SpedUploadService
         }
 
         $csv = $response->body();
+        $contentType = $response->header('Content-Type') ?? '';
 
         if (!$response->successful()) {
             $detail = '';
@@ -485,6 +612,24 @@ class SpedUploadService
                 'success' => false,
                 'message' => 'Erro ao processar (' . $response->status() . '). ' . mb_substr($detail, 0, 200),
             ];
+        }
+
+        // Verificar se a resposta é JSON (n8n retorna resposta assíncrona)
+        // Exemplo: {"message":"Workflow was started"}
+        if (str_contains($contentType, 'application/json')) {
+            $decoded = json_decode($csv, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded) && isset($decoded['message'])) {
+                Log::info('Webhook retornou resposta assíncrona, CSV virá via endpoint /api/data/receive/raf/csvfile', [
+                    'resume_url' => $resumeUrl,
+                    'message' => $decoded['message'],
+                ]);
+                
+                return [
+                    'success' => true,
+                    'async' => true,
+                    'message' => $decoded['message'] ?? 'Processamento iniciado. Aguarde o CSV via notificação.',
+                ];
+            }
         }
 
         $parsed = $this->csvParser->parse($csv);

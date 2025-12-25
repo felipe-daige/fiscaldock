@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\RafConsultaPendente;
 use App\Models\RafRelatorioProcessado;
+use App\Services\CreditService;
+use App\Services\Sped\SpedUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -14,6 +16,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 class DataReceiverController extends Controller
 {
+    public function __construct(
+        protected CreditService $creditService,
+        protected SpedUploadService $spedUploadService
+    ) {}
     /**
      * Recebe dados via HTTP POST.
      * Agora espera apenas 'id' e 'user_id' do n8n e busca dados do banco de dados.
@@ -298,14 +304,6 @@ class DataReceiverController extends Controller
         $apiToken = $request->header('X-API-Token') ?? $request->input('api_token');
         $expectedToken = config('services.api.token');
         
-        Log::debug('Autenticação API', [
-            'token_recebido' => $apiToken ? substr($apiToken, 0, 10) . '...' : null,
-            'token_esperado' => $expectedToken ? substr($expectedToken, 0, 10) . '...' : null,
-            'token_valido' => !empty($apiToken) && !empty($expectedToken) && $apiToken === $expectedToken,
-            'user_id_body' => $request->input('user_id'),
-            'auth_user' => Auth::user()?->id,
-        ]);
-        
         if (!empty($apiToken) && !empty($expectedToken) && $apiToken === $expectedToken) {
             // Token válido - busca user_id no payload (opcional)
             $userId = $request->input('user_id');
@@ -363,19 +361,6 @@ class DataReceiverController extends Controller
             // Verifica autenticação
             $user = Auth::user();
             
-            Log::debug('getData chamado', [
-                'resume_url' => $resumeUrl,
-                'user_authenticated' => $user !== null,
-                'user_id' => $user?->id,
-                'has_session' => Auth::check(),
-                'expects_json' => $request->expectsJson(),
-                'is_api_route' => $request->is('api/*'),
-                'headers' => [
-                    'accept' => $request->header('Accept'),
-                    'x-requested-with' => $request->header('X-Requested-With'),
-                ],
-            ]);
-            
             if (!$user) {
                 Log::warning('getData: usuário não autenticado', [
                     'resume_url' => $resumeUrl,
@@ -420,12 +405,6 @@ class DataReceiverController extends Controller
                 ], Response::HTTP_FORBIDDEN);
             }
 
-            Log::debug('Dados RAF recuperados do cache', [
-                'user_id' => $user->id,
-                'resume_url' => $resumeUrl,
-                'cache_key' => $cacheKey,
-            ]);
-
             return response()->json([
                 'success' => true,
                 'data' => $cachedData,
@@ -467,11 +446,6 @@ class DataReceiverController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
 
-            Log::debug('Dados RAF recuperados do cache (público)', [
-                'resume_url' => $resumeUrl,
-                'cache_key' => $publicCacheKey,
-            ]);
-
             return response()->json([
                 'success' => true,
                 'data' => $cachedData,
@@ -492,155 +466,10 @@ class DataReceiverController extends Controller
     }
 
     /**
-     * Busca os dados mais recentes do banco de dados para o usuário autenticado.
-     * Busca diretamente da tabela raf_consulta_pendente (sem cache).
-     */
-    public function getLatestData(Request $request)
-    {
-        try {
-            $user = Auth::user();
-            
-            Log::debug('getLatestData chamado', [
-                'user_authenticated' => $user !== null,
-                'user_id' => $user?->id,
-                'has_session' => Auth::check(),
-            ]);
-            
-            if (!$user) {
-                Log::warning('getLatestData: usuário não autenticado');
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Usuário não autenticado.',
-                ], Response::HTTP_UNAUTHORIZED);
-            }
-
-            // Primeiro, tentar buscar registro com n8n_received_at (processado pelo n8n)
-            $registro = RafConsultaPendente::where('user_id', $user->id)
-                ->whereNotNull('n8n_received_at')
-                ->orderBy('n8n_received_at', 'desc')
-                ->first();
-
-            // Se não encontrou, buscar o registro mais recente que tenha resume_url e valor_total_consulta
-            // (mesmo sem n8n_received_at, pode ter sido processado mas n8n_received_at não foi salvo)
-            if (!$registro) {
-                $registro = RafConsultaPendente::where('user_id', $user->id)
-                    ->whereNotNull('resume_url')
-                    ->whereNotNull('valor_total_consulta')
-                    ->where('created_at', '>=', now()->subHours(24)) // Últimas 24 horas
-                    ->orderBy('created_at', 'desc')
-                    ->first();
-            }
-
-            if (!$registro) {
-                Log::info('getLatestData: nenhum registro encontrado para o usuário', [
-                    'user_id' => $user->id,
-                ]);
-                
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Dados ainda não disponíveis. Aguarde o processamento do n8n.',
-                    'n8n_received' => false,
-                ], Response::HTTP_NOT_FOUND);
-            }
-            
-            // Se encontrou registro sem n8n_received_at mas com dados, ainda retornar
-            // (pode ter sido processado mas n8n_received_at não foi salvo por algum motivo)
-            if (!$registro->n8n_received_at && $registro->resume_url && !is_null($registro->valor_total_consulta)) {
-                Log::info('getLatestData: retornando registro sem n8n_received_at mas com dados válidos', [
-                    'user_id' => $user->id,
-                    'registro_id' => $registro->id,
-                    'has_resume_url' => !empty($registro->resume_url),
-                    'has_valor_total' => !is_null($registro->valor_total_consulta),
-                ]);
-            }
-
-            // Formatar dados no formato esperado pelo frontend
-            $formattedData = [
-                'id' => $registro->id,
-                'user_id' => $registro->user_id,
-                'resume_url' => $registro->resume_url,
-                'qtd_participantes_unicos' => $registro->qtd_participantes,
-                'valor_total_consulta' => (float) $registro->valor_total_consulta,
-                'custo_unitario' => (float) $registro->custo_unitario,
-                'tipo_efd' => $registro->tipo_efd,
-                'tipo_consulta' => $registro->tipo_consulta,
-                'created_at' => $registro->created_at?->toIso8601String(),
-                'updated_at' => $registro->updated_at?->toIso8601String(),
-            ];
-
-            // Buscar CSV da tabela raf_relatorio_processado
-            $relatorioProcessado = RafRelatorioProcessado::where('user_id', $user->id)
-                ->where('resume_url', $registro->resume_url)
-                ->first();
-            
-            if ($relatorioProcessado && !empty($relatorioProcessado->report_csv_base64)) {
-                try {
-                    // Decodificar BASE64 para CSV
-                    $csvContent = base64_decode($relatorioProcessado->report_csv_base64, true);
-                    if ($csvContent !== false && !empty(trim($csvContent))) {
-                        $formattedData['csv'] = $csvContent;
-                        $formattedData['csv_filename'] = 'resultado.csv';
-                        $formattedData['has_csv'] = true;
-                        
-                        Log::info('CSV recuperado da tabela raf_relatorio_processado', [
-                            'user_id' => $user->id,
-                            'resume_url' => $registro->resume_url,
-                            'relatorio_id' => $relatorioProcessado->id,
-                            'csv_size' => strlen($csvContent),
-                        ]);
-                    } else {
-                        $formattedData['has_csv'] = false;
-                        Log::warning('CSV base64 inválido ou vazio na tabela raf_relatorio_processado', [
-                            'user_id' => $user->id,
-                            'resume_url' => $registro->resume_url,
-                            'relatorio_id' => $relatorioProcessado->id,
-                        ]);
-                    }
-                } catch (\Exception $e) {
-                    Log::error('Erro ao decodificar CSV base64 da tabela', [
-                        'user_id' => $user->id,
-                        'resume_url' => $registro->resume_url,
-                        'error' => $e->getMessage(),
-                    ]);
-                    $formattedData['has_csv'] = false;
-                }
-            } else {
-                $formattedData['has_csv'] = false;
-            }
-            
-            Log::info('Dados RAF mais recentes recuperados do banco de dados', [
-                'user_id' => $user->id,
-                'registro_id' => $registro->id,
-                'resume_url' => $registro->resume_url,
-                'has_csv' => $formattedData['has_csv'] ?? false,
-                'n8n_received_at' => $registro->n8n_received_at?->toIso8601String(),
-            ]);
-            
-            return response()->json([
-                'success' => true,
-                'data' => $formattedData,
-                'resume_url' => $registro->resume_url,
-                'n8n_received' => true,
-            ], Response::HTTP_OK);
-
-        } catch (\Exception $e) {
-            Log::error('Erro ao buscar dados recentes do banco de dados', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao buscar dados.',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    /**
-     * Recebe notificação do n8n indicando que o CSV está disponível na tabela raf_relatorio_processado.
-     * Recebe id e user_id, faz query na tabela e retorna o CSV decodificado.
+     * Recebe notificação do n8n com CSV em base64.
+     * Recebe id, user_id, filename e csv_base64 diretamente, sem fazer query no banco.
+     * Armazena no cache para envio via SSE ao frontend.
      * Aceita autenticação via token (header X-API-Token) ou sessão (para frontend).
-     * NÃO armazena nada no cache.
      */
     public function receiveCsv(Request $request)
     {
@@ -696,56 +525,29 @@ class DataReceiverController extends Controller
                 }
             }
 
-            // Validar campos obrigatórios: id e user_id
-            if (empty($receivedData['id']) || empty($receivedData['user_id'])) {
+            // Validar campos obrigatórios: id, user_id, filename e csv_base64
+            if (empty($receivedData['id']) || empty($receivedData['user_id']) || empty($receivedData['filename']) || empty($receivedData['csv_base64'])) {
                 Log::warning('Dados incompletos em receiveCsv', [
                     'has_id' => !empty($receivedData['id']),
                     'has_user_id' => !empty($receivedData['user_id']),
+                    'has_filename' => !empty($receivedData['filename']),
+                    'has_csv_base64' => !empty($receivedData['csv_base64']),
                 ]);
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Campos obrigatórios ausentes: id e user_id são necessários.',
+                    'message' => 'Campos obrigatórios ausentes: id, user_id, filename e csv_base64 são necessários.',
                 ], Response::HTTP_BAD_REQUEST);
             }
 
             $relatorioId = (int) $receivedData['id'];
             $userId = (int) ($user?->id ?? $receivedData['user_id']);
-
-            // Buscar registro na tabela raf_relatorio_processado usando id e validar user_id
-            $relatorioProcessado = RafRelatorioProcessado::where('id', $relatorioId)
-                ->where('user_id', $userId)
-                ->first();
-
-            if (!$relatorioProcessado) {
-                Log::warning('Relatório não encontrado em raf_relatorio_processado', [
-                    'id' => $relatorioId,
-                    'user_id' => $userId,
-                ]);
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Relatório não encontrado ou não pertence ao usuário informado.',
-                ], Response::HTTP_NOT_FOUND);
-            }
-
-            // Verificar se tem report_csv_base64
-            if (empty($relatorioProcessado->report_csv_base64)) {
-                Log::warning('Relatório encontrado mas sem CSV base64', [
-                    'id' => $relatorioId,
-                    'user_id' => $userId,
-                    'relatorio_id' => $relatorioProcessado->id,
-                ]);
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Relatório encontrado mas CSV ainda não está disponível.',
-                ], Response::HTTP_NOT_FOUND);
-            }
+            $filename = $receivedData['filename'];
+            $csvBase64 = $receivedData['csv_base64'];
 
             // Decodificar BASE64 para CSV
             try {
-                $csvContent = base64_decode($relatorioProcessado->report_csv_base64, true);
+                $csvContent = base64_decode($csvBase64, true);
                 if ($csvContent === false || empty(trim($csvContent))) {
                     throw new \Exception('Falha ao decodificar base64 ou CSV vazio');
                 }
@@ -762,44 +564,162 @@ class DataReceiverController extends Controller
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-            Log::info('Relatório processado encontrado e CSV decodificado com sucesso', [
+            // Obter resume_url se fornecido, caso contrário usar null
+            $resumeUrl = $receivedData['resume_url'] ?? null;
+
+            Log::info('CSV recebido e decodificado com sucesso', [
                 'id' => $relatorioId,
                 'user_id' => $userId,
-                'relatorio_id' => $relatorioProcessado->id,
+                'filename' => $filename,
                 'csv_size' => strlen($csvContent),
-                'resume_url' => $relatorioProcessado->resume_url,
+                'resume_url' => $resumeUrl,
+            ]);
+
+            // Buscar consulta pendente pelo resume_url para obter o ID correto e dados adicionais
+            $consultaPendente = null;
+            if (!empty($resumeUrl)) {
+                Log::info('Buscando consulta pendente pelo resume_url', [
+                    'resume_url' => $resumeUrl,
+                    'user_id' => $userId,
+                ]);
+                $consultaPendente = RafConsultaPendente::where('resume_url', $resumeUrl)
+                    ->where('user_id', $userId)
+                    ->first();
+                Log::info('Consulta pendente encontrada', [
+                    'encontrada' => $consultaPendente !== null,
+                    'consulta_id' => $consultaPendente?->id,
+                    'resume_url' => $resumeUrl,
+                ]);
+            } else {
+                Log::info('Resume URL vazio, nao buscando consulta pendente');
+            }
+
+            // Determinar o ID para notificação: usar o ID da consulta pendente se encontrada
+            // (que é o que o frontend está aguardando via SSE), senão usar o ID recebido
+            $idParaNotificacao = $consultaPendente?->id ?? $relatorioId;
+            Log::info('ID para notificacao determinado', [
+                'id_para_notificacao' => $idParaNotificacao,
+                'consulta_pendente_id' => $consultaPendente?->id,
+                'relatorio_id_recebido' => $relatorioId,
+            ]);
+
+            // Salvar ou atualizar o CSV no banco de dados
+            // Se temos resume_url, usar como chave de busca (mais confiável que ID)
+            // Caso contrário, usar o ID recebido
+            // Preencher todos os campos obrigatórios da tabela
+            Log::info('Iniciando salvamento do CSV no banco de dados', [
+                'tem_resume_url' => !empty($resumeUrl),
+                'resume_url' => $resumeUrl,
+                'relatorio_id' => $relatorioId,
+                'user_id' => $userId,
+                'filename' => $filename,
+                'csv_size' => strlen($csvBase64),
+            ]);
+            
+            if (!empty($resumeUrl)) {
+                try {
+                    $relatorioProcessado = RafRelatorioProcessado::updateOrCreate(
+                        ['resume_url' => $resumeUrl],
+                        [
+                            'user_id' => $userId,
+                            'report_csv_base64' => $csvBase64,
+                            'filename' => $filename,
+                            'document_type' => $consultaPendente?->tipo_efd ?? 'EFD Fiscal',
+                            'consultant_type' => $consultaPendente?->tipo_consulta ?? 'completa',
+                            'total_participants' => $consultaPendente?->qtd_participantes ?? 0,
+                            'total_price' => $consultaPendente?->valor_total_consulta ?? 0.00,
+                        ]
+                    );
+                    Log::info('CSV salvo/atualizado com sucesso usando resume_url', [
+                        'relatorio_id' => $relatorioProcessado->id,
+                        'wasRecentlyCreated' => $relatorioProcessado->wasRecentlyCreated,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Erro ao salvar CSV usando resume_url', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                    throw $e;
+                }
+            } else {
+                // Se não tem resume_url, tentar atualizar pelo ID ou criar novo
+                try {
+                    $relatorioProcessado = RafRelatorioProcessado::updateOrCreate(
+                        ['id' => $relatorioId],
+                        [
+                            'user_id' => $userId,
+                            'report_csv_base64' => $csvBase64,
+                            'filename' => $filename,
+                            'document_type' => $consultaPendente?->tipo_efd ?? 'EFD Fiscal',
+                            'consultant_type' => $consultaPendente?->tipo_consulta ?? 'completa',
+                            'total_participants' => $consultaPendente?->qtd_participantes ?? 0,
+                            'total_price' => $consultaPendente?->valor_total_consulta ?? 0.00,
+                        ]
+                    );
+                    // Se não tinha resume_url, usar o ID do registro salvo para notificação
+                    $idParaNotificacao = $relatorioProcessado->id;
+                    Log::info('CSV salvo/atualizado com sucesso usando ID', [
+                        'relatorio_id' => $relatorioProcessado->id,
+                        'wasRecentlyCreated' => $relatorioProcessado->wasRecentlyCreated,
+                        'id_para_notificacao_atualizado' => $idParaNotificacao,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Erro ao salvar CSV usando ID', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                    throw $e;
+                }
+            }
+
+            Log::info('CSV salvo no banco de dados', [
+                'id' => $relatorioProcessado->id,
+                'consulta_pendente_id' => $consultaPendente?->id,
+                'user_id' => $userId,
+                'filename' => $filename,
+                'id_para_notificacao' => $idParaNotificacao,
             ]);
 
             // Criar notificação no cache para SSE notificar o frontend
+            // Usar o ID da consulta pendente (que o frontend está aguardando)
+            // Não incluir CSV na notificação (muito grande para cache) - frontend buscará do banco via GET
+            Log::info('Criando notificacao no cache para SSE', [
+                'user_id' => $userId,
+                'id_para_notificacao' => $idParaNotificacao,
+                'resume_url' => $resumeUrl,
+                'filename' => $filename,
+            ]);
+            
             $notificationId = uniqid('csv_ready_', true);
             $notificationKey = "raf_notification:{$userId}:{$notificationId}";
             $notification = [
                 'type' => 'csv_ready',
                 'user_id' => $userId,
-                'relatorio_id' => $relatorioProcessado->id,
-                'resume_url' => $relatorioProcessado->resume_url,
+                'relatorio_id' => $idParaNotificacao, // Usar ID da consulta pendente
+                'resume_url' => $resumeUrl,
+                'csv_filename' => $filename,
                 'timestamp' => now()->toIso8601String(),
             ];
             Cache::put($notificationKey, $notification, 300); // 5 minutos
+            Log::info('Notificacao salva no cache', [
+                'notification_key' => $notificationKey,
+                'notification' => $notification,
+            ]);
 
             // Adicionar ao índice de notificações do usuário
             $indexKey = "raf_notifications_index:{$userId}";
             $notificationIds = Cache::get($indexKey, []);
             $notificationIds[] = $notificationId;
             Cache::put($indexKey, $notificationIds, 300);
+            Log::info('Notificacao adicionada ao indice', [
+                'index_key' => $indexKey,
+                'total_notifications' => count($notificationIds),
+            ]);
 
-            // Retornar CSV decodificado sem armazenar no cache
+            // Retornar apenas sucesso - dados serão enviados via SSE
             return response()->json([
                 'success' => true,
-                'message' => 'CSV disponível e decodificado com sucesso.',
-                'data' => [
-                    'id' => $relatorioProcessado->id,
-                    'user_id' => $userId,
-                    'resume_url' => $relatorioProcessado->resume_url,
-                    'csv' => $csvContent,
-                    'csv_filename' => 'resultado.csv',
-                    'received_at' => now()->toIso8601String(),
-                ],
+                'message' => 'CSV recebido e armazenado no cache. Será enviado via SSE ao frontend.',
             ], Response::HTTP_OK);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -829,15 +749,23 @@ class DataReceiverController extends Controller
     /**
      * Endpoint SSE para notificar o frontend quando dados estiverem prontos.
      * O frontend se conecta a este endpoint e recebe notificações em tempo real.
-     * Verifica apenas o cache, sem fazer queries no banco.
+     * Verifica o cache E o banco de dados para garantir que notificações sejam entregues
+     * mesmo quando o cache não é compartilhado entre ambientes.
      */
     public function streamNotifications(Request $request)
     {
         $user = Auth::user();
         
+        // Obter relatorio_id da query string se fornecido
+        $requestedRelatorioId = $request->query('relatorio_id');
+        if ($requestedRelatorioId) {
+            $requestedRelatorioId = (int) $requestedRelatorioId;
+        }
+        
         Log::info('SSE streamNotifications chamado', [
             'user_id' => $user?->id,
             'authenticated' => Auth::check(),
+            'relatorio_id' => $requestedRelatorioId,
         ]);
         
         if (!$user) {
@@ -846,7 +774,7 @@ class DataReceiverController extends Controller
         }
 
         // Enviar comentário inicial para manter conexão viva
-        return response()->stream(function () use ($user) {
+        return response()->stream(function () use ($user, $requestedRelatorioId) {
             // Enviar comentário inicial
             echo ": SSE connection established\n\n";
             
@@ -862,11 +790,14 @@ class DataReceiverController extends Controller
             }
             
             $lastNotificationTime = null;
+            $notifiedCsvIds = []; // IDs de CSVs já notificados nesta sessão
+            $isFirstDbCheck = true; // Flag para primeira verificação no banco
             
             while (true) {
                 try {
-                    // Verificar apenas o cache - buscar notificações do usuário
-                    // Usar uma chave de índice para rastrear notificações
+                    // ========================================
+                    // 1. Verificar cache (compatibilidade)
+                    // ========================================
                     $indexKey = "raf_notifications_index:{$user->id}";
                     $notificationIds = Cache::get($indexKey, []);
                     
@@ -907,11 +838,18 @@ class DataReceiverController extends Controller
                             }
                         }
                         
-                        // Verificar notificações de csv_ready
+                        // Verificar notificações de csv_ready no cache
                         $csvKey = "raf_notification:{$user->id}:{$notificationId}";
                         $csvNotification = Cache::get($csvKey);
                         
                         if ($csvNotification && isset($csvNotification['type']) && $csvNotification['type'] === 'csv_ready') {
+                            // Se estamos aguardando um relatorio_id específico, validar que corresponde
+                            if ($requestedRelatorioId && isset($csvNotification['relatorio_id'])) {
+                                if ((int) $csvNotification['relatorio_id'] !== $requestedRelatorioId) {
+                                    continue; // Ignorar notificações de outros relatórios
+                                }
+                            }
+                            
                             $notificationTime = isset($csvNotification['timestamp']) 
                                 ? \Carbon\Carbon::parse($csvNotification['timestamp']) 
                                 : now();
@@ -930,6 +868,11 @@ class DataReceiverController extends Controller
                                 }
                                 flush();
                                 
+                                // Marcar como notificado
+                                if (isset($csvNotification['relatorio_id'])) {
+                                    $notifiedCsvIds[] = $csvNotification['relatorio_id'];
+                                }
+                                
                                 // Remover notificação do cache após enviar
                                 Cache::forget($csvKey);
                                 
@@ -945,6 +888,135 @@ class DataReceiverController extends Controller
                             }
                         }
                     }
+                    
+                    // ========================================
+                    // 2. Verificar banco de dados (fallback)
+                    // Isso garante que notificações sejam entregues mesmo quando
+                    // o cache não é compartilhado entre ambientes (prod vs local)
+                    // ========================================
+                    $query = RafRelatorioProcessado::where('user_id', $user->id)
+                        ->whereNotNull('report_csv_base64')
+                        ->where('report_csv_base64', '!=', '')
+                        ->whereNotIn('id', $notifiedCsvIds);
+                    
+                    // Se estamos aguardando um relatorio_id específico, pode ser da consulta pendente
+                    if ($requestedRelatorioId) {
+                        // Logar apenas na primeira iteração para evitar poluição de logs
+                        if ($isFirstDbCheck) {
+                            Log::info('SSE: Iniciando busca por CSV para relatorio_id especifico', [
+                                'user_id' => $user->id,
+                                'requested_relatorio_id' => $requestedRelatorioId,
+                            ]);
+                        }
+                        
+                        // Primeiro tentar buscar diretamente pelo ID
+                        // Criar uma nova query para não modificar a query base
+                        $idQuery = RafRelatorioProcessado::where('user_id', $user->id)
+                            ->whereNotNull('report_csv_base64')
+                            ->where('report_csv_base64', '!=', '')
+                            ->where('id', $requestedRelatorioId)
+                            ->whereNotIn('id', $notifiedCsvIds);
+                        
+                        $csvFromDb = $idQuery->first();
+                        
+                        // Se não encontrou, pode ser que o ID seja da consulta pendente
+                        // Buscar pela consulta pendente e então pelo resume_url
+                        if (!$csvFromDb) {
+                            $consultaPendente = RafConsultaPendente::where('id', $requestedRelatorioId)
+                                ->where('user_id', $user->id)
+                                ->first();
+                            
+                            if ($consultaPendente && !empty($consultaPendente->resume_url)) {
+                                // Buscar o relatório processado pelo resume_url
+                                // IMPORTANTE: Quando há requestedRelatorioId específico, NÃO aplicar whereNotIn
+                                // porque o usuário está aguardando especificamente esse relatório
+                                // e ele pode ter sido notificado anteriormente (ex: reconexão SSE)
+                                $csvFromDb = RafRelatorioProcessado::where('user_id', $user->id)
+                                    ->whereNotNull('report_csv_base64')
+                                    ->where('report_csv_base64', '!=', '')
+                                    ->where('resume_url', $consultaPendente->resume_url)
+                                    ->first();
+                            }
+                        }
+                    } else {
+                        // Se não há relatorio_id específico, na primeira verificação não buscar relatórios antigos
+                        // Apenas buscar relatórios criados após a conexão ser estabelecida
+                        if ($isFirstDbCheck) {
+                            // Na primeira verificação, não buscar nada - aguardar novos relatórios
+                            // Isso evita enviar relatórios antigos imediatamente
+                            $query->where('updated_at', '>', now()->subSeconds(5)); // Apenas relatórios muito recentes (últimos 5 segundos)
+                        } elseif ($lastNotificationTime) {
+                            // Nas próximas verificações, filtrar apenas novos (baseado no último notificado)
+                            $query->where('updated_at', '>', $lastNotificationTime);
+                        }
+                        
+                        $csvFromDb = $query->orderBy('updated_at', 'desc')->first();
+                    }
+                    
+                    // Marcar que já fez a primeira verificação
+                    if ($isFirstDbCheck) {
+                        $isFirstDbCheck = false;
+                    }
+                    
+                    if ($csvFromDb) {
+                        Log::info('SSE: CSV encontrado no banco, preparando notificacao', [
+                            'user_id' => $user->id,
+                            'csv_id' => $csvFromDb->id,
+                            'requested_relatorio_id' => $requestedRelatorioId,
+                            'resume_url' => $csvFromDb->resume_url,
+                            'filename' => $csvFromDb->filename,
+                            'updated_at' => $csvFromDb->updated_at,
+                        ]);
+                        
+                        // Enviar notificação csv_ready do banco de dados
+                        // Usar filename do banco ou fallback para nome genérico
+                        $csvFilename = !empty($csvFromDb->filename) 
+                            ? $csvFromDb->filename 
+                            : 'raf_relatorio_' . $csvFromDb->id . '.csv';
+                        
+                        // Se estamos aguardando um relatorio_id específico (da consulta pendente),
+                        // usar esse ID na notificação para que o frontend reconheça
+                        $relatorioIdParaNotificacao = $requestedRelatorioId ?? $csvFromDb->id;
+                        
+                        $csvNotificationData = [
+                            'type' => 'csv_ready',
+                            'user_id' => $user->id,
+                            'relatorio_id' => $relatorioIdParaNotificacao,
+                            'csv_filename' => $csvFilename,
+                            'timestamp' => $csvFromDb->updated_at->toIso8601String(),
+                        ];
+                        
+                        Log::info('SSE: Enviando notificacao csv_ready', [
+                            'notification_data' => $csvNotificationData,
+                        ]);
+                        
+                        $data = json_encode([
+                            'type' => 'csv_ready',
+                            'data' => $csvNotificationData,
+                        ]);
+                        echo "data: {$data}\n\n";
+                        
+                        if (ob_get_level() > 0) {
+                            ob_flush();
+                        }
+                        flush();
+                        
+                        // Marcar como notificado
+                        $notifiedCsvIds[] = $csvFromDb->id;
+                        $lastNotificationTime = $csvFromDb->updated_at;
+                        
+                        try {
+                            Log::info('SSE: csv_ready enviado do banco de dados com sucesso', [
+                                'user_id' => $user->id,
+                                'relatorio_id' => $csvFromDb->id,
+                                'relatorio_id_para_notificacao' => $relatorioIdParaNotificacao,
+                            ]);
+                        } catch (\Exception $e) {
+                            // Ignorar erros de log
+                        }
+                    }
+                    // Nota: Não logar quando CSV não é encontrado para evitar poluição de logs
+                    // O sistema faz polling a cada segundo até o CSV estar disponível
                     
                     // Aguardar 1 segundo antes da próxima verificação (mais responsivo)
                     usleep(1000000); // 1 segundo em microsegundos
@@ -976,6 +1048,339 @@ class DataReceiverController extends Controller
             'X-Accel-Buffering' => 'no',
             'Connection' => 'keep-alive',
         ]);
+    }
+
+    /**
+     * Busca CSV do banco de dados por ID do relatório.
+     * Aceita tanto ID de raf_relatorio_processado quanto ID de raf_consulta_pendente.
+     * Retorna o CSV decodificado do base64 armazenado na tabela raf_relatorio_processado.
+     * 
+     * @param int $id ID do relatório (pode ser de raf_relatorio_processado ou raf_consulta_pendente)
+     * @return \Illuminate\Http\Response|\Illuminate\Http\JsonResponse
+     */
+    public function getCsv(int $id)
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                Log::warning('getCsv: usuário não autenticado', [
+                    'id' => $id,
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuário não autenticado.',
+                ], Response::HTTP_UNAUTHORIZED);
+            }
+
+            // Primeiro tentar buscar diretamente em raf_relatorio_processado
+            $relatorio = RafRelatorioProcessado::find($id);
+            
+            // Se não encontrou, pode ser que o ID seja da consulta pendente
+            // Buscar pela consulta pendente e então pelo resume_url
+            if (!$relatorio) {
+                $consultaPendente = RafConsultaPendente::where('id', $id)
+                    ->where('user_id', $user->id)
+                    ->first();
+                
+                if ($consultaPendente && !empty($consultaPendente->resume_url)) {
+                    // Buscar o relatório processado pelo resume_url
+                    $relatorio = RafRelatorioProcessado::where('resume_url', $consultaPendente->resume_url)
+                        ->where('user_id', $user->id)
+                        ->first();
+                }
+            }
+            
+            if (!$relatorio) {
+                Log::warning('Relatório não encontrado em getCsv', [
+                    'id' => $id,
+                    'user_id' => $user?->id,
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Relatório não encontrado.',
+                ], Response::HTTP_NOT_FOUND);
+            }
+            
+            // Validar que o relatório pertence ao usuário autenticado
+            if ((int) $relatorio->user_id !== $user->id) {
+                Log::warning('Tentativa de acesso a relatório de outro usuário em getCsv', [
+                    'id' => $id,
+                    'authenticated_user_id' => $user->id,
+                    'relatorio_user_id' => $relatorio->user_id,
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acesso negado.',
+                ], Response::HTTP_FORBIDDEN);
+            }
+            
+            // Validar que tem CSV em base64
+            if (empty($relatorio->report_csv_base64)) {
+                Log::warning('Relatório sem CSV em base64', [
+                    'id' => $id,
+                    'user_id' => $user->id,
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'CSV não disponível para este relatório.',
+                ], Response::HTTP_NOT_FOUND);
+            }
+            
+            // Decodificar base64 para CSV
+            try {
+                $csvContent = base64_decode($relatorio->report_csv_base64, true);
+                if ($csvContent === false || empty(trim($csvContent))) {
+                    throw new \Exception('Falha ao decodificar base64 ou CSV vazio');
+                }
+            } catch (\Exception $e) {
+                Log::error('Erro ao decodificar CSV base64 em getCsv', [
+                    'id' => $id,
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao decodificar CSV.',
+                ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+            
+            // Usar filename do banco ou fallback para nome genérico
+            $filename = !empty($relatorio->filename) 
+                ? $relatorio->filename 
+                : 'raf_relatorio_' . $id . '.csv';
+            
+            // Garantir extensão .csv
+            if (!str_ends_with(strtolower($filename), '.csv')) {
+                $filename .= '.csv';
+            }
+            
+            Log::info('CSV recuperado do banco com sucesso', [
+                'id' => $id,
+                'user_id' => $user->id,
+                'csv_size' => strlen($csvContent),
+                'filename' => $filename,
+            ]);
+            
+            // Retornar CSV como resposta de texto
+            return response($csvContent, 200, [
+                'Content-Type' => 'text/csv;charset=utf-8',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Erro inesperado em getCsv', [
+                'id' => $id,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Confirma o uso de créditos e envia approved/denied para o resume_url.
+     * Recebe id e user_id, faz query na tabela raf_consulta_pendente e envia webhook.
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function confirmCredits(Request $request)
+    {
+        try {
+            Log::info('Requisição recebida em DataReceiverController::confirmCredits', [
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'ip' => $request->ip(),
+                'body' => $request->all(),
+            ]);
+
+            // Validar id e user_id
+            $validated = $request->validate([
+                'id' => 'required|integer',
+                'user_id' => 'required|integer',
+            ]);
+
+            $id = (int) $validated['id'];
+            $userId = (int) $validated['user_id'];
+
+            // Verificar autenticação do usuário
+            $user = Auth::user();
+            if (!$user || (int) $user->id !== $userId) {
+                Log::warning('Tentativa de confirmação com user_id diferente do autenticado', [
+                    'authenticated_user_id' => $user?->id,
+                    'requested_user_id' => $userId,
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuário não autenticado ou não autorizado.',
+                ], Response::HTTP_UNAUTHORIZED);
+            }
+
+            // Query na tabela raf_consulta_pendente
+            $registro = RafConsultaPendente::where('id', $id)
+                ->where('user_id', $userId)
+                ->first();
+
+            if (!$registro) {
+                Log::warning('Registro não encontrado para confirmação de créditos', [
+                    'id' => $id,
+                    'user_id' => $userId,
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Registro não encontrado.',
+                ], Response::HTTP_NOT_FOUND);
+            }
+
+            // Buscar resume_url da tabela
+            $resumeUrl = $registro->resume_url;
+            if (empty($resumeUrl)) {
+                Log::error('Resume URL não encontrado no registro', [
+                    'id' => $id,
+                    'user_id' => $userId,
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'URL de confirmação não encontrada.',
+                ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            // Calcular valor de créditos necessário
+            $valorTotalConsulta = (float) $registro->valor_total_consulta;
+            $valorCreditos = (int) ceil($valorTotalConsulta);
+            $saldoAtual = $this->creditService->getBalance($user);
+
+            Log::info('Processando confirmação de créditos', [
+                'user_id' => $userId,
+                'registro_id' => $id,
+                'saldo_atual' => $saldoAtual,
+                'valor_solicitado' => $valorCreditos,
+                'resume_url' => $resumeUrl,
+            ]);
+
+            // Verificar se tem créditos suficientes
+            if (!$this->creditService->hasEnough($user, $valorCreditos)) {
+                Log::warning('Créditos insuficientes para operação', [
+                    'user_id' => $userId,
+                    'saldo_atual' => $saldoAtual,
+                    'valor_solicitado' => $valorCreditos,
+                ]);
+
+                // Envia denied para o webhook
+                $webhookResult = $this->spedUploadService->sendWebhookStatus($resumeUrl, 'denied');
+
+                if (!$webhookResult['success']) {
+                    Log::error('Falha ao enviar denied para webhook', [
+                        'resume_url' => $resumeUrl,
+                        'error' => $webhookResult['message'] ?? 'Erro desconhecido',
+                    ]);
+                }
+
+                return response()->json([
+                    'success' => false,
+                    'insufficient_credits' => true,
+                    'credits' => $saldoAtual,
+                    'required' => $valorCreditos,
+                    'message' => 'Créditos insuficientes. Entre em contato pelo telefone (69) 99999-9999 para adquirir mais créditos.',
+                ], Response::HTTP_PAYMENT_REQUIRED);
+            }
+
+            // Descontar os créditos
+            $deducted = $this->creditService->deduct($user, $valorCreditos);
+
+            if (!$deducted) {
+                Log::error('Falha ao descontar créditos', [
+                    'user_id' => $userId,
+                    'valor' => $valorCreditos,
+                ]);
+
+                // Envia denied para o webhook
+                $webhookResult = $this->spedUploadService->sendWebhookStatus($resumeUrl, 'denied');
+
+                if (!$webhookResult['success']) {
+                    Log::error('Falha ao enviar denied para webhook após falha no desconto', [
+                        'resume_url' => $resumeUrl,
+                        'error' => $webhookResult['message'] ?? 'Erro desconhecido',
+                    ]);
+                }
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao processar créditos. Tente novamente.',
+                ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            // Enviar approved para o webhook
+            $webhookResult = $this->spedUploadService->sendWebhookStatus($resumeUrl, 'approved');
+
+            if (!$webhookResult['success']) {
+                // Reembolsar os créditos em caso de falha no webhook
+                $this->creditService->add($user, $valorCreditos);
+
+                Log::warning('Webhook falhou, créditos reembolsados', [
+                    'user_id' => $userId,
+                    'registro_id' => $id,
+                    'valor' => $valorCreditos,
+                    'error' => $webhookResult['message'] ?? 'Erro desconhecido',
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => $webhookResult['message'] ?? 'Erro ao enviar confirmação. Créditos foram reembolsados.',
+                    'credits' => $this->creditService->getBalance($user),
+                ], Response::HTTP_BAD_GATEWAY);
+            }
+
+            Log::info('Confirmação de créditos processada com sucesso', [
+                'user_id' => $userId,
+                'registro_id' => $id,
+                'valor' => $valorCreditos,
+                'novo_saldo' => $this->creditService->getBalance($user),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Créditos confirmados com sucesso.',
+                'credits' => $this->creditService->getBalance($user),
+            ], Response::HTTP_OK);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Erro de validação na confirmação de créditos', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro de validação.',
+                'errors' => $e->errors(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        } catch (\Exception $e) {
+            Log::error('Erro inesperado na confirmação de créditos', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }
 

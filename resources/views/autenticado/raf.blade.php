@@ -500,6 +500,17 @@
 
 <script>
 (() => {
+    // Inicializar window.disconnectSSE como função vazia para evitar erros
+    // Será sobrescrita quando initRaf for executado
+    if (!window.disconnectSSE) {
+        window.disconnectSSE = function() {
+            // Função vazia até que initRaf seja executado
+            if (window._rafDisconnectSSE && typeof window._rafDisconnectSSE === 'function') {
+                window._rafDisconnectSSE();
+            }
+        };
+    }
+    
     function initRafTabs() {
         const tabButtons = document.querySelectorAll('.raf-tab');
         const tabContents = document.querySelectorAll('.raf-tab-content');
@@ -622,10 +633,17 @@
 
     // Dados de confirmação pendente
     let pendingConfirmation = null;
+    let isConfirming = false; // Flag para evitar cliques duplos
+    let currentRelatorioId = null; // ID do relatório atual sendo aguardado
     
     // Controle de conexão SSE
     let eventSource = null;
     let isConnectingSSE = false;
+    
+    // Variável global para armazenar a função disconnectSSE (para o SPA poder chamar)
+    if (!window._rafDisconnectSSE) {
+        window._rafDisconnectSSE = null;
+    }
 
     const formatFileSize = (bytes) => {
         if (!Number.isFinite(bytes)) return '';
@@ -699,130 +717,6 @@
         }
     };
 
-    /**
-     * Busca dados do banco de dados e atualiza a UI automaticamente.
-     * Chamado automaticamente pelo polling quando n8n envia dados.
-     */
-    const checkAndUpdateDataFromDatabase = async () => {
-        try {
-            const currentCsrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrf || '';
-            
-            const response = await fetch('/api/data/receive-latest', {
-                method: 'GET',
-                headers: {
-                    'X-CSRF-TOKEN': currentCsrf,
-                    'Accept': 'application/json',
-                },
-                credentials: 'same-origin',
-            });
-
-            if (response.status === 401) {
-                handleAuthError('checkAndUpdateDataFromDatabase', false);
-                return;
-            }
-
-            if (!response.ok) {
-                const data = await response.json().catch(() => ({}));
-                const errorMessage = data.message || `Erro ${response.status}`;
-                
-                // Tratamento específico por status
-                if (response.status === 404) {
-                    // Verificar se é porque n8n ainda não enviou
-                    if (data.n8n_received === false) {
-                        // Não mostrar alerta, apenas continuar o polling silenciosamente
-                        return;
-                    } else {
-                        // Não mostrar alerta, apenas continuar o polling silenciosamente
-                        return;
-                    }
-                } else if (response.status === 403) {
-                    showAlert('error', 'Acesso negado.');
-                    return;
-                } else if (response.status === 500) {
-                    showAlert('error', 'Erro ao buscar dados. Tente novamente.');
-                    return;
-                }
-                
-                throw new Error(errorMessage);
-            }
-
-            const result = await response.json();
-
-            if (!result.success || !result.data) {
-                showAlert('info', 'Nenhum dado disponível. Aguarde o processamento ou faça um novo upload.');
-                return;
-            }
-
-            const dbData = result.data;
-
-            // n8n já confirmou - dados disponíveis
-
-            // Atualizar card de informações
-            updateInfoCard(dbData, !!pendingConfirmation);
-
-            // Se tem CSV, disponibilizar para download
-            // O CSV já vem decodificado do backend (convertido de BASE64)
-            // Validar rigorosamente antes de mostrar o botão
-            const hasCsvFlag = dbData.has_csv === true;
-            const hasCsvContent = dbData.csv && typeof dbData.csv === 'string' && dbData.csv.trim().length > 0;
-            
-            if (hasCsvFlag && hasCsvContent) {
-                // Criar Blob a partir do CSV já decodificado
-                const blob = new Blob([dbData.csv], { type: 'text/csv;charset=utf-8;' });
-                const filename = dbData.csv_filename || 'resultado.csv';
-                
-                // Validar que o blob não está vazio antes de mostrar o botão
-                if (blob.size > 0) {
-                    setDownload(blob, filename);
-                    freezeTimer();
-                    showAlert('success', 'CSV disponível para download.');
-                    if (resultBadge) resultBadge.classList.remove('hidden');
-                    setLoading(false);
-                    
-                    // Confirmar recebimento do CSV no resume_url se existir
-                    if (dbData.resume_url && dbData.resume_url.trim() !== '') {
-                        await confirmCsvReceived(dbData.resume_url);
-                    }
-                    
-                    // Desconectar SSE quando CSV estiver disponível
-                    disconnectSSE();
-                } else {
-                    console.warn('[RAF] CSV recebido mas blob está vazio. Aguardando próxima verificação...');
-                }
-            } else if (hasCsvFlag && !hasCsvContent) {
-                // Se has_csv é true mas csv não está presente ou está vazio, aguardar próxima verificação
-                // O relógio continua contando
-                console.log('[RAF] CSV marcado como disponível mas conteúdo ainda não recebido ou está vazio. Aguardando...');
-            }
-
-            // Se tem resume_url e valor_total_consulta, mostrar modal de confirmação
-            // Sempre mostrar o modal quando houver dados de confirmação do banco de dados
-            // Verificar se valor_total_consulta existe (pode ser 0, mas não null/undefined)
-            const hasResumeUrl = dbData.resume_url && dbData.resume_url.trim() !== '';
-            const hasValorTotal = dbData.valor_total_consulta !== null && dbData.valor_total_consulta !== undefined;
-            
-            if (hasResumeUrl && hasValorTotal) {
-                await showCreditsConfirmation(
-                    dbData.resume_url,
-                    dbData.valor_total_consulta,
-                    dbData.qtd_participantes_unicos || 0,
-                    dbData.custo_unitario || 0
-                );
-                
-                // Desconectar SSE quando modal de confirmação for exibido
-                disconnectSSE();
-                // Não mostrar alerta de sucesso quando modal for exibido
-                return;
-            }
-
-            // Mostrar alerta de sucesso apenas se não exibiu o modal
-            showAlert('success', 'Dados atualizados com sucesso.');
-
-        } catch (err) {
-            console.error('[RAF] Erro ao buscar dados do banco de dados:', err);
-            // Não mostrar alerta de erro no polling automático, apenas logar
-        }
-    };
 
     const setTimerState = (state) => {
         if (!timerWrap) return;
@@ -879,8 +773,8 @@
      * @returns {boolean} - true se deve parar a operação, false caso contrário
      */
     const handleAuthError = (context = 'requisição', silent = false) => {
-        // TODO: Desconectar recebimento de dados (SSE/WebSocket) em caso de erro de autenticação
-        // disconnectDataReceiver();
+        // Desconectar SSE em caso de erro de autenticação
+        disconnectSSE();
         
         // Parar timer se estiver rodando
         stopTimer();
@@ -958,8 +852,9 @@
 
     /**
      * Conecta ao endpoint SSE para receber notificações em tempo real.
+     * @param {number|null} relatorioId - ID do relatório específico a aguardar (opcional)
      */
-    const connectSSE = () => {
+    const connectSSE = (relatorioId = null) => {
         // Verificar se já existe uma conexão ativa ou se já está conectando
         if (isConnectingSSE || (eventSource && (eventSource.readyState === EventSource.OPEN || eventSource.readyState === EventSource.CONNECTING))) {
             return;
@@ -972,16 +867,92 @@
         isConnectingSSE = true;
         
         try {
-            eventSource = new EventSource('/api/data/notifications/stream');
+            // Construir URL do SSE com query parameter relatorio_id se fornecido
+            let sseUrl = '/api/data/notifications/stream';
+            if (relatorioId) {
+                sseUrl += `?relatorio_id=${encodeURIComponent(relatorioId)}`;
+            }
+            
+            eventSource = new EventSource(sseUrl);
             
             eventSource.onmessage = async (event) => {
                 try {
                     const notification = JSON.parse(event.data);
                     
                     if (notification.type === 'csv_ready' && notification.data) {
-                        // CSV está disponível - fazer verificação única no banco para buscar o CSV
+                        // CSV está disponível - buscar do banco de dados via GET
                         console.log('[RAF] Notificação de CSV disponível recebida', notification.data);
-                        await checkAndUpdateDataFromDatabase();
+                        
+                        const csvData = notification.data;
+                        const relatorioId = csvData.relatorio_id;
+                        
+                        // Validar que temos o ID do relatório
+                        if (!relatorioId) {
+                            console.warn('[RAF] Notificação csv_ready recebida mas relatorio_id não está presente.');
+                            return;
+                        }
+                        
+                        // Se estamos aguardando um relatorio_id específico, validar que corresponde
+                        if (currentRelatorioId && relatorioId !== currentRelatorioId) {
+                            console.log('[RAF] Notificação csv_ready recebida para relatório diferente. Aguardado:', currentRelatorioId, 'Recebido:', relatorioId);
+                            return; // Ignorar notificações de outros relatórios
+                        }
+                        
+                        // Buscar CSV do banco de dados via GET
+                        try {
+                            const response = await fetch(`/api/data/csv/${relatorioId}`, {
+                                method: 'GET',
+                                headers: {
+                                    'Accept': 'text/csv',
+                                },
+                                credentials: 'same-origin',
+                            });
+                            
+                            if (!response.ok) {
+                                const errorData = await response.json().catch(() => ({}));
+                                throw new Error(errorData.message || `Erro ${response.status} ao buscar CSV`);
+                            }
+                            
+                            // Obter CSV como blob
+                            const blob = await response.blob();
+                            
+                            // Extrair filename do header Content-Disposition ou usar padrão
+                            const disposition = response.headers.get('content-disposition');
+                            let filename = 'resultado.csv';
+                            if (disposition) {
+                                const match = disposition.match(/filename="?([^";]+)"?/i);
+                                if (match && match[1]) {
+                                    filename = match[1];
+                                }
+                            }
+                            
+                            // Validar que o blob não está vazio antes de mostrar o botão
+                            if (blob.size > 0) {
+                                setDownload(blob, filename);
+                                freezeTimer();
+                                showAlert('success', 'Processado com sucesso. O CSV está pronto para download.');
+                                if (resultBadge) resultBadge.classList.remove('hidden');
+                                setLoading(false);
+                                
+                                // Confirmar recebimento do CSV no resume_url se existir
+                                if (csvData.resume_url && csvData.resume_url.trim() !== '') {
+                                    await confirmCsvReceived(csvData.resume_url);
+                                }
+                                
+                                // Limpar relatorio_id atual e desconectar SSE quando CSV estiver disponível
+                                currentRelatorioId = null;
+                                disconnectSSE();
+                                
+                                // Garantir que o modal esteja fechado
+                                hideCreditsConfirmation();
+                            } else {
+                                console.warn('[RAF] CSV recebido mas blob está vazio.');
+                            }
+                        } catch (err) {
+                            console.error('[RAF] Erro ao buscar CSV do banco de dados:', err);
+                            showAlert('error', 'Erro ao buscar CSV. Tente novamente.');
+                            setLoading(false);
+                        }
                         return;
                     }
                     
@@ -1011,9 +982,6 @@
                                 return;
                             }
                         }
-                        
-                        // Se não tem dados completos na notificação, buscar do banco
-                        await checkAndUpdateDataFromDatabase();
                     }
                 } catch (err) {
                     console.error('[RAF] Erro ao processar notificação SSE:', err);
@@ -1053,6 +1021,9 @@
         // Limpar flag de conexão
         isConnectingSSE = false;
     };
+    
+    // Armazenar referência global para o SPA poder chamar
+    window._rafDisconnectSSE = disconnectSSE;
 
     const resetDownload = () => {
         if (currentDownloadUrl) {
@@ -1251,6 +1222,9 @@
         // Esconder o backdrop do modal
         if (creditsModalBackdrop) {
             creditsModalBackdrop.classList.add('hidden');
+            // Limpar estilos inline que podem ter sido definidos ao abrir o modal
+            creditsModalBackdrop.style.display = '';
+            creditsModalBackdrop.style.visibility = '';
         }
         
         // Restaurar scroll do body
@@ -1346,11 +1320,25 @@
 
     const confirmCreditsAndProcess = async () => {
         if (!pendingConfirmation) return;
+        
+        // Proteção contra cliques duplos
+        if (isConfirming) {
+            console.log('[RAF] Confirmação já em andamento, ignorando clique duplicado');
+            return;
+        }
 
         const { resumeUrl, valorTotalConsulta } = pendingConfirmation;
+        isConfirming = true;
         setCreditsLoading(true);
 
+        // AbortController para timeout de 35 segundos
+        const abortController = new AbortController();
+        let timeoutId = null; // Declarar fora do try para acessar no finally
+        
         try {
+            timeoutId = setTimeout(() => {
+                abortController.abort();
+            }, 35000); // 35 segundos
             const currentCsrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrf || '';
             
             const response = await fetch('/app/credits/confirm', {
@@ -1360,19 +1348,58 @@
                     'Content-Type': 'application/json',
                     'Accept': 'application/json, text/csv',
                 },
-                credentials: 'same-origin', // Garantir que cookies de sessão sejam enviados
+                credentials: 'same-origin',
+                signal: abortController.signal,
                 body: JSON.stringify({
                     resume_url: resumeUrl,
                     valor_total_consulta: valorTotalConsulta,
                 }),
             });
 
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+            }
             const contentType = response.headers.get('content-type');
+
+            // Tratar HTTP 409 (Conflict) - Lock otimista detectou processamento duplicado
+            if (response.status === 409) {
+                const data = await response.json().catch(() => ({}));
+                showAlert('info', data.message || 'Processamento já em andamento. Aguarde...');
+                hideCreditsConfirmation();
+                stopTimer();
+                setLoading(false);
+                return;
+            }
 
             if (response.status === 402) {
                 // Créditos insuficientes
                 const data = await response.json();
                 showAlert('error', data.message || 'Créditos insuficientes. Entre em contato pelo telefone (69) 99999-9999.');
+                hideCreditsConfirmation();
+                stopTimer();
+                setLoading(false);
+                return;
+            }
+
+            // Tratar HTTP 502 (Bad Gateway) - Timeout no webhook
+            if (response.status === 502) {
+                console.error('[RAF] HTTP 502 recebido do servidor');
+                let errorMessage = 'Timeout ao processar. Os créditos foram reembolsados. Tente novamente.';
+                try {
+                    const text = await response.text();
+                    console.error('[RAF] Resposta 502:', text.substring(0, 500));
+                    // Tentar parsear como JSON se possível
+                    if (text && text.trim().startsWith('{')) {
+                        const data = JSON.parse(text);
+                        if (data.message) {
+                            errorMessage = data.message;
+                        }
+                    }
+                } catch (parseErr) {
+                    console.error('[RAF] Erro ao parsear resposta 502:', parseErr);
+                }
+                showAlert('error', errorMessage);
                 hideCreditsConfirmation();
                 stopTimer();
                 setLoading(false);
@@ -1387,7 +1414,32 @@
             // REINICIAR o relógio após confirmar créditos
             startTimer();
 
-            // Sucesso - resposta é CSV
+            // Verificar se a resposta é JSON (pode ser resposta assíncrona)
+            if (contentType && contentType.includes('application/json')) {
+                const data = await response.json();
+                
+                // Armazenar relatorio_id se estiver presente na resposta
+                if (data.id || data.relatorio_id) {
+                    currentRelatorioId = data.id || data.relatorio_id;
+                }
+                
+                // Se for resposta assíncrona (n8n retornou JSON ao invés de CSV)
+                if (data.success && data.async === true) {
+                    // Esconder botão de download até o CSV estar realmente disponível
+                    resetDownload();
+                    
+                    showAlert('info', data.message || 'Créditos confirmados. Aguarde enquanto o relatório final está sendo gerado...');
+                    
+                    // Conectar SSE para receber notificação quando CSV estiver disponível
+                    // O SSE vai notificar quando o CSV estiver pronto, sem necessidade de polling
+                    connectSSE(currentRelatorioId);
+                    
+                    hideCreditsConfirmation();
+                    return;
+                }
+            }
+
+            // Sucesso - resposta é CSV (resposta síncrona)
             if (contentType && contentType.includes('text/csv')) {
                 const blob = await response.blob();
                 const disposition = response.headers.get('content-disposition');
@@ -1410,26 +1462,52 @@
                 updateFileUi();
                 updateEnablement();
             } else {
-                // Se não for CSV imediatamente, aguardar notificação do n8n via SSE
+                // Se não for CSV nem JSON async, aguardar notificação do n8n via SSE
                 // O relógio já foi reiniciado acima e continuará até o CSV estar disponível
                 
                 // Esconder botão de download até o CSV estar realmente disponível
                 resetDownload();
                 
-                showAlert('info', 'Créditos confirmados. Aguardando processamento do relatório...');
+                showAlert('info', 'Créditos confirmados. Aguarde enquanto o relatório final está sendo gerado...');
                 
                 // Conectar SSE para receber notificação quando CSV estiver disponível
-                connectSSE();
+                connectSSE(currentRelatorioId);
             }
 
             hideCreditsConfirmation();
         } catch (err) {
-            showAlert('error', err.message || 'Erro ao processar. Tente novamente.');
+            console.error('[RAF] Erro no confirmCreditsAndProcess:', err);
+            // Tratar timeout do AbortController
+            if (err.name === 'AbortError') {
+                showAlert('error', 'Timeout ao processar. A requisição demorou mais de 35 segundos. Tente novamente.');
+            } else if (err.name === 'TypeError' && err.message && err.message.includes('fetch')) {
+                // Erro de rede ou conexão
+                showAlert('error', 'Erro de conexão. Verifique sua internet e tente novamente.');
+            } else {
+                showAlert('error', err.message || 'Erro ao processar. Tente novamente.');
+            }
             hideCreditsConfirmation();
             stopTimer();
         } finally {
+            // Garantir que o modal feche em qualquer circunstância
+            if (creditsModalBackdrop) {
+                creditsModalBackdrop.classList.add('hidden');
+                // Limpar estilos inline que podem ter sido definidos ao abrir o modal
+                creditsModalBackdrop.style.display = '';
+                creditsModalBackdrop.style.visibility = '';
+            }
+            // Esconder também o botão de confirmação do card de informações
+            if (infoConfirmCreditsWrap) {
+                infoConfirmCreditsWrap.classList.add('hidden');
+            }
+            document.body.style.overflow = '';
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
             setCreditsLoading(false);
             setLoading(false);
+            isConfirming = false; // Liberar flag
+            pendingConfirmation = null; // Limpar confirmação pendente
         }
     };
 
@@ -1736,7 +1814,7 @@
             return;
         }
 
-        showAlert('info', 'Enviado corretamente e sendo processado');
+        showAlert('info', 'SPED enviado com sucesso. Aguarde enquanto processamos os valores da consulta...');
         setLoading(true);
         stopTimer();
         resetDownload();
@@ -1777,6 +1855,11 @@
 
                 // Verifica se precisa de confirmação de créditos
                 if (data.success && data.needs_confirmation && data.resume_url && data.valor_total_consulta !== undefined) {
+                    // Armazenar relatorio_id se estiver presente na resposta
+                    if (data.relatorio_id || data.id) {
+                        currentRelatorioId = data.relatorio_id || data.id;
+                    }
+                    
                     // Atualizar card de informações da consulta
                     updateInfoCard({
                         qtd_participantes_unicos: data.qtd_participantes_unicos,
@@ -1784,7 +1867,7 @@
                         custo_unitario: data.custo_unitario
                     }, true); // needsConfirmation = true
                     
-                    showAlert('info', 'Aguardando confirmação de créditos...');
+                    showAlert('info', 'Valores da consulta processados. Aguarde a confirmação de créditos...');
                     
                     // Aguarda a função async completar
                     await showCreditsConfirmation(
@@ -1820,7 +1903,7 @@
                         setLoading(false);
                         
                         // Mostrar mensagem para o usuário aguardar o n8n
-                        showAlert('info', 'Processamento concluído. Aguarde o processamento do n8n e use o botão "Atualizar" quando estiver disponível.');
+                        showAlert('info', 'SPED processado. Aguarde enquanto geramos o relatório final. Você será notificado quando estiver pronto.');
                         
                         // Mostrar card de informações se estiver oculto
                         if (infoConsultaCard && infoConsultaCard.parentElement) {
@@ -1832,16 +1915,6 @@
                         
                         // Conectar ao SSE para receber notificações quando o n8n enviar os dados
                         connectSSE();
-                        
-                        // Verificar imediatamente se já há dados no banco (pode ter sido processado rapidamente)
-                        checkAndUpdateDataFromDatabase().catch(err => {
-                            console.error('[RAF] Erro na verificação imediata:', err);
-                        });
-                        
-                        // Verificar novamente após um delay para casos onde o n8n ainda está processando
-                        setTimeout(async () => {
-                            await checkAndUpdateDataFromDatabase();
-                        }, 3000); // Aguardar 3 segundos para dar tempo ao n8n processar
                     }
                 }
             } else if (contentType && contentType.includes('text/csv')) {
@@ -1963,9 +2036,11 @@
     updateFileUi();
     updateEnablement();
     
-    // Conectar ao SSE quando a página carregar para receber notificações em tempo real
-    // O frontend apenas escuta - não faz nenhuma verificação ou polling
-    connectSSE();
+    // SSE será conectado apenas quando o usuário submeter um SPED ou confirmar créditos
+    // Isso evita que o último relatório apareça ao recarregar a página
+    // O SSE já é conectado nos momentos corretos:
+    // - Após confirmar créditos (linhas 1424 e 1463)
+    // - Após submeter SPED que retorna sem CSV imediato (linha 1908)
     
     // Desconectar SSE quando a página for fechada
     window.addEventListener('beforeunload', () => {
@@ -1975,6 +2050,17 @@
 
     // Expor para o SPA (resources/js/spa.js chama initRaf ao navegar)
     window.initRaf = initRaf;
+    // Expor disconnectSSE para o SPA poder desconectar ao navegar
+    // Usar a referência global armazenada
+    window.disconnectSSE = function() {
+        try {
+            if (window._rafDisconnectSSE && typeof window._rafDisconnectSSE === 'function') {
+                window._rafDisconnectSSE();
+            }
+        } catch (error) {
+            console.warn('[RAF] Erro ao desconectar SSE:', error);
+        }
+    };
 
     // Também rodar na primeira carga (full reload)
     if (document.readyState === 'loading') {

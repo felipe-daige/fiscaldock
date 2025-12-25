@@ -19,6 +19,7 @@ class RafRelatorioProcessado extends Model
         'resume_url',
         'total_participants',
         'total_price',
+        'filename',
     ];
 
     protected function casts(): array
@@ -36,4 +37,5 @@ class RafRelatorioProcessado extends Model
         return $this->belongsTo(User::class);
     }
 }
+
 
