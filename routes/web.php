@@ -61,11 +61,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/raf/cancelar/{id}', [RafController::class, 'cancelar'])->name('raf.cancelar');
     });
     
-    // Rota para buscar os dados mais recentes do cache do usuário
-    // Requer autenticação via sessão (stateful) para funcionar com frontend
-    Route::get('/api/data/receive-latest', [\App\Http\Controllers\Api\DataReceiverController::class, 'getLatestData'])
-        ->name('api.data.get.latest');
-    
     // Rota SSE para notificações em tempo real
     Route::get('/api/data/notifications/stream', [\App\Http\Controllers\Api\DataReceiverController::class, 'streamNotifications'])
         ->name('api.data.notifications.stream');

@@ -29,3 +29,15 @@ Route::get('/data/receive-public/{resume_url}', [DataReceiverController::class, 
 // Aceita autenticação via token API (para n8n) ou sessão
 Route::post('/data/receive/raf/csvfile', [DataReceiverController::class, 'receiveCsv'])
     ->name('api.data.receive.raf.csvfile');
+
+// Rota para buscar CSV do banco de dados por ID do relatório
+// Requer autenticação via sessão (web middleware)
+Route::get('/data/csv/{id}', [DataReceiverController::class, 'getCsv'])
+    ->middleware(['web', 'auth'])
+    ->name('api.data.csv.get');
+
+// Rota para confirmar uso de créditos e enviar approved/denied para resume_url
+// Requer autenticação via sessão (web middleware)
+Route::post('/raf/confirm', [DataReceiverController::class, 'confirmCredits'])
+    ->middleware(['web', 'auth'])
+    ->name('api.raf.confirm');

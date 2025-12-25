@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('document_type');
             $table->string('consultant_type');
+            $table->string('filename');
             $table->text('report_csv_base64');
             $table->string('resume_url')->nullable();
             $table->integer('total_participants');

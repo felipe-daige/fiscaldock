@@ -157,6 +157,16 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             window._cleanupFunctions = {};
         }
+        
+        // Desconectar SSE se existir (para páginas RAF)
+        // Usar try-catch para evitar erro se disconnectSSE não estiver definida
+        try {
+            if (typeof window.disconnectSSE === 'function') {
+                window.disconnectSSE();
+            }
+        } catch (error) {
+            // Ignorar erro se disconnectSSE não estiver definida (página RAF não foi carregada)
+        }
     }
     
     // 1. INTERCEPTAR CLIQUES EM LINKS
@@ -303,12 +313,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Pegar HTML da resposta
             const html = await resposta.text();
-            // #region agent log
-            const scriptMatches = html.match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
-            const scriptCount = scriptMatches.length;
-            const hasTryInHtml = /try\s*\{/.test(html);
-            fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:304',message:'HTML recebido antes de innerHTML',data:{url,htmlLength:html.length,scriptCount,hasTryInHtml,scriptPreviews:scriptMatches.slice(0,3).map(s=>s.substring(0,200))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-            // #endregion
             
             // Trocar conteúdo
             app.innerHTML = html;
@@ -397,31 +401,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. EXECUTAR SCRIPTS
     function executarScripts() {
         const scripts = app.querySelectorAll('script');
-        // #region agent log
-        fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:392',message:'executarScripts iniciado',data:{scriptCount:scripts.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
         scripts.forEach((script, index) => {
             try {
-                // #region agent log
-                const scriptContent = script.textContent || '';
-                const hasTry = /try\s*\{/.test(scriptContent);
-                const hasCatch = /catch\s*\(/.test(scriptContent);
-                const hasFinally = /finally\s*\{/.test(scriptContent);
-                fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:394',message:'Processando script',data:{index,hasTry,hasCatch,hasFinally,contentLength:scriptContent.length,contentPreview:scriptContent.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                // #endregion
                 const novoScript = document.createElement('script');
                 novoScript.textContent = script.textContent;
                 
                 // Validar se o script tem conteúdo válido antes de executar
                 if (script.textContent && script.textContent.trim() !== '') {
-                    // #region agent log
-                    fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:406',message:'Antes de appendChild',data:{index,contentLength:script.textContent.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                    // #endregion
                     // Adicionar handler de erro para capturar erros de sintaxe
                     novoScript.onerror = function(error) {
-                        // #region agent log
-                        fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:401',message:'Erro ao executar script (onerror)',data:{index,error:error?.message||String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                        // #endregion
                         console.error('Erro ao executar script:', error);
                     };
                     
@@ -430,18 +418,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Validar sintaxe básica do script
                         new Function(script.textContent);
                     } catch (syntaxError) {
-                        // #region agent log
-                        fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:407',message:'Erro de sintaxe detectado antes de appendChild',data:{index,error:syntaxError?.message||String(syntaxError),stack:syntaxError?.stack,contentPreview:script.textContent.substring(0,500)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                        // #endregion
                         console.error('Erro de sintaxe no script:', syntaxError);
                         throw syntaxError;
                     }
                     
                     // Adicionar ao head para executar
                     document.head.appendChild(novoScript);
-                    // #region agent log
-                    fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:406',message:'appendChild executado com sucesso',data:{index},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                    // #endregion
                     
                     // Remover script original do app
                     script.parentNode.removeChild(script);
@@ -450,9 +432,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     script.parentNode.removeChild(script);
                 }
             } catch (error) {
-                // #region agent log
-                fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:414',message:'Erro ao processar script (catch)',data:{index,error:error?.message||String(error),stack:error?.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                // #endregion
                 console.error('Erro ao processar script:', error);
                 // Continuar com outros scripts mesmo se um falhar
             }
@@ -493,18 +472,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4.2. CARREGAR JAVASCRIPT ESPECÍFICO (SISTEMA DINÂMICO)
     function carregarJavaScriptEspecifico(caminho) {
         const { scriptPath, nomePagina } = obterInfoPagina(caminho);
-        // #region agent log
-        fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:453',message:'carregarJavaScriptEspecifico chamado',data:{caminho,scriptPath,nomePagina},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
 
         if (nomePagina && nomePagina !== '') {
             // Verificar se a função já está disponível (código inline já foi executado)
             const infoPagina = obterInfoPagina(caminho);
             const nomeFuncao = funcoesEspecificas[caminho] || infoPagina.nomeFuncao;
             if (nomeFuncao && window[nomeFuncao] && typeof window[nomeFuncao] === 'function') {
-                // #region agent log
-                fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:500',message:'Função já disponível, não precisa carregar arquivo',data:{nomeFuncao,scriptPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                // #endregion
                 // Função já está disponível (provavelmente de código inline), não precisa carregar arquivo
                 return;
             }
@@ -524,27 +497,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 const script = document.createElement('script');
                 script.src = scriptPath;
                 script.onload = function() {
-                    // #region agent log
-                    fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:462',message:'Script carregado com sucesso',data:{scriptPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                    // #endregion
                     // Aguardar um pouco para garantir que a função foi definida
                     setTimeout(() => {
                         executarFuncaoEspecifica(caminho);
                     }, 100);
                 };
                 script.onerror = function() {
-                    // #region agent log
-                    fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:468',message:'Erro ao carregar script (arquivo não encontrado)',data:{scriptPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                    // #endregion
                     // Arquivo não encontrado (normal se não tiver JavaScript específico ou se o código estiver inline)
                     // Tentar executar a função mesmo assim, caso esteja disponível via código inline
                     setTimeout(() => {
                         executarFuncaoEspecifica(caminho);
                     }, 100);
                 };
-                // #region agent log
-                fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:471',message:'Antes de appendChild script externo',data:{scriptPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                // #endregion
                 document.head.appendChild(script);
             } else {
                 // Script já carregado, executar função
@@ -611,34 +575,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Garante que funções definidas em scripts inline estejam disponíveis antes de executar funções específicas
     function processarScriptsInline() {
         const scripts = app.querySelectorAll('script');
-        // #region agent log
-        fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:535',message:'processarScriptsInline iniciado',data:{scriptCount:scripts.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
         scripts.forEach((script, index) => {
             try {
-                // #region agent log
-                const scriptContent = script.textContent || '';
-                const hasTry = /try\s*\{/.test(scriptContent);
-                const hasCatch = /catch\s*\(/.test(scriptContent);
-                const hasFinally = /finally\s*\{/.test(scriptContent);
-                const tryCount = (scriptContent.match(/try\s*\{/g) || []).length;
-                const catchCount = (scriptContent.match(/catch\s*\(/g) || []).length;
-                const finallyCount = (scriptContent.match(/finally\s*\{/g) || []).length;
-                fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:538',message:'Processando script inline',data:{index,hasTry,hasCatch,hasFinally,tryCount,catchCount,finallyCount,contentLength:scriptContent.length,contentPreview:scriptContent.substring(0,300)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                // #endregion
                 const novoScript = document.createElement('script');
                 novoScript.textContent = script.textContent;
                 
                 // Validar se o script tem conteúdo válido antes de executar
                 if (script.textContent && script.textContent.trim() !== '') {
-                    // #region agent log
-                    fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:550',message:'Antes de appendChild script inline',data:{index,contentLength:script.textContent.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                    // #endregion
                     // Adicionar handler de erro para capturar erros de sintaxe
                     novoScript.onerror = function(error) {
-                        // #region agent log
-                        fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:545',message:'Erro ao executar script inline (onerror)',data:{index,error:error?.message||String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                        // #endregion
                         console.error('Erro ao executar script inline:', error);
                     };
                     
@@ -647,18 +592,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Validar sintaxe básica do script
                         new Function(script.textContent);
                     } catch (syntaxError) {
-                        // #region agent log
-                        fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:551',message:'Erro de sintaxe detectado antes de appendChild (inline)',data:{index,error:syntaxError?.message||String(syntaxError),stack:syntaxError?.stack,contentPreview:script.textContent.substring(0,500)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                        // #endregion
                         console.error('Erro de sintaxe no script inline:', syntaxError);
                         throw syntaxError;
                     }
                     
                     // Adicionar ao head para executar
                     document.head.appendChild(novoScript);
-                    // #region agent log
-                    fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:550',message:'appendChild script inline executado com sucesso',data:{index},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                    // #endregion
                     
                     // Remover script original do app
                     script.parentNode.removeChild(script);
@@ -667,9 +606,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     script.parentNode.removeChild(script);
                 }
             } catch (error) {
-                // #region agent log
-                fetch('http://localhost:7243/ingest/3d147c95-857e-48db-840c-f8263c8ab2e1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'spa.js:558',message:'Erro ao processar script inline (catch)',data:{index,error:error?.message||String(error),stack:error?.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                // #endregion
                 console.error('Erro ao processar script inline:', error);
                 // Continuar com outros scripts mesmo se um falhar
             }

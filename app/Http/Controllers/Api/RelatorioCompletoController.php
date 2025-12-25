@@ -184,14 +184,6 @@ class RelatorioCompletoController extends Controller
         $apiToken = $request->header('X-API-Token') ?? $request->input('api_token');
         $expectedToken = config('services.api.token');
         
-        Log::debug('Autenticação API', [
-            'token_recebido' => $apiToken ? substr($apiToken, 0, 10) . '...' : null,
-            'token_esperado' => $expectedToken ? substr($expectedToken, 0, 10) . '...' : null,
-            'token_valido' => !empty($apiToken) && !empty($expectedToken) && $apiToken === $expectedToken,
-            'user_id_body' => $request->input('user_id'),
-            'auth_user' => Auth::user()?->id,
-        ]);
-        
         if (!empty($apiToken) && !empty($expectedToken) && $apiToken === $expectedToken) {
             // Token válido - busca user_id no payload (opcional)
             $userId = $request->input('user_id');

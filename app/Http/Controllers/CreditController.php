@@ -86,6 +86,9 @@ class CreditController extends Controller
 
         // Se for apenas confirmação de recebimento, não descontar créditos novamente
         if ($confirmReceipt) {
+            // Limpar o lock de processamento ao confirmar recebimento
+            $relatorio->processing_started_at = null;
+            $relatorio->save();
             Log::info('Confirmação de recebimento do CSV', [
                 'user_id' => $user->id,
                 'resume_url' => $resumeUrl,
@@ -114,6 +117,64 @@ class CreditController extends Controller
             ]);
         }
 
+        // ========== LOCK OTIMISTA: Evitar processamento duplicado ==========
+        // Verificar se já está sendo processado (lock adquirido nos últimos 60 segundos)
+        $lockTimeout = 60; // segundos
+        if ($relatorio->processing_started_at !== null) {
+            $secondsSinceLock = now()->diffInSeconds($relatorio->processing_started_at);
+            
+            if ($secondsSinceLock < $lockTimeout) {
+                Log::warning('Requisição bloqueada: processamento já em andamento', [
+                    'user_id' => $user->id,
+                    'relatorio_id' => $relatorio->id,
+                    'processing_started_at' => $relatorio->processing_started_at->toIso8601String(),
+                    'seconds_since_lock' => $secondsSinceLock,
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'processing' => true,
+                    'message' => 'Processamento já em andamento. Aguarde...',
+                ], Response::HTTP_CONFLICT);
+            }
+            
+            // Lock expirou, permitir nova tentativa
+            Log::info('Lock expirado, permitindo nova tentativa', [
+                'user_id' => $user->id,
+                'relatorio_id' => $relatorio->id,
+                'seconds_since_lock' => $secondsSinceLock,
+            ]);
+        }
+
+        // Tentar adquirir o lock atomicamente (evita race condition)
+        $lockAcquired = RafConsultaPendente::where('id', $relatorio->id)
+            ->where('user_id', $user->id)
+            ->where(function ($query) use ($lockTimeout) {
+                $query->whereNull('processing_started_at')
+                    ->orWhere('processing_started_at', '<', now()->subSeconds($lockTimeout));
+            })
+            ->update(['processing_started_at' => now()]);
+
+        if ($lockAcquired === 0) {
+            // Outra requisição adquiriu o lock primeiro (race condition)
+            Log::warning('Falha ao adquirir lock: outra requisição em andamento', [
+                'user_id' => $user->id,
+                'relatorio_id' => $relatorio->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'processing' => true,
+                'message' => 'Processamento já em andamento. Aguarde...',
+            ], Response::HTTP_CONFLICT);
+        }
+
+        Log::info('Lock adquirido com sucesso', [
+            'user_id' => $user->id,
+            'relatorio_id' => $relatorio->id,
+        ]);
+        // ========== FIM DO LOCK OTIMISTA ==========
+
         // Usar o valor_total_consulta do banco de dados (mais atualizado)
         $valorTotalConsulta = (float) $relatorio->valor_total_consulta;
         
@@ -137,8 +198,11 @@ class CreditController extends Controller
                 'valor_solicitado' => $valorCreditos,
             ]);
 
-            // Envia negação para o webhook
-            $this->spedUploadService->confirmAndResume($resumeUrl, 'negado');
+            // Liberar o lock
+            RafConsultaPendente::where('id', $relatorio->id)->update(['processing_started_at' => null]);
+
+            // Envia negação para o webhook (sem esperar resposta)
+            $this->spedUploadService->sendWebhookStatus($resumeUrl, 'denied');
 
             return response()->json([
                 'success' => false,
@@ -158,8 +222,11 @@ class CreditController extends Controller
                 'valor' => $valorCreditos,
             ]);
 
-            // Envia negação para o webhook
-            $this->spedUploadService->confirmAndResume($resumeUrl, 'negado');
+            // Liberar o lock
+            RafConsultaPendente::where('id', $relatorio->id)->update(['processing_started_at' => null]);
+
+            // Envia negação para o webhook (sem esperar resposta)
+            $this->spedUploadService->sendWebhookStatus($resumeUrl, 'denied');
 
             return response()->json([
                 'success' => false,
@@ -167,14 +234,18 @@ class CreditController extends Controller
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        // Envia confirmação para o webhook e aguarda o CSV
-        $result = $this->spedUploadService->confirmAndResume($resumeUrl, 'confirmado');
+        // Envia confirmação para o webhook sem esperar o CSV (assíncrono)
+        // Usa sendWebhookStatus que tem timeout curto (30s) e não espera CSV
+        $result = $this->spedUploadService->sendWebhookStatus($resumeUrl, 'approved');
 
         if (!$result['success']) {
             // Reembolsa os créditos em caso de falha no webhook
             $this->creditService->add($user, $valorCreditos);
             
-            Log::warning('Webhook falhou, créditos reembolsados', [
+            // Liberar o lock para permitir nova tentativa
+            RafConsultaPendente::where('id', $relatorio->id)->update(['processing_started_at' => null]);
+            
+            Log::warning('Webhook falhou, créditos reembolsados e lock liberado', [
                 'user_id' => $user->id,
                 'relatorio_id' => $relatorio->id,
                 'valor' => $valorCreditos,
@@ -188,18 +259,24 @@ class CreditController extends Controller
             ], Response::HTTP_BAD_GATEWAY);
         }
 
-        // Remove o registro da tabela de pendentes após sucesso
-        $relatorio->delete();
-
-        // Retorna o CSV como resposta
-        $csv = $result['csv'] ?? '';
-        $filename = $result['filename'] ?? 'resultado.csv';
-
-        return response($csv, Response::HTTP_OK, [
-            'Content-Type' => 'text/csv; charset=utf-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-            'X-Credits-Remaining' => $this->creditService->getBalance($user),
+        // Sempre retornar assíncrono - o CSV virá via endpoint /api/data/receive/raf/csvfile
+        // O frontend conecta ao SSE e aguarda a notificação quando o CSV estiver disponível
+        Log::info('Webhook confirmação enviada com sucesso, aguardando CSV via endpoint', [
+            'user_id' => $user->id,
+            'relatorio_id' => $relatorio->id,
+            'resume_url' => $resumeUrl,
         ]);
+
+        // NÃO deletar o registro ainda - será deletado quando o CSV for recebido
+        // Retornar id e user_id para o frontend aguardar via SSE
+        return response()->json([
+            'success' => true,
+            'async' => true,
+            'message' => 'Créditos confirmados. Aguarde enquanto o relatório está sendo gerado...',
+            'id' => $relatorio->id,
+            'user_id' => $user->id,
+            'credits' => $this->creditService->getBalance($user),
+        ], Response::HTTP_OK);
     }
 
     /**
@@ -248,13 +325,13 @@ class CreditController extends Controller
             'resume_url' => $resumeUrl,
         ]);
 
-        // Envia 'answer: decline' para o webhook
-        $result = $this->spedUploadService->confirmAndResume($resumeUrl, 'decline');
+        // Envia 'declined' para o webhook (sem esperar resposta)
+        $result = $this->spedUploadService->sendWebhookStatus($resumeUrl, 'declined');
 
         // Remove o registro da tabela de pendentes após cancelamento
         $relatorio->delete();
 
-        if (!$result['success'] && $result['message'] !== 'Operação cancelada pelo usuário.') {
+        if (!$result['success']) {
             Log::warning('Falha ao enviar cancelamento para webhook', [
                 'user_id' => $user->id,
                 'resume_url' => $resumeUrl,

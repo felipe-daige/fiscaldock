@@ -20,6 +20,7 @@ class RafConsultaPendente extends Model
         'custo_unitario',
         'resume_url',
         'n8n_received_at',
+        'processing_started_at',
     ];
 
     protected function casts(): array
@@ -29,6 +30,7 @@ class RafConsultaPendente extends Model
             'custo_unitario' => 'decimal:2',
             'qtd_participantes' => 'integer',
             'n8n_received_at' => 'datetime',
+            'processing_started_at' => 'datetime',
         ];
     }
 
@@ -53,29 +55,6 @@ class RafConsultaPendente extends Model
      */
     public function scopeDoUsuario($query, $userId)
     {
-        // #region agent log
-        try {
-            $debugLogPath = '/opt/hub_contabil/.cursor/debug.log';
-            $debugLogDir = dirname($debugLogPath);
-            if (is_dir($debugLogDir) && is_writable($debugLogDir)) {
-                file_put_contents($debugLogPath, json_encode([
-                    'sessionId' => 'debug-session',
-                    'runId' => 'run1',
-                    'hypothesisId' => 'B',
-                    'location' => 'RafConsultaPendente.php:52',
-                    'message' => 'Scope doUsuario called',
-                    'data' => [
-                        'user_id_param' => $userId,
-                        'user_id_param_type' => gettype($userId),
-                        'user_id_casted' => (int) $userId,
-                        'query_table' => $query->getModel()->getTable(),
-                    ],
-                    'timestamp' => time() * 1000
-                ]) . "\n", FILE_APPEND);
-            }
-        } catch (\Throwable $e) {}
-        // #endregion
-        
         return $query->where('user_id', (int) $userId);
     }
 
