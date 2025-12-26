@@ -24,7 +24,7 @@ class SpedUploadService
      * @param string $tipo Tipo do SPED (EFD Contribuições ou EFD Fiscal)
      * @param string|null $originalName Nome original do arquivo (opcional)
      * @param bool $isAuthenticated Se é requisição autenticada (afeta timeout e logs)
-     * @param string $modalidade Modalidade da consulta: 'regime' ou 'completa'
+     * @param string $modalidade Modalidade da consulta: 'gratuito' ou 'completa'
      * @param int|null $userId ID do usuário (opcional, para requisições autenticadas)
      * @return array{success: bool, headers?: array, rows?: array, csv?: string, filename?: string, message?: string, errors?: array}
      */
@@ -33,7 +33,7 @@ class SpedUploadService
         string $tipo,
         ?string $originalName = null,
         bool $isAuthenticated = false,
-        string $modalidade = 'regime',
+        string $modalidade = 'gratuito',
         ?int $userId = null
     ): array {
         $fileName = match ($tipo) {
@@ -44,6 +44,15 @@ class SpedUploadService
 
         // Seleciona a URL do webhook baseado no tipo de SPED e modalidade
         $webhookUrl = $this->getWebhookUrl($tipo, $modalidade);
+        
+        Log::debug('Webhook URL selecionada', [
+            'tipo' => $tipo,
+            'modalidade' => $modalidade,
+            'webhook_url' => $webhookUrl,
+            'config_sped_fiscal_url' => config('services.webhook.sped_fiscal_url'),
+            'config_sped_fiscal_completa_url' => config('services.webhook.sped_fiscal_completa_url'),
+        ]);
+        
         $webhookUser = config('services.webhook.username');
         $webhookPass = config('services.webhook.password');
 
@@ -176,6 +185,22 @@ class SpedUploadService
                 
                 return $result;
             } else {
+                // JSON válido com apenas "message" = resposta assíncrona (ex: Workflow was started)
+                // Isso acontece na modalidade gratuita quando o n8n inicia o workflow mas não retorna resume_url
+                if (isset($data['message']) && !isset($data['resume_url'])) {
+                    Log::info('Webhook SPED retornou resposta assíncrona (sem resume_url)', [
+                        'tipo' => $tipo,
+                        'modalidade' => $modalidade,
+                        'message' => $data['message'],
+                    ]);
+                    
+                    return [
+                        'success' => true,
+                        'async' => true,
+                        'message' => $data['message'] ?? 'Processamento iniciado. Aguarde o relatório.',
+                    ];
+                }
+                
                 // JSON válido mas sem resume_url - pode ser resposta de erro ou outro formato
                 Log::debug('Webhook SPED retornou JSON mas sem resume_url/valor_total_consulta', [
                     'tipo' => $tipo,
@@ -714,11 +739,11 @@ class SpedUploadService
     private function getWebhookUrl(string $tipo, string $modalidade): string
     {
         // Validação de segurança - apenas modalidades permitidas
-        if (!in_array($modalidade, ['regime', 'completa'], true)) {
+        if (!in_array($modalidade, ['gratuito', 'completa'], true)) {
             throw new \InvalidArgumentException('Modalidade inválida: ' . $modalidade);
         }
 
-        // Modalidade completa: CND + Regime Tributário
+        // RAF Completo: CND + Regime Tributário (modalidade paga)
         if ($modalidade === 'completa') {
             return match ($tipo) {
                 'EFD Fiscal' => config('services.webhook.sped_fiscal_completa_url')
@@ -730,15 +755,24 @@ class SpedUploadService
             };
         }
 
-        // Modalidade regime (padrão): apenas Regime Tributário
-        return match ($tipo) {
+        // RAF Gratuito: apenas Regime Tributário (modalidade gratuita)
+        $url = match ($tipo) {
             'EFD Fiscal' => config('services.webhook.sped_fiscal_url')
-                ?: 'https://autowebhook.fiscaldock.com.br/webhook/consultar-regime-tributario-sped-fiscal',
+                ?: 'https://autowebhook.fiscaldock.com.br/webhook/raf-consulta-gratuita-sped-fiscal',
             'EFD Contribuições' => config('services.webhook.sped_contribuicoes_url')
                 ?: 'https://autowebhook.fiscaldock.com.br/webhook/consultar-regime-tributario-sped-contribuicoes',
             default => config('services.webhook.sped_contribuicoes_url')
                 ?: 'https://autowebhook.fiscaldock.com.br/webhook/consultar-regime-tributario-sped-contribuicoes',
         };
+        
+        Log::debug('getWebhookUrl - RAF Gratuito', [
+            'tipo' => $tipo,
+            'modalidade' => $modalidade,
+            'config_value' => $tipo === 'EFD Fiscal' ? config('services.webhook.sped_fiscal_url') : config('services.webhook.sped_contribuicoes_url'),
+            'url_retornada' => $url,
+        ]);
+        
+        return $url;
     }
 }
 

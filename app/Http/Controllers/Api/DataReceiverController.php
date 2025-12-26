@@ -792,6 +792,7 @@ class DataReceiverController extends Controller
             $lastNotificationTime = null;
             $notifiedCsvIds = []; // IDs de CSVs já notificados nesta sessão
             $isFirstDbCheck = true; // Flag para primeira verificação no banco
+            $connectionEstablishedAt = now(); // Timestamp de quando a conexão SSE foi estabelecida
             
             while (true) {
                 try {
@@ -939,16 +940,11 @@ class DataReceiverController extends Controller
                             }
                         }
                     } else {
-                        // Se não há relatorio_id específico, na primeira verificação não buscar relatórios antigos
-                        // Apenas buscar relatórios criados após a conexão ser estabelecida
-                        if ($isFirstDbCheck) {
-                            // Na primeira verificação, não buscar nada - aguardar novos relatórios
-                            // Isso evita enviar relatórios antigos imediatamente
-                            $query->where('updated_at', '>', now()->subSeconds(5)); // Apenas relatórios muito recentes (últimos 5 segundos)
-                        } elseif ($lastNotificationTime) {
-                            // Nas próximas verificações, filtrar apenas novos (baseado no último notificado)
-                            $query->where('updated_at', '>', $lastNotificationTime);
-                        }
+                        // Quando não há relatorio_id específico (modalidade gratuita),
+                        // APENAS buscar relatórios criados APÓS a conexão ser estabelecida.
+                        // Isso evita retornar relatórios antigos instantaneamente.
+                        // Sempre filtrar por relatórios criados após a conexão SSE
+                        $query->where('updated_at', '>', $connectionEstablishedAt);
                         
                         $csvFromDb = $query->orderBy('updated_at', 'desc')->first();
                     }
@@ -1260,7 +1256,7 @@ class DataReceiverController extends Controller
 
             // Calcular valor de créditos necessário
             $valorTotalConsulta = (float) $registro->valor_total_consulta;
-            $valorCreditos = (int) ceil($valorTotalConsulta);
+            $valorCreditos = $valorTotalConsulta;
             $saldoAtual = $this->creditService->getBalance($user);
 
             Log::info('Processando confirmação de créditos', [

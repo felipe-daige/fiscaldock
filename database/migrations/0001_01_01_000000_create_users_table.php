@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
-            $table->unsignedInteger('credits')->default(0);
+            $table->decimal('credits', 12, 2)->default(0);
             $table->timestamps();
         });
 
