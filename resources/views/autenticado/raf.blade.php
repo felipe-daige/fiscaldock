@@ -566,7 +566,9 @@
 
     const form = document.getElementById('sped-form');
     if (!form) return;
-    if (form.dataset.rafInitialized === '1') return;
+    if (form.dataset.rafInitialized === '1') {
+        return;
+    }
     form.dataset.rafInitialized = '1';
 
     const submitBtn = document.getElementById('sped-submit');
@@ -635,6 +637,7 @@
     let pendingConfirmation = null;
     let isConfirming = false; // Flag para evitar cliques duplos
     let currentRelatorioId = null; // ID do relatório atual sendo aguardado
+    let processedResumeUrls = new Set(); // URLs já processadas para evitar reprocessamento
     
     // Controle de conexão SSE
     let eventSource = null;
@@ -972,13 +975,17 @@
                             const hasValorTotal = dbData.valor_total_consulta !== null && dbData.valor_total_consulta !== undefined;
                             
                             if (hasResumeUrl && hasValorTotal) {
-                                await showCreditsConfirmation(
+                                const modalShown = await showCreditsConfirmation(
                                     dbData.resume_url,
                                     dbData.valor_total_consulta,
                                     dbData.qtd_participantes_unicos,
                                     dbData.custo_unitario
                                 );
-                                disconnectSSE();
+                                // Só desconectar SSE se o modal foi realmente exibido
+                                // Se foi bloqueado (resumeUrl já processado), manter SSE ativo para receber csv_ready
+                                if (modalShown) {
+                                    disconnectSSE();
+                                }
                                 return;
                             }
                         }
@@ -1104,14 +1111,20 @@
     // ========== Funções do Card de Confirmação de Créditos ==========
     
     const showCreditsConfirmation = async (resumeUrl, valorTotalConsulta, qtdParticipantesUnicos, custoUnitario) => {
+        // Verificar se este resumeUrl já foi processado
+        if (processedResumeUrls.has(resumeUrl)) {
+            console.log('[RAF] showCreditsConfirmation bloqueado - resumeUrl já foi processado:', resumeUrl);
+            return false; // Retornar false para indicar que foi bloqueado
+        }
+        
         if (!creditsModalBackdrop) {
             console.error('[RAF] ERRO: creditsModalBackdrop não encontrado!');
-            return;
+            return false;
         }
         
         if (!creditsCard) {
             console.error('[RAF] ERRO: creditsCard não encontrado!');
-            return;
+            return false;
         }
 
         // PAUSAR o relógio quando o modal for exibido
@@ -1193,12 +1206,12 @@
         // Mostrar o modal overlay
         if (!creditsModalBackdrop) {
             console.error('[RAF] ERRO: creditsModalBackdrop não encontrado! Verifique se o elemento existe no DOM.');
-            return;
+            return false;
         }
         
         if (!creditsCard) {
             console.error('[RAF] ERRO: creditsCard não encontrado! Verifique se o elemento existe no DOM.');
-            return;
+            return false;
         }
         
         // Remover classe hidden do backdrop para exibir o modal
@@ -1216,6 +1229,8 @@
             creditsModalBackdrop.style.display = 'flex';
             creditsModalBackdrop.style.visibility = 'visible';
         }
+        
+        return true; // Modal foi exibido com sucesso
     };
 
     const hideCreditsConfirmation = () => {
@@ -1329,6 +1344,10 @@
 
         const { resumeUrl, valorTotalConsulta } = pendingConfirmation;
         isConfirming = true;
+        
+        // Marcar resumeUrl como processado ANTES do fetch para evitar reprocessamento
+        processedResumeUrls.add(resumeUrl);
+        
         setCreditsLoading(true);
 
         // AbortController para timeout de 35 segundos
@@ -1562,7 +1581,9 @@
     }
 
     if (creditsConfirmBtn) {
-        creditsConfirmBtn.addEventListener('click', confirmCreditsAndProcess);
+        creditsConfirmBtn.addEventListener('click', () => {
+            confirmCreditsAndProcess();
+        });
     }
 
     // Event listeners para fechar o modal
@@ -1596,7 +1617,9 @@
     }
 
     if (infoCreditsConfirmBtn) {
-        infoCreditsConfirmBtn.addEventListener('click', confirmCreditsAndProcess);
+        infoCreditsConfirmBtn.addEventListener('click', () => {
+            confirmCreditsAndProcess();
+        });
     }
 
     
