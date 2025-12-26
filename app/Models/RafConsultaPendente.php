@@ -89,7 +89,7 @@ class RafConsultaPendente extends Model
     public function getTipoConsultaLabelAttribute(): string
     {
         return match($this->tipo_consulta) {
-            'regime' => 'Gratuita — Regime Tributário',
+            'gratuito' => 'Gratuita — Regime Tributário',
             'completa' => 'Completa — Regime + CND',
             default => $this->tipo_consulta,
         };

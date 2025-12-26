@@ -98,9 +98,9 @@ class RelatorioCompletoController extends Controller
             // Buscar saldo de créditos do usuário
             $saldoAtual = $this->creditService->getBalance($user);
 
-            // Calcular valor arredondado de créditos necessários
+            // Calcular valor de créditos necessários
             $valorTotalConsulta = (float) $validated['valor_total_consulta'];
-            $valorCreditosNecessarios = (int) ceil($valorTotalConsulta);
+            $valorCreditosNecessarios = $valorTotalConsulta;
 
             // Verificar se tem créditos suficientes
             $temCreditosSuficientes = $this->creditService->hasEnough($user, $valorCreditosNecessarios);

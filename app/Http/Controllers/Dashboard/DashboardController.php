@@ -161,7 +161,7 @@ class DashboardController extends Controller
         try {
             $validated = $request->validate([
                 'tipo' => 'required|in:EFD Contribuições,EFD Fiscal',
-                'modalidade' => 'required|in:regime,completa',
+                'modalidade' => 'required|in:gratuito,completa',
                 'sped' => 'required|file|mimes:txt,text/plain|max:10240', // 10 MB
             ]);
         } catch (ValidationException $e) {

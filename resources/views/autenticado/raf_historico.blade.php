@@ -53,7 +53,7 @@
                                     <div>
                                         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Tipo de Consulta</p>
                                         <p class="text-sm font-semibold text-gray-900">
-                                            @if($relatorio->tipo_consulta === 'regime')
+                                            @if($relatorio->tipo_consulta === 'gratuito')
                                                 <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
                                                     Gratuita — Regime Tributário
                                                 </span>
@@ -391,7 +391,7 @@
                 }
 
                 const data = result.data;
-                const tipoConsultaLabel = data.tipo_consulta === 'regime' 
+                const tipoConsultaLabel = data.tipo_consulta === 'gratuito' 
                     ? 'Gratuita — Regime Tributário' 
                     : 'Completa — Regime + CND';
 

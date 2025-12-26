@@ -115,7 +115,7 @@ class LandingPageController extends Controller
             $validated['tipo'],
             $originalName,
             false, // isAuthenticated = false para endpoint público
-            'regime', // modalidade padrão
+            'gratuito', // modalidade padrão
             null // user_id = null para endpoint público
         );
 

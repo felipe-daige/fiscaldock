@@ -19,7 +19,7 @@ class CreditService
     /**
      * Verifica se o usuário tem créditos suficientes.
      */
-    public function hasEnough(User $user, int $amount): bool
+    public function hasEnough(User $user, float $amount): bool
     {
         return $this->getBalance($user) >= $amount;
     }
@@ -28,7 +28,7 @@ class CreditService
      * Desconta créditos do usuário.
      * Retorna true se a operação foi bem-sucedida, false caso contrário.
      */
-    public function deduct(User $user, int $amount): bool
+    public function deduct(User $user, float $amount): bool
     {
         if ($amount <= 0) {
             return true; // Nada a descontar
@@ -52,7 +52,7 @@ class CreditService
                 return false;
             }
 
-            $freshUser->credits -= $amount;
+            $freshUser->credits = (int) floor($freshUser->credits - $amount);
             $freshUser->save();
 
             // Atualiza o modelo original
@@ -72,7 +72,7 @@ class CreditService
      * Adiciona créditos ao usuário.
      * Para uso futuro com gateway de pagamento.
      */
-    public function add(User $user, int $amount): void
+    public function add(User $user, float $amount): void
     {
         if ($amount <= 0) {
             return;
@@ -85,7 +85,7 @@ class CreditService
                 return;
             }
 
-            $freshUser->credits += $amount;
+            $freshUser->credits = (int) floor($freshUser->credits + $amount);
             $freshUser->save();
 
             // Atualiza o modelo original

@@ -178,8 +178,7 @@ class CreditController extends Controller
         // Usar o valor_total_consulta do banco de dados (mais atualizado)
         $valorTotalConsulta = (float) $relatorio->valor_total_consulta;
         
-        // Arredonda para cima para garantir que tenha créditos suficientes
-        $valorCreditos = (int) ceil($valorTotalConsulta);
+        $valorCreditos = $valorTotalConsulta;
         $saldoAtual = $this->creditService->getBalance($user);
 
         Log::info('Tentativa de confirmação de créditos', [

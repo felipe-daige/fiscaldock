@@ -134,13 +134,13 @@
                                 <div class="space-y-2" role="radiogroup" aria-labelledby="raf-modalidade-label">
                                     <div class="flex items-start gap-3">
                                         <input 
-                                            id="modalidade-regime" 
+                                            id="modalidade-gratuito" 
                                             name="modalidade" 
                                             type="radio" 
-                                            value="regime"
+                                            value="gratuito"
                                             class="mt-1 h-4 w-4 border-gray-300 text-primary-600 focus:ring-primary-500"
                                         >
-                                        <label for="modalidade-regime" class="flex-1">
+                                        <label for="modalidade-gratuito" class="flex-1">
                                             <span class="block text-sm font-semibold text-gray-900">Gratuita — Regime Tributário</span>
                                             <span class="block text-xs text-gray-600">Consulta apenas o regime tributário (Simples, Presumido ou Real).</span>
                                         </label>
@@ -1152,9 +1152,8 @@
             console.error('Erro ao buscar saldo de créditos:', e);
         }
 
-        // Arredondar para cima o valor total
-        const valorArredondado = Math.ceil(valorTotalConsulta);
-        const hasEnough = userBalance >= valorArredondado;
+        // Usar o valor total diretamente (com decimais)
+        const hasEnough = userBalance >= valorTotalConsulta;
 
         // Atualizar UI do card
         if (creditsCnpjCount) {
@@ -1170,7 +1169,7 @@
         if (creditsTotal) {
             // Garante que valorTotalConsulta seja um número válido
             const creditValue = (valorTotalConsulta !== null && valorTotalConsulta !== undefined && !isNaN(valorTotalConsulta))
-                ? Math.ceil(valorTotalConsulta).toString()
+                ? valorTotalConsulta.toFixed(2)
                 : '--';
             creditsTotal.textContent = creditValue;
         } else {
@@ -1904,7 +1903,28 @@
                     setLoading(false);
                     // Não chama stopTimer() aqui porque o timer deve continuar até a confirmação
                     return; // Não continua o fluxo normal, a seção de confirmação vai gerenciar
-                } else {
+                }
+                
+                // Se for resposta assíncrona (modalidade gratuita - sem confirmação de créditos)
+                // Isso acontece quando o webhook retorna apenas {"message": "Workflow was started"}
+                if (data.success && data.async === true) {
+                    // Armazenar relatorio_id se disponível
+                    if (data.relatorio_id || data.id) {
+                        currentRelatorioId = data.relatorio_id || data.id;
+                    }
+                    
+                    resetDownload();
+                    showAlert('info', data.message || 'Processamento iniciado. Aguarde enquanto geramos o relatório...');
+                    
+                    // Conectar SSE para receber notificação quando CSV estiver disponível
+                    connectSSE(currentRelatorioId);
+                    
+                    setLoading(false);
+                    return;
+                }
+                
+                // Se não for needs_confirmation nem async, verificar se tem CSV
+                if (data.success) {
                     // Se tem CSV nos dados, processar normalmente
                     if (data.csv && data.csv.trim() !== '') {
                         const blob = new Blob([data.csv], { type: 'text/csv;charset=utf-8;' });

@@ -141,7 +141,7 @@ class RafController extends Controller
         }
 
         $resumeUrl = $relatorio->resume_url;
-        $valorCreditos = (int) ceil((float) $relatorio->valor_total_consulta);
+        $valorCreditos = (float) $relatorio->valor_total_consulta;
         $saldoAtual = $this->creditService->getBalance($user);
 
         Log::info('Tentativa de confirmação de créditos via histórico', [
