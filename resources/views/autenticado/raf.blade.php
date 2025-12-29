@@ -648,6 +648,25 @@
         window._rafDisconnectSSE = null;
     }
 
+    /**
+     * Reseta o estado para um novo envio de documento.
+     * Deve ser chamado no início de cada submit para garantir estado limpo.
+     */
+    const resetState = () => {
+        // Limpar URLs já processadas para permitir novos modais
+        processedResumeUrls.clear();
+        
+        // Limpar dados de confirmação pendente
+        pendingConfirmation = null;
+        isConfirming = false;
+        
+        // Limpar ID do relatório atual
+        currentRelatorioId = null;
+        
+        // Desconectar SSE anterior para iniciar novo ciclo
+        disconnectSSE();
+    };
+
     const formatFileSize = (bytes) => {
         if (!Number.isFinite(bytes)) return '';
         const k = 1024;
@@ -1167,9 +1186,10 @@
         }
         
         if (creditsTotal) {
-            // Garante que valorTotalConsulta seja um número válido
-            const creditValue = (valorTotalConsulta !== null && valorTotalConsulta !== undefined && !isNaN(valorTotalConsulta))
-                ? valorTotalConsulta.toFixed(2)
+            // Garante que valorTotalConsulta seja um número válido (converter string para número se necessário)
+            const numericValue = parseFloat(valorTotalConsulta);
+            const creditValue = (!isNaN(numericValue) && isFinite(numericValue))
+                ? numericValue.toFixed(2)
                 : '--';
             creditsTotal.textContent = creditValue;
         } else {
@@ -1808,6 +1828,9 @@
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        // Reset estado para novo envio
+        resetState();
 
         const tipo = tipoSelect.value;
         const file = fileInput.files[0];
@@ -1848,6 +1871,7 @@
         formData.append('sped', file);
 
         let hasDownloadSuccess = false;
+        let hasAsyncStarted = false;
 
         try {
             // Obter token CSRF atualizado antes de cada requisição
@@ -1912,6 +1936,9 @@
                     if (data.relatorio_id || data.id) {
                         currentRelatorioId = data.relatorio_id || data.id;
                     }
+                    
+                    // Marcar que o processamento assíncrono foi iniciado
+                    hasAsyncStarted = true;
                     
                     resetDownload();
                     showAlert('info', data.message || 'Processamento iniciado. Aguarde enquanto geramos o relatório...');
@@ -2069,7 +2096,9 @@
             resetDownload();
         } finally {
             setLoading(false);
-            if (!hasDownloadSuccess) {
+            // Não parar o timer se o processamento assíncrono foi iniciado
+            // O timer deve continuar até o CSV estar disponível via SSE
+            if (!hasDownloadSuccess && !hasAsyncStarted) {
                 stopTimer();
             }
         }
