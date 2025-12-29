@@ -188,17 +188,43 @@ class SpedUploadService
                 // JSON válido com apenas "message" = resposta assíncrona (ex: Workflow was started)
                 // Isso acontece na modalidade gratuita quando o n8n inicia o workflow mas não retorna resume_url
                 if (isset($data['message']) && !isset($data['resume_url'])) {
+                    // Buscar o registro mais recente do usuário para obter o relatorio_id
+                    // Na modalidade gratuita, o n8n pode criar o registro depois, então tentamos buscar
+                    // o registro mais recente criado nos últimos minutos
+                    $relatorioId = null;
+                    if ($userId) {
+                        // Buscar o relatório mais recente do usuário criado nos últimos 5 minutos
+                        // Isso cobre o caso onde o n8n já criou o registro
+                        $relatorio = RafConsultaPendente::where('user_id', $userId)
+                            ->where('created_at', '>=', now()->subMinutes(5))
+                            ->orderBy('created_at', 'desc')
+                            ->first();
+                        
+                        if ($relatorio) {
+                            $relatorioId = $relatorio->id;
+                        }
+                    }
+                    
                     Log::info('Webhook SPED retornou resposta assíncrona (sem resume_url)', [
                         'tipo' => $tipo,
                         'modalidade' => $modalidade,
                         'message' => $data['message'],
+                        'relatorio_id' => $relatorioId,
+                        'user_id' => $userId,
                     ]);
                     
-                    return [
+                    $result = [
                         'success' => true,
                         'async' => true,
                         'message' => $data['message'] ?? 'Processamento iniciado. Aguarde o relatório.',
                     ];
+                    
+                    // Adicionar relatorio_id se encontrado
+                    if ($relatorioId) {
+                        $result['relatorio_id'] = $relatorioId;
+                    }
+                    
+                    return $result;
                 }
                 
                 // JSON válido mas sem resume_url - pode ser resposta de erro ou outro formato
@@ -747,11 +773,11 @@ class SpedUploadService
         if ($modalidade === 'completa') {
             return match ($tipo) {
                 'EFD Fiscal' => config('services.webhook.sped_fiscal_completa_url')
-                    ?: 'https://autowebhook.fiscaldock.com.br/webhook/consultar-cnd-e-regime-tributario-sped-fiscal',
+                    ?: 'https://autowebhook.fiscaldock.com.br/webhook/raf-consulta-completa-sped-fiscal',
                 'EFD Contribuições' => config('services.webhook.sped_contribuicoes_completa_url')
-                    ?: 'https://autowebhook.fiscaldock.com.br/webhook/consultar-cnd-e-regime-tributario-sped-contribuicoes',
+                    ?: 'https://autowebhook.fiscaldock.com.br/webhook/raf-consulta-completa-sped-contribuicoes',
                 default => config('services.webhook.sped_contribuicoes_completa_url')
-                    ?: 'https://autowebhook.fiscaldock.com.br/webhook/consultar-cnd-e-regime-tributario-sped-contribuicoes',
+                    ?: 'https://autowebhook.fiscaldock.com.br/webhook/raf-consulta-completa-sped-contribuicoes',
             };
         }
 
@@ -760,9 +786,9 @@ class SpedUploadService
             'EFD Fiscal' => config('services.webhook.sped_fiscal_url')
                 ?: 'https://autowebhook.fiscaldock.com.br/webhook/raf-consulta-gratuita-sped-fiscal',
             'EFD Contribuições' => config('services.webhook.sped_contribuicoes_url')
-                ?: 'https://autowebhook.fiscaldock.com.br/webhook/consultar-regime-tributario-sped-contribuicoes',
+                ?: 'https://autowebhook.fiscaldock.com.br/webhook/raf-consulta-gratuita-sped-contribuicoes',
             default => config('services.webhook.sped_contribuicoes_url')
-                ?: 'https://autowebhook.fiscaldock.com.br/webhook/consultar-regime-tributario-sped-contribuicoes',
+                ?: 'https://autowebhook.fiscaldock.com.br/webhook/raf-consulta-gratuita-sped-contribuicoes',
         };
         
         Log::debug('getWebhookUrl - RAF Gratuito', [

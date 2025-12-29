@@ -133,18 +133,46 @@ class DataReceiverController extends Controller
                 ], Response::HTTP_FORBIDDEN);
             }
             
+            // Atualizar registro com valores do n8n (se enviados)
+            $updated = false;
+            
+            if (isset($receivedData['qtd_participantes'])) {
+                $registro->qtd_participantes = (int) $receivedData['qtd_participantes'];
+                $updated = true;
+            }
+            if (isset($receivedData['valor_total_consulta'])) {
+                $registro->valor_total_consulta = (float) $receivedData['valor_total_consulta'];
+                $updated = true;
+            }
+            if (isset($receivedData['custo_unitario'])) {
+                $registro->custo_unitario = (float) $receivedData['custo_unitario'];
+                $updated = true;
+            }
+            if (isset($receivedData['resume_url'])) {
+                $registro->resume_url = $receivedData['resume_url'];
+                $updated = true;
+            }
+            
             // Marcar que o n8n enviou os dados (orquestrador)
             if (!$registro->n8n_received_at) {
                 $registro->n8n_received_at = now();
+                $updated = true;
+            }
+            
+            // Salvar apenas se houver alterações
+            if ($updated) {
                 $saved = $registro->save();
                 
                 // Recarregar do banco para confirmar que foi salvo
                 $registro->refresh();
                 
-                Log::info('n8n_received_at marcado no registro RAF', [
+                Log::info('Registro RAF atualizado com dados do n8n', [
                     'id' => $id,
                     'user_id' => $userId,
                     'n8n_received_at' => $registro->n8n_received_at,
+                    'qtd_participantes' => $registro->qtd_participantes,
+                    'valor_total_consulta' => $registro->valor_total_consulta,
+                    'custo_unitario' => $registro->custo_unitario,
                     'saved' => $saved,
                 ]);
             }
@@ -172,34 +200,8 @@ class DataReceiverController extends Controller
                 'n8n_received_at' => $registro->n8n_received_at?->toIso8601String(),
             ]);
 
-            // Notificar frontend via cache que dados estão prontos
-            // O frontend está escutando via SSE e verificará este cache
-            $notificationKey = "raf_data_ready:{$userId}:{$id}";
-            $notification = [
-                'id' => $id,
-                'user_id' => $userId,
-                'resume_url' => $formattedData['resume_url'],
-                'valor_total_consulta' => $formattedData['valor_total_consulta'],
-                'qtd_participantes_unicos' => $formattedData['qtd_participantes_unicos'],
-                'custo_unitario' => $formattedData['custo_unitario'],
-                'timestamp' => now()->toIso8601String(),
-            ];
-            
-            Cache::put($notificationKey, $notification, 300); // 5 minutos de TTL
-            
-            // Adicionar ao índice de notificações do usuário
-            $indexKey = "raf_notifications_index:{$userId}";
-            $notificationIds = Cache::get($indexKey, []);
-            if (!in_array($id, $notificationIds)) {
-                $notificationIds[] = $id;
-                Cache::put($indexKey, $notificationIds, 300);
-            }
-            
-            Log::info('Notificação SSE salva no cache', [
-                'user_id' => $userId,
-                'id' => $id,
-                'notification_key' => $notificationKey,
-            ]);
+            // Notificação será verificada diretamente do banco de dados via SSE
+            // O campo n8n_received_at já foi marcado acima, indicando que está pronto
 
             // Preparar resposta
             $responseData = [
@@ -680,46 +682,13 @@ class DataReceiverController extends Controller
                 'id_para_notificacao' => $idParaNotificacao,
             ]);
 
-            // Criar notificação no cache para SSE notificar o frontend
-            // Usar o ID da consulta pendente (que o frontend está aguardando)
-            // Não incluir CSV na notificação (muito grande para cache) - frontend buscará do banco via GET
-            Log::info('Criando notificacao no cache para SSE', [
-                'user_id' => $userId,
-                'id_para_notificacao' => $idParaNotificacao,
-                'resume_url' => $resumeUrl,
-                'filename' => $filename,
-            ]);
+            // Notificação será verificada diretamente do banco de dados via SSE
+            // O SSE verifica RafRelatorioProcessado periodicamente para encontrar CSVs prontos
             
-            $notificationId = uniqid('csv_ready_', true);
-            $notificationKey = "raf_notification:{$userId}:{$notificationId}";
-            $notification = [
-                'type' => 'csv_ready',
-                'user_id' => $userId,
-                'relatorio_id' => $idParaNotificacao, // Usar ID da consulta pendente
-                'resume_url' => $resumeUrl,
-                'csv_filename' => $filename,
-                'timestamp' => now()->toIso8601String(),
-            ];
-            Cache::put($notificationKey, $notification, 300); // 5 minutos
-            Log::info('Notificacao salva no cache', [
-                'notification_key' => $notificationKey,
-                'notification' => $notification,
-            ]);
-
-            // Adicionar ao índice de notificações do usuário
-            $indexKey = "raf_notifications_index:{$userId}";
-            $notificationIds = Cache::get($indexKey, []);
-            $notificationIds[] = $notificationId;
-            Cache::put($indexKey, $notificationIds, 300);
-            Log::info('Notificacao adicionada ao indice', [
-                'index_key' => $indexKey,
-                'total_notifications' => count($notificationIds),
-            ]);
-
             // Retornar apenas sucesso - dados serão enviados via SSE
             return response()->json([
                 'success' => true,
-                'message' => 'CSV recebido e armazenado no cache. Será enviado via SSE ao frontend.',
+                'message' => 'CSV recebido e armazenado. Será enviado via SSE ao frontend.',
             ], Response::HTTP_OK);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -749,8 +718,8 @@ class DataReceiverController extends Controller
     /**
      * Endpoint SSE para notificar o frontend quando dados estiverem prontos.
      * O frontend se conecta a este endpoint e recebe notificações em tempo real.
-     * Verifica o cache E o banco de dados para garantir que notificações sejam entregues
-     * mesmo quando o cache não é compartilhado entre ambientes.
+     * Verifica diretamente o banco de dados (RafConsultaPendente e RafRelatorioProcessado)
+     * para garantir que notificações sejam entregues mesmo em ambientes diferentes.
      */
     public function streamNotifications(Request $request)
     {
@@ -791,109 +760,74 @@ class DataReceiverController extends Controller
             
             $lastNotificationTime = null;
             $notifiedCsvIds = []; // IDs de CSVs já notificados nesta sessão
+            $notifiedDataReadyIds = []; // IDs de data_ready já notificados nesta sessão
             $isFirstDbCheck = true; // Flag para primeira verificação no banco
             $connectionEstablishedAt = now(); // Timestamp de quando a conexão SSE foi estabelecida
             
             while (true) {
                 try {
                     // ========================================
-                    // 1. Verificar cache (compatibilidade)
+                    // 1. Verificar RafConsultaPendente para notificações data_ready
+                    // Busca registros que precisam de confirmação de créditos
+                    // IMPORTANTE: Filtrar apenas registros atualizados APÓS a conexão SSE
                     // ========================================
-                    $indexKey = "raf_notifications_index:{$user->id}";
-                    $notificationIds = Cache::get($indexKey, []);
+                    $pendenteQuery = RafConsultaPendente::where('user_id', $user->id)
+                        ->whereNotNull('n8n_received_at')
+                        ->where('n8n_received_at', '>', $connectionEstablishedAt)
+                        ->whereNotNull('resume_url')
+                        ->whereNotNull('valor_total_consulta')
+                        ->whereNotIn('id', $notifiedDataReadyIds);
                     
-                    foreach ($notificationIds as $notificationId) {
-                        // Verificar notificações de data_ready
-                        $key = "raf_data_ready:{$user->id}:{$notificationId}";
-                        $notification = Cache::get($key);
+                    // Se estamos aguardando um relatorio_id específico, filtrar por ele
+                    if ($requestedRelatorioId) {
+                        $pendenteQuery->where('id', $requestedRelatorioId);
+                    }
+                    
+                    $pendente = $pendenteQuery->orderBy('n8n_received_at', 'desc')->first();
+                    
+                    if ($pendente) {
+                        // Enviar notificação data_ready
+                        // Converter valores para float pois campos decimal vêm como string do banco
+                        $dataReadyNotification = [
+                            'type' => 'data_ready',
+                            'data' => [
+                                'id' => $pendente->id,
+                                'user_id' => $pendente->user_id,
+                                'resume_url' => $pendente->resume_url,
+                                'valor_total_consulta' => (float) $pendente->valor_total_consulta,
+                                'qtd_participantes_unicos' => (int) $pendente->qtd_participantes,
+                                'custo_unitario' => (float) $pendente->custo_unitario,
+                            ],
+                        ];
                         
-                        if ($notification && isset($notification['timestamp'])) {
-                            $notificationTime = \Carbon\Carbon::parse($notification['timestamp']);
-                            
-                            // Se é uma notificação nova (mais recente que a última processada)
-                            if (!$lastNotificationTime || $notificationTime->isAfter($lastNotificationTime)) {
-                                // Enviar evento SSE
-                                $data = json_encode([
-                                    'type' => 'data_ready',
-                                    'data' => $notification,
-                                ]);
-                                echo "data: {$data}\n\n";
-                                
-                                if (ob_get_level() > 0) {
-                                    ob_flush();
-                                }
-                                flush();
-                                
-                                // Remover notificação do cache após enviar
-                                Cache::forget($key);
-                                
-                                // Atualizar índice
-                                $notificationIds = array_filter($notificationIds, fn($id) => $id !== $notificationId);
-                                Cache::put($indexKey, $notificationIds, 300);
-                                
-                                // Atualizar lastNotificationTime
-                                $lastNotificationTime = $notificationTime;
-                                
-                                // Sair do loop após enviar notificação
-                                break;
-                            }
+                        $data = json_encode($dataReadyNotification);
+                        echo "data: {$data}\n\n";
+                        
+                        if (ob_get_level() > 0) {
+                            ob_flush();
+                        }
+                        flush();
+                        
+                        // Marcar como notificado
+                        $notifiedDataReadyIds[] = $pendente->id;
+                        
+                        // Atualizar lastNotificationTime
+                        if ($pendente->n8n_received_at) {
+                            $lastNotificationTime = $pendente->n8n_received_at;
                         }
                         
-                        // Verificar notificações de csv_ready no cache
-                        $csvKey = "raf_notification:{$user->id}:{$notificationId}";
-                        $csvNotification = Cache::get($csvKey);
-                        
-                        if ($csvNotification && isset($csvNotification['type']) && $csvNotification['type'] === 'csv_ready') {
-                            // Se estamos aguardando um relatorio_id específico, validar que corresponde
-                            if ($requestedRelatorioId && isset($csvNotification['relatorio_id'])) {
-                                if ((int) $csvNotification['relatorio_id'] !== $requestedRelatorioId) {
-                                    continue; // Ignorar notificações de outros relatórios
-                                }
-                            }
-                            
-                            $notificationTime = isset($csvNotification['timestamp']) 
-                                ? \Carbon\Carbon::parse($csvNotification['timestamp']) 
-                                : now();
-                            
-                            // Se é uma notificação nova (mais recente que a última processada)
-                            if (!$lastNotificationTime || $notificationTime->isAfter($lastNotificationTime)) {
-                                // Enviar evento SSE
-                                $data = json_encode([
-                                    'type' => 'csv_ready',
-                                    'data' => $csvNotification,
-                                ]);
-                                echo "data: {$data}\n\n";
-                                
-                                if (ob_get_level() > 0) {
-                                    ob_flush();
-                                }
-                                flush();
-                                
-                                // Marcar como notificado
-                                if (isset($csvNotification['relatorio_id'])) {
-                                    $notifiedCsvIds[] = $csvNotification['relatorio_id'];
-                                }
-                                
-                                // Remover notificação do cache após enviar
-                                Cache::forget($csvKey);
-                                
-                                // Atualizar índice
-                                $notificationIds = array_filter($notificationIds, fn($id) => $id !== $notificationId);
-                                Cache::put($indexKey, $notificationIds, 300);
-                                
-                                // Atualizar lastNotificationTime
-                                $lastNotificationTime = $notificationTime;
-                                
-                                // Sair do loop após enviar notificação
-                                break;
-                            }
+                        try {
+                            Log::info('SSE: data_ready enviado do banco de dados', [
+                                'user_id' => $user->id,
+                                'relatorio_id' => $pendente->id,
+                            ]);
+                        } catch (\Exception $e) {
+                            // Ignorar erros de log
                         }
                     }
                     
                     // ========================================
-                    // 2. Verificar banco de dados (fallback)
-                    // Isso garante que notificações sejam entregues mesmo quando
-                    // o cache não é compartilhado entre ambientes (prod vs local)
+                    // 3. Verificar banco de dados para CSV pronto
                     // ========================================
                     $query = RafRelatorioProcessado::where('user_id', $user->id)
                         ->whereNotNull('report_csv_base64')

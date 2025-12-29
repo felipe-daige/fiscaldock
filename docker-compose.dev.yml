@@ -1,6 +1,6 @@
 services:
   app:
-    image: fiscaldock-app:latest
+    image: fiscaldock/fiscaldock:1.0.0
     restart: unless-stopped
     networks:
       - devnet
