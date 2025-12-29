@@ -1,6 +1,6 @@
 services:
   app:
-    image: felipedaige/fiscaldock:1.0.0
+    image: felipedaige/fiscaldock:1.0.1
     restart: unless-stopped
     networks:
       - network_public
@@ -91,7 +91,7 @@ services:
           - node.role == manager
 
   scheduler:
-    image: felipedaige/fiscaldock:1.0.0
+    image: felipedaige/fiscaldock:1.0.1
     restart: unless-stopped
     networks:
       - network_public
@@ -128,7 +128,7 @@ services:
           - node.role == manager
 
   worker:
-    image: felipedaige/fiscaldock:1.0.0
+    image: felipedaige/fiscaldock:1.0.1
     restart: unless-stopped
     networks:
       - network_public
