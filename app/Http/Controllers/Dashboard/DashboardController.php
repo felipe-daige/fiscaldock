@@ -120,6 +120,10 @@ class DashboardController extends Controller
         return $this->renderAutenticado($request, 'raf');
     }
 
+    public function validarXml(Request $request){
+        return $this->renderAutenticado($request, 'validar_xml');
+    }
+
     public function perfil(Request $request){
         $perfilView = self::AUTH_VIEW_PREFIX . 'perfil';
 

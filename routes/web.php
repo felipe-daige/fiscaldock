@@ -60,6 +60,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/raf/confirmar/{id}', [RafController::class, 'confirmar'])->name('raf.confirmar');
         Route::post('/raf/cancelar/{id}', [RafController::class, 'cancelar'])->name('raf.cancelar');
     });
+
+    // Rotas de validação de notas fiscais
+    Route::prefix('notas')->name('notas.')->group(function () {
+        Route::get('/validar', [DashboardController::class, 'validarXml'])->name('validar');
+    });
     
     // Rota SSE para notificações em tempo real
     Route::get('/api/data/notifications/stream', [\App\Http\Controllers\Api\DataReceiverController::class, 'streamNotifications'])
