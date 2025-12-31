@@ -7,7 +7,7 @@ let _sidebarOpenHandler = null;
 let _sidebarCloseHandler = null;
 let _sidebarOverlayHandler = null;
 let _sidebarLinkClickHandler = null;
-let _sidebarCollapsibleHandler = null;
+let _sidebarCollapsibleHandlers = [];
 let _sidebarToggleHandler = null;
 const _dropdownOpenTimers = new WeakMap();
 const _dropdownCloseTimers = new WeakMap();
@@ -237,40 +237,65 @@ function initLayout() {
     // Gerenciar link ativo
     updateActiveLink();
     
-    // Sidebar collapsible (menu Soluções)
-    // Remover handler antigo se existir
-    if (_sidebarCollapsibleHandler) {
-        const oldCollapsible = document.querySelector('.sidebar-collapsible');
-        const oldSummary = oldCollapsible?.querySelector('.sidebar-summary');
-        if (oldSummary && _sidebarCollapsibleHandler) {
-            oldSummary.removeEventListener('click', _sidebarCollapsibleHandler);
+    // Sidebar collapsibles (múltiplos menus)
+    // Remover handlers antigos se existirem
+    _sidebarCollapsibleHandlers.forEach(({ element, handler }) => {
+        if (element && handler) {
+            element.removeEventListener('click', handler);
         }
-        _sidebarCollapsibleHandler = null;
-    }
+    });
+    _sidebarCollapsibleHandlers = [];
     
-    const sidebarCollapsible = document.querySelector('.sidebar-collapsible');
-    const sidebarSummary = sidebarCollapsible?.querySelector('.sidebar-summary');
-    const sidebarSubmenuWrapper = sidebarCollapsible?.querySelector('.sidebar-submenu-wrapper');
-    const sidebarArrow = sidebarCollapsible?.querySelector('.sidebar-arrow');
+    // Obter rota atual para auto-expandir
+    const currentPath = window.location.pathname;
     
-    if (sidebarCollapsible && sidebarSummary && sidebarSubmenuWrapper) {
-        // Inicializar estado expandido
-        // Usar requestAnimationFrame para garantir que o DOM está renderizado
+    // Processar todos os collapsibles
+    const sidebarCollapsibles = document.querySelectorAll('.sidebar-collapsible');
+    
+    sidebarCollapsibles.forEach((sidebarCollapsible) => {
+        const sidebarSummary = sidebarCollapsible.querySelector('.sidebar-summary');
+        const sidebarSubmenuWrapper = sidebarCollapsible.querySelector('.sidebar-submenu-wrapper');
+        const sidebarArrow = sidebarCollapsible.querySelector('.sidebar-arrow');
+        
+        if (!sidebarSummary || !sidebarSubmenuWrapper) return;
+        
+        // Verificar se algum link do submenu corresponde à rota atual
+        const submenuLinks = sidebarSubmenuWrapper.querySelectorAll('[data-link]');
+        let shouldExpand = false;
+        
+        submenuLinks.forEach((link) => {
+            const linkHref = link.getAttribute('href');
+            if (linkHref && currentPath.startsWith(linkHref)) {
+                shouldExpand = true;
+            }
+        });
+        
+        // Inicializar estado expandido/colapsado
         requestAnimationFrame(() => {
-            if (sidebarCollapsible.classList.contains('expanded')) {
+            if (shouldExpand || sidebarCollapsible.classList.contains('expanded')) {
+                sidebarCollapsible.classList.remove('collapsed');
+                sidebarCollapsible.classList.add('expanded');
                 const height = sidebarSubmenuWrapper.scrollHeight;
                 sidebarSubmenuWrapper.style.maxHeight = height + 'px';
                 sidebarSubmenuWrapper.style.opacity = '1';
                 sidebarSubmenuWrapper.style.visibility = 'visible';
+                if (sidebarArrow) {
+                    sidebarArrow.style.transform = 'rotate(180deg)';
+                }
             } else {
+                sidebarCollapsible.classList.remove('expanded');
+                sidebarCollapsible.classList.add('collapsed');
                 sidebarSubmenuWrapper.style.maxHeight = '0';
                 sidebarSubmenuWrapper.style.opacity = '0';
                 sidebarSubmenuWrapper.style.visibility = 'hidden';
+                if (sidebarArrow) {
+                    sidebarArrow.style.transform = 'rotate(0deg)';
+                }
             }
         });
         
         // Handler de clique
-        _sidebarCollapsibleHandler = function(e) {
+        const handler = function(e) {
             // Se o clique foi em um link, permitir navegação normal (SPA processa)
             if (e.target.closest('[data-link]')) {
                 return; // Deixa o SPA processar o clique
@@ -306,8 +331,9 @@ function initLayout() {
             }
         };
         
-        sidebarSummary.addEventListener('click', _sidebarCollapsibleHandler);
-    }
+        sidebarSummary.addEventListener('click', handler);
+        _sidebarCollapsibleHandlers.push({ element: sidebarSummary, handler });
+    });
     
     // Sidebar toggle (desktop) - encolher/expandir
     const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
@@ -419,13 +445,13 @@ function resetLayout() {
         });
         _dropdownHoverHandlers = [];
     }
-    if (_sidebarCollapsibleHandler) {
-        const sidebarCollapsible = document.querySelector('.sidebar-collapsible');
-        const sidebarSummary = sidebarCollapsible?.querySelector('.sidebar-summary');
-        if (sidebarSummary) {
-            sidebarSummary.removeEventListener('click', _sidebarCollapsibleHandler);
-        }
-        _sidebarCollapsibleHandler = null;
+    if (_sidebarCollapsibleHandlers.length) {
+        _sidebarCollapsibleHandlers.forEach(({ element, handler }) => {
+            if (element && handler) {
+                element.removeEventListener('click', handler);
+            }
+        });
+        _sidebarCollapsibleHandlers = [];
     }
     if (_sidebarToggleHandler) {
         const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
@@ -578,12 +604,13 @@ function setActiveLink(path) {
         }
     });
     
-    // Adiciona classes ativas ao link atual
+    // Adiciona classes ativas ao link atual e expande collapsibles se necessário
     allLinks.forEach(link => {
         if (link.hasAttribute('data-no-active')) {
             return;
         }
-        if (link.getAttribute('href') === path) {
+        const linkHref = link.getAttribute('href');
+        if (linkHref && path.startsWith(linkHref)) {
             const isButton = link.classList.contains('btn-accent') || link.classList.contains('btn-primary') || link.classList.contains('btn-secondary');
             
             if (isButton) {
@@ -593,6 +620,26 @@ function setActiveLink(path) {
                 // Para links normais, usar classes de texto ativo sem alterar a largura
                 link.classList.remove('text-gray-600');
                 link.classList.add('text-blue-500');
+            }
+            
+            // Se o link está dentro de um submenu, expandir o collapsible pai
+            const submenuWrapper = link.closest('.sidebar-submenu-wrapper');
+            if (submenuWrapper) {
+                const collapsible = submenuWrapper.closest('.sidebar-collapsible');
+                if (collapsible && collapsible.classList.contains('collapsed')) {
+                    const summary = collapsible.querySelector('.sidebar-summary');
+                    const arrow = collapsible.querySelector('.sidebar-arrow');
+                    
+                    collapsible.classList.remove('collapsed');
+                    collapsible.classList.add('expanded');
+                    const height = submenuWrapper.scrollHeight;
+                    submenuWrapper.style.maxHeight = height + 'px';
+                    submenuWrapper.style.opacity = '1';
+                    submenuWrapper.style.visibility = 'visible';
+                    if (arrow) {
+                        arrow.style.transform = 'rotate(180deg)';
+                    }
+                }
             }
         }
     });
