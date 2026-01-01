@@ -152,6 +152,10 @@ class DashboardController extends Controller
         return $this->renderAutenticado($request, 'consultar_listas_restritivas');
     }
 
+    public function consultarCnpj(Request $request){
+        return $this->renderAutenticado($request, 'consultar_cnpj');
+    }
+
     public function perfil(Request $request){
         $perfilView = self::AUTH_VIEW_PREFIX . 'perfil';
 

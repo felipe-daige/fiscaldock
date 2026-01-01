@@ -838,13 +838,23 @@ class DataReceiverController extends Controller
                     
                     // ========================================
                     // 2. Verificar erros de processamento
-                    // IMPORTANTE: Filtrar apenas erros que ocorreram APÓS a conexão SSE
+                    // Na primeira verificação, buscar erros dos últimos 5 minutos para capturar
+                    // erros registrados antes da conexão SSE ser estabelecida.
+                    // Nas verificações subsequentes, apenas erros após a conexão SSE.
                     // ========================================
                     $errorQuery = RafConsultaPendente::where('user_id', $user->id)
                         ->where('status', 'error')
                         ->whereNotNull('error_at')
-                        ->where('error_at', '>', $connectionEstablishedAt)
                         ->whereNotIn('id', $notifiedErrorIds);
+                    
+                    // Na primeira verificação, buscar erros dos últimos 5 minutos
+                    // para capturar erros registrados antes da conexão SSE
+                    if ($isFirstDbCheck) {
+                        $errorQuery->where('error_at', '>=', now()->subMinutes(5));
+                    } else {
+                        // Nas verificações subsequentes, apenas erros após a conexão SSE
+                        $errorQuery->where('error_at', '>', $connectionEstablishedAt);
+                    }
                     
                     // Se estamos aguardando um relatorio_id específico, filtrar por ele
                     if ($requestedRelatorioId) {
@@ -1470,7 +1480,7 @@ class DataReceiverController extends Controller
                 'tab_id' => 'ID da aba',
             ]);
 
-            // Verificar se resume_url é false (arquivo inválido, não há consulta para buscar)
+            // Verificar se resume_url é false (arquivo inválido, não há consulta para buscar por resume_url)
             $resumeUrl = $validated['resume_url'];
             $isInvalidFile = ($resumeUrl === false || $resumeUrl === 'false');
             
@@ -1478,59 +1488,96 @@ class DataReceiverController extends Controller
                 $resumeUrl = null;
             }
 
-            // Buscar a consulta pendente (apenas se não for arquivo inválido)
+            // Buscar a consulta pendente
             $consulta = null;
+            $userIdToSearch = $receivedData['user_id'] ?? $validated['user_id'] ?? $user?->id;
+            $tabIdToSearch = $receivedData['tab_id'] ?? $validated['tab_id'] ?? null;
 
-            if (!$isInvalidFile) {
-                // Estratégia 1: Buscar por resume_url se fornecido e válido
-                if (!empty($resumeUrl) && is_string($resumeUrl)) {
-                    $consulta = RafConsultaPendente::where('resume_url', $resumeUrl)->first();
-                }
+            // Estratégia 1: Buscar por resume_url se fornecido e válido (apenas se não for arquivo inválido)
+            if (!$isInvalidFile && !empty($resumeUrl) && is_string($resumeUrl)) {
+                $consulta = RafConsultaPendente::where('resume_url', $resumeUrl)->first();
+            }
 
-                // Estratégia 2: Se não encontrou e temos id/user_id, buscar por eles
-                if (!$consulta && isset($validated['id']) && isset($validated['user_id'])) {
-                    $consulta = RafConsultaPendente::where('id', $validated['id'])
-                        ->where('user_id', $validated['user_id'])
-                        ->first();
-                }
+            // Estratégia 2: Se não encontrou e temos id/user_id, buscar por eles
+            if (!$consulta && isset($validated['id']) && isset($validated['user_id'])) {
+                $consulta = RafConsultaPendente::where('id', $validated['id'])
+                    ->where('user_id', $validated['user_id'])
+                    ->first();
+            }
 
-                // Estratégia 3: Se ainda não encontrou, buscar consulta mais recente
-                if (!$consulta) {
-                    $userIdToSearch = $receivedData['user_id'] ?? $validated['user_id'] ?? $user?->id;
+            // Estratégia 3: Buscar por tab_id + user_id (mais preciso para erros de arquivo inválido)
+            if (!$consulta && $userIdToSearch && $tabIdToSearch) {
+                $consulta = RafConsultaPendente::where('user_id', $userIdToSearch)
+                    ->where('tab_id', $tabIdToSearch)
+                    ->where('status', 'pending')
+                    ->where('created_at', '>=', now()->subMinutes(30))
+                    ->orderBy('created_at', 'desc')
+                    ->first();
                     
-                    if ($userIdToSearch) {
-                        $consulta = RafConsultaPendente::where('user_id', $userIdToSearch)
-                            ->where('created_at', '>=', now()->subMinutes(30))
-                            ->orderBy('created_at', 'desc')
-                            ->first();
-                    }
+                if ($consulta) {
+                    Log::info('Consulta encontrada por tab_id para atualizar com erro', [
+                        'consulta_id' => $consulta->id,
+                        'user_id' => $userIdToSearch,
+                        'tab_id' => $tabIdToSearch,
+                    ]);
                 }
             }
 
-            // Se não encontrou consulta (ou é arquivo inválido), criar registro de erro para notificar via SSE
-            if (!$consulta) {
-                $userIdForError = $receivedData['user_id'] ?? $validated['user_id'] ?? $user?->id;
-                $tabIdForError = $receivedData['tab_id'] ?? $validated['tab_id'] ?? null;
+            // Estratégia 4: Se ainda não encontrou, buscar consulta mais recente do usuário
+            if (!$consulta && $userIdToSearch) {
+                $consulta = RafConsultaPendente::where('user_id', $userIdToSearch)
+                    ->where('status', 'pending')
+                    ->where('created_at', '>=', now()->subMinutes(30))
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+            }
+
+            // Se encontrou consulta existente, atualizar com o erro
+            if ($consulta) {
+                $consulta->update([
+                    'status' => 'error',
+                    'error_code' => $validated['error_code'],
+                    'error_message' => $validated['error_message'],
+                    'error_at' => now(),
+                ]);
                 
-                if ($userIdForError) {
+                Log::info('Consulta existente atualizada com erro', [
+                    'consulta_id' => $consulta->id,
+                    'user_id' => $consulta->user_id,
+                    'tab_id' => $consulta->tab_id,
+                    'error_code' => $validated['error_code'],
+                    'is_invalid_file' => $isInvalidFile,
+                ]);
+                
+                // Se é arquivo inválido, retornar sucesso (SSE vai notificar o usuário)
+                if ($isInvalidFile) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Erro registrado na consulta existente. Usuário será notificado via SSE.',
+                        'consulta_id' => $consulta->id,
+                    ], Response::HTTP_OK);
+                }
+            } else {
+                // Não encontrou consulta, criar nova apenas como fallback
+                if ($userIdToSearch) {
                     $consulta = RafConsultaPendente::create([
-                        'user_id' => $userIdForError,
-                        'tab_id' => $tabIdForError,
+                        'user_id' => $userIdToSearch,
+                        'tab_id' => $tabIdToSearch,
                         'status' => 'error',
                         'error_code' => $validated['error_code'],
                         'error_message' => $validated['error_message'],
                         'error_at' => now(),
                     ]);
                     
-                    Log::info('Registro de erro criado para notificar usuário', [
+                    Log::info('Registro de erro criado (fallback - consulta não encontrada)', [
                         'consulta_id' => $consulta->id,
-                        'user_id' => $userIdForError,
-                        'tab_id' => $tabIdForError,
+                        'user_id' => $userIdToSearch,
+                        'tab_id' => $tabIdToSearch,
                         'error_code' => $validated['error_code'],
                         'is_invalid_file' => $isInvalidFile,
                     ]);
                     
-                    // Se é arquivo inválido, retornar sucesso imediatamente (SSE vai notificar o usuário)
+                    // Se é arquivo inválido, retornar sucesso (SSE vai notificar o usuário)
                     if ($isInvalidFile) {
                         return response()->json([
                             'success' => true,
