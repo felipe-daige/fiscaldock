@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         '/app/solucoes/conciliacao-bancaria': 'initConciliacaoBancaria',
         '/app/solucoes/gestao-cnds': 'initGestaoCnds',
         '/app/solucoes/inteligencia-tributaria': 'initInteligenciaTributaria',
-        '/app/solucoes/raf': 'initRaf',
+        '/app/raf': 'initRaf',
         '/app/perfil': 'initPerfil',
         '/dashboard': 'initDashboard',
         '/sobre': 'initSobre',

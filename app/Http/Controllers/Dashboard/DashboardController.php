@@ -120,8 +120,39 @@ class DashboardController extends Controller
         return $this->renderAutenticado($request, 'raf');
     }
 
+    public function spedAnaliseRisco(Request $request){
+        $viewName = 'sped.analise_risco';
+
+        if(!view()->exists($viewName)){
+            abort(404);
+        }
+
+        if(!Auth::check()){
+            if($this->isAjaxRequest($request)){
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Você não está logado',
+                    'redirect' => '/login'
+                ]);
+            }
+            return redirect('/login');
+        }
+
+        if($this->isAjaxRequest($request)){
+            return view($viewName);
+        }
+        
+        return view(self::AUTH_LAYOUT_VIEW, [
+            'initialView' => $viewName
+        ]);
+    }
+
     public function validarXml(Request $request){
         return $this->renderAutenticado($request, 'validar_xml');
+    }
+
+    public function xmlAnaliseRisco(Request $request){
+        return $this->renderAutenticado($request, 'xml_analise_risco');
     }
 
     public function perfil(Request $request){

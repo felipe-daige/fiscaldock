@@ -9,7 +9,7 @@
                     <p class="mt-1 text-sm text-gray-600">Visualize e gerencie seus relatórios RAF que aguardam confirmação de pagamento.</p>
                 </div>
                 <a 
-                    href="/app/solucoes/raf" 
+                    href="/app/raf" 
                     class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
                     data-link
                 >
@@ -141,7 +141,7 @@
                 <p class="mt-2 text-sm text-gray-600">Você não possui relatórios aguardando confirmação de pagamento.</p>
                 <div class="mt-6">
                     <a 
-                        href="/app/solucoes/raf" 
+                        href="/app/raf" 
                         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700"
                         data-link
                     >
@@ -372,7 +372,7 @@
             const relatorioId = btn.dataset.relatorioId;
             
             try {
-                const response = await fetch(`/app/solucoes/raf/detalhes/${relatorioId}`, {
+                const response = await fetch(`/app/raf/detalhes/${relatorioId}`, {
                     method: 'GET',
                     headers: {
                         'X-CSRF-TOKEN': csrf,
@@ -455,7 +455,7 @@
             confirmarSpinner.classList.remove('hidden');
 
             try {
-                const response = await fetch(`/app/solucoes/raf/confirmar/${relatorioId}`, {
+                const response = await fetch(`/app/raf/confirmar/${relatorioId}`, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': csrf,
@@ -574,7 +574,7 @@
 
             // Tentar cancelar no servidor em background (não bloqueia a remoção do card)
             try {
-                const response = await fetch(`/app/solucoes/raf/cancelar/${relatorioId}`, {
+                const response = await fetch(`/app/raf/cancelar/${relatorioId}`, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': csrf,

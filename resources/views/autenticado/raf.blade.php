@@ -9,7 +9,7 @@
                     <p class="mt-1 text-sm text-gray-600">Analise seus fornecedores a partir do SPED e obtenha um relatório completo de regime tributário e situação fiscal.</p>
                 </div>
                 <a 
-                    href="/app/solucoes/raf/historico" 
+                    href="/app/raf/historico" 
                     class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
                     data-link
                     id="raf-historico-link"
@@ -1877,7 +1877,7 @@
             // Obter token CSRF atualizado antes de cada requisição
             const currentCsrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrf || '';
             
-            const response = await fetch('/app/solucoes/raf/upload', {
+            const response = await fetch('/app/raf/upload', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': currentCsrf
@@ -2147,7 +2147,7 @@
         if (!badge) return;
 
         try {
-            const response = await fetch('/app/solucoes/raf/historico', {
+            const response = await fetch('/app/raf/historico', {
                 method: 'GET',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',

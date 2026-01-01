@@ -51,20 +51,26 @@ Route::middleware('auth')->group(function () {
         Route::get('/conciliacao-bancaria', [DashboardController::class, 'conciliacaoBancaria'])->name('conciliacao-bancaria');
         Route::get('/gestao-cnds', [DashboardController::class, 'gestaoCnds'])->name('gestao-cnds');
         Route::get('/inteligencia-tributaria', [DashboardController::class, 'inteligenciaTributaria'])->name('inteligencia-tributaria');
-        Route::get('/raf', [DashboardController::class, 'raf'])->name('raf');
-        Route::post('/raf/upload', [DashboardController::class, 'uploadSped'])->name('raf.upload');
-        
-        // Rotas de histórico de relatórios RAF
-        Route::get('/raf/historico', [RafController::class, 'historico'])->name('raf.historico');
-        Route::get('/raf/detalhes/{id}', [RafController::class, 'detalhes'])->name('raf.detalhes');
-        Route::post('/raf/confirmar/{id}', [RafController::class, 'confirmar'])->name('raf.confirmar');
-        Route::post('/raf/cancelar/{id}', [RafController::class, 'cancelar'])->name('raf.cancelar');
     });
 
-    // Rotas de validação de notas fiscais
-    Route::prefix('notas')->name('notas.')->group(function () {
-        Route::get('/validar', [DashboardController::class, 'validarXml'])->name('validar');
-    });
+    // Rotas RAF (movidas de app/solucoes para app/raf)
+    Route::get('/app/raf', [DashboardController::class, 'raf'])->name('app.raf');
+    Route::post('/app/raf/upload', [DashboardController::class, 'uploadSped'])->name('app.raf.upload');
+    
+    // Rotas de histórico de relatórios RAF
+    Route::get('/app/raf/historico', [RafController::class, 'historico'])->name('app.raf.historico');
+    Route::get('/app/raf/detalhes/{id}', [RafController::class, 'detalhes'])->name('app.raf.detalhes');
+    Route::post('/app/raf/confirmar/{id}', [RafController::class, 'confirmar'])->name('app.raf.confirmar');
+    Route::post('/app/raf/cancelar/{id}', [RafController::class, 'cancelar'])->name('app.raf.cancelar');
+
+    // Rota de Análise de Risco SPED
+    Route::get('/app/sped-analise-risco', [DashboardController::class, 'spedAnaliseRisco'])->name('app.sped.analise.risco');
+
+    // Rota de validação de XML
+    Route::get('/app/validar_xml', [DashboardController::class, 'validarXml'])->name('app.validar_xml');
+    
+    // Rota de Análise de Risco XMLs
+    Route::get('/app/xml_analise_risco', [DashboardController::class, 'xmlAnaliseRisco'])->name('app.xml.analise.risco');
     
     // Rota SSE para notificações em tempo real
     Route::get('/api/data/notifications/stream', [\App\Http\Controllers\Api\DataReceiverController::class, 'streamNotifications'])
