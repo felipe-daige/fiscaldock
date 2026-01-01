@@ -2052,6 +2052,7 @@
     // Event listeners para radio buttons do tipo de SPED
     tipoRadios.forEach(radio => {
         radio.addEventListener('change', () => {
+            showAlert('info', ''); // Limpar alerta ao mudar opção
             updateEnablement();
             updateTipoSpedLabels();
         });
@@ -2060,11 +2061,13 @@
     // Event listeners para radio buttons do tipo de consulta
     modalidadeRadios.forEach(radio => {
         radio.addEventListener('change', () => {
+            showAlert('info', ''); // Limpar alerta ao mudar opção
             updateEnablement();
             updateTipoConsultaLabels();
         });
     });
     fileInput.addEventListener('change', () => {
+        showAlert('info', ''); // Limpar alerta sempre ao tentar mudar arquivo
         const file = fileInput.files?.[0];
         
         // Validar se o arquivo é .txt
@@ -2084,9 +2087,6 @@
         
         updateFileUi();
         updateEnablement();
-        if (fileInput.files?.length) {
-            showAlert('info', '');
-        }
     });
 
     const openFilePicker = () => {
