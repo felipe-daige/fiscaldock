@@ -1333,6 +1333,13 @@
             infoCreditsConfirmText.textContent = hasEnough ? 'Confirmar e processar' : 'Créditos insuficientes';
         }
         
+        // Atualizar card de informações com os valores recebidos
+        updateInfoCard({
+            qtd_participantes_unicos: qtdParticipantesUnicos,
+            valor_total_consulta: valorTotalConsulta,
+            custo_unitario: custoUnitario
+        }, true); // needsConfirmation = true
+
         // Mostrar botão de confirmação no card de informações
         if (infoConfirmCreditsWrap) {
             infoConfirmCreditsWrap.classList.remove('hidden');
