@@ -842,19 +842,13 @@ class DataReceiverController extends Controller
                     // erros registrados antes da conexão SSE ser estabelecida.
                     // Nas verificações subsequentes, apenas erros após a conexão SSE.
                     // ========================================
+                    // IMPORTANTE: Só buscar erros que ocorreram APÓS a conexão SSE
+                    // Isso evita mostrar erros antigos quando o usuário envia um novo arquivo
                     $errorQuery = RafConsultaPendente::where('user_id', $user->id)
                         ->where('status', 'error')
                         ->whereNotNull('error_at')
-                        ->whereNotIn('id', $notifiedErrorIds);
-                    
-                    // Na primeira verificação, buscar erros dos últimos 5 minutos
-                    // para capturar erros registrados antes da conexão SSE
-                    if ($isFirstDbCheck) {
-                        $errorQuery->where('error_at', '>=', now()->subMinutes(5));
-                    } else {
-                        // Nas verificações subsequentes, apenas erros após a conexão SSE
-                        $errorQuery->where('error_at', '>', $connectionEstablishedAt);
-                    }
+                        ->whereNotIn('id', $notifiedErrorIds)
+                        ->where('error_at', '>', $connectionEstablishedAt); // Sempre filtrar por tempo
                     
                     // Se estamos aguardando um relatorio_id específico, filtrar por ele
                     if ($requestedRelatorioId) {
