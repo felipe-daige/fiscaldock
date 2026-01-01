@@ -96,15 +96,15 @@
                             <button type="button" class="tab-btn flex-1 bg-white border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 hover:border-gray-300 text-gray-600 transition-colors flex flex-col items-center justify-center text-center relative" data-tab="rapida">
                                 <div class="text-3xl mb-2">🔍</div>
                                 <span class="font-semibold text-sm mb-1">Rápida</span>
-                                <span class="text-xs text-gray-500" data-price-rapida>Grátis</span>
+                                <span class="text-xs text-gray-500" data-price-rapida>0 créditos</span>
                             </button>
 
                             {{-- Card Básico --}}
                             <button type="button" class="tab-btn flex-1 bg-white border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 hover:border-gray-300 text-gray-600 transition-colors flex flex-col items-center justify-center text-center relative" data-tab="basico">
                                 <div class="text-3xl mb-2">📋</div>
                                 <span class="font-semibold text-sm mb-1">Básico</span>
-                                <span class="text-xs text-gray-500" data-price-basico-cnpj>R$ 14,90</span>
-                                <span class="text-xs text-gray-500 hidden" data-price-basico-cpf>R$ 9,90</span>
+                                <span class="text-xs text-gray-500" data-price-basico-cnpj>15 créditos</span>
+                                <span class="text-xs text-gray-500 hidden" data-price-basico-cpf>10 créditos</span>
                             </button>
 
                             {{-- Card Completo --}}
@@ -112,16 +112,16 @@
                                 <span class="absolute -top-2 -right-2 bg-white text-yellow-600 text-xs px-2 py-0.5 rounded-full font-semibold border-2 border-yellow-500 shadow-sm">Favorito</span>
                                 <div class="text-3xl mb-2">📊</div>
                                 <span class="font-semibold text-sm mb-1">Completo</span>
-                                <span class="text-xs text-blue-600" data-price-completo-cnpj>R$ 29,90</span>
-                                <span class="text-xs text-blue-600 hidden" data-price-completo-cpf>R$ 19,90</span>
+                                <span class="text-xs text-blue-600" data-price-completo-cnpj>30 créditos</span>
+                                <span class="text-xs text-blue-600 hidden" data-price-completo-cpf>20 créditos</span>
                             </button>
 
                             {{-- Card Monitor --}}
                             <button type="button" class="tab-btn flex-1 bg-white border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 hover:border-gray-300 text-gray-600 transition-colors flex flex-col items-center justify-center text-center relative" data-tab="monitor">
                                 <div class="text-3xl mb-2">🔔</div>
                                 <span class="font-semibold text-sm mb-1">Monitor</span>
-                                <span class="text-xs text-gray-500" data-price-monitor-cnpj>R$ 49,90/mês</span>
-                                <span class="text-xs text-gray-500 hidden" data-price-monitor-cpf>R$ 29,90/mês</span>
+                                <span class="text-xs text-gray-500" data-price-monitor-cnpj>50 créditos/mês</span>
+                                <span class="text-xs text-gray-500 hidden" data-price-monitor-cpf>30 créditos/mês</span>
                             </button>
                         </div>
                     </div>
@@ -147,6 +147,12 @@
                                     </svg>
                                     <span class="text-gray-800 text-base">Quadro Societário (QSA)</span>
                                 </div>
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <span class="text-gray-800 text-base">Monitoramento mensal automático</span>
+                                </div>
                             </div>
                             <div id="content-rapida-cpf" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 hidden">
                                 <div class="flex items-start">
@@ -160,6 +166,12 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
                                     <span class="text-gray-800 text-base">Nome completo</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <span class="text-gray-800 text-base">Monitoramento mensal automático</span>
                                 </div>
                             </div>
                         </div>
@@ -219,6 +231,12 @@
                                     </svg>
                                     <span class="text-gray-800 text-base">Salvo no histórico</span>
                                 </div>
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <span class="text-gray-800 text-base">Monitoramento mensal automático</span>
+                                </div>
                             </div>
                             <div id="content-basico-cpf" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 hidden">
                                 <div class="flex items-start">
@@ -262,6 +280,12 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
                                     <span class="text-gray-800 text-base">Salvo no histórico</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <span class="text-gray-800 text-base">Monitoramento mensal automático</span>
                                 </div>
                             </div>
                         </div>
@@ -327,6 +351,12 @@
                                     </svg>
                                     <span class="text-gray-800 text-base">Recomendações automáticas</span>
                                 </div>
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <span class="text-gray-800 text-base">Monitoramento mensal automático</span>
+                                </div>
                             </div>
                             <div id="content-completo-cpf" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 hidden">
                                 <div class="flex items-start">
@@ -365,6 +395,12 @@
                                     </svg>
                                     <span class="text-gray-800 text-base">Recomendações automáticas</span>
                                 </div>
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <span class="text-gray-800 text-base">Monitoramento mensal automático</span>
+                                </div>
                             </div>
                         </div>
 
@@ -385,7 +421,7 @@
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-800 text-base">Reconsulta automática mensal</span>
+                                    <span class="text-gray-800 text-base">Reconsulta automática semanal (mais frequente)</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
