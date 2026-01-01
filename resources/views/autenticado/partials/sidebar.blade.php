@@ -50,10 +50,10 @@
                 </div>
 
                 <div class="sidebar-submenu-wrapper mt-1 ml-3 pl-3 border-l border-gray-200 space-y-1">
-                    <a href="/clientes" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
+                    <a href="/app/clientes" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">Todos os Clientes</span>
                     </a>
-                    <a href="/clientes/novo" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
+                    <a href="/app/novo_cliente" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">Novo Cliente</span>
                     </a>
                     <a href="/clientes/monitoramento" data-link class="sidebar-sublink flex items-center justify-between w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
@@ -137,17 +137,8 @@
                 </div>
 
                 <div class="sidebar-submenu-wrapper mt-1 ml-3 pl-3 border-l border-gray-200 space-y-1">
-                    <a href="/sped/importar" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
+                    <a href="/app/sped_importar" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">Importar</span>
-                    </a>
-                    <a href="/sped/analise" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
-                        <span class="sidebar-label font-medium">Análise Fiscal</span>
-                    </a>
-                    <a href="/sped/participantes" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
-                        <span class="sidebar-label font-medium">Participantes</span>
-                    </a>
-                    <a href="/sped/cruzamentos" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
-                        <span class="sidebar-label font-medium">Cruzamentos</span>
                     </a>
                     <a href="/app/raf" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">RAF</span>
@@ -219,14 +210,8 @@
                     <a href="/relatorios/diagnostico" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">Diagnóstico Fiscal</span>
                     </a>
-                    <a href="/relatorios/risco" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
-                        <span class="sidebar-label font-medium">Análise de Risco</span>
-                    </a>
                     <a href="/relatorios/exportar" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">Exportar Dados</span>
-                    </a>
-                    <a href="/app/raf" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
-                        <span class="sidebar-label font-medium">RAF</span>
                     </a>
                 </div>
             </div>

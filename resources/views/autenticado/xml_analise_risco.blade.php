@@ -28,22 +28,22 @@
                         
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de XML:</label>
-                            <div class="grid grid-cols-3 gap-2">
-                                <label class="flex items-start p-3 border-2 border-blue-600 rounded-lg cursor-pointer bg-blue-50">
+                            <div class="flex flex-row gap-3">
+                                <label class="flex-1 flex items-start p-3 border-2 border-blue-600 rounded-lg cursor-pointer bg-blue-50 hover:bg-blue-100 transition-colors">
                                     <input type="radio" name="tipo-xml" value="nfe" checked class="mt-1 mr-2 w-4 h-4 text-blue-600">
                                     <div>
                                         <div class="font-semibold text-gray-800 text-sm">NFe</div>
                                         <div class="text-xs text-gray-600">Nota Fiscal</div>
                                     </div>
                                 </label>
-                                <label class="flex items-start p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-400">
+                                <label class="flex-1 flex items-start p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
                                     <input type="radio" name="tipo-xml" value="nfse" class="mt-1 mr-2 w-4 h-4 text-blue-600">
                                     <div>
                                         <div class="font-semibold text-gray-800 text-sm">NFSe</div>
                                         <div class="text-xs text-gray-600">Serviço</div>
                                     </div>
                                 </label>
-                                <label class="flex items-start p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-400">
+                                <label class="flex-1 flex items-start p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
                                     <input type="radio" name="tipo-xml" value="cte" class="mt-1 mr-2 w-4 h-4 text-blue-600">
                                     <div>
                                         <div class="font-semibold text-gray-800 text-sm">CTe</div>
@@ -131,13 +131,39 @@
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">SELECIONE AS CONSULTAS DESEJADAS</h3>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="consultas-container">
-                            {{-- Grupo 1: CADASTRO BÁSICO --}}
+                            {{-- Grupo 1: VALIDAÇÃO DA NOTA --}}
+                            <div id="card-validacao-nota" class="border border-gray-200 rounded-lg shadow-sm bg-white" data-grupo="validacao-nota">
+                                <div class="flex items-center gap-3 p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                                    <input type="checkbox" class="grupo-checkbox w-4 h-4 text-blue-600 border-gray-300 rounded" data-grupo="validacao-nota">
+                                    <span class="text-lg">🔍</span>
+                                    <h4 class="text-sm font-semibold text-gray-800 flex-1">VALIDAÇÃO DA NOTA</h4>
+                                    <span class="text-xs text-gray-600 grupo-contador" data-grupo="validacao-nota">2 consultas</span>
+                                </div>
+                                <div class="p-3">
+                                    <div class="space-y-2">
+                                        <label class="flex items-center p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer">
+                                            <input type="checkbox" class="consulta-checkbox mr-2 w-4 h-4 text-blue-600" data-grupo="validacao-nota" data-orgao="sefaz" data-consulta="situacao-nfe" data-preco="0.12" checked>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm font-medium text-gray-800">Situação NFe na SEFAZ</div>
+                                            </div>
+                                        </label>
+                                        <label class="flex items-center p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer">
+                                            <input type="checkbox" class="consulta-checkbox mr-2 w-4 h-4 text-blue-600" data-grupo="validacao-nota" data-orgao="sefaz" data-consulta="manifestacao-destinatario" data-preco="0.10">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm font-medium text-gray-800">Manifestação do Destinatário</div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Grupo 2: CADASTRO BÁSICO --}}
                             <div id="card-cadastro-basico" class="border border-gray-200 rounded-lg shadow-sm bg-white" data-grupo="cadastro-basico">
                                 <div class="flex items-center gap-3 p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
                                     <input type="checkbox" class="grupo-checkbox w-4 h-4 text-blue-600 border-gray-300 rounded" data-grupo="cadastro-basico">
                                     <span class="text-lg">📋</span>
                                     <h4 class="text-sm font-semibold text-gray-800 flex-1">CADASTRO BÁSICO</h4>
-                                    <span class="text-xs text-gray-600 grupo-contador" data-grupo="cadastro-basico">4 consultas</span>
+                                    <span class="text-xs text-gray-600 grupo-contador" data-grupo="cadastro-basico">7 consultas</span>
                                 </div>
                                 <div class="p-3">
                                     <div class="space-y-2">
@@ -165,11 +191,29 @@
                                                 <div class="text-sm font-medium text-gray-800">Simples Nacional (Receita Federal)</div>
                                             </div>
                                         </label>
+                                        <label class="flex items-center p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer">
+                                            <input type="checkbox" class="consulta-checkbox mr-2 w-4 h-4 text-blue-600" data-grupo="cadastro-basico" data-orgao="receita" data-consulta="cnae" data-preco="0.10">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm font-medium text-gray-800">CNAE Principal/Secundários (Receita Federal)</div>
+                                            </div>
+                                        </label>
+                                        <label class="flex items-center p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer">
+                                            <input type="checkbox" class="consulta-checkbox mr-2 w-4 h-4 text-blue-600" data-grupo="cadastro-basico" data-orgao="receita" data-consulta="data-abertura" data-preco="0.08">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm font-medium text-gray-800">Data de Abertura (Receita Federal)</div>
+                                            </div>
+                                        </label>
+                                        <label class="flex items-center p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer">
+                                            <input type="checkbox" class="consulta-checkbox mr-2 w-4 h-4 text-blue-600" data-grupo="cadastro-basico" data-orgao="receita" data-consulta="capital-social" data-preco="0.08">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm font-medium text-gray-800">Capital Social (Receita Federal)</div>
+                                            </div>
+                                        </label>
                                     </div>
                                 </div>
                             </div>
 
-                            {{-- Grupo 2: CERTIDÕES NEGATIVAS --}}
+                            {{-- Grupo 3: CERTIDÕES NEGATIVAS --}}
                             <div id="card-certidoes-negativas" class="border border-gray-200 rounded-lg shadow-sm bg-white" data-grupo="certidoes-negativas">
                                 <div class="flex items-center gap-3 p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
                                     <input type="checkbox" class="grupo-checkbox w-4 h-4 text-blue-600 border-gray-300 rounded" data-grupo="certidoes-negativas">
@@ -219,7 +263,7 @@
                                     <input type="checkbox" class="grupo-checkbox w-4 h-4 text-blue-600 border-gray-300 rounded" data-grupo="listas-restritivas">
                                     <span class="text-lg">⚠️</span>
                                     <h4 class="text-sm font-semibold text-gray-800 flex-1">LISTAS RESTRITIVAS</h4>
-                                    <span class="text-xs text-gray-600 grupo-contador" data-grupo="listas-restritivas">4 consultas</span>
+                                    <span class="text-xs text-gray-600 grupo-contador" data-grupo="listas-restritivas">5 consultas</span>
                                 </div>
                                 <div class="p-3">
                                     <div class="space-y-2">
@@ -247,6 +291,12 @@
                                                 <div class="text-sm font-medium text-gray-800">Lista Trabalho Escravo (MTE)</div>
                                             </div>
                                         </label>
+                                        <label class="flex items-center p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer">
+                                            <input type="checkbox" class="consulta-checkbox mr-2 w-4 h-4 text-blue-600" data-grupo="listas-restritivas" data-orgao="cgu" data-consulta="acordo-leniencia" data-preco="0.10">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm font-medium text-gray-800">Acordo de Leniência (CGU)</div>
+                                            </div>
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -257,7 +307,7 @@
                                     <input type="checkbox" class="grupo-checkbox w-4 h-4 text-blue-600 border-gray-300 rounded" data-grupo="restricoes-financeiras">
                                     <span class="text-lg">💰</span>
                                     <h4 class="text-sm font-semibold text-gray-800 flex-1">RESTRIÇÕES FINANCEIRAS</h4>
-                                    <span class="text-xs text-gray-600 grupo-contador" data-grupo="restricoes-financeiras">1 consulta</span>
+                                    <span class="text-xs text-gray-600 grupo-contador" data-grupo="restricoes-financeiras">2 consultas</span>
                                 </div>
                                 <div class="p-3">
                                     <div class="space-y-2">
@@ -265,6 +315,70 @@
                                             <input type="checkbox" class="consulta-checkbox mr-2 w-4 h-4 text-blue-600" data-grupo="restricoes-financeiras" data-orgao="ieptb" data-consulta="protestos" data-preco="0.20">
                                             <div class="flex-1 min-w-0">
                                                 <div class="text-sm font-medium text-gray-800">Protestos (Cartórios/IEPTB)</div>
+                                            </div>
+                                        </label>
+                                        <label class="flex items-center p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer">
+                                            <input type="checkbox" class="consulta-checkbox mr-2 w-4 h-4 text-blue-600" data-grupo="restricoes-financeiras" data-orgao="pgfn" data-consulta="divida-ativa-federal" data-preco="0.15">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm font-medium text-gray-800">Dívida Ativa Federal (PGFN)</div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Grupo 5: PROCESSOS E AÇÕES --}}
+                            <div id="card-processos-acoes" class="border border-gray-200 rounded-lg shadow-sm bg-white" data-grupo="processos-acoes">
+                                <div class="flex items-center gap-3 p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                                    <input type="checkbox" class="grupo-checkbox w-4 h-4 text-blue-600 border-gray-300 rounded" data-grupo="processos-acoes">
+                                    <span class="text-lg">⚖️</span>
+                                    <h4 class="text-sm font-semibold text-gray-800 flex-1">PROCESSOS E AÇÕES</h4>
+                                    <span class="text-xs text-gray-600 grupo-contador" data-grupo="processos-acoes">2 consultas</span>
+                                </div>
+                                <div class="p-3">
+                                    <div class="space-y-2">
+                                        <label class="flex items-center p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer">
+                                            <input type="checkbox" class="consulta-checkbox mr-2 w-4 h-4 text-blue-600" data-grupo="processos-acoes" data-orgao="tcu" data-consulta="processos-tcu" data-preco="0.12">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm font-medium text-gray-800">Processos TCU</div>
+                                            </div>
+                                        </label>
+                                        <label class="flex items-center p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer">
+                                            <input type="checkbox" class="consulta-checkbox mr-2 w-4 h-4 text-blue-600" data-grupo="processos-acoes" data-orgao="tribunais" data-consulta="falencia-recuperacao" data-preco="0.15">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm font-medium text-gray-800">Falência/Recuperação Judicial</div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Grupo 6: VALIDAÇÃO CRUZADA --}}
+                            <div id="card-validacao-cruzada" class="border border-gray-200 rounded-lg shadow-sm bg-white" data-grupo="validacao-cruzada">
+                                <div class="flex items-center gap-3 p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                                    <input type="checkbox" class="grupo-checkbox w-4 h-4 text-blue-600 border-gray-300 rounded" data-grupo="validacao-cruzada">
+                                    <span class="text-lg">🔗</span>
+                                    <h4 class="text-sm font-semibold text-gray-800 flex-1">VALIDAÇÃO CRUZADA</h4>
+                                    <span class="text-xs text-gray-600 grupo-contador" data-grupo="validacao-cruzada">3 consultas</span>
+                                </div>
+                                <div class="p-3">
+                                    <div class="space-y-2">
+                                        <label class="flex items-center p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer">
+                                            <input type="checkbox" class="consulta-checkbox mr-2 w-4 h-4 text-blue-600" data-grupo="validacao-cruzada" data-orgao="interno" data-consulta="validacao-cnpj-nota" data-preco="0.05">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm font-medium text-gray-800">CNPJ Emissor vs CNPJ da Nota</div>
+                                            </div>
+                                        </label>
+                                        <label class="flex items-center p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer">
+                                            <input type="checkbox" class="consulta-checkbox mr-2 w-4 h-4 text-blue-600" data-grupo="validacao-cruzada" data-orgao="interno" data-consulta="validacao-ie-uf" data-preco="0.05">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm font-medium text-gray-800">IE Emissor vs UF da Nota</div>
+                                            </div>
+                                        </label>
+                                        <label class="flex items-center p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer">
+                                            <input type="checkbox" class="consulta-checkbox mr-2 w-4 h-4 text-blue-600" data-grupo="validacao-cruzada" data-orgao="interno" data-consulta="validacao-cfop" data-preco="0.05">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm font-medium text-gray-800">CFOP vs Operação</div>
                                             </div>
                                         </label>
                                     </div>
@@ -654,6 +768,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelector('input[name="tipo-xml"][value="nfe"]').checked = true;
         document.querySelectorAll('.consulta-checkbox').forEach(cb => {
             cb.checked = false;
+        });
+        document.querySelectorAll('.consulta-checkbox[data-consulta="situacao-nfe"]').forEach(cb => {
+            cb.checked = true;
         });
         document.querySelectorAll('.consulta-checkbox[data-consulta="situacao-cnpj"]').forEach(cb => {
             cb.checked = true;

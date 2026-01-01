@@ -120,31 +120,12 @@ class DashboardController extends Controller
         return $this->renderAutenticado($request, 'raf');
     }
 
+    public function spedImportar(Request $request){
+        return $this->renderAutenticado($request, 'sped_importar');
+    }
+
     public function spedAnaliseRisco(Request $request){
-        $viewName = 'sped.analise_risco';
-
-        if(!view()->exists($viewName)){
-            abort(404);
-        }
-
-        if(!Auth::check()){
-            if($this->isAjaxRequest($request)){
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Você não está logado',
-                    'redirect' => '/login'
-                ]);
-            }
-            return redirect('/login');
-        }
-
-        if($this->isAjaxRequest($request)){
-            return view($viewName);
-        }
-        
-        return view(self::AUTH_LAYOUT_VIEW, [
-            'initialView' => $viewName
-        ]);
+        return $this->renderAutenticado($request, 'sped_analise_risco');
     }
 
     public function validarXml(Request $request){
@@ -153,6 +134,14 @@ class DashboardController extends Controller
 
     public function xmlAnaliseRisco(Request $request){
         return $this->renderAutenticado($request, 'xml_analise_risco');
+    }
+
+    public function novoCliente(Request $request){
+        return $this->renderAutenticado($request, 'novo_cliente');
+    }
+
+    public function clientes(Request $request){
+        return $this->renderAutenticado($request, 'clientes');
     }
 
     public function perfil(Request $request){
