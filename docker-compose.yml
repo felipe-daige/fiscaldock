@@ -1,6 +1,6 @@
 services:
   app:
-    image: fiscaldock/fiscaldock:1.0.6
+    image: fiscaldock/fiscaldock:1.0.7
     restart: unless-stopped
     networks:
       - network_public
@@ -91,7 +91,7 @@ services:
           - node.role == manager
 
   scheduler:
-    image: fiscaldock/fiscaldock:1.0.6
+    image: fiscaldock/fiscaldock:1.0.7
     restart: unless-stopped
     networks:
       - network_public
@@ -128,7 +128,7 @@ services:
           - node.role == manager
 
   worker:
-    image: fiscaldock/fiscaldock:1.0.6
+    image: fiscaldock/fiscaldock:1.0.7
     restart: unless-stopped
     networks:
       - network_public
