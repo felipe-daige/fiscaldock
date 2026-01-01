@@ -24,9 +24,9 @@
                 {{-- Seleção do tipo de consulta --}}
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-3">Tipo de Consulta:</label>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-row gap-4">
                         {{-- Card CNPJ --}}
-                        <label id="card-tipo-cnpj" class="flex items-center justify-center p-4 border-2 border-blue-600 rounded-lg cursor-pointer bg-blue-50 hover:bg-blue-100 transition-colors">
+                        <label id="card-tipo-cnpj" class="flex-1 flex items-center justify-center p-4 border-2 border-blue-600 rounded-lg cursor-pointer bg-blue-50 hover:bg-blue-100 transition-colors">
                             <input type="radio" name="tipo-consulta" value="cnpj" checked class="sr-only" id="radio-cnpj">
                             <div class="text-center">
                                 <div class="text-2xl mb-2">🏢</div>
@@ -36,7 +36,7 @@
                         </label>
 
                         {{-- Card CPF --}}
-                        <label id="card-tipo-cpf" class="flex items-center justify-center p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-gray-50 transition-colors">
+                        <label id="card-tipo-cpf" class="flex-1 flex items-center justify-center p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-gray-50 transition-colors">
                             <input type="radio" name="tipo-consulta" value="cpf" class="sr-only" id="radio-cpf">
                             <div class="text-center">
                                 <div class="text-2xl mb-2">👤</div>
@@ -89,302 +89,315 @@
                 <div>
                     <h3 class="text-sm font-semibold text-gray-800 mb-4">Escolha o tipo de relatório:</h3>
                     
-                    {{-- Tabs --}}
-                    <div class="border-b border-gray-200 mb-6">
-                        <div class="flex overflow-x-auto" id="tabs-container">
-                            <button type="button" class="tab-btn flex-shrink-0 px-4 py-4 border-b-2 border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300 transition-colors flex flex-col items-center justify-center min-w-[120px]" data-tab="rapida">
-                                <span class="font-semibold text-sm">Rápida</span>
-                                <span class="text-xs mt-1" data-price-rapida>Grátis</span>
+                    {{-- Tabs como Cards --}}
+                    <div class="mb-6">
+                        <div class="flex flex-row gap-3 md:gap-4" id="tabs-container">
+                            {{-- Card Rápida --}}
+                            <button type="button" class="tab-btn flex-1 bg-white border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 hover:border-gray-300 text-gray-600 transition-colors flex flex-col items-center justify-center text-center relative" data-tab="rapida">
+                                <div class="text-3xl mb-2">🔍</div>
+                                <span class="font-semibold text-sm mb-1">Rápida</span>
+                                <span class="text-xs text-gray-500" data-price-rapida>Grátis</span>
                             </button>
-                            <button type="button" class="tab-btn flex-shrink-0 px-4 py-4 border-b-2 border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300 transition-colors flex flex-col items-center justify-center min-w-[120px]" data-tab="basico">
-                                <span class="font-semibold text-sm">Básico</span>
-                                <span class="text-xs mt-1" data-price-basico-cnpj>R$ 14,90</span>
-                                <span class="text-xs mt-1 hidden" data-price-basico-cpf>R$ 9,90</span>
+
+                            {{-- Card Básico --}}
+                            <button type="button" class="tab-btn flex-1 bg-white border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 hover:border-gray-300 text-gray-600 transition-colors flex flex-col items-center justify-center text-center relative" data-tab="basico">
+                                <div class="text-3xl mb-2">📋</div>
+                                <span class="font-semibold text-sm mb-1">Básico</span>
+                                <span class="text-xs text-gray-500" data-price-basico-cnpj>R$ 14,90</span>
+                                <span class="text-xs text-gray-500 hidden" data-price-basico-cpf>R$ 9,90</span>
                             </button>
-                            <button type="button" class="tab-btn flex-shrink-0 px-4 py-4 border-b-2 border-blue-500 bg-blue-50 text-blue-700 transition-colors flex flex-col items-center justify-center min-w-[120px] relative" data-tab="completo">
-                                <span class="font-semibold text-sm">Completo</span>
-                                <span class="text-xs mt-1" data-price-completo-cnpj>R$ 29,90</span>
-                                <span class="text-xs mt-1 hidden" data-price-completo-cpf>R$ 19,90</span>
-                                <span class="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-2 py-0.5 rounded">Popular</span>
+
+                            {{-- Card Completo --}}
+                            <button type="button" class="tab-btn flex-1 bg-blue-50 border-2 border-blue-500 rounded-lg p-4 shadow-sm text-blue-700 transition-colors flex flex-col items-center justify-center text-center relative" data-tab="completo">
+                                <span class="absolute -top-2 -right-2 bg-white text-yellow-600 text-xs px-2 py-0.5 rounded-full font-semibold border-2 border-yellow-500 shadow-sm">Favorito</span>
+                                <div class="text-3xl mb-2">📊</div>
+                                <span class="font-semibold text-sm mb-1">Completo</span>
+                                <span class="text-xs text-blue-600" data-price-completo-cnpj>R$ 29,90</span>
+                                <span class="text-xs text-blue-600 hidden" data-price-completo-cpf>R$ 19,90</span>
                             </button>
-                            <button type="button" class="tab-btn flex-shrink-0 px-4 py-4 border-b-2 border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300 transition-colors flex flex-col items-center justify-center min-w-[120px]" data-tab="monitor">
-                                <span class="font-semibold text-sm">Monitor</span>
-                                <span class="text-xs mt-1" data-price-monitor-cnpj>R$ 49,90/mês</span>
-                                <span class="text-xs mt-1 hidden" data-price-monitor-cpf>R$ 29,90/mês</span>
+
+                            {{-- Card Monitor --}}
+                            <button type="button" class="tab-btn flex-1 bg-white border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 hover:border-gray-300 text-gray-600 transition-colors flex flex-col items-center justify-center text-center relative" data-tab="monitor">
+                                <div class="text-3xl mb-2">🔔</div>
+                                <span class="font-semibold text-sm mb-1">Monitor</span>
+                                <span class="text-xs text-gray-500" data-price-monitor-cnpj>R$ 49,90/mês</span>
+                                <span class="text-xs text-gray-500 hidden" data-price-monitor-cpf>R$ 29,90/mês</span>
                             </button>
                         </div>
                     </div>
 
                     {{-- Área de Detalhes --}}
-                    <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                    <div class="bg-gray-50 rounded-xl p-6 mb-6 border border-gray-100">
                         {{-- Conteúdo Tab Rápida --}}
                         <div id="content-rapida" class="hidden">
-                            <div class="flex items-center justify-between mb-4">
-                                <h4 class="text-lg font-bold text-gray-900">Consulta Rápida</h4>
+                            <div class="flex items-center mb-4">
+                                <span class="text-2xl mr-2">🔍</span>
+                                <h4 class="text-lg font-bold text-gray-800">Consulta Rápida</h4>
                             </div>
-                            <div id="content-rapida-cnpj" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div id="content-rapida-cnpj" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Situação Cadastral CNPJ</span>
+                                    <span class="text-gray-800 text-base">Situação Cadastral CNPJ</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Quadro Societário (QSA)</span>
-                                </div>
-                            </div>
-                            <div id="content-rapida-cpf" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-600 text-sm">Situação CPF</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-600 text-sm">Nome completo</span>
+                                    <span class="text-gray-800 text-base">Quadro Societário (QSA)</span>
                                 </div>
                             </div>
-                            <p class="text-xs text-red-600 font-semibold mt-4">Sem relatório • Sem histórico</p>
+                            <div id="content-rapida-cpf" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 hidden">
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <span class="text-gray-800 text-base">Situação CPF</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <span class="text-gray-800 text-base">Nome completo</span>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Conteúdo Tab Básico --}}
                         <div id="content-basico" class="hidden">
-                            <div class="flex items-center justify-between mb-4">
-                                <h4 class="text-lg font-bold text-gray-900">Relatório Básico</h4>
+                            <div class="flex items-center mb-4">
+                                <span class="text-2xl mr-2">📋</span>
+                                <h4 class="text-lg font-bold text-gray-800">Relatório Básico</h4>
                             </div>
-                            <div id="content-basico-cnpj" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div id="content-basico-cnpj" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Situação Cadastral</span>
+                                    <span class="text-gray-800 text-base">Situação Cadastral</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Quadro Societário</span>
+                                    <span class="text-gray-800 text-base">Quadro Societário</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Simples Nacional</span>
+                                    <span class="text-gray-800 text-base">Simples Nacional</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Inscrição Estadual</span>
+                                    <span class="text-gray-800 text-base">Inscrição Estadual</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Listas Restritivas (CEIS, CNEP, Trabalho Escravo)</span>
+                                    <span class="text-gray-800 text-base">Listas Restritivas (CEIS, CNEP, Trabalho Escravo)</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Score de Risco (0-100)</span>
+                                    <span class="text-gray-800 text-base">Score de Risco (0-100)</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Relatório PDF</span>
+                                    <span class="text-gray-800 text-base">Relatório PDF</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Salvo no histórico</span>
+                                    <span class="text-gray-800 text-base">Salvo no histórico</span>
                                 </div>
                             </div>
-                            <div id="content-basico-cpf" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
+                            <div id="content-basico-cpf" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 hidden">
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Situação CPF</span>
+                                    <span class="text-gray-800 text-base">Situação CPF</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Dados cadastrais</span>
+                                    <span class="text-gray-800 text-base">Dados cadastrais</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Participação em empresas (QSA reverso)</span>
+                                    <span class="text-gray-800 text-base">Participação em empresas (QSA reverso)</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Verificação de óbito</span>
+                                    <span class="text-gray-800 text-base">Verificação de óbito</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Score de Risco (0-100)</span>
+                                    <span class="text-gray-800 text-base">Score de Risco (0-100)</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Relatório PDF</span>
+                                    <span class="text-gray-800 text-base">Relatório PDF</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Salvo no histórico</span>
+                                    <span class="text-gray-800 text-base">Salvo no histórico</span>
                                 </div>
                             </div>
                         </div>
 
                         {{-- Conteúdo Tab Completo --}}
                         <div id="content-completo">
-                            <div class="flex items-center justify-between mb-4">
-                                <h4 class="text-lg font-bold text-gray-900">Relatório Completo</h4>
-                                <span class="bg-blue-500 text-white text-xs px-2 py-1 rounded">Popular</span>
+                            <div class="flex items-center mb-4">
+                                <span class="text-2xl mr-2">📊</span>
+                                <h4 class="text-lg font-bold text-gray-800">Relatório Completo</h4>
                             </div>
-                            <div id="content-completo-cnpj" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div id="content-completo-cnpj" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Tudo do Básico +</span>
+                                    <span class="text-gray-800 text-base">Tudo do Básico +</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">CND Federal</span>
+                                    <span class="text-gray-800 text-base">CND Federal</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">CND Estadual</span>
+                                    <span class="text-gray-800 text-base">CND Estadual</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">CND Municipal</span>
+                                    <span class="text-gray-800 text-base">CND Municipal</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">CNDT (Trabalhista)</span>
+                                    <span class="text-gray-800 text-base">CNDT (Trabalhista)</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">CRF (FGTS)</span>
+                                    <span class="text-gray-800 text-base">CRF (FGTS)</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Protestos em Cartórios</span>
+                                    <span class="text-gray-800 text-base">Protestos em Cartórios</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Análise detalhada</span>
+                                    <span class="text-gray-800 text-base">Análise detalhada</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Recomendações automáticas</span>
+                                    <span class="text-gray-800 text-base">Recomendações automáticas</span>
                                 </div>
                             </div>
-                            <div id="content-completo-cpf" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
+                            <div id="content-completo-cpf" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 hidden">
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Tudo do Básico +</span>
+                                    <span class="text-gray-800 text-base">Tudo do Básico +</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Protestos em Cartórios</span>
+                                    <span class="text-gray-800 text-base">Protestos em Cartórios</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Processos judiciais</span>
+                                    <span class="text-gray-800 text-base">Processos judiciais</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Benefícios INSS</span>
+                                    <span class="text-gray-800 text-base">Benefícios INSS</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Análise detalhada</span>
+                                    <span class="text-gray-800 text-base">Análise detalhada</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Recomendações automáticas</span>
+                                    <span class="text-gray-800 text-base">Recomendações automáticas</span>
                                 </div>
                             </div>
                         </div>
 
                         {{-- Conteúdo Tab Monitoramento --}}
                         <div id="content-monitor" class="hidden">
-                            <div class="flex items-center justify-between mb-4">
-                                <h4 class="text-lg font-bold text-gray-900">Monitoramento</h4>
+                            <div class="flex items-center mb-4">
+                                <span class="text-2xl mr-2">🔔</span>
+                                <h4 class="text-lg font-bold text-gray-800">Monitoramento</h4>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Tudo do Completo +</span>
+                                    <span class="text-gray-800 text-base">Tudo do Completo +</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Reconsulta automática mensal</span>
+                                    <span class="text-gray-800 text-base">Reconsulta automática mensal</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Alerta por e-mail se situação mudar</span>
+                                    <span class="text-gray-800 text-base">Alerta por e-mail se situação mudar</span>
                                 </div>
                                 <div class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span class="text-gray-600 text-sm">Histórico de alterações</span>
+                                    <span class="text-gray-800 text-base">Histórico de alterações</span>
                                 </div>
                             </div>
                         </div>
@@ -444,17 +457,31 @@
     function switchTab(tabName) {
         currentTab = tabName;
         
-        // Remover active de todas as tabs
+        // Remover active de todas as tabs (estado inativo)
         document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
-            btn.classList.add('border-transparent', 'text-gray-600');
+            btn.classList.remove('bg-blue-50', 'border-2', 'border-blue-500', 'shadow-sm', 'text-blue-700');
+            btn.classList.add('bg-white', 'border', 'border-gray-200', 'text-gray-600');
+            
+            // Atualizar cores dos preços para inativo
+            const priceElements = btn.querySelectorAll('[data-price-basico-cnpj], [data-price-basico-cpf], [data-price-completo-cnpj], [data-price-completo-cpf], [data-price-monitor-cnpj], [data-price-monitor-cpf], [data-price-rapida]');
+            priceElements.forEach(el => {
+                el.classList.remove('text-blue-600');
+                el.classList.add('text-gray-500');
+            });
         });
         
-        // Adicionar active na tab clicada
+        // Adicionar active na tab clicada (estado ativo)
         const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
         if (activeTab) {
-            activeTab.classList.remove('border-transparent', 'text-gray-600');
-            activeTab.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+            activeTab.classList.remove('bg-white', 'border', 'border-gray-200', 'text-gray-600');
+            activeTab.classList.add('bg-blue-50', 'border-2', 'border-blue-500', 'shadow-sm', 'text-blue-700');
+            
+            // Atualizar cores dos preços para ativo
+            const priceElements = activeTab.querySelectorAll('[data-price-basico-cnpj], [data-price-basico-cpf], [data-price-completo-cnpj], [data-price-completo-cpf], [data-price-monitor-cnpj], [data-price-monitor-cpf], [data-price-rapida]');
+            priceElements.forEach(el => {
+                el.classList.remove('text-gray-500');
+                el.classList.add('text-blue-600');
+            });
         }
         
         // Esconder todos os conteúdos
@@ -529,7 +556,7 @@
             button.textContent = 'Consultar';
             button.className = 'w-full px-6 py-3 bg-gray-600 text-white rounded-lg text-sm font-semibold hover:bg-gray-700 transition-colors';
         } else if (currentTab === 'monitor') {
-            button.textContent = 'Assinar';
+            button.textContent = 'Assinar Monitoramento';
             button.className = 'w-full px-6 py-3 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors';
         } else {
             button.textContent = 'Gerar Relatório';

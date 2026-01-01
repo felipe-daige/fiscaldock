@@ -144,6 +144,14 @@ class DashboardController extends Controller
         return $this->renderAutenticado($request, 'clientes');
     }
 
+    public function consultarInscricaoEstadual(Request $request){
+        return $this->renderAutenticado($request, 'consultar_inscricao_estadual');
+    }
+
+    public function consultarListasRestritivas(Request $request){
+        return $this->renderAutenticado($request, 'consultar_listas_restritivas');
+    }
+
     public function perfil(Request $request){
         $perfilView = self::AUTH_VIEW_PREFIX . 'perfil';
 

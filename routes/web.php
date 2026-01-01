@@ -81,6 +81,12 @@ Route::middleware('auth')->group(function () {
     // Rota de Clientes
     Route::get('/app/clientes', [DashboardController::class, 'clientes'])->name('app.clientes');
     
+    // Rota de Consultar Inscrição Estadual
+    Route::get('/app/consultar', [DashboardController::class, 'consultarInscricaoEstadual'])->name('app.consultar');
+    
+    // Rota de Consultar Listas Restritivas
+    Route::get('/app/consultar_listas_restritivas', [DashboardController::class, 'consultarListasRestritivas'])->name('app.consultar.listas.restritivas');
+    
     // Rota SSE para notificações em tempo real
     Route::get('/api/data/notifications/stream', [\App\Http\Controllers\Api\DataReceiverController::class, 'streamNotifications'])
         ->name('api.data.notifications.stream');

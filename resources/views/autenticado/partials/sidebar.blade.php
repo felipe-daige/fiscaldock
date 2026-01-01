@@ -169,19 +169,19 @@
                 </div>
 
                 <div class="sidebar-submenu-wrapper mt-1 ml-3 pl-3 border-l border-gray-200 space-y-1">
+                    <a href="/app/consultar" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
+                        <span class="sidebar-label font-medium">Inscrição Estadual</span>
+                    </a>
                     <a href="/consultas/cnpj" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">CNPJ</span>
                     </a>
                     <a href="/consultas/cpf" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">CPF</span>
                     </a>
-                    <a href="/consultas/ie" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
-                        <span class="sidebar-label font-medium">Inscrição Estadual</span>
-                    </a>
                     <a href="/consultas/simples" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">Simples Nacional</span>
                     </a>
-                    <a href="/consultas/listas" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
+                    <a href="/app/consultar_listas_restritivas" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">Listas Restritivas</span>
                     </a>
                 </div>
