@@ -41,3 +41,8 @@ Route::get('/data/csv/{id}', [DataReceiverController::class, 'getCsv'])
 Route::post('/raf/confirm', [DataReceiverController::class, 'confirmCredits'])
     ->middleware(['web', 'auth'])
     ->name('api.raf.confirm');
+
+// Rota para receber notificações de erro do n8n
+// Aceita autenticação via token API (para n8n) ou sessão
+Route::post('/data/error', [DataReceiverController::class, 'receiveError'])
+    ->name('api.data.error');
