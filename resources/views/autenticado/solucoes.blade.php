@@ -88,7 +88,7 @@
             </a>
 
             {{-- Card: RAF - Auditoria de Fornecedores --}}
-            <a href="/app/solucoes/raf" data-link class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all hover:scale-105 border border-gray-200 group">
+            <a href="/app/raf" data-link class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all hover:scale-105 border border-gray-200 group">
                 <div class="flex flex-col h-full">
                     <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors mb-4">
                         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

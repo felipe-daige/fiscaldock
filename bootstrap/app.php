@@ -27,7 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             '/api/*',
             'api/data/receive',
             '/api/data/receive',
-            '/app/solucoes/raf/confirmar',
+            '/app/raf/confirmar',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
