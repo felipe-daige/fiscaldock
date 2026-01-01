@@ -63,6 +63,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/app/raf/confirmar/{id}', [RafController::class, 'confirmar'])->name('app.raf.confirmar');
     Route::post('/app/raf/cancelar/{id}', [RafController::class, 'cancelar'])->name('app.raf.cancelar');
 
+    // Rota de Importação de SPED
+    Route::get('/app/sped_importar', [DashboardController::class, 'spedImportar'])->name('app.sped.importar');
+
     // Rota de Análise de Risco SPED
     Route::get('/app/sped-analise-risco', [DashboardController::class, 'spedAnaliseRisco'])->name('app.sped.analise.risco');
 
@@ -71,6 +74,12 @@ Route::middleware('auth')->group(function () {
     
     // Rota de Análise de Risco XMLs
     Route::get('/app/xml_analise_risco', [DashboardController::class, 'xmlAnaliseRisco'])->name('app.xml.analise.risco');
+    
+    // Rota de Novo Cliente
+    Route::get('/app/novo_cliente', [DashboardController::class, 'novoCliente'])->name('app.novo.cliente');
+    
+    // Rota de Clientes
+    Route::get('/app/clientes', [DashboardController::class, 'clientes'])->name('app.clientes');
     
     // Rota SSE para notificações em tempo real
     Route::get('/api/data/notifications/stream', [\App\Http\Controllers\Api\DataReceiverController::class, 'streamNotifications'])

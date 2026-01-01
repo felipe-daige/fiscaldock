@@ -55,142 +55,117 @@
                     <div id="sped-form-section">
                         <div>
                             <h2 class="text-lg font-semibold text-gray-900">Processar SPED</h2>
-                            <p class="mt-1 text-sm text-gray-600">1) Escolha o tipo de SPED. 2) Escolha o tipo de consulta. 3) Selecione/arraste o arquivo .txt. 4) Envie.</p>
-                        </div>
+                                                   </div>
                     </div>
 
                     <form id="sped-form" class="space-y-5">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                            {{-- Coluna Esquerda: Tipo de SPED + Arquivo SPED --}}
+                        <div>
+                            {{-- Campos do formulário --}}
                             <div class="space-y-4">
-                                <div class="space-y-2">
-                                    <label for="tipo" class="block text-sm font-semibold text-gray-800">Tipo de SPED</label>
-                                    <select 
-                                        id="tipo" 
-                                        name="tipo" 
-                                        class="w-full rounded-lg border border-gray-300 bg-white text-gray-800 shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 focus:ring-offset-gray-50 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
-                                    >
-                                        <option value="" selected disabled>Selecione o tipo</option>
-                                        <option value="EFD Contribuições">EFD Contribuições</option>
-                                        <option value="EFD Fiscal">EFD Fiscal</option>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de SPED:</label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <label class="flex items-start p-3 border-2 border-blue-600 rounded-lg cursor-pointer bg-blue-50 tipo-sped-label" data-tipo="efd-contrib">
+                                            <input type="radio" name="tipo-sped" value="efd-contrib" checked class="mt-1 mr-3 w-4 h-4 text-blue-600 flex-shrink-0">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="font-semibold text-gray-800 text-sm">EFD Contribuições</div>
+                                                <div class="text-xs text-gray-600">PIS/COFINS</div>
+                                            </div>
+                                        </label>
+                                        <label class="flex items-start p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 tipo-sped-label" data-tipo="efd-fiscal">
+                                            <input type="radio" name="tipo-sped" value="efd-fiscal" class="mt-1 mr-3 w-4 h-4 text-blue-600 flex-shrink-0">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="font-semibold text-gray-800 text-sm">EFD Fiscal</div>
+                                                <div class="text-xs text-gray-600">ICMS/IPI</div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de consulta:</label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <label class="flex items-start p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 tipo-consulta-label" data-consulta="gratuito">
+                                            <input type="radio" name="modalidade" value="gratuito" class="mt-1 mr-3 w-4 h-4 text-blue-600 flex-shrink-0">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="font-semibold text-gray-800 text-sm">Gratuita</div>
+                                                <div class="text-xs text-gray-600">Regime Tributário</div>
+                                            </div>
+                                        </label>
+                                        <label class="flex items-start p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 tipo-consulta-label" data-consulta="completa">
+                                            <input type="radio" name="modalidade" value="completa" class="mt-1 mr-3 w-4 h-4 text-blue-600 flex-shrink-0">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="font-semibold text-gray-800 text-sm">Completa</div>
+                                                <div class="text-xs text-gray-600">Regime + CND</div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Selecione a modalidade antes de enviar.</p>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Vincular a cliente (opcional):</label>
+                                    <select id="cliente-select" name="cliente_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">Selecione um cliente...</option>
+                                        <option value="1">Cliente Exemplo 1</option>
+                                        <option value="2">Cliente Exemplo 2</option>
                                     </select>
-                                    <p id="tipo-hint" class="text-xs text-gray-500">Selecione o tipo de SPED e a consulta para liberar o upload.</p>
                                 </div>
 
-                                <div class="space-y-2">
-                                    <label for="sped" class="block text-sm font-semibold text-gray-800">Arquivo SPED (.txt)</label>
-
-                                    <input
-                                        type="file"
-                                        id="sped"
-                                        name="sped"
-                                        accept=".txt"
-                                        class="sr-only"
-                                        disabled
-                                    >
-
-                                    <div
-                                        id="sped-dropzone"
-                                        class="w-full rounded-xl border-2 border-dashed px-4 py-6 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
-                                        role="button"
-                                        tabindex="0"
-                                        aria-disabled="true"
-                                        aria-describedby="sped-file-help"
-                                    >
-                                        <div class="flex flex-col items-center gap-2">
-                                            <svg class="h-7 w-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                <div class="mb-4">
+                                    <div id="sped-dropzone" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors cursor-pointer bg-gray-50 hover:bg-blue-50" role="button" tabindex="0" aria-disabled="true">
+                                        <div class="mb-2">
+                                            <svg class="mx-auto h-10 w-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                                             </svg>
-                                            <div class="space-y-0.5 w-full px-2 min-w-0">
-                                                <p class="text-sm font-semibold text-gray-900 truncate max-w-full" id="sped-dropzone-title" title="" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Nenhum arquivo selecionado</p>
-                                                <p class="text-xs text-gray-500" id="sped-dropzone-subtitle">Selecione o tipo de SPED e o tipo de consulta para liberar o upload.</p>
-                                            </div>
                                         </div>
-                                    </div>
-
-                                    <div id="sped-file-meta" class="hidden rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-                                        <div class="flex items-start justify-between gap-3">
-                                            <div class="min-w-0 flex-1 overflow-hidden">
-                                                <p class="text-sm font-semibold text-gray-900 truncate" id="sped-file-name" title="" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></p>
-                                                <p class="text-xs text-gray-500" id="sped-file-size"></p>
-                                            </div>
-                                            <button 
-                                                type="button" 
-                                                id="sped-change-file" 
-                                                class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 active:bg-gray-100 px-3 py-1.5 text-sm flex-shrink-0"
-                                            >
-                                                Trocar arquivo
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <p id="sped-file-help" class="text-xs text-gray-500">Máximo 10 MB.</p>
-                                </div>
-                            </div>
-
-                            {{-- Coluna Direita: Tipo de consulta --}}
-                            <div class="space-y-3">
-                                <span class="block text-sm font-semibold text-gray-800">Tipo de consulta</span>
-                                <div class="space-y-2" role="radiogroup" aria-labelledby="raf-modalidade-label">
-                                    <div class="flex items-start gap-3">
-                                        <input 
-                                            id="modalidade-gratuito" 
-                                            name="modalidade" 
-                                            type="radio" 
-                                            value="gratuito"
-                                            class="mt-1 h-4 w-4 border-gray-300 text-primary-600 focus:ring-primary-500"
+                                        <p class="text-xs text-gray-700 mb-1">Arraste o arquivo SPED aqui</p>
+                                        <p class="text-xs text-gray-500">ou clique para selecionar</p>
+                                        <p class="text-xs text-gray-500 mt-1">.txt | Máximo: 10MB</p>
+                                        <input
+                                            type="file"
+                                            id="sped"
+                                            name="sped"
+                                            accept=".txt"
+                                            class="hidden"
+                                            disabled
                                         >
-                                        <label for="modalidade-gratuito" class="flex-1">
-                                            <span class="block text-sm font-semibold text-gray-900">Gratuita — Regime Tributário</span>
-                                            <span class="block text-xs text-gray-600">Consulta apenas o regime tributário (Simples, Presumido ou Real).</span>
-                                        </label>
-                                    </div>
-                                    <div class="flex items-start gap-3">
-                                        <input 
-                                            id="modalidade-completa" 
-                                            name="modalidade" 
-                                            type="radio" 
-                                            value="completa"
-                                            class="mt-1 h-4 w-4 border-gray-300 text-primary-600 focus:ring-primary-500"
-                                        >
-                                        <label for="modalidade-completa" class="flex-1">
-                                            <span class="block text-sm font-semibold text-gray-900">Completa — Regime + CND (Receita Federal)</span>
-                                            <span class="block text-xs text-gray-600">Consulta o regime tributário e a Certidão de Regularidade Fiscal (CND).</span>
-                                        </label>
                                     </div>
                                 </div>
-                                <p class="text-xs text-gray-500">Selecione a modalidade antes de enviar.</p>
+
+                                <div id="sped-file-meta" class="mb-4 hidden">
+                                    <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200">
+                                        <div class="flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                            </svg>
+                                            <div>
+                                                <div class="text-xs font-medium text-gray-800" id="sped-file-name">arquivo.txt</div>
+                                                <div class="text-xs text-gray-500" id="sped-file-size">0 MB</div>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            type="button" 
+                                            id="sped-change-file" 
+                                            class="text-red-500 hover:text-red-700"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="space-y-3">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <button
-                                    type="submit"
-                                    class="btn-primary-solid inline-flex flex-row items-center justify-center gap-2 px-5 py-2.5 font-semibold shadow-sm disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-primary-500"
-                                    id="sped-submit"
-                                    disabled
-                                >
-                                    <svg id="sped-submit-spinner" class="hidden h-5 w-5 shrink-0 animate-spin" viewBox="0 0 24 24" aria-hidden="true">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        <div id="sped-alert" class="hidden rounded-xl border border-gray-200 bg-white text-gray-700 px-4 py-3 text-sm" role="status" aria-live="polite">
+                            <div class="flex gap-2">
+                                <span id="sped-alert-icon" class="mt-0.5">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
                                     </svg>
-                                    <svg id="sped-submit-icon" class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                    </svg>
-                                    <span id="sped-submit-label" class="whitespace-nowrap">Enviar SPED</span>
-                                </button>
-                            </div>
-
-                            <div id="sped-alert" class="hidden rounded-xl border border-gray-200 bg-white text-gray-700 px-4 py-3 text-sm" role="status" aria-live="polite">
-                                <div class="flex gap-2">
-                                    <span id="sped-alert-icon" class="mt-0.5">
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
-                                        </svg>
-                                    </span>
-                                    <p id="sped-alert-text" class="min-w-0"></p>
-                                </div>
+                                </span>
+                                <p id="sped-alert-text" class="min-w-0"></p>
                             </div>
                         </div>
                     </form>
@@ -227,7 +202,7 @@
                                     href="#"
                                     download="resultado.csv"
                                 >
-                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
                                     </svg>
                                     <span id="csv-download-label">Baixar CSV</span>
@@ -239,7 +214,7 @@
                 </div>
 
                 {{-- Card de Informações da Consulta --}}
-                <div id="info-consulta-card" class="bg-white rounded-xl border border-gray-200 shadow-md">
+                <div id="info-consulta-card" class="bg-white rounded-xl border border-gray-200 shadow-md mt-6">
             <div class="p-6 space-y-4">
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900">Informações da Consulta</h3>
@@ -259,6 +234,25 @@
                         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Custo unitário da consulta</p>
                         <p class="text-2xl font-bold text-gray-900" id="info-custo-unitario">--</p>
                     </div>
+                </div>
+
+                {{-- Botão Enviar SPED --}}
+                <div class="pt-4 border-t border-gray-200">
+                    <button
+                        type="button"
+                        class="btn-primary-solid w-full inline-flex flex-row items-center justify-center gap-2 px-5 py-2.5 font-semibold shadow-sm disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-primary-500"
+                        id="sped-submit"
+                        disabled
+                    >
+                        <svg id="sped-submit-spinner" class="hidden h-5 w-5 shrink-0 animate-spin" viewBox="0 0 24 24" aria-hidden="true">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+                        <svg id="sped-submit-icon" class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                        <span id="sped-submit-label" class="whitespace-nowrap">Enviar SPED</span>
+                    </button>
                 </div>
 
                 {{-- Botão de confirmar créditos (aparece quando necessário) --}}
@@ -575,7 +569,7 @@
     const resultBadge = document.getElementById('result-badge');
     const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-    const tipoSelect = document.getElementById('tipo');
+    const tipoRadios = document.querySelectorAll('input[name="tipo-sped"]');
     const fileInput = document.getElementById('sped');
     const modalidadeRadios = document.querySelectorAll('input[name="modalidade"]');
     const submitLabel = document.getElementById('sped-submit-label');
@@ -583,8 +577,6 @@
     const submitIcon = document.getElementById('sped-submit-icon');
 
     const dropzone = document.getElementById('sped-dropzone');
-    const dropzoneTitle = document.getElementById('sped-dropzone-title');
-    const dropzoneSubtitle = document.getElementById('sped-dropzone-subtitle');
     const fileMeta = document.getElementById('sped-file-meta');
     const fileNameEl = document.getElementById('sped-file-name');
     const fileSizeEl = document.getElementById('sped-file-size');
@@ -622,6 +614,10 @@
     const infoQtdParticipantes = document.getElementById('info-qtd-participantes');
     const infoValorTotal = document.getElementById('info-valor-total');
     const infoCustoUnitario = document.getElementById('info-custo-unitario');
+    
+    // Flag para rastrear se o card já foi preenchido com dados válidos
+    // Uma vez preenchido, os dados nunca devem desaparecer
+    let infoCardHasValidData = false;
     const infoConfirmCreditsWrap = document.getElementById('info-confirm-credits-wrap');
     const infoCreditsCancelBtn = document.getElementById('info-credits-cancel-btn');
     const infoCreditsConfirmBtn = document.getElementById('info-credits-confirm-btn');
@@ -629,15 +625,17 @@
     const infoCreditsConfirmText = document.getElementById('info-credits-confirm-text');
 
     let isLoading = false;
+    let isProcessing = false; // Estado de processamento após confirmação de créditos
     let timerInterval = null;
     let timerStart = 0;
     let currentDownloadUrl = null;
 
     // Dados de confirmação pendente
     let pendingConfirmation = null;
-    let isConfirming = false; // Flag para evitar cliques duplos
-    let currentRelatorioId = null; // ID do relatório atual sendo aguardado
-    let processedResumeUrls = new Set(); // URLs já processadas para evitar reprocessamento
+        let isConfirming = false; // Flag para evitar cliques duplos
+        let currentRelatorioId = null; // ID do relatório atual sendo aguardado
+        let processedResumeUrls = new Set(); // URLs já processadas para evitar reprocessamento
+        let asyncProcessingStarted = false; // Flag para indicar se processamento assíncrono foi iniciado
     
     // Controle de conexão SSE
     let eventSource = null;
@@ -647,6 +645,62 @@
     if (!window._rafDisconnectSSE) {
         window._rafDisconnectSSE = null;
     }
+
+    /**
+     * Obtém o valor do tipo de SPED selecionado via radio buttons.
+     * @returns {string} Valor do radio selecionado ('efd-contrib' ou 'efd-fiscal') ou string vazia
+     */
+    const getSelectedTipoSped = () => {
+        const selected = Array.from(tipoRadios).find(radio => radio.checked);
+        return selected ? selected.value : '';
+    };
+
+    /**
+     * Mapeia o valor do radio button para o valor esperado pelo backend.
+     * @param {string} radioValue - Valor do radio ('efd-contrib' ou 'efd-fiscal')
+     * @returns {string} Valor mapeado para o backend ('EFD Contribuições' ou 'EFD Fiscal')
+     */
+    const mapTipoSpedToBackend = (radioValue) => {
+        const mapping = {
+            'efd-contrib': 'EFD Contribuições',
+            'efd-fiscal': 'EFD Fiscal'
+        };
+        return mapping[radioValue] || '';
+    };
+
+    /**
+     * Atualiza o visual dos labels dos radio buttons baseado na seleção.
+     */
+    const updateTipoSpedLabels = () => {
+        const selectedValue = getSelectedTipoSped();
+        document.querySelectorAll('.tipo-sped-label').forEach(label => {
+            const radio = label.querySelector('input[type="radio"]');
+            if (radio && radio.value === selectedValue) {
+                label.classList.remove('border-gray-300', 'hover:border-blue-400');
+                label.classList.add('border-blue-600', 'bg-blue-50');
+            } else {
+                label.classList.remove('border-blue-600', 'bg-blue-50');
+                label.classList.add('border-gray-300', 'hover:border-blue-400');
+            }
+        });
+    };
+
+    /**
+     * Atualiza o visual dos labels dos radio buttons do tipo de consulta baseado na seleção.
+     */
+    const updateTipoConsultaLabels = () => {
+        const selectedValue = getSelectedModalidade();
+        document.querySelectorAll('.tipo-consulta-label').forEach(label => {
+            const radio = label.querySelector('input[type="radio"]');
+            if (radio && radio.value === selectedValue) {
+                label.classList.remove('border-gray-300', 'hover:border-blue-400');
+                label.classList.add('border-blue-600', 'bg-blue-50');
+            } else {
+                label.classList.remove('border-blue-600', 'bg-blue-50');
+                label.classList.add('border-gray-300', 'hover:border-blue-400');
+            }
+        });
+    };
 
     /**
      * Reseta o estado para um novo envio de documento.
@@ -662,6 +716,9 @@
         
         // Limpar ID do relatório atual
         currentRelatorioId = null;
+        
+        // Resetar estado de processamento
+        isProcessing = false;
         
         // Desconectar SSE anterior para iniciar novo ciclo
         disconnectSSE();
@@ -703,27 +760,79 @@
                              (valorTotal !== null && valorTotal !== undefined && valorTotal > 0) ||
                              (custoUnitario !== null && custoUnitario !== undefined && custoUnitario > 0);
 
+        // IMPORTANTE: Se está processando E já tem dados válidos, nunca limpar valores
+        // Apenas atualizar se novos dados válidos forem fornecidos
+        if (isProcessing && infoCardHasValidData) {
+            // Se houver novos dados válidos, atualizar normalmente
+            if (hasValidData) {
+                // Atualizar valores apenas se forem válidos (não null/undefined)
+                if (infoQtdParticipantes && qtdParticipantes !== null && qtdParticipantes !== undefined) {
+                    infoQtdParticipantes.textContent = qtdParticipantes.toString();
+                }
 
-        // Atualizar valores (sempre atualiza, mesmo se for null/undefined)
-        if (infoQtdParticipantes) {
-            const qtdText = (qtdParticipantes !== null && qtdParticipantes !== undefined)
-                ? qtdParticipantes.toString()
-                : '--';
-            infoQtdParticipantes.textContent = qtdText;
+                if (infoValorTotal && valorTotal !== null && valorTotal !== undefined) {
+                    const valorFormatted = formatCurrency(valorTotal);
+                    infoValorTotal.textContent = valorFormatted;
+                }
+
+                if (infoCustoUnitario && custoUnitario !== null && custoUnitario !== undefined) {
+                    const custoFormatted = formatCurrency(custoUnitario);
+                    infoCustoUnitario.textContent = custoFormatted;
+                }
+            }
+            // Se não houver dados válidos, manter valores existentes (não fazer nada)
+            // Garantir que o card permaneça visível durante processamento
+            infoConsultaCard.classList.remove('hidden');
+            return; // Retornar cedo para não executar a lógica de limpeza abaixo
         }
 
-        if (infoValorTotal) {
-            const valorFormatted = formatCurrency(valorTotal);
-            infoValorTotal.textContent = valorFormatted;
-        }
-
-        if (infoCustoUnitario) {
-            const custoFormatted = formatCurrency(custoUnitario);
-            infoCustoUnitario.textContent = custoFormatted;
-        }
-
-        // Sempre mostrar o card quando houver dados válidos
+        // Se houver dados válidos, marcar o flag e atualizar os valores
         if (hasValidData) {
+            infoCardHasValidData = true;
+            
+            // Atualizar valores apenas se forem válidos (não null/undefined)
+            if (infoQtdParticipantes && qtdParticipantes !== null && qtdParticipantes !== undefined) {
+                infoQtdParticipantes.textContent = qtdParticipantes.toString();
+            }
+
+            if (infoValorTotal && valorTotal !== null && valorTotal !== undefined) {
+                const valorFormatted = formatCurrency(valorTotal);
+                infoValorTotal.textContent = valorFormatted;
+            }
+
+            if (infoCustoUnitario && custoUnitario !== null && custoUnitario !== undefined) {
+                const custoFormatted = formatCurrency(custoUnitario);
+                infoCustoUnitario.textContent = custoFormatted;
+            }
+        } else if (!infoCardHasValidData) {
+            // Só atualizar para '--' se o card ainda não tiver sido preenchido com dados válidos
+            // Se já tiver dados válidos, não limpar os valores
+            if (infoQtdParticipantes) {
+                infoQtdParticipantes.textContent = '--';
+            }
+
+            if (infoValorTotal) {
+                infoValorTotal.textContent = '--';
+            }
+
+            if (infoCustoUnitario) {
+                infoCustoUnitario.textContent = '--';
+            }
+        }
+        // Se infoCardHasValidData for true e não houver dados válidos agora,
+        // não fazer nada - manter os valores existentes
+
+        // IMPORTANTE: Uma vez que o card foi exibido com dados válidos, ele deve permanecer visível
+        // e os dados nunca devem desaparecer (exceto se a página for recarregada)
+        if (infoCardHasValidData) {
+            infoConsultaCard.classList.remove('hidden');
+        } else if (hasValidData) {
+            // Mostrar o card quando houver dados válidos pela primeira vez
+            infoConsultaCard.classList.remove('hidden');
+        }
+        
+        // Garantir que o card permaneça visível durante processamento
+        if (isProcessing && infoCardHasValidData && infoConsultaCard) {
             infoConsultaCard.classList.remove('hidden');
         }
 
@@ -786,6 +895,7 @@
             }
         }
     };
+
 
     /**
      * Trata erros de autenticação 401 de forma centralizada.
@@ -956,6 +1066,9 @@
                                 if (resultBadge) resultBadge.classList.remove('hidden');
                                 setLoading(false);
                                 
+                                // Parar processamento quando CSV estiver disponível via SSE
+                                setProcessing(false);
+                                
                                 // Confirmar recebimento do CSV no resume_url se existir
                                 if (csvData.resume_url && csvData.resume_url.trim() !== '') {
                                     await confirmCsvReceived(csvData.resume_url);
@@ -967,6 +1080,9 @@
                                 
                                 // Garantir que o modal esteja fechado
                                 hideCreditsConfirmation();
+                                
+                                // Esconder os botões de confirmação quando o CSV estiver disponível
+                                hideConfirmButtons();
                             } else {
                                 console.warn('[RAF] CSV recebido mas blob está vazio.');
                             }
@@ -1222,6 +1338,18 @@
             infoConfirmCreditsWrap.classList.remove('hidden');
         }
 
+        // Esconder o botão principal quando o modal aparecer
+        if (submitBtn) {
+            submitBtn.style.display = 'none';
+        }
+
+        // Resetar apenas o estado de loading do botão principal
+        // NÃO resetar setProcessing aqui - o processamento continua em andamento
+        setLoading(false);
+
+        // Garantir que os botões não estejam em estado de loading quando o modal é exibido
+        setCreditsLoading(false);
+
         // Mostrar o modal overlay
         if (!creditsModalBackdrop) {
             console.error('[RAF] ERRO: creditsModalBackdrop não encontrado! Verifique se o elemento existe no DOM.');
@@ -1264,14 +1392,50 @@
         // Restaurar scroll do body
         document.body.style.overflow = '';
         
-        pendingConfirmation = null;
+        // NÃO mostrar o botão principal aqui - ele só deve aparecer quando os botões de confirmação forem escondidos
+        // Verificar se os botões de confirmação estão visíveis
+        const confirmButtonsVisible = infoConfirmCreditsWrap && !infoConfirmCreditsWrap.classList.contains('hidden');
+        
+        // Se os botões de confirmação ainda estão visíveis, manter o botão principal escondido
+        // Se não estão visíveis, mostrar o botão principal
+        if (submitBtn && !confirmButtonsVisible) {
+            submitBtn.style.display = '';
+        }
+        
+        // Resetar apenas o estado de loading
+        // NÃO resetar setProcessing aqui - o processamento pode continuar em andamento
+        setLoading(false);
+        
+        // NÃO esconder os botões de confirmação aqui - eles devem permanecer visíveis
+        // até o usuário realmente confirmar ou cancelar
+        // Os botões serão escondidos apenas em handleCancelCredits ou confirmCreditsAndProcess
         
         // TODO: Desconectar recebimento de dados (SSE/WebSocket) quando modal for escondido
         // disconnectDataReceiver();
-        
-        // Esconder botão de confirmação no card de informações também
+    };
+    
+    /**
+     * Esconde os botões de confirmação do card de informações.
+     * Deve ser chamado apenas quando o usuário realmente confirmar ou cancelar.
+     * Quando os botões são escondidos, o botão principal é mostrado novamente.
+     * Se o processamento estiver em andamento, o botão será mostrado com spinner girando.
+     */
+    const hideConfirmButtons = () => {
         if (infoConfirmCreditsWrap) {
             infoConfirmCreditsWrap.classList.add('hidden');
+        }
+        pendingConfirmation = null;
+        
+        // Mostrar o botão principal novamente quando os botões de confirmação forem escondidos
+        if (submitBtn) {
+            submitBtn.style.display = '';
+        }
+        
+        // Se o processamento estiver em andamento, garantir que o spinner esteja visível
+        if (isProcessing) {
+            submitLabel.textContent = 'Processando...';
+            submitSpinner.classList.remove('hidden');
+            submitIcon.classList.add('hidden');
         }
     };
 
@@ -1310,6 +1474,9 @@
                 // Validar que o blob não está vazio antes de mostrar o botão
                 if (blob.size > 0) {
                     setDownload(blob, filename);
+                    
+                    // Parar processamento quando CSV estiver disponível
+                    setProcessing(false);
                     
                     // Confirmar recebimento do CSV no resume_url se existir
                     if (data.resume_url && data.resume_url.trim() !== '') {
@@ -1407,6 +1574,7 @@
                 hideCreditsConfirmation();
                 stopTimer();
                 setLoading(false);
+                setProcessing(false);
                 return;
             }
 
@@ -1417,6 +1585,7 @@
                 hideCreditsConfirmation();
                 stopTimer();
                 setLoading(false);
+                setProcessing(false);
                 return;
             }
 
@@ -1441,6 +1610,7 @@
                 hideCreditsConfirmation();
                 stopTimer();
                 setLoading(false);
+                setProcessing(false);
                 return;
             }
 
@@ -1461,18 +1631,37 @@
                     currentRelatorioId = data.id || data.relatorio_id;
                 }
                 
-                // Se for resposta assíncrona (n8n retornou JSON ao invés de CSV)
+                    // Se for resposta assíncrona (n8n retornou JSON ao invés de CSV)
                 if (data.success && data.async === true) {
                     // Esconder botão de download até o CSV estar realmente disponível
                     resetDownload();
                     
-                    showAlert('info', data.message || 'Créditos confirmados. Aguarde enquanto o relatório final está sendo gerado...');
+                    // Não exibir mensagem "Workflow was started" ao usuário
+                    const message = data.message && !data.message.toLowerCase().includes('workflow was started')
+                        ? data.message
+                        : 'Créditos confirmados. Aguarde enquanto o relatório final está sendo gerado...';
+                    showAlert('info', message);
                     
                     // Conectar SSE para receber notificação quando CSV estiver disponível
                     // O SSE vai notificar quando o CSV estiver pronto, sem necessidade de polling
                     connectSSE(currentRelatorioId);
                     
+                    // Fechar o modal primeiro para mostrar o botão principal
                     hideCreditsConfirmation();
+                    
+                    // Esconder os botões de confirmação após confirmar
+                    hideConfirmButtons();
+                    
+                    // Preservar valores atuais do card antes de iniciar processamento
+                    if (infoCardHasValidData && infoConsultaCard) {
+                        // Garantir que o card permaneça visível durante processamento
+                        infoConsultaCard.classList.remove('hidden');
+                    }
+                    
+                    // Mudar botão para "Processando..." após confirmar créditos
+                    setProcessing(true);
+                    asyncProcessingStarted = true; // Marcar que processamento assíncrono foi iniciado
+                    
                     return;
                 }
             }
@@ -1491,12 +1680,20 @@
                 freezeTimer();
                 showAlert('success', 'Processado com sucesso. O CSV está pronto para download.');
                 resultBadge.classList.remove('hidden');
+                
+                // Parar processamento quando CSV estiver disponível
+                setProcessing(false);
 
                 // Atualizar saldo exibido se existir
                 const remainingCredits = response.headers.get('X-Credits-Remaining');
 
                 // Reset parcial após sucesso
                 form.reset();
+                // Resetar radio buttons do tipo de SPED para o primeiro (efd-contrib)
+                if (tipoRadios.length > 0) {
+                    tipoRadios[0].checked = true;
+                }
+                updateTipoSpedLabels();
                 updateFileUi();
                 updateEnablement();
             } else {
@@ -1510,9 +1707,23 @@
                 
                 // Conectar SSE para receber notificação quando CSV estiver disponível
                 connectSSE(currentRelatorioId);
+                
+                // Fechar o modal primeiro para mostrar o botão principal
+                hideCreditsConfirmation();
+                
+                // Esconder os botões de confirmação após confirmar
+                hideConfirmButtons();
+                
+                // Preservar valores atuais do card antes de iniciar processamento
+                if (infoCardHasValidData && infoConsultaCard) {
+                    // Garantir que o card permaneça visível durante processamento
+                    infoConsultaCard.classList.remove('hidden');
+                }
+                
+                // Mudar botão para "Processando..." após confirmar créditos
+                setProcessing(true);
+                asyncProcessingStarted = true; // Marcar que processamento assíncrono foi iniciado
             }
-
-            hideCreditsConfirmation();
         } catch (err) {
             console.error('[RAF] Erro no confirmCreditsAndProcess:', err);
             // Tratar timeout do AbortController
@@ -1534,16 +1745,20 @@
                 creditsModalBackdrop.style.display = '';
                 creditsModalBackdrop.style.visibility = '';
             }
-            // Esconder também o botão de confirmação do card de informações
-            if (infoConfirmCreditsWrap) {
-                infoConfirmCreditsWrap.classList.add('hidden');
-            }
+            // Esconder os botões de confirmação após confirmar (em caso de erro também)
+            hideConfirmButtons();
             document.body.style.overflow = '';
             if (timeoutId) {
                 clearTimeout(timeoutId);
             }
             setCreditsLoading(false);
             setLoading(false);
+            // Só parar o processamento se não foi iniciado processamento assíncrono
+            // Se o processamento assíncrono foi iniciado, ele deve continuar até o CSV estar disponível
+            if (!asyncProcessingStarted) {
+                setProcessing(false); // Garantir que processamento seja resetado em caso de erro
+            }
+            asyncProcessingStarted = false; // Resetar flag
             isConfirming = false; // Liberar flag
             pendingConfirmation = null; // Limpar confirmação pendente
         }
@@ -1553,8 +1768,11 @@
     const handleCancelCredits = async () => {
         if (!pendingConfirmation || !pendingConfirmation.resumeUrl) {
             hideCreditsConfirmation();
+            // Esconder os botões de confirmação após cancelar (isso também mostra o botão principal)
+            hideConfirmButtons();
             stopTimer();
             setLoading(false);
+            setProcessing(false);
             showAlert('info', 'Operação cancelada.');
             return;
         }
@@ -1590,8 +1808,11 @@
             showAlert('error', 'Erro ao cancelar operação. Tente novamente.');
         } finally {
             hideCreditsConfirmation();
+            // Esconder os botões de confirmação após cancelar (isso também mostra o botão principal)
+            hideConfirmButtons();
             stopTimer();
             setLoading(false);
+            setProcessing(false);
         }
     };
 
@@ -1660,70 +1881,67 @@
     const setDropzoneEnabled = (enabled, hasTipo = false, hasModalidade = false) => {
         if (!dropzone) return;
         
-        // Classes base da dropzone
-        const baseClasses = 'w-full rounded-xl border-2 border-dashed px-4 py-6 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2';
-        
         if (enabled) {
             // Dropzone habilitada
-            dropzone.className = `${baseClasses} border-gray-300 bg-white hover:border-primary-400 hover:bg-primary-50/30 cursor-pointer`;
+            dropzone.className = 'border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors cursor-pointer bg-gray-50 hover:bg-blue-50';
             dropzone.setAttribute('aria-disabled', 'false');
-            dropzoneSubtitle.textContent = 'Arraste e solte aqui, ou clique para selecionar.';
         } else {
             // Dropzone desabilitada
-            dropzone.className = `${baseClasses} border-gray-300 bg-gray-100 pointer-events-none cursor-not-allowed opacity-60`;
+            dropzone.className = 'border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition-colors cursor-not-allowed bg-gray-100 opacity-60 pointer-events-none';
             dropzone.setAttribute('aria-disabled', 'true');
-            
-            // Mensagem específica baseada no que está faltando
-            if (!hasTipo && !hasModalidade) {
-                dropzoneSubtitle.textContent = 'Selecione o tipo de SPED e o tipo de consulta para liberar o upload.';
-            } else if (!hasTipo) {
-                dropzoneSubtitle.textContent = 'Selecione o tipo de SPED para liberar o upload.';
-            } else if (!hasModalidade) {
-                dropzoneSubtitle.textContent = 'Selecione o tipo de consulta para liberar o upload.';
-            }
         }
     };
 
     const updateFileUi = () => {
         const file = fileInput.files?.[0];
         if (!file) {
-            dropzoneTitle.textContent = 'Nenhum arquivo selecionado';
-            dropzoneTitle.removeAttribute('title');
             fileMeta.classList.add('hidden');
             fileNameEl.textContent = '';
-            fileNameEl.removeAttribute('title');
             fileSizeEl.textContent = '';
             return;
         }
 
         const fileName = file.name;
-        dropzoneTitle.textContent = fileName;
-        dropzoneTitle.setAttribute('title', fileName);
         fileMeta.classList.remove('hidden');
         fileNameEl.textContent = fileName;
-        fileNameEl.setAttribute('title', fileName);
-        fileSizeEl.textContent = `${formatFileSize(file.size)} • ${file.type || 'text/plain'}`;
+        fileSizeEl.textContent = formatFileSize(file.size);
     };
 
     const getSelectedModalidade = () => {
-        const checked = Array.from(modalidadeRadios).find(r => r.checked);
-        return checked?.value || '';
+        const selected = Array.from(modalidadeRadios).find(radio => radio.checked);
+        return selected ? selected.value : '';
     };
 
     const updateEnablement = () => {
-        const hasTipo = tipoSelect.value !== '';
+        const hasTipo = getSelectedTipoSped() !== '';
         const modalidade = getSelectedModalidade();
         const hasModalidade = modalidade !== '';
-        const fileEnabled = hasTipo && hasModalidade && !isLoading;
-        fileInput.disabled = !fileEnabled;
+        const fileEnabled = hasTipo && hasModalidade && !isLoading && !isProcessing;
+        fileInput.disabled = !fileEnabled || isProcessing;
         setDropzoneEnabled(fileEnabled, hasTipo, hasModalidade);
         const hasFile = fileInput.files?.length > 0;
-        submitBtn.disabled = !(hasTipo && hasFile && hasModalidade) || isLoading;
+        // Botão desabilitado se: não tem campos preenchidos, está carregando, ou está processando
+        submitBtn.disabled = !(hasTipo && hasFile && hasModalidade) || isLoading || isProcessing;
+        
+        // Atualizar visual dos labels dos radio buttons
+        updateTipoSpedLabels();
+        updateTipoConsultaLabels();
     };
 
-    tipoSelect.addEventListener('change', updateEnablement);
+    // Event listeners para radio buttons do tipo de SPED
+    tipoRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            updateEnablement();
+            updateTipoSpedLabels();
+        });
+    });
+    
+    // Event listeners para radio buttons do tipo de consulta
     modalidadeRadios.forEach(radio => {
-        radio.addEventListener('change', updateEnablement);
+        radio.addEventListener('change', () => {
+            updateEnablement();
+            updateTipoConsultaLabels();
+        });
     });
     fileInput.addEventListener('change', () => {
         const file = fileInput.files?.[0];
@@ -1770,11 +1988,11 @@
             if (!isEnabled) return;
             
             if (on) {
-                dropzone.classList.remove('border-gray-300', 'bg-white', 'hover:border-primary-400', 'hover:bg-primary-50/30');
-                dropzone.classList.add('border-primary-500', 'bg-primary-50/50');
+                dropzone.classList.remove('border-gray-300', 'bg-gray-50', 'hover:border-blue-400', 'hover:bg-blue-50');
+                dropzone.classList.add('border-blue-500', 'bg-blue-50');
             } else {
-                dropzone.classList.remove('border-primary-500', 'bg-primary-50/50');
-                dropzone.classList.add('border-gray-300', 'bg-white', 'hover:border-primary-400', 'hover:bg-primary-50/30');
+                dropzone.classList.remove('border-blue-500', 'bg-blue-50');
+                dropzone.classList.add('border-gray-300', 'bg-gray-50', 'hover:border-blue-400', 'hover:bg-blue-50');
             }
         };
 
@@ -1813,17 +2031,82 @@
         changeFileBtn.addEventListener('click', openFilePicker);
     }
 
+    // Event listener para o botão Enviar SPED (que está fora do formulário)
+    if (submitBtn) {
+        submitBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Disparar o submit do formulário
+            if (form) {
+                form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+            }
+        });
+    }
+
     const setLoading = (loading, message = '') => {
         isLoading = !!loading;
-        submitLabel.textContent = isLoading ? 'Enviando...' : 'Enviar SPED';
-        submitSpinner.classList.toggle('hidden', !isLoading);
-        submitIcon.classList.toggle('hidden', isLoading);
-        tipoSelect.disabled = isLoading;
+        
+        // Verificar se o modal está aberto (não tem classe hidden)
+        const isModalOpen = creditsModalBackdrop && !creditsModalBackdrop.classList.contains('hidden');
+        
+        // Só atualizar o texto do botão se não estiver processando e o modal não estiver aberto
+        // Se o modal estiver aberto, o botão principal está escondido
+        if (!isProcessing && !isModalOpen) {
+            submitLabel.textContent = isLoading ? 'Enviando...' : 'Enviar SPED';
+            submitSpinner.classList.toggle('hidden', !isLoading);
+            submitIcon.classList.toggle('hidden', isLoading);
+        }
+        
+        // Desabilitar/enabilitar radio buttons do tipo de SPED
+        tipoRadios.forEach(radio => {
+            radio.disabled = isLoading || isProcessing;
+        });
+        
         updateEnablement();
 
         if (message) {
             showAlert('info', message);
         }
+    };
+
+    /**
+     * Define o estado de processamento após confirmação de créditos.
+     * O botão fica em "Processando..." e desabilitado até receber o CSV via SSE.
+     */
+    const setProcessing = (processing) => {
+        isProcessing = !!processing;
+        
+        // Verificar se o modal está aberto (não tem classe hidden)
+        const isModalOpen = creditsModalBackdrop && !creditsModalBackdrop.classList.contains('hidden');
+        
+        // Só atualizar o texto do botão se o modal não estiver aberto
+        // Se o modal estiver aberto, o botão principal está escondido
+        if (!isModalOpen) {
+            if (isProcessing) {
+                submitLabel.textContent = 'Processando...';
+                submitSpinner.classList.remove('hidden');
+                submitIcon.classList.add('hidden');
+            } else {
+                // Voltar ao estado normal (não processando)
+                submitLabel.textContent = isLoading ? 'Enviando...' : 'Enviar SPED';
+                submitSpinner.classList.toggle('hidden', !isLoading);
+                submitIcon.classList.toggle('hidden', isLoading);
+            }
+        }
+        
+        // Desabilitar/enabilitar campos do formulário durante processamento
+        tipoRadios.forEach(radio => {
+            radio.disabled = isLoading || isProcessing;
+        });
+        
+        if (modalidadeRadios && modalidadeRadios.length > 0) {
+            modalidadeRadios.forEach(radio => {
+                radio.disabled = isLoading || isProcessing;
+            });
+        }
+        
+        fileInput.disabled = isLoading || isProcessing;
+        
+        updateEnablement();
     };
 
     form.addEventListener('submit', async (e) => {
@@ -1832,9 +2115,12 @@
         // Reset estado para novo envio
         resetState();
 
-        const tipo = tipoSelect.value;
+        const tipoRadioValue = getSelectedTipoSped();
+        const tipo = mapTipoSpedToBackend(tipoRadioValue);
         const file = fileInput.files[0];
         const modalidade = getSelectedModalidade();
+        const clienteSelect = document.getElementById('cliente-select');
+        const clienteId = clienteSelect ? clienteSelect.value : '';
 
         if (!tipo) {
             showAlert('error', 'Selecione o tipo de SPED.');
@@ -1859,7 +2145,6 @@
             return;
         }
 
-        showAlert('info', 'SPED enviado com sucesso. Aguarde enquanto processamos os valores da consulta...');
         setLoading(true);
         stopTimer();
         resetDownload();
@@ -1869,6 +2154,11 @@
         formData.append('tipo', tipo);
         formData.append('modalidade', modalidade);
         formData.append('sped', file);
+        
+        // Adicionar cliente_id se selecionado
+        if (clienteId && clienteId !== '') {
+            formData.append('cliente_id', clienteId);
+        }
 
         let hasDownloadSuccess = false;
         let hasAsyncStarted = false;
@@ -1941,10 +2231,18 @@
                     hasAsyncStarted = true;
                     
                     resetDownload();
-                    showAlert('info', data.message || 'Processamento iniciado. Aguarde enquanto geramos o relatório...');
+                    // Não exibir mensagem "Workflow was started" ao usuário
+                    // Substituir por mensagem genérica
+                    const message = data.message && !data.message.toLowerCase().includes('workflow was started')
+                        ? data.message
+                        : 'Processamento iniciado. Aguarde enquanto geramos o relatório...';
+                    showAlert('info', message);
                     
                     // Conectar SSE para receber notificação quando CSV estiver disponível
                     connectSSE(currentRelatorioId);
+                    
+                    // Mudar botão para "Processando..." quando processamento assíncrono iniciar
+                    setProcessing(true);
                     
                     setLoading(false);
                     return;
@@ -1963,6 +2261,9 @@
                         freezeTimer();
                         showAlert('success', 'Processado com sucesso. O CSV está pronto para download.');
                         resultBadge.classList.remove('hidden');
+                        
+                        // Parar processamento quando CSV estiver disponível
+                        setProcessing(false);
 
                         // Reset parcial após sucesso
                         form.reset();
@@ -2020,12 +2321,20 @@
                 freezeTimer();
                 showAlert('success', 'Processado com sucesso. O CSV está pronto para download.');
                 resultBadge.classList.remove('hidden');
+                
+                // Parar processamento quando CSV estiver disponível
+                setProcessing(false);
 
                 // TODO: Desconectar recebimento de dados (SSE/WebSocket) quando CSV for recebido
                 // disconnectDataReceiver();
 
                 // Reset parcial após sucesso
                 form.reset();
+                // Resetar radio buttons do tipo de SPED para o primeiro (efd-contrib)
+                if (tipoRadios.length > 0) {
+                    tipoRadios[0].checked = true;
+                }
+                updateTipoSpedLabels();
                 updateFileUi();
                 updateEnablement();
                 return;
@@ -2075,6 +2384,9 @@
                 hasDownloadSuccess = true;
                 freezeTimer();
                 
+                // Parar processamento quando CSV estiver disponível
+                setProcessing(false);
+                
                 // TODO: Desconectar recebimento de dados (SSE/WebSocket) quando CSV for recebido
                 // disconnectDataReceiver();
             } else {
@@ -2083,6 +2395,11 @@
 
             // Reset parcial após sucesso
             form.reset();
+            // Resetar radio buttons do tipo de SPED para o primeiro (efd-contrib)
+            if (tipoRadios.length > 0) {
+                tipoRadios[0].checked = true;
+            }
+            updateTipoSpedLabels();
             updateFileUi();
             updateEnablement();
         } catch (err) {
@@ -2105,6 +2422,8 @@
     });
 
     // Estado inicial
+    updateTipoSpedLabels();
+    updateTipoConsultaLabels();
     updateFileUi();
     updateEnablement();
     
