@@ -195,6 +195,7 @@ class DashboardController extends Controller
                 'tipo' => 'required|in:EFD Contribuições,EFD Fiscal',
                 'modalidade' => 'required|in:gratuito,completa',
                 'sped' => 'required|file|mimes:txt,text/plain|max:10240', // 10 MB
+                'tab_id' => 'nullable|string|max:36',
             ]);
         } catch (ValidationException $e) {
             $errors = $e->errors();
@@ -235,7 +236,8 @@ class DashboardController extends Controller
                 $originalName,
                 true, // isAuthenticated
                 $validated['modalidade'],
-                $userId // user_id
+                $userId, // user_id
+                $validated['tab_id'] ?? null // tab_id
             );
         } catch (\InvalidArgumentException $e) {
             return response()->json([

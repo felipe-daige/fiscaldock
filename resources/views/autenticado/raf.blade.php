@@ -157,17 +157,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <div id="sped-alert" class="hidden rounded-xl border border-gray-200 bg-white text-gray-700 px-4 py-3 text-sm" role="status" aria-live="polite">
-                            <div class="flex gap-2">
-                                <span id="sped-alert-icon" class="mt-0.5">
-                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
-                                    </svg>
-                                </span>
-                                <p id="sped-alert-text" class="min-w-0"></p>
-                            </div>
-                        </div>
                     </form>
                 </div>
             </div>
@@ -214,75 +203,90 @@
                 </div>
 
                 {{-- Card de Informações da Consulta --}}
-                <div id="info-consulta-card" class="bg-white rounded-xl border border-gray-200 shadow-md mt-6">
-            <div class="p-6 space-y-4">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-900">Informações da Consulta</h3>
-                    <p class="mt-1 text-sm text-gray-600">Detalhes do processamento da consulta.</p>
+                <div id="info-consulta-card" class="bg-white rounded-xl border border-gray-200 shadow-md">
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Informações da Consulta</h3>
+                            <p class="mt-1 text-sm text-gray-600">Detalhes do processamento da consulta.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Quantidade de participantes</p>
+                                <p class="text-2xl font-bold text-gray-900" id="info-qtd-participantes">--</p>
+                            </div>
+                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Valor total da consulta</p>
+                                <p class="text-2xl font-bold text-gray-900" id="info-valor-total">--</p>
+                            </div>
+                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Custo unitário da consulta</p>
+                                <p class="text-2xl font-bold text-gray-900" id="info-custo-unitario">--</p>
+                            </div>
+                        </div>
+
+                        {{-- Botão Enviar SPED --}}
+                        <div class="pt-4 border-t border-gray-200">
+                            <button
+                                type="button"
+                                class="btn-primary-solid w-full inline-flex flex-row items-center justify-center gap-2 px-5 py-2.5 font-semibold shadow-sm disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-primary-500"
+                                id="sped-submit"
+                                disabled
+                            >
+                                <svg id="sped-submit-spinner" class="hidden h-5 w-5 shrink-0 animate-spin" viewBox="0 0 24 24" aria-hidden="true">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                </svg>
+                                <svg id="sped-submit-icon" class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                </svg>
+                                <span id="sped-submit-label" class="whitespace-nowrap">Enviar SPED</span>
+                            </button>
+                        </div>
+
+                        {{-- Botão de confirmar créditos (aparece quando necessário) --}}
+                        <div id="info-confirm-credits-wrap" class="hidden pt-4 border-t border-gray-200">
+                            <div class="flex flex-col-reverse sm:flex-row gap-3">
+                                <button
+                                    type="button"
+                                    id="info-credits-cancel-btn"
+                                    class="flex-1 sm:flex-none inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="button"
+                                    id="info-credits-confirm-btn"
+                                    class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <svg id="info-credits-confirm-spinner" class="hidden h-5 w-5 animate-spin" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                    </svg>
+                                    <span id="info-credits-confirm-text">Confirmar e processar</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Quantidade de participantes</p>
-                        <p class="text-2xl font-bold text-gray-900" id="info-qtd-participantes">--</p>
-                    </div>
-                    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Valor total da consulta</p>
-                        <p class="text-2xl font-bold text-gray-900" id="info-valor-total">--</p>
-                    </div>
-                    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Custo unitário da consulta</p>
-                        <p class="text-2xl font-bold text-gray-900" id="info-custo-unitario">--</p>
-                    </div>
-                </div>
-
-                {{-- Botão Enviar SPED --}}
-                <div class="pt-4 border-t border-gray-200">
-                    <button
-                        type="button"
-                        class="btn-primary-solid w-full inline-flex flex-row items-center justify-center gap-2 px-5 py-2.5 font-semibold shadow-sm disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-primary-500"
-                        id="sped-submit"
-                        disabled
-                    >
-                        <svg id="sped-submit-spinner" class="hidden h-5 w-5 shrink-0 animate-spin" viewBox="0 0 24 24" aria-hidden="true">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                        </svg>
-                        <svg id="sped-submit-icon" class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                        </svg>
-                        <span id="sped-submit-label" class="whitespace-nowrap">Enviar SPED</span>
-                    </button>
-                </div>
-
-                {{-- Botão de confirmar créditos (aparece quando necessário) --}}
-                <div id="info-confirm-credits-wrap" class="hidden pt-4 border-t border-gray-200">
-                    <div class="flex flex-col-reverse sm:flex-row gap-3">
-                        <button
-                            type="button"
-                            id="info-credits-cancel-btn"
-                            class="flex-1 sm:flex-none inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            type="button"
-                            id="info-credits-confirm-btn"
-                            class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <svg id="info-credits-confirm-spinner" class="hidden h-5 w-5 animate-spin" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                            </svg>
-                            <span id="info-credits-confirm-text">Confirmar e processar</span>
-                        </button>
-                    </div>
+                {{-- Card de Alerta de status/erro (independente, abaixo de info-consulta-card) --}}
+                <div id="info-alert" class="hidden bg-white rounded-xl border border-gray-200 shadow-md">
+                    <div class="p-6">
+                        <div class="flex gap-2">
+                            <span id="info-alert-icon" class="mt-0.5 shrink-0">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
+                                </svg>
+                            </span>
+                            <p id="info-alert-text" class="min-w-0 text-sm"></p>
+                        </div>
                     </div>
                 </div>
             </div>
+            {{-- Fim Coluna direita: space-y-6 --}}
         </div>
-
-        </div>
+        {{-- Fim Grid 2 colunas --}}
         </div>
         {{-- Fim Aba: Processar SPED --}}
 
@@ -582,9 +586,10 @@
     const fileSizeEl = document.getElementById('sped-file-size');
     const changeFileBtn = document.getElementById('sped-change-file');
 
-    const alertEl = document.getElementById('sped-alert');
-    const alertTextEl = document.getElementById('sped-alert-text');
-    const alertIconWrap = document.getElementById('sped-alert-icon');
+    // Elementos de alerta removidos do card "Processar SPED" - agora só usamos info-alert
+    const alertEl = null;
+    const alertTextEl = null;
+    const alertIconWrap = null;
 
     const timerWrap = document.getElementById('timer-wrap');
     const timerValue = document.getElementById('timer-value');
@@ -614,6 +619,9 @@
     const infoQtdParticipantes = document.getElementById('info-qtd-participantes');
     const infoValorTotal = document.getElementById('info-valor-total');
     const infoCustoUnitario = document.getElementById('info-custo-unitario');
+    const infoAlertEl = document.getElementById('info-alert');
+    const infoAlertTextEl = document.getElementById('info-alert-text');
+    const infoAlertIconWrap = document.getElementById('info-alert-icon');
     
     // Flag para rastrear se o card já foi preenchido com dados válidos
     // Uma vez preenchido, os dados nunca devem desaparecer
@@ -636,6 +644,10 @@
         let currentRelatorioId = null; // ID do relatório atual sendo aguardado
         let processedResumeUrls = new Set(); // URLs já processadas para evitar reprocessamento
         let asyncProcessingStarted = false; // Flag para indicar se processamento assíncrono foi iniciado
+    
+    // Identificador único por aba para isolar notificações SSE
+    const tabId = crypto.randomUUID ? crypto.randomUUID() : 
+        (Date.now().toString(36) + Math.random().toString(36).substr(2));
     
     // Controle de conexão SSE
     let eventSource = null;
@@ -719,6 +731,7 @@
         
         // Resetar estado de processamento
         isProcessing = false;
+        asyncProcessingStarted = false;
         
         // Desconectar SSE anterior para iniciar novo ciclo
         disconnectSSE();
@@ -856,44 +869,88 @@
         if (wasHidden) timerWrap.classList.add('hidden');
     };
 
-    const showAlert = (type, message) => {
+    // Função auxiliar para atualizar um elemento de alerta
+    const updateAlertElement = (alertEl, alertTextEl, alertIconWrap, type, message) => {
         if (!alertEl || !alertTextEl) return;
 
-        // Classes base do alert
-        const baseClasses = 'rounded-xl border px-4 py-3 text-sm';
+        // Verificar se é o card independente de informações (tem id info-alert)
+        const isInfoCard = alertEl.id === 'info-alert';
         
-        // Classes específicas por tipo
-        const typeClasses = {
-            info: 'border-gray-200 bg-white text-gray-700',
-            success: 'border-green-200 bg-green-50 text-green-800',
-            error: 'border-red-200 bg-red-50 text-red-800',
-        };
+        if (isInfoCard) {
+            // Classes para o card independente
+            const baseClasses = 'bg-white rounded-xl border shadow-md mt-6';
+            
+            // Classes específicas por tipo para o card
+            const typeClasses = {
+                info: 'border-gray-200',
+                success: 'border-green-200 bg-green-50',
+                error: 'border-red-200 bg-red-50',
+            };
+            
+            // Classes de texto por tipo
+            const textClasses = {
+                info: 'text-gray-700',
+                success: 'text-green-800',
+                error: 'text-red-800',
+            };
+            
+            alertEl.className = `${baseClasses} ${typeClasses[type] || typeClasses.info}`;
+            alertTextEl.className = `min-w-0 text-sm ${textClasses[type] || textClasses.info}`;
+        } else {
+            // Classes base do alert (estrutura antiga)
+            const baseClasses = 'rounded-xl border px-4 py-3 text-sm';
+            
+            // Classes específicas por tipo
+            const typeClasses = {
+                info: 'border-gray-200 bg-white text-gray-700',
+                success: 'border-green-200 bg-green-50 text-green-800',
+                error: 'border-red-200 bg-red-50 text-red-800',
+            };
 
-        alertEl.className = `${baseClasses} ${typeClasses[type] || typeClasses.info}`;
+            alertEl.className = `${baseClasses} ${typeClasses[type] || typeClasses.info}`;
+        }
+        
         alertTextEl.textContent = message || '';
         alertEl.classList.toggle('hidden', !message);
 
         if (alertIconWrap) {
+            // Classes de cor para o ícone
+            const iconColorClasses = {
+                info: 'text-gray-700',
+                success: 'text-green-800',
+                error: 'text-red-800',
+            };
+            
+            const iconColor = iconColorClasses[type] || iconColorClasses.info;
+            
             if (type === 'success') {
                 alertIconWrap.innerHTML = `
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <svg class="h-5 w-5 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m7 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 `;
             } else if (type === 'error') {
                 alertIconWrap.innerHTML = `
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <svg class="h-5 w-5 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 `;
             } else {
                 alertIconWrap.innerHTML = `
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <svg class="h-5 w-5 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
                     </svg>
                 `;
             }
         }
+    };
+
+    const showAlert = (type, message) => {
+        // Atualizar alerta no card "Processar SPED" (formulário)
+        updateAlertElement(alertEl, alertTextEl, alertIconWrap, type, message);
+        
+        // Atualizar alerta no card "Informações da Consulta" (abaixo do botão)
+        updateAlertElement(infoAlertEl, infoAlertTextEl, infoAlertIconWrap, type, message);
     };
 
 
@@ -999,17 +1056,74 @@
         isConnectingSSE = true;
         
         try {
-            // Construir URL do SSE com query parameter relatorio_id se fornecido
+            // Construir URL do SSE com query parameters relatorio_id e tab_id
             let sseUrl = '/api/data/notifications/stream';
+            const params = new URLSearchParams();
             if (relatorioId) {
-                sseUrl += `?relatorio_id=${encodeURIComponent(relatorioId)}`;
+                params.append('relatorio_id', relatorioId);
             }
+            params.append('tab_id', tabId);
+            sseUrl += '?' + params.toString();
             
             eventSource = new EventSource(sseUrl);
             
             eventSource.onmessage = async (event) => {
                 try {
                     const notification = JSON.parse(event.data);
+                    
+                    // Validar tab_id para garantir isolamento entre abas
+                    if (notification.data && notification.data.tab_id && notification.data.tab_id !== tabId) {
+                        console.log('[RAF] Notificação recebida para outra aba. Ignorando. Aguardado:', tabId, 'Recebido:', notification.data.tab_id);
+                        return;
+                    }
+                    
+                    // Tratamento de erros do n8n
+                    if (notification.type === 'error' && notification.data) {
+                        console.error('[RAF] Erro recebido via SSE:', notification.data);
+                        
+                        const errorData = notification.data;
+                        
+                        // Validar que é para o relatório atual (se aplicável)
+                        if (currentRelatorioId && errorData.relatorio_id && 
+                            errorData.relatorio_id !== currentRelatorioId) {
+                            console.log('[RAF] Erro recebido para relatório diferente. Ignorando.');
+                            return;
+                        }
+                        
+                        // Parar todo processamento
+                        setProcessing(false);
+                        stopTimer();
+                        setLoading(false);
+                        
+                        // Esconder modal e botões de confirmação
+                        hideCreditsConfirmation();
+                        hideConfirmButtons();
+                        
+                        // Esconder badge de sucesso
+                        if (resultBadge) resultBadge.classList.add('hidden');
+                        
+                        // Montar mensagem amigável
+                        let userMessage = errorData.message || 'Ocorreu um erro no processamento.';
+                        
+                        if (errorData.credits_refunded) {
+                            userMessage += ' Seus créditos foram reembolsados automaticamente.';
+                        }
+                        
+                        if (errorData.recoverable) {
+                            userMessage += ' Você pode tentar novamente.';
+                        }
+                        
+                        // Exibir erro
+                        showAlert('error', userMessage);
+                        
+                        // Limpar estado completamente para permitir novo envio
+                        currentRelatorioId = null;
+                        processedResumeUrls.clear();
+                        asyncProcessingStarted = false;
+                        disconnectSSE();
+                        
+                        return;
+                    }
                     
                     if (notification.type === 'csv_ready' && notification.data) {
                         // CSV está disponível - buscar do banco de dados via GET
@@ -2161,6 +2275,7 @@
         formData.append('tipo', tipo);
         formData.append('modalidade', modalidade);
         formData.append('sped', file);
+        formData.append('tab_id', tabId); // Identificador único por aba
         
         // Adicionar cliente_id se selecionado
         if (clienteId && clienteId !== '') {

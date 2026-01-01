@@ -13,12 +13,18 @@ class RafConsultaPendente extends Model
 
     protected $fillable = [
         'user_id',
+        'tab_id',
         'tipo_efd',
         'tipo_consulta',
         'qtd_participantes',
         'valor_total_consulta',
         'custo_unitario',
         'resume_url',
+        'status',
+        'error_code',
+        'error_message',
+        'credits_refunded',
+        'error_at',
         'n8n_received_at',
         'processing_started_at',
     ];
@@ -29,8 +35,10 @@ class RafConsultaPendente extends Model
             'valor_total_consulta' => 'decimal:2',
             'custo_unitario' => 'decimal:2',
             'qtd_participantes' => 'integer',
+            'credits_refunded' => 'boolean',
             'n8n_received_at' => 'datetime',
             'processing_started_at' => 'datetime',
+            'error_at' => 'datetime',
         ];
     }
 

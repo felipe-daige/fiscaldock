@@ -34,7 +34,8 @@ class SpedUploadService
         ?string $originalName = null,
         bool $isAuthenticated = false,
         string $modalidade = 'gratuito',
-        ?int $userId = null
+        ?int $userId = null,
+        ?string $tabId = null
     ): array {
         $fileName = match ($tipo) {
             'EFD Contribuições' => 'sped_contribuicoes.txt',
@@ -72,10 +73,13 @@ class SpedUploadService
         }
 
         try {
-            // Preparar payload com tipo e user_id (se fornecido)
+            // Preparar payload com tipo, user_id e tab_id (se fornecido)
             $payload = ['tipo' => $tipo];
             if ($userId !== null) {
                 $payload['user_id'] = $userId;
+            }
+            if ($tabId !== null) {
+                $payload['tab_id'] = $tabId;
             }
             
             $response = $http->attach('sped', file_get_contents($file->getRealPath()), $fileName)
