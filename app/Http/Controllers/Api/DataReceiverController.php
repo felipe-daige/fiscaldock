@@ -152,6 +152,10 @@ class DataReceiverController extends Controller
                 $registro->resume_url = $receivedData['resume_url'];
                 $updated = true;
             }
+            if (isset($receivedData['tab_id'])) {
+                $registro->tab_id = $receivedData['tab_id'];
+                $updated = true;
+            }
             
             // Marcar que o n8n enviou os dados (orquestrador)
             if (!$registro->n8n_received_at) {
@@ -731,10 +735,14 @@ class DataReceiverController extends Controller
             $requestedRelatorioId = (int) $requestedRelatorioId;
         }
         
+        // Obter tab_id da query string se fornecido
+        $requestedTabId = $request->query('tab_id');
+        
         Log::info('SSE streamNotifications chamado', [
             'user_id' => $user?->id,
             'authenticated' => Auth::check(),
             'relatorio_id' => $requestedRelatorioId,
+            'tab_id' => $requestedTabId,
         ]);
         
         if (!$user) {
@@ -743,7 +751,7 @@ class DataReceiverController extends Controller
         }
 
         // Enviar comentário inicial para manter conexão viva
-        return response()->stream(function () use ($user, $requestedRelatorioId) {
+        return response()->stream(function () use ($user, $requestedRelatorioId, $requestedTabId) {
             // Enviar comentário inicial
             echo ": SSE connection established\n\n";
             
@@ -761,6 +769,7 @@ class DataReceiverController extends Controller
             $lastNotificationTime = null;
             $notifiedCsvIds = []; // IDs de CSVs já notificados nesta sessão
             $notifiedDataReadyIds = []; // IDs de data_ready já notificados nesta sessão
+            $notifiedErrorIds = []; // IDs de erros já notificados nesta sessão
             $isFirstDbCheck = true; // Flag para primeira verificação no banco
             $connectionEstablishedAt = now(); // Timestamp de quando a conexão SSE foi estabelecida
             
@@ -778,9 +787,9 @@ class DataReceiverController extends Controller
                         ->whereNotNull('valor_total_consulta')
                         ->whereNotIn('id', $notifiedDataReadyIds);
                     
-                    // Se estamos aguardando um relatorio_id específico, filtrar por ele
-                    if ($requestedRelatorioId) {
-                        $pendenteQuery->where('id', $requestedRelatorioId);
+                    // Filtrar por tab_id se fornecido para isolar notificações entre abas
+                    if ($requestedTabId) {
+                        $pendenteQuery->where('tab_id', $requestedTabId);
                     }
                     
                     $pendente = $pendenteQuery->orderBy('n8n_received_at', 'desc')->first();
@@ -793,6 +802,7 @@ class DataReceiverController extends Controller
                             'data' => [
                                 'id' => $pendente->id,
                                 'user_id' => $pendente->user_id,
+                                'tab_id' => $pendente->tab_id,
                                 'resume_url' => $pendente->resume_url,
                                 'valor_total_consulta' => (float) $pendente->valor_total_consulta,
                                 'qtd_participantes_unicos' => (int) $pendente->qtd_participantes,
@@ -820,6 +830,68 @@ class DataReceiverController extends Controller
                             Log::info('SSE: data_ready enviado do banco de dados', [
                                 'user_id' => $user->id,
                                 'relatorio_id' => $pendente->id,
+                            ]);
+                        } catch (\Exception $e) {
+                            // Ignorar erros de log
+                        }
+                    }
+                    
+                    // ========================================
+                    // 2. Verificar erros de processamento
+                    // IMPORTANTE: Filtrar apenas erros que ocorreram APÓS a conexão SSE
+                    // ========================================
+                    $errorQuery = RafConsultaPendente::where('user_id', $user->id)
+                        ->where('status', 'error')
+                        ->whereNotNull('error_at')
+                        ->where('error_at', '>', $connectionEstablishedAt)
+                        ->whereNotIn('id', $notifiedErrorIds);
+                    
+                    // Se estamos aguardando um relatorio_id específico, filtrar por ele
+                    if ($requestedRelatorioId) {
+                        $errorQuery->where('id', $requestedRelatorioId);
+                    }
+                    
+                    // Filtrar por tab_id se fornecido para isolar notificações entre abas
+                    if ($requestedTabId) {
+                        $errorQuery->where('tab_id', $requestedTabId);
+                    }
+                    
+                    $errorConsulta = $errorQuery->orderBy('error_at', 'desc')->first();
+                    
+                    if ($errorConsulta) {
+                        // Enviar notificação de erro
+                        $errorNotification = [
+                            'type' => 'error',
+                            'data' => [
+                                'relatorio_id' => $errorConsulta->id,
+                                'code' => $errorConsulta->error_code,
+                                'message' => $errorConsulta->error_message,
+                                'credits_refunded' => (bool) $errorConsulta->credits_refunded,
+                                'recoverable' => true, // Pode ser baseado no error_code no futuro
+                            ],
+                        ];
+                        
+                        $data = json_encode($errorNotification);
+                        echo "data: {$data}\n\n";
+                        
+                        if (ob_get_level() > 0) {
+                            ob_flush();
+                        }
+                        flush();
+                        
+                        // Marcar como notificado
+                        $notifiedErrorIds[] = $errorConsulta->id;
+                        
+                        // Atualizar lastNotificationTime
+                        if ($errorConsulta->error_at) {
+                            $lastNotificationTime = $errorConsulta->error_at;
+                        }
+                        
+                        try {
+                            Log::info('SSE: error enviado do banco de dados', [
+                                'user_id' => $user->id,
+                                'relatorio_id' => $errorConsulta->id,
+                                'error_code' => $errorConsulta->error_code,
                             ]);
                         } catch (\Exception $e) {
                             // Ignorar erros de log
@@ -857,9 +929,15 @@ class DataReceiverController extends Controller
                         // Se não encontrou, pode ser que o ID seja da consulta pendente
                         // Buscar pela consulta pendente e então pelo resume_url
                         if (!$csvFromDb) {
-                            $consultaPendente = RafConsultaPendente::where('id', $requestedRelatorioId)
-                                ->where('user_id', $user->id)
-                                ->first();
+                            $consultaPendenteQuery = RafConsultaPendente::where('id', $requestedRelatorioId)
+                                ->where('user_id', $user->id);
+                            
+                            // Filtrar por tab_id se fornecido para isolar notificações entre abas
+                            if ($requestedTabId) {
+                                $consultaPendenteQuery->where('tab_id', $requestedTabId);
+                            }
+                            
+                            $consultaPendente = $consultaPendenteQuery->first();
                             
                             if ($consultaPendente && !empty($consultaPendente->resume_url)) {
                                 // Buscar o relatório processado pelo resume_url
@@ -908,10 +986,22 @@ class DataReceiverController extends Controller
                         // usar esse ID na notificação para que o frontend reconheça
                         $relatorioIdParaNotificacao = $requestedRelatorioId ?? $csvFromDb->id;
                         
+                        // Obter tab_id da consulta pendente se disponível
+                        $tabIdParaNotificacao = null;
+                        if ($requestedRelatorioId) {
+                            $consultaPendenteParaTabId = RafConsultaPendente::where('id', $requestedRelatorioId)
+                                ->where('user_id', $user->id)
+                                ->first();
+                            if ($consultaPendenteParaTabId) {
+                                $tabIdParaNotificacao = $consultaPendenteParaTabId->tab_id;
+                            }
+                        }
+                        
                         $csvNotificationData = [
                             'type' => 'csv_ready',
                             'user_id' => $user->id,
                             'relatorio_id' => $relatorioIdParaNotificacao,
+                            'tab_id' => $tabIdParaNotificacao,
                             'csv_filename' => $csvFilename,
                             'timestamp' => $csvFromDb->updated_at->toIso8601String(),
                         ];
@@ -1301,6 +1391,255 @@ class DataReceiverController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Erro inesperado na confirmação de créditos', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Endpoint para n8n reportar erros de processamento.
+     * POST /api/data/error
+     * Aceita autenticação via token API (para n8n) ou sessão.
+     */
+    public function receiveError(Request $request)
+    {
+        try {
+            Log::info('Requisição recebida em DataReceiverController::receiveError', [
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'ip' => $request->ip(),
+                'headers' => [
+                    'x-api-token' => $request->hasHeader('X-API-Token') ? 'presente' : 'ausente',
+                    'content-type' => $request->header('Content-Type'),
+                ],
+                'body' => $request->all(),
+            ]);
+
+            // Verifica autenticação via token ou sessão (opcional)
+            $user = $this->authenticate($request);
+
+            // Processar payload - pode vir em formato n8n ou simples
+            $rawData = $request->all();
+            $receivedData = $rawData;
+
+            // Se é array numérico (formato n8n), extrair o primeiro elemento
+            if (is_array($rawData) && !empty($rawData) && array_keys($rawData) === range(0, count($rawData) - 1)) {
+                $firstItem = $rawData[0] ?? null;
+                if (is_array($firstItem) && isset($firstItem['data'])) {
+                    $nestedData = $firstItem['data'];
+                    if (isset($nestedData['data']) && is_array($nestedData['data'])) {
+                        $receivedData = $nestedData['data'];
+                    } else {
+                        $receivedData = $nestedData;
+                    }
+                } else {
+                    $receivedData = $firstItem;
+                }
+            } elseif (is_array($rawData) && isset($rawData['data']) && is_array($rawData['data'])) {
+                if (isset($rawData['data']['data']) && is_array($rawData['data']['data'])) {
+                    $receivedData = $rawData['data']['data'];
+                } else {
+                    $receivedData = $rawData['data'];
+                }
+            }
+
+            // Validar campos obrigatórios
+            // resume_url pode ser string, false, ou null (quando SPED é inválido)
+            $validated = $request->validate([
+                'resume_url' => 'nullable', // Aceita string, false, null
+                'error_code' => 'required|string|max:50',
+                'error_message' => 'required|string|max:500',
+                'refund_credits' => 'sometimes|boolean',
+                'id' => 'sometimes|integer', // ID da consulta (alternativa quando resume_url é false)
+                'user_id' => 'sometimes|integer', // ID do usuário (alternativa quando resume_url é false)
+                'tab_id' => 'sometimes|string|max:36', // tab_id para isolar notificações entre abas
+            ], [], [
+                'resume_url' => 'URL de retomada',
+                'error_code' => 'código do erro',
+                'error_message' => 'mensagem de erro',
+                'refund_credits' => 'reembolsar créditos',
+                'id' => 'ID da consulta',
+                'user_id' => 'ID do usuário',
+                'tab_id' => 'ID da aba',
+            ]);
+
+            // Verificar se resume_url é false (arquivo inválido, não há consulta para buscar)
+            $resumeUrl = $validated['resume_url'];
+            $isInvalidFile = ($resumeUrl === false || $resumeUrl === 'false');
+            
+            if ($isInvalidFile) {
+                $resumeUrl = null;
+            }
+
+            // Buscar a consulta pendente (apenas se não for arquivo inválido)
+            $consulta = null;
+
+            if (!$isInvalidFile) {
+                // Estratégia 1: Buscar por resume_url se fornecido e válido
+                if (!empty($resumeUrl) && is_string($resumeUrl)) {
+                    $consulta = RafConsultaPendente::where('resume_url', $resumeUrl)->first();
+                }
+
+                // Estratégia 2: Se não encontrou e temos id/user_id, buscar por eles
+                if (!$consulta && isset($validated['id']) && isset($validated['user_id'])) {
+                    $consulta = RafConsultaPendente::where('id', $validated['id'])
+                        ->where('user_id', $validated['user_id'])
+                        ->first();
+                }
+
+                // Estratégia 3: Se ainda não encontrou, buscar consulta mais recente
+                if (!$consulta) {
+                    $userIdToSearch = $receivedData['user_id'] ?? $validated['user_id'] ?? $user?->id;
+                    
+                    if ($userIdToSearch) {
+                        $consulta = RafConsultaPendente::where('user_id', $userIdToSearch)
+                            ->where('created_at', '>=', now()->subMinutes(30))
+                            ->orderBy('created_at', 'desc')
+                            ->first();
+                    }
+                }
+            }
+
+            // Se não encontrou consulta (ou é arquivo inválido), criar registro de erro para notificar via SSE
+            if (!$consulta) {
+                $userIdForError = $receivedData['user_id'] ?? $validated['user_id'] ?? $user?->id;
+                $tabIdForError = $receivedData['tab_id'] ?? $validated['tab_id'] ?? null;
+                
+                if ($userIdForError) {
+                    $consulta = RafConsultaPendente::create([
+                        'user_id' => $userIdForError,
+                        'tab_id' => $tabIdForError,
+                        'status' => 'error',
+                        'error_code' => $validated['error_code'],
+                        'error_message' => $validated['error_message'],
+                        'error_at' => now(),
+                    ]);
+                    
+                    Log::info('Registro de erro criado para notificar usuário', [
+                        'consulta_id' => $consulta->id,
+                        'user_id' => $userIdForError,
+                        'tab_id' => $tabIdForError,
+                        'error_code' => $validated['error_code'],
+                        'is_invalid_file' => $isInvalidFile,
+                    ]);
+                    
+                    // Se é arquivo inválido, retornar sucesso imediatamente (SSE vai notificar o usuário)
+                    if ($isInvalidFile) {
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Erro registrado. Usuário será notificado via SSE.',
+                            'consulta_id' => $consulta->id,
+                        ], Response::HTTP_OK);
+                    }
+                } else {
+                    Log::warning('Não foi possível criar consulta de erro - user_id não disponível', [
+                        'resume_url' => $resumeUrl,
+                        'id' => $validated['id'] ?? null,
+                        'error_code' => $validated['error_code'],
+                    ]);
+
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'user_id não disponível para registrar erro.',
+                    ], Response::HTTP_BAD_REQUEST);
+                }
+            }
+
+            // Obter usuário da consulta se não foi autenticado via token
+            if (!$user) {
+                $user = $consulta->user;
+            }
+
+            // Verificar se precisa reembolsar créditos
+            $creditsRefunded = false;
+            $newBalance = null;
+
+            if ($validated['refund_credits'] ?? false) {
+                try {
+                    // Verificar se a consulta já tinha créditos descontados
+                    // Se o status não for 'error' ainda, pode ser que os créditos já tenham sido descontados
+                    // Nesse caso, reembolsar
+                    if ($user && $consulta->valor_total_consulta > 0) {
+                        $this->creditService->add($user, $consulta->valor_total_consulta);
+                        $creditsRefunded = true;
+                        $newBalance = $this->creditService->getBalance($user);
+
+                        Log::info('Créditos reembolsados ao reportar erro', [
+                            'user_id' => $user->id,
+                            'consulta_id' => $consulta->id,
+                            'valor_reembolsado' => $consulta->valor_total_consulta,
+                            'novo_saldo' => $newBalance,
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Erro ao reembolsar créditos', [
+                        'user_id' => $user?->id,
+                        'consulta_id' => $consulta->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    // Continuar mesmo se o reembolso falhar
+                }
+            }
+
+            // Atualizar status para erro
+            $updateData = [
+                'status' => 'error',
+                'error_code' => $validated['error_code'],
+                'error_message' => $validated['error_message'],
+                'credits_refunded' => $creditsRefunded,
+                'error_at' => now(),
+            ];
+            
+            // Atualizar tab_id se foi enviado e a consulta não tinha (para garantir notificação na aba correta)
+            $tabIdFromPayload = $receivedData['tab_id'] ?? $validated['tab_id'] ?? null;
+            if ($tabIdFromPayload && empty($consulta->tab_id)) {
+                $updateData['tab_id'] = $tabIdFromPayload;
+            }
+            
+            $consulta->update($updateData);
+
+            Log::warning('Erro recebido do n8n e registrado', [
+                'consulta_id' => $consulta->id,
+                'user_id' => $consulta->user_id,
+                'tab_id' => $consulta->tab_id,
+                'error_code' => $validated['error_code'],
+                'error_message' => $validated['error_message'],
+                'credits_refunded' => $creditsRefunded,
+            ]);
+
+            $response = [
+                'success' => true,
+                'message' => 'Erro registrado com sucesso.',
+            ];
+
+            if ($creditsRefunded && $newBalance !== null) {
+                $response['credits_refunded'] = true;
+                $response['new_balance'] = $newBalance;
+            }
+
+            return response()->json($response, Response::HTTP_OK);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Erro de validação na API receiveError', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro de validação.',
+                'errors' => $e->errors(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        } catch (\Exception $e) {
+            Log::error('Erro inesperado na API receiveError', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'request_data' => $request->all(),
