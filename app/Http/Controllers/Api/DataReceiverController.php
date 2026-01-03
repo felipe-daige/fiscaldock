@@ -157,6 +157,13 @@ class DataReceiverController extends Controller
                 $updated = true;
             }
             
+            // IMPORTANTE: Limpar processing_started_at para permitir nova confirmação
+            // Isso é necessário quando o n8n envia novos dados para o mesmo registro
+            if ($registro->processing_started_at !== null) {
+                $registro->processing_started_at = null;
+                $updated = true;
+            }
+            
             // Marcar que o n8n enviou os dados (orquestrador)
             if (!$registro->n8n_received_at) {
                 $registro->n8n_received_at = now();
@@ -788,8 +795,13 @@ class DataReceiverController extends Controller
                         ->whereNotIn('id', $notifiedDataReadyIds);
                     
                     // Filtrar por tab_id se fornecido para isolar notificações entre abas
+                    // IMPORTANTE: Também incluir registros sem tab_id, pois o n8n pode criar
+                    // novos registros sem tab_id quando envia dados para /api/data/receive
                     if ($requestedTabId) {
-                        $pendenteQuery->where('tab_id', $requestedTabId);
+                        $pendenteQuery->where(function ($q) use ($requestedTabId) {
+                            $q->where('tab_id', $requestedTabId)
+                              ->orWhereNull('tab_id'); // Incluir registros sem tab_id
+                        });
                     }
                     
                     $pendente = $pendenteQuery->orderBy('n8n_received_at', 'desc')->first();
@@ -838,36 +850,44 @@ class DataReceiverController extends Controller
                     
                     // ========================================
                     // 2. Verificar erros de processamento
-                    // Na primeira verificação, buscar erros dos últimos 5 minutos para capturar
-                    // erros registrados antes da conexão SSE ser estabelecida.
-                    // Nas verificações subsequentes, apenas erros após a conexão SSE.
                     // ========================================
-                    // IMPORTANTE: Só buscar erros que ocorreram APÓS a conexão SSE
-                    // Isso evita mostrar erros antigos quando o usuário envia um novo arquivo
+                    // IMPORTANTE: Só buscar erros que ocorreram APÓS a conexão SSE ser estabelecida
+                    // (ou poucos segundos antes, para capturar erros quase simultâneos).
+                    // Usar uma margem pequena de 3 segundos para evitar race conditions,
+                    // mas não muito grande para evitar pegar erros de envios anteriores.
+                    $errorTimeThreshold = $connectionEstablishedAt->copy()->subSeconds(3);
+                    
                     $errorQuery = RafConsultaPendente::where('user_id', $user->id)
                         ->where('status', 'error')
                         ->whereNotNull('error_at')
                         ->whereNotIn('id', $notifiedErrorIds)
-                        ->where('error_at', '>', $connectionEstablishedAt); // Sempre filtrar por tempo
+                        ->where('error_at', '>=', $errorTimeThreshold);
                     
-                    // Se estamos aguardando um relatorio_id específico, filtrar por ele
-                    if ($requestedRelatorioId) {
-                        $errorQuery->where('id', $requestedRelatorioId);
-                    }
-                    
-                    // Filtrar por tab_id se fornecido para isolar notificações entre abas
-                    if ($requestedTabId) {
+                    // Se temos tab_id ou relatorio_id específico, filtrar por eles
+                    // Isso garante que só pegamos erros relevantes para esta sessão
+                    if ($requestedTabId && $requestedRelatorioId) {
+                        // Buscar por tab_id OU relatorio_id
+                        $errorQuery->where(function ($q) use ($requestedRelatorioId, $requestedTabId) {
+                            $q->where('tab_id', $requestedTabId)
+                              ->orWhere('id', $requestedRelatorioId);
+                        });
+                    } elseif ($requestedTabId) {
                         $errorQuery->where('tab_id', $requestedTabId);
+                    } elseif ($requestedRelatorioId) {
+                        $errorQuery->where('id', $requestedRelatorioId);
                     }
                     
                     $errorConsulta = $errorQuery->orderBy('error_at', 'desc')->first();
                     
                     if ($errorConsulta) {
                         // Enviar notificação de erro
+                        // Incluir tab_id para permitir que o frontend valide pelo tab_id
+                        // mesmo quando o relatorio_id é diferente (caso de erro INVALID_SPED)
                         $errorNotification = [
                             'type' => 'error',
                             'data' => [
                                 'relatorio_id' => $errorConsulta->id,
+                                'tab_id' => $errorConsulta->tab_id,
                                 'code' => $errorConsulta->error_code,
                                 'message' => $errorConsulta->error_message,
                                 'credits_refunded' => (bool) $errorConsulta->credits_refunded,
@@ -1487,20 +1507,81 @@ class DataReceiverController extends Controller
             $userIdToSearch = $receivedData['user_id'] ?? $validated['user_id'] ?? $user?->id;
             $tabIdToSearch = $receivedData['tab_id'] ?? $validated['tab_id'] ?? null;
 
+            Log::debug('receiveError: Iniciando busca de consulta pendente', [
+                'is_invalid_file' => $isInvalidFile,
+                'user_id_to_search' => $userIdToSearch,
+                'tab_id_to_search' => $tabIdToSearch,
+                'resume_url' => $resumeUrl,
+                'error_code' => $validated['error_code'],
+            ]);
+
+            // Quando é arquivo inválido (INVALID_SPED), priorizar busca por tab_id
+            // pois o resume_url não existe e o registro pode ter sido criado em um ID diferente
+            if ($isInvalidFile && $userIdToSearch && $tabIdToSearch) {
+                // Estratégia prioritária para arquivo inválido: buscar por tab_id + user_id
+                // Não filtrar por status para encontrar qualquer registro da mesma aba
+                Log::debug('receiveError: Buscando por tab_id (arquivo inválido)', [
+                    'user_id' => $userIdToSearch,
+                    'tab_id' => $tabIdToSearch,
+                ]);
+                
+                $consulta = RafConsultaPendente::where('user_id', $userIdToSearch)
+                    ->where('tab_id', $tabIdToSearch)
+                    ->where('created_at', '>=', now()->subMinutes(30))
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+                    
+                if ($consulta) {
+                    Log::info('Consulta encontrada por tab_id para erro de arquivo inválido', [
+                        'consulta_id' => $consulta->id,
+                        'user_id' => $userIdToSearch,
+                        'tab_id' => $tabIdToSearch,
+                        'error_code' => $validated['error_code'],
+                    ]);
+                } else {
+                    Log::warning('receiveError: Nenhuma consulta encontrada por tab_id (arquivo inválido)', [
+                        'user_id' => $userIdToSearch,
+                        'tab_id' => $tabIdToSearch,
+                        'total_registros_user' => RafConsultaPendente::where('user_id', $userIdToSearch)
+                            ->where('created_at', '>=', now()->subMinutes(30))
+                            ->count(),
+                        'registros_com_tab_id' => RafConsultaPendente::where('user_id', $userIdToSearch)
+                            ->where('tab_id', $tabIdToSearch)
+                            ->where('created_at', '>=', now()->subMinutes(30))
+                            ->count(),
+                    ]);
+                }
+            }
+
             // Estratégia 1: Buscar por resume_url se fornecido e válido (apenas se não for arquivo inválido)
-            if (!$isInvalidFile && !empty($resumeUrl) && is_string($resumeUrl)) {
+            if (!$consulta && !$isInvalidFile && !empty($resumeUrl) && is_string($resumeUrl)) {
+                Log::debug('receiveError: Buscando por resume_url', ['resume_url' => $resumeUrl]);
                 $consulta = RafConsultaPendente::where('resume_url', $resumeUrl)->first();
+                if ($consulta) {
+                    Log::debug('receiveError: Consulta encontrada por resume_url', ['consulta_id' => $consulta->id]);
+                }
             }
 
             // Estratégia 2: Se não encontrou e temos id/user_id, buscar por eles
             if (!$consulta && isset($validated['id']) && isset($validated['user_id'])) {
+                Log::debug('receiveError: Buscando por id/user_id', [
+                    'id' => $validated['id'],
+                    'user_id' => $validated['user_id'],
+                ]);
                 $consulta = RafConsultaPendente::where('id', $validated['id'])
                     ->where('user_id', $validated['user_id'])
                     ->first();
+                if ($consulta) {
+                    Log::debug('receiveError: Consulta encontrada por id/user_id', ['consulta_id' => $consulta->id]);
+                }
             }
 
-            // Estratégia 3: Buscar por tab_id + user_id (mais preciso para erros de arquivo inválido)
+            // Estratégia 3: Buscar por tab_id + user_id (para casos não-invalidos também)
             if (!$consulta && $userIdToSearch && $tabIdToSearch) {
+                Log::debug('receiveError: Buscando por tab_id (caso não-inválido)', [
+                    'user_id' => $userIdToSearch,
+                    'tab_id' => $tabIdToSearch,
+                ]);
                 $consulta = RafConsultaPendente::where('user_id', $userIdToSearch)
                     ->where('tab_id', $tabIdToSearch)
                     ->where('status', 'pending')
@@ -1514,16 +1595,25 @@ class DataReceiverController extends Controller
                         'user_id' => $userIdToSearch,
                         'tab_id' => $tabIdToSearch,
                     ]);
+                } else {
+                    Log::debug('receiveError: Nenhuma consulta encontrada por tab_id (caso não-inválido)', [
+                        'user_id' => $userIdToSearch,
+                        'tab_id' => $tabIdToSearch,
+                    ]);
                 }
             }
 
             // Estratégia 4: Se ainda não encontrou, buscar consulta mais recente do usuário
             if (!$consulta && $userIdToSearch) {
+                Log::debug('receiveError: Buscando consulta mais recente do usuário', ['user_id' => $userIdToSearch]);
                 $consulta = RafConsultaPendente::where('user_id', $userIdToSearch)
                     ->where('status', 'pending')
                     ->where('created_at', '>=', now()->subMinutes(30))
                     ->orderBy('created_at', 'desc')
                     ->first();
+                if ($consulta) {
+                    Log::debug('receiveError: Consulta mais recente encontrada', ['consulta_id' => $consulta->id]);
+                }
             }
 
             // Se encontrou consulta existente, atualizar com o erro

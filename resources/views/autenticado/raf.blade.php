@@ -1117,9 +1117,19 @@
                         const errorData = notification.data;
                         
                         // Validar que é para o relatório atual (se aplicável)
-                        if (currentRelatorioId && errorData.relatorio_id && 
-                            errorData.relatorio_id !== currentRelatorioId) {
-                            console.log('[RAF] Erro recebido para relatório diferente. Ignorando.');
+                        // Aceitar erro se: (1) tab_id corresponde OU (2) relatorio_id corresponde OU (3) não temos ID específico
+                        // Isso permite receber erros de registros criados pelo receiveError com ID diferente
+                        const isForCurrentTab = errorData.tab_id && errorData.tab_id === tabId;
+                        const isForCurrentRelatorio = !currentRelatorioId || !errorData.relatorio_id || 
+                            errorData.relatorio_id === currentRelatorioId;
+                        
+                        if (!isForCurrentTab && !isForCurrentRelatorio) {
+                            console.log('[RAF] Erro recebido para relatório/aba diferente. Ignorando.', {
+                                errorTabId: errorData.tab_id,
+                                currentTabId: tabId,
+                                errorRelatorioId: errorData.relatorio_id,
+                                currentRelatorioId: currentRelatorioId
+                            });
                             return;
                         }
                         
@@ -1781,8 +1791,14 @@
                 const data = await response.json();
                 
                 // Armazenar relatorio_id se estiver presente na resposta
+                // Preservar currentRelatorioId existente se a resposta não incluir ID
+                // (pode acontecer em alguns casos, mas o ID já deveria estar definido)
                 if (data.id || data.relatorio_id) {
                     currentRelatorioId = data.id || data.relatorio_id;
+                    console.log('[RAF] currentRelatorioId atualizado após confirmação de créditos:', currentRelatorioId);
+                } else if (!currentRelatorioId) {
+                    // Se não temos ID na resposta E não temos ID anterior, logar aviso
+                    console.warn('[RAF] Confirmação de créditos retornou sem ID e não há currentRelatorioId anterior');
                 }
                 
                     // Se for resposta assíncrona (n8n retornou JSON ao invés de CSV)
@@ -1798,7 +1814,14 @@
                     
                     // Conectar SSE para receber notificação quando CSV estiver disponível
                     // O SSE vai notificar quando o CSV estiver pronto, sem necessidade de polling
-                    connectSSE(currentRelatorioId);
+                    // Garantir que temos um relatorio_id antes de conectar
+                    if (currentRelatorioId) {
+                        console.log('[RAF] Conectando SSE após confirmação de créditos com relatorio_id:', currentRelatorioId);
+                        connectSSE(currentRelatorioId);
+                    } else {
+                        console.error('[RAF] ERRO: Tentando conectar SSE sem currentRelatorioId após confirmação de créditos');
+                        showAlert('error', 'Erro ao processar confirmação. Por favor, tente novamente.');
+                    }
                     
                     // Fechar o modal primeiro para mostrar o botão principal
                     hideCreditsConfirmation();

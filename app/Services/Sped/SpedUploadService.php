@@ -206,6 +206,19 @@ class SpedUploadService
                         
                         if ($relatorio) {
                             $relatorioId = $relatorio->id;
+                            
+                            // IMPORTANTE: Sempre atualizar o tab_id quando fornecido e diferente do atual
+                            // Isso permite que o receiveError encontre o registro pelo tab_id correto
+                            // mesmo quando o registro foi criado em uma sessão anterior
+                            if ($tabId && $relatorio->tab_id !== $tabId) {
+                                $relatorio->tab_id = $tabId;
+                                $relatorio->save();
+                                Log::info('Tab ID atualizado no registro RafConsultaPendente', [
+                                    'relatorio_id' => $relatorioId,
+                                    'old_tab_id' => $relatorio->getOriginal('tab_id'),
+                                    'new_tab_id' => $tabId,
+                                ]);
+                            }
                         }
                     }
                     
