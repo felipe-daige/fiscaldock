@@ -11,7 +11,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'name', // Mantém o campo name padrão
+        'name',
         'sobrenome',
         'email',
         'password',
@@ -34,23 +34,39 @@ class User extends Authenticatable
     }
 
     // Relacionamentos
-    public function empresas()
+    public function clientes()
     {
-        return $this->hasMany(Empresa::class);
+        return $this->hasMany(Cliente::class);
     }
 
     public function funcionariosCriados()
     {
-        return $this->hasMany(Funcionario::class, 'criado_por');
+        return $this->hasMany(ClienteFuncionario::class, 'criado_por');
     }
 
-    public function solicitacoesSocio()
+    public function solicitacoes()
     {
-        return $this->hasMany(SolicitacaoSocio::class);
+        return $this->hasMany(ClienteSolicitacao::class);
     }
 
     public function rafConsultasPendentes()
     {
         return $this->hasMany(RafConsultaPendente::class);
+    }
+
+    public function rafRelatoriosProcessados()
+    {
+        return $this->hasMany(RafRelatorioProcessado::class);
+    }
+
+    public function privateDocuments()
+    {
+        return $this->hasMany(PrivateDocument::class);
+    }
+
+    // Helper - mantém compatibilidade com código antigo
+    public function empresas()
+    {
+        return $this->clientes();
     }
 }

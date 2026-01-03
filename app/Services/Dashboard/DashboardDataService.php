@@ -2,7 +2,7 @@
 
 namespace App\Services\Dashboard;
 
-use App\Models\Empresa;
+use App\Models\Cliente;
 use Carbon\Carbon;
 
 class DashboardDataService
@@ -11,23 +11,23 @@ class DashboardDataService
      * Obtém todos os dados do dashboard para um usuário.
      *
      * @param int $userId ID do usuário
-     * @return array Dados do dashboard (KPIs, monitoramento de empresas, etc.)
+     * @return array Dados do dashboard (KPIs, monitoramento de clientes, etc.)
      */
     public function getDashboardData(int $userId): array
     {
-        $empresasIds = Empresa::where('user_id', $userId)->pluck('id')->toArray();
+        $clientesIds = Cliente::where('user_id', $userId)->pluck('id')->toArray();
 
         // KPIs - Calculando dados reais quando possível
         $kpi_xml_pendentes = 0; // Funcionalidade removida
 
-        $total_empresas = Empresa::where('user_id', $userId)->count();
+        $total_clientes = Cliente::where('user_id', $userId)->count();
 
         // Dados mock para CND e SPED (até implementação completa)
-        $kpi_cnd_risco = 3; // Mock: empresas com CND vencida ou vencendo em < 5 dias
+        $kpi_cnd_risco = 3; // Mock: clientes com CND vencida ou vencendo em < 5 dias
         $kpi_sped_pendentes = 12; // Mock: SPEDs pendentes no mês atual
 
         // Lista RAF - Mix de dados reais e mock
-        $monitoramento_empresas = $this->getMonitoramentoEmpresas($userId);
+        $monitoramento_clientes = $this->getMonitoramentoClientes($userId);
 
         // Status da última sincronização (mock)
         $ultima_sincronizacao = Carbon::now()->subHours(2);
@@ -36,24 +36,24 @@ class DashboardDataService
             'kpi_cnd_risco' => $kpi_cnd_risco,
             'kpi_xml_pendentes' => $kpi_xml_pendentes,
             'kpi_sped_pendentes' => $kpi_sped_pendentes,
-            'total_empresas' => $total_empresas > 0 ? $total_empresas : count($monitoramento_empresas),
-            'monitoramento_empresas' => $monitoramento_empresas,
+            'total_empresas' => $total_clientes > 0 ? $total_clientes : count($monitoramento_clientes),
+            'monitoramento_empresas' => $monitoramento_clientes,
             'ultima_sincronizacao' => $ultima_sincronizacao,
         ];
     }
 
     /**
-     * Obtém dados de monitoramento das empresas do usuário.
+     * Obtém dados de monitoramento dos clientes do usuário.
      *
      * @param int $userId ID do usuário
-     * @return array Lista de empresas com dados de monitoramento
+     * @return array Lista de clientes com dados de monitoramento
      */
-    private function getMonitoramentoEmpresas(int $userId): array
+    private function getMonitoramentoClientes(int $userId): array
     {
-        $empresas = Empresa::where('user_id', $userId)->get();
-        $monitoramento_empresas = [];
+        $clientes = Cliente::where('user_id', $userId)->get();
+        $monitoramento_clientes = [];
 
-        foreach ($empresas as $empresa) {
+        foreach ($clientes as $cliente) {
             // Funcionalidade de XML removida
             $xmlPendentes = 0;
 
@@ -74,10 +74,10 @@ class DashboardDataService
             // Calcular conciliação (mock - funcionalidade de XML removida)
             $conciliacaoPct = 0;
 
-            $monitoramento_empresas[] = [
-                'id' => $empresa->id,
-                'nome' => $empresa->nome_empresa,
-                'cnpj' => $empresa->cnpj,
+            $monitoramento_clientes[] = [
+                'id' => $cliente->id,
+                'nome' => $cliente->nome,
+                'cnpj' => $cliente->documento,
                 'regime' => $regime,
                 'cnd_status' => $cndStatus,
                 'cnd_vencimento' => $cndVencimento->format('Y-m-d'),
@@ -87,20 +87,20 @@ class DashboardDataService
             ];
         }
 
-        // Se não houver empresas, adicionar dados mock para demonstração
-        if (empty($monitoramento_empresas)) {
-            $monitoramento_empresas = $this->getMockEmpresas();
+        // Se não houver clientes, adicionar dados mock para demonstração
+        if (empty($monitoramento_clientes)) {
+            $monitoramento_clientes = $this->getMockClientes();
         }
 
-        return $monitoramento_empresas;
+        return $monitoramento_clientes;
     }
 
     /**
-     * Retorna dados mock de empresas para demonstração.
+     * Retorna dados mock de clientes para demonstração.
      *
-     * @return array Lista de empresas mock
+     * @return array Lista de clientes mock
      */
-    private function getMockEmpresas(): array
+    private function getMockClientes(): array
     {
         return [
             [
@@ -139,4 +139,3 @@ class DashboardDataService
         ];
     }
 }
-
