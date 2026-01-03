@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('enderecos', function (Blueprint $table) {
+        Schema::create('clientes_enderecos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('empresa_id')->constrained('empresas')->onDelete('cascade');
+            $table->foreignId('cliente_id')->constrained('clientes')->onDelete('cascade');
+            $table->enum('tipo', ['principal', 'correspondencia', 'filial'])->default('principal');
             $table->string('cep')->nullable();
             $table->string('logradouro')->nullable();
             $table->string('numero')->nullable();
@@ -21,7 +22,7 @@ return new class extends Migration
             $table->string('bairro')->nullable();
             $table->string('cidade')->nullable();
             $table->string('estado')->nullable();
-            $table->string('pais')->nullable();
+            $table->string('pais')->nullable()->default('Brasil');
             $table->timestamps();
         });
     }
@@ -31,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('enderecos');
+        Schema::dropIfExists('clientes_enderecos');
     }
 };

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\Empresa;
+use App\Models\Cliente;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
@@ -78,14 +78,35 @@ class AuthController extends Controller
         }
 
         $credentials = $request->only('email', 'password');
+        
+        // Log para debug
+        Log::info('Tentativa de login', [
+            'email' => $credentials['email'] ?? 'não fornecido',
+            'password_length' => isset($credentials['password']) ? strlen($credentials['password']) : 0,
+            'credentials_keys' => array_keys($credentials)
+        ]);
+        
         $user = Auth::attempt($credentials);
         
         if(!$user){
+            // Verificar se o usuário existe
+            $userExists = User::where('email', $credentials['email'] ?? '')->first();
+            Log::warning('Falha no login', [
+                'email' => $credentials['email'] ?? 'não fornecido',
+                'user_exists' => $userExists ? 'sim' : 'não',
+                'user_id' => $userExists?->id
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Email ou senha inválidos',
             ], 401);
         }
+        
+        Log::info('Login bem-sucedido', [
+            'user_id' => Auth::id(),
+            'email' => Auth::user()->email
+        ]);
 
         return response()->json([
             'success' => true,
@@ -135,9 +156,10 @@ class AuthController extends Controller
             ], 422);
         }
 
-        return $this->criarEmpresaNova($request);
+        return $this->criarClienteNovo($request);
     }
-    private function criarEmpresaNova(Request $request){
+
+    private function criarClienteNovo(Request $request){
         DB::beginTransaction();
 
         try{
@@ -149,15 +171,20 @@ class AuthController extends Controller
                 'password' => Hash::make($request->senha),
             ]);
 
-            $empresa = Empresa::create([
+            // Detectar se é CPF ou CNPJ baseado no tamanho do documento
+            $documento = preg_replace('/\D/', '', $request->cnpj);
+            $tipoPessoa = strlen($documento) <= 11 ? 'PF' : 'PJ';
+
+            $cliente = Cliente::create([
                 'user_id' => $user->id,
-                'nome_empresa' => $request->empresa,
-                'cnpj' => $request->cnpj,
-                'cargo' => $request->cargo,
+                'tipo_pessoa' => $tipoPessoa,
+                'documento' => $request->cnpj,
+                'nome' => $request->empresa,
+                'razao_social' => $tipoPessoa === 'PJ' ? $request->empresa : null,
+                'telefone' => $request->telefone,
+                'email' => $request->email,
                 'faturamento_anual' => $request->faturamento,
                 'preparacao_reforma' => $request->preparacao_reforma,
-                'telefone_empresa' => $request->telefone,
-                'email_empresa' => $request->email,
             ]);
 
             Auth::attempt($request->only('email', 'senha'));
@@ -166,7 +193,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Empresa cadastrada com sucesso!',
+                'message' => 'Cadastro realizado com sucesso!',
                 'redirect' => '/dashboard'
             ]);
 
@@ -178,7 +205,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao cadastrar sua empresa.'
+                'message' => 'Erro ao realizar cadastro.'
             ], 500);
         }
     }
@@ -199,4 +226,3 @@ class AuthController extends Controller
         return redirect('/inicio');
     }
 }
-

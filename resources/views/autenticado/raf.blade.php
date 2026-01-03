@@ -287,6 +287,39 @@
             {{-- Fim Coluna direita: space-y-6 --}}
         </div>
         {{-- Fim Grid 2 colunas --}}
+
+        {{-- Card de Tempo Estimado de Espera --}}
+        <div class="mt-6 bg-white rounded-xl border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">Tempo Estimado de Espera</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {{-- Modalidade Gratuita --}}
+                <div class="rounded-lg border border-gray-200 p-4">
+                    <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Gratuita (Regime)</h4>
+                    <div class="text-sm">
+                        <div class="flex justify-between py-2 border-b border-gray-100"><span class="font-medium text-gray-900">25</span><span class="text-gray-500">~45s</span></div>
+                        <div class="flex justify-between py-2 border-b border-gray-100"><span class="font-medium text-gray-900">50</span><span class="text-gray-500">~1min</span></div>
+                        <div class="flex justify-between py-2 border-b border-gray-100"><span class="font-medium text-gray-900">100</span><span class="text-gray-500">~2min</span></div>
+                        <div class="flex justify-between py-2 border-b border-gray-100"><span class="font-medium text-gray-900">250</span><span class="text-gray-500">~6min</span></div>
+                        <div class="flex justify-between py-2 border-b border-gray-100"><span class="font-medium text-gray-900">500</span><span class="text-gray-500">~11min</span></div>
+                        <div class="flex justify-between py-2"><span class="font-medium text-gray-900">1.000</span><span class="text-gray-500">~22min</span></div>
+                    </div>
+                </div>
+                
+                {{-- Modalidade Completa --}}
+                <div class="rounded-lg border border-gray-200 p-4">
+                    <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Completa (Regime + CND)</h4>
+                    <div class="text-sm">
+                        <div class="flex justify-between py-2 border-b border-gray-100"><span class="font-medium text-gray-900">25</span><span class="text-gray-500">~3min</span></div>
+                        <div class="flex justify-between py-2 border-b border-gray-100"><span class="font-medium text-gray-900">50</span><span class="text-gray-500">~6min</span></div>
+                        <div class="flex justify-between py-2 border-b border-gray-100"><span class="font-medium text-gray-900">100</span><span class="text-gray-500">~12min</span></div>
+                        <div class="flex justify-between py-2 border-b border-gray-100"><span class="font-medium text-gray-900">250</span><span class="text-gray-500">~31min</span></div>
+                        <div class="flex justify-between py-2 border-b border-gray-100"><span class="font-medium text-gray-900">500</span><span class="text-gray-500">~1h</span></div>
+                        <div class="flex justify-between py-2"><span class="font-medium text-gray-900">1.000</span><span class="text-gray-500">~2h</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
         </div>
         {{-- Fim Aba: Processar SPED --}}
 
@@ -1760,7 +1793,7 @@
                     // Não exibir mensagem "Workflow was started" ao usuário
                     const message = data.message && !data.message.toLowerCase().includes('workflow was started')
                         ? data.message
-                        : 'Créditos confirmados. Aguarde enquanto o relatório final está sendo gerado...';
+                        : 'Créditos confirmados. Aguarde enquanto o relatório final está sendo gerado. Utilize a lista abaixo para estimaro o tempo de espera para cada relatório';
                     showAlert('info', message);
                     
                     // Conectar SSE para receber notificação quando CSV estiver disponível
@@ -1824,7 +1857,7 @@
                 // Esconder botão de download até o CSV estar realmente disponível
                 resetDownload();
                 
-                showAlert('info', 'Créditos confirmados. Aguarde enquanto o relatório final está sendo gerado...');
+                showAlert('info', 'Créditos confirmados. Aguarde enquanto o relatório final está sendo gerado. Utilize a lista abaixo para estimaro o tempo de espera para cada relatório');
                 
                 // Conectar SSE para receber notificação quando CSV estiver disponível
                 connectSSE(currentRelatorioId);

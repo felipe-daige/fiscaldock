@@ -8,11 +8,13 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('solicitacoes_socio', function (Blueprint $table) {
+        Schema::create('clientes_solicitacoes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('empresa_id')->constrained('empresas')->onDelete('cascade');
+            $table->foreignId('cliente_id')->constrained('clientes')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->enum('tipo', ['socio', 'acesso', 'outro'])->default('socio');
             $table->enum('status', ['pendente', 'aprovado', 'rejeitado'])->default('pendente');
+            $table->text('descricao')->nullable();
             $table->timestamp('solicitado_em');
             $table->timestamp('respondido_em')->nullable();
             $table->timestamps();
@@ -21,6 +23,6 @@ return new class extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('solicitacoes_socio');
+        Schema::dropIfExists('clientes_solicitacoes');
     }
 };

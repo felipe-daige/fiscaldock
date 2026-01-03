@@ -116,7 +116,7 @@
 
                             {{-- Card Completo --}}
                             <button type="button" class="pacote-btn flex-1 bg-blue-50 border-2 border-blue-500 rounded-lg p-4 shadow-sm text-blue-700 transition-colors flex flex-col items-center justify-center text-center relative" data-pacote="completo">
-                                <span class="absolute -top-2 -right-2 bg-white text-yellow-600 text-xs px-2 py-0.5 rounded-full font-semibold border-2 border-yellow-500 shadow-sm">⭐</span>
+                                <span class="absolute -top-2 -right-2 bg-white text-yellow-600 text-xs px-2 py-0.5 rounded-full font-semibold border-2 border-yellow-500 shadow-sm">Favorito</span>
                                 <div class="text-3xl mb-2">📊</div>
                                 <span class="font-semibold text-sm mb-1">Completo</span>
                                 <span class="text-xs text-blue-600">5 listas</span>
@@ -241,7 +241,7 @@
                                 <span class="text-xs text-gray-500">2 créditos</span>
                             </button>
                             <button type="button" class="pacote-btn-lote flex-1 bg-blue-50 border-2 border-blue-500 rounded-lg p-4 shadow-sm text-blue-700 transition-colors flex flex-col items-center justify-center text-center relative" data-pacote-lote="completo">
-                                <span class="absolute -top-2 -right-2 bg-white text-yellow-600 text-xs px-2 py-0.5 rounded-full font-semibold border-2 border-yellow-500 shadow-sm">⭐</span>
+                                <span class="absolute -top-2 -right-2 bg-white text-yellow-600 text-xs px-2 py-0.5 rounded-full font-semibold border-2 border-yellow-500 shadow-sm">Favorito</span>
                                 <div class="text-3xl mb-2">📊</div>
                                 <span class="font-semibold text-sm mb-1">Completo</span>
                                 <span class="text-xs text-blue-600">5 créditos</span>
