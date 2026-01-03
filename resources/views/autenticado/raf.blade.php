@@ -1143,7 +1143,7 @@
                         hideConfirmButtons();
                         
                         // Esconder badge de sucesso
-                        if (resultBadge) resultBadge.classList.add('hidden');
+                        updateResultBadge('hidden');
                         
                         // Montar mensagem amigável
                         let userMessage = errorData.message || 'Ocorreu um erro no processamento.';
@@ -1220,7 +1220,6 @@
                                 setDownload(blob, filename);
                                 freezeTimer();
                                 showAlert('success', 'Processado com sucesso. O CSV está pronto para download.');
-                                if (resultBadge) resultBadge.classList.remove('hidden');
                                 setLoading(false);
                                 
                                 // Parar processamento quando CSV estiver disponível via SSE
@@ -1324,6 +1323,33 @@
     // Armazenar referência global para o SPA poder chamar
     window._rafDisconnectSSE = disconnectSSE;
 
+    /**
+     * Atualiza o badge de status do resultado.
+     * @param {string} state - 'processing' (amarelo), 'completed' (verde), ou 'hidden' (escondido)
+     */
+    const updateResultBadge = (state) => {
+        if (!resultBadge) return;
+        
+        // Remover todas as classes de estado
+        resultBadge.classList.remove('bg-green-50', 'text-green-700', 'border-green-200');
+        resultBadge.classList.remove('bg-amber-50', 'text-amber-700', 'border-amber-200');
+        
+        if (state === 'processing') {
+            // Estado: Processando (amarelo)
+            resultBadge.textContent = 'Processando';
+            resultBadge.classList.add('bg-amber-50', 'text-amber-700', 'border-amber-200');
+            resultBadge.classList.remove('hidden');
+        } else if (state === 'completed') {
+            // Estado: Processado (verde)
+            resultBadge.textContent = 'Processado';
+            resultBadge.classList.add('bg-green-50', 'text-green-700', 'border-green-200');
+            resultBadge.classList.remove('hidden');
+        } else {
+            // Estado: Escondido
+            resultBadge.classList.add('hidden');
+        }
+    };
+
     const resetDownload = () => {
         if (currentDownloadUrl) {
             URL.revokeObjectURL(currentDownloadUrl);
@@ -1335,6 +1361,8 @@
             downloadLink.removeAttribute('download');
         }
         if (downloadLabel) downloadLabel.textContent = 'Baixar CSV';
+        // Esconder o badge quando resetar
+        updateResultBadge('hidden');
     };
 
     const setDownload = (blob, filename = 'resultado.csv') => {
@@ -1355,6 +1383,9 @@
         
         // Garantir que o link não cause redirecionamento
         downloadLink.setAttribute('target', '_self');
+        
+        // Mostrar badge como "Processado" quando o download estiver disponível
+        updateResultBadge('completed');
     };
 
     // ========== Função para Confirmar Recebimento do CSV ==========
@@ -1597,7 +1628,7 @@
         
         // Se o processamento estiver em andamento, garantir que o spinner esteja visível
         if (isProcessing) {
-            submitLabel.textContent = 'Processando...';
+            submitLabel.textContent = 'Gerando Relatório';
             submitSpinner.classList.remove('hidden');
             submitIcon.classList.add('hidden');
         }
@@ -1651,7 +1682,6 @@
                     
                     freezeTimer();
                     showAlert('success', 'Processado com sucesso. CSV disponível.');
-                    resultBadge.classList.remove('hidden');
                     setLoading(false);
                 } else {
                     console.warn('[RAF] CSV recebido em onDataReceived mas blob está vazio');
@@ -1856,7 +1886,6 @@
                 setDownload(blob, filename);
                 freezeTimer();
                 showAlert('success', 'Processado com sucesso. O CSV está pronto para download.');
-                resultBadge.classList.remove('hidden');
                 
                 // Parar processamento quando CSV estiver disponível
                 setProcessing(false);
@@ -2259,14 +2288,18 @@
         // Se o modal estiver aberto, o botão principal está escondido
         if (!isModalOpen) {
             if (isProcessing) {
-                submitLabel.textContent = 'Processando...';
+                submitLabel.textContent = 'Gerando Relatório';
                 submitSpinner.classList.remove('hidden');
                 submitIcon.classList.add('hidden');
+                // Mostrar badge como "Processando" quando iniciar processamento
+                updateResultBadge('processing');
             } else {
                 // Voltar ao estado normal (não processando)
                 submitLabel.textContent = isLoading ? 'Enviando...' : 'Enviar SPED';
                 submitSpinner.classList.toggle('hidden', !isLoading);
                 submitIcon.classList.toggle('hidden', isLoading);
+                // Não alterar o badge aqui - ele deve manter o estado atual
+                // Se já estiver "Processado", manter; se não houver download, manter escondido
             }
         }
         
@@ -2438,7 +2471,6 @@
                         hasDownloadSuccess = true;
                         freezeTimer();
                         showAlert('success', 'Processado com sucesso. O CSV está pronto para download.');
-                        resultBadge.classList.remove('hidden');
                         
                         // Parar processamento quando CSV estiver disponível
                         setProcessing(false);
@@ -2498,7 +2530,6 @@
                 hasDownloadSuccess = true;
                 freezeTimer();
                 showAlert('success', 'Processado com sucesso. O CSV está pronto para download.');
-                resultBadge.classList.remove('hidden');
                 
                 // Parar processamento quando CSV estiver disponível
                 setProcessing(false);
@@ -2551,7 +2582,6 @@
             }
 
             showAlert('success', 'Processado com sucesso.');
-            resultBadge.classList.remove('hidden');
 
             if (data.csv) {
                 const blob = new Blob([data.csv], { type: 'text/csv;charset=utf-8;' });
@@ -2587,7 +2617,6 @@
                 errorMessage = 'O processamento está demorando mais que o esperado. O SPED pode estar sendo processado em segundo plano. Aguarde alguns minutos e verifique novamente.';
             }
             showAlert('error', errorMessage);
-            resultBadge.classList.add('hidden');
             resetDownload();
         } finally {
             setLoading(false);
