@@ -121,9 +121,12 @@ class CreditController extends Controller
         // Verificar se já está sendo processado (lock adquirido nos últimos 60 segundos)
         $lockTimeout = 60; // segundos
         if ($relatorio->processing_started_at !== null) {
-            $secondsSinceLock = now()->diffInSeconds($relatorio->processing_started_at);
+            // Usar diffInSeconds com absolute=false para obter valor com sinal
+            // Se processing_started_at está no futuro (valor negativo), considerar como lock inválido
+            $secondsSinceLock = now()->diffInSeconds($relatorio->processing_started_at, false);
             
-            if ($secondsSinceLock < $lockTimeout) {
+            // Lock só é válido se processing_started_at está no passado E dentro do timeout
+            if ($secondsSinceLock >= 0 && $secondsSinceLock < $lockTimeout) {
                 Log::warning('Requisição bloqueada: processamento já em andamento', [
                     'user_id' => $user->id,
                     'relatorio_id' => $relatorio->id,
@@ -138,8 +141,8 @@ class CreditController extends Controller
                 ], Response::HTTP_CONFLICT);
             }
             
-            // Lock expirou, permitir nova tentativa
-            Log::info('Lock expirado, permitindo nova tentativa', [
+            // Lock expirou ou é inválido (timestamp no futuro), permitir nova tentativa
+            Log::info('Lock expirado ou inválido, permitindo nova tentativa', [
                 'user_id' => $user->id,
                 'relatorio_id' => $relatorio->id,
                 'seconds_since_lock' => $secondsSinceLock,
