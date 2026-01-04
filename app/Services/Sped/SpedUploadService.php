@@ -516,11 +516,11 @@ class SpedUploadService
     }
 
     /**
-     * Envia apenas o status (approved/denied) para o webhook sem aguardar CSV.
+     * Envia apenas o status (approved/declined) para o webhook sem aguardar CSV.
      * Usado quando o usuário confirma o uso de créditos.
      *
      * @param string $resumeUrl URL de callback do n8n
-     * @param string $status 'approved' ou 'denied'
+     * @param string $status 'approved' ou 'declined' (aceita também 'denied', 'negado' para compatibilidade)
      * @return array{success: bool, message?: string}
      */
     public function sendWebhookStatus(string $resumeUrl, string $status): array
@@ -539,8 +539,8 @@ class SpedUploadService
         // Garantir que o status está no formato correto
         $webhookStatus = match($status) {
             'approved', 'confirmado', 'confirmed' => 'approved',
-            'denied', 'negado', 'declined' => 'denied',
-            default => 'denied',
+            'denied', 'negado', 'declined' => 'declined',
+            default => 'declined',
         };
 
         try {

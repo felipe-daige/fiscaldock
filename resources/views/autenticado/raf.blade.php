@@ -210,7 +210,7 @@
                             <p class="mt-1 text-sm text-gray-600">Detalhes do processamento da consulta.</p>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
                                 <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Quantidade de participantes</p>
                                 <p class="text-2xl font-bold text-gray-900" id="info-qtd-participantes">--</p>
@@ -218,10 +218,6 @@
                             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
                                 <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Valor total da consulta</p>
                                 <p class="text-2xl font-bold text-gray-900" id="info-valor-total">--</p>
-                            </div>
-                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Custo unitário da consulta</p>
-                                <p class="text-2xl font-bold text-gray-900" id="info-custo-unitario">--</p>
                             </div>
                         </div>
 
@@ -651,7 +647,6 @@
     const infoConsultaCard = document.getElementById('info-consulta-card');
     const infoQtdParticipantes = document.getElementById('info-qtd-participantes');
     const infoValorTotal = document.getElementById('info-valor-total');
-    const infoCustoUnitario = document.getElementById('info-custo-unitario');
     const infoAlertEl = document.getElementById('info-alert');
     const infoAlertTextEl = document.getElementById('info-alert-text');
     const infoAlertIconWrap = document.getElementById('info-alert-icon');
@@ -798,13 +793,11 @@
 
         const qtdParticipantes = data.qtd_participantes_unicos ?? data.qnt_participantes ?? null;
         const valorTotal = data.valor_total_consulta ?? null;
-        const custoUnitario = data.custo_unitario ?? null;
 
         // Verificar se há dados válidos para exibir
         // Considera válido se pelo menos um dos valores não for null/undefined
         const hasValidData = (qtdParticipantes !== null && qtdParticipantes !== undefined && qtdParticipantes > 0) ||
-                             (valorTotal !== null && valorTotal !== undefined && valorTotal > 0) ||
-                             (custoUnitario !== null && custoUnitario !== undefined && custoUnitario > 0);
+                             (valorTotal !== null && valorTotal !== undefined && valorTotal > 0);
 
         // IMPORTANTE: Se está processando E já tem dados válidos, nunca limpar valores
         // Apenas atualizar se novos dados válidos forem fornecidos
@@ -819,11 +812,6 @@
                 if (infoValorTotal && valorTotal !== null && valorTotal !== undefined) {
                     const valorFormatted = formatCurrency(valorTotal);
                     infoValorTotal.textContent = valorFormatted;
-                }
-
-                if (infoCustoUnitario && custoUnitario !== null && custoUnitario !== undefined) {
-                    const custoFormatted = formatCurrency(custoUnitario);
-                    infoCustoUnitario.textContent = custoFormatted;
                 }
             }
             // Se não houver dados válidos, manter valores existentes (não fazer nada)
@@ -845,11 +833,6 @@
                 const valorFormatted = formatCurrency(valorTotal);
                 infoValorTotal.textContent = valorFormatted;
             }
-
-            if (infoCustoUnitario && custoUnitario !== null && custoUnitario !== undefined) {
-                const custoFormatted = formatCurrency(custoUnitario);
-                infoCustoUnitario.textContent = custoFormatted;
-            }
         } else if (!infoCardHasValidData) {
             // Só atualizar para '--' se o card ainda não tiver sido preenchido com dados válidos
             // Se já tiver dados válidos, não limpar os valores
@@ -859,10 +842,6 @@
 
             if (infoValorTotal) {
                 infoValorTotal.textContent = '--';
-            }
-
-            if (infoCustoUnitario) {
-                infoCustoUnitario.textContent = '--';
             }
         }
         // Se infoCardHasValidData for true e não houver dados válidos agora,
@@ -1258,7 +1237,6 @@
                                 resume_url: notification.data.resume_url,
                                 valor_total_consulta: notification.data.valor_total_consulta,
                                 qtd_participantes_unicos: notification.data.qtd_participantes_unicos || 0,
-                                custo_unitario: notification.data.custo_unitario || 0,
                             };
                             
                             // Verificar condições para exibir modal
@@ -1269,8 +1247,7 @@
                                 const modalShown = await showCreditsConfirmation(
                                     dbData.resume_url,
                                     dbData.valor_total_consulta,
-                                    dbData.qtd_participantes_unicos,
-                                    dbData.custo_unitario
+                                    dbData.qtd_participantes_unicos
                                 );
                                 // Só desconectar SSE se o modal foi realmente exibido
                                 // Se foi bloqueado (resumeUrl já processado), manter SSE ativo para receber csv_ready
@@ -1433,7 +1410,7 @@
 
     // ========== Funções do Card de Confirmação de Créditos ==========
     
-    const showCreditsConfirmation = async (resumeUrl, valorTotalConsulta, qtdParticipantesUnicos, custoUnitario) => {
+    const showCreditsConfirmation = async (resumeUrl, valorTotalConsulta, qtdParticipantesUnicos) => {
         // Verificar se este resumeUrl já foi processado
         if (processedResumeUrls.has(resumeUrl)) {
             console.log('[RAF] showCreditsConfirmation bloqueado - resumeUrl já foi processado:', resumeUrl);
@@ -1524,8 +1501,7 @@
         // Atualizar card de informações com os valores recebidos
         updateInfoCard({
             qtd_participantes_unicos: qtdParticipantesUnicos,
-            valor_total_consulta: valorTotalConsulta,
-            custo_unitario: custoUnitario
+            valor_total_consulta: valorTotalConsulta
         }, true); // needsConfirmation = true
 
         // Mostrar botão de confirmação no card de informações
@@ -1644,7 +1620,6 @@
         //     resume_url: string,
         //     qtd_participantes_unicos: number,
         //     valor_total_consulta: number,
-        //     custo_unitario: number,
         //     csv?: string,
         //     filename?: string,
         //     headers?: array,
@@ -1652,7 +1627,7 @@
         // }
         
         // Atualizar card de informações
-        if (data.qtd_participantes_unicos || data.valor_total_consulta || data.custo_unitario) {
+        if (data.qtd_participantes_unicos || data.valor_total_consulta) {
             updateInfoCard(data, !!pendingConfirmation);
         }
         
@@ -1694,8 +1669,7 @@
             showCreditsConfirmation(
                 data.resume_url,
                 data.valor_total_consulta,
-                data.qtd_participantes_unicos || 0,
-                data.custo_unitario || 0
+                data.qtd_participantes_unicos || 0
             );
         }
     };
@@ -2410,8 +2384,7 @@
                     // Atualizar card de informações da consulta
                     updateInfoCard({
                         qtd_participantes_unicos: data.qtd_participantes_unicos,
-                        valor_total_consulta: data.valor_total_consulta,
-                        custo_unitario: data.custo_unitario
+                        valor_total_consulta: data.valor_total_consulta
                     }, true); // needsConfirmation = true
                     
                     showAlert('info', 'Valores da consulta processados. Aguarde a confirmação de créditos...');
@@ -2420,8 +2393,7 @@
                     await showCreditsConfirmation(
                         data.resume_url, 
                         data.valor_total_consulta,
-                        data.qtd_participantes_unicos || 0,
-                        data.custo_unitario || 0
+                        data.qtd_participantes_unicos || 0
                     );
                     
                     // IMPORTANTE: Para o loading e timer, mas NÃO continua o processamento

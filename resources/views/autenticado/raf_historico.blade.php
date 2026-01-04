@@ -157,67 +157,59 @@
 </div>
 
 {{-- Modal de Detalhes --}}
-<div id="raf-detalhes-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div class="flex items-start justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900" id="modal-title">Detalhes do Relatório</h3>
-                    <button type="button" class="raf-modal-close text-gray-400 hover:text-gray-500">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div id="raf-detalhes-content" class="space-y-4">
-                    {{-- Conteúdo será preenchido via JavaScript --}}
-                </div>
-            </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button type="button" class="raf-modal-close w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-gray-600 text-base font-medium text-white hover:bg-gray-700 sm:ml-3 sm:w-auto sm:text-sm">
-                    Fechar
+<div id="raf-detalhes-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto">
+        <div class="px-4 py-4 sm:p-5">
+            <div class="flex items-start justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900" id="modal-title">Detalhes do Relatório</h3>
+                <button type="button" class="raf-modal-close text-gray-400 hover:text-gray-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
                 </button>
             </div>
+            <div id="raf-detalhes-content" class="space-y-4">
+                {{-- Conteúdo será preenchido via JavaScript --}}
+            </div>
+        </div>
+        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button type="button" class="raf-modal-close w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-gray-600 text-base font-medium text-white hover:bg-gray-700 sm:ml-3 sm:w-auto sm:text-sm">
+                Fechar
+            </button>
         </div>
     </div>
 </div>
 
 {{-- Modal de Confirmação de Cancelamento --}}
-<div id="raf-cancelar-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="cancelar-modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div class="flex items-start">
-                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                        <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                        </svg>
-                    </div>
-                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
-                        <h3 class="text-lg font-semibold text-gray-900" id="cancelar-modal-title">Confirmar Cancelamento</h3>
-                        <div class="mt-2">
-                            <p class="text-sm text-gray-500">Tem certeza que deseja cancelar este relatório? Esta ação não pode ser desfeita.</p>
-                        </div>
-                    </div>
-                    <button type="button" class="raf-cancelar-modal-close text-gray-400 hover:text-gray-500 ml-4">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
+<div id="raf-cancelar-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div class="px-4 py-4 sm:p-5">
+            <div class="flex items-start">
+                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
                 </div>
-            </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button type="button" id="raf-cancelar-confirm-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
-                    Confirmar
+                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
+                    <h3 class="text-lg font-semibold text-gray-900" id="cancelar-modal-title">Confirmar Cancelamento</h3>
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-500">Tem certeza que deseja cancelar este relatório? Esta ação não pode ser desfeita.</p>
+                    </div>
+                </div>
+                <button type="button" class="raf-cancelar-modal-close text-gray-400 hover:text-gray-500 ml-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
                 </button>
-                <button type="button" class="raf-cancelar-modal-close mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                    Cancelar
-                </button>
             </div>
+        </div>
+        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button type="button" id="raf-cancelar-confirm-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                Confirmar
+            </button>
+            <button type="button" class="raf-cancelar-modal-close mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                Cancelar
+            </button>
         </div>
     </div>
 </div>
@@ -330,7 +322,7 @@
     });
 
     detalhesModal.addEventListener('click', (e) => {
-        if (e.target === detalhesModal || e.target.classList.contains('bg-gray-500')) {
+        if (e.target === detalhesModal) {
             closeModal();
         }
     });
@@ -361,7 +353,7 @@
     });
 
     cancelarModal.addEventListener('click', (e) => {
-        if (e.target === cancelarModal || e.target.classList.contains('bg-gray-500')) {
+        if (e.target === cancelarModal) {
             closeCancelarModal();
         }
     });
@@ -562,9 +554,6 @@
             // Fecha o modal imediatamente
             closeCancelarModal();
 
-            // Remover card imediatamente da interface (sem depender da resposta do servidor)
-            removerCard(relatorioId);
-
             // Desabilita o botão e mostra spinner
             if (btn) {
                 btn.disabled = true;
@@ -572,7 +561,7 @@
                 if (cancelarSpinner) cancelarSpinner.classList.remove('hidden');
             }
 
-            // Tentar cancelar no servidor em background (não bloqueia a remoção do card)
+            // Aguardar resposta do servidor antes de remover o card
             try {
                 const response = await fetch(`/app/raf/cancelar/${relatorioId}`, {
                     method: 'POST',
@@ -585,13 +574,28 @@
 
                 const data = await response.json();
 
-                // Log apenas para debug, não afeta a remoção do card
-                if (!response.ok || !data.success) {
-                    console.warn('Aviso: Erro ao cancelar no servidor, mas card já foi removido:', data.message || 'Erro desconhecido');
+                if (response.ok && data.success) {
+                    // Só remove o card se o servidor confirmar sucesso
+                    removerCard(relatorioId);
+                } else {
+                    // Se falhar, reabilita o botão e mostra erro
+                    if (btn) {
+                        btn.disabled = false;
+                        if (cancelarText) cancelarText.classList.remove('hidden');
+                        if (cancelarSpinner) cancelarSpinner.classList.add('hidden');
+                    }
+                    console.error('Erro ao cancelar no servidor:', data.message || 'Erro desconhecido');
+                    alert('Erro ao cancelar relatório: ' + (data.message || 'Erro desconhecido. Tente novamente.'));
                 }
             } catch (err) {
-                // Log apenas para debug, não afeta a remoção do card
-                console.warn('Aviso: Erro ao cancelar no servidor, mas card já foi removido:', err);
+                // Se houver erro de rede, reabilita o botão
+                if (btn) {
+                    btn.disabled = false;
+                    if (cancelarText) cancelarText.classList.remove('hidden');
+                    if (cancelarSpinner) cancelarSpinner.classList.add('hidden');
+                }
+                console.error('Erro ao cancelar:', err);
+                alert('Erro ao cancelar relatório. Verifique sua conexão e tente novamente.');
             }
         });
     };
