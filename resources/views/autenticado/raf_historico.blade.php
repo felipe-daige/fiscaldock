@@ -1,12 +1,12 @@
-{{-- Histórico de Relatórios RAF Pendentes --}}
-<div class="min-h-screen bg-gray-50">
+{{-- Histórico de Relatórios RAF --}}
+<div class="min-h-screen bg-gray-50" id="raf-historico-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {{-- Page title --}}
         <div class="mb-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Histórico de Relatórios Pendentes</h1>
-                    <p class="mt-1 text-sm text-gray-600">Visualize e gerencie seus relatórios RAF que aguardam confirmação de pagamento.</p>
+                    <h1 class="text-2xl font-bold text-gray-900">Histórico de Relatórios</h1>
+                    <p class="mt-1 text-sm text-gray-600">Visualize e gerencie seus relatórios RAF.</p>
                 </div>
                 <a 
                     href="/app/raf" 
@@ -21,63 +21,66 @@
             </div>
         </div>
 
-        {{-- Estatísticas --}}
-        @if($total_pendentes > 0)
-        <div class="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2">
-                    <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <span class="text-sm font-semibold text-gray-700">Total de pendentes:</span>
-                    <span class="text-lg font-bold text-amber-600">{{ $total_pendentes }}</span>
-                </div>
-            </div>
+        {{-- Sistema de Tabs --}}
+        <div class="mb-6 flex gap-2 border-b border-gray-200">
+            <a 
+                href="?status=pendente" 
+                class="px-4 py-3 text-sm font-semibold transition-colors {{ $status_atual === 'pendente' ? 'text-amber-600 border-b-2 border-amber-600' : 'text-gray-600 hover:text-gray-900' }}"
+                data-link
+            >
+                Pendentes ({{ $total_pendentes }})
+            </a>
+            <a 
+                href="?status=processado" 
+                class="px-4 py-3 text-sm font-semibold transition-colors {{ $status_atual === 'processado' ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-600 hover:text-gray-900' }}"
+                data-link
+            >
+                Processados ({{ $total_processados }})
+            </a>
         </div>
-        @endif
 
         {{-- Lista de Relatórios --}}
-        {{-- Debug: total_pendentes={{ $total_pendentes }}, relatorios_count={{ $relatorios->count() }} --}}
         @if($relatorios->count() > 0)
             <div class="space-y-4">
                 @foreach($relatorios as $relatorio)
-                    <div class="bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-shadow" data-relatorio-id="{{ $relatorio->id }}">
-                        <div class="p-6">
-                            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                {{-- Informações principais --}}
-                                <div class="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <div>
-                                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Tipo de EFD</p>
+                    @if($status_atual === 'pendente')
+                        {{-- Card Pendente --}}
+                        <div class="bg-white rounded-xl border border-amber-200 shadow-md hover:shadow-lg transition-shadow" data-relatorio-id="{{ $relatorio->id }}">
+                            <div class="p-6">
+                                {{-- Header --}}
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="flex items-center gap-3">
                                         <p class="text-sm font-semibold text-gray-900">{{ $relatorio->tipo_efd }}</p>
+                                        @if($relatorio->tipo_consulta === 'gratuito')
+                                            <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
+                                                Gratuita — Regime Tributário
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-700">
+                                                Completa — Regime + CND
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-amber-100 text-amber-700">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Pendente
+                                    </span>
+                                </div>
+
+                                {{-- Informações --}}
+                                <div class="mb-4 space-y-2 text-sm text-gray-700">
+                                    <div>
+                                        <strong>{{ number_format($relatorio->qtd_participantes, 0, ',', '.') }}</strong> participantes identificados
                                     </div>
                                     <div>
-                                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Tipo de Consulta</p>
-                                        <p class="text-sm font-semibold text-gray-900">
-                                            @if($relatorio->tipo_consulta === 'gratuito')
-                                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
-                                                    Gratuita — Regime Tributário
-                                                </span>
-                                            @else
-                                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-700">
-                                                    Completa — Regime + CND
-                                                </span>
-                                            @endif
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Participantes</p>
-                                        <p class="text-sm font-semibold text-gray-900">{{ number_format($relatorio->qtd_participantes, 0, ',', '.') }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Valor Total</p>
-                                        <p class="text-lg font-bold text-amber-600">
-                                            R$ {{ number_format($relatorio->valor_total_consulta, 2, ',', '.') }}
-                                        </p>
+                                        Valor da consulta: <strong>{{ number_format($relatorio->valor_total_consulta, 0, ',', '.') }} pontos</strong>
                                     </div>
                                 </div>
 
-                                {{-- Ações --}}
-                                <div class="flex flex-col sm:flex-row gap-2 lg:flex-shrink-0">
+                                {{-- Botões --}}
+                                <div class="flex flex-col sm:flex-row gap-2">
                                     <button
                                         type="button"
                                         class="raf-detalhes-btn inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
@@ -118,17 +121,112 @@
                                         </svg>
                                     </button>
                                 </div>
-                            </div>
 
-                            {{-- Informações adicionais --}}
-                            <div class="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between text-xs text-gray-500">
-                                <div class="flex items-center gap-4">
-                                    <span>Custo unitário: <strong class="text-gray-700">R$ {{ number_format($relatorio->custo_unitario, 2, ',', '.') }}</strong></span>
+                                {{-- Footer --}}
+                                <div class="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                                    <span>Aguardando confirmação</span>
+                                    <span>Criado em: <strong class="text-gray-700">{{ $relatorio->created_at ? $relatorio->created_at->format('d/m/Y \à\s H:i') : 'N/A' }}</strong></span>
                                 </div>
-                                <span>Criado em: <strong class="text-gray-700">{{ $relatorio->created_at ? $relatorio->created_at->format('d/m/Y \à\s H:i') : 'N/A' }}</strong></span>
                             </div>
                         </div>
-                    </div>
+                    @else
+                        {{-- Card Processado --}}
+                        <div class="bg-white rounded-xl border border-green-200 shadow-md hover:shadow-lg transition-shadow" data-relatorio-id="{{ $relatorio->id }}">
+                            <div class="p-6">
+                                {{-- Header --}}
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <p class="text-sm font-semibold text-gray-900">{{ $relatorio->document_type }}</p>
+                                        @if($relatorio->consultant_type === 'gratuito')
+                                            <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
+                                                Gratuita — Regime Tributário
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-700">
+                                                Completa — Regime + CND
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        Processado
+                                    </span>
+                                </div>
+
+                                {{-- Subtítulo: Razão Social, CNPJ e Período --}}
+                                @if($relatorio->razao_social_empresa || $relatorio->cnpj_empresa_analisada || $relatorio->data_inicial_analisada || $relatorio->data_final_analisada)
+                                    <div class="mb-4">
+                                        @if($relatorio->razao_social_empresa)
+                                            <p class="text-sm text-gray-700 font-medium">{{ $relatorio->razao_social_empresa }}</p>
+                                        @endif
+                                        @if($relatorio->cnpj_empresa_analisada)
+                                            <p class="text-xs text-gray-500">CNPJ: {{ preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $relatorio->cnpj_empresa_analisada) }}</p>
+                                        @endif
+                                        @if($relatorio->data_inicial_analisada && $relatorio->data_final_analisada)
+                                            <p class="text-xs text-gray-500 mt-1">
+                                                <svg class="inline w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                </svg>
+                                                Período de Análise do SPED Informado: {{ $relatorio->data_inicial_analisada->format('d/m/Y') }} a {{ $relatorio->data_final_analisada->format('d/m/Y') }}
+                                            </p>
+                                        @elseif($relatorio->data_inicial_analisada)
+                                            <p class="text-xs text-gray-500 mt-1">
+                                                <svg class="inline w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                </svg>
+                                                A partir de: {{ $relatorio->data_inicial_analisada->format('d/m/Y') }}
+                                            </p>
+                                        @elseif($relatorio->data_final_analisada)
+                                            <p class="text-xs text-gray-500 mt-1">
+                                                <svg class="inline w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                </svg>
+                                                Até: {{ $relatorio->data_final_analisada->format('d/m/Y') }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                @endif
+
+                                {{-- Analytics --}}
+                                <div class="mb-4 space-y-2 text-sm text-gray-700">
+                                    <div>
+                                        <strong>{{ number_format($relatorio->total_fornecedores ?? 0, 0, ',', '.') }}</strong> fornecedores analisados
+                                    </div>
+                                    <div>
+                                        Situação: <strong>{{ $relatorio->qtd_ativos ?? 0 }}</strong> ativos · <strong>{{ $relatorio->qtd_inaptos ?? 0 }}</strong> inaptos
+                                    </div>
+                                    <div>
+                                        Regime: <strong>{{ $relatorio->qtd_simples ?? 0 }}</strong> Simples · <strong>{{ $relatorio->qtd_presumido ?? 0 }}</strong> Presumido · <strong>{{ $relatorio->qtd_real ?? 0 }}</strong> Real · <strong>{{ $relatorio->qtd_regime_indeterminado ?? 0 }}</strong> indeterminados
+                                    </div>
+                                    <div>
+                                        CND: <strong>{{ $relatorio->qtd_cnd_regular ?? 0 }}</strong> regulares · <strong>{{ $relatorio->qtd_cnd_pendencia ?? 0 }}</strong> com pendências
+                                    </div>
+                                </div>
+
+                                {{-- Botões --}}
+                                <div class="flex flex-col sm:flex-row gap-2">
+                                    <a
+                                        href="/app/raf/baixar/{{ $relatorio->id }}"
+                                        class="raf-baixar-btn inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold shadow-sm transition hover:bg-green-700"
+                                        target="_blank"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                        </svg>
+                                        Baixar
+                                    </a>
+                                </div>
+
+                                {{-- Footer --}}
+                                <div class="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between text-xs text-gray-500">
+                                    <span>{{ number_format($relatorio->total_price ?? 0, 0, ',', '.') }} pontos</span>
+                                    <span>Processado em: <strong class="text-gray-700">{{ $relatorio->processed_at ? $relatorio->processed_at->format('d/m/Y \à\s H:i') : ($relatorio->created_at ? $relatorio->created_at->format('d/m/Y \à\s H:i') : 'N/A') }}</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 @endforeach
             </div>
         @else
@@ -137,26 +235,40 @@
                 <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
-                <h3 class="mt-4 text-lg font-semibold text-gray-900">Nenhum relatório pendente</h3>
-                <p class="mt-2 text-sm text-gray-600">Você não possui relatórios aguardando confirmação de pagamento.</p>
-                <div class="mt-6">
-                    <a 
-                        href="/app/raf" 
-                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700"
-                        data-link
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Criar Novo Relatório
-                    </a>
-                </div>
+                <h3 class="mt-4 text-lg font-semibold text-gray-900">
+                    @if($status_atual === 'pendente')
+                        Nenhum relatório pendente
+                    @else
+                        Nenhum relatório processado
+                    @endif
+                </h3>
+                <p class="mt-2 text-sm text-gray-600">
+                    @if($status_atual === 'pendente')
+                        Você não possui relatórios aguardando confirmação de pagamento.
+                    @else
+                        Você ainda não possui relatórios processados.
+                    @endif
+                </p>
+                @if($status_atual === 'pendente')
+                    <div class="mt-6">
+                        <a 
+                            href="/app/raf" 
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700"
+                            data-link
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Criar Novo Relatório
+                        </a>
+                    </div>
+                @endif
             </div>
         @endif
     </div>
 </div>
 
-{{-- Modal de Detalhes --}}
+{{-- Modal de Detalhes (Pendentes) --}}
 <div id="raf-detalhes-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto">
         <div class="px-4 py-4 sm:p-5">
@@ -214,391 +326,487 @@
     </div>
 </div>
 
+{{-- Modal de Relatório Expirado --}}
+<div id="raf-expirado-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
+        <div class="bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-3">
+            <div class="flex items-center gap-3">
+                <div class="flex-shrink-0 flex items-center justify-center h-9 w-9 rounded-full bg-white/20">
+                    <svg class="h-5 w-5 text-amber-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-base font-bold text-amber-900">Tempo de Confirmação Expirado</h3>
+            </div>
+        </div>
+        <div class="px-5 py-4">
+            <p class="text-sm text-gray-700 mb-3">
+                O prazo para confirmar este relatório expirou. Os relatórios pendentes têm um tempo limite para confirmação.
+            </p>
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <div class="flex items-start gap-2">
+                    <svg class="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <p class="text-xs text-amber-800">
+                        <strong>Não se preocupe!</strong> Basta enviar o arquivo SPED novamente para gerar um novo relatório. Seus créditos não foram descontados.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-gray-50 px-5 py-3 flex justify-end gap-2">
+            <a 
+                href="/app/raf" 
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-semibold shadow-sm transition hover:bg-amber-600"
+                data-link
+                id="raf-expirado-reenviar-btn"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                </svg>
+                Enviar Novo SPED
+            </a>
+            <button 
+                type="button" 
+                class="raf-expirado-modal-close px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
+            >
+                Entendi
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
-(() => {
-    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+(function() {
+    'use strict';
 
-    // Função auxiliar para remover card com animação e atualizar contador
-    const removerCard = (relatorioIdOrCard) => {
-        // Se receber relatorioId (string ou number), buscar o card no DOM
-        let card = null;
-        if (typeof relatorioIdOrCard === 'string' || typeof relatorioIdOrCard === 'number') {
-            const relatorioId = String(relatorioIdOrCard);
-            // Usar seletor direto pelo atributo data-relatorio-id
-            card = document.querySelector(`[data-relatorio-id="${relatorioId}"]`);
-            
-            // Se não encontrou, tentar com seletor mais específico incluindo classes
-            if (!card) {
-                card = document.querySelector(`div[data-relatorio-id="${relatorioId}"]`);
+    // Função principal de inicialização - exposta globalmente para o SPA
+    function initRafHistorico() {
+        const container = document.getElementById('raf-historico-container');
+        if (!container) {
+            console.warn('[RAF Histórico] Container não encontrado');
+            return;
+        }
+
+        // Prevenir inicialização dupla
+        if (container.dataset.initialized === '1') {
+            console.log('[RAF Histórico] Já inicializado, ignorando');
+            return;
+        }
+        container.dataset.initialized = '1';
+
+        console.log('[RAF Histórico] Inicializando...');
+
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+        // Estado do modal de cancelamento
+        let pendingCancelRelatorioId = null;
+
+        // Função auxiliar para remover card com animação
+        function removerCard(relatorioId) {
+            const card = document.querySelector(`div.bg-white.rounded-xl[data-relatorio-id="${relatorioId}"]`);
+
+            if (!card || !card.parentNode) {
+                console.warn('[RAF Histórico] Card não encontrado para remoção:', relatorioId);
+                return;
             }
-        } else {
-            // Se receber o elemento diretamente, usar ele
-            card = relatorioIdOrCard;
-        }
 
-        if (!card) {
-            console.warn('Card não encontrado para remoção:', relatorioIdOrCard);
-            return;
-        }
+            // Aplicar animação de fade out
+            card.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(-10px)';
 
-        // Garantir que o card existe no DOM
-        if (!card.parentNode) {
-            console.warn('Card já foi removido do DOM');
-            return;
-        }
-
-        // Aplicar animação de fade out
-        card.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out, max-height 0.3s ease-out';
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(-10px)';
-        card.style.overflow = 'hidden';
-        const originalHeight = card.offsetHeight;
-        card.style.maxHeight = originalHeight + 'px';
-
-        // Forçar reflow para garantir que a animação comece
-        void card.offsetHeight;
-
-        // Remover do DOM após animação
-        setTimeout(() => {
-            // Verificar novamente se o card ainda existe no DOM antes de remover
-            if (card && card.parentNode) {
-                try {
+            // Remover do DOM após animação
+            setTimeout(function() {
+                if (card && card.parentNode) {
                     card.remove();
-                } catch (err) {
-                    // Se remove() falhar, tentar removeChild
-                    if (card.parentNode) {
-                        card.parentNode.removeChild(card);
-                    }
                 }
-            }
 
-            // Atualizar contador de pendentes - contar apenas cards principais (divs), não botões
-            // Filtrar apenas os cards principais (não botões ou outros elementos)
-            const allCards = document.querySelectorAll('[data-relatorio-id]');
-            const cardsRestantes = Array.from(allCards).filter(el => {
-                // Verificar se é um card principal (div com classes bg-white rounded-xl)
-                return el.tagName === 'DIV' && el.classList.contains('bg-white') && el.classList.contains('rounded-xl');
-            });
-            const totalPendentes = cardsRestantes.length;
+                // Contar cards restantes
+                const cardsRestantes = document.querySelectorAll('div.bg-white.rounded-xl[data-relatorio-id]');
 
-            // Atualizar o contador na interface se existir
-            const contadorElement = document.querySelector('.text-lg.font-bold.text-amber-600');
-            if (contadorElement) {
-                if (totalPendentes === 0) {
-                    // Se não houver mais cards, recarregar a página para mostrar estado vazio
+                if (cardsRestantes.length === 0) {
                     window.location.reload();
-                } else {
-                    contadorElement.textContent = totalPendentes;
                 }
-            } else if (totalPendentes === 0) {
-                // Se não houver contador mas não houver mais cards, recarregar
-                window.location.reload();
-            }
 
-            // Limpar cache e atualizar badge de pendentes na página principal RAF
-            if (typeof window.updatePendentesBadge === 'function') {
-                window.updatePendentesBadge();
-            }
-        }, 300);
-    };
-
-    // Modal de detalhes
-    const detalhesModal = document.getElementById('raf-detalhes-modal');
-    const detalhesContent = document.getElementById('raf-detalhes-content');
-    const modalCloseBtns = document.querySelectorAll('.raf-modal-close');
-
-    const openModal = () => {
-        detalhesModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    };
-
-    const closeModal = () => {
-        detalhesModal.classList.add('hidden');
-        document.body.style.overflow = '';
-    };
-
-    modalCloseBtns.forEach(btn => {
-        btn.addEventListener('click', closeModal);
-    });
-
-    detalhesModal.addEventListener('click', (e) => {
-        if (e.target === detalhesModal) {
-            closeModal();
+                // Atualizar badge de pendentes na página principal RAF
+                if (typeof window.updatePendentesBadge === 'function') {
+                    window.updatePendentesBadge();
+                }
+            }, 300);
         }
-    });
 
-    // Modal de confirmação de cancelamento
-    const cancelarModal = document.getElementById('raf-cancelar-modal');
-    const cancelarModalCloseBtns = document.querySelectorAll('.raf-cancelar-modal-close');
-    const cancelarConfirmBtn = document.getElementById('raf-cancelar-confirm-btn');
-    let pendingCancelData = null; // Armazena apenas relatorioId quando o modal é aberto
+        // Modal de detalhes
+        const detalhesModal = document.getElementById('raf-detalhes-modal');
+        const detalhesContent = document.getElementById('raf-detalhes-content');
 
-    const openCancelarModal = (relatorioId) => {
-        pendingCancelData = { relatorioId };
-        cancelarModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        
-        // Configurar listener do botão de confirmação após abrir o modal
-        setTimeout(setupConfirmButtonListener, 50);
-    };
-
-    const closeCancelarModal = () => {
-        cancelarModal.classList.add('hidden');
-        document.body.style.overflow = '';
-        pendingCancelData = null;
-    };
-
-    cancelarModalCloseBtns.forEach(btn => {
-        btn.addEventListener('click', closeCancelarModal);
-    });
-
-    cancelarModal.addEventListener('click', (e) => {
-        if (e.target === cancelarModal) {
-            closeCancelarModal();
-        }
-    });
-
-    // Botão Ver Detalhes
-    document.querySelectorAll('.raf-detalhes-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const relatorioId = btn.dataset.relatorioId;
-            
-            try {
-                const response = await fetch(`/app/raf/detalhes/${relatorioId}`, {
-                    method: 'GET',
-                    headers: {
-                        'X-CSRF-TOKEN': csrf,
-                        'Accept': 'application/json',
-                    },
-                    credentials: 'same-origin',
-                });
-
-                if (!response.ok) {
-                    throw new Error('Erro ao buscar detalhes');
-                }
-
-                const result = await response.json();
-                if (!result.success || !result.data) {
-                    throw new Error('Dados não encontrados');
-                }
-
-                const data = result.data;
-                const tipoConsultaLabel = data.tipo_consulta === 'gratuito' 
-                    ? 'Gratuita — Regime Tributário' 
-                    : 'Completa — Regime + CND';
-
-                detalhesContent.innerHTML = `
-                    <div class="space-y-3">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tipo de EFD</p>
-                                <p class="text-sm font-semibold text-gray-900 mt-1">${data.tipo_efd}</p>
-                            </div>
-                            <div>
-                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tipo de Consulta</p>
-                                <p class="text-sm font-semibold text-gray-900 mt-1">${tipoConsultaLabel}</p>
-                            </div>
-                            <div>
-                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Quantidade de Participantes</p>
-                                <p class="text-sm font-semibold text-gray-900 mt-1">${data.qtd_participantes.toLocaleString('pt-BR')}</p>
-                            </div>
-                            <div>
-                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Custo Unitário</p>
-                                <p class="text-sm font-semibold text-gray-900 mt-1">R$ ${data.custo_unitario.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                            </div>
-                            <div class="col-span-2">
-                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Valor Total da Consulta</p>
-                                <p class="text-lg font-bold text-amber-600 mt-1">R$ ${data.valor_total_consulta.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                            </div>
-                            <div class="col-span-2">
-                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Data e Horário de Criação</p>
-                                <p class="text-sm text-gray-700 mt-1">${data.created_at ? new Date(data.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                openModal();
-            } catch (err) {
-                console.error('Erro ao buscar detalhes:', err);
+        function openDetalhesModal() {
+            if (detalhesModal) {
+                detalhesModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
             }
+        }
+
+        function closeDetalhesModal() {
+            if (detalhesModal) {
+                detalhesModal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Modal de cancelamento
+        const cancelarModal = document.getElementById('raf-cancelar-modal');
+
+        function openCancelarModal(relatorioId) {
+            pendingCancelRelatorioId = relatorioId;
+            if (cancelarModal) {
+                cancelarModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeCancelarModal() {
+            if (cancelarModal) {
+                cancelarModal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+            pendingCancelRelatorioId = null;
+        }
+
+        // Modal de expiração
+        const expiradoModal = document.getElementById('raf-expirado-modal');
+        let pendingExpiredRelatorioId = null;
+
+        function showExpiredModal(relatorioId) {
+            pendingExpiredRelatorioId = relatorioId;
+            if (expiradoModal) {
+                expiradoModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeExpiredModal() {
+            if (expiradoModal) {
+                expiradoModal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+            // Remover o card após fechar o modal
+            if (pendingExpiredRelatorioId) {
+                removerCard(pendingExpiredRelatorioId);
+                pendingExpiredRelatorioId = null;
+            }
+        }
+
+        // Event listeners para fechar modal de expiração
+        document.querySelectorAll('.raf-expirado-modal-close').forEach(function(btn) {
+            btn.addEventListener('click', closeExpiredModal);
         });
-    });
 
-    // Botão Confirmar
-    document.querySelectorAll('.raf-confirmar-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const relatorioId = btn.dataset.relatorioId;
-            const card = btn.closest('[data-relatorio-id]');
-            const confirmarText = btn.querySelector('.raf-confirmar-text');
-            const confirmarSpinner = btn.querySelector('.raf-confirmar-spinner');
-
-            if (!card) {
-                console.error('Card não encontrado para confirmação');
-                return;
-            }
-
-            if (!confirm('Tem certeza que deseja confirmar e pagar este relatório?')) {
-                return;
-            }
-
-            btn.disabled = true;
-            confirmarText.classList.add('hidden');
-            confirmarSpinner.classList.remove('hidden');
-
-            try {
-                const response = await fetch(`/app/raf/confirmar/${relatorioId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': csrf,
-                        'Accept': 'application/json, text/csv',
-                    },
-                    credentials: 'same-origin',
-                });
-
-                const contentType = response.headers.get('content-type');
-
-                if (response.status === 402) {
-                    const data = await response.json();
-                    console.error('Créditos insuficientes:', data.message);
-                    btn.disabled = false;
-                    confirmarText.classList.remove('hidden');
-                    confirmarSpinner.classList.add('hidden');
-                    return;
+        if (expiradoModal) {
+            expiradoModal.addEventListener('click', function(e) {
+                if (e.target === expiradoModal) {
+                    closeExpiredModal();
                 }
+            });
+        }
 
-                if (!response.ok) {
-                    const data = await response.json().catch(() => ({}));
-                    console.error('Erro ao confirmar:', data.message || `Erro ${response.status}`);
-                    btn.disabled = false;
-                    confirmarText.classList.remove('hidden');
-                    confirmarSpinner.classList.add('hidden');
-                    return;
+        // Botão "Enviar Novo SPED" também fecha o modal e remove o card
+        const reenviarBtn = document.getElementById('raf-expirado-reenviar-btn');
+        if (reenviarBtn) {
+            reenviarBtn.addEventListener('click', function() {
+                // Remover o card antes de navegar
+                if (pendingExpiredRelatorioId) {
+                    removerCard(pendingExpiredRelatorioId);
+                    pendingExpiredRelatorioId = null;
                 }
+                if (expiradoModal) {
+                    expiradoModal.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }
+            });
+        }
 
-                // Se a resposta é CSV, fazer download
-                if (contentType && contentType.includes('text/csv')) {
-                    const blob = await response.blob();
-                    const disposition = response.headers.get('content-disposition');
-                    let filename = 'resultado.csv';
-                    const match = disposition && disposition.match(/filename=\"?([^\";]+)\"?/i);
-                    if (match && match[1]) {
-                        filename = match[1];
+        // Event listeners para fechar modais de detalhes
+        document.querySelectorAll('.raf-modal-close').forEach(function(btn) {
+            btn.addEventListener('click', closeDetalhesModal);
+        });
+
+        if (detalhesModal) {
+            detalhesModal.addEventListener('click', function(e) {
+                if (e.target === detalhesModal) {
+                    closeDetalhesModal();
+                }
+            });
+        }
+
+        // Event listeners para fechar modal de cancelamento
+        document.querySelectorAll('.raf-cancelar-modal-close').forEach(function(btn) {
+            btn.addEventListener('click', closeCancelarModal);
+        });
+
+        if (cancelarModal) {
+            cancelarModal.addEventListener('click', function(e) {
+                if (e.target === cancelarModal) {
+                    closeCancelarModal();
+                }
+            });
+        }
+
+        // Botão Ver Detalhes (Pendentes)
+        document.querySelectorAll('.raf-detalhes-btn').forEach(function(btn) {
+            btn.addEventListener('click', async function() {
+                const relatorioId = this.dataset.relatorioId;
+                console.log('[RAF Histórico] Ver detalhes:', relatorioId);
+                
+                try {
+                    const response = await fetch('/app/raf/detalhes/' + relatorioId, {
+                        method: 'GET',
+                        headers: {
+                            'X-CSRF-TOKEN': csrf,
+                            'Accept': 'application/json',
+                        },
+                        credentials: 'same-origin',
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Erro ao buscar detalhes: ' + response.status);
                     }
 
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
+                    const result = await response.json();
+                    if (!result.success || !result.data) {
+                        throw new Error('Dados não encontrados');
+                    }
 
-                    // Remover card da lista usando função auxiliar - passar relatorioId
-                    removerCard(relatorioId);
-                } else {
-                    console.error('Resposta inesperada do servidor:', contentType);
-                    btn.disabled = false;
-                    confirmarText.classList.remove('hidden');
-                    confirmarSpinner.classList.add('hidden');
+                    const data = result.data;
+                    const tipoConsultaLabel = data.tipo_consulta === 'gratuito' 
+                        ? 'Gratuita — Regime Tributário' 
+                        : 'Completa — Regime + CND';
+
+                    const custoUnitario = Number(data.custo_unitario || 0);
+                    const valorTotal = Number(data.valor_total_consulta || 0);
+                    const qtdParticipantes = Number(data.qtd_participantes || 0);
+
+                    const html = '<div class="space-y-3">' +
+                        '<div class="grid grid-cols-2 gap-4">' +
+                            '<div>' +
+                                '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tipo de EFD</p>' +
+                                '<p class="text-sm font-semibold text-gray-900 mt-1">' + (data.tipo_efd || 'N/A') + '</p>' +
+                            '</div>' +
+                            '<div>' +
+                                '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tipo de Consulta</p>' +
+                                '<p class="text-sm font-semibold text-gray-900 mt-1">' + tipoConsultaLabel + '</p>' +
+                            '</div>' +
+                            '<div>' +
+                                '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Quantidade de Participantes</p>' +
+                                '<p class="text-sm font-semibold text-gray-900 mt-1">' + qtdParticipantes.toLocaleString('pt-BR') + '</p>' +
+                            '</div>' +
+                            '<div>' +
+                                '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Custo Unitário</p>' +
+                                '<p class="text-sm font-semibold text-gray-900 mt-1">' + custoUnitario.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' pontos</p>' +
+                            '</div>' +
+                            '<div class="col-span-2">' +
+                                '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Valor Total da Consulta</p>' +
+                                '<p class="text-lg font-bold text-amber-600 mt-1">' + valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' pontos</p>' +
+                            '</div>' +
+                            '<div class="col-span-2">' +
+                                '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Data e Horário de Criação</p>' +
+                                '<p class="text-sm text-gray-700 mt-1">' + (data.created_at ? new Date(data.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A') + '</p>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+
+                    if (detalhesContent) {
+                        detalhesContent.innerHTML = html;
+                    }
+                    openDetalhesModal();
+                } catch (err) {
+                    console.error('[RAF Histórico] Erro ao buscar detalhes:', err);
+                    alert('Erro ao buscar detalhes do relatório. Tente novamente.');
                 }
-            } catch (err) {
-                console.error('Erro ao confirmar:', err);
-                btn.disabled = false;
-                confirmarText.classList.remove('hidden');
-                confirmarSpinner.classList.add('hidden');
-            }
+            });
         });
-    });
 
-    // Botão Cancelar - abre modal de confirmação
-    document.querySelectorAll('.raf-cancelar-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const relatorioId = btn.dataset.relatorioId;
-            if (!relatorioId) {
-                console.error('Relatório ID não encontrado');
-                return;
-            }
+        // Botão Confirmar e Pagar
+        document.querySelectorAll('.raf-confirmar-btn').forEach(function(btn) {
+            btn.addEventListener('click', async function() {
+                const relatorioId = this.dataset.relatorioId;
+                const confirmarText = this.querySelector('.raf-confirmar-text');
+                const confirmarSpinner = this.querySelector('.raf-confirmar-spinner');
+                const buttonRef = this;
 
-            // Abre o modal de confirmação
-            openCancelarModal(relatorioId);
+                console.log('[RAF Histórico] Confirmar relatório:', relatorioId);
+
+                buttonRef.disabled = true;
+                if (confirmarText) confirmarText.classList.add('hidden');
+                if (confirmarSpinner) confirmarSpinner.classList.remove('hidden');
+
+                try {
+                    const response = await fetch('/app/raf/confirmar/' + relatorioId, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrf,
+                            'Accept': 'application/json, text/csv',
+                        },
+                        credentials: 'same-origin',
+                    });
+
+                    const contentType = response.headers.get('content-type');
+
+                    if (response.status === 402) {
+                        const data = await response.json();
+                        alert('Créditos insuficientes: ' + (data.message || 'Saldo insuficiente para esta operação.'));
+                        buttonRef.disabled = false;
+                        if (confirmarText) confirmarText.classList.remove('hidden');
+                        if (confirmarSpinner) confirmarSpinner.classList.add('hidden');
+                        return;
+                    }
+
+                    // Verificar se é erro de expiração (410 Gone)
+                    if (response.status === 410) {
+                        const data = await response.json().catch(function() { return {}; });
+                        // Mostrar modal de expiração
+                        showExpiredModal(relatorioId);
+                        return;
+                    }
+
+                    if (!response.ok) {
+                        const data = await response.json().catch(function() { return {}; });
+                        alert('Erro ao confirmar: ' + (data.message || 'Erro ' + response.status));
+                        buttonRef.disabled = false;
+                        if (confirmarText) confirmarText.classList.remove('hidden');
+                        if (confirmarSpinner) confirmarSpinner.classList.add('hidden');
+                        return;
+                    }
+
+                    // Se a resposta é CSV, fazer download
+                    if (contentType && contentType.includes('text/csv')) {
+                        const blob = await response.blob();
+                        const disposition = response.headers.get('content-disposition');
+                        let filename = 'resultado.csv';
+                        const match = disposition && disposition.match(/filename="?([^";]+)"?/i);
+                        if (match && match[1]) {
+                            filename = match[1];
+                        }
+
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+
+                        // Remover card da lista
+                        removerCard(relatorioId);
+                    } else {
+                        alert('Resposta inesperada do servidor. Tente novamente.');
+                        buttonRef.disabled = false;
+                        if (confirmarText) confirmarText.classList.remove('hidden');
+                        if (confirmarSpinner) confirmarSpinner.classList.add('hidden');
+                    }
+                } catch (err) {
+                    console.error('[RAF Histórico] Erro ao confirmar:', err);
+                    alert('Erro ao confirmar relatório. Verifique sua conexão e tente novamente.');
+                    buttonRef.disabled = false;
+                    if (confirmarText) confirmarText.classList.remove('hidden');
+                    if (confirmarSpinner) confirmarSpinner.classList.add('hidden');
+                }
+            });
         });
-    });
 
-    // Botão Confirmar do modal de cancelamento - usar listener direto no botão
-    // Adicionar listener quando o modal é aberto para garantir que o botão existe
-    const setupConfirmButtonListener = () => {
-        const confirmBtn = document.getElementById('raf-cancelar-confirm-btn');
-        if (!confirmBtn) return;
-        
-        // Remover listener anterior se existir (evitar múltiplos listeners)
-        const newConfirmBtn = confirmBtn.cloneNode(true);
-        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-        
-        // Adicionar listener no novo botão
-        newConfirmBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+        // Botão Cancelar - abre modal de confirmação
+        document.querySelectorAll('.raf-cancelar-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const relatorioId = this.dataset.relatorioId;
+                console.log('[RAF Histórico] Abrir modal cancelar:', relatorioId);
+                if (!relatorioId) {
+                    console.error('[RAF Histórico] Relatório ID não encontrado');
+                    return;
+                }
+                openCancelarModal(relatorioId);
+            });
+        });
 
-            if (!pendingCancelData || !pendingCancelData.relatorioId) {
-                console.error('Dados de cancelamento não encontrados');
-                return;
-            }
+        // Botão Confirmar do modal de cancelamento
+        const cancelarConfirmBtn = document.getElementById('raf-cancelar-confirm-btn');
+        if (cancelarConfirmBtn) {
+            cancelarConfirmBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                e.stopPropagation();
 
-            const { relatorioId } = pendingCancelData;
-            const btn = document.querySelector(`.raf-cancelar-btn[data-relatorio-id="${relatorioId}"]`);
-            const cancelarText = btn?.querySelector('.raf-cancelar-text');
-            const cancelarSpinner = btn?.querySelector('.raf-cancelar-spinner');
+                if (!pendingCancelRelatorioId) {
+                    console.error('[RAF Histórico] ID de relatório para cancelar não encontrado');
+                    return;
+                }
 
-            // Fecha o modal imediatamente
-            closeCancelarModal();
+                const relatorioId = pendingCancelRelatorioId;
+                const btn = document.querySelector('.raf-cancelar-btn[data-relatorio-id="' + relatorioId + '"]');
+                const cancelarText = btn ? btn.querySelector('.raf-cancelar-text') : null;
+                const cancelarSpinner = btn ? btn.querySelector('.raf-cancelar-spinner') : null;
 
-            // Desabilita o botão e mostra spinner
-            if (btn) {
-                btn.disabled = true;
-                if (cancelarText) cancelarText.classList.add('hidden');
-                if (cancelarSpinner) cancelarSpinner.classList.remove('hidden');
-            }
+                console.log('[RAF Histórico] Confirmar cancelamento:', relatorioId);
 
-            // Aguardar resposta do servidor antes de remover o card
-            try {
-                const response = await fetch(`/app/raf/cancelar/${relatorioId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': csrf,
-                        'Accept': 'application/json',
-                    },
-                    credentials: 'same-origin',
-                });
+                // Fecha o modal imediatamente
+                closeCancelarModal();
 
-                const data = await response.json();
+                // Desabilita o botão e mostra spinner
+                if (btn) {
+                    btn.disabled = true;
+                    if (cancelarText) cancelarText.classList.add('hidden');
+                    if (cancelarSpinner) cancelarSpinner.classList.remove('hidden');
+                }
 
-                if (response.ok && data.success) {
-                    // Só remove o card se o servidor confirmar sucesso
-                    removerCard(relatorioId);
-                } else {
-                    // Se falhar, reabilita o botão e mostra erro
+                // Aguardar resposta do servidor antes de remover o card
+                try {
+                    const response = await fetch('/app/raf/cancelar/' + relatorioId, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrf,
+                            'Accept': 'application/json',
+                        },
+                        credentials: 'same-origin',
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        // Só remove o card se o servidor confirmar sucesso
+                        removerCard(relatorioId);
+                    } else {
+                        // Se falhar, reabilita o botão e mostra erro
+                        if (btn) {
+                            btn.disabled = false;
+                            if (cancelarText) cancelarText.classList.remove('hidden');
+                            if (cancelarSpinner) cancelarSpinner.classList.add('hidden');
+                        }
+                        alert('Erro ao cancelar relatório: ' + (data.message || 'Erro desconhecido. Tente novamente.'));
+                    }
+                } catch (err) {
+                    // Se houver erro de rede, reabilita o botão
                     if (btn) {
                         btn.disabled = false;
                         if (cancelarText) cancelarText.classList.remove('hidden');
                         if (cancelarSpinner) cancelarSpinner.classList.add('hidden');
                     }
-                    console.error('Erro ao cancelar no servidor:', data.message || 'Erro desconhecido');
-                    alert('Erro ao cancelar relatório: ' + (data.message || 'Erro desconhecido. Tente novamente.'));
+                    console.error('[RAF Histórico] Erro ao cancelar:', err);
+                    alert('Erro ao cancelar relatório. Verifique sua conexão e tente novamente.');
                 }
-            } catch (err) {
-                // Se houver erro de rede, reabilita o botão
-                if (btn) {
-                    btn.disabled = false;
-                    if (cancelarText) cancelarText.classList.remove('hidden');
-                    if (cancelarSpinner) cancelarSpinner.classList.add('hidden');
-                }
-                console.error('Erro ao cancelar:', err);
-                alert('Erro ao cancelar relatório. Verifique sua conexão e tente novamente.');
-            }
-        });
-    };
+            });
+        }
+
+        console.log('[RAF Histórico] Inicialização concluída');
+    }
+
+    // Expor função globalmente para o SPA
+    window.initRafHistorico = initRafHistorico;
+
+    // Auto-inicializar na primeira carga
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initRafHistorico, { once: true });
+    } else {
+        // DOM já está pronto, inicializar imediatamente
+        initRafHistorico();
+    }
 })();
 </script>
-

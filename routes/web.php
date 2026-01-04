@@ -62,6 +62,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/app/raf/detalhes/{id}', [RafController::class, 'detalhes'])->name('app.raf.detalhes');
     Route::post('/app/raf/confirmar/{id}', [RafController::class, 'confirmar'])->name('app.raf.confirmar');
     Route::post('/app/raf/cancelar/{id}', [RafController::class, 'cancelar'])->name('app.raf.cancelar');
+    Route::get('/app/raf/baixar/{id}', [RafController::class, 'baixar'])->name('app.raf.baixar');
 
     // Rota de Importação de SPED
     Route::get('/app/sped_importar', [DashboardController::class, 'spedImportar'])->name('app.sped.importar');

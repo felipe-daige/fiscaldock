@@ -41,7 +41,7 @@
             <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
             <!-- Main Content Area -->
-            <main id="app" class="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+            <main id="app" class="flex-1">
                 @if(isset($initialView))
                     @include($initialView)
                 @endif
