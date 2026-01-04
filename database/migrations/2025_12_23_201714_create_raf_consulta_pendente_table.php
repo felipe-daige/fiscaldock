@@ -15,12 +15,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('tab_id', 36)->nullable();
-            $table->string('tipo_efd');
-            $table->string('tipo_consulta');
-            $table->integer('qtd_participantes');
-            $table->decimal('valor_total_consulta', 10, 2);
-            $table->decimal('custo_unitario', 10, 2);
-            $table->string('resume_url');
+            $table->string('tipo_efd')->nullable();
+            $table->string('tipo_consulta')->nullable();
+            $table->integer('qtd_participantes')->nullable();
+            $table->decimal('valor_total_consulta', 10, 2)->nullable();
+            $table->decimal('custo_unitario', 10, 2)->nullable();
+            $table->string('resume_url')->nullable();
             $table->string('status')->default('pending')->after('resume_url');
             $table->string('error_code')->nullable()->after('status');
             $table->text('error_message')->nullable()->after('error_code');

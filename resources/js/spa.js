@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const _spaScriptOverrides = {
         importacaoXml: '/js/importacao_xml.js',
         raf: null, // Código inline na view, não há arquivo externo
+        rafHistorico: null, // Código inline na view, não há arquivo externo
     };
 
     // Converte slug (com hífen/underscore) para camelCase
@@ -68,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         '/app/solucoes/gestao-cnds': 'initGestaoCnds',
         '/app/solucoes/inteligencia-tributaria': 'initInteligenciaTributaria',
         '/app/raf': 'initRaf',
+        '/app/raf/historico': 'initRafHistorico',
         '/app/perfil': 'initPerfil',
         '/dashboard': 'initDashboard',
         '/sobre': 'initSobre',

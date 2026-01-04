@@ -15,9 +15,9 @@
                     id="raf-historico-link"
                 >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
-                    <span>Ver relatórios pendentes</span>
+                    <span>Ver histórico</span>
                     <span id="raf-pendentes-badge" class="hidden ml-1 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-amber-500 rounded-full"></span>
                 </a>
             </div>
@@ -763,6 +763,9 @@
         
         // Desconectar SSE anterior para iniciar novo ciclo
         disconnectSSE();
+        
+        // Limpar estado persistido ao resetar
+        clearPersistedState();
     };
 
     const formatFileSize = (bytes) => {
@@ -870,6 +873,11 @@
             } else {
                 infoConfirmCreditsWrap.classList.add('hidden');
             }
+        }
+        
+        // Persistir estado quando houver dados válidos
+        if (infoCardHasValidData) {
+            persistState();
         }
     };
 
@@ -983,6 +991,9 @@
         // Resetar estado de loading
         setLoading(false);
         
+        // Limpar estado persistido em caso de erro de autenticação
+        clearPersistedState();
+        
         // Mostrar mensagem apenas se não for silencioso
         if (!silent) {
             showAlert('error', 'Sua sessão expirou. Por favor, recarregue a página e faça login novamente.');
@@ -1012,6 +1023,9 @@
             const ss = String(elapsed % 60).padStart(2, '0');
             timerValue.textContent = `${mm}:${ss}`;
         }, 1000);
+        
+        // Persistir estado quando timer iniciar
+        persistState();
     };
 
     const stopTimer = () => {
@@ -1143,6 +1157,9 @@
                         processedResumeUrls.clear();
                         asyncProcessingStarted = false;
                         disconnectSSE();
+                        
+                        // Limpar estado persistido em caso de erro fatal
+                        clearPersistedState();
                         
                         return;
                     }
@@ -1300,6 +1317,172 @@
     // Armazenar referência global para o SPA poder chamar
     window._rafDisconnectSSE = disconnectSSE;
 
+    // ========== Funções de Persistência de Estado ==========
+    
+    /**
+     * Chave única para o sessionStorage usando tabId
+     */
+    const getStorageKey = () => `raf_state_${tabId}`;
+    
+    /**
+     * Salva o estado atual no sessionStorage.
+     * Persiste apenas se houver processamento em andamento ou confirmação pendente.
+     */
+    const persistState = () => {
+        // Só persistir se houver processamento ou confirmação pendente
+        if (!isProcessing && !pendingConfirmation) {
+            clearPersistedState();
+            return;
+        }
+        
+        const state = {
+            isProcessing,
+            currentRelatorioId,
+            timerStart,
+            pendingConfirmation,
+            infoCard: {
+                qtdParticipantes: infoQtdParticipantes?.textContent || '--',
+                valorTotal: infoValorTotal?.textContent || '--',
+                hasValidData: infoCardHasValidData
+            },
+            processedResumeUrls: Array.from(processedResumeUrls),
+            savedAt: Date.now()
+        };
+        
+        try {
+            sessionStorage.setItem(getStorageKey(), JSON.stringify(state));
+        } catch (e) {
+            console.warn('[RAF] Erro ao salvar estado no sessionStorage:', e);
+        }
+    };
+    
+    /**
+     * Restaura o estado do sessionStorage.
+     * @returns {boolean} true se restaurou com sucesso, false caso contrário
+     */
+    const restoreState = () => {
+        const storageKey = getStorageKey();
+        const saved = sessionStorage.getItem(storageKey);
+        
+        if (!saved) {
+            return false;
+        }
+        
+        try {
+            const state = JSON.parse(saved);
+            
+            // Validar se não está muito antigo (ex: 2 horas)
+            const maxAge = 2 * 60 * 60 * 1000; // 2 horas
+            if (Date.now() - state.savedAt > maxAge) {
+                console.log('[RAF] Estado salvo muito antigo, ignorando');
+                sessionStorage.removeItem(storageKey);
+                return false;
+            }
+            
+            // Restaurar variáveis de estado
+            currentRelatorioId = state.currentRelatorioId || null;
+            pendingConfirmation = state.pendingConfirmation || null;
+            infoCardHasValidData = state.infoCard?.hasValidData || false;
+            
+            // Restaurar processedResumeUrls
+            if (state.processedResumeUrls && Array.isArray(state.processedResumeUrls)) {
+                processedResumeUrls = new Set(state.processedResumeUrls);
+            }
+            
+            // Restaurar UI do card de informações
+            if (state.infoCard) {
+                if (infoQtdParticipantes && state.infoCard.qtdParticipantes) {
+                    infoQtdParticipantes.textContent = state.infoCard.qtdParticipantes;
+                }
+                if (infoValorTotal && state.infoCard.valorTotal) {
+                    infoValorTotal.textContent = state.infoCard.valorTotal;
+                }
+                
+                // Mostrar card se tiver dados válidos
+                if (infoCardHasValidData && infoConsultaCard) {
+                    infoConsultaCard.classList.remove('hidden');
+                }
+            }
+            
+            // Restaurar timer se estiver processando
+            if (state.isProcessing && state.timerStart) {
+                timerStart = state.timerStart;
+                
+                // Calcular tempo decorrido e mostrar
+                const elapsed = Math.floor((Date.now() - timerStart) / 1000);
+                const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                const ss = String(elapsed % 60).padStart(2, '0');
+                
+                if (timerValue) {
+                    timerValue.textContent = `${mm}:${ss}`;
+                }
+                
+                if (timerWrap) {
+                    timerWrap.classList.remove('hidden');
+                    timerWrap.classList.add('animate-pulse');
+                    setTimerState('default');
+                }
+                
+                // Continuar contando
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                }
+                timerInterval = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - timerStart) / 1000);
+                    const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                    const ss = String(elapsed % 60).padStart(2, '0');
+                    if (timerValue) {
+                        timerValue.textContent = `${mm}:${ss}`;
+                    }
+                }, 1000);
+            }
+            
+            // Restaurar estado de processamento apenas se houver relatorioId válido
+            // Se não houver relatorioId, o processamento provavelmente já terminou
+            if (state.isProcessing && currentRelatorioId) {
+                setProcessing(true);
+                
+                // Reconectar SSE se tiver relatorioId
+                console.log('[RAF] Restaurando estado: reconectando SSE para relatorio_id:', currentRelatorioId);
+                connectSSE(currentRelatorioId);
+                
+                showAlert('info', 'Relatório em processamento. Aguarde...');
+            } else if (state.isProcessing && !currentRelatorioId) {
+                // Se estava processando mas não tem relatorioId, limpar estado inválido
+                console.log('[RAF] Estado de processamento sem relatorioId, limpando estado inválido');
+                clearPersistedState();
+            }
+            
+            // Se tinha confirmação pendente, mostrar botões de confirmação
+            if (state.pendingConfirmation) {
+                if (infoConfirmCreditsWrap) {
+                    infoConfirmCreditsWrap.classList.remove('hidden');
+                }
+                if (submitBtn) {
+                    submitBtn.style.display = 'none';
+                }
+            }
+            
+            console.log('[RAF] Estado restaurado com sucesso');
+            return true;
+        } catch (e) {
+            console.error('[RAF] Erro ao restaurar estado:', e);
+            sessionStorage.removeItem(storageKey);
+            return false;
+        }
+    };
+    
+    /**
+     * Limpa o estado persistido do sessionStorage.
+     */
+    const clearPersistedState = () => {
+        try {
+            sessionStorage.removeItem(getStorageKey());
+        } catch (e) {
+            console.warn('[RAF] Erro ao limpar estado do sessionStorage:', e);
+        }
+    };
+
     /**
      * Atualiza o badge de status do resultado.
      * @param {string} state - 'processing' (amarelo), 'completed' (verde), ou 'hidden' (escondido)
@@ -1363,6 +1546,9 @@
         
         // Mostrar badge como "Processado" quando o download estiver disponível
         updateResultBadge('completed');
+        
+        // Limpar estado persistido quando CSV estiver disponível
+        clearPersistedState();
     };
 
     // ========== Função para Confirmar Recebimento do CSV ==========
@@ -1547,6 +1733,9 @@
             creditsModalBackdrop.style.display = 'flex';
             creditsModalBackdrop.style.visibility = 'visible';
         }
+        
+        // Persistir estado quando modal de confirmação for exibido
+        persistState();
         
         return true; // Modal foi exibido com sucesso
     };
@@ -1937,6 +2126,8 @@
             // Se o processamento assíncrono foi iniciado, ele deve continuar até o CSV estar disponível
             if (!asyncProcessingStarted) {
                 setProcessing(false); // Garantir que processamento seja resetado em caso de erro
+                // Limpar estado persistido apenas se não houver processamento assíncrono em andamento
+                clearPersistedState();
             }
             asyncProcessingStarted = false; // Resetar flag
             isConfirming = false; // Liberar flag
@@ -1953,6 +2144,8 @@
             stopTimer();
             setLoading(false);
             setProcessing(false);
+            // Limpar estado persistido quando usuário cancelar
+            clearPersistedState();
             showAlert('info', 'Operação cancelada.');
             return;
         }
@@ -1993,6 +2186,8 @@
             stopTimer();
             setLoading(false);
             setProcessing(false);
+            // Limpar estado persistido quando usuário cancelar
+            clearPersistedState();
         }
     };
 
@@ -2291,6 +2486,9 @@
         fileInput.disabled = isLoading || isProcessing;
         
         updateEnablement();
+        
+        // Persistir estado quando processamento mudar
+        persistState();
     };
 
     form.addEventListener('submit', async (e) => {
@@ -2605,6 +2803,14 @@
     updateTipoConsultaLabels();
     updateFileUi();
     updateEnablement();
+    
+    // Tentar restaurar estado salvo (se houver) - DEPOIS de inicializar tudo
+    const stateRestored = restoreState();
+    if (stateRestored) {
+        console.log('[RAF] Estado anterior restaurado');
+        // Atualizar habilitação novamente após restaurar estado
+        updateEnablement();
+    }
     
     // SSE será conectado apenas quando o usuário submeter um SPED ou confirmar créditos
     // Isso evita que o último relatório apareça ao recarregar a página

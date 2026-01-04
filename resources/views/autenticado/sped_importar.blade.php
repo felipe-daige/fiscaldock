@@ -96,26 +96,34 @@
                 {{-- Card: Valor do Relatório --}}
                 <div class="bg-white rounded-lg shadow-md p-6 h-fit lg:sticky lg:top-4">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4">VALOR DO RELATÓRIO</h3>
-                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
-                        <div class="space-y-3 text-sm">
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Fornecedores encontrados:</span>
-                                <span class="font-semibold text-gray-800" id="relatorio-fornecedores">—</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Custo por consulta:</span>
-                                <span class="font-semibold text-gray-800" id="relatorio-custo-consulta">R$ 0,26</span>
-                            </div>
-                            <div class="border-t border-gray-300 pt-3 mt-3">
-                                <div class="flex justify-between items-center">
-                                    <span class="font-semibold text-gray-800">VALOR TOTAL:</span>
-                                    <span class="text-2xl font-bold text-amber-600" id="relatorio-valor-total">—</span>
+                    <div id="relatorio-placeholder" class="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+                        <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                        <p class="text-sm text-gray-500">O preço será calculado após a importação do documento SPED</p>
+                    </div>
+                    <div id="relatorio-valores" class="hidden">
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Fornecedores encontrados:</span>
+                                    <span class="font-semibold text-gray-800" id="relatorio-fornecedores">—</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Custo por consulta:</span>
+                                    <span class="font-semibold text-gray-800" id="relatorio-custo-consulta">R$ 0,26</span>
+                                </div>
+                                <div class="border-t border-gray-300 pt-3 mt-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-semibold text-gray-800">VALOR TOTAL:</span>
+                                        <span class="text-2xl font-bold text-amber-600" id="relatorio-valor-total">—</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="text-xs text-gray-500 text-center">
-                        Valor calculado automaticamente após processar o SPED
+                        <div class="text-xs text-gray-500 text-center">
+                            Valor calculado automaticamente após processar o SPED
+                        </div>
                     </div>
                 </div>
             </div>
@@ -580,6 +588,10 @@ function atualizarValorRelatorio() {
     const totalFornecedores = dadosMockados.resumo.totalFornecedores;
     const custoPorConsulta = 0.26; // R$ 0,26 por consulta
     const valorTotal = totalFornecedores * custoPorConsulta;
+
+    // Esconder placeholder e mostrar valores
+    document.getElementById('relatorio-placeholder').classList.add('hidden');
+    document.getElementById('relatorio-valores').classList.remove('hidden');
 
     document.getElementById('relatorio-fornecedores').textContent = totalFornecedores;
     document.getElementById('relatorio-custo-consulta').textContent = `R$ ${custoPorConsulta.toFixed(2).replace('.', ',')}`;

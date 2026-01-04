@@ -470,19 +470,18 @@ class DataReceiverController extends Controller
                 'resume_url' => $resumeUrl,
             ]);
 
-            // Buscar consulta pendente pelo resume_url para obter o ID correto e dados adicionais
+            // Buscar consulta pendente apenas pelo resume_url (é único)
             $consultaPendente = null;
             if (!empty($resumeUrl)) {
                 Log::info('Buscando consulta pendente pelo resume_url', [
                     'resume_url' => $resumeUrl,
                     'user_id' => $userId,
                 ]);
-                $consultaPendente = RafConsultaPendente::where('resume_url', $resumeUrl)
-                    ->where('user_id', $userId)
-                    ->first();
+                $consultaPendente = RafConsultaPendente::where('resume_url', $resumeUrl)->first();
                 Log::info('Consulta pendente encontrada', [
                     'encontrada' => $consultaPendente !== null,
                     'consulta_id' => $consultaPendente?->id,
+                    'consulta_user_id' => $consultaPendente?->user_id,
                     'resume_url' => $resumeUrl,
                 ]);
             } else {
@@ -574,6 +573,54 @@ class DataReceiverController extends Controller
                 'filename' => $filename,
                 'id_para_notificacao' => $idParaNotificacao,
             ]);
+
+            // Deletar a consulta pendente para evitar duplicação no histórico
+            Log::info('Iniciando delete da consulta pendente', [
+                'tem_consulta_pendente' => $consultaPendente !== null,
+                'consulta_pendente_id' => $consultaPendente?->id,
+                'tem_resume_url' => !empty($resumeUrl),
+                'resume_url' => $resumeUrl,
+            ]);
+            
+            if ($consultaPendente) {
+                try {
+                    $consultaPendenteId = $consultaPendente->id;
+                    $consultaPendenteResumeUrl = $consultaPendente->resume_url;
+                    $deleted = $consultaPendente->delete();
+                    Log::info('Consulta pendente removida após processamento', [
+                        'consulta_pendente_id' => $consultaPendenteId,
+                        'consulta_pendente_resume_url' => $consultaPendenteResumeUrl,
+                        'relatorio_processado_id' => $relatorioProcessado->id,
+                        'deleted' => $deleted,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Erro ao remover consulta pendente', [
+                        'consulta_pendente_id' => $consultaPendente->id,
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                }
+            } elseif (!empty($resumeUrl)) {
+                // Fallback: tentar deletar por resume_url
+                try {
+                    $deleted = RafConsultaPendente::where('resume_url', $resumeUrl)->delete();
+                    Log::info('Consultas pendentes removidas por resume_url (fallback)', [
+                        'resume_url' => $resumeUrl,
+                        'registros_deletados' => $deleted,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Erro ao remover por resume_url', [
+                        'resume_url' => $resumeUrl,
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                }
+            } else {
+                Log::warning('Nenhuma consulta pendente foi deletada - nenhum critério atendido', [
+                    'resume_url' => $resumeUrl,
+                    'consulta_pendente' => $consultaPendente !== null,
+                ]);
+            }
 
             // Notificação será verificada diretamente do banco de dados via SSE
             // O SSE verifica RafRelatorioProcessado periodicamente para encontrar CSVs prontos

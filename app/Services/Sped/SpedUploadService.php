@@ -584,6 +584,7 @@ class SpedUploadService
 
             return [
                 'success' => false,
+                'http_code' => $response->status(),
                 'message' => 'Erro ao enviar confirmação (' . $response->status() . '). ' . mb_substr($detail, 0, 200),
             ];
         }
@@ -595,6 +596,7 @@ class SpedUploadService
 
         return [
             'success' => true,
+            'http_code' => $response->status(),
         ];
     }
 
@@ -678,6 +680,7 @@ class SpedUploadService
 
             return [
                 'success' => false,
+                'http_code' => $response->status(),
                 'message' => 'Erro ao processar (' . $response->status() . '). ' . mb_substr($detail, 0, 200),
             ];
         }
