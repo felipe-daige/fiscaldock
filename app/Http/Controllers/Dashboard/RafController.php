@@ -253,26 +253,51 @@ class RafController extends Controller
 
         $resumeUrl = $relatorio->resume_url;
 
+        if (!$resumeUrl) {
+            Log::warning('Resume URL não encontrado para cancelamento', [
+                'user_id' => $user->id,
+                'relatorio_id' => $id,
+            ]);
+            
+            // Sem resume_url, não é possível notificar o n8n
+            // Retornar erro pois não podemos cancelar sem notificar o webhook
+            return response()->json([
+                'success' => false,
+                'message' => 'Não foi possível cancelar: resume_url não encontrado.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
         Log::info('Cancelamento de confirmação de créditos via histórico', [
             'user_id' => $user->id,
             'relatorio_id' => $id,
             'resume_url' => $resumeUrl,
         ]);
 
-        // Envia 'answer: decline' para o webhook
-        $result = $this->spedUploadService->confirmAndResume($resumeUrl, 'decline');
+        // Envia 'declined' para o webhook usando sendWebhookStatus (método correto para cancelamentos)
+        // O n8n será responsável por deletar o registro após receber o declined
+        $result = $this->spedUploadService->sendWebhookStatus($resumeUrl, 'declined');
 
-        if (!$result['success'] && $result['message'] !== 'Operação cancelada pelo usuário.') {
+        if (!$result['success']) {
             Log::warning('Falha ao enviar cancelamento para webhook via histórico', [
                 'user_id' => $user->id,
                 'relatorio_id' => $id,
                 'resume_url' => $resumeUrl,
                 'error' => $result['message'] ?? 'Erro desconhecido',
             ]);
+            // Retornar erro se não conseguir enviar para o webhook
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'] ?? 'Erro ao enviar cancelamento para o servidor.',
+            ], Response::HTTP_BAD_GATEWAY);
         }
 
-        // Remove o registro da tabela de pendentes
-        $relatorio->delete();
+        Log::info('Cancelamento enviado com sucesso para webhook', [
+            'user_id' => $user->id,
+            'relatorio_id' => $id,
+            'resume_url' => $resumeUrl,
+        ]);
+
+        // Não deletar o registro aqui - o n8n vai deletar após receber o declined
 
         return response()->json([
             'success' => true,

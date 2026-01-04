@@ -328,10 +328,8 @@ class CreditController extends Controller
         ]);
 
         // Envia 'declined' para o webhook (sem esperar resposta)
+        // O n8n será responsável por deletar o registro após receber o declined
         $result = $this->spedUploadService->sendWebhookStatus($resumeUrl, 'declined');
-
-        // Remove o registro da tabela de pendentes após cancelamento
-        $relatorio->delete();
 
         if (!$result['success']) {
             Log::warning('Falha ao enviar cancelamento para webhook', [
@@ -339,8 +337,21 @@ class CreditController extends Controller
                 'resume_url' => $resumeUrl,
                 'error' => $result['message'] ?? 'Erro desconhecido',
             ]);
+            
+            // Retornar erro se não conseguir enviar para o webhook
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'] ?? 'Erro ao enviar cancelamento para o servidor.',
+            ], Response::HTTP_BAD_GATEWAY);
         }
 
+        Log::info('Cancelamento enviado com sucesso para webhook', [
+            'user_id' => $user->id,
+            'relatorio_id' => $relatorio->id,
+            'resume_url' => $resumeUrl,
+        ]);
+
+        // Não deletar o registro aqui - o n8n vai deletar após receber o declined
         return response()->json([
             'success' => true,
             'message' => 'Operação cancelada com sucesso.',

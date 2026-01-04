@@ -10,7 +10,6 @@ use App\Services\CreditService;
 use App\Services\Sped\SpedUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -359,123 +358,6 @@ class DataReceiverController extends Controller
         $apiToken = $request->header('X-API-Token') ?? $request->input('api_token');
         $expectedToken = config('services.api.token');
         return !empty($apiToken) && !empty($expectedToken) && $apiToken === $expectedToken;
-    }
-
-    /**
-     * Busca dados armazenados em cache por resume_url.
-     * Requer autenticação do usuário.
-     */
-    public function getData(Request $request, string $resumeUrl)
-    {
-        try {
-            // Decodificar URL se necessário
-            $resumeUrl = urldecode($resumeUrl);
-            
-            // Verifica autenticação
-            $user = Auth::user();
-            
-            if (!$user) {
-                Log::warning('getData: usuário não autenticado', [
-                    'resume_url' => $resumeUrl,
-                    'session_id' => $request->session()->getId(),
-                    'expects_json' => $request->expectsJson(),
-                    'is_api_route' => $request->is('api/*'),
-                    'headers' => [
-                        'accept' => $request->header('Accept'),
-                        'x-requested-with' => $request->header('X-Requested-With'),
-                    ],
-                ]);
-                
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Usuário não autenticado.',
-                ], Response::HTTP_UNAUTHORIZED);
-            }
-
-            // Buscar dados em cache
-            $resumeUrlHash = md5($resumeUrl);
-            $cacheKey = "raf_confirmation:{$user->id}:{$resumeUrlHash}";
-            $cachedData = Cache::get($cacheKey);
-
-            if (!$cachedData) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Dados não encontrados.',
-                ], Response::HTTP_NOT_FOUND);
-            }
-
-            // Validar que o user_id do cache corresponde ao usuário autenticado
-            if (isset($cachedData['user_id']) && (int) $cachedData['user_id'] !== $user->id) {
-                Log::warning('Tentativa de acesso a dados de outro usuário', [
-                    'user_id' => $user->id,
-                    'cache_user_id' => $cachedData['user_id'] ?? null,
-                    'resume_url' => $resumeUrl,
-                ]);
-                
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Acesso negado.',
-                ], Response::HTTP_FORBIDDEN);
-            }
-
-            return response()->json([
-                'success' => true,
-                'data' => $cachedData,
-            ], Response::HTTP_OK);
-
-        } catch (\Exception $e) {
-            Log::error('Erro ao buscar dados RAF do cache', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'resume_url' => $resumeUrl ?? null,
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao buscar dados.',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    /**
-     * Busca dados armazenados em cache por resume_url (endpoint público).
-     * Não requer autenticação.
-     */
-    public function getDataPublic(Request $request, string $resumeUrl)
-    {
-        try {
-            // Decodificar URL se necessário
-            $resumeUrl = urldecode($resumeUrl);
-            
-            // Buscar dados em cache usando chave pública
-            $resumeUrlHash = md5($resumeUrl);
-            $publicCacheKey = "raf_confirmation_public:{$resumeUrlHash}";
-            $cachedData = Cache::get($publicCacheKey);
-
-            if (!$cachedData) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Dados não encontrados.',
-                ], Response::HTTP_NOT_FOUND);
-            }
-
-            return response()->json([
-                'success' => true,
-                'data' => $cachedData,
-            ], Response::HTTP_OK);
-
-        } catch (\Exception $e) {
-            Log::error('Erro ao buscar dados RAF do cache (público)', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'resume_url' => $resumeUrl ?? null,
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao buscar dados.',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
     }
 
     /**
