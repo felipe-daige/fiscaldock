@@ -13,26 +13,26 @@ services:
       - vendor_cache:/var/www/html/vendor
       - ./docker/php/opcache-dev.ini:/usr/local/etc/php/conf.d/99-opcache.ini:ro
     environment:
-      APP_ENV: "local"
-      APP_DEBUG: "true"
-      APP_URL: "http://localhost:8080"
-      ASSET_URL: "http://localhost:8080"
-      APP_KEY: "REMOVED_APP_KEY"
-      DB_CONNECTION: pgsql
-      DB_HOST: postgres
-      DB_PORT: "5432"
-      DB_DATABASE: fiscaldock
-      DB_USERNAME: postgres
-      DB_PASSWORD: REMOVED_PASSWORD
-      CACHE_STORE: database
-      SESSION_DRIVER: database
-      SESSION_LIFETIME: "120"
-      QUEUE_CONNECTION: sync
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
-      TRUSTED_PROXIES: "*"
-      LOG_CHANNEL: stack
-      LOG_LEVEL: debug
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      ASSET_URL: ${ASSET_URL:-http://localhost:8080}
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE:-fiscaldock}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+      CACHE_STORE: ${CACHE_STORE:-database}
+      SESSION_DRIVER: ${SESSION_DRIVER:-database}
+      SESSION_LIFETIME: ${SESSION_LIFETIME:-120}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-sync}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-*}
+      LOG_CHANNEL: ${LOG_CHANNEL:-stack}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
     ports:
       - "8080:80"
     deploy: null
@@ -51,23 +51,23 @@ services:
       - ./storage/logs:/var/www/html/storage/logs  # Mapeia logs para o host
     command: php artisan schedule:work
     environment:
-      APP_ENV: "local"
-      APP_DEBUG: "true"
-      APP_URL: "http://localhost:8080"
-      APP_KEY: "REMOVED_APP_KEY"
-      DB_CONNECTION: pgsql
-      DB_HOST: postgres
-      DB_PORT: "5432"
-      DB_DATABASE: fiscaldock
-      DB_USERNAME: postgres
-      DB_PASSWORD: REMOVED_PASSWORD
-      CACHE_STORE: database
-      SESSION_DRIVER: database
-      QUEUE_CONNECTION: sync
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
-      LOG_CHANNEL: stack
-      LOG_LEVEL: debug
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE:-fiscaldock}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+      CACHE_STORE: ${CACHE_STORE:-database}
+      SESSION_DRIVER: ${SESSION_DRIVER:-database}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-sync}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      LOG_CHANNEL: ${LOG_CHANNEL:-stack}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
     deploy: null
 
   worker:
@@ -84,23 +84,23 @@ services:
       - ./storage/logs:/var/www/html/storage/logs  # Mapeia logs para o host
     command: php artisan queue:work --verbose --tries=3 --timeout=90
     environment:
-      APP_ENV: "local"
-      APP_DEBUG: "true"
-      APP_URL: "http://localhost:8080"
-      APP_KEY: "REMOVED_APP_KEY"
-      DB_CONNECTION: pgsql
-      DB_HOST: postgres
-      DB_PORT: "5432"
-      DB_DATABASE: fiscaldock
-      DB_USERNAME: postgres
-      DB_PASSWORD: REMOVED_PASSWORD
-      CACHE_STORE: database
-      SESSION_DRIVER: database
-      QUEUE_CONNECTION: sync
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
-      LOG_CHANNEL: stack
-      LOG_LEVEL: debug
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE:-fiscaldock}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+      CACHE_STORE: ${CACHE_STORE:-database}
+      SESSION_DRIVER: ${SESSION_DRIVER:-database}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-sync}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      LOG_CHANNEL: ${LOG_CHANNEL:-stack}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
     profiles:
       - worker  # Só sobe se usar: docker compose --profile worker up
 
