@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('raf_consulta_pendente', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('cliente_id')->nullable()->constrained('clientes')->onDelete('set null');
             $table->string('tab_id', 36)->nullable();
             $table->string('tipo_efd')->nullable();
             $table->string('tipo_consulta')->nullable();

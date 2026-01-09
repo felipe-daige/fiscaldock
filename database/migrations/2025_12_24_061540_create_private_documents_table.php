@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('priv_docs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('cliente_id')->nullable()->constrained('clientes')->onDelete('set null');
             $table->string('document_type');
             $table->text('final_report_base64')->nullable();
             $table->longText('document_text')->nullable();

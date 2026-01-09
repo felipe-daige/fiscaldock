@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\RelatorioCompletoController;
+use App\Models\Cliente;
 use App\Services\Dashboard\DashboardDataService;
 use App\Services\Sped\SpedUploadService;
 use Illuminate\Http\Request;
@@ -117,7 +118,38 @@ class DashboardController extends Controller
     }
 
     public function raf(Request $request){
-        return $this->renderAutenticado($request, 'raf');
+        $autenticadoView = self::AUTH_VIEW_PREFIX . 'raf';
+
+        if(!view()->exists($autenticadoView)){
+            abort(404);
+        }
+
+        if(!Auth::check()){
+            if($this->isAjaxRequest($request)){
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Você não está logado',
+                    'redirect' => '/login'
+                ]);
+            }
+            return redirect('/login');
+        }
+
+        // Buscar clientes do usuário logado (ativos)
+        $clientes = Cliente::where('user_id', Auth::id())
+            ->where('ativo', true)
+            ->select('id', 'nome', 'razao_social', 'documento', 'tipo_pessoa')
+            ->orderBy('nome')
+            ->get();
+
+        if($this->isAjaxRequest($request)){
+            return view($autenticadoView, ['clientes' => $clientes]);
+        }
+        
+        return view(self::AUTH_LAYOUT_VIEW, [
+            'initialView' => $autenticadoView,
+            'clientes' => $clientes
+        ]);
     }
 
     public function spedImportar(Request $request){
@@ -140,8 +172,87 @@ class DashboardController extends Controller
         return $this->renderAutenticado($request, 'novo_cliente');
     }
 
+    public function consultarCliente(Request $request){
+        $autenticadoView = self::AUTH_VIEW_PREFIX . 'consultar_cliente';
+
+        if(!view()->exists($autenticadoView)){
+            abort(404);
+        }
+
+        if(!Auth::check()){
+            if($this->isAjaxRequest($request)){
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Você não está logado',
+                    'redirect' => '/login'
+                ]);
+            }
+            return redirect('/login');
+        }
+
+        // Buscar clientes PJ do usuário logado
+        $clientes = Cliente::where('user_id', Auth::id())
+            ->where('tipo_pessoa', 'PJ')
+            ->where('ativo', true)
+            ->select('id', 'nome', 'documento')
+            ->orderBy('nome')
+            ->get();
+
+        if($this->isAjaxRequest($request)){
+            return view($autenticadoView, ['clientes' => $clientes]);
+        }
+        
+        return view(self::AUTH_LAYOUT_VIEW, [
+            'initialView' => $autenticadoView,
+            'clientes' => $clientes
+        ]);
+    }
+
     public function clientes(Request $request){
-        return $this->renderAutenticado($request, 'clientes');
+        $autenticadoView = self::AUTH_VIEW_PREFIX . 'clientes';
+
+        if(!view()->exists($autenticadoView)){
+            abort(404);
+        }
+
+        if(!Auth::check()){
+            if($this->isAjaxRequest($request)){
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Você não está logado',
+                    'redirect' => '/login'
+                ]);
+            }
+            return redirect('/login');
+        }
+
+        // Buscar clientes do usuário logado
+        $clientes = Cliente::where('user_id', Auth::id())
+            ->with('endereco')
+            ->orderBy('nome')
+            ->get();
+
+        // Estatísticas
+        $totalAtivos = $clientes->where('ativo', true)->count();
+        $totalInativos = $clientes->where('ativo', false)->count();
+        $totalPJ = $clientes->where('tipo_pessoa', 'PJ')->count();
+        $totalPF = $clientes->where('tipo_pessoa', 'PF')->count();
+
+        $data = [
+            'clientes' => $clientes,
+            'totalAtivos' => $totalAtivos,
+            'totalInativos' => $totalInativos,
+            'totalPJ' => $totalPJ,
+            'totalPF' => $totalPF,
+        ];
+
+        if($this->isAjaxRequest($request)){
+            return view($autenticadoView, $data);
+        }
+        
+        return view(self::AUTH_LAYOUT_VIEW, array_merge([
+            'initialView' => $autenticadoView
+        ], $data));
     }
 
     public function consultarInscricaoEstadual(Request $request){
@@ -200,6 +311,7 @@ class DashboardController extends Controller
                 'modalidade' => 'required|in:gratuito,completa',
                 'sped' => 'required|file|mimes:txt,text/plain|max:10240', // 10 MB
                 'tab_id' => 'nullable|string|max:36',
+                'cliente_id' => 'nullable|integer|min:0',
             ]);
         } catch (ValidationException $e) {
             $errors = $e->errors();
@@ -233,6 +345,26 @@ class DashboardController extends Controller
         $user = Auth::user();
         $userId = $user ? $user->id : null;
         
+        // Obter cliente_id (0 se não fornecido)
+        $clienteId = isset($validated['cliente_id']) && $validated['cliente_id'] !== null 
+            ? (int) $validated['cliente_id'] 
+            : 0;
+        
+        // Validar se o cliente pertence ao usuário (se cliente_id > 0)
+        if ($clienteId > 0) {
+            $cliente = Cliente::where('id', $clienteId)
+                ->where('user_id', $userId)
+                ->where('ativo', true)
+                ->first();
+            
+            if (!$cliente) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cliente não encontrado ou não pertence ao usuário.',
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        }
+        
         try {
             $result = $this->spedUploadService->uploadAndProcess(
                 $file,
@@ -241,7 +373,8 @@ class DashboardController extends Controller
                 true, // isAuthenticated
                 $validated['modalidade'],
                 $userId, // user_id
-                $validated['tab_id'] ?? null // tab_id
+                $validated['tab_id'] ?? null, // tab_id
+                $clienteId // cliente_id
             );
         } catch (\InvalidArgumentException $e) {
             return response()->json([
