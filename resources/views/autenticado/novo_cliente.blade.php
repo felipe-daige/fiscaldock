@@ -1,4 +1,4 @@
-{{-- Novo Cliente - Análise de Risco --}}
+{{-- Novo Cliente - Cadastro --}}
 <div class="min-h-screen bg-gray-50" id="novo-cliente-container">
     {{-- Header Section --}}
     <div class="bg-white border-b border-gray-200 shadow-sm">
@@ -8,445 +8,476 @@
                     Novo Cliente
                 </h1>
                 <p class="text-xs text-gray-500 mt-1">
-                    Cadastre um novo cliente e realize análises de risco
+                    Cadastre um novo cliente no sistema
                 </p>
             </div>
         </div>
     </div>
 
     {{-- Main Content --}}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div class="space-y-6">
-            {{-- Seção: Análise de Risco --}}
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-6">Análise de Risco</h2>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <form id="form-novo-cliente" method="POST" action="{{ route('app.cliente.store') }}" class="space-y-6">
+            @csrf
 
-                {{-- Seleção do tipo de consulta --}}
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-3">Tipo de Consulta:</label>
-                    <div class="flex flex-row gap-4">
-                        {{-- Card CNPJ --}}
-                        <label id="card-tipo-cnpj" class="flex-1 flex items-center justify-center p-4 border-2 border-blue-600 rounded-lg cursor-pointer bg-blue-50 hover:bg-blue-100 transition-colors">
-                            <input type="radio" name="tipo-consulta" value="cnpj" checked class="sr-only" id="radio-cnpj">
-                            <div class="text-center">
-                                <div class="text-2xl mb-2">🏢</div>
-                                <div class="font-semibold text-gray-800 text-sm">CNPJ</div>
-                                <div class="text-xs text-gray-600">Empresa</div>
-                            </div>
+            {{-- Grid: Dados do Cliente + Endereço Principal --}}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {{-- Seção 1: Dados do Cliente --}}
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-6">Dados do Cliente</h2>
+
+                <div class="space-y-4">
+                    {{-- Tipo de Pessoa --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Tipo de Pessoa:</label>
+                        <div class="flex flex-row gap-4">
+                            <label id="card-tipo-pj" class="flex-1 flex items-center justify-center p-4 border-2 border-blue-600 rounded-lg cursor-pointer bg-blue-50 hover:bg-blue-100 transition-colors">
+                                <input type="radio" name="tipo_pessoa" value="PJ" checked class="sr-only" id="radio-pj">
+                                <div class="text-center">
+                                    <div class="text-2xl mb-2">🏢</div>
+                                    <div class="font-semibold text-gray-800 text-sm">Pessoa Jurídica</div>
+                                    <div class="text-xs text-gray-600">CNPJ</div>
+                                </div>
+                            </label>
+
+                            <label id="card-tipo-pf" class="flex-1 flex items-center justify-center p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-gray-50 transition-colors">
+                                <input type="radio" name="tipo_pessoa" value="PF" class="sr-only" id="radio-pf">
+                                <div class="text-center">
+                                    <div class="text-2xl mb-2">👤</div>
+                                    <div class="font-semibold text-gray-800 text-sm">Pessoa Física</div>
+                                    <div class="text-xs text-gray-600">CPF</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    {{-- Documento --}}
+                    <div>
+                        <label for="documento" class="block text-sm font-medium text-gray-700 mb-2">
+                            <span id="label-documento">CNPJ</span> <span class="text-red-500">*</span>
                         </label>
+                        <input 
+                            type="text" 
+                            id="documento" 
+                            name="documento" 
+                            required
+                            placeholder="00.000.000/0000-00"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                        @error('documento')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
 
-                        {{-- Card CPF --}}
-                        <label id="card-tipo-cpf" class="flex-1 flex items-center justify-center p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-gray-50 transition-colors">
-                            <input type="radio" name="tipo-consulta" value="cpf" class="sr-only" id="radio-cpf">
-                            <div class="text-center">
-                                <div class="text-2xl mb-2">👤</div>
-                                <div class="font-semibold text-gray-800 text-sm">CPF</div>
-                                <div class="text-xs text-gray-600">Pessoa Física</div>
-                            </div>
+                    {{-- Nome / Nome Fantasia --}}
+                    <div>
+                        <label for="nome" class="block text-sm font-medium text-gray-700 mb-2">
+                            <span id="label-nome">Nome Fantasia</span> <span class="text-red-500">*</span>
                         </label>
+                        <input 
+                            type="text" 
+                            id="nome" 
+                            name="nome" 
+                            required
+                            placeholder="Nome fantasia ou nome completo"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                        @error('nome')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Razão Social (apenas PJ) --}}
+                    <div id="campo-razao-social">
+                        <label for="razao_social" class="block text-sm font-medium text-gray-700 mb-2">
+                            Razão Social
+                        </label>
+                        <input 
+                            type="text" 
+                            id="razao_social" 
+                            name="razao_social" 
+                            placeholder="Razão social completa"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                        @error('razao_social')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Telefone --}}
+                    <div>
+                        <label for="telefone" class="block text-sm font-medium text-gray-700 mb-2">
+                            Telefone
+                        </label>
+                        <input 
+                            type="text" 
+                            id="telefone" 
+                            name="telefone" 
+                            placeholder="(00) 00000-0000"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                        @error('telefone')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Email --}}
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                            Email
+                        </label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            placeholder="email@exemplo.com"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                        @error('email')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Faturamento Anual (apenas PJ) --}}
+                    <div id="campo-faturamento">
+                        <label for="faturamento_anual" class="block text-sm font-medium text-gray-700 mb-2">
+                            Faturamento Anual
+                        </label>
+                        <input 
+                            type="text" 
+                            id="faturamento_anual" 
+                            name="faturamento_anual" 
+                            placeholder="R$ 0,00"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                        @error('faturamento_anual')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
-
-                {{-- Campos de entrada condicionais --}}
-                <div class="mb-6">
-                    {{-- Campos CNPJ --}}
-                    <div id="campos-cnpj" class="space-y-4">
-                        <div>
-                            <label for="input-cnpj" class="block text-sm font-medium text-gray-700 mb-2">CNPJ</label>
-                            <input 
-                                type="text" 
-                                id="input-cnpj" 
-                                placeholder="00.000.000/0000-00"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
-                        </div>
-                    </div>
-
-                    {{-- Campos CPF --}}
-                    <div id="campos-cpf" class="space-y-4 hidden">
-                        <div>
-                            <label for="input-cpf" class="block text-sm font-medium text-gray-700 mb-2">CPF</label>
-                            <input 
-                                type="text" 
-                                id="input-cpf" 
-                                placeholder="000.000.000-00"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
-                        </div>
-                        <div>
-                            <label for="input-data-nascimento" class="block text-sm font-medium text-gray-700 mb-2">Data de Nascimento</label>
-                            <input 
-                                type="text" 
-                                id="input-data-nascimento" 
-                                placeholder="00/00/0000"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Tabs de Planos --}}
-                <div>
-                    <h3 class="text-sm font-semibold text-gray-800 mb-4">Escolha o tipo de relatório:</h3>
-                    
-                    {{-- Tabs como Cards --}}
-                    <div class="mb-6">
-                        <div class="flex flex-row gap-3 md:gap-4" id="tabs-container">
-                            {{-- Card Rápida --}}
-                            <button type="button" class="tab-btn flex-1 bg-white border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 hover:border-gray-300 text-gray-600 transition-colors flex flex-col items-center justify-center text-center relative" data-tab="rapida">
-                                <div class="text-3xl mb-2">🔍</div>
-                                <span class="font-semibold text-sm mb-1">Rápida</span>
-                                <span class="text-xs text-gray-500" data-price-rapida>0 créditos</span>
-                            </button>
-
-                            {{-- Card Básico --}}
-                            <button type="button" class="tab-btn flex-1 bg-white border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 hover:border-gray-300 text-gray-600 transition-colors flex flex-col items-center justify-center text-center relative" data-tab="basico">
-                                <div class="text-3xl mb-2">📋</div>
-                                <span class="font-semibold text-sm mb-1">Básico</span>
-                                <span class="text-xs text-gray-500" data-price-basico-cnpj>15 créditos</span>
-                                <span class="text-xs text-gray-500 hidden" data-price-basico-cpf>10 créditos</span>
-                            </button>
-
-                            {{-- Card Completo --}}
-                            <button type="button" class="tab-btn flex-1 bg-blue-50 border-2 border-blue-500 rounded-lg p-4 shadow-sm text-blue-700 transition-colors flex flex-col items-center justify-center text-center relative" data-tab="completo">
-                                <span class="absolute -top-2 -right-2 bg-white text-yellow-600 text-xs px-2 py-0.5 rounded-full font-semibold border-2 border-yellow-500 shadow-sm">Favorito</span>
-                                <div class="text-3xl mb-2">📊</div>
-                                <span class="font-semibold text-sm mb-1">Completo</span>
-                                <span class="text-xs text-blue-600" data-price-completo-cnpj>30 créditos</span>
-                                <span class="text-xs text-blue-600 hidden" data-price-completo-cpf>20 créditos</span>
-                            </button>
-
-                            {{-- Card Monitor --}}
-                            <button type="button" class="tab-btn flex-1 bg-white border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 hover:border-gray-300 text-gray-600 transition-colors flex flex-col items-center justify-center text-center relative" data-tab="monitor">
-                                <div class="text-3xl mb-2">🔔</div>
-                                <span class="font-semibold text-sm mb-1">Monitor</span>
-                                <span class="text-xs text-gray-500" data-price-monitor-cnpj>50 créditos/mês</span>
-                                <span class="text-xs text-gray-500 hidden" data-price-monitor-cpf>30 créditos/mês</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {{-- Área de Detalhes --}}
-                    <div class="bg-gray-50 rounded-xl p-6 mb-6 border border-gray-100">
-                        {{-- Conteúdo Tab Rápida --}}
-                        <div id="content-rapida" class="hidden">
-                            <div class="flex items-center mb-4">
-                                <span class="text-2xl mr-2">🔍</span>
-                                <h4 class="text-lg font-bold text-gray-800">Consulta Rápida</h4>
-                            </div>
-                            <div id="content-rapida-cnpj" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Situação Cadastral CNPJ</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Quadro Societário (QSA)</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Monitoramento mensal automático</span>
-                                </div>
-                            </div>
-                            <div id="content-rapida-cpf" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 hidden">
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Situação CPF</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Nome completo</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Monitoramento mensal automático</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Conteúdo Tab Básico --}}
-                        <div id="content-basico" class="hidden">
-                            <div class="flex items-center mb-4">
-                                <span class="text-2xl mr-2">📋</span>
-                                <h4 class="text-lg font-bold text-gray-800">Relatório Básico</h4>
-                            </div>
-                            <div id="content-basico-cnpj" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Situação Cadastral</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Quadro Societário</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Simples Nacional</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Inscrição Estadual</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Listas Restritivas (CEIS, CNEP, Trabalho Escravo)</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Score de Risco (0-100)</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Relatório PDF</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Salvo no histórico</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Monitoramento mensal automático</span>
-                                </div>
-                            </div>
-                            <div id="content-basico-cpf" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 hidden">
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Situação CPF</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Dados cadastrais</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Participação em empresas (QSA reverso)</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Verificação de óbito</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Score de Risco (0-100)</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Relatório PDF</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Salvo no histórico</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Monitoramento mensal automático</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Conteúdo Tab Completo --}}
-                        <div id="content-completo">
-                            <div class="flex items-center mb-4">
-                                <span class="text-2xl mr-2">📊</span>
-                                <h4 class="text-lg font-bold text-gray-800">Relatório Completo</h4>
-                            </div>
-                            <div id="content-completo-cnpj" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Tudo do Básico +</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">CND Federal</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">CND Estadual</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">CND Municipal</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">CNDT (Trabalhista)</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">CRF (FGTS)</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Protestos em Cartórios</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Análise detalhada</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Recomendações automáticas</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Monitoramento mensal automático</span>
-                                </div>
-                            </div>
-                            <div id="content-completo-cpf" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 hidden">
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Tudo do Básico +</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Protestos em Cartórios</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Processos judiciais</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Benefícios INSS</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Análise detalhada</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Recomendações automáticas</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Monitoramento mensal automático</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Conteúdo Tab Monitoramento --}}
-                        <div id="content-monitor" class="hidden">
-                            <div class="flex items-center mb-4">
-                                <span class="text-2xl mr-2">🔔</span>
-                                <h4 class="text-lg font-bold text-gray-800">Monitoramento</h4>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Tudo do Completo +</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Reconsulta automática semanal (mais frequente)</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Alerta por e-mail se situação mudar</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span class="text-gray-800 text-base">Histórico de alterações</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Botão de Ação --}}
-                    <button type="button" id="action-button" class="w-full px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors">
-                        Gerar Relatório
-                    </button>
-                </div>
-
             </div>
-        </div>
+
+            {{-- Seção 2: Endereço Principal --}}
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-6">Endereço Principal</h2>
+
+                <div class="space-y-4">
+                    {{-- CEP --}}
+                    <div>
+                        <label for="cep" class="block text-sm font-medium text-gray-700 mb-2">
+                            CEP <span class="text-red-500">*</span>
+                        </label>
+                        <div class="flex gap-2">
+                            <input 
+                                type="text" 
+                                id="cep" 
+                                name="endereco[cep]" 
+                                required
+                                placeholder="00000-000"
+                                maxlength="9"
+                                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                            <button 
+                                type="button" 
+                                id="btn-buscar-cep" 
+                                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-300 transition-colors"
+                            >
+                                Buscar
+                            </button>
+                        </div>
+                        @error('endereco.cep')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Logradouro --}}
+                    <div>
+                        <label for="logradouro" class="block text-sm font-medium text-gray-700 mb-2">
+                            Logradouro <span class="text-red-500">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="logradouro" 
+                            name="endereco[logradouro]" 
+                            required
+                            placeholder="Rua, Avenida, etc."
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                        @error('endereco.logradouro')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Número e Complemento --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="numero" class="block text-sm font-medium text-gray-700 mb-2">
+                                Número <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="numero" 
+                                name="endereco[numero]" 
+                                required
+                                placeholder="123"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                            @error('endereco.numero')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label for="complemento" class="block text-sm font-medium text-gray-700 mb-2">
+                                Complemento
+                            </label>
+                            <input 
+                                type="text" 
+                                id="complemento" 
+                                name="endereco[complemento]" 
+                                placeholder="Apto, Sala, etc."
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                            @error('endereco.complemento')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    {{-- Bairro --}}
+                    <div>
+                        <label for="bairro" class="block text-sm font-medium text-gray-700 mb-2">
+                            Bairro <span class="text-red-500">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="bairro" 
+                            name="endereco[bairro]" 
+                            required
+                            placeholder="Nome do bairro"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                        @error('endereco.bairro')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Cidade e Estado --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="cidade" class="block text-sm font-medium text-gray-700 mb-2">
+                                Cidade <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="cidade" 
+                                name="endereco[cidade]" 
+                                required
+                                placeholder="Nome da cidade"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                            @error('endereco.cidade')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label for="estado" class="block text-sm font-medium text-gray-700 mb-2">
+                                Estado (UF) <span class="text-red-500">*</span>
+                            </label>
+                            <select 
+                                id="estado" 
+                                name="endereco[estado]" 
+                                required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="">Selecione</option>
+                                <option value="AC">Acre</option>
+                                <option value="AL">Alagoas</option>
+                                <option value="AP">Amapá</option>
+                                <option value="AM">Amazonas</option>
+                                <option value="BA">Bahia</option>
+                                <option value="CE">Ceará</option>
+                                <option value="DF">Distrito Federal</option>
+                                <option value="ES">Espírito Santo</option>
+                                <option value="GO">Goiás</option>
+                                <option value="MA">Maranhão</option>
+                                <option value="MT">Mato Grosso</option>
+                                <option value="MS">Mato Grosso do Sul</option>
+                                <option value="MG">Minas Gerais</option>
+                                <option value="PA">Pará</option>
+                                <option value="PB">Paraíba</option>
+                                <option value="PR">Paraná</option>
+                                <option value="PE">Pernambuco</option>
+                                <option value="PI">Piauí</option>
+                                <option value="RJ">Rio de Janeiro</option>
+                                <option value="RN">Rio Grande do Norte</option>
+                                <option value="RS">Rio Grande do Sul</option>
+                                <option value="RO">Rondônia</option>
+                                <option value="RR">Roraima</option>
+                                <option value="SC">Santa Catarina</option>
+                                <option value="SP">São Paulo</option>
+                                <option value="SE">Sergipe</option>
+                                <option value="TO">Tocantins</option>
+                            </select>
+                            @error('endereco.estado')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+            {{-- Fim do Grid 2 colunas --}}
+
+            {{-- Seção 3: Funcionário/Responsável Inicial (largura total) --}}
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-6">Funcionário/Responsável Inicial</h2>
+
+                <div class="space-y-4">
+                    {{-- Nome e Sobrenome --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="funcionario_nome" class="block text-sm font-medium text-gray-700 mb-2">
+                                Nome <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="funcionario_nome" 
+                                name="funcionario[nome]" 
+                                required
+                                placeholder="Nome"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                            @error('funcionario.nome')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label for="funcionario_sobrenome" class="block text-sm font-medium text-gray-700 mb-2">
+                                Sobrenome <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="funcionario_sobrenome" 
+                                name="funcionario[sobrenome]" 
+                                required
+                                placeholder="Sobrenome"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                            @error('funcionario.sobrenome')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    {{-- Email e Senha --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="funcionario_email" class="block text-sm font-medium text-gray-700 mb-2">
+                                Email <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="email" 
+                                id="funcionario_email" 
+                                name="funcionario[email]" 
+                                required
+                                placeholder="email@exemplo.com"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                            @error('funcionario.email')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label for="funcionario_senha" class="block text-sm font-medium text-gray-700 mb-2">
+                                Senha <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="password" 
+                                id="funcionario_senha" 
+                                name="funcionario[senha]" 
+                                required
+                                placeholder="Mínimo 8 caracteres"
+                                minlength="8"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                            @error('funcionario.senha')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    {{-- Cargo e Departamento --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="funcionario_cargo" class="block text-sm font-medium text-gray-700 mb-2">
+                                Cargo <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="funcionario_cargo" 
+                                name="funcionario[cargo]" 
+                                required
+                                placeholder="Ex: Gerente, Diretor, etc."
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                            @error('funcionario.cargo')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label for="funcionario_departamento" class="block text-sm font-medium text-gray-700 mb-2">
+                                Departamento
+                            </label>
+                            <input 
+                                type="text" 
+                                id="funcionario_departamento" 
+                                name="funcionario[departamento]" 
+                                placeholder="Ex: Financeiro, TI, etc."
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                            @error('funcionario.departamento')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    {{-- Nível de Acesso --}}
+                    <div>
+                        <label for="funcionario_nivel_acesso" class="block text-sm font-medium text-gray-700 mb-2">
+                            Nível de Acesso <span class="text-red-500">*</span>
+                        </label>
+                        <select 
+                            id="funcionario_nivel_acesso" 
+                            name="funcionario[nivel_acesso]" 
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                            <option value="funcionario">Funcionário</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                        @error('funcionario.nivel_acesso')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+            </div>
+
+            {{-- Botões de Ação --}}
+            <div class="flex gap-4 justify-end">
+                <a 
+                    href="{{ route('app.clientes') }}" 
+                    data-link
+                    class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-300 transition-colors"
+                >
+                    Cancelar
+                </a>
+                <button 
+                    type="submit" 
+                    class="px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
+                >
+                    Cadastrar Cliente
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -454,10 +485,6 @@
 <script>
 (function() {
     'use strict';
-
-    // Variáveis globais
-    let currentTab = 'completo';
-    let currentTipo = 'cnpj';
 
     // Função para aplicar máscara de CNPJ
     function maskCNPJ(value) {
@@ -480,234 +507,179 @@
             .substring(0, 14);
     }
 
-    // Função para aplicar máscara de data
-    function maskData(value) {
+    // Função para aplicar máscara de CEP
+    function maskCEP(value) {
         return value
             .replace(/\D/g, '')
-            .replace(/(\d{2})(\d)/, '$1/$2')
-            .replace(/(\d{2})\/(\d{2})(\d)/, '$1/$2/$3')
-            .substring(0, 10);
+            .replace(/(\d{5})(\d)/, '$1-$2')
+            .substring(0, 9);
     }
 
-    // Função para alternar tabs
-    function switchTab(tabName) {
-        currentTab = tabName;
-        
-        // Remover active de todas as tabs (estado inativo)
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('bg-blue-50', 'border-2', 'border-blue-500', 'shadow-sm', 'text-blue-700');
-            btn.classList.add('bg-white', 'border', 'border-gray-200', 'text-gray-600');
-            
-            // Atualizar cores dos preços para inativo
-            const priceElements = btn.querySelectorAll('[data-price-basico-cnpj], [data-price-basico-cpf], [data-price-completo-cnpj], [data-price-completo-cpf], [data-price-monitor-cnpj], [data-price-monitor-cpf], [data-price-rapida]');
-            priceElements.forEach(el => {
-                el.classList.remove('text-blue-600');
-                el.classList.add('text-gray-500');
-            });
-        });
-        
-        // Adicionar active na tab clicada (estado ativo)
-        const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
-        if (activeTab) {
-            activeTab.classList.remove('bg-white', 'border', 'border-gray-200', 'text-gray-600');
-            activeTab.classList.add('bg-blue-50', 'border-2', 'border-blue-500', 'shadow-sm', 'text-blue-700');
-            
-            // Atualizar cores dos preços para ativo
-            const priceElements = activeTab.querySelectorAll('[data-price-basico-cnpj], [data-price-basico-cpf], [data-price-completo-cnpj], [data-price-completo-cpf], [data-price-monitor-cnpj], [data-price-monitor-cpf], [data-price-rapida]');
-            priceElements.forEach(el => {
-                el.classList.remove('text-gray-500');
-                el.classList.add('text-blue-600');
-            });
+    // Função para aplicar máscara de telefone
+    function maskTelefone(value) {
+        return value
+            .replace(/\D/g, '')
+            .replace(/(\d{2})(\d)/, '($1) $2')
+            .replace(/(\d{4,5})(\d{4})$/, '$1-$2')
+            .substring(0, 15);
+    }
+
+    // Função para aplicar máscara de moeda
+    function maskMoeda(value) {
+        return value
+            .replace(/\D/g, '')
+            .replace(/(\d)(\d{2})$/, '$1,$2')
+            .replace(/(?=(\d{3})+(\D))\B/g, '.')
+            .replace(/^/, 'R$ ');
+    }
+
+    // Função para buscar CEP via API ViaCEP
+    async function buscarCEP(cep) {
+        const cepLimpo = cep.replace(/\D/g, '');
+        if (cepLimpo.length !== 8) {
+            return;
         }
-        
-        // Esconder todos os conteúdos
-        document.querySelectorAll('[id^="content-"]').forEach(content => {
-            if (!content.id.includes('-cnpj') && !content.id.includes('-cpf')) {
-                content.classList.add('hidden');
+
+        try {
+            const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+            const data = await response.json();
+
+            if (!data.erro) {
+                document.getElementById('logradouro').value = data.logradouro || '';
+                document.getElementById('bairro').value = data.bairro || '';
+                document.getElementById('cidade').value = data.localidade || '';
+                document.getElementById('estado').value = data.uf || '';
+            } else {
+                alert('CEP não encontrado');
             }
-        });
-        
-        // Mostrar conteúdo da tab selecionada
-        const content = document.getElementById(`content-${tabName}`);
-        if (content) {
-            content.classList.remove('hidden');
-        }
-        
-        // Atualizar conteúdo conforme CNPJ/CPF
-        updateContent();
-        updateButton();
-    }
-
-    // Função para atualizar preços conforme CNPJ/CPF
-    function updatePrices() {
-        const isCNPJ = currentTipo === 'cnpj';
-        
-        // Preço Básico
-        const priceBasicoCNPJ = document.querySelector('[data-price-basico-cnpj]');
-        const priceBasicoCPF = document.querySelector('[data-price-basico-cpf]');
-        if (priceBasicoCNPJ && priceBasicoCPF) {
-            priceBasicoCNPJ.classList.toggle('hidden', !isCNPJ);
-            priceBasicoCPF.classList.toggle('hidden', isCNPJ);
-        }
-        
-        // Preço Completo
-        const priceCompletoCNPJ = document.querySelector('[data-price-completo-cnpj]');
-        const priceCompletoCPF = document.querySelector('[data-price-completo-cpf]');
-        if (priceCompletoCNPJ && priceCompletoCPF) {
-            priceCompletoCNPJ.classList.toggle('hidden', !isCNPJ);
-            priceCompletoCPF.classList.toggle('hidden', isCNPJ);
-        }
-        
-        // Preço Monitoramento
-        const priceMonitorCNPJ = document.querySelector('[data-price-monitor-cnpj]');
-        const priceMonitorCPF = document.querySelector('[data-price-monitor-cpf]');
-        if (priceMonitorCNPJ && priceMonitorCPF) {
-            priceMonitorCNPJ.classList.toggle('hidden', !isCNPJ);
-            priceMonitorCPF.classList.toggle('hidden', isCNPJ);
+        } catch (error) {
+            console.error('Erro ao buscar CEP:', error);
+            alert('Erro ao buscar CEP. Tente novamente.');
         }
     }
 
-    // Função para atualizar conteúdo conforme CNPJ/CPF
-    function updateContent() {
-        const isCNPJ = currentTipo === 'cnpj';
-        
-        // Atualizar conteúdo de cada tab
-        ['rapida', 'basico', 'completo'].forEach(tab => {
-            const contentCNPJ = document.getElementById(`content-${tab}-cnpj`);
-            const contentCPF = document.getElementById(`content-${tab}-cpf`);
+    // Função para alternar entre PF e PJ
+    function toggleTipoPessoa(tipo) {
+        const isPJ = tipo === 'PJ';
+        const cardPJ = document.getElementById('card-tipo-pj');
+        const cardPF = document.getElementById('card-tipo-pf');
+        const campoRazaoSocial = document.getElementById('campo-razao-social');
+        const campoFaturamento = document.getElementById('campo-faturamento');
+        const labelDocumento = document.getElementById('label-documento');
+        const labelNome = document.getElementById('label-nome');
+        const inputDocumento = document.getElementById('documento');
+
+        // Atualizar cards
+        if (isPJ) {
+            cardPJ.classList.remove('border-gray-300', 'hover:bg-gray-50');
+            cardPJ.classList.add('border-blue-600', 'bg-blue-50');
+            cardPF.classList.remove('border-blue-600', 'bg-blue-50');
+            cardPF.classList.add('border-gray-300', 'hover:bg-gray-50');
             
-            if (contentCNPJ && contentCPF) {
-                contentCNPJ.classList.toggle('hidden', !isCNPJ);
-                contentCPF.classList.toggle('hidden', isCNPJ);
-            }
-        });
-    }
-
-    // Função para atualizar botão de ação
-    function updateButton() {
-        const button = document.getElementById('action-button');
-        if (!button) return;
-        
-        if (currentTab === 'rapida') {
-            button.textContent = 'Consultar';
-            button.className = 'w-full px-6 py-3 bg-gray-600 text-white rounded-lg text-sm font-semibold hover:bg-gray-700 transition-colors';
-        } else if (currentTab === 'monitor') {
-            button.textContent = 'Assinar Monitoramento';
-            button.className = 'w-full px-6 py-3 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors';
+            campoRazaoSocial.style.display = 'block';
+            campoFaturamento.style.display = 'block';
+            labelDocumento.textContent = 'CNPJ';
+            labelNome.textContent = 'Nome Fantasia';
+            inputDocumento.placeholder = '00.000.000/0000-00';
         } else {
-            button.textContent = 'Gerar Relatório';
-            button.className = 'w-full px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors';
+            cardPF.classList.remove('border-gray-300', 'hover:bg-gray-50');
+            cardPF.classList.add('border-blue-600', 'bg-blue-50');
+            cardPJ.classList.remove('border-blue-600', 'bg-blue-50');
+            cardPJ.classList.add('border-gray-300', 'hover:bg-gray-50');
+            
+            campoRazaoSocial.style.display = 'none';
+            campoFaturamento.style.display = 'none';
+            labelDocumento.textContent = 'CPF';
+            labelNome.textContent = 'Nome';
+            inputDocumento.placeholder = '000.000.000-00';
         }
+
+        // Limpar e aplicar máscara no documento
+        inputDocumento.value = '';
     }
 
-    // Função para alternar entre CNPJ e CPF
-    function toggleTipoConsulta(tipo) {
-        currentTipo = tipo;
-        const cardCNPJ = document.getElementById('card-tipo-cnpj');
-        const cardCPF = document.getElementById('card-tipo-cpf');
-        const camposCNPJ = document.getElementById('campos-cnpj');
-        const camposCPF = document.getElementById('campos-cpf');
-        const inputCNPJ = document.getElementById('input-cnpj');
-        const inputCPF = document.getElementById('input-cpf');
-        const inputDataNasc = document.getElementById('input-data-nascimento');
-
-        if (tipo === 'cnpj') {
-            // Atualizar cards de seleção
-            cardCNPJ.classList.remove('border-gray-300', 'hover:bg-gray-50');
-            cardCNPJ.classList.add('border-blue-600', 'bg-blue-50');
-            cardCPF.classList.remove('border-blue-600', 'bg-blue-50');
-            cardCPF.classList.add('border-gray-300', 'hover:bg-gray-50');
-
-            // Mostrar campos CNPJ e esconder CPF
-            camposCNPJ.classList.remove('hidden');
-            camposCPF.classList.add('hidden');
-
-            // Limpar campos CPF
-            if (inputCPF) inputCPF.value = '';
-            if (inputDataNasc) inputDataNasc.value = '';
-        } else {
-            // Atualizar cards de seleção
-            cardCPF.classList.remove('border-gray-300', 'hover:bg-gray-50');
-            cardCPF.classList.add('border-blue-600', 'bg-blue-50');
-            cardCNPJ.classList.remove('border-blue-600', 'bg-blue-50');
-            cardCNPJ.classList.add('border-gray-300', 'hover:bg-gray-50');
-
-            // Mostrar campos CPF e esconder CNPJ
-            camposCPF.classList.remove('hidden');
-            camposCNPJ.classList.add('hidden');
-
-            // Limpar campo CNPJ
-            if (inputCNPJ) inputCNPJ.value = '';
-        }
-        
-        // Atualizar preços e conteúdo
-        updatePrices();
-        updateContent();
-    }
-
-    // Inicialização quando o DOM estiver pronto
+    // Inicialização
     function init() {
-        // Event listeners para os radio buttons
-        const radioCNPJ = document.getElementById('radio-cnpj');
-        const radioCPF = document.getElementById('radio-cpf');
-        const inputCNPJ = document.getElementById('input-cnpj');
-        const inputCPF = document.getElementById('input-cpf');
-        const inputDataNasc = document.getElementById('input-data-nascimento');
+        const radioPJ = document.getElementById('radio-pj');
+        const radioPF = document.getElementById('radio-pf');
+        const inputDocumento = document.getElementById('documento');
+        const inputCEP = document.getElementById('cep');
+        const inputTelefone = document.getElementById('telefone');
+        const inputFaturamento = document.getElementById('faturamento_anual');
+        const btnBuscarCEP = document.getElementById('btn-buscar-cep');
 
-        // Toggle ao clicar nos cards
-        if (radioCNPJ) {
-            radioCNPJ.addEventListener('change', function() {
+        // Toggle tipo pessoa
+        if (radioPJ) {
+            radioPJ.addEventListener('change', function() {
                 if (this.checked) {
-                    toggleTipoConsulta('cnpj');
+                    toggleTipoPessoa('PJ');
                 }
             });
         }
 
-        if (radioCPF) {
-            radioCPF.addEventListener('change', function() {
+        if (radioPF) {
+            radioPF.addEventListener('change', function() {
                 if (this.checked) {
-                    toggleTipoConsulta('cpf');
+                    toggleTipoPessoa('PF');
                 }
             });
         }
 
-        // Event listeners para as tabs
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const tabName = this.getAttribute('data-tab');
-                switchTab(tabName);
-            });
-        });
-
-        // Máscaras nos inputs
-        if (inputCNPJ) {
-            inputCNPJ.addEventListener('input', function(e) {
-                this.value = maskCNPJ(this.value);
+        // Máscara documento (CNPJ/CPF)
+        if (inputDocumento) {
+            inputDocumento.addEventListener('input', function(e) {
+                const tipoPessoa = document.querySelector('input[name="tipo_pessoa"]:checked').value;
+                if (tipoPessoa === 'PJ') {
+                    this.value = maskCNPJ(this.value);
+                } else {
+                    this.value = maskCPF(this.value);
+                }
             });
         }
 
-        if (inputCPF) {
-            inputCPF.addEventListener('input', function(e) {
-                this.value = maskCPF(this.value);
+        // Máscara CEP
+        if (inputCEP) {
+            inputCEP.addEventListener('input', function(e) {
+                this.value = maskCEP(this.value);
+            });
+
+            // Buscar CEP ao perder foco
+            inputCEP.addEventListener('blur', function(e) {
+                if (this.value.length === 9) {
+                    buscarCEP(this.value);
+                }
             });
         }
 
-        if (inputDataNasc) {
-            inputDataNasc.addEventListener('input', function(e) {
-                this.value = maskData(this.value);
+        // Botão buscar CEP
+        if (btnBuscarCEP) {
+            btnBuscarCEP.addEventListener('click', function(e) {
+                e.preventDefault();
+                const cep = document.getElementById('cep').value;
+                if (cep.length === 9) {
+                    buscarCEP(cep);
+                } else {
+                    alert('Por favor, informe um CEP válido');
+                }
             });
         }
 
-        // Tentar usar jQuery Mask se disponível
-        if (typeof $ !== 'undefined' && typeof $.fn.mask !== 'undefined') {
-            if (inputCNPJ) $('#input-cnpj').mask('00.000.000/0000-00');
-            if (inputCPF) $('#input-cpf').mask('000.000.000-00');
-            if (inputDataNasc) $('#input-data-nascimento').mask('00/00/0000');
+        // Máscara telefone
+        if (inputTelefone) {
+            inputTelefone.addEventListener('input', function(e) {
+                this.value = maskTelefone(this.value);
+            });
         }
-        
-        // Inicializar com tab Completo selecionada
-        switchTab('completo');
-        updatePrices();
+
+        // Máscara faturamento
+        if (inputFaturamento) {
+            inputFaturamento.addEventListener('input', function(e) {
+                this.value = maskMoeda(this.value);
+            });
+        }
+
+        // Inicializar com PJ selecionado
+        toggleTipoPessoa('PJ');
     }
 
     // Aguardar DOM estar pronto

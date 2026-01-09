@@ -5,6 +5,7 @@ use App\Http\Controllers\CreditController;
 use App\Http\Controllers\Landing\LandingPageController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\RafController;
+use App\Http\Controllers\Dashboard\ClienteController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -63,6 +64,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/app/raf/confirmar/{id}', [RafController::class, 'confirmar'])->name('app.raf.confirmar');
     Route::post('/app/raf/cancelar/{id}', [RafController::class, 'cancelar'])->name('app.raf.cancelar');
     Route::get('/app/raf/baixar/{id}', [RafController::class, 'baixar'])->name('app.raf.baixar');
+    Route::post('/app/raf/excluir/{id}', [RafController::class, 'excluir'])->name('app.raf.excluir');
 
     // Rota de Importação de SPED
     Route::get('/app/sped_importar', [DashboardController::class, 'spedImportar'])->name('app.sped.importar');
@@ -76,8 +78,12 @@ Route::middleware('auth')->group(function () {
     // Rota de Análise de Risco XMLs
     Route::get('/app/xml_analise_risco', [DashboardController::class, 'xmlAnaliseRisco'])->name('app.xml.analise.risco');
     
-    // Rota de Novo Cliente
+    // Rota de Novo Cliente (formulário de cadastro)
     Route::get('/app/novo_cliente', [DashboardController::class, 'novoCliente'])->name('app.novo.cliente');
+    Route::post('/app/novo_cliente', [ClienteController::class, 'store'])->name('app.cliente.store');
+    
+    // Rota de Consultar Cliente (análise de risco)
+    Route::get('/app/consultar_cliente', [DashboardController::class, 'consultarCliente'])->name('app.consultar.cliente');
     
     // Rota de Clientes
     Route::get('/app/clientes', [DashboardController::class, 'clientes'])->name('app.clientes');

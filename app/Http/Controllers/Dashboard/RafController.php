@@ -161,14 +161,17 @@ class RafController extends Controller
                     'cnpj_empresa_analisada' => $relatorioProcessado->cnpj_empresa_analisada,
                     'razao_social_empresa' => $relatorioProcessado->razao_social_empresa,
                     'total_fornecedores' => $relatorioProcessado->total_fornecedores,
-                    'qtd_ativos' => $relatorioProcessado->qtd_ativos,
-                    'qtd_inaptos' => $relatorioProcessado->qtd_inaptos,
-                    'qtd_simples' => $relatorioProcessado->qtd_simples,
-                    'qtd_presumido' => $relatorioProcessado->qtd_presumido,
-                    'qtd_real' => $relatorioProcessado->qtd_real,
-                    'qtd_regime_indeterminado' => $relatorioProcessado->qtd_regime_indeterminado,
-                    'qtd_cnd_regular' => $relatorioProcessado->qtd_cnd_regular,
-                    'qtd_cnd_pendencia' => $relatorioProcessado->qtd_cnd_pendencia,
+                    'qnt_situacao_nula' => $relatorioProcessado->qnt_situacao_nula,
+                    'qnt_situacao_ativa' => $relatorioProcessado->qnt_situacao_ativa,
+                    'qnt_situacao_suspensa' => $relatorioProcessado->qnt_situacao_suspensa,
+                    'qnt_situacao_inapta' => $relatorioProcessado->qnt_situacao_inapta,
+                    'qnt_situacao_baixada' => $relatorioProcessado->qnt_situacao_baixada,
+                    'qnt_simples' => $relatorioProcessado->qnt_simples,
+                    'qnt_presumido' => $relatorioProcessado->qnt_presumido,
+                    'qnt_real' => $relatorioProcessado->qnt_real,
+                    'qnt_regime_indeterminado' => $relatorioProcessado->qnt_regime_indeterminado,
+                    'qnt_cnd_regular' => $relatorioProcessado->qnt_cnd_regular,
+                    'qnt_cnd_pendencia' => $relatorioProcessado->qnt_cnd_pendencia,
                     'filename' => $relatorioProcessado->filename,
                     'processed_at' => $relatorioProcessado->processed_at?->toIso8601String(),
                     'created_at' => $relatorioProcessado->created_at?->toIso8601String(),
@@ -500,6 +503,61 @@ class RafController extends Controller
             'success' => true,
             'message' => 'Operação cancelada com sucesso.',
         ]);
+    }
+
+    /**
+     * Exclui um relatório processado.
+     */
+    public function excluir(Request $request, $id)
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usuário não autenticado.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = Auth::user();
+        $relatorio = RafRelatorioProcessado::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$relatorio) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Relatório não encontrado.',
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        Log::info('Exclusão de relatório processado', [
+            'user_id' => $user->id,
+            'relatorio_id' => $id,
+        ]);
+
+        try {
+            $relatorio->delete();
+
+            Log::info('Relatório processado excluído com sucesso', [
+                'user_id' => $user->id,
+                'relatorio_id' => $id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Relatório excluído com sucesso.',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao excluir relatório processado', [
+                'user_id' => $user->id,
+                'relatorio_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao excluir relatório. Tente novamente.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**

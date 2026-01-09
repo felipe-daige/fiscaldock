@@ -51,13 +51,13 @@
                                 <div class="flex items-start justify-between mb-3">
                                     <div class="flex items-center gap-3">
                                         <p class="text-sm font-semibold text-gray-900">{{ $relatorio->tipo_efd }}</p>
-                                        @if($relatorio->tipo_consulta === 'gratuito')
+                                        @if(strtolower($relatorio->tipo_consulta ?? '') === 'gratuito')
                                             <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
-                                                Gratuita — Regime Tributário
+                                                Gratuita — Regime + Situação Cadastral
                                             </span>
                                         @else
                                             <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-700">
-                                                Completa — Regime + CND
+                                                Completa — Regime + Situação Cadastral + CND
                                             </span>
                                         @endif
                                     </div>
@@ -137,13 +137,13 @@
                                 <div class="flex items-start justify-between mb-3">
                                     <div class="flex items-center gap-3">
                                         <p class="text-sm font-semibold text-gray-900">{{ $relatorio->document_type }}</p>
-                                        @if($relatorio->consultant_type === 'gratuito')
+                                        @if(strtolower($relatorio->consultant_type ?? '') === 'gratuito')
                                             <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
-                                                Gratuita — Regime Tributário
+                                                Gratuita — Regime + Situação Cadastral
                                             </span>
                                         @else
                                             <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-700">
-                                                Completa — Regime + CND
+                                                Completa — Regime + Situação Cadastral + CND
                                             </span>
                                         @endif
                                     </div>
@@ -192,17 +192,26 @@
                                 {{-- Analytics --}}
                                 <div class="mb-4 space-y-2 text-sm text-gray-700">
                                     <div>
-                                        <strong>{{ number_format($relatorio->total_fornecedores ?? 0, 0, ',', '.') }}</strong> fornecedores analisados
+                                        <strong>{{ number_format($relatorio->total_participants ?? 0, 0, ',', '.') }}</strong> fornecedores analisados
                                     </div>
                                     <div>
-                                        Situação: <strong>{{ $relatorio->qtd_ativos ?? 0 }}</strong> ativos · <strong>{{ $relatorio->qtd_inaptos ?? 0 }}</strong> inaptos
+                                        Situações Fiscal: <strong>{{ $relatorio->qnt_situacao_nula ?? 0 }}</strong> nulas · <strong>{{ $relatorio->qnt_situacao_ativa ?? 0 }}</strong> ativas · <strong>{{ $relatorio->qnt_situacao_suspensa ?? 0 }}</strong> suspensas · <strong>{{ $relatorio->qnt_situacao_inapta ?? 0 }}</strong> inaptas · <strong>{{ $relatorio->qnt_situacao_baixada ?? 0 }}</strong> baixadas
                                     </div>
                                     <div>
-                                        Regime: <strong>{{ $relatorio->qtd_simples ?? 0 }}</strong> Simples · <strong>{{ $relatorio->qtd_presumido ?? 0 }}</strong> Presumido · <strong>{{ $relatorio->qtd_real ?? 0 }}</strong> Real · <strong>{{ $relatorio->qtd_regime_indeterminado ?? 0 }}</strong> indeterminados
+                                        Regimes Tributários: <strong>{{ $relatorio->qnt_simples ?? 0 }}</strong> Simples · <strong>{{ $relatorio->qnt_presumido ?? 0 }}</strong> Presumido · <strong>{{ $relatorio->qnt_real ?? 0 }}</strong> Real · <strong>{{ $relatorio->qnt_regime_indeterminado ?? 0 }}</strong> indeterminados
                                     </div>
-                                    <div>
-                                        CND: <strong>{{ $relatorio->qtd_cnd_regular ?? 0 }}</strong> regulares · <strong>{{ $relatorio->qtd_cnd_pendencia ?? 0 }}</strong> com pendências
-                                    </div>
+                                    @if(strtolower($relatorio->consultant_type ?? '') === 'gratuito')
+                                        <div class="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                            <svg class="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            <span class="text-sm font-medium text-amber-800">Gere um relatório completo para ver informações de CND</span>
+                                        </div>
+                                    @else
+                                        <div>
+                                            Situção dos CNDs: <strong>{{ $relatorio->qnt_cnd_regular ?? 0 }}</strong> regulares · <strong>{{ $relatorio->qnt_cnd_pendencia ?? 0 }}</strong> com pendências
+                                        </div>
+                                    @endif
                                 </div>
 
                                 {{-- Botões --}}
@@ -217,6 +226,20 @@
                                         </svg>
                                         Baixar
                                     </a>
+                                    <button
+                                        type="button"
+                                        class="raf-excluir-btn inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-red-300 bg-white text-red-700 text-sm font-semibold shadow-sm transition hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        data-relatorio-id="{{ $relatorio->id }}"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                        <span class="raf-excluir-text">Excluir</span>
+                                        <svg class="raf-excluir-spinner hidden w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                        </svg>
+                                    </button>
                                 </div>
 
                                 {{-- Footer --}}
@@ -376,6 +399,40 @@
     </div>
 </div>
 
+{{-- Modal de Confirmação de Exclusão --}}
+<div id="raf-excluir-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden">
+        <div class="px-4 py-4 sm:p-5">
+            <div class="flex items-start">
+                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </div>
+                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
+                    <h3 class="text-lg font-semibold text-gray-900">Confirmar Exclusão</h3>
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-500">Tem certeza que deseja excluir este relatório? Esta ação não pode ser desfeita.</p>
+                    </div>
+                </div>
+                <button type="button" class="raf-excluir-modal-close text-gray-400 hover:text-gray-500 ml-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button type="button" id="raf-excluir-confirm-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                Excluir
+            </button>
+            <button type="button" class="raf-excluir-modal-close mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
 (function() {
     'use strict';
@@ -401,6 +458,9 @@
 
         // Estado do modal de cancelamento
         let pendingCancelRelatorioId = null;
+
+        // Estado do modal de exclusão
+        let pendingExcluirRelatorioId = null;
 
         // Função auxiliar para remover card com animação
         function removerCard(relatorioId) {
@@ -526,6 +586,38 @@
             });
         }
 
+        // Modal de exclusão
+        const excluirModal = document.getElementById('raf-excluir-modal');
+
+        function openExcluirModal(relatorioId) {
+            pendingExcluirRelatorioId = relatorioId;
+            if (excluirModal) {
+                excluirModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeExcluirModal() {
+            if (excluirModal) {
+                excluirModal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+            pendingExcluirRelatorioId = null;
+        }
+
+        // Event listeners para fechar modal de exclusão
+        document.querySelectorAll('.raf-excluir-modal-close').forEach(function(btn) {
+            btn.addEventListener('click', closeExcluirModal);
+        });
+
+        if (excluirModal) {
+            excluirModal.addEventListener('click', function(e) {
+                if (e.target === excluirModal) {
+                    closeExcluirModal();
+                }
+            });
+        }
+
         // Event listeners para fechar modais de detalhes
         document.querySelectorAll('.raf-modal-close').forEach(function(btn) {
             btn.addEventListener('click', closeDetalhesModal);
@@ -579,8 +671,8 @@
 
                     const data = result.data;
                     const tipoConsultaLabel = data.tipo_consulta === 'gratuito' 
-                        ? 'Gratuita — Regime Tributário' 
-                        : 'Completa — Regime + CND';
+                        ? 'Gratuita — Regime + Situação Cadastral' 
+                        : 'Completa — Regime + Situação Cadastral + CND';
 
                     const custoUnitario = Number(data.custo_unitario || 0);
                     const valorTotal = Number(data.valor_total_consulta || 0);
@@ -791,6 +883,86 @@
                     }
                     console.error('[RAF Histórico] Erro ao cancelar:', err);
                     alert('Erro ao cancelar relatório. Verifique sua conexão e tente novamente.');
+                }
+            });
+        }
+
+        // Botão Excluir - abre modal de confirmação
+        document.querySelectorAll('.raf-excluir-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const relatorioId = this.dataset.relatorioId;
+                console.log('[RAF Histórico] Abrir modal excluir:', relatorioId);
+                if (!relatorioId) {
+                    console.error('[RAF Histórico] Relatório ID não encontrado');
+                    return;
+                }
+                openExcluirModal(relatorioId);
+            });
+        });
+
+        // Botão Confirmar do modal de exclusão
+        const excluirConfirmBtn = document.getElementById('raf-excluir-confirm-btn');
+        if (excluirConfirmBtn) {
+            excluirConfirmBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (!pendingExcluirRelatorioId) {
+                    console.error('[RAF Histórico] ID de relatório para excluir não encontrado');
+                    return;
+                }
+
+                const relatorioId = pendingExcluirRelatorioId;
+                const btn = document.querySelector('.raf-excluir-btn[data-relatorio-id="' + relatorioId + '"]');
+                const excluirText = btn ? btn.querySelector('.raf-excluir-text') : null;
+                const excluirSpinner = btn ? btn.querySelector('.raf-excluir-spinner') : null;
+
+                console.log('[RAF Histórico] Confirmar exclusão:', relatorioId);
+
+                // Fecha o modal imediatamente
+                closeExcluirModal();
+
+                // Desabilita o botão e mostra spinner
+                if (btn) {
+                    btn.disabled = true;
+                    if (excluirText) excluirText.classList.add('hidden');
+                    if (excluirSpinner) excluirSpinner.classList.remove('hidden');
+                }
+
+                // Aguardar resposta do servidor antes de remover o card
+                try {
+                    const response = await fetch('/app/raf/excluir/' + relatorioId, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrf,
+                            'Accept': 'application/json',
+                        },
+                        credentials: 'same-origin',
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        // Só remove o card se o servidor confirmar sucesso
+                        removerCard(relatorioId);
+                    } else {
+                        // Se falhar, reabilita o botão e mostra erro
+                        if (btn) {
+                            btn.disabled = false;
+                            if (excluirText) excluirText.classList.remove('hidden');
+                            if (excluirSpinner) excluirSpinner.classList.add('hidden');
+                        }
+                        alert('Erro ao excluir relatório: ' + (data.message || 'Erro desconhecido. Tente novamente.'));
+                    }
+                } catch (err) {
+                    // Se houver erro de rede, reabilita o botão
+                    if (btn) {
+                        btn.disabled = false;
+                        if (excluirText) excluirText.classList.remove('hidden');
+                        if (excluirSpinner) excluirSpinner.classList.add('hidden');
+                    }
+                    console.error('[RAF Histórico] Erro ao excluir:', err);
+                    alert('Erro ao excluir relatório. Verifique sua conexão e tente novamente.');
                 }
             });
         }

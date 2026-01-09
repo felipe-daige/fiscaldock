@@ -89,14 +89,14 @@
                                             <input type="radio" name="modalidade" value="gratuito" class="mt-1 mr-3 w-4 h-4 text-blue-600 flex-shrink-0">
                                             <div class="flex-1 min-w-0">
                                                 <div class="font-semibold text-gray-800 text-sm">Gratuita</div>
-                                                <div class="text-xs text-gray-600">Regime Tributário</div>
+                                                <div class="text-xs text-gray-600">Regime + Situação Cadastral</div>
                                             </div>
                                         </label>
                                         <label class="flex items-start p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 tipo-consulta-label" data-consulta="completa">
                                             <input type="radio" name="modalidade" value="completa" class="mt-1 mr-3 w-4 h-4 text-blue-600 flex-shrink-0">
                                             <div class="flex-1 min-w-0">
                                                 <div class="font-semibold text-gray-800 text-sm">Completa</div>
-                                                <div class="text-xs text-gray-600">Regime + CND</div>
+                                                <div class="text-xs text-gray-600">Regime + Sit. Cadastral + CND</div>
                                             </div>
                                         </label>
                                     </div>
@@ -107,8 +107,16 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Vincular a cliente (opcional):</label>
                                     <select id="cliente-select" name="cliente_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                         <option value="">Selecione um cliente...</option>
-                                        <option value="1">Cliente Exemplo 1</option>
-                                        <option value="2">Cliente Exemplo 2</option>
+                                        @forelse($clientes ?? [] as $cliente)
+                                            <option value="{{ $cliente->id }}">
+                                                {{ $cliente->razao_social ?? $cliente->nome }} 
+                                                @if($cliente->documento)
+                                                    - {{ $cliente->documento_formatado }}
+                                                @endif
+                                            </option>
+                                        @empty
+                                            <option value="" disabled>Nenhum cliente cadastrado</option>
+                                        @endforelse
                                     </select>
                                 </div>
 
@@ -291,7 +299,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {{-- Modalidade Gratuita --}}
                 <div class="rounded-lg border border-gray-200 p-4">
-                    <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Gratuita (Regime)</h4>
+                    <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Gratuita (Regime + Sit. Cadastral)</h4>
                     <div class="text-sm">
                         <div class="flex justify-between py-2 border-b border-gray-100"><span class="font-medium text-gray-900">25</span><span class="text-gray-500">~45s</span></div>
                         <div class="flex justify-between py-2 border-b border-gray-100"><span class="font-medium text-gray-900">50</span><span class="text-gray-500">~1min</span></div>
@@ -304,7 +312,7 @@
                 
                 {{-- Modalidade Completa --}}
                 <div class="rounded-lg border border-gray-200 p-4">
-                    <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Completa (Regime + CND)</h4>
+                    <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Completa (Regime + Sit. Cadastral + CND)</h4>
                     <div class="text-sm">
                         <div class="flex justify-between py-2 border-b border-gray-100"><span class="font-medium text-gray-900">25</span><span class="text-gray-500">~3min</span></div>
                         <div class="flex justify-between py-2 border-b border-gray-100"><span class="font-medium text-gray-900">50</span><span class="text-gray-500">~6min</span></div>
@@ -361,7 +369,7 @@
                                     <div class="pt-0.5">
                                         <h4 class="font-semibold text-gray-900">Consulta Automática de Regime</h4>
                                         <p class="text-sm text-gray-600 mt-1">
-                                            Para cada CNPJ, consultamos em tempo real o Regime Tributário (Simples, Presumido ou Real) e a Situação Fiscal (CND - Certidão Negativa de Débitos).
+                                            Para cada CNPJ, consultamos em tempo real o Regime Tributário (Simples, Presumido ou Real) e a Situação Cadastral. Na modalidade completa, também consultamos a Situação Fiscal (CND - Certidão Negativa de Débitos).
                                         </p>
                                     </div>
                                 </div>
@@ -1446,7 +1454,7 @@
                 console.log('[RAF] Restaurando estado: reconectando SSE para relatorio_id:', currentRelatorioId);
                 connectSSE(currentRelatorioId);
                 
-                showAlert('info', 'Relatório em processamento. Aguarde...');
+                showAlert('info', 'Relatório em processamento. Aguarde... ⚠️ Não saia desta página até o processamento ser concluído.');
             } else if (state.isProcessing && !currentRelatorioId) {
                 // Se estava processando mas não tem relatorioId, limpar estado inválido
                 console.log('[RAF] Estado de processamento sem relatorioId, limpando estado inválido');
@@ -1793,7 +1801,7 @@
         
         // Se o processamento estiver em andamento, garantir que o spinner esteja visível
         if (isProcessing) {
-            submitLabel.textContent = 'Gerando Relatório';
+            submitLabel.textContent = 'Aguarde...';
             submitSpinner.classList.remove('hidden');
             submitIcon.classList.add('hidden');
         }
@@ -2002,7 +2010,7 @@
                     // Não exibir mensagem "Workflow was started" ao usuário
                     const message = data.message && !data.message.toLowerCase().includes('workflow was started')
                         ? data.message
-                        : 'Créditos confirmados. Aguarde enquanto o relatório final está sendo gerado. Utilize a lista abaixo para estimaro o tempo de espera para cada relatório';
+                        : 'Créditos confirmados. Aguarde enquanto o relatório final está sendo gerado. ⚠️ Não saia desta página até o processamento ser concluído.';
                     showAlert('info', message);
                     
                     // Conectar SSE para receber notificação quando CSV estiver disponível
@@ -2072,7 +2080,7 @@
                 // Esconder botão de download até o CSV estar realmente disponível
                 resetDownload();
                 
-                showAlert('info', 'Créditos confirmados. Aguarde enquanto o relatório final está sendo gerado. Utilize a lista abaixo para estimaro o tempo de espera para cada relatório');
+                showAlert('info', 'Créditos confirmados. Aguarde enquanto o relatório final está sendo gerado. ⚠️ Não saia desta página até o processamento ser concluído.');
                 
                 // Conectar SSE para receber notificação quando CSV estiver disponível
                 connectSSE(currentRelatorioId);
@@ -2457,7 +2465,7 @@
         // Se o modal estiver aberto, o botão principal está escondido
         if (!isModalOpen) {
             if (isProcessing) {
-                submitLabel.textContent = 'Gerando Relatório';
+                submitLabel.textContent = 'Aguarde...';
                 submitSpinner.classList.remove('hidden');
                 submitIcon.classList.add('hidden');
                 // Mostrar badge como "Processando" quando iniciar processamento
@@ -2538,10 +2546,9 @@
         formData.append('sped', file);
         formData.append('tab_id', tabId); // Identificador único por aba
         
-        // Adicionar cliente_id se selecionado
-        if (clienteId && clienteId !== '') {
-            formData.append('cliente_id', clienteId);
-        }
+        // Sempre enviar cliente_id (0 se não selecionado)
+        const clienteIdToSend = (clienteId && clienteId !== '') ? parseInt(clienteId) : 0;
+        formData.append('cliente_id', clienteIdToSend);
 
         let hasDownloadSuccess = false;
         let hasAsyncStarted = false;
@@ -2616,7 +2623,7 @@
                     // Substituir por mensagem genérica
                     const message = data.message && !data.message.toLowerCase().includes('workflow was started')
                         ? data.message
-                        : 'Processamento iniciado. Aguarde enquanto geramos o relatório...';
+                        : 'Processamento iniciado. Aguarde enquanto geramos o relatório. ⚠️ Não saia desta página até o processamento ser concluído.';
                     showAlert('info', message);
                     
                     // Conectar SSE para receber notificação quando CSV estiver disponível
@@ -2654,7 +2661,7 @@
                         setLoading(false);
                         
                         // Mostrar mensagem para o usuário aguardar o n8n
-                        showAlert('info', 'SPED processado. Aguarde enquanto geramos o relatório final. Você será notificado quando estiver pronto.');
+                        showAlert('info', 'SPED processado. Aguarde enquanto geramos o relatório final. ⚠️ Não saia desta página até o processamento ser concluído.');
                         
                         // Mostrar card de informações se estiver oculto
                         if (infoConsultaCard && infoConsultaCard.parentElement) {

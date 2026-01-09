@@ -15,6 +15,7 @@ return new class extends Migration
         Schema::create('priv_cpf_operacoes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('cpf_id')->constrained('priv_cpf_cadastro')->onDelete('cascade');
+            $table->foreignId('cliente_id')->nullable()->constrained('clientes')->onDelete('set null');
             $table->string('cnpj_empresa', 14);
             $table->string('tipo_participacao', 20);
             $table->string('chave_acesso', 44)->nullable();

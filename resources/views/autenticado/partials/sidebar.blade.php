@@ -56,6 +56,9 @@
                     <a href="/app/novo_cliente" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">Novo Cliente</span>
                     </a>
+                    <a href="/app/consultar_cliente" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
+                        <span class="sidebar-label font-medium">Consultar Cliente</span>
+                    </a>
                     <a href="/clientes/monitoramento" data-link class="sidebar-sublink flex items-center justify-between w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">Monitoramento</span>
                         <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-semibold rounded-full bg-amber-100 text-amber-700 sidebar-label">3</span>

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('priv_cpf_relacionamentos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('cpf_id')->constrained('priv_cpf_cadastro')->onDelete('cascade');
+            $table->foreignId('cliente_id')->nullable()->constrained('clientes')->onDelete('set null');
             $table->string('cnpj', 14);
             $table->string('razao_social', 255)->nullable();
             $table->string('tipo_relacao', 20);
@@ -40,5 +41,6 @@ return new class extends Migration
         Schema::dropIfExists('priv_cpf_relacionamentos');
     }
 };
+
 
 
