@@ -957,6 +957,28 @@ class DataReceiverController extends Controller
                             'tab_id' => $tabIdParaNotificacao,
                             'csv_filename' => $csvFilename,
                             'timestamp' => $csvFromDb->updated_at->toIso8601String(),
+                            // Tipo de consulta para determinar exibição de CND
+                            'consultant_type' => $csvFromDb->consultant_type,
+                            // Dados da empresa
+                            'razao_social_empresa' => $csvFromDb->razao_social_empresa,
+                            'cnpj_empresa_analisada' => $csvFromDb->cnpj_empresa_analisada,
+                            'data_inicial_analisada' => $csvFromDb->data_inicial_analisada?->format('Y-m-d'),
+                            'data_final_analisada' => $csvFromDb->data_final_analisada?->format('Y-m-d'),
+                            'total_participants' => $csvFromDb->total_participants,
+                            // Situação Cadastral
+                            'qnt_situacao_nula' => $csvFromDb->qnt_situacao_nula ?? 0,
+                            'qnt_situacao_ativa' => $csvFromDb->qnt_situacao_ativa ?? 0,
+                            'qnt_situacao_suspensa' => $csvFromDb->qnt_situacao_suspensa ?? 0,
+                            'qnt_situacao_inapta' => $csvFromDb->qnt_situacao_inapta ?? 0,
+                            'qnt_situacao_baixada' => $csvFromDb->qnt_situacao_baixada ?? 0,
+                            // Regime Tributário
+                            'qnt_simples' => $csvFromDb->qnt_simples ?? 0,
+                            'qnt_presumido' => $csvFromDb->qnt_presumido ?? 0,
+                            'qnt_real' => $csvFromDb->qnt_real ?? 0,
+                            'qnt_regime_indeterminado' => $csvFromDb->qnt_regime_indeterminado ?? 0,
+                            // CND (só exibido no frontend se consultant_type = 'completa')
+                            'qnt_cnd_regular' => $csvFromDb->qnt_cnd_regular ?? 0,
+                            'qnt_cnd_pendencia' => $csvFromDb->qnt_cnd_pendencia ?? 0,
                         ];
                         
                         Log::info('SSE: Enviando notificacao csv_ready', [

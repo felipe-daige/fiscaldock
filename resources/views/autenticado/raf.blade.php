@@ -229,6 +229,61 @@
                             </div>
                         </div>
 
+                        {{-- Seção de Estatísticas do Relatório (inicialmente oculta) --}}
+                        <div id="info-report-stats" class="hidden space-y-4 pt-4 border-t border-gray-200">
+                            {{-- Dados da Empresa --}}
+                            <div id="info-empresa-section">
+                                <p id="info-razao-social" class="text-sm font-medium text-gray-700"></p>
+                                <p id="info-cnpj" class="text-xs text-gray-500"></p>
+                                <p id="info-periodo" class="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                    <svg class="inline w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    <span id="info-periodo-text"></span>
+                                </p>
+                            </div>
+
+                            {{-- Situação Cadastral --}}
+                            <div class="text-sm text-gray-700">
+                                <p class="mb-1">
+                                    <span class="font-medium text-gray-500">Situação Cadastral:</span>
+                                    <span id="info-situacao-nula" class="font-semibold">0</span> nulas · 
+                                    <span id="info-situacao-ativa" class="font-semibold">0</span> ativas · 
+                                    <span id="info-situacao-suspensa" class="font-semibold">0</span> suspensas · 
+                                    <span id="info-situacao-inapta" class="font-semibold">0</span> inaptas · 
+                                    <span id="info-situacao-baixada" class="font-semibold">0</span> baixadas
+                                </p>
+                            </div>
+
+                            {{-- Regime Tributário --}}
+                            <div class="text-sm text-gray-700">
+                                <p>
+                                    <span class="font-medium text-gray-500">Regimes Tributários:</span>
+                                    <span id="info-regime-simples" class="font-semibold">0</span> Simples · 
+                                    <span id="info-regime-presumido" class="font-semibold">0</span> Presumido · 
+                                    <span id="info-regime-real" class="font-semibold">0</span> Real · 
+                                    <span id="info-regime-indeterminado" class="font-semibold">0</span> indeterminados
+                                </p>
+                            </div>
+
+                            {{-- CND - Versão Completa (exibida quando consultant_type = 'completa' ou 'completo') --}}
+                            <div id="info-cnd-completa" class="hidden text-sm text-gray-700">
+                                <p>
+                                    <span class="font-medium text-gray-500">Situação Fiscal:</span>
+                                    <span id="info-cnd-regular" class="font-semibold">0</span> Regular(es) · 
+                                    <span id="info-cnd-pendencia" class="font-semibold">0</span> Pendente(s)
+                                </p>
+                            </div>
+
+                            {{-- CND - Alerta para consulta gratuita (exibido quando consultant_type = 'gratuito') --}}
+                            <div id="info-cnd-alerta" class="hidden flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                <svg class="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="text-sm font-medium text-amber-800">Gere um relatório COMPLETO para ver informações da Situação Fiscal (CND) dos Participantes</span>
+                            </div>
+                        </div>
+
                         {{-- Botão Enviar SPED --}}
                         <div class="pt-4 border-t border-gray-200">
                             <button
@@ -374,6 +429,20 @@
                                     </div>
                                 </div>
 
+                                {{-- Nota sobre algoritmo de matriz --}}
+                                <div class="bg-blue-50 rounded-lg border border-blue-100 p-4 ml-12">
+                                    <div class="flex gap-3">
+                                        <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <div class="flex-1">
+                                            <p class="text-sm text-blue-900">
+                                                <strong>Algoritmo de Identificação de Matriz:</strong> O sistema utiliza um algoritmo próprio de identificação de CNPJs matriz e faz a pesquisa utilizando a matriz. Isso porque matriz e filiais são a mesma pessoa jurídica, então a maioria das consultas/certidões (como a CND) avalia a regularidade do CNPJ como um todo e aparece centralizada na matriz.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {{-- Etapa 3 --}}
                                 <div class="flex gap-4">
                                     <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center">
@@ -441,7 +510,7 @@
                         </div>
 
                         {{-- CTA --}}
-                        <div class="pt-2">
+                        <div class="pt-2 flex justify-center">
                             <button 
                                 type="button" 
                                 class="raf-go-to-processar inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -659,6 +728,30 @@
     const infoAlertTextEl = document.getElementById('info-alert-text');
     const infoAlertIconWrap = document.getElementById('info-alert-icon');
     
+    // Elementos de estatísticas do relatório
+    const infoReportStats = document.getElementById('info-report-stats');
+    const infoEmpresaSection = document.getElementById('info-empresa-section');
+    const infoRazaoSocial = document.getElementById('info-razao-social');
+    const infoCnpj = document.getElementById('info-cnpj');
+    const infoPeriodo = document.getElementById('info-periodo');
+    const infoPeriodoText = document.getElementById('info-periodo-text');
+    // Situação Cadastral
+    const infoSituacaoNula = document.getElementById('info-situacao-nula');
+    const infoSituacaoAtiva = document.getElementById('info-situacao-ativa');
+    const infoSituacaoSuspensa = document.getElementById('info-situacao-suspensa');
+    const infoSituacaoInapta = document.getElementById('info-situacao-inapta');
+    const infoSituacaoBaixada = document.getElementById('info-situacao-baixada');
+    // Regime Tributário
+    const infoRegimeSimples = document.getElementById('info-regime-simples');
+    const infoRegimePresumido = document.getElementById('info-regime-presumido');
+    const infoRegimeReal = document.getElementById('info-regime-real');
+    const infoRegimeIndeterminado = document.getElementById('info-regime-indeterminado');
+    // CND
+    const infoCndCompleta = document.getElementById('info-cnd-completa');
+    const infoCndAlerta = document.getElementById('info-cnd-alerta');
+    const infoCndRegular = document.getElementById('info-cnd-regular');
+    const infoCndPendencia = document.getElementById('info-cnd-pendencia');
+    
     // Flag para rastrear se o card já foi preenchido com dados válidos
     // Uma vez preenchido, os dados nunca devem desaparecer
     let infoCardHasValidData = false;
@@ -757,23 +850,26 @@
     const resetState = () => {
         // Limpar URLs já processadas para permitir novos modais
         processedResumeUrls.clear();
-        
+
         // Limpar dados de confirmação pendente
         pendingConfirmation = null;
         isConfirming = false;
-        
+
         // Limpar ID do relatório atual
         currentRelatorioId = null;
-        
+
         // Resetar estado de processamento
         isProcessing = false;
         asyncProcessingStarted = false;
-        
+
         // Desconectar SSE anterior para iniciar novo ciclo
         disconnectSSE();
-        
+
         // Limpar estado persistido ao resetar
         clearPersistedState();
+        
+        // Resetar estatísticas do relatório anterior
+        resetReportStats();
     };
 
     const formatFileSize = (bytes) => {
@@ -889,6 +985,148 @@
         }
     };
 
+    /**
+     * Formata um CNPJ para o padrão XX.XXX.XXX/XXXX-XX
+     * @param {string} cnpj - CNPJ sem formatação
+     * @returns {string} CNPJ formatado
+     */
+    const formatCnpj = (cnpj) => {
+        if (!cnpj) return '';
+        const cleaned = cnpj.replace(/\D/g, '');
+        if (cleaned.length !== 14) return cnpj;
+        return cleaned.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+    };
+
+    /**
+     * Formata uma data de YYYY-MM-DD para DD/MM/YYYY
+     * @param {string} dateStr - Data no formato YYYY-MM-DD
+     * @returns {string} Data formatada DD/MM/YYYY
+     */
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        const parts = dateStr.split('-');
+        if (parts.length !== 3) return dateStr;
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    };
+
+    /**
+     * Atualiza as estatísticas do relatório no card de informações.
+     * Exibe dados da empresa, situação cadastral, regime tributário e CND.
+     * @param {object} data - Dados recebidos via SSE (csv_ready notification)
+     */
+    const updateReportStats = (data) => {
+        if (!infoReportStats) {
+            console.warn('[RAF] Elemento info-report-stats não encontrado');
+            return;
+        }
+
+        // Verificar se há dados suficientes para exibir
+        const hasAnyStats = data.total_participants || 
+                            data.razao_social_empresa || 
+                            data.cnpj_empresa_analisada ||
+                            data.qnt_situacao_ativa > 0 ||
+                            data.qnt_simples > 0;
+
+        if (!hasAnyStats) {
+            // Sem dados, manter oculto
+            infoReportStats.classList.add('hidden');
+            return;
+        }
+
+        // Mostrar a seção de estatísticas
+        infoReportStats.classList.remove('hidden');
+
+        // Dados da Empresa
+        if (infoRazaoSocial) {
+            infoRazaoSocial.textContent = data.razao_social_empresa || '';
+            infoRazaoSocial.classList.toggle('hidden', !data.razao_social_empresa);
+        }
+
+        if (infoCnpj) {
+            if (data.cnpj_empresa_analisada) {
+                infoCnpj.textContent = 'CNPJ: ' + formatCnpj(data.cnpj_empresa_analisada);
+                infoCnpj.classList.remove('hidden');
+            } else {
+                infoCnpj.classList.add('hidden');
+            }
+        }
+
+        // Período
+        if (infoPeriodo && infoPeriodoText) {
+            if (data.data_inicial_analisada && data.data_final_analisada) {
+                infoPeriodoText.textContent = `Período de Análise do SPED Informado: ${formatDate(data.data_inicial_analisada)} a ${formatDate(data.data_final_analisada)}`;
+                infoPeriodo.classList.remove('hidden');
+            } else if (data.data_inicial_analisada) {
+                infoPeriodoText.textContent = `A partir de: ${formatDate(data.data_inicial_analisada)}`;
+                infoPeriodo.classList.remove('hidden');
+            } else if (data.data_final_analisada) {
+                infoPeriodoText.textContent = `Até: ${formatDate(data.data_final_analisada)}`;
+                infoPeriodo.classList.remove('hidden');
+            } else {
+                infoPeriodo.classList.add('hidden');
+            }
+        }
+
+        // Esconder seção de empresa se não tiver nenhum dado
+        if (infoEmpresaSection) {
+            const hasEmpresaData = data.razao_social_empresa || data.cnpj_empresa_analisada || data.data_inicial_analisada || data.data_final_analisada;
+            infoEmpresaSection.classList.toggle('hidden', !hasEmpresaData);
+        }
+
+        // Situação Cadastral
+        if (infoSituacaoNula) infoSituacaoNula.textContent = (data.qnt_situacao_nula ?? 0).toString();
+        if (infoSituacaoAtiva) infoSituacaoAtiva.textContent = (data.qnt_situacao_ativa ?? 0).toString();
+        if (infoSituacaoSuspensa) infoSituacaoSuspensa.textContent = (data.qnt_situacao_suspensa ?? 0).toString();
+        if (infoSituacaoInapta) infoSituacaoInapta.textContent = (data.qnt_situacao_inapta ?? 0).toString();
+        if (infoSituacaoBaixada) infoSituacaoBaixada.textContent = (data.qnt_situacao_baixada ?? 0).toString();
+
+        // Regime Tributário
+        if (infoRegimeSimples) infoRegimeSimples.textContent = (data.qnt_simples ?? 0).toString();
+        if (infoRegimePresumido) infoRegimePresumido.textContent = (data.qnt_presumido ?? 0).toString();
+        if (infoRegimeReal) infoRegimeReal.textContent = (data.qnt_real ?? 0).toString();
+        if (infoRegimeIndeterminado) infoRegimeIndeterminado.textContent = (data.qnt_regime_indeterminado ?? 0).toString();
+
+        // CND - Verificar consultant_type (case-insensitive)
+        const consultantType = (data.consultant_type || '').toLowerCase();
+        const isCompleta = consultantType === 'completa' || consultantType === 'completo';
+
+        if (infoCndCompleta && infoCndAlerta) {
+            if (isCompleta) {
+                // Consulta completa: mostrar estatísticas de CND
+                infoCndCompleta.classList.remove('hidden');
+                infoCndAlerta.classList.add('hidden');
+                
+                if (infoCndRegular) infoCndRegular.textContent = (data.qnt_cnd_regular ?? 0).toString();
+                if (infoCndPendencia) infoCndPendencia.textContent = (data.qnt_cnd_pendencia ?? 0).toString();
+            } else {
+                // Consulta gratuita: não exibir informações de CND
+                infoCndCompleta.classList.add('hidden');
+                infoCndAlerta.classList.add('hidden');
+            }
+        }
+
+        console.log('[RAF] Estatísticas do relatório atualizadas', {
+            consultant_type: data.consultant_type,
+            isCompleta,
+            razao_social: data.razao_social_empresa,
+            total_participants: data.total_participants,
+        });
+    };
+
+    /**
+     * Reseta as estatísticas do relatório (usado ao iniciar novo processamento)
+     */
+    const resetReportStats = () => {
+        if (infoReportStats) {
+            infoReportStats.classList.add('hidden');
+        }
+        if (infoCndCompleta) {
+            infoCndCompleta.classList.add('hidden');
+        }
+        if (infoCndAlerta) {
+            infoCndAlerta.classList.add('hidden');
+        }
+    };
 
     const setTimerState = (state) => {
         if (!timerWrap) return;
@@ -1225,6 +1463,9 @@
                                 freezeTimer();
                                 showAlert('success', 'Processado com sucesso. O CSV está pronto para download.');
                                 setLoading(false);
+                                
+                                // Atualizar estatísticas do relatório com dados recebidos via SSE
+                                updateReportStats(csvData);
                                 
                                 // Parar processamento quando CSV estiver disponível via SSE
                                 setProcessing(false);
@@ -2152,6 +2393,8 @@
             stopTimer();
             setLoading(false);
             setProcessing(false);
+            // Esconder o badge "Processando" quando cancelar
+            updateResultBadge('hidden');
             // Limpar estado persistido quando usuário cancelar
             clearPersistedState();
             showAlert('info', 'Operação cancelada.');
@@ -2194,6 +2437,8 @@
             stopTimer();
             setLoading(false);
             setProcessing(false);
+            // Esconder o badge "Processando" quando cancelar
+            updateResultBadge('hidden');
             // Limpar estado persistido quando usuário cancelar
             clearPersistedState();
         }

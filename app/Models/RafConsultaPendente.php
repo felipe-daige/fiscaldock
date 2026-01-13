@@ -48,6 +48,11 @@ class RafConsultaPendente extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function cliente()
+    {
+        return $this->belongsTo(Cliente::class);
+    }
+
     // Scopes
     /**
      * Filtra relatórios pendentes (todos os registros são pendentes por padrão).

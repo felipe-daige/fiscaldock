@@ -60,8 +60,13 @@
                             >
                                 <option value="">-- Selecione um cliente ou digite manualmente --</option>
                                 @foreach($clientes ?? [] as $cliente)
-                                    <option value="{{ $cliente->documento }}" data-nome="{{ $cliente->nome }}">
-                                        {{ $cliente->nome }} - {{ $cliente->documento_formatado }}
+                                    <option value="{{ $cliente->documento }}" data-nome="{{ $cliente->tipo_pessoa === 'PJ' ? ($cliente->razao_social ?? $cliente->nome ?? '') : ($cliente->nome ?? '') }}">
+                                        @if($cliente->tipo_pessoa === 'PJ')
+                                            {{ $cliente->razao_social ?? '—' }}@if($cliente->nome) ({{ $cliente->nome }})@endif
+                                        @else
+                                            {{ $cliente->nome ?? '—' }}
+                                        @endif
+                                         - {{ $cliente->documento_formatado }}
                                     </option>
                                 @endforeach
                             </select>

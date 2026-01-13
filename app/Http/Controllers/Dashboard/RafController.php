@@ -69,6 +69,7 @@ class RafController extends Controller
         // Buscar relatórios conforme status
         if ($status === 'processado') {
             $relatorios = RafRelatorioProcessado::where('user_id', $userId)
+                ->with('cliente')
                 ->orderBy('created_at', 'desc')
                 ->get();
         } else {
@@ -78,6 +79,7 @@ class RafController extends Controller
                     $query->whereNull('resume_url')
                         ->orWhereNotIn('resume_url', $resumeUrlsProcessados);
                 })
+                ->with('cliente')
                 ->orderBy('created_at', 'desc')
                 ->get();
         }
@@ -507,6 +509,7 @@ class RafController extends Controller
 
     /**
      * Exclui um relatório processado.
+     * Também deleta qualquer registro pendente correspondente (com o mesmo resume_url) para evitar que apareça na aba de pendentes.
      */
     public function excluir(Request $request, $id)
     {
@@ -523,24 +526,65 @@ class RafController extends Controller
             ->first();
 
         if (!$relatorio) {
+            Log::warning('Tentativa de excluir relatório processado inexistente', [
+                'user_id' => $user->id,
+                'relatorio_id' => $id,
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Relatório não encontrado.',
             ], Response::HTTP_NOT_FOUND);
         }
 
-        Log::info('Exclusão de relatório processado', [
+        $resumeUrl = $relatorio->resume_url;
+        $relatorioId = $relatorio->id;
+
+        Log::info('Iniciando exclusão de relatório processado', [
             'user_id' => $user->id,
-            'relatorio_id' => $id,
+            'relatorio_id' => $relatorioId,
+            'resume_url' => $resumeUrl,
         ]);
 
         try {
+            // Deletar o relatório processado
             $relatorio->delete();
 
             Log::info('Relatório processado excluído com sucesso', [
                 'user_id' => $user->id,
-                'relatorio_id' => $id,
+                'relatorio_id' => $relatorioId,
+                'resume_url' => $resumeUrl,
             ]);
+
+            // Se houver resume_url, verificar e deletar qualquer registro pendente correspondente
+            // Isso evita que o registro apareça na aba de pendentes após a exclusão
+            if (!empty($resumeUrl)) {
+                $consultaPendente = RafConsultaPendente::where('resume_url', $resumeUrl)
+                    ->where('user_id', $user->id)
+                    ->first();
+
+                if ($consultaPendente) {
+                    $consultaPendenteId = $consultaPendente->id;
+                    $consultaPendente->delete();
+
+                    Log::info('Registro pendente correspondente também foi excluído', [
+                        'user_id' => $user->id,
+                        'relatorio_processado_id' => $relatorioId,
+                        'consulta_pendente_id' => $consultaPendenteId,
+                        'resume_url' => $resumeUrl,
+                    ]);
+                } else {
+                    Log::info('Nenhum registro pendente correspondente encontrado', [
+                        'user_id' => $user->id,
+                        'relatorio_processado_id' => $relatorioId,
+                        'resume_url' => $resumeUrl,
+                    ]);
+                }
+            } else {
+                Log::info('Relatório processado não possui resume_url, pulando verificação de pendentes', [
+                    'user_id' => $user->id,
+                    'relatorio_processado_id' => $relatorioId,
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
@@ -549,8 +593,10 @@ class RafController extends Controller
         } catch (\Exception $e) {
             Log::error('Erro ao excluir relatório processado', [
                 'user_id' => $user->id,
-                'relatorio_id' => $id,
+                'relatorio_id' => $relatorioId ?? $id,
+                'resume_url' => $resumeUrl ?? null,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([

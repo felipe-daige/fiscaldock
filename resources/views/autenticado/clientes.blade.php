@@ -135,7 +135,7 @@
                             @foreach($clientes as $cliente)
                             <tr class="hover:bg-blue-50/50 transition-colors cliente-row" 
                                 data-cliente-id="{{ $cliente->id }}"
-                                data-nome="{{ strtolower($cliente->nome) }}"
+                                data-nome="{{ strtolower($cliente->tipo_pessoa === 'PJ' ? ($cliente->razao_social ?? $cliente->nome ?? '') : ($cliente->nome ?? '')) }}"
                                 data-documento="{{ $cliente->documento }}"
                                 data-tipo="{{ $cliente->tipo_pessoa }}"
                                 data-status="{{ $cliente->ativo ? 'ativos' : 'inativos' }}">
@@ -144,15 +144,16 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center gap-2">
-                                        <div class="text-sm font-medium text-gray-900">{{ $cliente->nome }}</div>
                                         @if($cliente->tipo_pessoa === 'PJ')
+                                            <div class="text-sm font-medium text-gray-900">{{ $cliente->razao_social ?? '—' }}</div>
                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">PJ</span>
                                         @else
+                                            <div class="text-sm font-medium text-gray-900">{{ $cliente->nome ?? '—' }}</div>
                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">PF</span>
                                         @endif
                                     </div>
-                                    @if($cliente->razao_social && $cliente->razao_social !== $cliente->nome)
-                                        <div class="text-xs text-gray-500">{{ $cliente->razao_social }}</div>
+                                    @if($cliente->tipo_pessoa === 'PJ' && $cliente->nome)
+                                        <div class="text-xs text-gray-500">{{ $cliente->nome }}</div>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
