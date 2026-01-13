@@ -20,12 +20,13 @@ class ClienteController extends Controller
     public function store(Request $request)
     {
         try {
-            // Validação dos dados
-            $validated = $request->validate([
+            // Validação baseada no tipo de pessoa
+            $tipoPessoa = $request->input('tipo_pessoa');
+            
+            // Regras base
+            $rules = [
                 'tipo_pessoa' => 'required|in:PF,PJ',
                 'documento' => 'required|string|max:18|unique:clientes,documento',
-                'nome' => 'required|string|max:255',
-                'razao_social' => 'nullable|string|max:255',
                 'telefone' => 'nullable|string|max:20',
                 'email' => 'nullable|email|max:255',
                 'faturamento_anual' => 'nullable|string|max:50',
@@ -49,7 +50,20 @@ class ClienteController extends Controller
                 'funcionario.cargo' => 'required|string|max:255',
                 'funcionario.departamento' => 'nullable|string|max:255',
                 'funcionario.nivel_acesso' => 'required|in:funcionario,admin',
-            ]);
+            ];
+            
+            // Regras condicionais baseadas no tipo de pessoa
+            if ($tipoPessoa === 'PJ') {
+                // Para PJ: razao_social obrigatório, nome opcional
+                $rules['razao_social'] = 'required|string|max:255';
+                $rules['nome'] = 'nullable|string|max:255';
+            } else {
+                // Para PF: nome obrigatório, razao_social não aplicável
+                $rules['nome'] = 'required|string|max:255';
+                $rules['razao_social'] = 'nullable|string|max:255';
+            }
+            
+            $validated = $request->validate($rules);
 
             $user = Auth::user();
             if (!$user) {
@@ -86,7 +100,7 @@ class ClienteController extends Controller
                     'user_id' => $user->id,
                     'tipo_pessoa' => $validated['tipo_pessoa'],
                     'documento' => $documentoLimpo,
-                    'nome' => $validated['nome'],
+                    'nome' => $validated['nome'] ?? null,
                     'razao_social' => $validated['razao_social'] ?? null,
                     'telefone' => $validated['telefone'] ?? null,
                     'email' => $validated['email'] ?? null,

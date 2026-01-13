@@ -68,37 +68,37 @@
                         @enderror
                     </div>
 
-                    {{-- Nome / Nome Fantasia --}}
-                    <div>
-                        <label for="nome" class="block text-sm font-medium text-gray-700 mb-2">
-                            <span id="label-nome">Nome Fantasia</span> <span class="text-red-500">*</span>
-                        </label>
-                        <input 
-                            type="text" 
-                            id="nome" 
-                            name="nome" 
-                            required
-                            placeholder="Nome fantasia ou nome completo"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                        @error('nome')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    {{-- Razão Social (apenas PJ) --}}
+                    {{-- Razão Social (obrigatório para PJ) --}}
                     <div id="campo-razao-social">
                         <label for="razao_social" class="block text-sm font-medium text-gray-700 mb-2">
-                            Razão Social
+                            Razão Social <span class="text-red-500">*</span>
                         </label>
                         <input 
                             type="text" 
                             id="razao_social" 
                             name="razao_social" 
+                            required
                             placeholder="Razão social completa"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
                         @error('razao_social')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Nome / Nome Fantasia (opcional) --}}
+                    <div>
+                        <label for="nome" class="block text-sm font-medium text-gray-700 mb-2">
+                            <span id="label-nome">Nome Fantasia</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="nome" 
+                            name="nome" 
+                            placeholder="Nome fantasia ou nome completo"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                        @error('nome')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
@@ -568,6 +568,8 @@
         const labelDocumento = document.getElementById('label-documento');
         const labelNome = document.getElementById('label-nome');
         const inputDocumento = document.getElementById('documento');
+        const inputRazaoSocial = document.getElementById('razao_social');
+        const inputNome = document.getElementById('nome');
 
         // Atualizar cards
         if (isPJ) {
@@ -581,6 +583,14 @@
             labelDocumento.textContent = 'CNPJ';
             labelNome.textContent = 'Nome Fantasia';
             inputDocumento.placeholder = '00.000.000/0000-00';
+            
+            // Para PJ: razao_social obrigatório, nome opcional
+            if (inputRazaoSocial) {
+                inputRazaoSocial.required = true;
+            }
+            if (inputNome) {
+                inputNome.required = false;
+            }
         } else {
             cardPF.classList.remove('border-gray-300', 'hover:bg-gray-50');
             cardPF.classList.add('border-blue-600', 'bg-blue-50');
@@ -592,6 +602,15 @@
             labelDocumento.textContent = 'CPF';
             labelNome.textContent = 'Nome';
             inputDocumento.placeholder = '000.000.000-00';
+            
+            // Para PF: nome obrigatório, razao_social não aplicável
+            if (inputRazaoSocial) {
+                inputRazaoSocial.required = false;
+                inputRazaoSocial.value = '';
+            }
+            if (inputNome) {
+                inputNome.required = true;
+            }
         }
 
         // Limpar e aplicar máscara no documento

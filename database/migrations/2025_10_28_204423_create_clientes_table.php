@@ -20,8 +20,8 @@ return new class extends Migration
             
             // Dados principais
             $table->string('documento')->unique(); // CPF ou CNPJ
-            $table->string('nome'); // Nome fantasia ou nome da pessoa
-            $table->string('razao_social')->nullable(); // Só para PJ
+            $table->string('nome')->nullable(); // Nome fantasia ou nome da pessoa
+            $table->string('razao_social'); // Razão social (obrigatório para PJ)
             
             // Contato
             $table->string('telefone')->nullable();

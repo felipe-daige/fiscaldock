@@ -192,24 +192,35 @@
                                 {{-- Analytics --}}
                                 <div class="mb-4 space-y-2 text-sm text-gray-700">
                                     <div>
-                                        <strong>{{ number_format($relatorio->total_participants ?? 0, 0, ',', '.') }}</strong> fornecedores analisados
+                                        <strong>{{ number_format($relatorio->total_participants ?? 0, 0, ',', '.') }}</strong> fornecedores identificados 
+                                        ({{ number_format($relatorio->qnt_fornecedores_cnpj ?? 0, 0, ',', '.') }} CNPJs, 
+                                        {{ number_format($relatorio->qnt_fornecedores_cpf ?? 0, 0, ',', '.') }} CPFs — apenas CNPJs são analisados)
                                     </div>
                                     <div>
-                                        Situações Fiscal: <strong>{{ $relatorio->qnt_situacao_nula ?? 0 }}</strong> nulas · <strong>{{ $relatorio->qnt_situacao_ativa ?? 0 }}</strong> ativas · <strong>{{ $relatorio->qnt_situacao_suspensa ?? 0 }}</strong> suspensas · <strong>{{ $relatorio->qnt_situacao_inapta ?? 0 }}</strong> inaptas · <strong>{{ $relatorio->qnt_situacao_baixada ?? 0 }}</strong> baixadas
+                                        <strong>{{ number_format($relatorio->qnt_fornecedores_cnpj ?? 0, 0, ',', '.') }}</strong> fornecedores analisados 
+                                        ({{ number_format($relatorio->qnt_fornecedores_cnpj ?? 0, 0, ',', '.') }} CNPJs)
+                                    </div>
+                                    <div>
+                                        Situações Cadastral: <strong>{{ $relatorio->qnt_situacao_nula ?? 0 }}</strong> nulas · <strong>{{ $relatorio->qnt_situacao_ativa ?? 0 }}</strong> ativas · <strong>{{ $relatorio->qnt_situacao_suspensa ?? 0 }}</strong> suspensas · <strong>{{ $relatorio->qnt_situacao_inapta ?? 0 }}</strong> inaptas · <strong>{{ $relatorio->qnt_situacao_baixada ?? 0 }}</strong> baixadas
                                     </div>
                                     <div>
                                         Regimes Tributários: <strong>{{ $relatorio->qnt_simples ?? 0 }}</strong> Simples · <strong>{{ $relatorio->qnt_presumido ?? 0 }}</strong> Presumido · <strong>{{ $relatorio->qnt_real ?? 0 }}</strong> Real · <strong>{{ $relatorio->qnt_regime_indeterminado ?? 0 }}</strong> indeterminados
                                     </div>
-                                    @if(strtolower($relatorio->consultant_type ?? '') === 'gratuito')
+                                    @php
+                                        $consultantType = strtolower($relatorio->consultant_type ?? '');
+                                        $isGratuito = $consultantType === 'gratuito';
+                                        $isCompleto = in_array($consultantType, ['completo', 'completa'], true);
+                                    @endphp
+                                    @if($isGratuito)
                                         <div class="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                                             <svg class="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                             </svg>
                                             <span class="text-sm font-medium text-amber-800">Gere um relatório completo para ver informações de CND</span>
                                         </div>
-                                    @else
+                                    @elseif($isCompleto)
                                         <div>
-                                            Situção dos CNDs: <strong>{{ $relatorio->qnt_cnd_regular ?? 0 }}</strong> regulares · <strong>{{ $relatorio->qnt_cnd_pendencia ?? 0 }}</strong> com pendências
+                                            Situação Fiscal: <strong>{{ $relatorio->qnt_cnd_regular ?? 0 }}</strong> Regular(es) · <strong>{{ $relatorio->qnt_cnd_pendencia ?? 0 }}</strong> Pendente(s)
                                         </div>
                                     @endif
                                 </div>
@@ -670,7 +681,10 @@
                     }
 
                     const data = result.data;
-                    const tipoConsultaLabel = data.tipo_consulta === 'gratuito' 
+                    // Usar consultant_type quando disponível (relatórios processados), fallback para tipo_consulta (relatórios pendentes)
+                    const consultantType = (data.consultant_type || data.tipo_consulta || '').toLowerCase();
+                    const isGratuito = consultantType === 'gratuito';
+                    const tipoConsultaLabel = isGratuito
                         ? 'Gratuita — Regime + Situação Cadastral' 
                         : 'Completa — Regime + Situação Cadastral + CND';
 
