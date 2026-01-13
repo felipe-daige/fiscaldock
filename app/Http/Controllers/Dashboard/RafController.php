@@ -317,7 +317,7 @@ class RafController extends Controller
                 'insufficient_credits' => true,
                 'credits' => $saldoAtual,
                 'required' => $valorCreditos,
-                'message' => 'Créditos insuficientes. Entre em contato pelo telefone (69) 99999-9999 para adquirir mais créditos.',
+                'message' => 'Créditos insuficientes. Entre em contato pelo telefone (67) 99984-4366 para adquirir mais créditos.',
             ], Response::HTTP_PAYMENT_REQUIRED);
         }
 
@@ -387,11 +387,37 @@ class RafController extends Controller
             ], Response::HTTP_BAD_GATEWAY);
         }
 
+        // Verificar se o processamento é assíncrono ou se o CSV está vazio
+        $isAsync = isset($result['async']) && $result['async'] === true;
+        $csv = $result['csv'] ?? '';
+        $csvIsEmpty = empty(trim($csv));
+
+        if ($isAsync || $csvIsEmpty) {
+            // Processamento assíncrono ou CSV vazio - não fazer download
+            // O CSV virá via endpoint /api/data/receive/raf/csvfile
+            // NÃO deletar o registro ainda - será deletado quando o CSV for recebido
+            Log::info('Webhook confirmação enviada com sucesso, aguardando CSV via endpoint', [
+                'user_id' => $user->id,
+                'relatorio_id' => $id,
+                'resume_url' => $resumeUrl,
+                'is_async' => $isAsync,
+                'csv_empty' => $csvIsEmpty,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'async' => true,
+                'message' => 'Créditos confirmados. Aguarde enquanto o relatório está sendo gerado...',
+                'id' => $relatorio->id,
+                'user_id' => $user->id,
+                'credits' => $this->creditService->getBalance($user),
+            ], Response::HTTP_OK);
+        }
+
+        // CSV disponível imediatamente - fazer download
         // Remove o registro da tabela de pendentes após sucesso
         $relatorio->delete();
 
-        // Retorna o CSV como resposta
-        $csv = $result['csv'] ?? '';
         $filename = $result['filename'] ?? 'resultado.csv';
 
         return response($csv, Response::HTTP_OK, [

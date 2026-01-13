@@ -141,7 +141,7 @@ class RelatorioCompletoController extends Controller
                     'success' => true,
                     'data' => $data,
                     'insufficient_credits' => true,
-                    'message' => 'Créditos insuficientes. Entre em contato pelo telefone (69) 99999-9999 para adquirir mais créditos.',
+                    'message' => 'Créditos insuficientes. Entre em contato pelo telefone (67) 99984-4366 para adquirir mais créditos.',
                 ], Response::HTTP_OK);
             }
 

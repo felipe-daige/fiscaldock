@@ -146,6 +146,9 @@
                     <a href="/app/raf" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">RAF</span>
                     </a>
+                    <a href="/app/raf/historico" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
+                        <span class="sidebar-label font-medium">Histórico RAF</span>
+                    </a>
                     <a href="/app/sped-analise-risco" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">Análise de Risco</span>
                     </a>
