@@ -572,7 +572,7 @@
                     </svg>
                     <div>
                         <p class="text-sm font-semibold text-red-800">Créditos insuficientes</p>
-                        <p class="text-sm text-red-700 mt-1">Entre em contato pelo telefone <a href="tel:+5569999999999" class="font-semibold underline hover:no-underline">(69) 99999-9999</a> para adquirir mais créditos.</p>
+                        <p class="text-sm text-red-700 mt-1">Entre em contato pelo telefone <a href="tel:+5567999844366" class="font-semibold underline hover:no-underline">(67) 99984-4366</a> para adquirir mais créditos.</p>
                     </div>
                 </div>
             </div>
@@ -893,6 +893,20 @@
         return formatted;
     };
 
+    const formatCredits = (value) => {
+        if (value === null || value === undefined || isNaN(value)) {
+            return '--';
+        }
+        // Arredondar para o inteiro mais próximo
+        const roundedValue = Math.round(parseFloat(value));
+        // Formatar com separador de milhar
+        const formatted = new Intl.NumberFormat('pt-BR', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(roundedValue);
+        return formatted;
+    };
+
     const updateInfoCard = (data, needsConfirmation = false) => {
         if (!infoConsultaCard) {
             return;
@@ -917,7 +931,7 @@
                 }
 
                 if (infoValorTotal && valorTotal !== null && valorTotal !== undefined) {
-                    const valorFormatted = formatCurrency(valorTotal);
+                    const valorFormatted = formatCredits(valorTotal);
                     infoValorTotal.textContent = valorFormatted;
                 }
             }
@@ -937,7 +951,7 @@
             }
 
             if (infoValorTotal && valorTotal !== null && valorTotal !== undefined) {
-                const valorFormatted = formatCurrency(valorTotal);
+                const valorFormatted = formatCredits(valorTotal);
                 infoValorTotal.textContent = valorFormatted;
             }
         } else if (!infoCardHasValidData) {
@@ -1887,7 +1901,7 @@
             console.error('Erro ao buscar saldo de créditos:', e);
         }
 
-        // Usar o valor total diretamente (com decimais)
+        // Verificar se tem créditos suficientes (valores são inteiros)
         const hasEnough = userBalance >= valorTotalConsulta;
 
         // Atualizar UI do card
@@ -1903,10 +1917,7 @@
         
         if (creditsTotal) {
             // Garante que valorTotalConsulta seja um número válido (converter string para número se necessário)
-            const numericValue = parseFloat(valorTotalConsulta);
-            const creditValue = (!isNaN(numericValue) && isFinite(numericValue))
-                ? numericValue.toFixed(2)
-                : '--';
+            const creditValue = formatCredits(valorTotalConsulta);
             creditsTotal.textContent = creditValue;
         } else {
             console.error('[RAF] creditsTotal não encontrado!');
@@ -2187,7 +2198,7 @@
             if (response.status === 402) {
                 // Créditos insuficientes
                 const data = await response.json();
-                showAlert('error', data.message || 'Créditos insuficientes. Entre em contato pelo telefone (69) 99999-9999.');
+                showAlert('error', data.message || 'Créditos insuficientes. Entre em contato pelo telefone (67) 99984-4366.');
                 hideCreditsConfirmation();
                 stopTimer();
                 setLoading(false);

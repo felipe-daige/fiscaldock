@@ -361,9 +361,10 @@ class DataReceiverController extends Controller
     }
 
     /**
-     * Recebe notificação do n8n com CSV em base64.
-     * Recebe id, user_id, filename e csv_base64 diretamente, sem fazer query no banco.
-     * Armazena no cache para envio via SSE ao frontend.
+     * Canal SSE com n8n para notificar quando relatório foi processado.
+     * O n8n é responsável por todas as alterações no banco de dados.
+     * Este método apenas valida que o registro existe e retorna sucesso.
+     * O SSE (streamNotifications) verifica o banco diretamente para notificar o frontend.
      * Aceita autenticação via token (header X-API-Token) ou sessão (para frontend).
      */
     public function receiveCsv(Request $request)
@@ -420,215 +421,68 @@ class DataReceiverController extends Controller
                 }
             }
 
-            // Validar campos obrigatórios: id, user_id, filename e csv_base64
-            if (empty($receivedData['id']) || empty($receivedData['user_id']) || empty($receivedData['filename']) || empty($receivedData['csv_base64'])) {
+            // Validar apenas id e user_id (campos obrigatórios)
+            if (empty($receivedData['id']) || empty($receivedData['user_id'])) {
                 Log::warning('Dados incompletos em receiveCsv', [
                     'has_id' => !empty($receivedData['id']),
                     'has_user_id' => !empty($receivedData['user_id']),
-                    'has_filename' => !empty($receivedData['filename']),
-                    'has_csv_base64' => !empty($receivedData['csv_base64']),
                 ]);
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Campos obrigatórios ausentes: id, user_id, filename e csv_base64 são necessários.',
+                    'message' => 'Campos obrigatórios ausentes: id e user_id são necessários.',
                 ], Response::HTTP_BAD_REQUEST);
             }
 
             $relatorioId = (int) $receivedData['id'];
             $userId = (int) ($user?->id ?? $receivedData['user_id']);
-            $filename = $receivedData['filename'];
-            $csvBase64 = $receivedData['csv_base64'];
 
-            // Decodificar BASE64 para CSV
-            try {
-                $csvContent = base64_decode($csvBase64, true);
-                if ($csvContent === false || empty(trim($csvContent))) {
-                    throw new \Exception('Falha ao decodificar base64 ou CSV vazio');
-                }
-            } catch (\Exception $e) {
-                Log::error('Erro ao decodificar CSV base64', [
-                    'id' => $relatorioId,
+            Log::info('Validando registro em receiveCsv', [
+                'relatorio_id' => $relatorioId,
+                'user_id' => $userId,
+            ]);
+
+            // Buscar registro no banco (já salvo pelo n8n)
+            $relatorioProcessado = RafRelatorioProcessado::find($relatorioId);
+
+            if (!$relatorioProcessado) {
+                Log::warning('Registro não encontrado em receiveCsv', [
+                    'relatorio_id' => $relatorioId,
                     'user_id' => $userId,
-                    'error' => $e->getMessage(),
                 ]);
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Erro ao decodificar CSV base64.',
-                ], Response::HTTP_BAD_REQUEST);
+                    'message' => 'Registro não encontrado.',
+                ], Response::HTTP_NOT_FOUND);
             }
 
-            // Obter resume_url se fornecido, caso contrário usar null
-            $resumeUrl = $receivedData['resume_url'] ?? null;
-
-            Log::info('CSV recebido e decodificado com sucesso', [
-                'id' => $relatorioId,
-                'user_id' => $userId,
-                'filename' => $filename,
-                'csv_size' => strlen($csvContent),
-                'resume_url' => $resumeUrl,
-            ]);
-
-            // Buscar consulta pendente apenas pelo resume_url (é único)
-            $consultaPendente = null;
-            if (!empty($resumeUrl)) {
-                Log::info('Buscando consulta pendente pelo resume_url', [
-                    'resume_url' => $resumeUrl,
-                    'user_id' => $userId,
+            // Validar user_id
+            if ((int) $relatorioProcessado->user_id !== $userId) {
+                Log::warning('Tentativa de acesso a registro de outro usuário em receiveCsv', [
+                    'relatorio_id' => $relatorioId,
+                    'expected_user_id' => $userId,
+                    'actual_user_id' => $relatorioProcessado->user_id,
                 ]);
-                $consultaPendente = RafConsultaPendente::where('resume_url', $resumeUrl)->first();
-                Log::info('Consulta pendente encontrada', [
-                    'encontrada' => $consultaPendente !== null,
-                    'consulta_id' => $consultaPendente?->id,
-                    'consulta_user_id' => $consultaPendente?->user_id,
-                    'resume_url' => $resumeUrl,
-                ]);
-            } else {
-                Log::info('Resume URL vazio, nao buscando consulta pendente');
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acesso negado.',
+                ], Response::HTTP_FORBIDDEN);
             }
 
-            // Determinar o ID para notificação: usar o ID da consulta pendente se encontrada
-            // (que é o que o frontend está aguardando via SSE), senão usar o ID recebido
-            $idParaNotificacao = $consultaPendente?->id ?? $relatorioId;
-            Log::info('ID para notificacao determinado', [
-                'id_para_notificacao' => $idParaNotificacao,
-                'consulta_pendente_id' => $consultaPendente?->id,
-                'relatorio_id_recebido' => $relatorioId,
-            ]);
-
-            // Salvar ou atualizar o CSV no banco de dados
-            // Se temos resume_url, usar como chave de busca (mais confiável que ID)
-            // Caso contrário, usar o ID recebido
-            // Preencher todos os campos obrigatórios da tabela
-            Log::info('Iniciando salvamento do CSV no banco de dados', [
-                'tem_resume_url' => !empty($resumeUrl),
-                'resume_url' => $resumeUrl,
-                'relatorio_id' => $relatorioId,
+            // Retornar sucesso - CSV já está no banco, salvo pelo n8n
+            // O SSE verifica o banco diretamente e notifica o frontend quando CSV está pronto
+            Log::info('Registro validado com sucesso em receiveCsv', [
+                'relatorio_id' => $relatorioProcessado->id,
                 'user_id' => $userId,
-                'filename' => $filename,
-                'csv_size' => strlen($csvBase64),
-            ]);
-            
-            if (!empty($resumeUrl)) {
-                try {
-                    $relatorioProcessado = RafRelatorioProcessado::updateOrCreate(
-                        ['resume_url' => $resumeUrl],
-                        [
-                            'user_id' => $userId,
-                            'report_csv_base64' => $csvBase64,
-                            'filename' => $filename,
-                            'document_type' => $consultaPendente?->tipo_efd ?? 'EFD Fiscal',
-                            'consultant_type' => $consultaPendente?->tipo_consulta ?? 'completa',
-                            'total_participants' => $consultaPendente?->qtd_participantes ?? 0,
-                            'total_price' => $consultaPendente?->valor_total_consulta ?? 0.00,
-                        ]
-                    );
-                    Log::info('CSV salvo/atualizado com sucesso usando resume_url', [
-                        'relatorio_id' => $relatorioProcessado->id,
-                        'wasRecentlyCreated' => $relatorioProcessado->wasRecentlyCreated,
-                    ]);
-                } catch (\Exception $e) {
-                    Log::error('Erro ao salvar CSV usando resume_url', [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]);
-                    throw $e;
-                }
-            } else {
-                // Se não tem resume_url, tentar atualizar pelo ID ou criar novo
-                try {
-                    $relatorioProcessado = RafRelatorioProcessado::updateOrCreate(
-                        ['id' => $relatorioId],
-                        [
-                            'user_id' => $userId,
-                            'report_csv_base64' => $csvBase64,
-                            'filename' => $filename,
-                            'document_type' => $consultaPendente?->tipo_efd ?? 'EFD Fiscal',
-                            'consultant_type' => $consultaPendente?->tipo_consulta ?? 'completa',
-                            'total_participants' => $consultaPendente?->qtd_participantes ?? 0,
-                            'total_price' => $consultaPendente?->valor_total_consulta ?? 0.00,
-                        ]
-                    );
-                    // Se não tinha resume_url, usar o ID do registro salvo para notificação
-                    $idParaNotificacao = $relatorioProcessado->id;
-                    Log::info('CSV salvo/atualizado com sucesso usando ID', [
-                        'relatorio_id' => $relatorioProcessado->id,
-                        'wasRecentlyCreated' => $relatorioProcessado->wasRecentlyCreated,
-                        'id_para_notificacao_atualizado' => $idParaNotificacao,
-                    ]);
-                } catch (\Exception $e) {
-                    Log::error('Erro ao salvar CSV usando ID', [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]);
-                    throw $e;
-                }
-            }
-
-            Log::info('CSV salvo no banco de dados', [
-                'id' => $relatorioProcessado->id,
-                'consulta_pendente_id' => $consultaPendente?->id,
-                'user_id' => $userId,
-                'filename' => $filename,
-                'id_para_notificacao' => $idParaNotificacao,
+                'document_type' => $relatorioProcessado->document_type,
+                'consultant_type' => $relatorioProcessado->consultant_type,
             ]);
 
-            // Deletar a consulta pendente para evitar duplicação no histórico
-            Log::info('Iniciando delete da consulta pendente', [
-                'tem_consulta_pendente' => $consultaPendente !== null,
-                'consulta_pendente_id' => $consultaPendente?->id,
-                'tem_resume_url' => !empty($resumeUrl),
-                'resume_url' => $resumeUrl,
-            ]);
-            
-            if ($consultaPendente) {
-                try {
-                    $consultaPendenteId = $consultaPendente->id;
-                    $consultaPendenteResumeUrl = $consultaPendente->resume_url;
-                    $deleted = $consultaPendente->delete();
-                    Log::info('Consulta pendente removida após processamento', [
-                        'consulta_pendente_id' => $consultaPendenteId,
-                        'consulta_pendente_resume_url' => $consultaPendenteResumeUrl,
-                        'relatorio_processado_id' => $relatorioProcessado->id,
-                        'deleted' => $deleted,
-                    ]);
-                } catch (\Exception $e) {
-                    Log::error('Erro ao remover consulta pendente', [
-                        'consulta_pendente_id' => $consultaPendente->id,
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]);
-                }
-            } elseif (!empty($resumeUrl)) {
-                // Fallback: tentar deletar por resume_url
-                try {
-                    $deleted = RafConsultaPendente::where('resume_url', $resumeUrl)->delete();
-                    Log::info('Consultas pendentes removidas por resume_url (fallback)', [
-                        'resume_url' => $resumeUrl,
-                        'registros_deletados' => $deleted,
-                    ]);
-                } catch (\Exception $e) {
-                    Log::error('Erro ao remover por resume_url', [
-                        'resume_url' => $resumeUrl,
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]);
-                }
-            } else {
-                Log::warning('Nenhuma consulta pendente foi deletada - nenhum critério atendido', [
-                    'resume_url' => $resumeUrl,
-                    'consulta_pendente' => $consultaPendente !== null,
-                ]);
-            }
-
-            // Notificação será verificada diretamente do banco de dados via SSE
-            // O SSE verifica RafRelatorioProcessado periodicamente para encontrar CSVs prontos
-            
-            // Retornar apenas sucesso - dados serão enviados via SSE
             return response()->json([
                 'success' => true,
-                'message' => 'CSV recebido e armazenado. Será enviado via SSE ao frontend.',
+                'message' => 'Registro validado com sucesso. SSE notificará frontend quando CSV estiver pronto.',
             ], Response::HTTP_OK);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -1289,7 +1143,7 @@ class DataReceiverController extends Controller
                     'insufficient_credits' => true,
                     'credits' => $saldoAtual,
                     'required' => $valorCreditos,
-                    'message' => 'Créditos insuficientes. Entre em contato pelo telefone (69) 99999-9999 para adquirir mais créditos.',
+                    'message' => 'Créditos insuficientes. Entre em contato pelo telefone (67) 99984-4366 para adquirir mais créditos.',
                 ], Response::HTTP_PAYMENT_REQUIRED);
             }
 

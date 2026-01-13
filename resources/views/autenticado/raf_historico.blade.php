@@ -71,11 +71,25 @@
 
                                 {{-- Informações --}}
                                 <div class="mb-4 space-y-2 text-sm text-gray-700">
+                                    @if($relatorio->cliente_id && $relatorio->cliente)
+                                        <div>
+                                            Cliente: <strong>
+                                                @if($relatorio->cliente->tipo_pessoa === 'PJ')
+                                                    {{ $relatorio->cliente->razao_social ?? $relatorio->cliente->nome ?? 'N/A' }}
+                                                @else
+                                                    {{ $relatorio->cliente->nome ?? 'N/A' }}
+                                                @endif
+                                            </strong>
+                                            @if($relatorio->cliente->documento)
+                                                - {{ $relatorio->cliente->documento_formatado }}
+                                            @endif
+                                        </div>
+                                    @endif
                                     <div>
                                         <strong>{{ number_format($relatorio->qtd_participantes, 0, ',', '.') }}</strong> participantes identificados
                                     </div>
                                     <div>
-                                        Valor da consulta: <strong>{{ number_format($relatorio->valor_total_consulta, 0, ',', '.') }} pontos</strong>
+                                        Valor da consulta: <strong>{{ number_format($relatorio->valor_total_consulta, 0, ',', '.') }} créditos</strong>
                                     </div>
                                 </div>
 
@@ -155,9 +169,26 @@
                                     </span>
                                 </div>
 
-                                {{-- Subtítulo: Razão Social, CNPJ e Período --}}
-                                @if($relatorio->razao_social_empresa || $relatorio->cnpj_empresa_analisada || $relatorio->data_inicial_analisada || $relatorio->data_final_analisada)
+                                {{-- Subtítulo: Cliente, Razão Social, CNPJ e Período --}}
+                                @if(($relatorio->cliente_id && $relatorio->cliente) || $relatorio->razao_social_empresa || $relatorio->cnpj_empresa_analisada || $relatorio->data_inicial_analisada || $relatorio->data_final_analisada)
                                     <div class="mb-4">
+                                        @if($relatorio->cliente_id && $relatorio->cliente)
+                                            <p class="text-xs text-gray-500 mb-1">
+                                                <svg class="inline w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                                </svg>
+                                                Cliente: <strong class="text-gray-700">
+                                                    @if($relatorio->cliente->tipo_pessoa === 'PJ')
+                                                        {{ $relatorio->cliente->razao_social ?? $relatorio->cliente->nome ?? 'N/A' }}
+                                                    @else
+                                                        {{ $relatorio->cliente->nome ?? 'N/A' }}
+                                                    @endif
+                                                </strong>
+                                                @if($relatorio->cliente->documento)
+                                                    - {{ $relatorio->cliente->documento_formatado }}
+                                                @endif
+                                            </p>
+                                        @endif
                                         @if($relatorio->razao_social_empresa)
                                             <p class="text-sm text-gray-700 font-medium">{{ $relatorio->razao_social_empresa }}</p>
                                         @endif
@@ -216,7 +247,7 @@
                                             <svg class="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                             </svg>
-                                            <span class="text-sm font-medium text-amber-800">Gere um relatório completo para ver informações de CND</span>
+                                            <span class="text-sm font-medium text-amber-800">Você só terá acesso à situação fiscal dos participantes gerando um relatório completo</span>
                                         </div>
                                     @elseif($isCompleto)
                                         <div>
@@ -255,7 +286,7 @@
 
                                 {{-- Footer --}}
                                 <div class="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between text-xs text-gray-500">
-                                    <span>{{ number_format($relatorio->total_price ?? 0, 0, ',', '.') }} pontos</span>
+                                    <span>{{ number_format($relatorio->total_price ?? 0, 0, ',', '.') }} créditos</span>
                                     <span>Processado em: <strong class="text-gray-700">{{ $relatorio->processed_at ? $relatorio->processed_at->format('d/m/Y \à\s H:i') : ($relatorio->created_at ? $relatorio->created_at->format('d/m/Y \à\s H:i') : 'N/A') }}</strong></span>
                                 </div>
                             </div>
@@ -708,11 +739,11 @@
                             '</div>' +
                             '<div>' +
                                 '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Custo Unitário</p>' +
-                                '<p class="text-sm font-semibold text-gray-900 mt-1">' + custoUnitario.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' pontos</p>' +
+                                '<p class="text-sm font-semibold text-gray-900 mt-1">' + custoUnitario.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' créditos</p>' +
                             '</div>' +
                             '<div class="col-span-2">' +
                                 '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Valor Total da Consulta</p>' +
-                                '<p class="text-lg font-bold text-amber-600 mt-1">' + valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' pontos</p>' +
+                                '<p class="text-lg font-bold text-amber-600 mt-1">' + valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' créditos</p>' +
                             '</div>' +
                             '<div class="col-span-2">' +
                                 '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Data e Horário de Criação</p>' +
@@ -784,9 +815,47 @@
                         return;
                     }
 
+                    // Verificar se a resposta é JSON (processamento assíncrono)
+                    if (contentType && contentType.includes('application/json')) {
+                        const data = await response.json();
+                        
+                        // Se for processamento assíncrono, não fazer download
+                        if (data.async === true) {
+                            console.log('[RAF Histórico] Processamento assíncrono iniciado, CSV virá via notificação');
+                            
+                            // Mostrar mensagem informativa
+                            alert('Créditos confirmados! O relatório está sendo processado. Quando estiver pronto, ficará disponível para download na aba "Processados".');
+                            
+                            // Remover card da lista - o CSV virá via SSE/notificação
+                            removerCard(relatorioId);
+                            
+                            return;
+                        }
+                        
+                        // Se não for assíncrono mas é JSON, tratar como erro
+                        alert('Resposta inesperada do servidor. Tente novamente.');
+                        buttonRef.disabled = false;
+                        if (confirmarText) confirmarText.classList.remove('hidden');
+                        if (confirmarSpinner) confirmarSpinner.classList.add('hidden');
+                        return;
+                    }
+
                     // Se a resposta é CSV, fazer download
                     if (contentType && contentType.includes('text/csv')) {
                         const blob = await response.blob();
+                        
+                        // Verificar se o blob não está vazio antes de fazer download
+                        if (blob.size === 0) {
+                            console.warn('[RAF Histórico] CSV recebido mas está vazio, tratando como assíncrono');
+                            
+                            // Mostrar mensagem informativa
+                            alert('Créditos confirmados! O relatório está sendo processado. Quando estiver pronto, ficará disponível para download na aba "Processados".');
+                            
+                            // Remover card da lista - o CSV virá via SSE/notificação
+                            removerCard(relatorioId);
+                            return;
+                        }
+                        
                         const disposition = response.headers.get('content-disposition');
                         let filename = 'resultado.csv';
                         const match = disposition && disposition.match(/filename="?([^";]+)"?/i);
