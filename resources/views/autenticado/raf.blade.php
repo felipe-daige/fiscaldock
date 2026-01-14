@@ -1398,18 +1398,8 @@
                         // Esconder badge de sucesso
                         updateResultBadge('hidden');
                         
-                        // Montar mensagem amigável
-                        let userMessage = errorData.message || 'Ocorreu um erro no processamento.';
-                        
-                        if (errorData.credits_refunded) {
-                            userMessage += ' Seus créditos foram reembolsados automaticamente.';
-                        }
-                        
-                        if (errorData.recoverable) {
-                            userMessage += ' Você pode tentar novamente.';
-                        }
-                        
-                        // Exibir erro
+                        // Exibir mensagem de erro recebida (já contém todas as informações necessárias)
+                        const userMessage = errorData.message || 'Ocorreu um erro no processamento.';
                         showAlert('error', userMessage);
                         
                         // Limpar estado completamente para permitir novo envio

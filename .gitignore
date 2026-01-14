@@ -3,6 +3,9 @@
 .env
 .env.backup
 .env.production
+.env.development
+.env.local
+docker-stack-resolved.yml
 .phpactor.json
 .phpunit.result.cache
 /.fleet

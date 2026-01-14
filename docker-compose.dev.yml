@@ -1,6 +1,6 @@
 services:
   app:
-    image: felipedaige/fiscaldock:1.0.7
+    image: felipedaige/fiscaldock:1.1.2
     restart: unless-stopped
     networks:
       - devnet
@@ -38,7 +38,7 @@ services:
     deploy: null
 
   scheduler:
-    image: felipedaige/fiscaldock:1.0.7
+    image: felipedaige/fiscaldock:1.1.2
     restart: unless-stopped
     networks:
       - devnet
@@ -71,7 +71,7 @@ services:
     deploy: null
 
   worker:
-    image: felipedaige/fiscaldock:1.0.7
+    image: felipedaige/fiscaldock:1.1.2
     restart: unless-stopped
     networks:
       - devnet
