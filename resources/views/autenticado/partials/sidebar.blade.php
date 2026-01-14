@@ -59,9 +59,35 @@
                     <a href="/app/consultar_cliente" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">Consultar Cliente</span>
                     </a>
-                    <a href="/clientes/monitoramento" data-link class="sidebar-sublink flex items-center justify-between w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
-                        <span class="sidebar-label font-medium">Monitoramento</span>
-                        <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-semibold rounded-full bg-amber-100 text-amber-700 sidebar-label">3</span>
+                </div>
+            </div>
+
+            <!-- Monitoramento -->
+            <div class="sidebar-collapsible group collapsed">
+                <div class="sidebar-summary flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-gray-700 leading-5 cursor-pointer hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        <span class="sidebar-label font-medium truncate">Monitoramento</span>
+                    </div>
+                    <svg class="sidebar-arrow sidebar-label w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </div>
+
+                <div class="sidebar-submenu-wrapper mt-1 ml-3 pl-3 border-l border-gray-200 space-y-1">
+                    <a href="/app/monitoramento" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
+                        <span class="sidebar-label font-medium">Visão Geral</span>
+                    </a>
+                    <a href="/app/monitoramento/sped" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
+                        <span class="sidebar-label font-medium">Importar do SPED</span>
+                    </a>
+                    <a href="/app/monitoramento/avulso" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
+                        <span class="sidebar-label font-medium">Consulta Avulsa</span>
+                    </a>
+                    <a href="/app/monitoramento/historico" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
+                        <span class="sidebar-label font-medium">Histórico</span>
                     </a>
                 </div>
             </div>
