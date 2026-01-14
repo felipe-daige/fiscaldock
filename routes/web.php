@@ -100,4 +100,22 @@ Route::middleware('auth')->group(function () {
     // Rota SSE para notificações em tempo real
     Route::get('/api/data/notifications/stream', [\App\Http\Controllers\Api\DataReceiverController::class, 'streamNotifications'])
         ->name('api.data.notifications.stream');
+
+    // Rotas de Monitoramento
+    Route::prefix('app/monitoramento')->name('app.monitoramento.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'index'])->name('index');
+        Route::get('/sped', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'importarSped'])->name('sped');
+        Route::get('/avulso', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'consultaAvulsa'])->name('avulso');
+        Route::get('/historico', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'historico'])->name('historico');
+        Route::get('/participante/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'participante'])->name('participante');
+        Route::get('/consulta/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'consultaDetalhes'])->name('consulta');
+        Route::get('/participantes-raf/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'participantesRaf'])->name('participantes-raf');
+
+        // Acoes
+        Route::post('/importar-raf/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'importarDoRaf'])->name('importar-raf');
+        Route::post('/adicionar-cnpj', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'adicionarCnpj'])->name('adicionar-cnpj');
+        Route::post('/assinar', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'criarAssinatura'])->name('assinar');
+        Route::post('/cancelar-assinatura/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'cancelarAssinatura'])->name('cancelar-assinatura');
+        Route::post('/consulta-avulsa', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'executarConsultaAvulsa'])->name('consulta-avulsa');
+    });
 });

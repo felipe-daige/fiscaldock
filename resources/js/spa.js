@@ -15,6 +15,10 @@ document.addEventListener('DOMContentLoaded', () => {
         importacaoXml: '/js/importacao_xml.js',
         raf: null, // Código inline na view, não há arquivo externo
         rafHistorico: null, // Código inline na view, não há arquivo externo
+        monitoramento: null, // Código inline na view
+        monitoramentoSped: null, // Código inline na view
+        monitoramentoAvulso: null, // Código inline na view
+        monitoramentoHistorico: null, // Código inline na view
     };
 
     // Converte slug (com hífen/underscore) para camelCase
@@ -70,6 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
         '/app/solucoes/inteligencia-tributaria': 'initInteligenciaTributaria',
         '/app/raf': 'initRaf',
         '/app/raf/historico': 'initRafHistorico',
+        '/app/monitoramento': 'initMonitoramento',
+        '/app/monitoramento/sped': 'initMonitoramentoSped',
+        '/app/monitoramento/avulso': 'initMonitoramentoAvulso',
+        '/app/monitoramento/historico': 'initMonitoramentoHistorico',
         '/app/perfil': 'initPerfil',
         '/dashboard': 'initDashboard',
         '/sobre': 'initSobre',
