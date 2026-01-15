@@ -30,6 +30,19 @@ class MonitoramentoAssinatura extends Model
     ];
 
     /**
+     * Converte frequencia_dias para texto legível.
+     */
+    public function getFrequenciaAttribute(): string
+    {
+        return match (true) {
+            $this->frequencia_dias <= 1 => 'diario',
+            $this->frequencia_dias <= 7 => 'semanal',
+            $this->frequencia_dias <= 15 => 'quinzenal',
+            default => 'mensal',
+        };
+    }
+
+    /**
      * Usuário dono da assinatura.
      */
     public function user(): BelongsTo

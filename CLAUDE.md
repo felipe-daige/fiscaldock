@@ -174,6 +174,7 @@ Key services in `app/Services/` (coordination layer, not heavy processing):
 **RAF Workflow Models:**
 - `RafConsultaPendente`: Tracks pending SPED analysis requests (pre-processing)
 - `RafRelatorioProcessado`: Stores completed reports with statistics (post-processing)
+- `RafParticipante`: Individual participant/supplier records from RAF analysis (detailed data per CNPJ)
 
 **Client Management:**
 - `Cliente`: Client/company records
@@ -195,6 +196,7 @@ Two authentication methods:
 API routes (`routes/api.php`):
 - `/api/data/receive`: Receives processed data from n8n
 - `/api/data/receive/raf/csvfile`: Receives CSV reports (base64 encoded)
+- `/api/data/receive/raf/participantes`: Receives RAF participants from n8n (batch insert)
 - `/api/data/csv/{id}`: Downloads CSV by report ID
 - `/api/raf/confirm`: Confirms credit usage
 - `/api/data/error`: Receives error notifications from n8n
@@ -262,6 +264,190 @@ Without these webhooks, Laravel cannot process SPED files (it only coordinates, 
 - `users.credits` (decimal): Credit balance tracking
 - RAF tables track full lifecycle: pending → processed → confirmed/cancelled
 - Date fields use Carbon/datetime casting for timezone handling
+
+### RAF Participantes (Detailed Supplier Data)
+
+The `raf_participantes` table stores individual participant/supplier records from RAF SPED analysis. While `RafRelatorioProcessado` stores aggregated statistics, `RafParticipante` stores the detailed data for each CNPJ.
+
+**Table Structure:**
+```
+raf_participantes
+├── raf_relatorio_processado_id (FK) - Links to parent report
+├── user_id (FK) - For direct queries without JOIN
+├── cliente_id (FK, nullable) - Optional client association
+├── tipo_efd - 'EFD Fiscal' or 'EFD Contribuições'
+├── modalidade - 'gratuito' or 'completa'
+├── consultante_cnpj - CNPJ of company that owns the SPED
+├── cnpj - Participant/supplier CNPJ
+├── razao_social, situacao_cadastral, regime_tributario
+├── cnd_* fields (nullable) - CND data (only for 'completa' mode)
+└── data_inicio, data_final - Analysis period
+```
+
+**Relationship with Monitoramento:**
+- `raf_participantes`: Historical data per report (same CNPJ can appear multiple times)
+- `participantes` (Monitoramento): Active monitoring list (unique CNPJ per user)
+- These tables are **independent** - RAF is history, Monitoramento is active tracking
+
+**n8n Integration:**
+```
+POST /api/data/receive/raf/participantes
+{
+  "raf_relatorio_processado_id": 123,
+  "participantes": [
+    {
+      "tipo_efd": "EFD Fiscal",
+      "modalidade": "completa",
+      "consultante_cnpj": "12345678000100",
+      "cnpj": "98765432000199",
+      "razao_social": "Fornecedor XYZ",
+      "situacao_cadastral": "ativa",
+      "regime_tributario": "Simples",
+      "cnd_situacao": "Regular",
+      ...
+    }
+  ]
+}
+```
+
+### Monitoramento Module
+
+The Monitoramento (Monitoring) module enables continuous tracking of CNPJ tax and fiscal status.
+
+**Data Models:**
+- `Participante`: CNPJs being monitored (imported from SPED or added manually)
+- `MonitoramentoPlano`: Subscription plans with different consultation levels
+- `MonitoramentoAssinatura`: Active/paused/cancelled subscriptions linking participantes to plans
+- `MonitoramentoConsulta`: Individual consultation records with results
+
+**Business Flow (follows Laravel-n8n pattern):**
+
+1. **Participant Management (Laravel):**
+   - Import participants from RAF SPED reports (`/app/monitoramento/sped`)
+   - Add CNPJs manually (`/app/monitoramento/avulso`)
+   - View participant details (`/app/monitoramento/participante/{id}`)
+
+2. **Subscription Management (Laravel):**
+   - Create subscriptions with plan and frequency selection
+   - Pause/reactivate/cancel subscriptions
+   - Track subscription status and next execution date
+
+3. **Consultation Execution (n8n - Heavy Work):**
+   - **n8n receives consultation request** via webhook
+   - **n8n queries InfoSimples APIs** based on plan configuration
+   - **n8n returns results** to Laravel callback endpoint
+   - Laravel stores results in `MonitoramentoConsulta.resultado`
+
+4. **Results Display (Laravel):**
+   - View consultation history with filters
+   - Display detailed results in modals
+   - Track credits and statistics
+
+**n8n Webhook URLs (add to .env):**
+```env
+n8n_monitoramento_webhook_url=https://n8n.example.com/webhook/monitoramento
+```
+
+**API Callback Endpoint:**
+- `POST /api/data/receive/monitoramento` - Receives consultation results from n8n
+
+**InfoSimples API Integration (via n8n):**
+
+The monitoring module uses InfoSimples APIs for government data queries. Different plans include different API sets:
+
+| API | Description | Plans |
+|-----|-------------|-------|
+| `rfb/cnpj` | Basic CNPJ data and cadastral situation | All plans |
+| `rfb/simples` | Simples Nacional status | All plans |
+| `sintegra` | State tax registration (ICMS) | Cadastral+, Fiscal |
+| `pgfn/cnd` | Federal tax clearance certificate | Fiscal Federal+ |
+| `caixa/crf-fgts` | FGTS regularity certificate | Fiscal Federal+ |
+| `tst/cndt` | Labor debts certificate | Fiscal Completo+ |
+| `cenprot/protestos` | Protest records | Due Diligence |
+
+**Plan Structure:**
+```json
+{
+  "codigo": "fiscal_federal",
+  "nome": "Fiscal Federal",
+  "consultas_incluidas": ["cnpj", "simples", "sintegra", "pgfn", "fgts"],
+  "custo_creditos": 6
+}
+```
+
+**Subscription Frequencies:**
+- `diario`: Daily at 8:00 AM
+- `semanal`: Weekly at 8:00 AM
+- `quinzenal`: Every 2 weeks at 8:00 AM
+- `mensal`: Monthly at 8:00 AM
+
+### Importacao de Arquivo .txt (SSE)
+
+O modulo de Monitoramento permite importar CNPJs via arquivo .txt com acompanhamento em tempo real via SSE.
+
+**Fluxo:**
+```
+Frontend                 Laravel                  n8n
+   |                        |                      |
+   | Upload .txt ---------->| POST /importar-txt   |
+   |                        | Envia base64 ------->|
+   |                        |<--- importacao_id ---|
+   | SSE /stream/{id} <-----|                      |
+   |                        |                      |
+   |       +----------------|<-- POST /progress ---| (a cada CNPJ)
+   |<------| SSE data       |                      |
+   |       +----------------|                      |
+   +--------- Concluido ----+----------------------+
+```
+
+**Tabela `importacoes_participantes`:**
+- Rastreia historico de importacoes de arquivos .txt
+- Campos: user_id, tipo_efd, filename, total_cnpjs, processados, importados, duplicados, status
+
+**Arquivos Principais:**
+- `MonitoramentoController::importarTxt()` - Recebe arquivo, envia base64 para n8n
+- `MonitoramentoController::streamImportacao()` - SSE que le do cache
+- `DataReceiverController::receiveImportacaoTxtProgress()` - Recebe progresso do n8n, armazena em cache
+
+**Rotas:**
+```php
+// Web (autenticado)
+POST /app/monitoramento/importar-txt
+GET  /app/monitoramento/importacao/stream/{id}
+
+// API (n8n)
+POST /api/monitoramento/sped/importacao-txt/progress
+```
+
+**Variavel de Ambiente:**
+```env
+n8n_importacao_txt_webhook_url=https://n8n.example.com/webhook/importacao-txt
+```
+
+**Payload para n8n:**
+```json
+{
+    "user_id": 1,
+    "tipo_efd": "EFD Fiscal",
+    "filename": "fornecedores.txt",
+    "file_base64": "MTIzNDU2NzgwMDAxOTAK...",
+    "progress_url": "https://fiscaldock.com.br/api/monitoramento/sped/importacao-txt/progress"
+}
+```
+
+**Payload de Progresso (n8n -> Laravel):**
+```json
+{
+    "importacao_id": 123,
+    "status": "processando",
+    "total_cnpjs": 150,
+    "processados": 75,
+    "importados": 70,
+    "duplicados": 5
+}
+```
+
+**IMPORTANTE:** Laravel NAO edita banco durante importacao. n8n faz todas as operacoes de banco e envia progresso para Laravel armazenar em cache. O SSE le do cache e envia para o frontend.
 
 ## Development Patterns
 

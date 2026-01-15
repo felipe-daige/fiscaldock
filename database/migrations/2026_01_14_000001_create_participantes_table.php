@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Tabela principal de participantes (Monitoramento)
         Schema::create('participantes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
@@ -27,6 +28,28 @@ return new class extends Migration
 
             $table->unique(['user_id', 'cnpj']); // CNPJ único por usuário
         });
+
+        // Tabela de grupos de participantes
+        Schema::create('participante_grupos', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('nome');
+            $table->string('cor', 7)->nullable(); // Cor do badge (hex: #RRGGBB)
+            $table->text('descricao')->nullable();
+            $table->boolean('is_auto')->default(false); // Grupo criado automaticamente (ex: importação SPED)
+            $table->timestamps();
+
+            $table->index(['user_id', 'nome']);
+        });
+
+        // Tabela pivot para relação many-to-many
+        Schema::create('participante_grupo_participante', function (Blueprint $table) {
+            $table->foreignId('participante_id')->constrained('participantes')->onDelete('cascade');
+            $table->foreignId('participante_grupo_id')->constrained('participante_grupos')->onDelete('cascade');
+            $table->timestamps();
+
+            $table->primary(['participante_id', 'participante_grupo_id'], 'participante_grupo_pk');
+        });
     }
 
     /**
@@ -34,6 +57,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('participante_grupo_participante');
+        Schema::dropIfExists('participante_grupos');
         Schema::dropIfExists('participantes');
     }
 };
