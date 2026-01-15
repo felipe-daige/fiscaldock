@@ -13,6 +13,11 @@ Route::post('/data/receive', [DataReceiverController::class, 'receive'])
 Route::post('/data/receive/raf/csvfile', [DataReceiverController::class, 'receiveCsv'])
     ->name('api.data.receive.raf.csvfile');
 
+// Rota para receber participantes do RAF do n8n
+// Aceita autenticação via token API (para n8n)
+Route::post('/data/receive/raf/participantes', [DataReceiverController::class, 'receiveRafParticipantes'])
+    ->name('api.data.receive.raf.participantes');
+
 // Rota para buscar CSV do banco de dados por ID do relatório
 // Requer autenticação via sessão (web middleware)
 Route::get('/data/csv/{id}', [DataReceiverController::class, 'getCsv'])
@@ -29,3 +34,8 @@ Route::post('/raf/confirm', [DataReceiverController::class, 'confirmCredits'])
 // Aceita autenticação via token API (para n8n) ou sessão
 Route::post('/data/error', [DataReceiverController::class, 'receiveError'])
     ->name('api.data.error');
+
+// Rota para receber progresso de importação de arquivo .txt do Monitoramento
+// n8n envia progresso para Laravel armazenar em cache (SSE lê do cache)
+Route::post('/monitoramento/sped/importacao-txt/progress', [DataReceiverController::class, 'receiveImportacaoTxtProgress'])
+    ->name('api.monitoramento.sped.importacao-txt.progress');

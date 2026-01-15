@@ -114,8 +114,23 @@ Route::middleware('auth')->group(function () {
         // Acoes
         Route::post('/importar-raf/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'importarDoRaf'])->name('importar-raf');
         Route::post('/adicionar-cnpj', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'adicionarCnpj'])->name('adicionar-cnpj');
-        Route::post('/assinar', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'criarAssinatura'])->name('assinar');
-        Route::post('/cancelar-assinatura/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'cancelarAssinatura'])->name('cancelar-assinatura');
         Route::post('/consulta-avulsa', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'executarConsultaAvulsa'])->name('consulta-avulsa');
+
+        // Importação de arquivo .txt com SSE
+        Route::post('/importar-txt', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'importarTxt'])->name('importar-txt');
+        Route::get('/importacao/stream/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'streamImportacao'])->name('importacao.stream');
+
+        // Assinaturas
+        Route::post('/assinatura', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'criarAssinatura'])->name('assinatura.criar');
+        Route::post('/assinatura/{id}/pausar', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'pausarAssinatura'])->name('assinatura.pausar');
+        Route::post('/assinatura/{id}/reativar', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'reativarAssinatura'])->name('assinatura.reativar');
+        Route::delete('/assinatura/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'cancelarAssinatura'])->name('assinatura.cancelar');
+
+        // Grupos de participantes
+        Route::get('/grupos', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'grupos'])->name('grupos');
+        Route::post('/grupos', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'criarGrupo'])->name('grupos.criar');
+        Route::put('/grupos/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'editarGrupo'])->name('grupos.editar');
+        Route::delete('/grupos/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'excluirGrupo'])->name('grupos.excluir');
+        Route::post('/participantes/associar-grupo', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'associarGrupo'])->name('participantes.associar-grupo');
     });
 });

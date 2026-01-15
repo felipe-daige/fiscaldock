@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Participante extends Model
@@ -61,6 +62,15 @@ class Participante extends Model
     public function consultas(): HasMany
     {
         return $this->hasMany(MonitoramentoConsulta::class);
+    }
+
+    /**
+     * Grupos aos quais o participante pertence.
+     */
+    public function grupos(): BelongsToMany
+    {
+        return $this->belongsToMany(ParticipanteGrupo::class, 'participante_grupo_participante')
+            ->withTimestamps();
     }
 
     /**

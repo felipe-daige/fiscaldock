@@ -78,7 +78,7 @@
 
                 <div class="sidebar-submenu-wrapper mt-1 ml-3 pl-3 border-l border-gray-200 space-y-1">
                     <a href="/app/monitoramento" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
-                        <span class="sidebar-label font-medium">Visão Geral</span>
+                        <span class="sidebar-label font-medium">Participantes</span>
                     </a>
                     <a href="/app/monitoramento/sped" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors leading-5">
                         <span class="sidebar-label font-medium">Importar do SPED</span>

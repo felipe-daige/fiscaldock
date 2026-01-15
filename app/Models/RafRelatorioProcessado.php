@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RafRelatorioProcessado extends Model
 {
@@ -13,6 +15,7 @@ class RafRelatorioProcessado extends Model
 
     protected $fillable = [
         'user_id',
+        'cliente_id',
         'document_type',
         'consultant_type',
         'report_csv_base64',
@@ -68,14 +71,20 @@ class RafRelatorioProcessado extends Model
     }
 
     // Relacionamentos
-    public function user()
+
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function cliente()
+    public function cliente(): BelongsTo
     {
         return $this->belongsTo(Cliente::class);
+    }
+
+    public function participantes(): HasMany
+    {
+        return $this->hasMany(RafParticipante::class, 'raf_relatorio_processado_id');
     }
 }
 

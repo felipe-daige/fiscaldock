@@ -180,6 +180,32 @@
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <h2 class="text-lg font-semibold text-gray-900">Meus Participantes</h2>
                     <div class="flex items-center gap-3">
+                        {{-- Filtro por Grupo --}}
+                        <select
+                            id="filtro-grupo"
+                            class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                        >
+                            <option value="">Todos os grupos</option>
+                            @foreach($grupos ?? [] as $grupo)
+                                <option value="{{ $grupo->id }}" {{ ($grupoAtivo ?? '') == $grupo->id ? 'selected' : '' }}>
+                                    {{ $grupo->nome }} ({{ $grupo->participantes_count }})
+                                </option>
+                            @endforeach
+                        </select>
+
+                        {{-- Botao Gerenciar Grupos --}}
+                        <button
+                            type="button"
+                            id="btn-gerenciar-grupos"
+                            class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors"
+                            title="Gerenciar grupos"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                            </svg>
+                            Grupos
+                        </button>
+
                         <div class="relative">
                             <input
                                 type="text"
@@ -207,6 +233,7 @@
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Situacao</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Regime</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Origem</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Grupos</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Ultima Consulta</th>
                             <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Acoes</th>
                         </tr>
@@ -236,6 +263,20 @@
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-600">{{ $participante->regime_tributario ?? '-' }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-500">{{ str_replace('_', ' ', $participante->origem_tipo ?? '-') }}</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-wrap gap-1">
+                                        @forelse($participante->grupos as $grupo)
+                                            <span
+                                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+                                                style="background-color: {{ $grupo->cor }}20; color: {{ $grupo->cor }}"
+                                            >
+                                                {{ $grupo->nome }}
+                                            </span>
+                                        @empty
+                                            <span class="text-xs text-gray-400">-</span>
+                                        @endforelse
+                                    </div>
+                                </td>
                                 <td class="px-6 py-4 text-sm text-gray-500">
                                     {{ $participante->ultima_consulta_em ? $participante->ultima_consulta_em->format('d/m/Y') : '-' }}
                                 </td>
@@ -267,7 +308,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-6 py-12 text-center">
+                                <td colspan="9" class="px-6 py-12 text-center">
                                     <div class="flex flex-col items-center">
                                         <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -329,6 +370,12 @@
                     </svg>
                     Consultar Agora
                 </button>
+                <button type="button" id="btn-adicionar-grupo" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-semibold transition hover:bg-purple-700">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                    </svg>
+                    Adicionar ao Grupo
+                </button>
                 <button type="button" id="btn-cancelar-selecao" class="inline-flex items-center p-2 rounded-lg text-gray-400 hover:text-white transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -376,6 +423,164 @@
             </button>
             <button type="button" id="btn-confirmar-monitoramento" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
                 Confirmar Monitoramento
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- Modal Gerenciar Grupos --}}
+<div id="modal-gerenciar-grupos" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900">Gerenciar Grupos</h3>
+                <button type="button" class="modal-close text-gray-400 hover:text-gray-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="px-6 py-4">
+            {{-- Formulario para criar novo grupo --}}
+            <div class="mb-6">
+                <h4 class="text-sm font-medium text-gray-700 mb-3">Criar novo grupo</h4>
+                <div class="flex gap-2">
+                    <input
+                        type="text"
+                        id="novo-grupo-nome"
+                        placeholder="Nome do grupo"
+                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                    <input
+                        type="color"
+                        id="novo-grupo-cor"
+                        value="#3B82F6"
+                        class="w-10 h-10 rounded-lg border border-gray-300 cursor-pointer"
+                        title="Cor do grupo"
+                    >
+                    <button
+                        type="button"
+                        id="btn-criar-grupo"
+                        class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold transition hover:bg-blue-700"
+                    >
+                        Criar
+                    </button>
+                </div>
+                {{-- Cores predefinidas --}}
+                <div class="flex gap-2 mt-2">
+                    @foreach($coresPredefinidas ?? ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#6B7280'] as $cor)
+                        <button
+                            type="button"
+                            class="cor-predefinida w-6 h-6 rounded-full border-2 border-transparent hover:border-gray-400 transition-colors"
+                            style="background-color: {{ $cor }}"
+                            data-cor="{{ $cor }}"
+                            title="{{ $cor }}"
+                        ></button>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Lista de grupos existentes --}}
+            <div>
+                <h4 class="text-sm font-medium text-gray-700 mb-3">Grupos existentes</h4>
+                <div id="lista-grupos" class="space-y-2 max-h-64 overflow-y-auto">
+                    @forelse($grupos ?? [] as $grupo)
+                        <div class="grupo-item flex items-center justify-between p-3 bg-gray-50 rounded-lg" data-grupo-id="{{ $grupo->id }}">
+                            <div class="flex items-center gap-3">
+                                <span
+                                    class="w-4 h-4 rounded-full"
+                                    style="background-color: {{ $grupo->cor }}"
+                                ></span>
+                                <span class="grupo-nome text-sm font-medium text-gray-900">{{ $grupo->nome }}</span>
+                                <span class="text-xs text-gray-500">({{ $grupo->participantes_count }} participantes)</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <button
+                                    type="button"
+                                    class="btn-editar-grupo p-1.5 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                    title="Editar"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn-excluir-grupo p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                    title="Excluir"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    @empty
+                        <p class="text-sm text-gray-500 text-center py-4">Nenhum grupo criado ainda.</p>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+            <button type="button" class="modal-close w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
+                Fechar
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- Modal Selecionar Grupo (para acao em massa) --}}
+<div id="modal-selecionar-grupo" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900">Adicionar ao Grupo</h3>
+                <button type="button" class="modal-close text-gray-400 hover:text-gray-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="px-6 py-4">
+            <p class="text-sm text-gray-600 mb-4">Selecione o grupo para adicionar <strong id="modal-grupo-count">0</strong> participante(s):</p>
+
+            <div id="lista-grupos-selecao" class="space-y-2 max-h-64 overflow-y-auto">
+                @forelse($grupos ?? [] as $grupo)
+                    <button
+                        type="button"
+                        class="grupo-selecao-item w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-colors text-left"
+                        data-grupo-id="{{ $grupo->id }}"
+                    >
+                        <span
+                            class="w-4 h-4 rounded-full shrink-0"
+                            style="background-color: {{ $grupo->cor }}"
+                        ></span>
+                        <span class="text-sm font-medium text-gray-900">{{ $grupo->nome }}</span>
+                        <span class="text-xs text-gray-500">({{ $grupo->participantes_count }})</span>
+                    </button>
+                @empty
+                    <p class="text-sm text-gray-500 text-center py-4">Nenhum grupo disponivel. Crie um grupo primeiro.</p>
+                @endforelse
+            </div>
+
+            @if(empty($grupos) || count($grupos ?? []) === 0)
+                <button
+                    type="button"
+                    id="btn-criar-grupo-rapido"
+                    class="mt-4 w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-dashed border-gray-300 text-gray-600 text-sm font-medium hover:border-blue-500 hover:text-blue-600 transition-colors"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Criar novo grupo
+                </button>
+            @endif
+        </div>
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+            <button type="button" class="modal-close w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
+                Cancelar
             </button>
         </div>
     </div>
@@ -500,6 +705,218 @@
                         }
                     });
                 }, 300);
+            });
+        }
+
+        // =====================================================
+        // GRUPOS - Filtro, Modais e CRUD
+        // =====================================================
+
+        const filtroGrupo = document.getElementById('filtro-grupo');
+        const btnGerenciarGrupos = document.getElementById('btn-gerenciar-grupos');
+        const btnAdicionarGrupo = document.getElementById('btn-adicionar-grupo');
+        const modalGerenciarGrupos = document.getElementById('modal-gerenciar-grupos');
+        const modalSelecionarGrupo = document.getElementById('modal-selecionar-grupo');
+        const btnCriarGrupo = document.getElementById('btn-criar-grupo');
+        const novoGrupoNome = document.getElementById('novo-grupo-nome');
+        const novoGrupoCor = document.getElementById('novo-grupo-cor');
+
+        // Filtro por grupo - redireciona com query param
+        if (filtroGrupo) {
+            filtroGrupo.addEventListener('change', function() {
+                const grupoId = filtroGrupo.value;
+                const url = new URL(window.location.href);
+
+                if (grupoId) {
+                    url.searchParams.set('grupo', grupoId);
+                } else {
+                    url.searchParams.delete('grupo');
+                }
+
+                window.location.href = url.toString();
+            });
+        }
+
+        // Abrir modal gerenciar grupos
+        if (btnGerenciarGrupos && modalGerenciarGrupos) {
+            btnGerenciarGrupos.addEventListener('click', function() {
+                modalGerenciarGrupos.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            });
+
+            modalGerenciarGrupos.addEventListener('click', function(e) {
+                if (e.target === modalGerenciarGrupos) {
+                    modalGerenciarGrupos.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }
+            });
+        }
+
+        // Cores predefinidas
+        document.querySelectorAll('.cor-predefinida').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                if (novoGrupoCor) {
+                    novoGrupoCor.value = btn.dataset.cor;
+                }
+            });
+        });
+
+        // Criar grupo
+        if (btnCriarGrupo) {
+            btnCriarGrupo.addEventListener('click', async function() {
+                const nome = novoGrupoNome ? novoGrupoNome.value.trim() : '';
+                const cor = novoGrupoCor ? novoGrupoCor.value : '#3B82F6';
+
+                if (!nome) {
+                    alert('Digite o nome do grupo.');
+                    return;
+                }
+
+                try {
+                    btnCriarGrupo.disabled = true;
+                    btnCriarGrupo.textContent = 'Criando...';
+
+                    const response = await fetch('/app/monitoramento/grupos', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: JSON.stringify({ nome, cor }),
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Recarregar pagina para atualizar lista
+                        window.location.reload();
+                    } else {
+                        alert(data.error || 'Erro ao criar grupo.');
+                    }
+                } catch (error) {
+                    console.error('Erro ao criar grupo:', error);
+                    alert('Erro ao criar grupo. Tente novamente.');
+                } finally {
+                    btnCriarGrupo.disabled = false;
+                    btnCriarGrupo.textContent = 'Criar';
+                }
+            });
+        }
+
+        // Excluir grupo
+        document.querySelectorAll('.btn-excluir-grupo').forEach(function(btn) {
+            btn.addEventListener('click', async function() {
+                const grupoItem = btn.closest('.grupo-item');
+                const grupoId = grupoItem ? grupoItem.dataset.grupoId : null;
+                const grupoNome = grupoItem ? grupoItem.querySelector('.grupo-nome').textContent : '';
+
+                if (!grupoId) return;
+
+                if (!confirm('Tem certeza que deseja excluir o grupo "' + grupoNome + '"? Os participantes nao serao excluidos.')) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/app/monitoramento/grupos/' + grupoId, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert(data.error || 'Erro ao excluir grupo.');
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir grupo:', error);
+                    alert('Erro ao excluir grupo. Tente novamente.');
+                }
+            });
+        });
+
+        // Abrir modal selecionar grupo (acao em massa)
+        if (btnAdicionarGrupo && modalSelecionarGrupo) {
+            btnAdicionarGrupo.addEventListener('click', function() {
+                const selecionados = document.querySelectorAll('.participante-checkbox:checked');
+                document.getElementById('modal-grupo-count').textContent = selecionados.length;
+                modalSelecionarGrupo.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            });
+
+            modalSelecionarGrupo.addEventListener('click', function(e) {
+                if (e.target === modalSelecionarGrupo) {
+                    modalSelecionarGrupo.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }
+            });
+        }
+
+        // Selecionar grupo para adicionar participantes
+        document.querySelectorAll('.grupo-selecao-item').forEach(function(btn) {
+            btn.addEventListener('click', async function() {
+                const grupoId = btn.dataset.grupoId;
+                const selecionados = document.querySelectorAll('.participante-checkbox:checked');
+                const participanteIds = Array.from(selecionados).map(function(cb) {
+                    return cb.value;
+                });
+
+                if (participanteIds.length === 0) {
+                    alert('Nenhum participante selecionado.');
+                    return;
+                }
+
+                try {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+
+                    const response = await fetch('/app/monitoramento/participantes/associar-grupo', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: JSON.stringify({
+                            grupo_id: grupoId,
+                            participantes: participanteIds,
+                            acao: 'adicionar',
+                        }),
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert(data.error || 'Erro ao adicionar participantes ao grupo.');
+                    }
+                } catch (error) {
+                    console.error('Erro ao associar grupo:', error);
+                    alert('Erro ao adicionar ao grupo. Tente novamente.');
+                } finally {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            });
+        });
+
+        // Botao criar grupo rapido (quando nao tem grupos)
+        const btnCriarGrupoRapido = document.getElementById('btn-criar-grupo-rapido');
+        if (btnCriarGrupoRapido) {
+            btnCriarGrupoRapido.addEventListener('click', function() {
+                if (modalSelecionarGrupo) {
+                    modalSelecionarGrupo.classList.add('hidden');
+                }
+                if (modalGerenciarGrupos) {
+                    modalGerenciarGrupos.classList.remove('hidden');
+                    if (novoGrupoNome) novoGrupoNome.focus();
+                }
             });
         }
 

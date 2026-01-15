@@ -5,8 +5,8 @@
         <div class="mb-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Importar Participantes do SPED</h1>
-                    <p class="mt-1 text-sm text-gray-600">Selecione um relatorio RAF processado para importar os participantes.</p>
+                    <h1 class="text-2xl font-bold text-gray-900">Importar Participantes</h1>
+                    <p class="mt-1 text-sm text-gray-600">Adicione CNPJs à sua lista de monitoramento a partir de arquivos SPED ou relatórios RAF.</p>
                 </div>
                 <a
                     href="/app/monitoramento"
@@ -30,8 +30,7 @@
                 <div>
                     <h3 class="text-sm font-semibold text-blue-900">Como funciona?</h3>
                     <p class="text-sm text-blue-800 mt-1">
-                        Os participantes (fornecedores e clientes) identificados nos seus relatorios RAF podem ser importados para monitoramento continuo.
-                        Voce pode escolher importar todos ou selecionar individualmente quais CNPJs deseja monitorar.
+                        Importe CNPJs de fornecedores e clientes extraídos do seu arquivo SPED para acompanhar a situação cadastral, regime tributário e certidões de forma contínua.
                     </p>
                 </div>
             </div>
@@ -40,8 +39,8 @@
         {{-- Seção Importar de Arquivo .txt --}}
         <div class="mb-6">
             <div class="mb-4">
-                <h2 class="text-lg font-semibold text-gray-900">Importar Participantes de Arquivo .txt</h2>
-                <p class="text-sm text-gray-600 mt-1">Envie um arquivo .txt contendo CNPJs para importar participantes diretamente.</p>
+                <h2 class="text-lg font-semibold text-gray-900">Importar de Lista de CNPJs</h2>
+                <p class="text-sm text-gray-600 mt-1">Envie um arquivo .txt com os CNPJs que deseja monitorar.</p>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {{-- Card Upload (Esquerdo) --}}
@@ -81,7 +80,7 @@
                             </div>
                             <div class="space-y-2 text-xs text-blue-800">
                                 <div>
-                                    <strong class="text-blue-900">Formato do arquivo:</strong> Arquivo .txt com CNPJs, um por linha ou separados por vírgula/ponto e vírgula.
+                                    <strong class="text-blue-900">Formato:</strong> Um CNPJ por linha (apenas números, 14 dígitos).
                                 </div>
                                 <div>
                                     <strong class="text-blue-900">Exemplo:</strong>
@@ -92,7 +91,7 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <strong class="text-blue-900">Processo:</strong> Após importar, os CNPJs serão adicionados à sua lista de participantes para monitoramento contínuo.
+                                    <strong class="text-blue-900">Após importar:</strong> Os CNPJs serão adicionados à sua lista de monitoramento.
                                 </div>
                             </div>
                         </div>
@@ -231,7 +230,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                 </svg>
                                 <p class="text-xs text-gray-600">
-                                    <strong class="text-gray-900">Importação:</strong> Envie um arquivo .txt com CNPJs ou importe de relatórios RAF processados.
+                                    <strong class="text-gray-900">Importação:</strong> Adicione CNPJs via arquivo .txt ou a partir de relatórios RAF já processados.
                                 </p>
                             </div>
                             <div class="flex items-start gap-2">
@@ -239,7 +238,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                 </svg>
                                 <p class="text-xs text-gray-600">
-                                    <strong class="text-gray-900">Monitoramento:</strong> Os participantes são monitorados continuamente conforme o plano escolhido.
+                                    <strong class="text-gray-900">Consultas:</strong> Execute consultas avulsas ou configure frequência automática (diária, semanal, mensal).
                                 </p>
                             </div>
                             <div class="flex items-start gap-2">
@@ -247,7 +246,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                 </svg>
                                 <p class="text-xs text-gray-600">
-                                    <strong class="text-gray-900">Consultas:</strong> Realize consultas avulsas ou configure assinaturas mensais para monitoramento automático.
+                                    <strong class="text-gray-900">Alertas:</strong> Receba notificações sobre alterações na situação cadastral ou fiscal dos CNPJs.
                                 </p>
                             </div>
                             <div class="flex items-start gap-2">
@@ -255,7 +254,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                 </svg>
                                 <p class="text-xs text-gray-600">
-                                    <strong class="text-gray-900">Histórico:</strong> Acompanhe todas as consultas realizadas e resultados obtidos.
+                                    <strong class="text-gray-900">Histórico:</strong> Consulte o histórico completo de cada CNPJ monitorado.
                                 </p>
                             </div>
                         </div>
@@ -264,10 +263,64 @@
             </div>
         </div>
 
+        {{-- Seção de Progresso de Importação (inicialmente oculta) --}}
+        <div id="importacao-progresso" class="hidden">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Importando participantes...</h3>
+                        <p class="text-sm text-gray-600">Aguarde enquanto processamos os CNPJs do arquivo.</p>
+                    </div>
+                </div>
+
+                {{-- Barra de Progresso --}}
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">Progresso</span>
+                        <span class="text-sm font-semibold text-blue-600" id="progresso-porcentagem">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div id="barra-progresso" class="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                {{-- Contadores --}}
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="p-3 bg-gray-50 rounded-lg text-center">
+                        <div class="text-2xl font-bold text-gray-900" id="cnt-total">0</div>
+                        <div class="text-xs text-gray-500">Total CNPJs</div>
+                    </div>
+                    <div class="p-3 bg-blue-50 rounded-lg text-center">
+                        <div class="text-2xl font-bold text-blue-600" id="cnt-processados">0</div>
+                        <div class="text-xs text-gray-500">Processados</div>
+                    </div>
+                    <div class="p-3 bg-green-50 rounded-lg text-center">
+                        <div class="text-2xl font-bold text-green-600" id="cnt-importados">0</div>
+                        <div class="text-xs text-gray-500">Novos</div>
+                    </div>
+                    <div class="p-3 bg-amber-50 rounded-lg text-center">
+                        <div class="text-2xl font-bold text-amber-600" id="cnt-duplicados">0</div>
+                        <div class="text-xs text-gray-500">Já existentes</div>
+                    </div>
+                </div>
+
+                {{-- Status detalhado --}}
+                <div id="progresso-status" class="mt-4 text-center text-sm text-gray-600">
+                    Iniciando processamento...
+                </div>
+            </div>
+        </div>
+
         {{-- Lista de Relatorios RAF --}}
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm mt-6">
             <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">Relatorios RAF Processados</h2>
+                <h2 class="text-lg font-semibold text-gray-900">Importar de Relatórios RAF</h2>
             </div>
 
             @if(isset($relatorios) && $relatorios->count() > 0)
@@ -1017,9 +1070,150 @@
             });
         }
 
-        // Botão importar (por enquanto apenas mostra mensagem)
+        // Variáveis para controle de importação
+        let eventSourceTxt = null;
+        let importacaoEmAndamento = false;
+
+        // Elementos de progresso
+        const progressoContainer = document.getElementById('importacao-progresso');
+        const barraProgresso = document.getElementById('barra-progresso');
+        const progressoPorcentagem = document.getElementById('progresso-porcentagem');
+        const cntTotal = document.getElementById('cnt-total');
+        const cntProcessados = document.getElementById('cnt-processados');
+        const cntImportados = document.getElementById('cnt-importados');
+        const cntDuplicados = document.getElementById('cnt-duplicados');
+        const progressoStatus = document.getElementById('progresso-status');
+
+        // Função para atualizar UI de progresso
+        function atualizarProgresso(dados) {
+            if (barraProgresso) barraProgresso.style.width = (dados.porcentagem || 0) + '%';
+            if (progressoPorcentagem) progressoPorcentagem.textContent = (dados.porcentagem || 0) + '%';
+            if (cntTotal) cntTotal.textContent = dados.total_cnpjs || 0;
+            if (cntProcessados) cntProcessados.textContent = dados.processados || 0;
+            if (cntImportados) cntImportados.textContent = dados.importados || 0;
+            if (cntDuplicados) cntDuplicados.textContent = dados.duplicados || 0;
+
+            if (progressoStatus) {
+                if (dados.status === 'processando') {
+                    progressoStatus.textContent = 'Processando CNPJ ' + (dados.processados || 0) + ' de ' + (dados.total_cnpjs || 0) + '...';
+                } else if (dados.status === 'concluido') {
+                    progressoStatus.textContent = 'Importação concluída com sucesso!';
+                } else if (dados.status === 'erro') {
+                    progressoStatus.textContent = dados.error_message || 'Erro durante a importação.';
+                } else if (dados.status === 'aguardando') {
+                    progressoStatus.textContent = 'Aguardando início do processamento...';
+                }
+            }
+        }
+
+        // Função para mostrar UI de progresso
+        function mostrarProgresso() {
+            if (progressoContainer) progressoContainer.classList.remove('hidden');
+            // Ocultar cards de upload
+            const uploadSection = document.querySelector('.grid.grid-cols-1.lg\\:grid-cols-2.gap-6');
+            if (uploadSection) uploadSection.classList.add('hidden');
+        }
+
+        // Função para ocultar UI de progresso
+        function ocultarProgresso() {
+            if (progressoContainer) progressoContainer.classList.add('hidden');
+            // Mostrar cards de upload
+            const uploadSection = document.querySelector('.grid.grid-cols-1.lg\\:grid-cols-2.gap-6');
+            if (uploadSection) uploadSection.classList.remove('hidden');
+        }
+
+        // Função para resetar UI de progresso
+        function resetarProgresso() {
+            atualizarProgresso({
+                porcentagem: 0,
+                total_cnpjs: 0,
+                processados: 0,
+                importados: 0,
+                duplicados: 0,
+                status: 'aguardando'
+            });
+        }
+
+        // Função para conectar ao SSE
+        function conectarSSE(importacaoId) {
+            if (eventSourceTxt) {
+                eventSourceTxt.close();
+            }
+
+            const sseUrl = '/app/monitoramento/importacao/stream/' + importacaoId;
+            console.log('[Monitoramento SPED] Conectando ao SSE:', sseUrl);
+            eventSourceTxt = new EventSource(sseUrl);
+
+            eventSourceTxt.onopen = function() {
+                console.log('[Monitoramento SPED] SSE conectado');
+            };
+
+            eventSourceTxt.onmessage = function(event) {
+                try {
+                    const dados = JSON.parse(event.data);
+                    console.log('[Monitoramento SPED] Dados SSE:', dados);
+                    atualizarProgresso(dados);
+
+                    if (dados.status === 'concluido') {
+                        eventSourceTxt.close();
+                        eventSourceTxt = null;
+                        importacaoEmAndamento = false;
+
+                        if (window.showToast) {
+                            window.showToast('success', 'Importação concluída! ' + (dados.importados || 0) + ' novos participantes adicionados.');
+                        }
+
+                        // Redirecionar para monitoramento após 2 segundos
+                        setTimeout(function() {
+                            const link = document.createElement('a');
+                            link.href = '/app/monitoramento';
+                            link.setAttribute('data-link', '');
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        }, 2000);
+                    } else if (dados.status === 'erro') {
+                        eventSourceTxt.close();
+                        eventSourceTxt = null;
+                        importacaoEmAndamento = false;
+
+                        if (window.showToast) {
+                            window.showToast('error', dados.error_message || 'Erro durante a importação.');
+                        }
+
+                        // Voltar para formulário após 3 segundos
+                        setTimeout(function() {
+                            ocultarProgresso();
+                            limparArquivoTxt();
+                        }, 3000);
+                    }
+                } catch (e) {
+                    console.error('[Monitoramento SPED] Erro ao parsear SSE:', e);
+                }
+            };
+
+            eventSourceTxt.onerror = function(err) {
+                console.error('[Monitoramento SPED] Erro SSE:', err);
+                eventSourceTxt.close();
+                eventSourceTxt = null;
+
+                // Se ainda estava em andamento, mostrar erro
+                if (importacaoEmAndamento) {
+                    importacaoEmAndamento = false;
+                    if (window.showToast) {
+                        window.showToast('error', 'Erro na conexão. Verifique o status da importação.');
+                    }
+
+                    setTimeout(function() {
+                        ocultarProgresso();
+                    }, 2000);
+                }
+            };
+        }
+
+        // Botão importar - funcionalidade real
         if (txtImportarBtn) {
-            txtImportarBtn.addEventListener('click', function() {
+            txtImportarBtn.addEventListener('click', async function() {
                 const tipoSped = getSelectedTipoSped();
                 if (!tipoSped) {
                     if (window.showToast) {
@@ -1029,12 +1223,84 @@
                     }
                     return;
                 }
-                
-                // Por enquanto não faz nada - funcionalidade em desenvolvimento
-                if (window.showToast) {
-                    window.showToast('info', 'Funcionalidade de importação em desenvolvimento.');
-                } else {
-                    alert('Funcionalidade de importação em desenvolvimento.');
+
+                if (!txtFileInput || !txtFileInput.files || txtFileInput.files.length === 0) {
+                    if (window.showToast) {
+                        window.showToast('error', 'Selecione um arquivo .txt para importar.');
+                    } else {
+                        alert('Selecione um arquivo .txt para importar.');
+                    }
+                    return;
+                }
+
+                if (importacaoEmAndamento) {
+                    if (window.showToast) {
+                        window.showToast('warning', 'Aguarde a importação em andamento terminar.');
+                    }
+                    return;
+                }
+
+                // Desabilitar botão e mostrar loading
+                txtImportarBtn.disabled = true;
+                txtImportarBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg> Enviando...';
+
+                try {
+                    // Preparar FormData
+                    const formData = new FormData();
+                    formData.append('arquivo', txtFileInput.files[0]);
+                    formData.append('tipo_efd', tipoSped === 'efd-fiscal' ? 'EFD Fiscal' : 'EFD Contribuições');
+
+                    // Enviar arquivo para Laravel
+                    const response = await fetch('/app/monitoramento/importar-txt', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrf,
+                            'Accept': 'application/json',
+                        },
+                        credentials: 'same-origin',
+                        body: formData,
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.error || data.message || 'Erro ao enviar arquivo');
+                    }
+
+                    console.log('[Monitoramento SPED] Arquivo enviado, importacao_id:', data.importacao_id);
+
+                    // Marcar como em andamento
+                    importacaoEmAndamento = true;
+
+                    // Mostrar UI de progresso
+                    resetarProgresso();
+                    mostrarProgresso();
+
+                    // Conectar ao SSE para receber atualizações
+                    conectarSSE(data.importacao_id);
+
+                } catch (err) {
+                    console.error('[Monitoramento SPED] Erro ao enviar arquivo:', err);
+                    if (window.showToast) {
+                        window.showToast('error', err.message || 'Erro ao enviar arquivo.');
+                    } else {
+                        alert(err.message || 'Erro ao enviar arquivo.');
+                    }
+                } finally {
+                    // Restaurar botão
+                    txtImportarBtn.disabled = false;
+                    txtImportarBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Importar';
+                    updateImportButtonState();
+                }
+            });
+        }
+
+        // Cleanup ao sair da página (para SPA)
+        if (window._cleanupFunctions) {
+            window._cleanupFunctions.push(function() {
+                if (eventSourceTxt) {
+                    eventSourceTxt.close();
+                    eventSourceTxt = null;
                 }
             });
         }

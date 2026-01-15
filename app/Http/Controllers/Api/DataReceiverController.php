@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\RafConsultaPendente;
 use App\Models\RafRelatorioProcessado;
+use App\Models\RafParticipante;
 use App\Services\CreditService;
 use App\Services\Sped\SpedUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -501,6 +503,148 @@ class DataReceiverController extends Controller
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'request_data' => $request->all(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Recebe participantes do RAF do n8n e armazena no banco de dados.
+     * POST /api/data/receive/raf/participantes
+     *
+     * Payload esperado:
+     * {
+     *   "raf_relatorio_processado_id": 123,
+     *   "participantes": [
+     *     {
+     *       "tipo_efd": "EFD Fiscal",
+     *       "modalidade": "completa",
+     *       "consultante_cnpj": "12345678000100",
+     *       "cnpj": "98765432000199",
+     *       ...
+     *     }
+     *   ]
+     * }
+     */
+    public function receiveRafParticipantes(Request $request)
+    {
+        try {
+            Log::info('Requisição recebida em receiveRafParticipantes', [
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'ip' => $request->ip(),
+                'headers' => [
+                    'x-api-token' => $request->hasHeader('X-API-Token') ? 'presente' : 'ausente',
+                    'content-type' => $request->header('Content-Type'),
+                ],
+                'participantes_count' => is_array($request->input('participantes')) ? count($request->input('participantes')) : 0,
+            ]);
+
+            // Verifica autenticação via token
+            if (!$this->isTokenValid($request)) {
+                Log::warning('Token inválido em receiveRafParticipantes');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Token de API inválido.',
+                ], Response::HTTP_UNAUTHORIZED);
+            }
+
+            // Validar payload
+            $validated = $request->validate([
+                'raf_relatorio_processado_id' => 'required|integer|exists:raf_relatorio_processado,id',
+                'participantes' => 'required|array|min:1',
+                'participantes.*.cnpj' => 'required|string|max:14',
+                'participantes.*.tipo_efd' => 'required|string|max:30',
+                'participantes.*.modalidade' => 'required|string|max:20',
+                'participantes.*.consultante_cnpj' => 'required|string|max:14',
+                'participantes.*.consultante_razao_social' => 'nullable|string|max:255',
+                'participantes.*.cnpj_matriz' => 'nullable|string|max:14',
+                'participantes.*.razao_social' => 'nullable|string|max:255',
+                'participantes.*.situacao_cadastral' => 'nullable|string|max:50',
+                'participantes.*.regime_tributario' => 'nullable|string|max:50',
+                'participantes.*.cnae_descricao' => 'nullable|string',
+                'participantes.*.cnd_situacao' => 'nullable|string|max:50',
+                'participantes.*.cnd_tipo' => 'nullable|string|max:100',
+                'participantes.*.cnd_data_emissao' => 'nullable|date',
+                'participantes.*.cnd_data_validade' => 'nullable|date',
+                'participantes.*.cnd_codigo_controle' => 'nullable|string|max:100',
+                'participantes.*.cnd_informacoes_adicionais' => 'nullable|string',
+                'participantes.*.data_inicio' => 'nullable|date',
+                'participantes.*.data_final' => 'nullable|date',
+            ]);
+
+            // Buscar relatório para obter user_id e cliente_id
+            $relatorio = RafRelatorioProcessado::findOrFail($validated['raf_relatorio_processado_id']);
+
+            // Preparar dados para batch insert
+            $now = now();
+            $participantesData = collect($validated['participantes'])->map(function ($p) use ($relatorio, $now) {
+                return [
+                    'raf_relatorio_processado_id' => $relatorio->id,
+                    'user_id' => $relatorio->user_id,
+                    'cliente_id' => $relatorio->cliente_id,
+                    'tipo_efd' => $p['tipo_efd'],
+                    'modalidade' => $p['modalidade'],
+                    'consultante_cnpj' => preg_replace('/\D/', '', $p['consultante_cnpj']),
+                    'consultante_razao_social' => $p['consultante_razao_social'] ?? null,
+                    'cnpj' => preg_replace('/\D/', '', $p['cnpj']),
+                    'cnpj_matriz' => isset($p['cnpj_matriz']) ? preg_replace('/\D/', '', $p['cnpj_matriz']) : null,
+                    'razao_social' => $p['razao_social'] ?? null,
+                    'situacao_cadastral' => $p['situacao_cadastral'] ?? null,
+                    'regime_tributario' => $p['regime_tributario'] ?? null,
+                    'cnae_descricao' => $p['cnae_descricao'] ?? null,
+                    'cnd_situacao' => $p['cnd_situacao'] ?? null,
+                    'cnd_tipo' => $p['cnd_tipo'] ?? null,
+                    'cnd_data_emissao' => $p['cnd_data_emissao'] ?? null,
+                    'cnd_data_validade' => $p['cnd_data_validade'] ?? null,
+                    'cnd_codigo_controle' => $p['cnd_codigo_controle'] ?? null,
+                    'cnd_informacoes_adicionais' => $p['cnd_informacoes_adicionais'] ?? null,
+                    'data_inicio' => $p['data_inicio'] ?? null,
+                    'data_final' => $p['data_final'] ?? null,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            })->toArray();
+
+            // Batch insert para performance (dividir em chunks de 500)
+            $chunks = array_chunk($participantesData, 500);
+            $totalInserted = 0;
+
+            foreach ($chunks as $chunk) {
+                RafParticipante::insert($chunk);
+                $totalInserted += count($chunk);
+            }
+
+            Log::info('Participantes RAF inseridos com sucesso', [
+                'relatorio_id' => $relatorio->id,
+                'user_id' => $relatorio->user_id,
+                'total_inserted' => $totalInserted,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Participantes inseridos com sucesso.',
+                'inserted' => $totalInserted,
+                'relatorio_id' => $relatorio->id,
+            ], Response::HTTP_OK);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Erro de validação em receiveRafParticipantes', [
+                'errors' => $e->errors(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro de validação.',
+                'errors' => $e->errors(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        } catch (\Exception $e) {
+            Log::error('Erro inesperado em receiveRafParticipantes', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
             return response()->json([
                 'success' => false,
@@ -1581,6 +1725,127 @@ class DataReceiverController extends Controller
                 'request_data' => $request->all(),
             ]);
 
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Recebe progresso da importação de arquivo .txt do Monitoramento (enviado pelo n8n).
+     * Armazena em cache para o SSE ler e enviar ao frontend.
+     * NÃO edita banco de dados - apenas cache.
+     *
+     * POST /api/monitoramento/sped/importacao-txt/progress
+     *
+     * Payload esperado:
+     * {
+     *   "importacao_id": 123,
+     *   "status": "processando", // processando, concluido, erro
+     *   "total_cnpjs": 150,
+     *   "processados": 75,
+     *   "importados": 70,
+     *   "duplicados": 5
+     * }
+     */
+    public function receiveImportacaoTxtProgress(Request $request)
+    {
+        try {
+            Log::info('Requisição recebida em receiveImportacaoTxtProgress', [
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'ip' => $request->ip(),
+                'headers' => [
+                    'x-api-token' => $request->hasHeader('X-API-Token') ? 'presente' : 'ausente',
+                    'content-type' => $request->header('Content-Type'),
+                ],
+                'body' => $request->all(),
+            ]);
+
+            // Verifica autenticação via token
+            if (!$this->isTokenValid($request)) {
+                Log::warning('Token inválido em receiveImportacaoTxtProgress');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Token de API inválido.',
+                ], Response::HTTP_UNAUTHORIZED);
+            }
+
+            // Validar payload
+            $validated = $request->validate([
+                'importacao_id' => 'required|integer',
+                'status' => 'required|in:processando,concluido,erro',
+                'total_cnpjs' => 'sometimes|integer|min:0',
+                'processados' => 'sometimes|integer|min:0',
+                'importados' => 'sometimes|integer|min:0',
+                'duplicados' => 'sometimes|integer|min:0',
+                'error_message' => 'sometimes|string|max:500',
+            ]);
+
+            $importacaoId = $validated['importacao_id'];
+            $cacheKey = "importacao_progresso_{$importacaoId}";
+
+            // Extrair valores com defaults
+            $total = $validated['total_cnpjs'] ?? 0;
+            $processados = $validated['processados'] ?? 0;
+            $importados = $validated['importados'] ?? 0;
+            $duplicados = $validated['duplicados'] ?? 0;
+
+            // Calcular porcentagem
+            $porcentagem = $total > 0 ? (int) round(($processados / $total) * 100) : 0;
+
+            // Dados para cache
+            $cacheData = [
+                'status' => $validated['status'],
+                'total_cnpjs' => $total,
+                'processados' => $processados,
+                'importados' => $importados,
+                'duplicados' => $duplicados,
+                'porcentagem' => $porcentagem,
+                'updated_at' => now()->toIso8601String(),
+            ];
+
+            // Se houver mensagem de erro, incluir
+            if (!empty($validated['error_message'])) {
+                $cacheData['error_message'] = $validated['error_message'];
+            }
+
+            // Armazena em cache (expira em 10 minutos)
+            Cache::put($cacheKey, $cacheData, 600);
+
+            Log::info('Progresso de importação armazenado em cache', [
+                'importacao_id' => $importacaoId,
+                'cache_key' => $cacheKey,
+                'status' => $validated['status'],
+                'porcentagem' => $porcentagem,
+                'processados' => $processados,
+                'total' => $total,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Progresso atualizado.',
+                'porcentagem' => $porcentagem,
+            ], Response::HTTP_OK);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Erro de validação em receiveImportacaoTxtProgress', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro de validação.',
+                'errors' => $e->errors(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        } catch (\Exception $e) {
+            Log::error('Erro inesperado em receiveImportacaoTxtProgress', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all(),
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
