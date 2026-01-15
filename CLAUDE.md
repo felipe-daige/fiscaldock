@@ -474,6 +474,34 @@ $webhookUrl = config('services.webhook.monitoramento_importacao_txt_url');
 
 **IMPORTANTE:** Laravel NAO edita banco durante importacao. n8n faz todas as operacoes de banco e envia progresso para Laravel armazenar em cache. O SSE le do cache e envia para o frontend.
 
+### Consulta Avulsa
+
+Permite consultar um CNPJ individual sem necessidade de arquivo SPED.
+
+**Rota:** `GET /app/monitoramento/avulso`
+
+**Formulario:**
+- **CNPJ**: CNPJ a ser consultado (obrigatorio)
+- **Cliente**: Associar participante a um cliente (opcional)
+- **Tipo de Consulta**: Plano de consulta (basico, cadastral+, fiscal_federal, fiscal_completo, due_diligence)
+
+**Planos Disponiveis:**
+| Plano | Creditos | Consultas Incluidas |
+|-------|----------|---------------------|
+| Basico | Gratis | Situacao cadastral + Simples Nacional |
+| Cadastral+ | 3 | CNPJ completo + SINTEGRA + IE |
+| Fiscal Federal | 6 | CND Federal + FGTS |
+| Fiscal Completo | 12 | Federal + Estadual + CNDT |
+| Due Diligence | 18 | Completo + Protestos + Processos |
+
+**Controller:** `MonitoramentoController::consultaAvulsa()` (GET) e `executarConsultaAvulsa()` (POST)
+
+**Dados passados para view:**
+- `$planos`: Planos de monitoramento ativos
+- `$credits`: Saldo de creditos do usuario
+- `$participantes`: Lista dos ultimos 50 participantes do usuario
+- `$clientes`: Clientes ativos do usuario para associacao opcional
+
 ## Development Patterns
 
 ### Laravel-n8n Integration Pattern

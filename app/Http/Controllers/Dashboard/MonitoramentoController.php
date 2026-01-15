@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\Cliente;
 use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoConsulta;
 use App\Models\MonitoramentoPlano;
@@ -128,9 +129,16 @@ class MonitoramentoController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        // Buscar clientes ativos do usuário para o select de associação
+        $clientes = Cliente::where('user_id', $userId)
+            ->where('ativo', true)
+            ->orderBy('razao_social')
+            ->get();
+
         $data = [
             'relatorios' => $relatorios,
             'credits' => $this->creditService->getBalance($user),
+            'clientes' => $clientes,
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -159,10 +167,25 @@ class MonitoramentoController extends Controller
         }
 
         $user = Auth::user();
+        $userId = (int) $user->id;
+
+        // Buscar participantes do usuário para lista
+        $participantes = Participante::where('user_id', $userId)
+            ->orderBy('updated_at', 'desc')
+            ->limit(50)
+            ->get();
+
+        // Buscar clientes ativos do usuário para o select de associação
+        $clientes = Cliente::where('user_id', $userId)
+            ->where('ativo', true)
+            ->orderBy('razao_social')
+            ->get();
 
         $data = [
             'planos' => MonitoramentoPlano::ativos(),
             'credits' => $this->creditService->getBalance($user),
+            'participantes' => $participantes,
+            'clientes' => $clientes,
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -1390,11 +1413,26 @@ class MonitoramentoController extends Controller
         $request->validate([
             'arquivo' => 'required|file|max:10240', // Máximo 10MB
             'tipo_efd' => 'required|in:EFD Fiscal,EFD Contribuições',
+            'cliente_id' => 'nullable|integer',
         ]);
 
         $user = Auth::user();
         $arquivo = $request->file('arquivo');
         $webhookUrl = config('services.webhook.monitoramento_importacao_txt_url');
+
+        // Validar que o cliente pertence ao usuário (se fornecido)
+        $clienteId = $request->input('cliente_id');
+        if ($clienteId) {
+            $cliente = Cliente::where('id', $clienteId)
+                ->where('user_id', $user->id)
+                ->first();
+            if (!$cliente) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Cliente não encontrado ou não pertence ao usuário.',
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        }
 
         if (empty($webhookUrl)) {
             Log::error('Webhook URL para importação .txt não configurada (WEBHOOK_MONITORAMENTO_IMPORTACAO_TXT_URL)');
@@ -1412,6 +1450,7 @@ class MonitoramentoController extends Controller
                 'filename' => $arquivo->getClientOriginalName(),
                 'file_base64' => base64_encode(file_get_contents($arquivo->path())),
                 'progress_url' => url('/api/monitoramento/sped/importacao-txt/progress'),
+                'cliente_id' => $clienteId,
             ]);
 
             if (!$response->successful()) {
@@ -1433,6 +1472,7 @@ class MonitoramentoController extends Controller
                 'user_id' => $user->id,
                 'filename' => $arquivo->getClientOriginalName(),
                 'importacao_id' => $importacaoId,
+                'cliente_id' => $clienteId,
             ]);
 
             return response()->json([

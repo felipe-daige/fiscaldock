@@ -70,6 +70,29 @@
                             </div>
                         </div>
 
+                        {{-- Seleção de Cliente (Opcional) --}}
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Associar a um Cliente: <span class="text-gray-400 font-normal">(opcional)</span>
+                            </label>
+                            <select
+                                id="cliente-select"
+                                name="cliente_id"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            >
+                                <option value="">Nao associar a um cliente</option>
+                                @foreach($clientes ?? [] as $cliente)
+                                    <option value="{{ $cliente->id }}">
+                                        {{ $cliente->razao_social ?? $cliente->nome }}
+                                        ({{ preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $cliente->documento) }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Associe os participantes importados a um cliente para melhor organizacao.
+                            </p>
+                        </div>
+
                         {{-- Instruções --}}
                         <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                             <div class="flex items-start gap-2 mb-3">
@@ -80,7 +103,7 @@
                             </div>
                             <div class="space-y-2 text-xs text-blue-800">
                                 <div>
-                                    <strong class="text-blue-900">Formato:</strong> Um CNPJ por linha (apenas números, 14 dígitos).
+                                    <strong class="text-blue-900">Formato:</strong> Um CNPJ por linha (apenas numeros, 14 digitos).
                                 </div>
                                 <div>
                                     <strong class="text-blue-900">Exemplo:</strong>
@@ -1249,6 +1272,12 @@
                     const formData = new FormData();
                     formData.append('arquivo', txtFileInput.files[0]);
                     formData.append('tipo_efd', tipoSped === 'efd-fiscal' ? 'EFD Fiscal' : 'EFD Contribuições');
+
+                    // Incluir cliente_id se selecionado
+                    const clienteSelect = document.getElementById('cliente-select');
+                    if (clienteSelect && clienteSelect.value) {
+                        formData.append('cliente_id', clienteSelect.value);
+                    }
 
                     // Enviar arquivo para Laravel
                     const response = await fetch('/app/monitoramento/importar-txt', {
