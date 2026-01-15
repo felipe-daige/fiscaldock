@@ -783,7 +783,7 @@ class SpedUploadService
     /**
      * Retorna a URL do webhook baseado no tipo de SPED e modalidade.
      *
-     * @throws \InvalidArgumentException Se a modalidade for inválida
+     * @throws \InvalidArgumentException Se a modalidade ou webhook não estiverem configurados
      */
     private function getWebhookUrl(string $tipo, string $modalidade): string
     {
@@ -794,33 +794,35 @@ class SpedUploadService
 
         // RAF Completo: CND + Regime Tributário (modalidade paga)
         if ($modalidade === 'completa') {
-            return match ($tipo) {
-                'EFD Fiscal' => config('services.webhook.sped_fiscal_completa_url')
-                    ?: 'https://autowebhook.fiscaldock.com.br/webhook/raf-consulta-completa-sped-fiscal',
-                'EFD Contribuições' => config('services.webhook.sped_contribuicoes_completa_url')
-                    ?: 'https://autowebhook.fiscaldock.com.br/webhook/raf-consulta-completa-sped-contribuicoes',
-                default => config('services.webhook.sped_contribuicoes_completa_url')
-                    ?: 'https://autowebhook.fiscaldock.com.br/webhook/raf-consulta-completa-sped-contribuicoes',
+            $url = match ($tipo) {
+                'EFD Fiscal' => config('services.webhook.sped_fiscal_completa_url'),
+                'EFD Contribuições' => config('services.webhook.sped_contribuicoes_completa_url'),
+                default => config('services.webhook.sped_contribuicoes_completa_url'),
+            };
+        } else {
+            // RAF Gratuito: apenas Regime Tributário (modalidade gratuita)
+            $url = match ($tipo) {
+                'EFD Fiscal' => config('services.webhook.sped_fiscal_url'),
+                'EFD Contribuições' => config('services.webhook.sped_contribuicoes_url'),
+                default => config('services.webhook.sped_contribuicoes_url'),
             };
         }
 
-        // RAF Gratuito: apenas Regime Tributário (modalidade gratuita)
-        $url = match ($tipo) {
-            'EFD Fiscal' => config('services.webhook.sped_fiscal_url')
-                ?: 'https://autowebhook.fiscaldock.com.br/webhook/raf-consulta-gratuita-sped-fiscal',
-            'EFD Contribuições' => config('services.webhook.sped_contribuicoes_url')
-                ?: 'https://autowebhook.fiscaldock.com.br/webhook/raf-consulta-gratuita-sped-contribuicoes',
-            default => config('services.webhook.sped_contribuicoes_url')
-                ?: 'https://autowebhook.fiscaldock.com.br/webhook/raf-consulta-gratuita-sped-contribuicoes',
-        };
-        
-        Log::debug('getWebhookUrl - RAF Gratuito', [
+        // Webhook não configurado
+        if (empty($url)) {
+            Log::error('Webhook não configurado no .env', [
+                'tipo' => $tipo,
+                'modalidade' => $modalidade,
+            ]);
+            throw new \InvalidArgumentException('Webhook não configurado. Verifique as variáveis de ambiente.');
+        }
+
+        Log::debug('getWebhookUrl', [
             'tipo' => $tipo,
             'modalidade' => $modalidade,
-            'config_value' => $tipo === 'EFD Fiscal' ? config('services.webhook.sped_fiscal_url') : config('services.webhook.sped_contribuicoes_url'),
-            'url_retornada' => $url,
+            'url' => $url,
         ]);
-        
+
         return $url;
     }
 }

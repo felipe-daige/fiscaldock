@@ -1394,13 +1394,13 @@ class MonitoramentoController extends Controller
 
         $user = Auth::user();
         $arquivo = $request->file('arquivo');
-        $webhookUrl = env('n8n_importacao_txt_webhook_url');
+        $webhookUrl = config('services.webhook.monitoramento_importacao_txt_url');
 
         if (empty($webhookUrl)) {
-            Log::error('Webhook URL para importação .txt não configurada');
+            Log::error('Webhook URL para importação .txt não configurada (WEBHOOK_MONITORAMENTO_IMPORTACAO_TXT_URL)');
             return response()->json([
                 'success' => false,
-                'error' => 'Serviço de importação não configurado.',
+                'error' => 'Serviço de importação não configurado. Verifique as variáveis de ambiente.',
             ], Response::HTTP_SERVICE_UNAVAILABLE);
         }
 
