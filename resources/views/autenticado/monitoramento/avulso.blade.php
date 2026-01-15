@@ -225,6 +225,33 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- Detalhes dos planos --}}
+                    <div class="border-t border-gray-200 pt-4 mt-4">
+                        <h4 class="text-sm font-semibold text-gray-900 mb-3">O que cada plano consulta</h4>
+                        <div class="space-y-3 text-xs">
+                            <div>
+                                <p class="font-medium text-gray-900">Basico (Gratis)</p>
+                                <p class="text-gray-500">Situacao cadastral RFB + Simples Nacional</p>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">Cadastral+ (3 cred.)</p>
+                                <p class="text-gray-500">CNPJ completo + SINTEGRA + Inscricao Estadual</p>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">Fiscal Federal (6 cred.)</p>
+                                <p class="text-gray-500">CND Conjunta PGFN/RFB + CRF FGTS</p>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">Fiscal Completo (12 cred.)</p>
+                                <p class="text-gray-500">+ CND Estadual + CNDT Trabalhista</p>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">Due Diligence (18 cred.)</p>
+                                <p class="text-gray-500">+ Protestos + Processos judiciais</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
