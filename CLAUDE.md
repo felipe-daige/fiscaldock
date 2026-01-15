@@ -251,10 +251,30 @@ Critical `.env` variables:
 - `APP_KEY`: Must be generated with `php artisan key:generate`
 
 **n8n Webhook URLs (required for processing):**
-- `n8n_gratuito_efd_fiscal_webhook_url`: Free tax regime analysis (EFD Fiscal)
-- `n8n_gratuito_efd_contrib_webhook_url`: Free tax regime analysis (EFD Contribuições)
-- `n8n_completa_efd_fiscal_webhook_url`: Complete analysis with CND (EFD Fiscal)
-- `n8n_completa_efd_contrib_webhook_url`: Complete analysis with CND (EFD Contribuições)
+
+All webhook URLs are configured via `.env` and accessed via `config('services.webhook.*')`:
+
+```env
+# RAF - Consulta Gratuita (apenas regime tributário)
+WEBHOOK_SPED_CONTRIBUICOES_URL=https://your-n8n.example.com/webhook/...
+WEBHOOK_SPED_FISCAL_URL=https://your-n8n.example.com/webhook/...
+
+# RAF - Consulta Completa (CND + regime tributário)
+WEBHOOK_SPED_CONTRIBUICOES_COMPLETA_URL=https://your-n8n.example.com/webhook/...
+WEBHOOK_SPED_FISCAL_COMPLETA_URL=https://your-n8n.example.com/webhook/...
+
+# Monitoramento - Importação de arquivo .txt
+WEBHOOK_MONITORAMENTO_IMPORTACAO_TXT_URL=https://your-n8n.example.com/webhook/...
+
+# Credenciais (se necessário)
+WEBHOOK_SPED_USERNAME=
+WEBHOOK_SPED_PASSWORD=
+
+# Token para APIs internas (n8n -> Laravel)
+API_TOKEN=your-secure-token
+```
+
+**Security Note:** Webhook URLs have NO default values in `config/services.php`. This prevents accidental exposure of internal URLs if the repository becomes public. All URLs MUST be configured in `.env`.
 
 Without these webhooks, Laravel cannot process SPED files (it only coordinates, doesn't process).
 
@@ -421,7 +441,12 @@ POST /api/monitoramento/sped/importacao-txt/progress
 
 **Variavel de Ambiente:**
 ```env
-n8n_importacao_txt_webhook_url=https://n8n.example.com/webhook/importacao-txt
+WEBHOOK_MONITORAMENTO_IMPORTACAO_TXT_URL=https://n8n.example.com/webhook/importacao-txt
+```
+
+**Acesso no código:**
+```php
+$webhookUrl = config('services.webhook.monitoramento_importacao_txt_url');
 ```
 
 **Payload para n8n:**
@@ -516,12 +541,25 @@ $result = $this->spedUploadService->uploadAndProcess(
 
 ### Webhook URLs
 Different n8n webhooks for different operations:
-- Gratuito EFD Fiscal: `n8n_gratuito_efd_fiscal_webhook_url`
-- Gratuito EFD Contribuições: `n8n_gratuito_efd_contrib_webhook_url`
-- Completa EFD Fiscal: `n8n_completa_efd_fiscal_webhook_url`
-- Completa EFD Contribuições: `n8n_completa_efd_contrib_webhook_url`
 
-Stored in `.env` and accessed via `env()` in `SpedUploadService`.
+| Operation | Config Key | Env Variable |
+|-----------|------------|--------------|
+| RAF Gratuito (EFD Fiscal) | `services.webhook.sped_fiscal_url` | `WEBHOOK_SPED_FISCAL_URL` |
+| RAF Gratuito (EFD Contribuições) | `services.webhook.sped_contribuicoes_url` | `WEBHOOK_SPED_CONTRIBUICOES_URL` |
+| RAF Completa (EFD Fiscal) | `services.webhook.sped_fiscal_completa_url` | `WEBHOOK_SPED_FISCAL_COMPLETA_URL` |
+| RAF Completa (EFD Contribuições) | `services.webhook.sped_contribuicoes_completa_url` | `WEBHOOK_SPED_CONTRIBUICOES_COMPLETA_URL` |
+| Monitoramento Importação .txt | `services.webhook.monitoramento_importacao_txt_url` | `WEBHOOK_MONITORAMENTO_IMPORTACAO_TXT_URL` |
+
+**Access Pattern:**
+```php
+// Always use config(), never env() directly
+$url = config('services.webhook.sped_fiscal_url');
+
+// SpedUploadService handles webhook selection automatically
+$this->spedUploadService->uploadAndProcess(...);
+```
+
+**Important:** If a webhook URL is not configured, `SpedUploadService::getWebhookUrl()` throws an `InvalidArgumentException` instead of using fallback URLs.
 
 ### SSE Notifications
 Real-time updates use Server-Sent Events (vanilla EventSource API):
