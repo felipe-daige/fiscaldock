@@ -30,7 +30,7 @@ return new class extends Migration
         });
 
         // Tabela de grupos de participantes
-        Schema::create('participante_grupos', function (Blueprint $table) {
+        Schema::create('participantes_grupos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('nome');
@@ -43,12 +43,12 @@ return new class extends Migration
         });
 
         // Tabela pivot para relação many-to-many
-        Schema::create('participante_grupo_participante', function (Blueprint $table) {
+        Schema::create('participantes_grupos_pivot', function (Blueprint $table) {
             $table->foreignId('participante_id')->constrained('participantes')->onDelete('cascade');
-            $table->foreignId('participante_grupo_id')->constrained('participante_grupos')->onDelete('cascade');
+            $table->foreignId('participantes_grupo_id')->constrained('participantes_grupos')->onDelete('cascade');
             $table->timestamps();
 
-            $table->primary(['participante_id', 'participante_grupo_id'], 'participante_grupo_pk');
+            $table->primary(['participante_id', 'participantes_grupo_id'], 'participantes_grupos_pivot_pk');
         });
     }
 
@@ -57,8 +57,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('participante_grupo_participante');
-        Schema::dropIfExists('participante_grupos');
+        Schema::dropIfExists('participantes_grupos_pivot');
+        Schema::dropIfExists('participantes_grupos');
         Schema::dropIfExists('participantes');
     }
 };

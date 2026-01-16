@@ -69,7 +69,7 @@ class Participante extends Model
      */
     public function grupos(): BelongsToMany
     {
-        return $this->belongsToMany(ParticipanteGrupo::class, 'participante_grupo_participante')
+        return $this->belongsToMany(ParticipanteGrupo::class, 'participantes_grupos_pivot', 'participante_id', 'participantes_grupo_id')
             ->withTimestamps();
     }
 
