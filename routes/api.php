@@ -13,11 +13,6 @@ Route::post('/data/receive', [DataReceiverController::class, 'receive'])
 Route::post('/data/receive/raf/csvfile', [DataReceiverController::class, 'receiveCsv'])
     ->name('api.data.receive.raf.csvfile');
 
-// Rota para receber participantes do RAF do n8n
-// Aceita autenticação via token API (para n8n)
-Route::post('/data/receive/raf/participantes', [DataReceiverController::class, 'receiveRafParticipantes'])
-    ->name('api.data.receive.raf.participantes');
-
 // Rota para buscar CSV do banco de dados por ID do relatório
 // Requer autenticação via sessão (web middleware)
 Route::get('/data/csv/{id}', [DataReceiverController::class, 'getCsv'])
