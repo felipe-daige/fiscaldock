@@ -38,10 +38,6 @@
 
         {{-- Seção Importar de Arquivo .txt --}}
         <div class="mb-6">
-            <div class="mb-4">
-                <h2 class="text-lg font-semibold text-gray-900">Importar de Lista de CNPJs</h2>
-                <p class="text-sm text-gray-600 mt-1">Envie um arquivo .txt com os CNPJs que deseja monitorar.</p>
-            </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {{-- Card Upload (Esquerdo) --}}
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
@@ -198,12 +194,47 @@
                             <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            <h3 class="text-base font-semibold text-gray-900">Sobre o Monitoramento</h3>
+                            <h3 class="text-base font-semibold text-gray-900">Como Funciona</h3>
                         </div>
                     </div>
                 <div class="p-6 space-y-6">
-                    {{-- Seção Planos Disponíveis --}}
+                    {{-- Seção Como Funciona --}}
                     <div>
+                        <h4 class="text-sm font-semibold text-gray-900 mb-3">Como Funciona</h4>
+                        <div class="space-y-4">
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">1</div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">Importação</p>
+                                    <p class="text-xs text-gray-500">Adicione CNPJs via arquivo EFD (SPED) .txt ou a partir de relatórios RAF já processados.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">2</div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">Consultas</p>
+                                    <p class="text-xs text-gray-500">Execute consultas avulsas ou configure frequência automática (semanal, mensal ou trimestral).</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">3</div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">Alertas</p>
+                                    <p class="text-xs text-gray-500">Receba notificações sobre alterações na situação cadastral ou fiscal dos CNPJs.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold">4</div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">Histórico</p>
+                                    <p class="text-xs text-gray-500">Consulte o histórico completo de cada CNPJ monitorado.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Seção Planos Disponíveis --}}
+                    <div class="pt-4 border-t border-gray-200">
                         <h4 class="text-sm font-semibold text-gray-900 mb-3">Planos Disponíveis</h4>
                         <div class="space-y-2">
                             <div class="p-3 rounded-lg border border-gray-200 bg-gray-50">
@@ -211,74 +242,35 @@
                                     <span class="text-xs font-semibold text-gray-900">Básico</span>
                                     <span class="text-xs font-medium text-green-600">Grátis</span>
                                 </div>
-                                <p class="text-xs text-gray-600">Situação + Simples Nacional</p>
+                                <p class="text-xs text-gray-600">Situacao Cadastral RFB + Simples Nacional</p>
                             </div>
                             <div class="p-3 rounded-lg border border-gray-200 bg-white">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs font-semibold text-gray-900">Cadastral+</span>
                                     <span class="text-xs font-medium text-blue-600">3 créditos</span>
                                 </div>
-                                <p class="text-xs text-gray-600">CNPJ + SINTEGRA + IE</p>
+                                <p class="text-xs text-gray-600">Inclui tudo do Básico + CNPJ Completo + SINTEGRA + Inscricao Estadual</p>
                             </div>
                             <div class="p-3 rounded-lg border border-gray-200 bg-white">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs font-semibold text-gray-900">Fiscal Federal</span>
                                     <span class="text-xs font-medium text-blue-600">6 créditos</span>
                                 </div>
-                                <p class="text-xs text-gray-600">CND Federal + FGTS</p>
+                                <p class="text-xs text-gray-600">Inclui tudo do Cadastral+ + CND Federal (PGFN) + CRF FGTS</p>
                             </div>
                             <div class="p-3 rounded-lg border border-gray-200 bg-white">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs font-semibold text-gray-900">Fiscal Completo</span>
                                     <span class="text-xs font-medium text-blue-600">12 créditos</span>
                                 </div>
-                                <p class="text-xs text-gray-600">Federal + Estadual + CNDT</p>
+                                <p class="text-xs text-gray-600">Inclui tudo do Fiscal Federal + CND Estadual + CNDT Trabalhista</p>
                             </div>
                             <div class="p-3 rounded-lg border border-gray-200 bg-white">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs font-semibold text-gray-900">Due Diligence</span>
                                     <span class="text-xs font-medium text-purple-600">18 créditos</span>
                                 </div>
-                                <p class="text-xs text-gray-600">Completo + Protestos + Processos</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Seção Como Funciona --}}
-                    <div class="pt-4 border-t border-gray-200">
-                        <h4 class="text-sm font-semibold text-gray-900 mb-3">Como Funciona</h4>
-                        <div class="space-y-3">
-                            <div class="flex items-start gap-2">
-                                <svg class="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                                <p class="text-xs text-gray-600">
-                                    <strong class="text-gray-900">Importação:</strong> Adicione CNPJs via arquivo .txt ou a partir de relatórios RAF já processados.
-                                </p>
-                            </div>
-                            <div class="flex items-start gap-2">
-                                <svg class="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                                <p class="text-xs text-gray-600">
-                                    <strong class="text-gray-900">Consultas:</strong> Execute consultas avulsas ou configure frequência automática (diária, semanal, mensal).
-                                </p>
-                            </div>
-                            <div class="flex items-start gap-2">
-                                <svg class="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                                <p class="text-xs text-gray-600">
-                                    <strong class="text-gray-900">Alertas:</strong> Receba notificações sobre alterações na situação cadastral ou fiscal dos CNPJs.
-                                </p>
-                            </div>
-                            <div class="flex items-start gap-2">
-                                <svg class="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                                <p class="text-xs text-gray-600">
-                                    <strong class="text-gray-900">Histórico:</strong> Consulte o histórico completo de cada CNPJ monitorado.
-                                </p>
+                                <p class="text-xs text-gray-600">Inclui tudo do Fiscal Completo + Protestos + Processos Judiciais</p>
                             </div>
                         </div>
                     </div>
