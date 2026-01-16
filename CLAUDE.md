@@ -23,28 +23,43 @@ This application follows a strict architectural division:
 - **Laravel's Role (Lightweight):**
   - User authentication and session management
   - Request coordination and API endpoints
-  - Database reads and simple writes
+  - Database reads (SELECT only)
   - Credit management and business rules
   - Data presentation via Blade templates
   - Triggering n8n workflows via webhooks
 
-- **n8n's Role (Heavy Processing):**
+- **n8n's Role (Heavy Processing + Database Writes):**
   - SPED file parsing and analysis
   - Tax regime consultations with government APIs
   - CND (Certidão Negativa de Débitos) checks
   - Monthly system data updates
   - All time-consuming processing tasks
   - External API integrations
+  - **ALL database writes (INSERT, UPDATE, DELETE)** via direct PostgreSQL connection
+
+**Database Access Pattern:**
+```
+┌─────────────┐         ┌─────────────┐         ┌─────────────┐
+│   Laravel   │ ◄────── │ PostgreSQL  │ ◄────── │    n8n      │
+│  (SELECT)   │         │   (banco)   │         │  (INSERT/   │
+│             │         │             │         │   UPDATE)   │
+└─────────────┘         └─────────────┘         └─────────────┘
+```
+
+**Exceptions (Laravel can write):**
+- `RafConsultaPendente` - created when user uploads SPED (triggers n8n)
+- `ImportacaoParticipante` - created for tracking import progress
+- User session/authentication data
 
 **When Building New Features:**
 - DO NOT implement heavy processing in Laravel
-- DO NOT add complex business logic that should be in n8n
+- DO NOT add database writes in Laravel (n8n handles all writes)
 - DO coordinate with n8n for any data-intensive operations
 - DO keep Laravel focused on user requests and data display
 - DO use webhooks to trigger n8n workflows
-- DO store results from n8n in the database for Laravel to display
+- n8n writes results directly to PostgreSQL, Laravel only reads
 
-Laravel is the platform where users order data; n8n is the engine that generates it.
+Laravel is the platform where users order data; n8n is the engine that generates and stores it.
 
 ## Development Commands
 
@@ -196,7 +211,6 @@ Two authentication methods:
 API routes (`routes/api.php`):
 - `/api/data/receive`: Receives processed data from n8n
 - `/api/data/receive/raf/csvfile`: Receives CSV reports (base64 encoded)
-- `/api/data/receive/raf/participantes`: Receives RAF participants from n8n (batch insert)
 - `/api/data/csv/{id}`: Downloads CSV by report ID
 - `/api/raf/confirm`: Confirms credit usage
 - `/api/data/error`: Receives error notifications from n8n
@@ -310,24 +324,14 @@ raf_participantes
 - These tables are **independent** - RAF is history, Monitoramento is active tracking
 
 **n8n Integration:**
-```
-POST /api/data/receive/raf/participantes
-{
-  "raf_relatorio_processado_id": 123,
-  "participantes": [
-    {
-      "tipo_efd": "EFD Fiscal",
-      "modalidade": "completa",
-      "consultante_cnpj": "12345678000100",
-      "cnpj": "98765432000199",
-      "razao_social": "Fornecedor XYZ",
-      "situacao_cadastral": "ativa",
-      "regime_tributario": "Simples",
-      "cnd_situacao": "Regular",
-      ...
-    }
-  ]
-}
+n8n writes directly to PostgreSQL (not via Laravel API):
+```sql
+-- n8n inserts participants directly into raf_participantes
+INSERT INTO raf_participantes (
+  raf_relatorio_processado_id, user_id, tipo_efd, modalidade,
+  consultante_cnpj, cnpj, razao_social, situacao_cadastral,
+  regime_tributario, cnd_situacao, ...
+) VALUES (...);
 ```
 
 ### Monitoramento Module
