@@ -21,15 +21,30 @@
             </div>
         </div>
 
+        {{-- Info Box --}}
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div>
+                    <h3 class="text-sm font-semibold text-blue-900">Como funciona?</h3>
+                    <p class="text-sm text-blue-800 mt-1">
+                        Consulte a situacao cadastral e fiscal de CNPJs individualmente. Escolha o tipo de consulta e receba informacoes detalhadas sobre fornecedores e clientes.
+                    </p>
+                </div>
+            </div>
+        </div>
+
         {{-- Grid: Formulario + Info --}}
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 items-start">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 items-stretch">
             {{-- Card Esquerdo: Nova Consulta --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm h-full flex flex-col">
                 <div class="px-6 py-4 border-b border-gray-200">
                     <h2 class="text-lg font-semibold text-gray-900">Nova Consulta</h2>
                 </div>
-                <div class="p-6">
-                    <form id="form-consulta-avulsa">
+                <div class="p-6 flex-1 flex flex-col">
+                    <form id="form-consulta-avulsa" class="flex-1 flex flex-col">
                         {{-- Input CNPJ unico --}}
                         <div class="mb-4">
                             <label for="cnpj-input" class="block text-sm font-medium text-gray-700 mb-2">
@@ -155,7 +170,7 @@
             </div>
 
             {{-- Card Direito: Como Funciona --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm h-full flex flex-col">
                 <div class="px-6 py-4 border-b border-gray-200">
                     <div class="flex items-center gap-2">
                         <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,28 +179,30 @@
                         <h3 class="text-base font-semibold text-gray-900">Como Funciona</h3>
                     </div>
                 </div>
-                <div class="p-6">
+                <div class="p-6 flex-1 flex flex-col">
                     {{-- Passo a passo --}}
-                    <div class="space-y-4 mb-6">
+                    <div class="mb-6 flex-shrink-0">
+                        <h4 class="text-sm font-semibold text-gray-900 mb-3">Como Funciona</h4>
+                        <div class="space-y-4">
                         <div class="flex items-start gap-3">
                             <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">1</div>
                             <div>
                                 <p class="text-sm font-medium text-gray-900">Digite o CNPJ</p>
-                                <p class="text-xs text-gray-500">Informe o CNPJ do fornecedor ou cliente que deseja consultar</p>
+                                <p class="text-xs text-gray-500">Informe o CNPJ do fornecedor ou cliente que deseja consultar. Opcionalmente, associe a um cliente para melhor organizacao.</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
                             <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">2</div>
                             <div>
-                                <p class="text-sm font-medium text-gray-900">Associe a um cliente (opcional)</p>
-                                <p class="text-xs text-gray-500">Vincule o participante a um cliente para melhor organizacao</p>
+                                <p class="text-sm font-medium text-gray-900">Escolha o tipo de consulta</p>
+                                <p class="text-xs text-gray-500">Quanto mais completa, mais informacoes voce recebe</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
                             <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">3</div>
                             <div>
-                                <p class="text-sm font-medium text-gray-900">Escolha o tipo de consulta</p>
-                                <p class="text-xs text-gray-500">Quanto mais completa, mais informacoes voce recebe</p>
+                                <p class="text-sm font-medium text-gray-900">Notificações</p>
+                                <p class="text-xs text-gray-500">Configure frequencia automatica de consultas (semanal, mensal ou trimestral) e receba notificacoes sobre alteracoes</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
@@ -195,60 +212,56 @@
                                 <p class="text-xs text-gray-500">O participante sera adicionado a sua lista para futuras consultas</p>
                             </div>
                         </div>
-                    </div>
-
-                    {{-- Tabela de creditos compacta --}}
-                    <div class="border-t border-gray-200 pt-4">
-                        <h4 class="text-sm font-semibold text-gray-900 mb-2">Tabela de Creditos</h4>
-                        <div class="bg-gray-50 rounded-lg p-3">
-                            <div class="space-y-1.5 text-xs">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-700">Basico</span>
-                                    <span class="font-medium text-green-600">Gratis</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-700">Cadastral+</span>
-                                    <span class="font-medium text-gray-900">3 cred.</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-700">Fiscal Federal</span>
-                                    <span class="font-medium text-gray-900">6 cred.</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-700">Fiscal Completo</span>
-                                    <span class="font-medium text-gray-900">12 cred.</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-700">Due Diligence</span>
-                                    <span class="font-medium text-gray-900">18 cred.</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
                     {{-- Detalhes dos planos --}}
-                    <div class="border-t border-gray-200 pt-4 mt-4">
+                    <div class="border-t border-gray-200 pt-4 mt-4 flex-1 flex flex-col">
                         <h4 class="text-sm font-semibold text-gray-900 mb-3">O que cada plano consulta</h4>
-                        <div class="space-y-3 text-xs">
-                            <div>
-                                <p class="font-medium text-gray-900">Basico (Gratis)</p>
-                                <p class="text-gray-500">Situacao cadastral RFB + Simples Nacional</p>
+                        <div class="space-y-2 flex-1">
+                            {{-- Plano Basico --}}
+                            <div class="p-3 rounded-lg border border-gray-200 bg-gray-50">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-semibold text-gray-900">Basico</span>
+                                    <span class="text-xs font-medium text-green-600">Gratis</span>
+                                </div>
+                                <p class="text-xs text-gray-600">Situacao Cadastral RFB + Simples Nacional</p>
                             </div>
-                            <div>
-                                <p class="font-medium text-gray-900">Cadastral+ (3 cred.)</p>
-                                <p class="text-gray-500">CNPJ completo + SINTEGRA + Inscricao Estadual</p>
+
+                            {{-- Plano Cadastral+ --}}
+                            <div class="p-3 rounded-lg border border-gray-200 bg-white">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-semibold text-gray-900">Cadastral+</span>
+                                    <span class="text-xs font-medium text-blue-600">3 creditos</span>
+                                </div>
+                                <p class="text-xs text-gray-600">Inclui tudo do Basico + CNPJ Completo + SINTEGRA + Inscricao Estadual</p>
                             </div>
-                            <div>
-                                <p class="font-medium text-gray-900">Fiscal Federal (6 cred.)</p>
-                                <p class="text-gray-500">CND Conjunta PGFN/RFB + CRF FGTS</p>
+
+                            {{-- Plano Fiscal Federal --}}
+                            <div class="p-3 rounded-lg border border-gray-200 bg-white">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-semibold text-gray-900">Fiscal Federal</span>
+                                    <span class="text-xs font-medium text-blue-600">6 creditos</span>
+                                </div>
+                                <p class="text-xs text-gray-600">Inclui tudo do Cadastral+ + CND Federal (PGFN) + CRF FGTS</p>
                             </div>
-                            <div>
-                                <p class="font-medium text-gray-900">Fiscal Completo (12 cred.)</p>
-                                <p class="text-gray-500">+ CND Estadual + CNDT Trabalhista</p>
+
+                            {{-- Plano Fiscal Completo --}}
+                            <div class="p-3 rounded-lg border border-gray-200 bg-white">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-semibold text-gray-900">Fiscal Completo</span>
+                                    <span class="text-xs font-medium text-blue-600">12 creditos</span>
+                                </div>
+                                <p class="text-xs text-gray-600">Inclui tudo do Fiscal Federal + CND Estadual + CNDT Trabalhista</p>
                             </div>
-                            <div>
-                                <p class="font-medium text-gray-900">Due Diligence (18 cred.)</p>
-                                <p class="text-gray-500">+ Protestos + Processos judiciais</p>
+
+                            {{-- Plano Due Diligence --}}
+                            <div class="p-3 rounded-lg border border-gray-200 bg-white">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-semibold text-gray-900">Due Diligence</span>
+                                    <span class="text-xs font-medium text-purple-600">18 creditos</span>
+                                </div>
+                                <p class="text-xs text-gray-600">Inclui tudo do Fiscal Completo + Protestos + Processos Judiciais</p>
                             </div>
                         </div>
                     </div>
