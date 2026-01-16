@@ -11,7 +11,7 @@ class ParticipanteGrupo extends Model
 {
     use HasFactory;
 
-    protected $table = 'participante_grupos';
+    protected $table = 'participantes_grupos';
 
     protected $fillable = [
         'user_id',
@@ -52,7 +52,7 @@ class ParticipanteGrupo extends Model
      */
     public function participantes(): BelongsToMany
     {
-        return $this->belongsToMany(Participante::class, 'participante_grupo_participante')
+        return $this->belongsToMany(Participante::class, 'participantes_grupos_pivot', 'participantes_grupo_id', 'participante_id')
             ->withTimestamps();
     }
 
