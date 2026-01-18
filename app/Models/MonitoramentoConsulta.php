@@ -20,6 +20,9 @@ class MonitoramentoConsulta extends Model
         'tipo',
         'status',
         'resultado',
+        'situacao_geral',
+        'tem_pendencias',
+        'proxima_validade',
         'creditos_cobrados',
         'error_code',
         'error_message',
@@ -28,6 +31,8 @@ class MonitoramentoConsulta extends Model
 
     protected $casts = [
         'resultado' => 'array',
+        'tem_pendencias' => 'boolean',
+        'proxima_validade' => 'date',
         'creditos_cobrados' => 'integer',
         'executado_em' => 'datetime',
     ];
@@ -97,6 +102,30 @@ class MonitoramentoConsulta extends Model
     }
 
     /**
+     * Verifica se a situacao geral e regular.
+     */
+    public function isRegular(): bool
+    {
+        return $this->situacao_geral === 'regular';
+    }
+
+    /**
+     * Verifica se a situacao geral requer atencao.
+     */
+    public function isAtencao(): bool
+    {
+        return $this->situacao_geral === 'atencao';
+    }
+
+    /**
+     * Verifica se a situacao geral e irregular.
+     */
+    public function isIrregular(): bool
+    {
+        return $this->situacao_geral === 'irregular';
+    }
+
+    /**
      * Marca como processando.
      */
     public function marcarProcessando(): void
@@ -105,13 +134,20 @@ class MonitoramentoConsulta extends Model
     }
 
     /**
-     * Marca como sucesso com resultado.
+     * Marca como sucesso com resultado e campos de filtro.
      */
-    public function marcarSucesso(array $resultado): void
-    {
+    public function marcarSucesso(
+        array $resultado,
+        ?string $situacaoGeral = null,
+        bool $temPendencias = false,
+        ?string $proximaValidade = null
+    ): void {
         $this->update([
             'status' => 'sucesso',
             'resultado' => $resultado,
+            'situacao_geral' => $situacaoGeral,
+            'tem_pendencias' => $temPendencias,
+            'proxima_validade' => $proximaValidade,
             'executado_em' => now(),
         ]);
     }
@@ -135,5 +171,42 @@ class MonitoramentoConsulta extends Model
     public static function doUsuario(int $userId)
     {
         return static::where('user_id', $userId)->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Scope: consultas com pendencias.
+     */
+    public function scopeComPendencias($query)
+    {
+        return $query->where('tem_pendencias', true);
+    }
+
+    /**
+     * Scope: consultas por situacao geral.
+     */
+    public function scopePorSituacao($query, string $situacao)
+    {
+        return $query->where('situacao_geral', $situacao);
+    }
+
+    /**
+     * Scope: certidoes com validade proxima (dentro de X dias).
+     */
+    public function scopeValidadeProxima($query, int $dias = 30)
+    {
+        return $query->whereNotNull('proxima_validade')
+            ->where('proxima_validade', '<=', now()->addDays($dias));
+    }
+
+    /**
+     * Scope: ultima consulta por participante.
+     */
+    public function scopeUltimaPorParticipante($query)
+    {
+        return $query->whereIn('id', function ($subquery) {
+            $subquery->selectRaw('MAX(id)')
+                ->from('monitoramento_consultas')
+                ->groupBy('participante_id');
+        });
     }
 }

@@ -22,6 +22,7 @@ class Participante extends Model
         'nome_fantasia',
         'situacao_cadastral',
         'regime_tributario',
+        'uf',
         'origem_tipo',
         'origem_ref',
         'ultima_consulta_em',

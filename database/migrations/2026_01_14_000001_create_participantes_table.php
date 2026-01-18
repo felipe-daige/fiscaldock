@@ -21,6 +21,14 @@ return new class extends Migration
             $table->string('nome_fantasia')->nullable();
             $table->string('situacao_cadastral')->nullable();
             $table->string('regime_tributario')->nullable();
+            $table->string('cnpj_matriz', 14)->nullable()->index();
+            $table->string('inscricao_estadual')->nullable();
+            $table->string('suframa')->nullable();
+            $table->string('endereco')->nullable();
+            $table->string('numero')->nullable();
+            $table->string('complemento')->nullable();
+            $table->string('bairro')->nullable();
+            $table->string('codigo_municipal')->nullable();
             $table->string('origem_tipo'); // SPED_EFD_FISCAL, SPED_EFD_CONTRIB, NFE, NFSE, MANUAL
             $table->json('origem_ref')->nullable(); // {"raf_relatorio_id": 123}
             $table->timestamp('ultima_consulta_em')->nullable();

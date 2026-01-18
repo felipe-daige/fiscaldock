@@ -591,6 +591,11 @@
         console.log('[Monitoramento SPED] Inicializando...');
 
         const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+        // Identificador único por aba para isolar notificações SSE
+        const tabId = crypto.randomUUID ? crypto.randomUUID() :
+            (Date.now().toString(36) + Math.random().toString(36).substr(2));
+
         const modalVerParticipantes = document.getElementById('modal-ver-participantes');
         const modalConfirmarImportacao = document.getElementById('modal-confirmar-importacao');
         const participantesLista = document.getElementById('modal-participantes-lista');
@@ -1260,19 +1265,17 @@
                 txtImportarBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg> Enviando...';
 
                 try {
-                    // Preparar FormData
                     const formData = new FormData();
-                    formData.append('arquivo', txtFileInput.files[0]);
+                    formData.append('file', txtFileInput.files[0]);
                     formData.append('tipo_efd', tipoSped === 'efd-fiscal' ? 'EFD Fiscal' : 'EFD Contribuições');
+                    formData.append('tab_id', tabId);
 
-                    // Incluir cliente_id se selecionado
                     const clienteSelect = document.getElementById('cliente-select');
                     if (clienteSelect && clienteSelect.value) {
                         formData.append('cliente_id', clienteSelect.value);
                     }
 
-                    // Enviar arquivo para Laravel
-                    const response = await fetch('/app/monitoramento/importar-txt', {
+                    const response = await fetch('/app/sped/upload', {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': csrf,

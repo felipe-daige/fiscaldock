@@ -6,6 +6,7 @@ use App\Http\Controllers\Landing\LandingPageController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\RafController;
 use App\Http\Controllers\Dashboard\ClienteController;
+use App\Http\Controllers\SpedUploadController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -38,6 +39,8 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
     Route::get('/app/perfil', [DashboardController::class, 'perfil'])->name('app.perfil');
+
+    Route::post('/app/sped/upload', SpedUploadController::class)->name('sped.upload');
 
     // Rotas de créditos
     Route::prefix('app/credits')->name('app.credits.')->group(function () {
@@ -119,6 +122,12 @@ Route::middleware('auth')->group(function () {
         // Importação de arquivo .txt com SSE
         Route::post('/importar-txt', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'importarTxt'])->name('importar-txt');
         Route::get('/importacao/stream/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'streamImportacao'])->name('importacao.stream');
+
+        // SSE para acompanhar resultado de consultas em tempo real
+        Route::get('/consulta/stream', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'streamConsultas'])->name('consulta.stream');
+
+        // SSE para acompanhar progresso de processamento SPED em tempo real
+        Route::get('/progresso/stream', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'streamProgresso'])->name('progresso.stream');
 
         // Assinaturas
         Route::post('/assinatura', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'criarAssinatura'])->name('assinatura.criar');

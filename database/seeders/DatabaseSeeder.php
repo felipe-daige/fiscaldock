@@ -15,14 +15,20 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
+        // Criar usuário de teste
         User::factory()->create([
             'name' => 'Test',
             'sobrenome' => 'User',
             'telefone' => '(11) 99999-9999',
             'email' => 'test@example.com',
+            'credits' => 100,
         ]);
+
+        // Popular planos de monitoramento
+        $this->call(MonitoramentoPlanoSeeder::class);
+
+        // Popular dados mock de monitoramento (participantes, assinaturas, consultas)
+        $this->call(MonitoramentoMockDataSeeder::class);
     }
 }
 
