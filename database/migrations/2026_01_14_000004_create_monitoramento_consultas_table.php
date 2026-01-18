@@ -20,11 +20,18 @@ return new class extends Migration
             $table->enum('tipo', ['assinatura', 'avulso']);
             $table->enum('status', ['pendente', 'processando', 'sucesso', 'erro'])->default('pendente');
             $table->json('resultado')->nullable(); // Dados retornados pelo n8n
+            $table->enum('situacao_geral', ['regular', 'atencao', 'irregular'])->nullable();
+            $table->boolean('tem_pendencias')->default(false);
+            $table->date('proxima_validade')->nullable();
             $table->integer('creditos_cobrados')->default(0);
             $table->string('error_code')->nullable();
             $table->text('error_message')->nullable();
             $table->timestamp('executado_em')->nullable();
             $table->timestamps();
+
+            $table->index('situacao_geral');
+            $table->index('tem_pendencias');
+            $table->index('proxima_validade');
         });
     }
 

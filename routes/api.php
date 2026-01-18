@@ -34,3 +34,8 @@ Route::post('/data/error', [DataReceiverController::class, 'receiveError'])
 // n8n envia progresso para Laravel armazenar em cache (SSE lê do cache)
 Route::post('/monitoramento/sped/importacao-txt/progress', [DataReceiverController::class, 'receiveImportacaoTxtProgress'])
     ->name('api.monitoramento.sped.importacao-txt.progress');
+
+// Rota para receber resultado de consulta do Monitoramento
+// n8n envia resultado da consulta (ou pode escrever diretamente no PostgreSQL)
+Route::post('/monitoramento/consulta/resultado', [DataReceiverController::class, 'receiveMonitoramentoConsulta'])
+    ->name('api.monitoramento.consulta.resultado');

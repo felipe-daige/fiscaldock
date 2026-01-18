@@ -960,6 +960,7 @@ class MonitoramentoController extends Controller
         $user = Auth::user();
         $cnpjsInput = $request->input('cnpjs', '');
         $planoId = $request->input('plano_id');
+        $clienteId = $request->input('cliente_id');
 
         // Aceita string separada por vírgula, quebra de linha ou array
         if (is_string($cnpjsInput)) {
@@ -1004,17 +1005,38 @@ class MonitoramentoController extends Controller
             ], Response::HTTP_PAYMENT_REQUIRED);
         }
 
+        // Verificar se webhook está configurado
+        $webhookUrl = config('services.webhook.monitoramento_consulta_url');
+        if (empty($webhookUrl)) {
+            Log::warning('Webhook de monitoramento não configurado', [
+                'user_id' => $user->id,
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Serviço de consulta temporariamente indisponível. Tente novamente mais tarde.',
+            ], Response::HTTP_SERVICE_UNAVAILABLE);
+        }
+
         try {
             DB::beginTransaction();
 
             $consultasCriadas = [];
+            $consultasParaN8n = [];
 
             foreach ($cnpjs as $cnpj) {
                 // Criar ou buscar participante
                 $participante = Participante::firstOrCreate(
                     ['user_id' => $user->id, 'cnpj' => $cnpj],
-                    ['origem_tipo' => 'MANUAL']
+                    [
+                        'origem_tipo' => 'MANUAL',
+                        'cliente_id' => $clienteId,
+                    ]
                 );
+
+                // Se já existe mas não tem cliente associado, atualizar
+                if ($clienteId && !$participante->cliente_id) {
+                    $participante->update(['cliente_id' => $clienteId]);
+                }
 
                 // Criar consulta
                 $consulta = MonitoramentoConsulta::create([
@@ -1027,6 +1049,14 @@ class MonitoramentoController extends Controller
                 ]);
 
                 $consultasCriadas[] = $consulta->id;
+
+                // Preparar dados para envio ao n8n
+                $consultasParaN8n[] = [
+                    'consulta_id' => $consulta->id,
+                    'participante_id' => $participante->id,
+                    'cnpj' => $cnpj,
+                    'uf' => $participante->uf ?? null,
+                ];
             }
 
             // Descontar créditos
@@ -1044,14 +1074,15 @@ class MonitoramentoController extends Controller
                 'consultas' => $consultasCriadas,
             ]);
 
-            // TODO: Enviar para n8n webhook para processamento
-            // Por enquanto, apenas criamos os registros
+            // Enviar para n8n webhook para processamento
+            $this->enviarConsultasParaN8n($user, $plano, $consultasParaN8n);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Consulta iniciada para ' . count($cnpjs) . ' CNPJ(s). Os resultados serão processados em breve.',
                 'creditos_cobrados' => $totalCreditos,
                 'saldo_restante' => $this->creditService->getBalance($user),
+                'consultas_ids' => $consultasCriadas,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1064,6 +1095,59 @@ class MonitoramentoController extends Controller
                 'success' => false,
                 'message' => 'Erro ao processar consulta. Tente novamente.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Envia consultas para o n8n webhook para processamento.
+     * n8n fará as consultas às APIs e atualizará o banco diretamente.
+     */
+    private function enviarConsultasParaN8n($user, MonitoramentoPlano $plano, array $consultas): void
+    {
+        $webhookUrl = config('services.webhook.monitoramento_consulta_url');
+
+        if (empty($webhookUrl)) {
+            Log::warning('Webhook de monitoramento não configurado');
+            return;
+        }
+
+        try {
+            $payload = [
+                'user_id' => $user->id,
+                'plano_codigo' => $plano->codigo,
+                'plano_nome' => $plano->nome,
+                'consultas_incluidas' => $plano->consultas_incluidas ?? [],
+                'custo_creditos' => $plano->custo_creditos,
+                'consultas' => $consultas,
+                'callback_url' => url('/api/monitoramento/consulta/resultado'),
+                'timestamp' => now()->toIso8601String(),
+            ];
+
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                    'X-API-Token' => config('services.api.token'),
+                ])
+                ->post($webhookUrl, $payload);
+
+            if ($response->successful()) {
+                Log::info('Consultas enviadas para n8n com sucesso', [
+                    'user_id' => $user->id,
+                    'total_consultas' => count($consultas),
+                    'plano' => $plano->codigo,
+                ]);
+            } else {
+                Log::error('Erro ao enviar consultas para n8n', [
+                    'user_id' => $user->id,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Exceção ao enviar consultas para n8n', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -1414,6 +1498,7 @@ class MonitoramentoController extends Controller
             'arquivo' => 'required|file|max:10240', // Máximo 10MB
             'tipo_efd' => 'required|in:EFD Fiscal,EFD Contribuições',
             'cliente_id' => 'nullable|integer',
+            'tab_id' => 'nullable|string|max:36',
         ]);
 
         $user = Auth::user();
@@ -1451,6 +1536,7 @@ class MonitoramentoController extends Controller
                 'file_base64' => base64_encode(file_get_contents($arquivo->path())),
                 'progress_url' => url('/api/monitoramento/sped/importacao-txt/progress'),
                 'cliente_id' => $clienteId,
+                'tab_id' => $request->input('tab_id'),
             ]);
 
             if (!$response->successful()) {
@@ -1473,6 +1559,7 @@ class MonitoramentoController extends Controller
                 'filename' => $arquivo->getClientOriginalName(),
                 'importacao_id' => $importacaoId,
                 'cliente_id' => $clienteId,
+                'tab_id' => $request->input('tab_id'),
             ]);
 
             return response()->json([
@@ -1542,6 +1629,261 @@ class MonitoramentoController extends Controller
                     ob_flush();
                 }
                 flush();
+            }
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache',
+            'X-Accel-Buffering' => 'no',
+            'Connection' => 'keep-alive',
+        ]);
+    }
+
+    /**
+     * SSE para acompanhar resultado de consultas em tempo real.
+     * Verifica o banco de dados para consultas que foram concluídas.
+     *
+     * GET /app/monitoramento/consulta/stream
+     *
+     * Query params:
+     * - consultas: IDs das consultas separados por vírgula (ex: "1,2,3")
+     */
+    public function streamConsultas(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Usuário não autenticado.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = Auth::user();
+        $consultasIds = $request->query('consultas', '');
+
+        // Parse IDs das consultas
+        $ids = array_filter(array_map('intval', explode(',', $consultasIds)));
+
+        if (empty($ids)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Nenhuma consulta especificada.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        return response()->stream(function () use ($user, $ids) {
+            $tentativas = 0;
+            $maxTentativas = 300; // 5 minutos
+            $consultasConcluidas = [];
+
+            // Enviar comentário inicial
+            echo ": SSE connection established for monitoramento consultas\n\n";
+            if (ob_get_level() > 0) {
+                ob_flush();
+            }
+            flush();
+
+            while ($tentativas < $maxTentativas) {
+                try {
+                    // Buscar consultas que ainda estão pendentes ou processando
+                    $consultas = MonitoramentoConsulta::where('user_id', $user->id)
+                        ->whereIn('id', $ids)
+                        ->whereNotIn('id', $consultasConcluidas)
+                        ->get();
+
+                    foreach ($consultas as $consulta) {
+                        // Se a consulta foi concluída (sucesso ou erro)
+                        if (in_array($consulta->status, ['sucesso', 'erro'])) {
+                            $data = [
+                                'type' => $consulta->status === 'sucesso' ? 'consulta_sucesso' : 'consulta_erro',
+                                'consulta_id' => $consulta->id,
+                                'participante_id' => $consulta->participante_id,
+                                'status' => $consulta->status,
+                                'situacao_geral' => $consulta->situacao_geral,
+                                'tem_pendencias' => $consulta->tem_pendencias,
+                                'executado_em' => $consulta->executado_em?->toIso8601String(),
+                            ];
+
+                            if ($consulta->status === 'erro') {
+                                $data['error_code'] = $consulta->error_code;
+                                $data['error_message'] = $consulta->error_message;
+                            }
+
+                            echo "data: " . json_encode($data) . "\n\n";
+                            $consultasConcluidas[] = $consulta->id;
+
+                            Log::info('SSE: Consulta concluída notificada', [
+                                'user_id' => $user->id,
+                                'consulta_id' => $consulta->id,
+                                'status' => $consulta->status,
+                            ]);
+                        }
+                    }
+
+                    // Se todas as consultas foram concluídas, encerrar
+                    if (count($consultasConcluidas) >= count($ids)) {
+                        echo "data: " . json_encode(['type' => 'complete', 'message' => 'Todas as consultas concluídas']) . "\n\n";
+                        if (ob_get_level() > 0) {
+                            ob_flush();
+                        }
+                        flush();
+                        break;
+                    }
+
+                    if (ob_get_level() > 0) {
+                        ob_flush();
+                    }
+                    flush();
+
+                    sleep(2); // Verifica a cada 2 segundos
+                    $tentativas++;
+
+                    // Verificar se a conexão ainda está ativa
+                    if (connection_aborted()) {
+                        break;
+                    }
+                } catch (\Exception $e) {
+                    Log::error('SSE: Erro no stream de consultas', [
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    sleep(2);
+                    $tentativas++;
+                }
+            }
+
+            // Se chegou no limite, encerra
+            if ($tentativas >= $maxTentativas) {
+                echo "data: " . json_encode(['type' => 'timeout', 'error' => 'Tempo limite atingido']) . "\n\n";
+                if (ob_get_level() > 0) {
+                    ob_flush();
+                }
+                flush();
+            }
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache',
+            'X-Accel-Buffering' => 'no',
+            'Connection' => 'keep-alive',
+        ]);
+    }
+
+    /**
+     * SSE para acompanhar progresso de processamento SPED em tempo real.
+     * Lê dados do cache (enviados pelo n8n via API) isolados por user_id + tab_id.
+     *
+     * GET /app/monitoramento/progresso/stream?tab_id=xxx
+     *
+     * Este endpoint é usado pelo frontend para acompanhar o progresso da
+     * identificação de participantes em arquivos SPED. O n8n envia atualizações
+     * de progresso para /api/monitoramento/sped/importacao-txt/progress com
+     * user_id, tab_id, progresso (0-100), mensagem e status.
+     */
+    public function streamProgresso(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Usuário não autenticado.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $userId = auth()->id();
+        $tabId = $request->query('tab_id');
+
+        if (!$tabId) {
+            return response()->json([
+                'success' => false,
+                'error' => 'tab_id obrigatório.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Chave do cache: progresso:{user_id}:{tab_id}
+        $cacheKey = "progresso:{$userId}:{$tabId}";
+
+        Log::info('SSE streamProgresso iniciado', [
+            'user_id' => $userId,
+            'tab_id' => $tabId,
+            'cache_key' => $cacheKey,
+        ]);
+
+        return response()->stream(function () use ($cacheKey, $userId, $tabId) {
+            $tentativas = 0;
+            $maxTentativas = 300; // 5 minutos (300 segundos)
+
+            // Enviar comentário inicial
+            echo ": SSE connection established for progress stream (user:{$userId}, tab:{$tabId})\n\n";
+            if (ob_get_level() > 0) {
+                ob_flush();
+            }
+            flush();
+
+            while ($tentativas < $maxTentativas) {
+                try {
+                    // Lê dados do cache (n8n envia via API)
+                    $data = Cache::get($cacheKey);
+
+                    if ($data) {
+                        // Enviar dados de progresso
+                        echo "data: " . json_encode($data) . "\n\n";
+
+                        if (ob_get_level() > 0) {
+                            ob_flush();
+                        }
+                        flush();
+
+                        // Se status é final, encerrar a conexão
+                        if (in_array($data['status'] ?? '', ['concluido', 'erro'])) {
+                            Log::info('SSE streamProgresso: status final recebido', [
+                                'user_id' => $userId,
+                                'tab_id' => $tabId,
+                                'status' => $data['status'],
+                            ]);
+                            // Limpar cache após status final
+                            Cache::forget($cacheKey);
+                            break;
+                        }
+                    }
+
+                    // Verificar se a conexão ainda está ativa
+                    if (connection_aborted()) {
+                        Log::info('SSE streamProgresso: conexão abortada pelo cliente', [
+                            'user_id' => $userId,
+                            'tab_id' => $tabId,
+                        ]);
+                        break;
+                    }
+
+                    sleep(1);
+                    $tentativas++;
+
+                } catch (\Exception $e) {
+                    Log::error('SSE streamProgresso: erro no loop', [
+                        'user_id' => $userId,
+                        'tab_id' => $tabId,
+                        'error' => $e->getMessage(),
+                    ]);
+                    sleep(1);
+                    $tentativas++;
+                    if (connection_aborted()) {
+                        break;
+                    }
+                }
+            }
+
+            // Se chegou no limite, encerrar
+            if ($tentativas >= $maxTentativas) {
+                echo "data: " . json_encode([
+                    'status' => 'timeout',
+                    'progresso' => 0,
+                    'mensagem' => 'Tempo limite atingido. Tente novamente.',
+                ]) . "\n\n";
+                if (ob_get_level() > 0) {
+                    ob_flush();
+                }
+                flush();
+                Log::warning('SSE streamProgresso: timeout', [
+                    'user_id' => $userId,
+                    'tab_id' => $tabId,
+                ]);
             }
         }, 200, [
             'Content-Type' => 'text/event-stream',

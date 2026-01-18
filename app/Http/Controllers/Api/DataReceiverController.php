@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\MonitoramentoConsulta;
+use App\Models\Participante;
 use App\Models\User;
 use App\Models\RafConsultaPendente;
 use App\Models\RafRelatorioProcessado;
@@ -1590,16 +1592,25 @@ class DataReceiverController extends Controller
     }
 
     /**
-     * Recebe progresso da importação de arquivo .txt do Monitoramento (enviado pelo n8n).
+     * Recebe progresso da importação/processamento de arquivo SPED (enviado pelo n8n).
      * Armazena em cache para o SSE ler e enviar ao frontend.
      * NÃO edita banco de dados - apenas cache.
      *
      * POST /api/monitoramento/sped/importacao-txt/progress
      *
-     * Payload esperado:
+     * Payload esperado (novo formato - n8n controla 100% do progresso):
+     * {
+     *   "user_id": 1,
+     *   "tab_id": "550e8400-e29b-41d4-a716-446655440000",
+     *   "progresso": 45,
+     *   "mensagem": "Identificando participantes...",
+     *   "status": "processando"
+     * }
+     *
+     * Payload legado (ainda suportado para compatibilidade):
      * {
      *   "importacao_id": 123,
-     *   "status": "processando", // processando, concluido, erro
+     *   "status": "processando",
      *   "total_cnpjs": 150,
      *   "processados": 75,
      *   "importados": 70,
@@ -1629,62 +1640,25 @@ class DataReceiverController extends Controller
                 ], Response::HTTP_UNAUTHORIZED);
             }
 
-            // Validar payload
-            $validated = $request->validate([
-                'importacao_id' => 'required|integer',
-                'status' => 'required|in:processando,concluido,erro',
-                'total_cnpjs' => 'sometimes|integer|min:0',
-                'processados' => 'sometimes|integer|min:0',
-                'importados' => 'sometimes|integer|min:0',
-                'duplicados' => 'sometimes|integer|min:0',
-                'error_message' => 'sometimes|string|max:500',
-            ]);
+            // Detectar formato do payload (novo vs legado)
+            $hasNewFormat = $request->has('user_id') && $request->has('tab_id') && $request->has('progresso');
+            $hasLegacyFormat = $request->has('importacao_id');
 
-            $importacaoId = $validated['importacao_id'];
-            $cacheKey = "importacao_progresso_{$importacaoId}";
-
-            // Extrair valores com defaults
-            $total = $validated['total_cnpjs'] ?? 0;
-            $processados = $validated['processados'] ?? 0;
-            $importados = $validated['importados'] ?? 0;
-            $duplicados = $validated['duplicados'] ?? 0;
-
-            // Calcular porcentagem
-            $porcentagem = $total > 0 ? (int) round(($processados / $total) * 100) : 0;
-
-            // Dados para cache
-            $cacheData = [
-                'status' => $validated['status'],
-                'total_cnpjs' => $total,
-                'processados' => $processados,
-                'importados' => $importados,
-                'duplicados' => $duplicados,
-                'porcentagem' => $porcentagem,
-                'updated_at' => now()->toIso8601String(),
-            ];
-
-            // Se houver mensagem de erro, incluir
-            if (!empty($validated['error_message'])) {
-                $cacheData['error_message'] = $validated['error_message'];
+            if ($hasNewFormat) {
+                // Novo formato: n8n controla 100% do progresso
+                return $this->handleNewProgressFormat($request);
+            } elseif ($hasLegacyFormat) {
+                // Formato legado: compatibilidade com implementação anterior
+                return $this->handleLegacyProgressFormat($request);
+            } else {
+                Log::warning('Formato de payload não reconhecido em receiveImportacaoTxtProgress', [
+                    'request_data' => $request->all(),
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Formato de payload inválido. Use user_id+tab_id+progresso ou importacao_id.',
+                ], Response::HTTP_BAD_REQUEST);
             }
-
-            // Armazena em cache (expira em 10 minutos)
-            Cache::put($cacheKey, $cacheData, 600);
-
-            Log::info('Progresso de importação armazenado em cache', [
-                'importacao_id' => $importacaoId,
-                'cache_key' => $cacheKey,
-                'status' => $validated['status'],
-                'porcentagem' => $porcentagem,
-                'processados' => $processados,
-                'total' => $total,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Progresso atualizado.',
-                'porcentagem' => $porcentagem,
-            ], Response::HTTP_OK);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::warning('Erro de validação em receiveImportacaoTxtProgress', [
@@ -1699,6 +1673,306 @@ class DataReceiverController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Erro inesperado em receiveImportacaoTxtProgress', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Processa novo formato de progresso (user_id + tab_id).
+     * n8n controla 100% do progresso (percentual + mensagem).
+     *
+     * Quando status="erro", pode incluir:
+     * - error_code: Código do erro (ex: "API_TIMEOUT", "INFOSIMPLES_ERROR")
+     * - error_message: Mensagem descritiva do erro
+     */
+    private function handleNewProgressFormat(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+            'tab_id' => 'required|string|max:36',
+            'progresso' => 'required|integer|min:0|max:100',
+            'mensagem' => 'nullable|string|max:255',
+            'status' => 'required|in:iniciando,processando,concluido,erro',
+            // Campos opcionais para erros
+            'error_code' => 'nullable|string|max:50',
+            'error_message' => 'nullable|string|max:500',
+        ]);
+
+        // Chave do cache: progresso:{user_id}:{tab_id}
+        $cacheKey = "progresso:{$validated['user_id']}:{$validated['tab_id']}";
+
+        // Dados para cache (repassa exatamente o que n8n enviou)
+        $cacheData = [
+            'user_id' => $validated['user_id'],
+            'tab_id' => $validated['tab_id'],
+            'progresso' => $validated['progresso'],
+            'mensagem' => $validated['mensagem'] ?? null,
+            'status' => $validated['status'],
+            'updated_at' => now()->toIso8601String(),
+        ];
+
+        // Adicionar campos de erro se fornecidos
+        if (!empty($validated['error_code'])) {
+            $cacheData['error_code'] = $validated['error_code'];
+        }
+        if (!empty($validated['error_message'])) {
+            $cacheData['error_message'] = $validated['error_message'];
+        }
+
+        // Armazena em cache (TTL 10 minutos)
+        Cache::put($cacheKey, $cacheData, 600);
+
+        Log::info('Progresso armazenado em cache (novo formato)', [
+            'cache_key' => $cacheKey,
+            'user_id' => $validated['user_id'],
+            'tab_id' => $validated['tab_id'],
+            'progresso' => $validated['progresso'],
+            'status' => $validated['status'],
+            'has_error' => !empty($validated['error_code']),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Progresso atualizado.',
+            'progresso' => $validated['progresso'],
+        ], Response::HTTP_OK);
+    }
+
+    /**
+     * Processa formato legado de progresso (importacao_id).
+     * Mantido para compatibilidade com implementações anteriores.
+     */
+    private function handleLegacyProgressFormat(Request $request)
+    {
+        $validated = $request->validate([
+            'importacao_id' => 'required|integer',
+            'status' => 'required|in:processando,concluido,erro',
+            'total_cnpjs' => 'sometimes|integer|min:0',
+            'processados' => 'sometimes|integer|min:0',
+            'importados' => 'sometimes|integer|min:0',
+            'duplicados' => 'sometimes|integer|min:0',
+            'error_message' => 'sometimes|string|max:500',
+        ]);
+
+        $importacaoId = $validated['importacao_id'];
+        $cacheKey = "importacao_progresso_{$importacaoId}";
+
+        // Extrair valores com defaults
+        $total = $validated['total_cnpjs'] ?? 0;
+        $processados = $validated['processados'] ?? 0;
+        $importados = $validated['importados'] ?? 0;
+        $duplicados = $validated['duplicados'] ?? 0;
+
+        // Calcular porcentagem
+        $porcentagem = $total > 0 ? (int) round(($processados / $total) * 100) : 0;
+
+        // Dados para cache
+        $cacheData = [
+            'status' => $validated['status'],
+            'total_cnpjs' => $total,
+            'processados' => $processados,
+            'importados' => $importados,
+            'duplicados' => $duplicados,
+            'porcentagem' => $porcentagem,
+            'updated_at' => now()->toIso8601String(),
+        ];
+
+        // Se houver mensagem de erro, incluir
+        if (!empty($validated['error_message'])) {
+            $cacheData['error_message'] = $validated['error_message'];
+        }
+
+        // Armazena em cache (expira em 10 minutos)
+        Cache::put($cacheKey, $cacheData, 600);
+
+        Log::info('Progresso de importação armazenado em cache (formato legado)', [
+            'importacao_id' => $importacaoId,
+            'cache_key' => $cacheKey,
+            'status' => $validated['status'],
+            'porcentagem' => $porcentagem,
+            'processados' => $processados,
+            'total' => $total,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Progresso atualizado.',
+            'porcentagem' => $porcentagem,
+        ], Response::HTTP_OK);
+    }
+
+    /**
+     * Recebe resultado de consulta do Monitoramento (enviado pelo n8n).
+     * n8n pode escrever diretamente no PostgreSQL, mas também pode usar este
+     * endpoint para notificar Laravel e permitir lógica adicional.
+     *
+     * POST /api/monitoramento/consulta/resultado
+     *
+     * Payload esperado:
+     * {
+     *   "consulta_id": 789,
+     *   "status": "sucesso", // ou "erro"
+     *   "resultado": {...}, // JSON com dados das APIs
+     *   "situacao_geral": "regular", // "regular", "atencao", "irregular"
+     *   "tem_pendencias": false,
+     *   "proxima_validade": "2026-07-15", // menor validade das certidões
+     *   "error_code": "TIMEOUT", // se status=erro
+     *   "error_message": "API não respondeu", // se status=erro
+     *   "participante": { // dados para atualizar participante
+     *     "razao_social": "EMPRESA EXEMPLO LTDA",
+     *     "situacao_cadastral": "Ativa",
+     *     "regime_tributario": "Simples Nacional"
+     *   }
+     * }
+     */
+    public function receiveMonitoramentoConsulta(Request $request)
+    {
+        try {
+            Log::info('Requisição recebida em receiveMonitoramentoConsulta', [
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'ip' => $request->ip(),
+                'headers' => [
+                    'x-api-token' => $request->hasHeader('X-API-Token') ? 'presente' : 'ausente',
+                    'content-type' => $request->header('Content-Type'),
+                ],
+                'body' => $request->all(),
+            ]);
+
+            // Verifica autenticação via token
+            if (!$this->isTokenValid($request)) {
+                Log::warning('Token inválido em receiveMonitoramentoConsulta');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Token de API inválido.',
+                ], Response::HTTP_UNAUTHORIZED);
+            }
+
+            // Validar payload
+            $validated = $request->validate([
+                'consulta_id' => 'required|integer',
+                'status' => 'required|in:sucesso,erro,processando',
+                'resultado' => 'sometimes|array',
+                'situacao_geral' => 'sometimes|in:regular,atencao,irregular',
+                'tem_pendencias' => 'sometimes|boolean',
+                'proxima_validade' => 'sometimes|nullable|date',
+                'error_code' => 'sometimes|string|max:50',
+                'error_message' => 'sometimes|string|max:500',
+                'participante' => 'sometimes|array',
+                'participante.razao_social' => 'sometimes|string|max:255',
+                'participante.situacao_cadastral' => 'sometimes|string|max:100',
+                'participante.regime_tributario' => 'sometimes|string|max:100',
+            ]);
+
+            $consultaId = $validated['consulta_id'];
+
+            // Buscar consulta
+            $consulta = MonitoramentoConsulta::find($consultaId);
+
+            if (!$consulta) {
+                Log::warning('Consulta não encontrada em receiveMonitoramentoConsulta', [
+                    'consulta_id' => $consultaId,
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Consulta não encontrada.',
+                ], Response::HTTP_NOT_FOUND);
+            }
+
+            // Atualizar consulta
+            $updateData = [
+                'status' => $validated['status'],
+                'executado_em' => now(),
+            ];
+
+            if ($validated['status'] === 'sucesso') {
+                if (isset($validated['resultado'])) {
+                    $updateData['resultado'] = $validated['resultado'];
+                }
+                if (isset($validated['situacao_geral'])) {
+                    $updateData['situacao_geral'] = $validated['situacao_geral'];
+                }
+                if (isset($validated['tem_pendencias'])) {
+                    $updateData['tem_pendencias'] = $validated['tem_pendencias'];
+                }
+                if (isset($validated['proxima_validade'])) {
+                    $updateData['proxima_validade'] = $validated['proxima_validade'];
+                }
+            } elseif ($validated['status'] === 'erro') {
+                if (isset($validated['error_code'])) {
+                    $updateData['error_code'] = $validated['error_code'];
+                }
+                if (isset($validated['error_message'])) {
+                    $updateData['error_message'] = $validated['error_message'];
+                }
+            }
+
+            $consulta->update($updateData);
+
+            Log::info('Consulta atualizada com resultado', [
+                'consulta_id' => $consultaId,
+                'status' => $validated['status'],
+            ]);
+
+            // Atualizar participante se dados foram fornecidos
+            if (isset($validated['participante']) && !empty($validated['participante'])) {
+                $participante = Participante::find($consulta->participante_id);
+
+                if ($participante) {
+                    $participanteUpdate = array_filter([
+                        'razao_social' => $validated['participante']['razao_social'] ?? null,
+                        'situacao_cadastral' => $validated['participante']['situacao_cadastral'] ?? null,
+                        'regime_tributario' => $validated['participante']['regime_tributario'] ?? null,
+                        'ultima_consulta_em' => now(),
+                    ]);
+
+                    if (!empty($participanteUpdate)) {
+                        $participante->update($participanteUpdate);
+
+                        Log::info('Participante atualizado com dados da consulta', [
+                            'participante_id' => $participante->id,
+                            'consulta_id' => $consultaId,
+                        ]);
+                    }
+                }
+            }
+
+            // Armazenar em cache para SSE (notificação em tempo real)
+            $cacheKey = "monitoramento_consulta_resultado_{$consultaId}";
+            Cache::put($cacheKey, [
+                'consulta_id' => $consultaId,
+                'user_id' => $consulta->user_id,
+                'status' => $validated['status'],
+                'situacao_geral' => $validated['situacao_geral'] ?? null,
+                'updated_at' => now()->toIso8601String(),
+            ], 300); // Cache por 5 minutos
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Resultado da consulta processado com sucesso.',
+                'consulta_id' => $consultaId,
+            ], Response::HTTP_OK);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Erro de validação em receiveMonitoramentoConsulta', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro de validação.',
+                'errors' => $e->errors(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        } catch (\Exception $e) {
+            Log::error('Erro inesperado em receiveMonitoramentoConsulta', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'request_data' => $request->all(),

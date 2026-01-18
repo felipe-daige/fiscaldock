@@ -44,6 +44,8 @@ return [
         'sped_fiscal_completa_url' => env('WEBHOOK_SPED_FISCAL_COMPLETA_URL'),
         // Webhook Monitoramento - importação de arquivo .txt
         'monitoramento_importacao_txt_url' => env('WEBHOOK_MONITORAMENTO_IMPORTACAO_TXT_URL'),
+        // Webhook Monitoramento - consultas avulsas e de assinatura
+        'monitoramento_consulta_url' => env('WEBHOOK_MONITORAMENTO_CONSULTA_URL'),
         // Credenciais
         'username' => env('WEBHOOK_SPED_USERNAME'),
         'password' => env('WEBHOOK_SPED_PASSWORD'),
