@@ -834,3 +834,410 @@ return items.map(item => ({
 - [ ] Incluir `origem_ref` com nome do arquivo quando vem de importação SPED
 - [ ] Usar `ON CONFLICT` para evitar duplicatas (CNPJ único por user)
 - [ ] Manter `cliente_id` se o usuário selecionou um cliente na UI
+
+---
+
+# HTTP Request - Importação SPED Monitoramento
+
+## 📖 Visão Geral
+
+JSON do body para colar no node **HTTP Request** do n8n.
+
+### Configuração do Node HTTP Request
+
+| Campo | Valor |
+|-------|-------|
+| **Method** | `POST` |
+| **URL** | `https://fiscaldock.com.br/api/monitoramento/sped/importacao-txt/progress` |
+| **Authentication** | None |
+| **Send Headers** | ON |
+| **Header 1** | `Content-Type` = `application/json` |
+| **Header 2** | `X-API-Token` = `dcf7ef50c60fe60636f2b279aecbabb04f1fd46946df6eeb4b85cc1c3579ca74` |
+| **Send Body** | ON |
+| **Body Content Type** | JSON |
+| **Specify Body** | Using JSON |
+
+---
+
+## 📊 Fluxo de Etapas
+
+| Etapa | Progresso | Status | Descrição |
+|-------|-----------|--------|-----------|
+| 1 | `5` | `processando` | Identificação da empresa + tipo documento |
+| 2 | `10` | `processando` | Totais encontrados (participantes, CNPJs, CPFs, duplicados) |
+| 3 | `20-98` | `processando` | Processamento (de 10 em 10%) |
+| 4 | `99` | `processando` | Salvamento concluído |
+| 5 | `100` | `concluido` | Resumo final |
+
+---
+
+## 🔧 Etapa 1 - Identificação da Empresa (5%)
+
+Enviar após identificar a empresa declarante e o tipo do documento.
+
+**Body JSON:**
+
+```json
+{
+  "user_id": {{ $json.user_id }},
+  "tab_id": "{{ $json.tab_id }}",
+  "progresso": 5,
+  "mensagem": "Empresa identificada",
+  "status": "processando",
+  "dados": {
+    "nome_empresa": "{{ $json.nome_empresa }}",
+    "cnpj_empresa": "{{ $json.cnpj_empresa }}",
+    "tipo_documento": "{{ $json.tipo_documento }}"
+  }
+}
+```
+
+### Campos `dados` da Etapa 1
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `nome_empresa` | string | Razão social da empresa declarante |
+| `cnpj_empresa` | string | CNPJ da empresa declarante (formatado) |
+| `tipo_documento` | string | Ex: `"SPED EFD Fiscal"` ou `"SPED EFD Contribuições"` |
+
+---
+
+## 🔧 Etapa 2 - Totais Encontrados (10%)
+
+Enviar após extrair e contar todos os participantes do documento.
+
+**Body JSON:**
+
+```json
+{
+  "user_id": {{ $json.user_id }},
+  "tab_id": "{{ $json.tab_id }}",
+  "progresso": 10,
+  "mensagem": "{{ $json.total_participantes }} participantes encontrados",
+  "status": "processando",
+  "dados": {
+    "total_participantes": {{ $json.total_participantes }},
+    "total_cnpjs": {{ $json.total_cnpjs }},
+    "total_cpfs": {{ $json.total_cpfs }},
+    "duplicados_documento": {{ $json.duplicados_documento }}
+  }
+}
+```
+
+### Campos `dados` da Etapa 2
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `total_participantes` | int | Total de participantes no documento |
+| `total_cnpjs` | int | Quantidade de CNPJs |
+| `total_cpfs` | int | Quantidade de CPFs |
+| `duplicados_documento` | int | Participantes duplicados dentro do próprio documento |
+
+---
+
+## 🔧 Etapa 3 - Processamento (20-98%)
+
+Enviar de 10 em 10% durante o processamento dos participantes.
+
+**Body JSON:**
+
+```json
+{
+  "user_id": {{ $json.user_id }},
+  "tab_id": "{{ $json.tab_id }}",
+  "progresso": {{ $json.progresso_calculado }},
+  "mensagem": "Processando participantes...",
+  "status": "processando"
+}
+```
+
+### Cálculo do Progresso (20% a 98%)
+
+| Percentual processado | Progresso a enviar |
+|-----------------------|-------------------|
+| 0-12% | `20` |
+| 12-22% | `30` |
+| 22-33% | `40` |
+| 33-44% | `50` |
+| 44-55% | `60` |
+| 55-66% | `70` |
+| 66-77% | `80` |
+| 77-88% | `90` |
+| 88-100% | `98` |
+
+---
+
+## 🔧 Etapa 4 - Salvamento Concluído (99%)
+
+Enviar após finalizar o salvamento de todos os participantes no banco.
+
+**Body JSON:**
+
+```json
+{
+  "user_id": {{ $json.user_id }},
+  "tab_id": "{{ $json.tab_id }}",
+  "progresso": 99,
+  "mensagem": "Finalizando importação...",
+  "status": "processando"
+}
+```
+
+---
+
+## 🔧 Etapa 5 - Resumo Final (100%)
+
+Enviar ao concluir todo o processo com o resumo final.
+
+**IMPORTANTE:** Incluir `importacao_id` e `participante_ids` para que o frontend possa exibir os participantes importados imediatamente.
+
+**Body JSON:**
+
+```json
+{
+  "user_id": {{ $json.user_id }},
+  "tab_id": "{{ $json.tab_id }}",
+  "progresso": 100,
+  "mensagem": "Importação concluída! {{ $json.novos_salvos }} novos participantes salvos.",
+  "status": "concluido",
+  "dados": {
+    "nome_empresa": "{{ $json.nome_empresa }}",
+    "total_cnpjs": {{ $json.total_cnpjs }},
+    "total_cpfs": {{ $json.total_cpfs }},
+    "total_a_analisar": {{ $json.novos_salvos }},
+    "total_duplicados": {{ $json.duplicados_identificados }},
+    "importacao_id": {{ $json.importacao_id }},
+    "participante_ids": {{ $json.participante_ids }}
+  }
+}
+```
+
+### Campos `dados` da Etapa 5 (Resumo Final)
+
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| `nome_empresa` | string | ✅ | Razão social da empresa declarante |
+| `total_cnpjs` | int | ✅ | Quantidade de CNPJs únicos |
+| `total_cpfs` | int | ✅ | Quantidade de CPFs únicos |
+| `total_a_analisar` | int | ✅ | Novos participantes inseridos |
+| `total_duplicados` | int | ✅ | Participantes que já existiam |
+| `importacao_id` | int | ✅ | ID do registro em `importacoes_participantes` |
+| `participante_ids` | array | ✅ | Array de IDs dos participantes criados: `[1, 2, 3, ...]` |
+
+### Como obter `participante_ids` no n8n
+
+Após inserir os participantes no banco, use `RETURNING id` para capturar os IDs:
+
+```sql
+INSERT INTO participantes (user_id, cnpj, razao_social, uf, origem_tipo, origem_ref, created_at, updated_at)
+VALUES
+  (1, '12345678000190', 'Empresa A', 'SP', 'SPED_EFD_FISCAL', '{}', NOW(), NOW()),
+  (1, '98765432000199', 'Empresa B', 'RJ', 'SPED_EFD_FISCAL', '{}', NOW(), NOW())
+ON CONFLICT (user_id, cnpj) DO UPDATE SET updated_at = NOW()
+RETURNING id;
+```
+
+Ou colete os IDs após o INSERT com um SELECT:
+
+```sql
+SELECT id FROM participantes
+WHERE user_id = {{ $json.user_id }}
+  AND created_at >= '{{ $json.inicio_processamento }}'
+ORDER BY id;
+```
+
+---
+
+## ⚠️ Etapa de Erro
+
+Enviar quando ocorrer qualquer erro durante o processamento.
+
+**Body JSON:**
+
+```json
+{
+  "user_id": {{ $json.user_id }},
+  "tab_id": "{{ $json.tab_id }}",
+  "progresso": {{ $json.progresso_atual }},
+  "mensagem": "Erro no processamento",
+  "status": "erro",
+  "error_code": "{{ $json.error_code }}",
+  "error_message": "{{ $json.error_message }}"
+}
+```
+
+### Códigos de Erro Disponíveis
+
+| error_code | error_message | Quando usar |
+|------------|---------------|-------------|
+| `INVALID_SPED` | `Arquivo não é um SPED válido` | Formato não reconhecido |
+| `PARSE_ERROR` | `Erro ao extrair dados do arquivo` | Falha no parsing |
+| `NO_PARTICIPANTS` | `Nenhum participante encontrado no arquivo` | Bloco 0150 vazio |
+| `DB_ERROR` | `Erro ao salvar participantes no banco` | Falha no INSERT |
+| `UNKNOWN_ERROR` | `Erro desconhecido` | Fallback |
+
+---
+
+## 📋 Resumo dos Campos por Etapa
+
+| Etapa | Progresso | Status | Campos em `dados` |
+|-------|-----------|--------|-------------------|
+| 1 - Identificação | `5` | `processando` | `nome_empresa`, `cnpj_empresa`, `tipo_documento` |
+| 2 - Totais | `10` | `processando` | `total_participantes`, `total_cnpjs`, `total_cpfs`, `duplicados_documento` |
+| 3 - Processando | `20-98` | `processando` | *(nenhum)* |
+| 4 - Salvando | `99` | `processando` | *(nenhum)* |
+| 5 - Concluído | `100` | `concluido` | `nome_empresa`, `total_cnpjs`, `total_cpfs`, `total_a_analisar`, `total_duplicados`, **`importacao_id`**, **`participante_ids`** |
+| Erro | qualquer | `erro` | `error_code`, `error_message` |
+
+---
+
+## ✅ Checklist de Implementação
+
+- [ ] Receber `user_id` e `tab_id` do webhook inicial do Laravel
+- [ ] Etapa 1: Enviar identificação da empresa (5%)
+- [ ] Etapa 2: Enviar totais encontrados (10%)
+- [ ] Etapa 3: Enviar progresso de 10 em 10% (20-98%)
+- [ ] Etapa 4: Enviar salvamento concluído (99%)
+- [ ] Etapa 5: Enviar resumo final com `status: "concluido"` (100%)
+  - [ ] Incluir `importacao_id` no campo `dados`
+  - [ ] Incluir `participante_ids` (array de IDs) no campo `dados`
+- [ ] Tratar erros enviando `status: "erro"` com código e mensagem
+
+---
+
+## 🔧 Troubleshooting
+
+### Erro 404 no endpoint de progresso
+
+**Sintoma:** n8n retorna `404 - The route api/monitoramento/sped/importacao-txt/progress could not be found`
+
+**Causa:** A imagem Docker do container de desenvolvimento está desatualizada e não contém a rota.
+
+**Solução:**
+
+1. Verificar versão da imagem em `docker-compose.dev.yml`:
+   ```yaml
+   services:
+     app:
+       image: felipedaige/fiscaldock:X.X.X  # Deve ser a versão mais recente
+   ```
+
+2. Atualizar todos os serviços (app, scheduler, worker) para a mesma versão
+
+3. Reiniciar os containers:
+   ```bash
+   docker compose -f docker-compose.dev.yml pull
+   docker compose -f docker-compose.dev.yml up -d
+   ```
+
+4. Limpar caches (se necessário):
+   ```bash
+   docker compose -f docker-compose.dev.yml exec app php artisan route:clear
+   docker compose -f docker-compose.dev.yml exec app php artisan config:clear
+   docker compose -f docker-compose.dev.yml exec app php artisan cache:clear
+   ```
+
+### Verificar se a rota existe
+
+```bash
+# Listar rotas de monitoramento
+docker compose -f docker-compose.dev.yml exec app php artisan route:list --path=api/monitoramento
+
+# Testar endpoint (deve retornar 401 "Token inválido", NÃO 404)
+curl -X POST "http://localhost:8080/api/monitoramento/sped/importacao-txt/progress" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Token: test" \
+  -d '{"user_id": 1, "tab_id": "test", "progresso": 50, "status": "processando"}'
+```
+
+**Resposta esperada (401):**
+```json
+{"success":false,"message":"Token de API inválido."}
+```
+
+**Se retornar 404:** A imagem Docker está desatualizada. Siga os passos acima.
+
+### Erro "JSON parameter needs to be valid JSON"
+
+**Sintoma:** O n8n retorna erro `JSON parameter needs to be valid JSON` ao enviar o payload de conclusão (Etapa 5 - 100%).
+
+**Causa:** Arrays no n8n não são serializados automaticamente como JSON. Ao usar `{{ array }}`, o resultado é `1,2,3` em vez de `[1,2,3]`.
+
+**Solução (testada e funcionando):**
+
+Use `JSON.stringify()` apenas no campo de array:
+
+```json
+{
+  "user_id": {{ $json.user_id }},
+  "tab_id": "{{ $('Normalizar Para SSE Final').item.json.tab_id }}",
+  "progresso": 100,
+  "mensagem": "Importação concluída",
+  "status": "concluido",
+  "dados": {
+    "total_processados": {{ $('Normalizar Para SSE Final').item.json.estatisticas?.total_processado || 0 }},
+    "total_cnpjs": {{ $json.total_cnpjs_unicos || 0 }},
+    "total_cpfs": {{ $json.total_cpfs_unicos || 0 }},
+    "novos_salvos": {{ $('Normalizar Para SSE Final').item.json.estatisticas?.novos_salvos || 0 }},
+    "duplicados_identificados": {{ $('Normalizar Para SSE Final').item.json.estatisticas?.duplicados_identificados || 0 }},
+    "importacao_id": {{ $json.id || 0 }},
+    "participante_ids": {{ JSON.stringify($('Normalizar Para SSE Final').first().json.ids || []) }}
+  }
+}
+```
+
+**Ponto chave:** O `JSON.stringify()` é necessário **apenas** no campo `participante_ids` porque é um array. Os outros campos (números e strings) funcionam normalmente com `{{ }}`.
+
+**Resultado esperado (JSON válido):**
+
+```json
+{
+  "user_id": 2,
+  "tab_id": "735d4d14-ea16-4019-b3ce-af6bc82d8048",
+  "progresso": 100,
+  "mensagem": "Importação concluída",
+  "status": "concluido",
+  "dados": {
+    "total_processados": 35,
+    "total_cnpjs": 24,
+    "total_cpfs": 11,
+    "novos_salvos": 24,
+    "duplicados_identificados": 0,
+    "importacao_id": 125,
+    "participante_ids": [973,974,975,976,977,978,979,980,981,982,983,984,985,986,987,988,989,990,991,992,993,994,995,996,997]
+  }
+}
+```
+
+---
+
+## ✅ Checklist de Configuração do HTTP Request (Etapa 5)
+
+- [x] **Method**: POST
+- [x] **URL**: `https://fiscaldock.com.br/api/monitoramento/sped/importacao-txt/progress`
+- [x] **Authentication**: Header Auth
+- [x] **Header Name**: `X-API-Token`
+- [x] **Header Value**: Token da API
+- [x] **Body Content Type**: JSON
+- [x] **Specify Body**: Using JSON
+- [x] **Body**: JSON com `JSON.stringify()` no campo de array
+
+---
+
+## 🧪 Verificação
+
+Após configurar, testar com dados reais:
+
+1. Executar o workflow manualmente
+2. Verificar se o HTTP Request retorna 200
+3. Verificar se o frontend exibe os participantes imediatamente
+4. Verificar se `importacoes_participantes.participante_ids` foi preenchido
+
+```sql
+-- Verificar se participante_ids foi salvo corretamente
+SELECT id, status, participante_ids
+FROM importacoes_participantes
+WHERE id = 125;
+```
+
+**Status:** ✅ Testado e funcionando (Janeiro/2026)
