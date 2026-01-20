@@ -280,60 +280,209 @@
 
         {{-- Seção de Progresso de Importação (inicialmente oculta) --}}
         <div id="importacao-progresso" class="hidden">
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+            <div id="progresso-card" class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                {{-- Header: Empresa e documento --}}
+                <div class="flex items-start gap-3 mb-4">
+                    <div id="progresso-icon" class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
                         <svg class="w-5 h-5 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                         </svg>
                     </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 id="progresso-empresa" class="font-semibold text-gray-900 truncate">
+                            Aguardando dados...
+                        </h3>
+                        <p id="progresso-documento" class="text-sm text-gray-500 hidden">
+                            {{-- Tipo SPED • Período --}}
+                        </p>
+                    </div>
+                </div>
+
+                {{-- Barra de progresso --}}
+                <div class="mb-3">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span id="progresso-mensagem" class="text-gray-600">Iniciando...</span>
+                        <span id="progresso-porcentagem" class="font-medium text-gray-900">0%</span>
+                    </div>
+                    <div class="bg-gray-100 rounded-full h-2 overflow-hidden">
+                        <div id="barra-progresso" class="bg-blue-600 h-full rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                {{-- Mensagem de erro (só aparece em caso de erro) --}}
+                <div id="progresso-erro" class="hidden pt-3 border-t border-red-100">
+                    <p id="progresso-erro-msg" class="text-sm text-gray-700 mb-3">
+                        Ocorreu um erro interno durante o processamento.
+                    </p>
+                    <p class="text-sm text-gray-600 mb-4">
+                        Por favor, tente novamente mais tarde.<br>
+                        Se o erro persistir, entre em contato com o suporte:
+                    </p>
+                    <a href="https://wa.me/5567999844366"
+                       target="_blank"
+                       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition mb-3">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                        </svg>
+                        WhatsApp: (67) 99984-4366
+                    </a>
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-900">Importando participantes...</h3>
-                        <p class="text-sm text-gray-600">Aguarde enquanto processamos os CNPJs do arquivo.</p>
+                        <button type="button"
+                                id="btn-tentar-novamente"
+                                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Tentar Novamente
+                        </button>
                     </div>
                 </div>
+            </div>
 
-                {{-- Barra de Progresso --}}
-                <div class="mb-4">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium text-gray-700">Progresso</span>
-                        <span class="text-sm font-semibold text-blue-600" id="progresso-porcentagem">0%</span>
+            {{-- Seção de Resultados da Importação (aparece após importação concluída) --}}
+            <div id="resultado-importacao" class="hidden mt-4">
+                <div class="bg-white border border-green-200 rounded-lg shadow-sm">
+                    {{-- Header dos Resultados --}}
+                    <div class="px-6 py-4 border-b border-gray-200 bg-green-50">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">Importação Concluída</h3>
+                                    <p class="text-sm text-gray-600" id="resultado-empresa">-</p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                id="btn-nova-importacao"
+                                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                Nova Importação
+                            </button>
+                        </div>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-3">
-                        <div id="barra-progresso" class="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
-                    </div>
-                </div>
 
-                {{-- Contadores --}}
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="p-3 bg-gray-50 rounded-lg text-center">
-                        <div class="text-2xl font-bold text-gray-900" id="cnt-total">0</div>
-                        <div class="text-xs text-gray-500">Total CNPJs</div>
+                    {{-- Estatísticas da Importação --}}
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                <p class="text-2xl font-bold text-gray-900" id="resultado-total-cnpjs">0</p>
+                                <p class="text-xs text-gray-500">CNPJs</p>
+                            </div>
+                            <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                <p class="text-2xl font-bold text-gray-900" id="resultado-total-cpfs">0</p>
+                                <p class="text-xs text-gray-500">CPFs</p>
+                            </div>
+                            <div class="text-center p-3 bg-green-50 rounded-lg">
+                                <p class="text-2xl font-bold text-green-600" id="resultado-novos">0</p>
+                                <p class="text-xs text-gray-500">Novos</p>
+                            </div>
+                            <div class="text-center p-3 bg-amber-50 rounded-lg">
+                                <p class="text-2xl font-bold text-amber-600" id="resultado-duplicados">0</p>
+                                <p class="text-xs text-gray-500">Duplicados</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="p-3 bg-blue-50 rounded-lg text-center">
-                        <div class="text-2xl font-bold text-blue-600" id="cnt-processados">0</div>
-                        <div class="text-xs text-gray-500">Processados</div>
-                    </div>
-                    <div class="p-3 bg-green-50 rounded-lg text-center">
-                        <div class="text-2xl font-bold text-green-600" id="cnt-importados">0</div>
-                        <div class="text-xs text-gray-500">Novos</div>
-                    </div>
-                    <div class="p-3 bg-amber-50 rounded-lg text-center">
-                        <div class="text-2xl font-bold text-amber-600" id="cnt-duplicados">0</div>
-                        <div class="text-xs text-gray-500">Já existentes</div>
-                    </div>
-                </div>
 
-                {{-- Status detalhado --}}
-                <div id="progresso-status" class="mt-4 text-center text-sm text-gray-600">
-                    Iniciando processamento...
+                    {{-- Lista de Participantes Importados --}}
+                    <div class="px-6 py-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-sm font-semibold text-gray-900">Participantes Importados</h4>
+                            <button
+                                type="button"
+                                id="btn-carregar-participantes"
+                                class="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                            >
+                                Carregar lista
+                            </button>
+                        </div>
+
+                        {{-- Container da lista (inicialmente mostra placeholder) --}}
+                        <div id="lista-participantes-container">
+                            <div class="text-center py-8 text-gray-500">
+                                <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                <p class="text-sm">Clique em "Carregar lista" para ver os participantes importados</p>
+                            </div>
+                        </div>
+
+                        {{-- Loading state --}}
+                        <div id="lista-participantes-loading" class="hidden text-center py-8">
+                            <svg class="w-8 h-8 mx-auto text-blue-600 animate-spin mb-3" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>
+                            <p class="text-sm text-gray-500">Carregando participantes...</p>
+                        </div>
+
+                        {{-- Tabela de participantes (preenchida via JS) --}}
+                        <div id="lista-participantes-tabela" class="hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">CNPJ</th>
+                                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Razão Social</th>
+                                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Situação</th>
+                                            <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="participantes-tbody-resultado" class="divide-y divide-gray-200">
+                                        {{-- Preenchido via JS --}}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="participantes-pagination" class="mt-4 flex items-center justify-between text-sm text-gray-500">
+                                <span id="participantes-info">Mostrando 0 de 0</span>
+                                <div class="flex gap-2">
+                                    <button type="button" id="btn-prev-page" class="px-3 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50" disabled>Anterior</button>
+                                    <button type="button" id="btn-next-page" class="px-3 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50" disabled>Próximo</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Ações --}}
+                    <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                        <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
+                            <a
+                                href="/app/monitoramento"
+                                class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition"
+                                data-link
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                                </svg>
+                                Ver Todos os Participantes
+                            </a>
+                            <a
+                                id="link-filtrar-importacao"
+                                href="/app/monitoramento/participantes?importacao="
+                                class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm hover:bg-blue-700 transition"
+                                data-link
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                                </svg>
+                                Ver Apenas Esta Importação
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         {{-- Lista de Relatorios RAF --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm mt-6">
+        <div id="raf-relatorios-section" class="bg-white rounded-xl border border-gray-200 shadow-sm mt-6">
             <div class="px-6 py-4 border-b border-gray-200">
                 <h2 class="text-lg font-semibold text-gray-900">Importar de Relatórios RAF</h2>
             </div>
@@ -796,7 +945,7 @@
                         document.body.style.overflow = '';
 
                         if (window.showToast) {
-                            window.showToast('success', data.message || 'Participantes importados com sucesso!');
+                            window.showToast(data.message || 'Participantes importados com sucesso!', 'success');
                         } else {
                             alert(data.message || 'Participantes importados com sucesso!');
                         }
@@ -1094,36 +1243,99 @@
         let eventSourceTxt = null;
         let importacaoEmAndamento = false;
 
-        // Elementos de progresso
+        // Elementos de progresso (nova UI minimalista)
         const progressoContainer = document.getElementById('importacao-progresso');
+        const progressoCard = document.getElementById('progresso-card');
         const barraProgresso = document.getElementById('barra-progresso');
         const progressoPorcentagem = document.getElementById('progresso-porcentagem');
-        const cntTotal = document.getElementById('cnt-total');
-        const cntProcessados = document.getElementById('cnt-processados');
-        const cntImportados = document.getElementById('cnt-importados');
-        const cntDuplicados = document.getElementById('cnt-duplicados');
-        const progressoStatus = document.getElementById('progresso-status');
+        const progressoMensagem = document.getElementById('progresso-mensagem');
+        const progressoEmpresa = document.getElementById('progresso-empresa');
+        const progressoDocumento = document.getElementById('progresso-documento');
+        const progressoIcon = document.getElementById('progresso-icon');
+
+        // Elementos de erro
+        const progressoErro = document.getElementById('progresso-erro');
+        const progressoErroMsg = document.getElementById('progresso-erro-msg');
+
+        // Função para atualizar ícone de status
+        function atualizarIconeStatus(status, errorMessage) {
+            if (!progressoIcon || !progressoCard) return;
+
+            // Reset classes do card
+            progressoCard.className = 'bg-white border rounded-lg p-4 shadow-sm';
+
+            switch (status) {
+                case 'concluido':
+                    progressoIcon.className = 'w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0';
+                    progressoIcon.innerHTML = '<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+                    progressoCard.classList.add('border-green-200');
+                    if (barraProgresso) barraProgresso.className = 'bg-green-600 h-full rounded-full transition-all duration-500 ease-out';
+                    // Ocultar seção de erro, manter stats
+                    if (progressoErro) progressoErro.classList.add('hidden');
+                    break;
+                case 'erro':
+                case 'timeout':
+                    progressoIcon.className = 'w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0';
+                    progressoIcon.innerHTML = '<svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+                    progressoCard.classList.add('border-red-200');
+                    if (barraProgresso) barraProgresso.className = 'bg-red-600 h-full rounded-full transition-all duration-500 ease-out';
+                    // Mostrar seção de erro
+                    if (progressoErro) {
+                        progressoErro.classList.remove('hidden');
+                        // Atualizar mensagem de erro se fornecida
+                        if (progressoErroMsg && errorMessage) {
+                            progressoErroMsg.textContent = errorMessage;
+                        } else if (progressoErroMsg) {
+                            progressoErroMsg.textContent = status === 'timeout'
+                                ? 'O processamento demorou mais do que o esperado.'
+                                : 'Ocorreu um erro interno durante o processamento.';
+                        }
+                    }
+                    break;
+                default:
+                    progressoIcon.className = 'w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0';
+                    progressoIcon.innerHTML = '<svg class="w-5 h-5 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>';
+                    progressoCard.classList.add('border-gray-200');
+                    if (barraProgresso) barraProgresso.className = 'bg-blue-600 h-full rounded-full transition-all duration-500 ease-out';
+                    // Ocultar seção de erro
+                    if (progressoErro) progressoErro.classList.add('hidden');
+            }
+        }
 
         // Função para atualizar UI de progresso
-        function atualizarProgresso(dados) {
-            if (barraProgresso) barraProgresso.style.width = (dados.porcentagem || 0) + '%';
-            if (progressoPorcentagem) progressoPorcentagem.textContent = (dados.porcentagem || 0) + '%';
-            if (cntTotal) cntTotal.textContent = dados.total_cnpjs || 0;
-            if (cntProcessados) cntProcessados.textContent = dados.processados || 0;
-            if (cntImportados) cntImportados.textContent = dados.importados || 0;
-            if (cntDuplicados) cntDuplicados.textContent = dados.duplicados || 0;
+        function atualizarProgresso(payload) {
+            const dados = payload.dados || {};
+            const progresso = parseInt(payload.progresso) || 0;
+            const status = payload.status || 'processando';
+            const mensagem = payload.mensagem || 'Processando...';
+            const errorMessage = payload.error_message || payload.mensagem || null;
 
-            if (progressoStatus) {
-                if (dados.status === 'processando') {
-                    progressoStatus.textContent = 'Processando CNPJ ' + (dados.processados || 0) + ' de ' + (dados.total_cnpjs || 0) + '...';
-                } else if (dados.status === 'concluido') {
-                    progressoStatus.textContent = 'Importação concluída com sucesso!';
-                } else if (dados.status === 'erro') {
-                    progressoStatus.textContent = dados.error_message || 'Erro durante a importação.';
-                } else if (dados.status === 'aguardando') {
-                    progressoStatus.textContent = 'Aguardando início do processamento...';
+            // Barra de progresso
+            if (barraProgresso) barraProgresso.style.width = progresso + '%';
+            if (progressoPorcentagem) progressoPorcentagem.textContent = progresso + '%';
+            if (progressoMensagem) progressoMensagem.textContent = mensagem;
+
+            // Empresa
+            if (progressoEmpresa && dados.nome_empresa) {
+                progressoEmpresa.textContent = dados.nome_empresa;
+            }
+
+            // Documento (tipo e período)
+            if (progressoDocumento) {
+                const tipo = dados.tipo_documento || '';
+                const periodo = dados.data_inicial_do_documento && dados.data_final_do_documento
+                    ? dados.data_inicial_do_documento + ' - ' + dados.data_final_do_documento
+                    : '';
+                const docText = [tipo, periodo].filter(Boolean).join(' • ');
+                if (docText) {
+                    progressoDocumento.textContent = docText;
+                    progressoDocumento.classList.remove('hidden');
                 }
             }
+
+            // Status visual (passa mensagem de erro se for erro/timeout)
+            const isError = status === 'erro' || status === 'timeout';
+            atualizarIconeStatus(status, isError ? errorMessage : null);
         }
 
         // Função para mostrar UI de progresso
@@ -1132,6 +1344,9 @@
             // Ocultar cards de upload
             const uploadSection = document.querySelector('.grid.grid-cols-1.lg\\:grid-cols-2.gap-6');
             if (uploadSection) uploadSection.classList.add('hidden');
+            // Ocultar seção de relatórios RAF
+            const rafSection = document.getElementById('raf-relatorios-section');
+            if (rafSection) rafSection.classList.add('hidden');
         }
 
         // Função para ocultar UI de progresso
@@ -1140,27 +1355,310 @@
             // Mostrar cards de upload
             const uploadSection = document.querySelector('.grid.grid-cols-1.lg\\:grid-cols-2.gap-6');
             if (uploadSection) uploadSection.classList.remove('hidden');
+            // Mostrar seção de relatórios RAF
+            const rafSection = document.getElementById('raf-relatorios-section');
+            if (rafSection) rafSection.classList.remove('hidden');
         }
 
         // Função para resetar UI de progresso
         function resetarProgresso() {
-            atualizarProgresso({
-                porcentagem: 0,
-                total_cnpjs: 0,
-                processados: 0,
-                importados: 0,
-                duplicados: 0,
-                status: 'aguardando'
+            // Resetar barra de progresso
+            if (barraProgresso) {
+                barraProgresso.style.width = '0%';
+                barraProgresso.className = 'bg-blue-600 h-full rounded-full transition-all duration-500 ease-out';
+            }
+            if (progressoPorcentagem) progressoPorcentagem.textContent = '0%';
+            if (progressoMensagem) progressoMensagem.textContent = 'Iniciando...';
+
+            // Resetar header
+            if (progressoEmpresa) progressoEmpresa.textContent = 'Aguardando dados...';
+            if (progressoDocumento) {
+                progressoDocumento.textContent = '';
+                progressoDocumento.classList.add('hidden');
+            }
+
+            // Resetar ícone e card para estado inicial (processando)
+            atualizarIconeStatus('processando');
+
+            // Ocultar seção de erro
+            if (progressoErro) progressoErro.classList.add('hidden');
+
+            // Ocultar seção de resultados
+            const resultadoImportacao = document.getElementById('resultado-importacao');
+            if (resultadoImportacao) resultadoImportacao.classList.add('hidden');
+        }
+
+        // Elementos da seção de resultados
+        const resultadoContainer = document.getElementById('resultado-importacao');
+        const resultadoEmpresa = document.getElementById('resultado-empresa');
+        const resultadoTotalCnpjs = document.getElementById('resultado-total-cnpjs');
+        const resultadoTotalCpfs = document.getElementById('resultado-total-cpfs');
+        const resultadoNovos = document.getElementById('resultado-novos');
+        const resultadoDuplicados = document.getElementById('resultado-duplicados');
+        const btnNovaImportacao = document.getElementById('btn-nova-importacao');
+        const btnCarregarParticipantes = document.getElementById('btn-carregar-participantes');
+        const linkFiltrarImportacao = document.getElementById('link-filtrar-importacao');
+        const listaParticipantesContainer = document.getElementById('lista-participantes-container');
+        const listaParticipantesLoading = document.getElementById('lista-participantes-loading');
+        const listaParticipantesTabela = document.getElementById('lista-participantes-tabela');
+        const participantesTbody = document.getElementById('participantes-tbody-resultado');
+
+        // Variável para guardar o ID da importação atual e IDs dos participantes
+        let importacaoAtualId = null;
+        let participanteIdsFromSSE = null; // Array de IDs recebidos do n8n via SSE
+        let participantesPage = 1;
+        let participantesTotal = 0;
+
+        // Função para mostrar seção de resultados após importação concluída
+        function mostrarResultadoImportacao(dados) {
+            console.log('[Monitoramento SPED] mostrarResultadoImportacao - dados recebidos:', dados);
+            console.log('[Monitoramento SPED] resultadoContainer existe?', !!resultadoContainer);
+
+            if (!resultadoContainer) {
+                console.error('[Monitoramento SPED] resultadoContainer NAO ENCONTRADO!');
+                return;
+            }
+
+            // Preencher dados
+            console.log('[Monitoramento SPED] Preenchendo cards...');
+            console.log('[Monitoramento SPED] total_cnpjs:', dados.total_cnpjs);
+            console.log('[Monitoramento SPED] total_cpfs:', dados.total_cpfs);
+            console.log('[Monitoramento SPED] novos_salvos:', dados.novos_salvos);
+            console.log('[Monitoramento SPED] duplicados_identificados:', dados.duplicados_identificados);
+            console.log('[Monitoramento SPED] participante_ids:', dados.participante_ids);
+
+            if (resultadoEmpresa) {
+                resultadoEmpresa.textContent = dados.nome_empresa || 'Importação concluída';
+            }
+            if (resultadoTotalCnpjs) {
+                const valor = dados.total_cnpjs || dados.total_cnpjs_unicos || 0;
+                console.log('[Monitoramento SPED] Setando CNPJs para:', valor);
+                resultadoTotalCnpjs.textContent = valor;
+            }
+            if (resultadoTotalCpfs) {
+                const valor = dados.total_cpfs || dados.total_cpfs_unicos || 0;
+                console.log('[Monitoramento SPED] Setando CPFs para:', valor);
+                resultadoTotalCpfs.textContent = valor;
+            }
+            if (resultadoNovos) {
+                const valor = dados.novos_salvos || dados.total_a_analisar || dados.novos || 0;
+                console.log('[Monitoramento SPED] Setando Novos para:', valor);
+                resultadoNovos.textContent = valor;
+            }
+            if (resultadoDuplicados) {
+                const valor = dados.duplicados_identificados || dados.total_duplicados || dados.registros_duplicados_documento || dados.duplicados || 0;
+                console.log('[Monitoramento SPED] Setando Duplicados para:', valor);
+                resultadoDuplicados.textContent = valor;
+            }
+
+            // Guardar ID da importação se disponível nos dados do SSE
+            if (dados.importacao_id) {
+                importacaoAtualId = dados.importacao_id;
+                console.log('[Monitoramento SPED] importacaoAtualId setado para:', importacaoAtualId);
+            }
+
+            // Guardar IDs dos participantes se disponível (enviados pelo n8n)
+            if (dados.participante_ids && Array.isArray(dados.participante_ids)) {
+                participanteIdsFromSSE = dados.participante_ids;
+                console.log('[Monitoramento SPED] participanteIdsFromSSE setado, total:', participanteIdsFromSSE.length);
+            }
+
+            // Atualizar link de filtro se temos o ID da importação (do SSE ou do upload inicial)
+            if (importacaoAtualId && linkFiltrarImportacao) {
+                linkFiltrarImportacao.href = '/app/monitoramento/participantes?importacao=' + importacaoAtualId;
+            }
+
+            // Resetar lista de participantes
+            if (listaParticipantesContainer) listaParticipantesContainer.classList.remove('hidden');
+            if (listaParticipantesLoading) listaParticipantesLoading.classList.add('hidden');
+            if (listaParticipantesTabela) listaParticipantesTabela.classList.add('hidden');
+            participantesPage = 1;
+
+            // Mostrar seção de resultados
+            resultadoContainer.classList.remove('hidden');
+
+            // Scroll para a seção de resultados
+            resultadoContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            // Carregar participantes automaticamente se temos IDs
+            if (participanteIdsFromSSE && participanteIdsFromSSE.length > 0) {
+                carregarParticipantes();
+            }
+        }
+
+        // Função para carregar lista de participantes
+        async function carregarParticipantes() {
+            // Verificar se temos IDs dos participantes (via SSE) ou ID da importação
+            if (!participanteIdsFromSSE && !importacaoAtualId) {
+                console.warn('[Monitoramento SPED] Nenhum ID disponível para carregar participantes');
+                return;
+            }
+
+            // Mostrar loading
+            if (listaParticipantesContainer) listaParticipantesContainer.classList.add('hidden');
+            if (listaParticipantesLoading) listaParticipantesLoading.classList.remove('hidden');
+            if (listaParticipantesTabela) listaParticipantesTabela.classList.add('hidden');
+
+            try {
+                let response;
+
+                // Priorizar uso de participante_ids se disponível (mais direto)
+                if (participanteIdsFromSSE && participanteIdsFromSSE.length > 0) {
+                    response = await fetch('/app/monitoramento/participantes/por-ids', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': csrf,
+                        },
+                        body: JSON.stringify({
+                            ids: participanteIdsFromSSE,
+                            page: participantesPage,
+                        }),
+                    });
+                } else {
+                    // Fallback: buscar por ID da importação
+                    response = await fetch('/app/monitoramento/participantes/por-importacao/' + importacaoAtualId + '?page=' + participantesPage, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+                }
+
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar participantes: HTTP ' + response.status);
+                }
+
+                const data = await response.json();
+
+                // Preencher tabela
+                preencherTabelaParticipantes(data.participantes || []);
+                participantesTotal = data.total || 0;
+
+                // Atualizar paginação
+                atualizarPaginacao(data);
+
+                // Mostrar tabela
+                if (listaParticipantesLoading) listaParticipantesLoading.classList.add('hidden');
+                if (listaParticipantesTabela) listaParticipantesTabela.classList.remove('hidden');
+
+            } catch (err) {
+                console.error('[Monitoramento SPED] Erro ao carregar participantes:', err);
+                if (listaParticipantesLoading) listaParticipantesLoading.classList.add('hidden');
+                if (listaParticipantesContainer) {
+                    listaParticipantesContainer.classList.remove('hidden');
+                    listaParticipantesContainer.innerHTML = '<div class="text-center py-8 text-red-500"><p class="text-sm">Erro ao carregar participantes. Tente novamente.</p></div>';
+                }
+            }
+        }
+
+        // Função para preencher tabela de participantes
+        function preencherTabelaParticipantes(participantes) {
+            if (!participantesTbody) return;
+
+            participantesTbody.innerHTML = '';
+
+            if (participantes.length === 0) {
+                participantesTbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-500 text-sm">Nenhum participante encontrado.</td></tr>';
+                return;
+            }
+
+            participantes.forEach(function(p) {
+                const cnpjFormatado = p.cnpj ? p.cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5') : '-';
+                const situacaoClass = p.situacao_cadastral === 'ATIVA'
+                    ? 'bg-green-100 text-green-700'
+                    : (p.situacao_cadastral ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700');
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-sm font-mono text-gray-900">${cnpjFormatado}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title="${p.razao_social || ''}">${p.razao_social || '-'}</td>
+                    <td class="px-4 py-3">
+                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${situacaoClass}">
+                            ${p.situacao_cadastral || '-'}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        <a href="/app/monitoramento/participante/${p.id}" class="text-blue-600 hover:text-blue-700 text-sm font-medium" data-link>Ver</a>
+                    </td>
+                `;
+                participantesTbody.appendChild(tr);
             });
         }
 
-        // Função para conectar ao SSE
-        function conectarSSE(importacaoId) {
+        // Função para atualizar paginação
+        function atualizarPaginacao(data) {
+            const infoEl = document.getElementById('participantes-info');
+            const btnPrev = document.getElementById('btn-prev-page');
+            const btnNext = document.getElementById('btn-next-page');
+
+            if (infoEl) {
+                const start = ((data.current_page || 1) - 1) * (data.per_page || 10) + 1;
+                const end = Math.min(start + (data.participantes?.length || 0) - 1, data.total || 0);
+                infoEl.textContent = 'Mostrando ' + start + '-' + end + ' de ' + (data.total || 0);
+            }
+
+            if (btnPrev) {
+                btnPrev.disabled = !data.prev_page_url;
+                btnPrev.onclick = function() {
+                    if (data.prev_page_url) {
+                        participantesPage--;
+                        carregarParticipantes();
+                    }
+                };
+            }
+
+            if (btnNext) {
+                btnNext.disabled = !data.next_page_url;
+                btnNext.onclick = function() {
+                    if (data.next_page_url) {
+                        participantesPage++;
+                        carregarParticipantes();
+                    }
+                };
+            }
+        }
+
+        // Event listeners para seção de resultados
+        if (btnNovaImportacao) {
+            btnNovaImportacao.addEventListener('click', function() {
+                // Ocultar seção de resultados
+                if (resultadoContainer) resultadoContainer.classList.add('hidden');
+                // Ocultar seção de progresso
+                ocultarProgresso();
+                // Resetar formulário
+                resetarProgresso();
+                // Limpar IDs armazenados
+                importacaoAtualId = null;
+                participanteIdsFromSSE = null;
+                // Limpar arquivo selecionado
+                if (txtFileInput) txtFileInput.value = '';
+                const txtFileMeta = document.getElementById('txt-file-meta');
+                if (txtFileMeta) txtFileMeta.classList.add('hidden');
+                const txtDropzone = document.getElementById('txt-dropzone');
+                if (txtDropzone) txtDropzone.classList.remove('hidden');
+                // Habilitar botão importar
+                if (txtImportarBtn) {
+                    txtImportarBtn.disabled = true;
+                    txtImportarBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Importar';
+                }
+            });
+        }
+
+        if (btnCarregarParticipantes) {
+            btnCarregarParticipantes.addEventListener('click', carregarParticipantes);
+        }
+
+        // Função para conectar ao SSE (novo formato com tab_id)
+        function conectarSSE() {
             if (eventSourceTxt) {
                 eventSourceTxt.close();
             }
 
-            const sseUrl = '/app/monitoramento/importacao/stream/' + importacaoId;
+            const sseUrl = '/app/monitoramento/progresso/stream?tab_id=' + encodeURIComponent(tabId);
             console.log('[Monitoramento SPED] Conectando ao SSE:', sseUrl);
             eventSourceTxt = new EventSource(sseUrl);
 
@@ -1179,33 +1677,26 @@
                         eventSourceTxt = null;
                         importacaoEmAndamento = false;
 
+                        // Usa mensagem do n8n ou monta mensagem com dados
+                        const dadosN8n = dados.dados || {};
+                        console.log('[Monitoramento SPED] Status concluido - dadosN8n:', dadosN8n);
+                        const totalImportados = dadosN8n.novos_salvos || dadosN8n.total_a_analisar || 0;
+                        const mensagemSucesso = dados.mensagem || ('Importação concluída! ' + totalImportados + ' novos participantes adicionados.');
+
                         if (window.showToast) {
-                            window.showToast('success', 'Importação concluída! ' + (dados.importados || 0) + ' novos participantes adicionados.');
+                            window.showToast(mensagemSucesso, 'success');
                         }
 
-                        // Redirecionar para monitoramento após 2 segundos
-                        setTimeout(function() {
-                            const link = document.createElement('a');
-                            link.href = '/app/monitoramento';
-                            link.setAttribute('data-link', '');
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                        }, 2000);
-                    } else if (dados.status === 'erro') {
+                        // Mostrar seção de resultados em vez de redirecionar
+                        console.log('[Monitoramento SPED] Chamando mostrarResultadoImportacao com:', dadosN8n);
+                        mostrarResultadoImportacao(dadosN8n);
+                    } else if (dados.status === 'erro' || dados.status === 'timeout') {
                         eventSourceTxt.close();
                         eventSourceTxt = null;
                         importacaoEmAndamento = false;
 
-                        if (window.showToast) {
-                            window.showToast('error', dados.error_message || 'Erro durante a importação.');
-                        }
-
-                        // Voltar para formulário após 3 segundos
-                        setTimeout(function() {
-                            ocultarProgresso();
-                            limparArquivoTxt();
-                        }, 3000);
+                        // Erro/timeout é tratado pelo atualizarProgresso que mostra a seção de erro
+                        // Não redireciona automaticamente - usuário decide via botão "Tentar Novamente"
                     }
                 } catch (e) {
                     console.error('[Monitoramento SPED] Erro ao parsear SSE:', e);
@@ -1217,16 +1708,16 @@
                 eventSourceTxt.close();
                 eventSourceTxt = null;
 
-                // Se ainda estava em andamento, mostrar erro
+                // Se ainda estava em andamento, mostrar seção de erro
                 if (importacaoEmAndamento) {
                     importacaoEmAndamento = false;
-                    if (window.showToast) {
-                        window.showToast('error', 'Erro na conexão. Verifique o status da importação.');
-                    }
-
-                    setTimeout(function() {
-                        ocultarProgresso();
-                    }, 2000);
+                    // Atualiza UI para mostrar erro de conexão
+                    atualizarProgresso({
+                        status: 'erro',
+                        progresso: 0,
+                        mensagem: 'Erro na conexão',
+                        error_message: 'Erro na conexão com o servidor. Verifique sua internet e tente novamente.'
+                    });
                 }
             };
         }
@@ -1237,7 +1728,7 @@
                 const tipoSped = getSelectedTipoSped();
                 if (!tipoSped) {
                     if (window.showToast) {
-                        window.showToast('error', 'Selecione o tipo de SPED antes de importar.');
+                        window.showToast('Selecione o tipo de SPED antes de importar.', 'error');
                     } else {
                         alert('Selecione o tipo de SPED antes de importar.');
                     }
@@ -1246,7 +1737,7 @@
 
                 if (!txtFileInput || !txtFileInput.files || txtFileInput.files.length === 0) {
                     if (window.showToast) {
-                        window.showToast('error', 'Selecione um arquivo .txt para importar.');
+                        window.showToast('Selecione um arquivo .txt para importar.', 'error');
                     } else {
                         alert('Selecione um arquivo .txt para importar.');
                     }
@@ -1255,7 +1746,7 @@
 
                 if (importacaoEmAndamento) {
                     if (window.showToast) {
-                        window.showToast('warning', 'Aguarde a importação em andamento terminar.');
+                        window.showToast('Aguarde a importação em andamento terminar.', 'warning');
                     }
                     return;
                 }
@@ -1291,7 +1782,13 @@
                         throw new Error(data.error || data.message || 'Erro ao enviar arquivo');
                     }
 
-                    console.log('[Monitoramento SPED] Arquivo enviado, importacao_id:', data.importacao_id);
+                    console.log('[Monitoramento SPED] Arquivo enviado com tab_id:', tabId);
+
+                    // Guardar ID da importação retornado pelo SpedUploadController
+                    if (data.importacao_id) {
+                        importacaoAtualId = data.importacao_id;
+                        console.log('[Monitoramento SPED] Importação ID:', importacaoAtualId);
+                    }
 
                     // Marcar como em andamento
                     importacaoEmAndamento = true;
@@ -1300,13 +1797,13 @@
                     resetarProgresso();
                     mostrarProgresso();
 
-                    // Conectar ao SSE para receber atualizações
-                    conectarSSE(data.importacao_id);
+                    // Conectar ao SSE para receber atualizações (usa tabId do escopo)
+                    conectarSSE();
 
                 } catch (err) {
                     console.error('[Monitoramento SPED] Erro ao enviar arquivo:', err);
                     if (window.showToast) {
-                        window.showToast('error', err.message || 'Erro ao enviar arquivo.');
+                        window.showToast(err.message || 'Erro ao enviar arquivo.', 'error');
                     } else {
                         alert(err.message || 'Erro ao enviar arquivo.');
                     }
@@ -1326,6 +1823,19 @@
                     eventSourceTxt.close();
                     eventSourceTxt = null;
                 }
+            });
+        }
+
+        // Botão "Tentar Novamente" na seção de erro
+        const btnTentarNovamente = document.getElementById('btn-tentar-novamente');
+        if (btnTentarNovamente) {
+            btnTentarNovamente.addEventListener('click', function() {
+                ocultarProgresso();
+                limparArquivoTxt();
+                resetarProgresso();
+                // Limpar IDs armazenados
+                importacaoAtualId = null;
+                participanteIdsFromSSE = null;
             });
         }
 

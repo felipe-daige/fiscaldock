@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
+use App\Models\ImportacaoParticipante;
 use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoConsulta;
 use App\Models\MonitoramentoPlano;
@@ -67,12 +68,12 @@ class MonitoramentoController extends Controller
         // Filtro por grupo
         $grupoId = $request->get('grupo');
 
-        // Buscar participantes com suas assinaturas e grupos
+        // Buscar participantes com suas assinaturas, grupos e importação
         $participantes = Participante::where('user_id', $userId)
             ->when($grupoId, function ($q) use ($grupoId) {
                 $q->whereHas('grupos', fn($q) => $q->where('participante_grupos.id', $grupoId));
             })
-            ->with(['assinaturas.plano', 'grupos', 'consultas' => function ($query) {
+            ->with(['assinaturas.plano', 'grupos', 'importacao', 'consultas' => function ($query) {
                 $query->latest('executado_em')->limit(1);
             }])
             ->orderBy('created_at', 'desc')
@@ -235,6 +236,85 @@ class MonitoramentoController extends Controller
 
         return view(self::AUTH_LAYOUT_VIEW, array_merge([
             'initialView' => $historicoView
+        ], $data));
+    }
+
+    /**
+     * Lista participantes importados com filtros.
+     */
+    public function listaParticipantes(Request $request)
+    {
+        $participantesView = self::AUTH_VIEW_PREFIX . 'participantes-importados';
+
+        if (!view()->exists($participantesView)) {
+            abort(404);
+        }
+
+        if (!Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        $user = Auth::user();
+        $userId = (int) $user->id;
+
+        // Filtros
+        $importacaoId = $request->get('importacao');
+        $clienteId = $request->get('cliente');
+        $origemTipo = $request->get('origem');
+        $busca = $request->get('busca');
+
+        // Query de participantes com filtros
+        $participantesQuery = Participante::where('user_id', $userId)
+            ->with(['cliente', 'importacao'])
+            ->when($importacaoId, fn($q) => $q->where('importacao_participante_id', $importacaoId))
+            ->when($clienteId, fn($q) => $q->where('cliente_id', $clienteId))
+            ->when($origemTipo, fn($q) => $q->where('origem_tipo', $origemTipo))
+            ->when($busca, function ($q) use ($busca) {
+                $q->where(function ($sub) use ($busca) {
+                    $sub->where('cnpj', 'like', "%{$busca}%")
+                        ->orWhere('razao_social', 'ilike', "%{$busca}%");
+                });
+            })
+            ->orderBy('created_at', 'desc');
+
+        $participantes = $participantesQuery->paginate(50)->withQueryString();
+
+        // Buscar importações para o filtro
+        $importacoes = ImportacaoParticipante::where('user_id', $userId)
+            ->where('status', 'concluido')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Buscar clientes para o filtro
+        $clientes = Cliente::where('user_id', $userId)
+            ->where('ativo', true)
+            ->orderBy('razao_social')
+            ->get();
+
+        // Tipos de origem disponíveis
+        $origens = ['SPED_EFD_FISCAL', 'SPED_EFD_CONTRIB', 'NFE', 'NFSE', 'MANUAL'];
+
+        $data = [
+            'participantes' => $participantes,
+            'importacoes' => $importacoes,
+            'clientes' => $clientes,
+            'origens' => $origens,
+            'filtros' => [
+                'importacao' => $importacaoId,
+                'cliente' => $clienteId,
+                'origem' => $origemTipo,
+                'busca' => $busca,
+            ],
+            'credits' => $this->creditService->getBalance($user),
+        ];
+
+        if ($this->isAjaxRequest($request)) {
+            $renderedView = view($participantesView, $data)->render();
+            return response($renderedView)->header('Content-Type', 'text/html');
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, array_merge([
+            'initialView' => $participantesView
         ], $data));
     }
 
@@ -1808,6 +1888,7 @@ class MonitoramentoController extends Controller
         return response()->stream(function () use ($cacheKey, $userId, $tabId) {
             $tentativas = 0;
             $maxTentativas = 300; // 5 minutos (300 segundos)
+            $lastDataHash = null; // Para evitar enviar dados repetidos
 
             // Enviar comentário inicial
             echo ": SSE connection established for progress stream (user:{$userId}, tab:{$tabId})\n\n";
@@ -1822,24 +1903,32 @@ class MonitoramentoController extends Controller
                     $data = Cache::get($cacheKey);
 
                     if ($data) {
-                        // Enviar dados de progresso
-                        echo "data: " . json_encode($data) . "\n\n";
+                        // Calcular hash para detectar mudanças
+                        $currentHash = md5(json_encode($data));
 
-                        if (ob_get_level() > 0) {
-                            ob_flush();
-                        }
-                        flush();
+                        // Só enviar se os dados mudaram
+                        if ($currentHash !== $lastDataHash) {
+                            $lastDataHash = $currentHash;
 
-                        // Se status é final, encerrar a conexão
-                        if (in_array($data['status'] ?? '', ['concluido', 'erro'])) {
-                            Log::info('SSE streamProgresso: status final recebido', [
-                                'user_id' => $userId,
-                                'tab_id' => $tabId,
-                                'status' => $data['status'],
-                            ]);
-                            // Limpar cache após status final
-                            Cache::forget($cacheKey);
-                            break;
+                            // Enviar dados de progresso
+                            echo "data: " . json_encode($data) . "\n\n";
+
+                            if (ob_get_level() > 0) {
+                                ob_flush();
+                            }
+                            flush();
+
+                            // Se status é final, encerrar a conexão
+                            if (in_array($data['status'] ?? '', ['concluido', 'erro'])) {
+                                Log::info('SSE streamProgresso: status final recebido', [
+                                    'user_id' => $userId,
+                                    'tab_id' => $tabId,
+                                    'status' => $data['status'],
+                                ]);
+                                // Limpar cache após status final
+                                Cache::forget($cacheKey);
+                                break;
+                            }
                         }
                     }
 
@@ -1890,6 +1979,123 @@ class MonitoramentoController extends Controller
             'Cache-Control' => 'no-cache',
             'X-Accel-Buffering' => 'no',
             'Connection' => 'keep-alive',
+        ]);
+    }
+
+    /**
+     * Retorna participantes por array de IDs (JSON para AJAX).
+     * Usado quando n8n envia participante_ids no payload de conclusão.
+     */
+    public function participantesPorIds(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Usuário não autenticado.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = Auth::user();
+        $ids = $request->input('ids', []);
+
+        if (empty($ids) || !is_array($ids)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Nenhum ID de participante fornecido.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Converter strings para inteiros (n8n pode enviar ["295", "325"] como strings)
+        $ids = array_map('intval', $ids);
+
+        // Buscar participantes pelos IDs, garantindo que pertencem ao usuário
+        $perPage = $request->input('per_page', 10);
+        $participantes = Participante::whereIn('id', $ids)
+            ->where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'participantes' => $participantes->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'cnpj' => $p->cnpj,
+                    'razao_social' => $p->razao_social,
+                    'situacao_cadastral' => $p->situacao_cadastral,
+                    'regime_tributario' => $p->regime_tributario,
+                    'uf' => $p->uf,
+                ];
+            }),
+            'total' => $participantes->total(),
+            'per_page' => $participantes->perPage(),
+            'current_page' => $participantes->currentPage(),
+            'last_page' => $participantes->lastPage(),
+            'prev_page_url' => $participantes->previousPageUrl(),
+            'next_page_url' => $participantes->nextPageUrl(),
+        ]);
+    }
+
+    /**
+     * Retorna participantes de uma importação específica (JSON para AJAX).
+     */
+    public function participantesPorImportacao(Request $request, $importacaoId)
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Usuário não autenticado.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = Auth::user();
+
+        // Verificar se a importação pertence ao usuário
+        $importacao = ImportacaoParticipante::where('id', $importacaoId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$importacao) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Importação não encontrada.',
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        // Buscar participantes dessa importação
+        $perPage = $request->input('per_page', 10);
+        $participantes = Participante::where('user_id', $user->id)
+            ->where('importacao_participante_id', $importacaoId)
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'importacao' => [
+                'id' => $importacao->id,
+                'filename' => $importacao->filename,
+                'tipo_efd' => $importacao->tipo_efd,
+                'total_participantes' => $importacao->total_participantes,
+                'novos' => $importacao->novos,
+                'duplicados' => $importacao->duplicados,
+                'created_at' => $importacao->created_at->format('d/m/Y H:i'),
+            ],
+            'participantes' => $participantes->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'cnpj' => $p->cnpj,
+                    'razao_social' => $p->razao_social,
+                    'situacao_cadastral' => $p->situacao_cadastral,
+                    'regime_tributario' => $p->regime_tributario,
+                    'uf' => $p->uf,
+                ];
+            }),
+            'total' => $participantes->total(),
+            'per_page' => $participantes->perPage(),
+            'current_page' => $participantes->currentPage(),
+            'last_page' => $participantes->lastPage(),
+            'prev_page_url' => $participantes->previousPageUrl(),
+            'next_page_url' => $participantes->nextPageUrl(),
         ]);
     }
 

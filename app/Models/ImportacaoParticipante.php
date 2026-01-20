@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ImportacaoParticipante extends Model
 {
@@ -13,11 +14,13 @@ class ImportacaoParticipante extends Model
         'user_id',
         'tipo_efd',
         'filename',
-        'total_cnpjs',
-        'processados',
-        'importados',
+        'total_participantes',
+        'total_cnpjs_unicos',
+        'total_cpfs_unicos',
+        'novos',
         'duplicados',
         'status',
+        'participante_ids',
         'iniciado_em',
         'concluido_em',
     ];
@@ -25,10 +28,12 @@ class ImportacaoParticipante extends Model
     protected function casts(): array
     {
         return [
-            'total_cnpjs' => 'integer',
-            'processados' => 'integer',
-            'importados' => 'integer',
+            'total_participantes' => 'integer',
+            'total_cnpjs_unicos' => 'integer',
+            'total_cpfs_unicos' => 'integer',
+            'novos' => 'integer',
             'duplicados' => 'integer',
+            'participante_ids' => 'array',
             'iniciado_em' => 'datetime',
             'concluido_em' => 'datetime',
         ];
@@ -41,13 +46,19 @@ class ImportacaoParticipante extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function participantes(): HasMany
+    {
+        return $this->hasMany(Participante::class, 'importacao_participante_id');
+    }
+
     // Acessores
 
-    public function getPorcentagemAttribute(): int
+    /**
+     * Total de participantes processados (novos + duplicados).
+     */
+    public function getTotalProcessadosAttribute(): int
     {
-        return $this->total_cnpjs > 0
-            ? (int) round(($this->processados / $this->total_cnpjs) * 100)
-            : 0;
+        return $this->novos + $this->duplicados;
     }
 
     // Scopes

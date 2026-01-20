@@ -17,6 +17,7 @@ class Participante extends Model
     protected $fillable = [
         'user_id',
         'cliente_id',
+        'importacao_participante_id',
         'cnpj',
         'razao_social',
         'nome_fantasia',
@@ -47,6 +48,14 @@ class Participante extends Model
     public function cliente(): BelongsTo
     {
         return $this->belongsTo(Cliente::class);
+    }
+
+    /**
+     * Importação que criou este participante (opcional).
+     */
+    public function importacao(): BelongsTo
+    {
+        return $this->belongsTo(ImportacaoParticipante::class, 'importacao_participante_id');
     }
 
     /**
