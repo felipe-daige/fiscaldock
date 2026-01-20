@@ -1694,6 +1694,14 @@ class DataReceiverController extends Controller
      */
     private function handleNewProgressFormat(Request $request)
     {
+        // Debug: logar dados raw antes da validação
+        Log::info('DEBUG handleNewProgressFormat - request raw', [
+            'has_dados_key' => $request->has('dados'),
+            'dados_is_array' => is_array($request->input('dados')),
+            'dados_type' => gettype($request->input('dados')),
+            'dados_not_empty' => !empty($request->input('dados')),
+        ]);
+
         $validated = $request->validate([
             'user_id' => 'required|integer|exists:users,id',
             'tab_id' => 'required|string|max:36',
@@ -1703,6 +1711,15 @@ class DataReceiverController extends Controller
             // Campos opcionais para erros
             'error_code' => 'nullable|string|max:50',
             'error_message' => 'nullable|string|max:500',
+            // Campo flexível para dados agregados (nome empresa, totais, etc.)
+            'dados' => 'nullable|array',
+            'dados.*' => 'nullable',  // Permitir qualquer valor dentro de dados
+        ]);
+
+        // Debug: logar dados após validação
+        Log::info('DEBUG handleNewProgressFormat - after validation', [
+            'validated_has_dados' => isset($validated['dados']),
+            'validated_dados_not_empty' => !empty($validated['dados'] ?? null),
         ]);
 
         // Chave do cache: progresso:{user_id}:{tab_id}
@@ -1726,6 +1743,11 @@ class DataReceiverController extends Controller
             $cacheData['error_message'] = $validated['error_message'];
         }
 
+        // Adicionar campo dados se fornecido (flexível, passa direto)
+        if (!empty($validated['dados'])) {
+            $cacheData['dados'] = $validated['dados'];
+        }
+
         // Armazena em cache (TTL 10 minutos)
         Cache::put($cacheKey, $cacheData, 600);
 
@@ -1736,6 +1758,7 @@ class DataReceiverController extends Controller
             'progresso' => $validated['progresso'],
             'status' => $validated['status'],
             'has_error' => !empty($validated['error_code']),
+            'has_dados' => !empty($validated['dados']),
         ]);
 
         return response()->json([

@@ -36,8 +36,23 @@ class SpedUploadController extends Controller
                 'progress_url' => url('/api/monitoramento/sped/importacao-txt/progress'),
             ]));
 
-            return response($response->body(), $response->status())
-                ->header('Content-Type', $response->header('Content-Type'));
+            // Normalizar resposta para o frontend (espera {success: true})
+            if ($response->successful()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Arquivo enviado para processamento.',
+                ]);
+            }
+
+            Log::error('Erro ao enviar SPED para n8n', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Erro ao processar arquivo.',
+            ], $response->status());
 
         } catch (\Exception $e) {
             Log::error('Erro upload SPED', ['error' => $e->getMessage()]);

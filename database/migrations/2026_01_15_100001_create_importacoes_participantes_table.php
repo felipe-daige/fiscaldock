@@ -16,11 +16,13 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('tipo_efd', 30); // 'EFD Fiscal' ou 'EFD Contribuições'
             $table->string('filename')->nullable();
-            $table->integer('total_cnpjs')->default(0);
-            $table->integer('processados')->default(0);
-            $table->integer('importados')->default(0);
-            $table->integer('duplicados')->default(0);
+            $table->integer('total_participantes')->default(0); // Total de registros no arquivo
+            $table->integer('total_cnpjs_unicos')->default(0);  // CNPJs únicos encontrados
+            $table->integer('total_cpfs_unicos')->default(0);   // CPFs únicos encontrados
+            $table->integer('novos')->default(0);               // Novos inseridos no banco
+            $table->integer('duplicados')->default(0);          // Já existiam no banco
             $table->string('status', 20)->default('pendente'); // pendente, processando, concluido, erro
+            $table->jsonb('participante_ids')->nullable(); // Array de IDs dos participantes criados
             $table->timestamp('iniciado_em')->nullable();
             $table->timestamp('concluido_em')->nullable();
             $table->timestamps();

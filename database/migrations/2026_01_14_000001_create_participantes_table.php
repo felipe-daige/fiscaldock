@@ -29,8 +29,9 @@ return new class extends Migration
             $table->string('complemento')->nullable();
             $table->string('bairro')->nullable();
             $table->string('codigo_municipal')->nullable();
+            $table->unsignedBigInteger('importacao_participante_id')->nullable()->index(); // FK sem constraint (criada depois)
             $table->string('origem_tipo'); // SPED_EFD_FISCAL, SPED_EFD_CONTRIB, NFE, NFSE, MANUAL
-            $table->json('origem_ref')->nullable(); // {"raf_relatorio_id": 123}
+            $table->json('origem_ref')->nullable(); // {"arquivo": "...", "importado_em": "..."}
             $table->timestamp('ultima_consulta_em')->nullable();
             $table->timestamps();
 

@@ -110,6 +110,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/sped', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'importarSped'])->name('sped');
         Route::get('/avulso', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'consultaAvulsa'])->name('avulso');
         Route::get('/historico', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'historico'])->name('historico');
+        Route::get('/participantes', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'listaParticipantes'])->name('participantes');
         Route::get('/participante/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'participante'])->name('participante');
         Route::get('/consulta/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'consultaDetalhes'])->name('consulta');
         Route::get('/participantes-raf/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'participantesRaf'])->name('participantes-raf');
@@ -141,5 +142,11 @@ Route::middleware('auth')->group(function () {
         Route::put('/grupos/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'editarGrupo'])->name('grupos.editar');
         Route::delete('/grupos/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'excluirGrupo'])->name('grupos.excluir');
         Route::post('/participantes/associar-grupo', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'associarGrupo'])->name('participantes.associar-grupo');
+
+        // Participantes por importação (AJAX)
+        Route::get('/participantes/por-importacao/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'participantesPorImportacao'])->name('participantes.por-importacao');
+
+        // Participantes por IDs (AJAX) - usado quando n8n envia participante_ids
+        Route::post('/participantes/por-ids', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'participantesPorIds'])->name('participantes.por-ids');
     });
 });

@@ -262,7 +262,39 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-600">{{ $participante->regime_tributario ?? '-' }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-500">{{ str_replace('_', ' ', $participante->origem_tipo ?? '-') }}</td>
+                                <td class="px-6 py-4">
+                                    @php
+                                        $origemTipo = $participante->origem_tipo ?? 'MANUAL';
+                                        $origemRef = $participante->origem_ref ?? [];
+                                        $importacao = $participante->importacao;
+
+                                        // Determinar cor e texto do badge baseado na origem
+                                        $badgeConfig = match($origemTipo) {
+                                            'SPED_EFD_FISCAL' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-700', 'label' => 'SPED Fiscal'],
+                                            'SPED_EFD_CONTRIB' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-700', 'label' => 'SPED Contrib'],
+                                            'NFE' => ['bg' => 'bg-green-100', 'text' => 'text-green-700', 'label' => 'NF-e'],
+                                            'NFSE' => ['bg' => 'bg-teal-100', 'text' => 'text-teal-700', 'label' => 'NFS-e'],
+                                            'MANUAL' => ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'label' => 'Manual'],
+                                            default => ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'label' => str_replace('_', ' ', $origemTipo)],
+                                        };
+
+                                        // Obter nome do arquivo
+                                        $nomeArquivo = $importacao?->filename ?? $origemRef['arquivo'] ?? null;
+                                        if ($nomeArquivo && strlen($nomeArquivo) > 25) {
+                                            $nomeArquivo = substr($nomeArquivo, 0, 22) . '...';
+                                        }
+                                    @endphp
+                                    <div class="flex flex-col gap-1">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium {{ $badgeConfig['bg'] }} {{ $badgeConfig['text'] }}">
+                                            {{ $badgeConfig['label'] }}
+                                        </span>
+                                        @if($nomeArquivo)
+                                            <span class="text-xs text-gray-400 truncate max-w-[150px]" title="{{ $importacao?->filename ?? $origemRef['arquivo'] ?? '' }}">
+                                                {{ $nomeArquivo }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </td>
                                 <td class="px-6 py-4">
                                     <div class="flex flex-wrap gap-1">
                                         @forelse($participante->grupos as $grupo)

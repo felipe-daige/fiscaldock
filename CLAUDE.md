@@ -40,6 +40,71 @@ php artisan migrate:fresh --seed
 ./deploy.sh
 ```
 
+## Docker Development
+
+**Image version:** `docker-compose.dev.yml` uses `felipedaige/fiscaldock:X.X.X`. Keep in sync with latest release.
+
+**Iniciar ambiente de desenvolvimento:**
+```bash
+docker compose -f docker-compose.dev.yml up -d
+# Acesso: http://localhost:8080
+```
+
+**Troubleshooting 404 on API routes (dev):**
+1. Check image version matches latest release
+2. Clear caches: `docker compose -f docker-compose.dev.yml exec app php artisan route:clear && php artisan config:clear && php artisan cache:clear`
+3. Restart containers: `docker compose -f docker-compose.dev.yml up -d`
+
+**Testing n8n integration locally:**
+```bash
+# Verify route exists
+docker compose -f docker-compose.dev.yml exec app php artisan route:list --path=api/monitoramento
+
+# Test endpoint (should return 401, not 404)
+curl -X POST "http://localhost:8080/api/monitoramento/sped/importacao-txt/progress" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Token: test" \
+  -d '{"user_id": 1, "tab_id": "test", "progresso": 50, "status": "processando"}'
+```
+
+## Docker Production (Swarm)
+
+**Arquitetura:** Produção usa Docker Swarm com rede overlay `network_public` e Traefik como reverse proxy.
+
+**Arquivos:**
+- `docker-compose.yml` - Configuração de produção (Swarm)
+- `docker-compose.dev.yml` - Configuração de desenvolvimento (local)
+
+**Verificar serviços rodando:**
+```bash
+docker service ls | grep fiscaldock
+```
+
+**Deploy para produção (atualizar imagem):**
+```bash
+# 1. Baixar nova imagem
+docker pull felipedaige/fiscaldock:X.X.X
+
+# 2. Atualizar serviços Swarm
+docker service update --image felipedaige/fiscaldock:X.X.X fiscaldock_app
+docker service update --image felipedaige/fiscaldock:X.X.X fiscaldock_scheduler
+
+# 3. Atualizar docker-compose.yml com a nova versão
+```
+
+**Troubleshooting 404 em produção:**
+
+Se n8n retorna 404 para rotas da API:
+1. Verificar se a rota existe no código local
+2. Testar localmente: `curl -X POST "http://localhost:8080/api/..." -H "X-API-Token: test"`
+3. Testar em produção: `curl -X POST "https://fiscaldock.com.br/api/..." -H "X-API-Token: test"`
+4. Se local funciona mas produção não → **imagem desatualizada**
+5. Fazer deploy da nova versão via `docker service update`
+
+**IMPORTANTE:** O script `./deploy.sh` usa `docker compose` (não Swarm). Para produção, usar `docker service update`.
+
+**Rede:** A rede `network_public` é overlay do Swarm e não permite `docker network connect` manual. Containers de dev e prod não se comunicam diretamente.
+
 ## Core Modules
 
 ### RAF (Regime and Fiscal Analysis)
@@ -102,11 +167,75 @@ $url = config('services.webhook.sped_fiscal_url');  // Never use env() directly
 
 Cache key: `progresso:{user_id}:{tab_id}`
 
+**Fluxo padrão de progresso:**
+
+| Etapa | progresso | status | mensagem | Resposta esperada |
+|-------|-----------|--------|----------|-------------------|
+| 1. Workflow iniciado | 0 | `iniciando` | "Iniciando processamento..." | 200 |
+| 2. Empresa identificada | 5 | `processando` | "NOME DA EMPRESA" | 200 |
+| 3. Processando | 10-90 | `processando` | "Processando participantes..." | 200 |
+| 4. Concluído | 100 | `concluido` | "Importação concluída" | 200 |
+| 5. Erro (se houver) | qualquer | `erro` | "Descrição do erro" | 200 |
+
+**IMPORTANTE:** O campo `progresso` deve ser sempre um **inteiro válido** (0-100). Nunca enviar `"NaN"` ou strings.
+
 **Payload n8n → Laravel:**
 ```json
-{"user_id": 1, "tab_id": "uuid", "progresso": 45, "mensagem": "...", "status": "processando"}
+{
+  "user_id": 1,
+  "tab_id": "uuid",
+  "progresso": 45,
+  "mensagem": "Processando participantes...",
+  "status": "processando",
+  "dados": {
+    "nome_empresa": "EMPRESA XYZ LTDA",
+    "total_participantes": 150,
+    "total_cpfs": 30,
+    "total_cnpjs": 120,
+    "total_duplicados": 15,
+    "total_a_analisar": 105,
+    "importacao_id": 123,
+    "participante_ids": [1, 2, 3, 4, 5]
+  }
+}
 ```
-Status: `iniciando`, `processando`, `concluido`, `erro`
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `user_id` | int | ID do usuário |
+| `tab_id` | string | UUID da aba do browser |
+| `progresso` | int | 0-100 (obrigatório, deve ser inteiro) |
+| `mensagem` | string | Texto exibido na UI |
+| `status` | enum | `iniciando`, `processando`, `concluido`, `erro` |
+| `dados` | object | **Flexível** - qualquer estrutura JSON |
+
+**Campo `dados`:** Passa direto do n8n → cache → SSE → frontend. Laravel não valida estrutura interna.
+
+**Campo `participante_ids`:** Array de IDs dos participantes criados. Quando `status=concluido`, n8n deve:
+1. Salvar o array na tabela `importacoes_participantes.participante_ids`
+2. Incluir no payload de progresso para exibição imediata no frontend
+
+```sql
+-- Ao finalizar importação, salvar IDs dos participantes criados
+UPDATE importacoes_participantes
+SET participante_ids = '[1, 2, 3, 4, 5]', status = 'concluido'
+WHERE id = 123;
+```
+
+**Frontend (sped.blade.php):**
+- Stats cards aparecem imediatamente ao iniciar importação (com zeros)
+- Valores atualizam em tempo real conforme dados chegam via SSE
+- Em caso de erro/timeout: stats são ocultados, seção de erro aparece
+- Em nova importação: stats resetam para zero mas permanecem visíveis
+
+**Resposta do Laravel:**
+```json
+// Sucesso (200)
+{"success": true}
+
+// Erro de validação (422) - ex: progresso inválido
+{"success": false, "errors": {"progresso": ["The progresso field must be an integer."]}}
+```
 
 ## Credit System
 
