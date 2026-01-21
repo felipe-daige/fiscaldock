@@ -145,7 +145,8 @@ All URLs via `config('services.webhook.*')`, NO defaults in code.
 | RAF Gratuito (Contribuições) | `WEBHOOK_SPED_CONTRIBUICOES_URL` |
 | RAF Completa (Fiscal) | `WEBHOOK_SPED_FISCAL_COMPLETA_URL` |
 | RAF Completa (Contribuições) | `WEBHOOK_SPED_CONTRIBUICOES_COMPLETA_URL` |
-| Monitoramento Import | `WEBHOOK_MONITORAMENTO_IMPORTACAO_TXT_URL` |
+| Monitoramento Import (Contribuições) | `WEBHOOK_MONITORAMENTO_IMPORTACAO_CONTRIBUICOES_URL` |
+| Monitoramento Import (Fiscal) | `WEBHOOK_MONITORAMENTO_IMPORTACAO_FISCAL_URL` |
 | Monitoramento Consulta | `WEBHOOK_MONITORAMENTO_CONSULTA_URL` |
 
 ```php

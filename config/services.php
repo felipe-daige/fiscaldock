@@ -42,8 +42,9 @@ return [
         // Webhooks RAF - modalidade "completa" (CND + regime tributário)
         'sped_contribuicoes_completa_url' => env('WEBHOOK_SPED_CONTRIBUICOES_COMPLETA_URL'),
         'sped_fiscal_completa_url' => env('WEBHOOK_SPED_FISCAL_COMPLETA_URL'),
-        // Webhook Monitoramento - importação de arquivo .txt
-        'monitoramento_importacao_txt_url' => env('WEBHOOK_MONITORAMENTO_IMPORTACAO_TXT_URL'),
+        // Webhook Monitoramento - importação de arquivo .txt (separado por tipo)
+        'monitoramento_importacao_contribuicoes_url' => env('WEBHOOK_MONITORAMENTO_IMPORTACAO_CONTRIBUICOES_URL'),
+        'monitoramento_importacao_fiscal_url' => env('WEBHOOK_MONITORAMENTO_IMPORTACAO_FISCAL_URL'),
         // Webhook Monitoramento - consultas avulsas e de assinatura
         'monitoramento_consulta_url' => env('WEBHOOK_MONITORAMENTO_CONSULTA_URL'),
         // Credenciais
