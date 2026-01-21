@@ -1712,8 +1712,8 @@ class DataReceiverController extends Controller
             'error_code' => 'nullable|string|max:50',
             'error_message' => 'nullable|string|max:500',
             // Campo flexível para dados agregados (nome empresa, totais, etc.)
-            'dados' => 'nullable|array',
-            'dados.*' => 'nullable',  // Permitir qualquer valor dentro de dados
+            // Não usar 'array' pois pode rejeitar arrays aninhados complexos do n8n
+            'dados' => 'nullable',
         ]);
 
         // Debug: logar dados após validação
@@ -1743,10 +1743,9 @@ class DataReceiverController extends Controller
             $cacheData['error_message'] = $validated['error_message'];
         }
 
-        // Adicionar campo dados se fornecido (flexível, passa direto)
-        if (!empty($validated['dados'])) {
-            $cacheData['dados'] = $validated['dados'];
-        }
+        // Sempre incluir campo dados no cache (mesmo se vazio, para consistência)
+        // Isso evita que dados válidos sejam perdidos por condições restritivas
+        $cacheData['dados'] = $validated['dados'] ?? [];
 
         // Armazena em cache (TTL 10 minutos)
         Cache::put($cacheKey, $cacheData, 600);
