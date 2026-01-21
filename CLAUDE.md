@@ -309,3 +309,86 @@ null
 ```
 
 **Docs:** `docs/n8n.md` (seção "Tabela Participantes")
+
+### Diferenciação Novos vs Duplicados na Lista
+
+Após importar SPED em `/app/monitoramento/sped`, a lista de participantes diferencia visualmente:
+
+- **Novos:** `importacao_participante_id == importação atual` (criados nesta importação)
+- **Duplicados:** `importacao_participante_id != importação atual` (já existiam antes)
+
+**Visual:**
+- Seção "Novos participantes" (fundo verde) aparece primeiro
+- Seção "Já cadastrados" (fundo âmbar) aparece depois com `opacity-50`
+
+**Backend:** `MonitoramentoController::participantesPorIds()` recebe `importacao_id` e retorna `is_novo`/`is_duplicado` para cada participante.
+
+**Frontend:** `sped.blade.php` → `preencherTabelaParticipantes()` separa e estiliza as seções.
+
+## Troubleshooting: Upload SPED Monitoramento não envia para n8n
+
+**Problema:** Ao clicar no botão "Importar" em `/app/monitoramento/sped`, às vezes o arquivo não é enviado para o n8n.
+
+**Sintomas possíveis:**
+- Botão fica em "Enviando..." e depois volta ao normal sem progresso
+- Toast de erro aparece
+- Nada acontece (silencioso)
+- Toast "Aguarde a importação em andamento terminar" aparece
+
+### Diagnóstico
+
+**1. Verificar logs do Laravel:**
+```bash
+# Ver últimos logs de upload
+grep -i "SpedUpload" storage/logs/laravel.log | tail -20
+
+# Logs esperados (sucesso):
+# SpedUpload: iniciando envio para n8n {...}
+# SpedUpload: arquivo enviado com sucesso {...}
+
+# Logs de erro:
+# SpedUpload: webhook não configurado
+# SpedUpload: erro na resposta do n8n
+# SpedUpload: exceção ao enviar
+```
+
+**2. Verificar console do browser (F12):**
+```
+[Monitoramento SPED] Arquivo enviado com tab_id: xxx  // Sucesso
+[Monitoramento SPED] Erro ao enviar arquivo: xxx      // Falha
+```
+
+**3. Verificar se webhook está configurado:**
+```bash
+grep "WEBHOOK_MONITORAMENTO_IMPORTACAO" .env
+# Deve mostrar URLs para CONTRIBUICOES e FISCAL
+```
+
+### Causas Conhecidas
+
+| Sintoma | Causa | Solução |
+|---------|-------|---------|
+| Toast "Aguarde importação em andamento" | Flag `importacaoEmAndamento` travada | Recarregar página (F5) |
+| Log "webhook não configurado" | Variável `.env` faltando | Adicionar `WEBHOOK_MONITORAMENTO_IMPORTACAO_*_URL` |
+| Log "erro na resposta do n8n" | n8n offline ou webhook errado | Verificar n8n e URL do webhook |
+| Log "exceção ao enviar" + timeout | n8n lento ou rede instável | Verificar conectividade |
+| Nenhum log de SpedUpload | Request não chegou ao Laravel | Verificar network tab do browser |
+
+### Arquivos Relevantes
+
+- `app/Http/Controllers/SpedUploadController.php` - Controller que envia para n8n
+- `resources/views/autenticado/monitoramento/sped.blade.php` - Frontend com JS
+- `config/services.php` - Configuração dos webhooks
+
+### Para Reportar ao Claude
+
+Se o problema persistir, forneça:
+1. **Logs do Laravel:** `grep -i "SpedUpload" storage/logs/laravel.log | tail -30`
+2. **Console do browser:** Copiar erros do F12 > Console
+3. **Network tab:** Status da request para `/app/sped/upload`
+4. **Tipo de SPED:** EFD Fiscal ou EFD Contribuições
+5. **Comportamento:** O que aconteceu (toast, erro, silêncio)
+
+### Histórico de Correções
+
+**2026-01-21:** Flag `importacaoEmAndamento` não era resetada nos botões "Nova Importação" e "Tentar Novamente", causando bloqueio silencioso de novas importações. Corrigido em `sped.blade.php`.

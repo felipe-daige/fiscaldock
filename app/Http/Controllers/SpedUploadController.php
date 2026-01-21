@@ -20,37 +20,68 @@ class SpedUploadController extends Controller
 
         $file = $request->file('file');
         $tipoEfd = $request->input('tipo_efd', 'contribuicoes');
+        $tabId = $request->input('tab_id');
 
         // Selecionar webhook baseado no tipo de EFD
-        $webhookUrl = match ($tipoEfd) {
-            'fiscal' => config('services.webhook.monitoramento_importacao_fiscal_url'),
-            default => config('services.webhook.monitoramento_importacao_contribuicoes_url'),
-        };
+        $isFiscal = str_contains(strtolower($tipoEfd), 'fiscal');
+        $webhookUrl = $isFiscal
+            ? config('services.webhook.monitoramento_importacao_fiscal_url')
+            : config('services.webhook.monitoramento_importacao_contribuicoes_url');
+
+        Log::info('SpedUpload: iniciando envio para n8n', [
+            'user_id' => Auth::id(),
+            'tipo_efd' => $tipoEfd,
+            'is_fiscal' => $isFiscal,
+            'tab_id' => $tabId,
+            'filename' => $file->getClientOriginalName(),
+            'file_size' => $file->getSize(),
+            'webhook_url' => $webhookUrl ? 'configurado' : 'NÃO CONFIGURADO',
+        ]);
 
         if (!$webhookUrl) {
+            Log::error('SpedUpload: webhook não configurado', [
+                'tipo_efd' => $tipoEfd,
+                'is_fiscal' => $isFiscal,
+            ]);
             return response()->json(['error' => "Webhook para tipo '$tipoEfd' não configurado"], 503);
         }
 
         try {
-            $response = Http::attach(
-                'file',
-                file_get_contents($file->getRealPath()),
-                $file->getClientOriginalName()
-            )->post($webhookUrl, array_merge($request->except(['file', '_token']), [
+            $payload = array_merge($request->except(['file', '_token']), [
                 'user_id' => Auth::id(),
                 'filename' => $file->getClientOriginalName(),
                 'progress_url' => url('/api/monitoramento/sped/importacao-txt/progress'),
-            ]));
+            ]);
+
+            Log::debug('SpedUpload: enviando para webhook', [
+                'webhook_url' => $webhookUrl,
+                'payload_keys' => array_keys($payload),
+            ]);
+
+            $response = Http::timeout(30)->attach(
+                'file',
+                file_get_contents($file->getRealPath()),
+                $file->getClientOriginalName()
+            )->post($webhookUrl, $payload);
 
             // Normalizar resposta para o frontend (espera {success: true})
             if ($response->successful()) {
+                Log::info('SpedUpload: arquivo enviado com sucesso', [
+                    'user_id' => Auth::id(),
+                    'tab_id' => $tabId,
+                    'filename' => $file->getClientOriginalName(),
+                    'response_status' => $response->status(),
+                ]);
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Arquivo enviado para processamento.',
                 ]);
             }
 
-            Log::error('Erro ao enviar SPED para n8n', [
+            Log::error('SpedUpload: erro na resposta do n8n', [
+                'user_id' => Auth::id(),
+                'tab_id' => $tabId,
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);
@@ -61,7 +92,12 @@ class SpedUploadController extends Controller
             ], $response->status());
 
         } catch (\Exception $e) {
-            Log::error('Erro upload SPED', ['error' => $e->getMessage()]);
+            Log::error('SpedUpload: exceção ao enviar', [
+                'user_id' => Auth::id(),
+                'tab_id' => $tabId,
+                'error' => $e->getMessage(),
+                'exception_class' => get_class($e),
+            ]);
             return response()->json(['error' => 'Erro ao enviar arquivo'], 500);
         }
     }

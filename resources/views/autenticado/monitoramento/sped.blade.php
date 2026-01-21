@@ -1514,6 +1514,7 @@
                         },
                         body: JSON.stringify({
                             ids: participanteIdsFromSSE,
+                            importacao_id: importacaoAtualId,
                             page: participantesPage,
                         }),
                     });
@@ -1565,14 +1566,38 @@
                 return;
             }
 
-            participantes.forEach(function(p) {
+            // Separar novos e duplicados
+            const novos = participantes.filter(p => p.is_novo);
+            const duplicados = participantes.filter(p => p.is_duplicado);
+
+            // Cabeçalho "Novos" se houver
+            if (novos.length > 0) {
+                const headerTr = document.createElement('tr');
+                headerTr.innerHTML = `<td colspan="4" class="px-4 py-2 bg-green-50 border-b border-green-200">
+                    <span class="text-xs font-semibold text-green-700 uppercase">Novos participantes (${novos.length})</span>
+                </td>`;
+                participantesTbody.appendChild(headerTr);
+                novos.forEach(p => renderRow(p, false));
+            }
+
+            // Cabeçalho "Duplicados" se houver
+            if (duplicados.length > 0) {
+                const headerTr = document.createElement('tr');
+                headerTr.innerHTML = `<td colspan="4" class="px-4 py-2 bg-amber-50 border-t border-b border-amber-200">
+                    <span class="text-xs font-semibold text-amber-600 uppercase">Ja cadastrados (${duplicados.length})</span>
+                </td>`;
+                participantesTbody.appendChild(headerTr);
+                duplicados.forEach(p => renderRow(p, true));
+            }
+
+            function renderRow(p, isDuplicado) {
                 const cnpjFormatado = p.cnpj ? p.cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5') : '-';
                 const situacaoClass = p.situacao_cadastral === 'ATIVA'
                     ? 'bg-green-100 text-green-700'
                     : (p.situacao_cadastral ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700');
 
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-50';
+                tr.className = isDuplicado ? 'hover:bg-gray-50 opacity-50' : 'hover:bg-gray-50';
                 tr.innerHTML = `
                     <td class="px-4 py-3 text-sm font-mono text-gray-900">${cnpjFormatado}</td>
                     <td class="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title="${p.razao_social || ''}">${p.razao_social || '-'}</td>
@@ -1586,7 +1611,7 @@
                     </td>
                 `;
                 participantesTbody.appendChild(tr);
-            });
+            }
         }
 
         // Função para atualizar paginação
@@ -1625,6 +1650,13 @@
         // Event listeners para seção de resultados
         if (btnNovaImportacao) {
             btnNovaImportacao.addEventListener('click', function() {
+                // Resetar flag de importação em andamento (CRÍTICO)
+                importacaoEmAndamento = false;
+                // Fechar SSE se ainda estiver aberto
+                if (eventSourceTxt) {
+                    eventSourceTxt.close();
+                    eventSourceTxt = null;
+                }
                 // Ocultar seção de resultados
                 if (resultadoContainer) resultadoContainer.classList.add('hidden');
                 // Ocultar seção de progresso
@@ -1830,6 +1862,13 @@
         const btnTentarNovamente = document.getElementById('btn-tentar-novamente');
         if (btnTentarNovamente) {
             btnTentarNovamente.addEventListener('click', function() {
+                // Resetar flag de importação em andamento (CRÍTICO)
+                importacaoEmAndamento = false;
+                // Fechar SSE se ainda estiver aberto
+                if (eventSourceTxt) {
+                    eventSourceTxt.close();
+                    eventSourceTxt = null;
+                }
                 ocultarProgresso();
                 limparArquivoTxt();
                 resetarProgresso();
