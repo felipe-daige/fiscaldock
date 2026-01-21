@@ -70,24 +70,27 @@ class AuthController extends Controller
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             LOG::info($e->errors());
-            return response()->json([
-                'success' => false,
-                'message' => 'Dados inválidos',
-                'errors' => $e->errors()
-            ], 422);
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dados inválidos',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            return back()->withErrors($e->errors())->withInput();
         }
 
         $credentials = $request->only('email', 'password');
-        
+
         // Log para debug
         Log::info('Tentativa de login', [
             'email' => $credentials['email'] ?? 'não fornecido',
             'password_length' => isset($credentials['password']) ? strlen($credentials['password']) : 0,
             'credentials_keys' => array_keys($credentials)
         ]);
-        
+
         $user = Auth::attempt($credentials);
-        
+
         if(!$user){
             // Verificar se o usuário existe
             $userExists = User::where('email', $credentials['email'] ?? '')->first();
@@ -96,23 +99,29 @@ class AuthController extends Controller
                 'user_exists' => $userExists ? 'sim' : 'não',
                 'user_id' => $userExists?->id
             ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Email ou senha inválidos',
-            ], 401);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email ou senha inválidos',
+                ], 401);
+            }
+            return back()->withErrors(['email' => 'Email ou senha inválidos'])->withInput();
         }
-        
+
         Log::info('Login bem-sucedido', [
             'user_id' => Auth::id(),
             'email' => Auth::user()->email
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Login realizado com sucesso',
-            'redirect' => '/dashboard'
-        ]);
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Login realizado com sucesso',
+                'redirect' => '/dashboard'
+            ]);
+        }
+        return redirect('/dashboard');
     }
 
     public function agendar(Request $request){
