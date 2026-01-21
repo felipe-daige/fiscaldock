@@ -19,10 +19,16 @@ class SpedUploadController extends Controller
         ]);
 
         $file = $request->file('file');
-        $webhookUrl = config('services.webhook.monitoramento_importacao_txt_url');
+        $tipoEfd = $request->input('tipo_efd', 'contribuicoes');
+
+        // Selecionar webhook baseado no tipo de EFD
+        $webhookUrl = match ($tipoEfd) {
+            'fiscal' => config('services.webhook.monitoramento_importacao_fiscal_url'),
+            default => config('services.webhook.monitoramento_importacao_contribuicoes_url'),
+        };
 
         if (!$webhookUrl) {
-            return response()->json(['error' => 'Webhook não configurado'], 503);
+            return response()->json(['error' => "Webhook para tipo '$tipoEfd' não configurado"], 503);
         }
 
         try {
