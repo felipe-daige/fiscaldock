@@ -372,22 +372,14 @@
 
                     {{-- Estatísticas da Importação --}}
                     <div class="px-6 py-4 border-b border-gray-200">
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-2 gap-4">
                             <div class="text-center p-3 bg-gray-50 rounded-lg">
-                                <p class="text-2xl font-bold text-gray-900" id="resultado-total-cnpjs">0</p>
-                                <p class="text-xs text-gray-500">CNPJs</p>
+                                <p class="text-2xl font-bold text-gray-900" id="resultado-total-participantes">0</p>
+                                <p class="text-xs text-gray-500">Total Participantes</p>
                             </div>
-                            <div class="text-center p-3 bg-gray-50 rounded-lg">
-                                <p class="text-2xl font-bold text-gray-900" id="resultado-total-cpfs">0</p>
-                                <p class="text-xs text-gray-500">CPFs</p>
-                            </div>
-                            <div class="text-center p-3 bg-green-50 rounded-lg">
-                                <p class="text-2xl font-bold text-green-600" id="resultado-novos">0</p>
-                                <p class="text-xs text-gray-500">Novos</p>
-                            </div>
-                            <div class="text-center p-3 bg-amber-50 rounded-lg">
-                                <p class="text-2xl font-bold text-amber-600" id="resultado-duplicados">0</p>
-                                <p class="text-xs text-gray-500">Duplicados</p>
+                            <div class="text-center p-3 bg-blue-50 rounded-lg">
+                                <p class="text-2xl font-bold text-blue-600" id="resultado-cnpjs-unicos">0</p>
+                                <p class="text-xs text-gray-500">CNPJs Únicos</p>
                             </div>
                         </div>
                     </div>
@@ -1391,10 +1383,8 @@
         // Elementos da seção de resultados
         const resultadoContainer = document.getElementById('resultado-importacao');
         const resultadoEmpresa = document.getElementById('resultado-empresa');
-        const resultadoTotalCnpjs = document.getElementById('resultado-total-cnpjs');
-        const resultadoTotalCpfs = document.getElementById('resultado-total-cpfs');
-        const resultadoNovos = document.getElementById('resultado-novos');
-        const resultadoDuplicados = document.getElementById('resultado-duplicados');
+        const resultadoTotalParticipantes = document.getElementById('resultado-total-participantes');
+        const resultadoCnpjsUnicos = document.getElementById('resultado-cnpjs-unicos');
         const btnNovaImportacao = document.getElementById('btn-nova-importacao');
         const btnCarregarParticipantes = document.getElementById('btn-carregar-participantes');
         const linkFiltrarImportacao = document.getElementById('link-filtrar-importacao');
@@ -1421,34 +1411,22 @@
 
             // Preencher dados
             console.log('[Monitoramento SPED] Preenchendo cards...');
-            console.log('[Monitoramento SPED] total_cnpjs:', dados.total_cnpjs);
-            console.log('[Monitoramento SPED] total_cpfs:', dados.total_cpfs);
-            console.log('[Monitoramento SPED] novos_salvos:', dados.novos_salvos);
-            console.log('[Monitoramento SPED] duplicados_identificados:', dados.duplicados_identificados);
+            console.log('[Monitoramento SPED] total_participantes:', dados.total_participantes);
+            console.log('[Monitoramento SPED] total_cnpjs_unicos:', dados.total_cnpjs_unicos);
             console.log('[Monitoramento SPED] participante_ids:', dados.participante_ids);
 
             if (resultadoEmpresa) {
-                resultadoEmpresa.textContent = dados.nome_empresa || 'Importação concluída';
+                resultadoEmpresa.textContent = 'Importação concluída';
             }
-            if (resultadoTotalCnpjs) {
-                const valor = dados.total_cnpjs || dados.total_cnpjs_unicos || 0;
-                console.log('[Monitoramento SPED] Setando CNPJs para:', valor);
-                resultadoTotalCnpjs.textContent = valor;
+            if (resultadoTotalParticipantes) {
+                const valor = dados.total_participantes || 0;
+                console.log('[Monitoramento SPED] Setando Total Participantes para:', valor);
+                resultadoTotalParticipantes.textContent = valor;
             }
-            if (resultadoTotalCpfs) {
-                const valor = dados.total_cpfs || dados.total_cpfs_unicos || 0;
-                console.log('[Monitoramento SPED] Setando CPFs para:', valor);
-                resultadoTotalCpfs.textContent = valor;
-            }
-            if (resultadoNovos) {
-                const valor = dados.novos_salvos || dados.total_a_analisar || dados.novos || 0;
-                console.log('[Monitoramento SPED] Setando Novos para:', valor);
-                resultadoNovos.textContent = valor;
-            }
-            if (resultadoDuplicados) {
-                const valor = dados.duplicados_identificados || dados.total_duplicados || dados.registros_duplicados_documento || dados.duplicados || 0;
-                console.log('[Monitoramento SPED] Setando Duplicados para:', valor);
-                resultadoDuplicados.textContent = valor;
+            if (resultadoCnpjsUnicos) {
+                const valor = dados.total_cnpjs_unicos || 0;
+                console.log('[Monitoramento SPED] Setando CNPJs Únicos para:', valor);
+                resultadoCnpjsUnicos.textContent = valor;
             }
 
             // Guardar ID da importação se disponível nos dados do SSE
