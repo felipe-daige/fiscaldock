@@ -1997,7 +1997,6 @@ class MonitoramentoController extends Controller
 
         $user = Auth::user();
         $ids = $request->input('ids', []);
-        $importacaoId = $request->input('importacao_id');
 
         if (empty($ids) || !is_array($ids)) {
             return response()->json([
@@ -2008,27 +2007,17 @@ class MonitoramentoController extends Controller
 
         // Converter strings para inteiros (n8n pode enviar ["295", "325"] como strings)
         $ids = array_map('intval', $ids);
-        $importacaoId = $importacaoId ? intval($importacaoId) : null;
 
         // Buscar participantes pelos IDs, garantindo que pertencem ao usuário
-        // Ordenar: novos primeiro (importacao_participante_id = importacao atual), depois duplicados
         $perPage = $request->input('per_page', 10);
-        $query = Participante::whereIn('id', $ids)
-            ->where('user_id', $user->id);
-
-        // Se temos importacao_id, ordenar novos primeiro
-        if ($importacaoId) {
-            $query->orderByRaw('CASE WHEN importacao_participante_id = ? THEN 0 ELSE 1 END', [$importacaoId]);
-        }
-
-        $participantes = $query->orderBy('created_at', 'desc')
+        $participantes = Participante::whereIn('id', $ids)
+            ->where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
             ->paginate($perPage);
 
         return response()->json([
             'success' => true,
-            'participantes' => $participantes->map(function ($p) use ($importacaoId) {
-                // Novo se: não há importacao_id para comparar, ou o participante foi criado nesta importação
-                $isNovo = !$importacaoId || $p->importacao_participante_id == $importacaoId;
+            'participantes' => $participantes->map(function ($p) {
                 return [
                     'id' => $p->id,
                     'cnpj' => $p->cnpj,
@@ -2036,8 +2025,6 @@ class MonitoramentoController extends Controller
                     'situacao_cadastral' => $p->situacao_cadastral,
                     'regime_tributario' => $p->regime_tributario,
                     'uf' => $p->uf,
-                    'is_novo' => $isNovo,
-                    'is_duplicado' => !$isNovo,
                 ];
             }),
             'total' => $participantes->total(),
