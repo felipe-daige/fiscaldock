@@ -173,7 +173,7 @@ Cache key: `progresso:{user_id}:{tab_id}`
 | Etapa | progresso | status | mensagem | Resposta esperada |
 |-------|-----------|--------|----------|-------------------|
 | 1. Workflow iniciado | 0 | `iniciando` | "Iniciando processamento..." | 200 |
-| 2. Empresa identificada | 5 | `processando` | "NOME DA EMPRESA" | 200 |
+| 2. Processando | 5 | `processando` | "Processando X CNPJs únicos identificados" | 200 |
 | 3. Processando | 10-90 | `processando` | "Processando participantes..." | 200 |
 | 4. Concluído | 100 | `concluido` | "Importação concluída" | 200 |
 | 5. Erro (se houver) | qualquer | `erro` | "Descrição do erro" | 200 |
@@ -189,17 +189,13 @@ Cache key: `progresso:{user_id}:{tab_id}`
   "mensagem": "Processando participantes...",
   "status": "processando",
   "dados": {
-    "nome_empresa": "EMPRESA XYZ LTDA",
-    "total_participantes": 150,
-    "total_cpfs": 30,
-    "total_cnpjs": 120,
-    "total_duplicados": 15,
-    "total_a_analisar": 105,
-    "importacao_id": 123,
-    "participante_ids": [1, 2, 3, 4, 5]
+    "total_participantes": 35,
+    "total_cnpjs_unicos": 24
   }
 }
 ```
+
+**Nota:** Os campos `importacao_id` e `participante_ids` são salvos diretamente na tabela `importacoes_participantes` pelo n8n, não no payload de progresso.
 
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
@@ -210,11 +206,9 @@ Cache key: `progresso:{user_id}:{tab_id}`
 | `status` | enum | `iniciando`, `processando`, `concluido`, `erro` |
 | `dados` | object | **Flexível** - qualquer estrutura JSON |
 
-**Campo `dados`:** Passa direto do n8n → cache → SSE → frontend. Laravel não valida estrutura interna.
+**Campo `dados`:** Passa direto do n8n → cache → SSE → frontend. Laravel não valida estrutura interna. Estrutura simplificada com `total_participantes` e `total_cnpjs_unicos`.
 
-**Campo `participante_ids`:** Array de IDs dos participantes criados. Quando `status=concluido`, n8n deve:
-1. Salvar o array na tabela `importacoes_participantes.participante_ids`
-2. Incluir no payload de progresso para exibição imediata no frontend
+**Campo `participante_ids`:** Array de IDs dos participantes criados. Quando `status=concluido`, n8n salva diretamente na tabela:
 
 ```sql
 -- Ao finalizar importação, salvar IDs dos participantes criados
