@@ -310,21 +310,6 @@ null
 
 **Docs:** `docs/n8n.md` (seção "Tabela Participantes")
 
-### Diferenciação Novos vs Duplicados na Lista
-
-Após importar SPED em `/app/monitoramento/sped`, a lista de participantes diferencia visualmente:
-
-- **Novos:** `importacao_participante_id == importação atual` (criados nesta importação)
-- **Duplicados:** `importacao_participante_id != importação atual` (já existiam antes)
-
-**Visual:**
-- Seção "Novos participantes" (fundo verde) aparece primeiro
-- Seção "Já cadastrados" (fundo âmbar) aparece depois com `opacity-50`
-
-**Backend:** `MonitoramentoController::participantesPorIds()` recebe `importacao_id` e retorna `is_novo`/`is_duplicado` para cada participante.
-
-**Frontend:** `sped.blade.php` → `preencherTabelaParticipantes()` separa e estiliza as seções.
-
 ## Troubleshooting: Upload SPED Monitoramento não envia para n8n
 
 **Problema:** Ao clicar no botão "Importar" em `/app/monitoramento/sped`, às vezes o arquivo não é enviado para o n8n.
