@@ -4,7 +4,7 @@
 
 services:
   app:
-    image: fiscaldock/fiscaldock:1.1.7
+    image: fiscaldock/fiscaldock:1.1.8
     restart: unless-stopped
     networks:
       - network_public
@@ -91,7 +91,7 @@ services:
       - "traefik.http.services.fiscaldock-service.loadbalancer.server.port=80"
 
   scheduler:
-    image: fiscaldock/fiscaldock:1.1.7
+    image: fiscaldock/fiscaldock:1.1.8
     restart: unless-stopped
     networks:
       - network_public
@@ -124,7 +124,7 @@ services:
       - app
 
   worker:
-    image: fiscaldock/fiscaldock:1.1.7
+    image: fiscaldock/fiscaldock:1.1.8
     restart: unless-stopped
     networks:
       - network_public
