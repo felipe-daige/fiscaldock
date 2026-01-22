@@ -99,17 +99,17 @@
         {{-- Planos Disponiveis --}}
         <div class="mb-8">
             <h2 class="text-lg font-semibold text-gray-900 mb-4">Planos de Monitoramento</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 @forelse($planos ?? [] as $plano)
                     <div class="bg-white rounded-xl border {{ $plano->is_gratuito ? 'border-green-200' : 'border-gray-200' }} shadow-sm p-6 hover:shadow-md transition-shadow">
-                        <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-start justify-between gap-2 mb-3">
                             <h3 class="font-semibold text-gray-900">{{ $plano->nome }}</h3>
                             @if($plano->is_gratuito)
-                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700 whitespace-nowrap">
                                     Gratis
                                 </span>
                             @else
-                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700 whitespace-nowrap">
                                     {{ $plano->custo_creditos }} cred.
                                 </span>
                             @endif
@@ -142,14 +142,14 @@
                     @endphp
                     @foreach($planosEstaticos as $plano)
                         <div class="bg-white rounded-xl border {{ $plano['gratuito'] ? 'border-green-200' : 'border-gray-200' }} shadow-sm p-6 hover:shadow-md transition-shadow">
-                            <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-start justify-between gap-2 mb-3">
                                 <h3 class="font-semibold text-gray-900">{{ $plano['nome'] }}</h3>
                                 @if($plano['gratuito'])
-                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700 whitespace-nowrap">
                                         Gratis
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700 whitespace-nowrap">
                                         {{ $plano['creditos'] }} cred.
                                     </span>
                                 @endif
@@ -225,122 +225,136 @@
                 <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            <th class="px-3 py-2 text-left">
                                 <input type="checkbox" id="select-all-participantes" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">CNPJ</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Razao Social</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Situacao</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Regime</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Origem</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Grupos</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Ultima Consulta</th>
-                            <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Acoes</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">CNPJ</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Razao Social</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-gray-500 uppercase w-12">UF</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-gray-500 uppercase">Regime</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-gray-500 uppercase">Situacao</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-gray-500 uppercase w-16">Score</th>
+                            <th class="px-2 py-2 text-right text-xs font-semibold text-gray-500 uppercase w-24">Acoes</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200" id="participantes-tbody">
                         @forelse($participantes ?? [] as $participante)
+                            @if(empty($participante->cnpj))
+                                @continue
+                            @endif
                             <tr class="hover:bg-gray-50 transition-colors" data-participante-id="{{ $participante->id }}">
-                                <td class="px-6 py-4">
+                                {{-- Checkbox --}}
+                                <td class="px-3 py-2">
                                     <input type="checkbox" class="participante-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500" value="{{ $participante->id }}">
                                 </td>
-                                <td class="px-6 py-4 text-sm font-mono text-gray-900">
+
+                                {{-- CNPJ --}}
+                                <td class="px-3 py-2 text-xs font-mono text-gray-900 whitespace-nowrap">
                                     {{ preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $participante->cnpj) }}
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-900">{{ $participante->razao_social ?? '-' }}</td>
-                                <td class="px-6 py-4">
+
+                                {{-- Razao Social --}}
+                                <td class="px-3 py-2 text-sm text-gray-900 max-w-[220px] truncate" title="{{ $participante->razao_social ?? '' }}">
+                                    {{ $participante->razao_social ?? '-' }}
+                                </td>
+
+                                {{-- UF --}}
+                                <td class="px-2 py-2 text-center text-xs text-gray-600 w-12">
+                                    {{ $participante->uf ?? '-' }}
+                                </td>
+
+                                {{-- Regime Tributario (badge compacto) --}}
+                                <td class="px-2 py-2 text-center">
+                                    @php
+                                        $regimeBadges = [
+                                            'simples_nacional' => ['label' => 'SN', 'bg' => 'bg-blue-100', 'text' => 'text-blue-700'],
+                                            'simples nacional' => ['label' => 'SN', 'bg' => 'bg-blue-100', 'text' => 'text-blue-700'],
+                                            'lucro_presumido' => ['label' => 'LP', 'bg' => 'bg-purple-100', 'text' => 'text-purple-700'],
+                                            'lucro presumido' => ['label' => 'LP', 'bg' => 'bg-purple-100', 'text' => 'text-purple-700'],
+                                            'lucro_real' => ['label' => 'LR', 'bg' => 'bg-amber-100', 'text' => 'text-amber-700'],
+                                            'lucro real' => ['label' => 'LR', 'bg' => 'bg-amber-100', 'text' => 'text-amber-700'],
+                                        ];
+                                        $regimeKey = strtolower($participante->regime_tributario ?? '');
+                                        $badge = $regimeBadges[$regimeKey] ?? ['label' => '-', 'bg' => 'bg-gray-100', 'text' => 'text-gray-500'];
+                                    @endphp
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium {{ $badge['bg'] }} {{ $badge['text'] }}" title="{{ $participante->regime_tributario ?? 'Nao definido' }}">
+                                        {{ $badge['label'] }}
+                                    </span>
+                                </td>
+
+                                {{-- Situacao (badge compacto) --}}
+                                <td class="px-2 py-2 text-center">
                                     @if($participante->situacao_cadastral === 'ATIVA')
-                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">Ativa</span>
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Ativa</span>
                                     @elseif($participante->situacao_cadastral === 'BAIXADA')
-                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-100 text-red-700">Baixada</span>
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">Baixada</span>
                                     @elseif($participante->situacao_cadastral === 'SUSPENSA')
-                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-amber-100 text-amber-700">Suspensa</span>
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">Suspensa</span>
                                     @elseif($participante->situacao_cadastral === 'INAPTA')
-                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-100 text-red-700">Inapta</span>
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">Inapta</span>
                                     @else
-                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">{{ $participante->situacao_cadastral ?? '-' }}</span>
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">{{ $participante->situacao_cadastral ?? '-' }}</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-600">{{ $participante->regime_tributario ?? '-' }}</td>
-                                <td class="px-6 py-4">
-                                    @php
-                                        $origemTipo = $participante->origem_tipo ?? 'MANUAL';
-                                        $origemRef = $participante->origem_ref ?? [];
-                                        $importacao = $participante->importacao;
 
-                                        // Determinar cor e texto do badge baseado na origem
-                                        $badgeConfig = match($origemTipo) {
-                                            'SPED_EFD_FISCAL' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-700', 'label' => 'SPED Fiscal'],
-                                            'SPED_EFD_CONTRIB' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-700', 'label' => 'SPED Contrib'],
-                                            'NFE' => ['bg' => 'bg-green-100', 'text' => 'text-green-700', 'label' => 'NF-e'],
-                                            'NFSE' => ['bg' => 'bg-teal-100', 'text' => 'text-teal-700', 'label' => 'NFS-e'],
-                                            'MANUAL' => ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'label' => 'Manual'],
-                                            default => ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'label' => str_replace('_', ' ', $origemTipo)],
-                                        };
+                                {{-- Score (placeholder para implementacao futura) --}}
+                                <td class="px-2 py-2 text-center">
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-400 cursor-not-allowed"
+                                        title="Score em breve"
+                                        disabled
+                                    >
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                        </svg>
+                                        --
+                                    </button>
+                                </td>
 
-                                        // Obter nome do arquivo
-                                        $nomeArquivo = $importacao?->filename ?? $origemRef['arquivo'] ?? null;
-                                        if ($nomeArquivo && strlen($nomeArquivo) > 25) {
-                                            $nomeArquivo = substr($nomeArquivo, 0, 22) . '...';
-                                        }
-                                    @endphp
-                                    <div class="flex flex-col gap-1">
-                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium {{ $badgeConfig['bg'] }} {{ $badgeConfig['text'] }}">
-                                            {{ $badgeConfig['label'] }}
-                                        </span>
-                                        @if($nomeArquivo)
-                                            <span class="text-xs text-gray-400 truncate max-w-[150px]" title="{{ $importacao?->filename ?? $origemRef['arquivo'] ?? '' }}">
-                                                {{ $nomeArquivo }}
+                                {{-- Acoes --}}
+                                <td class="px-2 py-2">
+                                    <div class="flex items-center justify-end gap-2">
+                                        {{-- Grupos (badge) --}}
+                                        @if($participante->grupos->count() > 0)
+                                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-700" title="{{ $participante->grupos->pluck('nome')->join(', ') }}">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                                                </svg>
+                                                {{ $participante->grupos->count() }}
                                             </span>
                                         @endif
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex flex-wrap gap-1">
-                                        @forelse($participante->grupos as $grupo)
-                                            <span
-                                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
-                                                style="background-color: {{ $grupo->cor }}20; color: {{ $grupo->cor }}"
-                                            >
-                                                {{ $grupo->nome }}
-                                            </span>
-                                        @empty
-                                            <span class="text-xs text-gray-400">-</span>
-                                        @endforelse
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-500">
-                                    {{ $participante->ultima_consulta_em ? $participante->ultima_consulta_em->format('d/m/Y') : '-' }}
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <div class="flex items-center justify-end gap-2">
+
+                                        {{-- Consultar / Monitorar --}}
                                         <button
                                             type="button"
-                                            class="btn-consultar-participante inline-flex items-center p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                            class="btn-monitorar-participante inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
                                             data-participante-id="{{ $participante->id }}"
-                                            title="Consultar agora"
+                                            data-participante-cnpj="{{ $participante->cnpj }}"
+                                            data-tem-plano="{{ $participante->monitoramento_ativo ? '1' : '0' }}"
+                                            title="{{ $participante->monitoramento_ativo ? 'Consultar agora' : 'Configurar monitoramento' }}"
                                         >
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                                             </svg>
+                                            {{ $participante->monitoramento_ativo ? 'Consultar' : 'Monitorar' }}
                                         </button>
+
+                                        {{-- Ver detalhes --}}
                                         <a
                                             href="/app/monitoramento/participante/{{ $participante->id }}"
-                                            class="inline-flex items-center p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                            class="text-xs font-medium hover:underline transition-colors"
+                                            style="color: #2563eb;"
                                             data-link
-                                            title="Ver detalhes"
                                         >
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                            </svg>
+                                            Ver
                                         </a>
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="px-6 py-12 text-center">
+                                <td colspan="8" class="px-6 py-12 text-center">
                                     <div class="flex flex-col items-center">
                                         <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -417,6 +431,81 @@
         </div>
     </div>
 </div>
+
+{{-- Modal Monitorar Participante Individual --}}
+<div id="modal-monitorar-individual" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900" id="modal-monitorar-titulo">Configurar Monitoramento</h3>
+                <button type="button" class="modal-close text-gray-400 hover:text-gray-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="px-6 py-4">
+            {{-- Info do participante --}}
+            <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                <p class="text-xs text-gray-500 mb-1">Participante</p>
+                <p class="text-sm font-mono font-semibold text-gray-900" id="modal-monitorar-cnpj">00.000.000/0001-00</p>
+                <p class="text-sm text-gray-600" id="modal-monitorar-razao">Razao Social</p>
+            </div>
+
+            {{-- Selecao de plano --}}
+            <p class="text-sm font-medium text-gray-700 mb-3">Selecione o plano de monitoramento:</p>
+            <div class="space-y-2" id="modal-monitorar-planos">
+                @php
+                    $planosDisponiveis = [
+                        ['id' => 'basico', 'nome' => 'Basico', 'creditos' => 0, 'gratuito' => true, 'descricao' => 'Situacao Cadastral + Simples Nacional'],
+                        ['id' => 'cadastral', 'nome' => 'Cadastral+', 'creditos' => 3, 'gratuito' => false, 'descricao' => 'CNPJ completo + SINTEGRA + IE'],
+                        ['id' => 'fiscal_federal', 'nome' => 'Fiscal Federal', 'creditos' => 6, 'gratuito' => false, 'descricao' => 'CND Federal (PGFN) + FGTS'],
+                        ['id' => 'fiscal_completo', 'nome' => 'Fiscal Completo', 'creditos' => 12, 'gratuito' => false, 'descricao' => 'Federal + Estadual + CNDT'],
+                        ['id' => 'due_diligence', 'nome' => 'Due Diligence', 'creditos' => 18, 'gratuito' => false, 'descricao' => 'Completo + Protestos + Processos'],
+                    ];
+                @endphp
+                @foreach($planosDisponiveis as $plano)
+                    <label class="plano-option flex items-center gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-colors has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                        <input type="radio" name="plano_selecionado" value="{{ $plano['id'] }}" data-creditos="{{ $plano['creditos'] }}" class="text-blue-600 focus:ring-blue-500">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-semibold text-gray-900">{{ $plano['nome'] }}</span>
+                                @if($plano['gratuito'])
+                                    <span class="px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Gratis</span>
+                                @else
+                                    <span class="px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">{{ $plano['creditos'] }} cred.</span>
+                                @endif
+                            </div>
+                            <p class="text-xs text-gray-500 mt-0.5">{{ $plano['descricao'] }}</p>
+                        </div>
+                    </label>
+                @endforeach
+            </div>
+
+            {{-- Resumo --}}
+            <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Frequencia:</span>
+                    <span class="font-medium text-gray-900">Mensal (30 dias)</span>
+                </div>
+                <div class="flex items-center justify-between text-sm mt-1">
+                    <span class="text-gray-600">Custo por consulta:</span>
+                    <span class="font-semibold text-blue-600" id="modal-monitorar-custo">0 creditos</span>
+                </div>
+            </div>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+            <button type="button" class="modal-close px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
+                Cancelar
+            </button>
+            <button type="button" id="btn-confirmar-monitorar" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                Ativar Monitoramento
+            </button>
+        </div>
+    </div>
+</div>
+<input type="hidden" id="modal-monitorar-participante-id" value="">
 
 {{-- Modal Criar Monitoramento --}}
 <div id="modal-criar-monitoramento" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -950,6 +1039,158 @@
                     if (novoGrupoNome) novoGrupoNome.focus();
                 }
             });
+        }
+
+        // =====================================================
+        // MONITORAR PARTICIPANTE INDIVIDUAL
+        // =====================================================
+
+        const modalMonitorarIndividual = document.getElementById('modal-monitorar-individual');
+        const modalMonitorarTitulo = document.getElementById('modal-monitorar-titulo');
+        const modalMonitorarCnpj = document.getElementById('modal-monitorar-cnpj');
+        const modalMonitorarRazao = document.getElementById('modal-monitorar-razao');
+        const modalMonitorarCusto = document.getElementById('modal-monitorar-custo');
+        const modalMonitorarParticipanteId = document.getElementById('modal-monitorar-participante-id');
+        const btnConfirmarMonitorar = document.getElementById('btn-confirmar-monitorar');
+
+        // Atualizar custo quando selecionar plano
+        document.querySelectorAll('input[name="plano_selecionado"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                const creditos = radio.dataset.creditos;
+                if (modalMonitorarCusto) {
+                    modalMonitorarCusto.textContent = creditos + ' creditos';
+                }
+                if (btnConfirmarMonitorar) {
+                    btnConfirmarMonitorar.disabled = false;
+                }
+            });
+        });
+
+        // Click nos botoes de monitorar
+        document.querySelectorAll('.btn-monitorar-participante').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const participanteId = btn.dataset.participanteId;
+                const cnpj = btn.dataset.participanteCnpj;
+                const temPlano = btn.dataset.temPlano === '1';
+                const row = btn.closest('tr');
+                const razaoSocial = row ? row.querySelector('td:nth-child(3)').textContent.trim() : '';
+
+                // Formatar CNPJ
+                const cnpjFormatado = cnpj ? cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5') : '';
+
+                if (temPlano) {
+                    // Ja tem plano - executar consulta diretamente (ou confirmar)
+                    if (confirm('Executar consulta agora para este participante?\n\nCNPJ: ' + cnpjFormatado)) {
+                        executarConsulta(participanteId);
+                    }
+                } else {
+                    // Nao tem plano - abrir modal para selecionar
+                    if (modalMonitorarIndividual) {
+                        if (modalMonitorarCnpj) modalMonitorarCnpj.textContent = cnpjFormatado;
+                        if (modalMonitorarRazao) modalMonitorarRazao.textContent = razaoSocial || '-';
+                        if (modalMonitorarParticipanteId) modalMonitorarParticipanteId.value = participanteId;
+                        if (modalMonitorarTitulo) modalMonitorarTitulo.textContent = 'Configurar Monitoramento';
+                        if (btnConfirmarMonitorar) {
+                            btnConfirmarMonitorar.textContent = 'Ativar Monitoramento';
+                            btnConfirmarMonitorar.disabled = true;
+                        }
+                        if (modalMonitorarCusto) modalMonitorarCusto.textContent = '0 creditos';
+
+                        // Limpar selecao anterior
+                        document.querySelectorAll('input[name="plano_selecionado"]').forEach(function(r) {
+                            r.checked = false;
+                        });
+
+                        modalMonitorarIndividual.classList.remove('hidden');
+                        document.body.style.overflow = 'hidden';
+                    }
+                }
+            });
+        });
+
+        // Fechar modal monitorar individual clicando fora
+        if (modalMonitorarIndividual) {
+            modalMonitorarIndividual.addEventListener('click', function(e) {
+                if (e.target === modalMonitorarIndividual) {
+                    modalMonitorarIndividual.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }
+            });
+        }
+
+        // Confirmar monitoramento
+        if (btnConfirmarMonitorar) {
+            btnConfirmarMonitorar.addEventListener('click', async function() {
+                const participanteId = modalMonitorarParticipanteId ? modalMonitorarParticipanteId.value : null;
+                const planoSelecionado = document.querySelector('input[name="plano_selecionado"]:checked');
+
+                if (!participanteId || !planoSelecionado) {
+                    alert('Selecione um plano de monitoramento.');
+                    return;
+                }
+
+                try {
+                    btnConfirmarMonitorar.disabled = true;
+                    btnConfirmarMonitorar.textContent = 'Ativando...';
+
+                    const response = await fetch('/app/monitoramento/participante/' + participanteId + '/ativar', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: JSON.stringify({
+                            plano: planoSelecionado.value,
+                        }),
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Fechar modal e atualizar pagina
+                        if (modalMonitorarIndividual) {
+                            modalMonitorarIndividual.classList.add('hidden');
+                            document.body.style.overflow = '';
+                        }
+                        window.location.reload();
+                    } else {
+                        alert(data.error || 'Erro ao ativar monitoramento.');
+                    }
+                } catch (error) {
+                    console.error('Erro ao ativar monitoramento:', error);
+                    alert('Erro ao ativar monitoramento. Tente novamente.');
+                } finally {
+                    btnConfirmarMonitorar.disabled = false;
+                    btnConfirmarMonitorar.textContent = 'Ativar Monitoramento';
+                }
+            });
+        }
+
+        // Funcao para executar consulta
+        async function executarConsulta(participanteId) {
+            try {
+                const response = await fetch('/app/monitoramento/participante/' + participanteId + '/consultar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Consulta iniciada com sucesso! Os resultados serao atualizados em breve.');
+                    window.location.reload();
+                } else {
+                    alert(data.error || 'Erro ao executar consulta.');
+                }
+            } catch (error) {
+                console.error('Erro ao executar consulta:', error);
+                alert('Erro ao executar consulta. Tente novamente.');
+            }
         }
 
         console.log('[Monitoramento] Inicializacao concluida');

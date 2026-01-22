@@ -377,9 +377,9 @@
                                 <p class="text-2xl font-bold text-gray-900" id="resultado-total-participantes">0</p>
                                 <p class="text-xs text-gray-500">Total Participantes</p>
                             </div>
-                            <div class="text-center p-3 bg-blue-50 rounded-lg">
-                                <p class="text-2xl font-bold text-blue-600" id="resultado-cnpjs-unicos">0</p>
-                                <p class="text-xs text-gray-500">CNPJs Únicos</p>
+                            <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                                <p class="text-2xl font-bold text-yellow-600" id="resultado-duplicados">0</p>
+                                <p class="text-xs text-gray-500">Duplicados</p>
                             </div>
                         </div>
                     </div>
@@ -422,10 +422,12 @@
                                 <table class="w-full text-sm">
                                     <thead class="bg-gray-50">
                                         <tr>
-                                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">CNPJ</th>
-                                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Razão Social</th>
-                                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Situação</th>
-                                            <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Ações</th>
+                                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">CNPJ</th>
+                                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Razão Social</th>
+                                            <th class="px-2 py-2 text-center text-xs font-semibold text-gray-500 uppercase w-12">UF</th>
+                                            <th class="px-2 py-2 text-center text-xs font-semibold text-gray-500 uppercase">Regime</th>
+                                            <th class="px-2 py-2 text-center text-xs font-semibold text-gray-500 uppercase">Situação</th>
+                                            <th class="px-2 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody id="participantes-tbody-resultado" class="divide-y divide-gray-200">
@@ -433,9 +435,9 @@
                                     </tbody>
                                 </table>
                             </div>
-                            <div id="participantes-pagination" class="mt-4 flex items-center justify-between text-sm text-gray-500">
+                            <div id="participantes-pagination" class="mt-6 py-2 flex items-center justify-between text-sm text-gray-500">
                                 <span id="participantes-info">Mostrando 0 de 0</span>
-                                <div class="flex gap-2">
+                                <div class="flex gap-3">
                                     <button type="button" id="btn-prev-page" class="px-3 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50" disabled>Anterior</button>
                                     <button type="button" id="btn-next-page" class="px-3 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50" disabled>Próximo</button>
                                 </div>
@@ -717,6 +719,81 @@
         </div>
     </div>
 </div>
+
+{{-- Modal Monitorar Participante Individual (SPED) --}}
+<div id="modal-monitorar-individual-sped" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900">Configurar Monitoramento</h3>
+                <button type="button" class="modal-close text-gray-400 hover:text-gray-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="px-6 py-4">
+            {{-- Info do participante --}}
+            <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                <p class="text-xs text-gray-500 mb-1">Participante</p>
+                <p class="text-sm font-mono font-semibold text-gray-900" id="modal-monitorar-cnpj-sped">00.000.000/0001-00</p>
+                <p class="text-sm text-gray-600" id="modal-monitorar-razao-sped">Razao Social</p>
+            </div>
+
+            {{-- Selecao de plano --}}
+            <p class="text-sm font-medium text-gray-700 mb-3">Selecione o plano de monitoramento:</p>
+            <div class="space-y-2">
+                @php
+                    $planosDisponiveis = [
+                        ['id' => 'basico', 'nome' => 'Basico', 'creditos' => 0, 'gratuito' => true, 'descricao' => 'Situacao Cadastral + Simples Nacional'],
+                        ['id' => 'cadastral', 'nome' => 'Cadastral+', 'creditos' => 3, 'gratuito' => false, 'descricao' => 'CNPJ completo + SINTEGRA + IE'],
+                        ['id' => 'fiscal_federal', 'nome' => 'Fiscal Federal', 'creditos' => 6, 'gratuito' => false, 'descricao' => 'CND Federal (PGFN) + FGTS'],
+                        ['id' => 'fiscal_completo', 'nome' => 'Fiscal Completo', 'creditos' => 12, 'gratuito' => false, 'descricao' => 'Federal + Estadual + CNDT'],
+                        ['id' => 'due_diligence', 'nome' => 'Due Diligence', 'creditos' => 18, 'gratuito' => false, 'descricao' => 'Completo + Protestos + Processos'],
+                    ];
+                @endphp
+                @foreach($planosDisponiveis as $plano)
+                    <label class="plano-option flex items-center gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-colors has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                        <input type="radio" name="plano_selecionado_sped" value="{{ $plano['id'] }}" data-creditos="{{ $plano['creditos'] }}" class="text-blue-600 focus:ring-blue-500">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-semibold text-gray-900">{{ $plano['nome'] }}</span>
+                                @if($plano['gratuito'])
+                                    <span class="px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Gratis</span>
+                                @else
+                                    <span class="px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">{{ $plano['creditos'] }} cred.</span>
+                                @endif
+                            </div>
+                            <p class="text-xs text-gray-500 mt-0.5">{{ $plano['descricao'] }}</p>
+                        </div>
+                    </label>
+                @endforeach
+            </div>
+
+            {{-- Resumo --}}
+            <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Frequencia:</span>
+                    <span class="font-medium text-gray-900">Mensal (30 dias)</span>
+                </div>
+                <div class="flex items-center justify-between text-sm mt-1">
+                    <span class="text-gray-600">Custo por consulta:</span>
+                    <span class="font-semibold text-blue-600" id="modal-monitorar-custo-sped">0 creditos</span>
+                </div>
+            </div>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+            <button type="button" class="modal-close px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
+                Cancelar
+            </button>
+            <button type="button" id="btn-confirmar-monitorar-sped" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                Ativar Monitoramento
+            </button>
+        </div>
+    </div>
+</div>
+<input type="hidden" id="modal-monitorar-participante-id-sped" value="">
 
 <script>
 (function() {
@@ -1384,7 +1461,7 @@
         const resultadoContainer = document.getElementById('resultado-importacao');
         const resultadoEmpresa = document.getElementById('resultado-empresa');
         const resultadoTotalParticipantes = document.getElementById('resultado-total-participantes');
-        const resultadoCnpjsUnicos = document.getElementById('resultado-cnpjs-unicos');
+        const resultadoDuplicados = document.getElementById('resultado-duplicados');
         const btnNovaImportacao = document.getElementById('btn-nova-importacao');
         const btnCarregarParticipantes = document.getElementById('btn-carregar-participantes');
         const linkFiltrarImportacao = document.getElementById('link-filtrar-importacao');
@@ -1412,21 +1489,21 @@
             // Preencher dados
             console.log('[Monitoramento SPED] Preenchendo cards...');
             console.log('[Monitoramento SPED] total_participantes:', dados.total_participantes);
-            console.log('[Monitoramento SPED] total_cnpjs_unicos:', dados.total_cnpjs_unicos);
+            console.log('[Monitoramento SPED] duplicados_identificados:', dados.duplicados_identificados);
             console.log('[Monitoramento SPED] participante_ids:', dados.participante_ids);
 
             if (resultadoEmpresa) {
                 resultadoEmpresa.textContent = 'Importação concluída';
             }
             if (resultadoTotalParticipantes) {
-                const valor = dados.total_participantes || 0;
+                const valor = dados.total_participantes || dados.total_processados || 0;
                 console.log('[Monitoramento SPED] Setando Total Participantes para:', valor);
                 resultadoTotalParticipantes.textContent = valor;
             }
-            if (resultadoCnpjsUnicos) {
-                const valor = dados.total_cnpjs_unicos || 0;
-                console.log('[Monitoramento SPED] Setando CNPJs Únicos para:', valor);
-                resultadoCnpjsUnicos.textContent = valor;
+            if (resultadoDuplicados) {
+                const valor = dados.duplicados_identificados || 0;
+                console.log('[Monitoramento SPED] Setando Duplicados para:', valor);
+                resultadoDuplicados.textContent = valor;
             }
 
             // Guardar ID da importação se disponível nos dados do SSE
@@ -1539,8 +1616,19 @@
             participantesTbody.innerHTML = '';
 
             if (participantes.length === 0) {
-                participantesTbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-500 text-sm">Nenhum participante encontrado.</td></tr>';
+                participantesTbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500 text-sm">Nenhum participante encontrado.</td></tr>';
                 return;
+            }
+
+            // Helper para badge de regime tributário
+            function getRegimeBadge(regime) {
+                const regimes = {
+                    'simples_nacional': { label: 'SN', class: 'bg-blue-100 text-blue-700' },
+                    'lucro_presumido': { label: 'LP', class: 'bg-purple-100 text-purple-700' },
+                    'lucro_real': { label: 'LR', class: 'bg-amber-100 text-amber-700' }
+                };
+                const r = regimes[regime?.toLowerCase()] || { label: '-', class: 'bg-gray-100 text-gray-500' };
+                return `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${r.class}">${r.label}</span>`;
             }
 
             participantes.forEach(p => {
@@ -1552,15 +1640,32 @@
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-gray-50';
                 tr.innerHTML = `
-                    <td class="px-4 py-3 text-sm font-mono text-gray-900">${cnpjFormatado}</td>
-                    <td class="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title="${p.razao_social || ''}">${p.razao_social || '-'}</td>
-                    <td class="px-4 py-3">
-                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${situacaoClass}">
+                    <td class="px-3 py-2 text-xs font-mono text-gray-900 whitespace-nowrap">${cnpjFormatado}</td>
+                    <td class="px-3 py-2 text-sm text-gray-900 max-w-[200px] truncate" title="${p.razao_social || ''}">${p.razao_social || '-'}</td>
+                    <td class="px-2 py-2 text-center text-xs text-gray-600 w-12">${p.uf || '-'}</td>
+                    <td class="px-2 py-2 text-center">${getRegimeBadge(p.regime_tributario)}</td>
+                    <td class="px-2 py-2 text-center">
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${situacaoClass}">
                             ${p.situacao_cadastral || '-'}
                         </span>
                     </td>
-                    <td class="px-4 py-3 text-right">
-                        <a href="/app/monitoramento/participante/${p.id}" class="text-blue-600 hover:text-blue-700 text-sm font-medium" data-link>Ver</a>
+                    <td class="px-2 py-2 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            <button
+                                type="button"
+                                class="btn-monitorar-participante inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                                data-participante-id="${p.id}"
+                                data-participante-cnpj="${p.cnpj || ''}"
+                                data-tem-plano="${p.monitoramento_ativo ? '1' : '0'}"
+                                title="${p.monitoramento_ativo ? 'Consultar agora' : 'Configurar monitoramento'}"
+                            >
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                                </svg>
+                                ${p.monitoramento_ativo ? 'Consultar' : 'Monitorar'}
+                            </button>
+                            <a href="/app/monitoramento/participante/${p.id}" class="text-xs font-medium hover:underline" style="color: #2563eb;" data-link>Ver</a>
+                        </div>
                     </td>
                 `;
                 participantesTbody.appendChild(tr);
@@ -1835,6 +1940,144 @@
         updateTipoSpedLabels();
         updateDropzoneState();
         updateImportButtonState();
+
+        // =====================================================
+        // MONITORAR PARTICIPANTE INDIVIDUAL (delegação de eventos)
+        // =====================================================
+
+        const modalMonitorarIndividualSped = document.getElementById('modal-monitorar-individual-sped');
+
+        // Event delegation para botões dinâmicos
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-monitorar-participante');
+            if (!btn) return;
+
+            const participanteId = btn.dataset.participanteId;
+            const cnpj = btn.dataset.participanteCnpj;
+            const temPlano = btn.dataset.temPlano === '1';
+            const row = btn.closest('tr');
+            const razaoSocial = row ? row.querySelector('td:nth-child(2)')?.textContent?.trim() : '';
+
+            // Formatar CNPJ
+            const cnpjFormatado = cnpj ? cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5') : '';
+
+            if (temPlano) {
+                // Já tem plano - executar consulta
+                if (confirm('Executar consulta agora para este participante?\n\nCNPJ: ' + cnpjFormatado)) {
+                    executarConsultaSped(participanteId);
+                }
+            } else {
+                // Não tem plano - abrir modal
+                if (modalMonitorarIndividualSped) {
+                    document.getElementById('modal-monitorar-cnpj-sped').textContent = cnpjFormatado;
+                    document.getElementById('modal-monitorar-razao-sped').textContent = razaoSocial || '-';
+                    document.getElementById('modal-monitorar-participante-id-sped').value = participanteId;
+                    document.getElementById('modal-monitorar-custo-sped').textContent = '0 creditos';
+                    document.getElementById('btn-confirmar-monitorar-sped').disabled = true;
+
+                    // Limpar seleção anterior
+                    document.querySelectorAll('input[name="plano_selecionado_sped"]').forEach(r => r.checked = false);
+
+                    modalMonitorarIndividualSped.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+        });
+
+        // Atualizar custo quando selecionar plano
+        document.querySelectorAll('input[name="plano_selecionado_sped"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                document.getElementById('modal-monitorar-custo-sped').textContent = radio.dataset.creditos + ' creditos';
+                document.getElementById('btn-confirmar-monitorar-sped').disabled = false;
+            });
+        });
+
+        // Fechar modal
+        if (modalMonitorarIndividualSped) {
+            modalMonitorarIndividualSped.addEventListener('click', function(e) {
+                if (e.target === modalMonitorarIndividualSped || e.target.closest('.modal-close')) {
+                    modalMonitorarIndividualSped.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }
+            });
+        }
+
+        // Confirmar monitoramento
+        const btnConfirmarMonitorarSped = document.getElementById('btn-confirmar-monitorar-sped');
+        if (btnConfirmarMonitorarSped) {
+            btnConfirmarMonitorarSped.addEventListener('click', async function() {
+                const participanteId = document.getElementById('modal-monitorar-participante-id-sped').value;
+                const planoSelecionado = document.querySelector('input[name="plano_selecionado_sped"]:checked');
+
+                if (!participanteId || !planoSelecionado) {
+                    alert('Selecione um plano de monitoramento.');
+                    return;
+                }
+
+                try {
+                    btnConfirmarMonitorarSped.disabled = true;
+                    btnConfirmarMonitorarSped.textContent = 'Ativando...';
+
+                    const response = await fetch('/app/monitoramento/participante/' + participanteId + '/ativar', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: JSON.stringify({ plano: planoSelecionado.value }),
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        modalMonitorarIndividualSped.classList.add('hidden');
+                        document.body.style.overflow = '';
+                        alert('Monitoramento ativado com sucesso!');
+                        // Atualizar botão na tabela
+                        const btn = document.querySelector('.btn-monitorar-participante[data-participante-id="' + participanteId + '"]');
+                        if (btn) {
+                            btn.dataset.temPlano = '1';
+                            btn.title = 'Consultar agora';
+                            btn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg> Consultar';
+                        }
+                    } else {
+                        alert(data.error || 'Erro ao ativar monitoramento.');
+                    }
+                } catch (error) {
+                    console.error('Erro ao ativar monitoramento:', error);
+                    alert('Erro ao ativar monitoramento. Tente novamente.');
+                } finally {
+                    btnConfirmarMonitorarSped.disabled = false;
+                    btnConfirmarMonitorarSped.textContent = 'Ativar Monitoramento';
+                }
+            });
+        }
+
+        // Função para executar consulta
+        async function executarConsultaSped(participanteId) {
+            try {
+                const response = await fetch('/app/monitoramento/participante/' + participanteId + '/consultar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Consulta iniciada com sucesso! Os resultados serão atualizados em breve.');
+                } else {
+                    alert(data.error || 'Erro ao executar consulta.');
+                }
+            } catch (error) {
+                console.error('Erro ao executar consulta:', error);
+                alert('Erro ao executar consulta. Tente novamente.');
+            }
+        }
 
         console.log('[Monitoramento SPED] Inicializacao concluida');
     }
