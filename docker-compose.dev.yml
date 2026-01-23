@@ -1,6 +1,6 @@
 services:
   app:
-    image: fiscaldock/fiscaldock:1.1.9
+    image: fiscaldock/fiscaldock:1.1.15
     restart: unless-stopped
     networks:
       - devnet
@@ -38,7 +38,7 @@ services:
     deploy: null
 
   scheduler:
-    image: fiscaldock/fiscaldock:1.1.9
+    image: fiscaldock/fiscaldock:1.1.15
     restart: unless-stopped
     networks:
       - devnet
@@ -71,7 +71,7 @@ services:
     deploy: null
 
   worker:
-    image: fiscaldock/fiscaldock:1.1.9
+    image: fiscaldock/fiscaldock:1.1.15
     restart: unless-stopped
     networks:
       - devnet

@@ -242,35 +242,49 @@
                                     <span class="text-xs font-semibold text-gray-900">Básico</span>
                                     <span class="text-xs font-medium text-green-600">Grátis</span>
                                 </div>
-                                <p class="text-xs text-gray-600">Situacao Cadastral RFB + Simples Nacional</p>
+                                <p class="text-xs text-gray-600">Situacao Cadastral + Dados Cadastrais + Simples/MEI</p>
                             </div>
                             <div class="p-3 rounded-lg border border-gray-200 bg-white">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs font-semibold text-gray-900">Cadastral+</span>
                                     <span class="text-xs font-medium text-blue-600">3 créditos</span>
                                 </div>
-                                <p class="text-xs text-gray-600">Inclui tudo do Básico + CNPJ Completo + SINTEGRA + Inscricao Estadual</p>
+                                <p class="text-xs text-gray-600">Basico + SINTEGRA + TCU Consolidada (CEIS, CNEP, CNJ)</p>
                             </div>
                             <div class="p-3 rounded-lg border border-gray-200 bg-white">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs font-semibold text-gray-900">Fiscal Federal</span>
                                     <span class="text-xs font-medium text-blue-600">6 créditos</span>
                                 </div>
-                                <p class="text-xs text-gray-600">Inclui tudo do Cadastral+ + CND Federal (PGFN) + CRF FGTS</p>
+                                <p class="text-xs text-gray-600">Cadastral+ + CND Federal (PGFN) + CRF FGTS</p>
                             </div>
                             <div class="p-3 rounded-lg border border-gray-200 bg-white">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs font-semibold text-gray-900">Fiscal Completo</span>
                                     <span class="text-xs font-medium text-blue-600">12 créditos</span>
                                 </div>
-                                <p class="text-xs text-gray-600">Inclui tudo do Fiscal Federal + CND Estadual + CNDT Trabalhista</p>
+                                <p class="text-xs text-gray-600">Fiscal Federal + CND Estadual + CNDT Trabalhista</p>
                             </div>
                             <div class="p-3 rounded-lg border border-gray-200 bg-white">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs font-semibold text-gray-900">Due Diligence</span>
-                                    <span class="text-xs font-medium text-purple-600">18 créditos</span>
+                                    <span class="text-xs font-medium text-purple-600">16 créditos</span>
                                 </div>
-                                <p class="text-xs text-gray-600">Inclui tudo do Fiscal Completo + Protestos + Processos Judiciais</p>
+                                <p class="text-xs text-gray-600">Fiscal Completo + Lista Devedores PGFN</p>
+                            </div>
+                            <div class="p-3 rounded-lg border border-gray-200 bg-white">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-semibold text-gray-900">ESG</span>
+                                    <span class="text-xs font-medium text-green-700">6 créditos</span>
+                                </div>
+                                <p class="text-xs text-gray-600">Trabalho Escravo + IBAMA Autuacoes</p>
+                            </div>
+                            <div class="p-3 rounded-lg border border-gray-200 bg-white">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-semibold text-gray-900">Completo</span>
+                                    <span class="text-xs font-medium text-amber-600">22 créditos</span>
+                                </div>
+                                <p class="text-xs text-gray-600">Todas as consultas disponiveis</p>
                             </div>
                         </div>
                     </div>
@@ -746,11 +760,13 @@
             <div class="space-y-2">
                 @php
                     $planosDisponiveis = [
-                        ['id' => 'basico', 'nome' => 'Basico', 'creditos' => 0, 'gratuito' => true, 'descricao' => 'Situacao Cadastral + Simples Nacional'],
-                        ['id' => 'cadastral', 'nome' => 'Cadastral+', 'creditos' => 3, 'gratuito' => false, 'descricao' => 'CNPJ completo + SINTEGRA + IE'],
-                        ['id' => 'fiscal_federal', 'nome' => 'Fiscal Federal', 'creditos' => 6, 'gratuito' => false, 'descricao' => 'CND Federal (PGFN) + FGTS'],
-                        ['id' => 'fiscal_completo', 'nome' => 'Fiscal Completo', 'creditos' => 12, 'gratuito' => false, 'descricao' => 'Federal + Estadual + CNDT'],
-                        ['id' => 'due_diligence', 'nome' => 'Due Diligence', 'creditos' => 18, 'gratuito' => false, 'descricao' => 'Completo + Protestos + Processos'],
+                        ['id' => 'basico', 'nome' => 'Basico', 'creditos' => 0, 'gratuito' => true, 'descricao' => 'Dados cadastrais + Simples/MEI'],
+                        ['id' => 'cadastral_plus', 'nome' => 'Cadastral+', 'creditos' => 3, 'gratuito' => false, 'descricao' => 'Basico + SINTEGRA + TCU Consolidada'],
+                        ['id' => 'fiscal_federal', 'nome' => 'Fiscal Federal', 'creditos' => 6, 'gratuito' => false, 'descricao' => 'Cadastral+ + CND Federal + CRF FGTS'],
+                        ['id' => 'fiscal_completo', 'nome' => 'Fiscal Completo', 'creditos' => 12, 'gratuito' => false, 'descricao' => 'Fiscal Federal + CND Estadual + CNDT'],
+                        ['id' => 'due_diligence', 'nome' => 'Due Diligence', 'creditos' => 16, 'gratuito' => false, 'descricao' => 'Fiscal Completo + Lista Devedores PGFN'],
+                        ['id' => 'esg', 'nome' => 'ESG', 'creditos' => 6, 'gratuito' => false, 'descricao' => 'Trabalho Escravo + IBAMA Autuacoes'],
+                        ['id' => 'completo', 'nome' => 'Completo', 'creditos' => 22, 'gratuito' => false, 'descricao' => 'Todas as consultas disponiveis'],
                     ];
                 @endphp
                 @foreach($planosDisponiveis as $plano)

@@ -59,7 +59,22 @@
                     <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <span>Origem: <strong class="text-gray-900">{{ $participante->origem ?? 'Manual' }}</strong></span>
+                    @php
+                        $origemLabel = match($participante->origem_tipo) {
+                            'SPED_EFD_FISCAL' => 'EFD Fiscal',
+                            'SPED_EFD_CONTRIB' => 'EFD Contribuições',
+                            'NFE' => 'NF-e',
+                            'NFSE' => 'NFS-e',
+                            'MANUAL' => 'Manual',
+                            default => $participante->origem_tipo ?? 'Manual',
+                        };
+                        $arquivoOrigem = $participante->origem_ref['arquivo'] ?? null;
+                    @endphp
+                    <span>Origem: <strong class="text-gray-900">{{ $origemLabel }}</strong></span>
+                    @if($arquivoOrigem)
+                        <span class="mx-2">|</span>
+                        <span>Arquivo: <strong class="text-gray-900">{{ $arquivoOrigem }}</strong></span>
+                    @endif
                     @if($participante->ultima_consulta_em)
                         <span class="mx-2">|</span>
                         <span>Ultima consulta: <strong class="text-gray-900">{{ $participante->ultima_consulta_em->format('d/m/Y H:i') }}</strong></span>
