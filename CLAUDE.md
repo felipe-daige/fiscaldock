@@ -133,7 +133,7 @@ Continuous tracking of CNPJ tax status via subscriptions.
 | Minha Receita | Free | CNPJ, Simples, QSA, CNAE |
 | InfoSimples | R$0.26/call | CND, FGTS, SINTEGRA, CNDT, protestos |
 
-**Plans:** Básico (0cr), Cadastral+ (3cr), Fiscal Federal (6cr), Fiscal Completo (12cr), Due Diligence (18cr)
+**Plans:** Básico (0cr), Cadastral+ (3cr), Fiscal Federal (6cr), Fiscal Completo (12cr), Due Diligence (16cr), ESG (6cr), Completo (22cr)
 
 ## Webhooks
 

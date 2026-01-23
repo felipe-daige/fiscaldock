@@ -65,6 +65,54 @@ class MonitoramentoController extends Controller
                 ->sum('creditos_cobrados'),
         ];
 
+        // Estatísticas detalhadas dos participantes
+        $participantesStats = [
+            'total' => $stats['total_participantes'],
+            'ativos' => Participante::where('user_id', $userId)
+                ->where('situacao_cadastral', 'ATIVA')
+                ->count(),
+            'inaptos' => Participante::where('user_id', $userId)
+                ->whereIn('situacao_cadastral', ['INAPTA', 'SUSPENSA', 'BAIXADA'])
+                ->count(),
+            'com_monitoramento' => MonitoramentoAssinatura::where('user_id', $userId)
+                ->where('status', 'ativo')
+                ->distinct('participante_id')
+                ->count('participante_id'),
+            'novos_mes' => Participante::where('user_id', $userId)
+                ->whereBetween('created_at', [$inicioMes, $fimMes])
+                ->count(),
+        ];
+
+        // Distribuição por regime tributário
+        $porRegime = Participante::where('user_id', $userId)
+            ->selectRaw("COALESCE(regime_tributario, 'nao_definido') as regime, COUNT(*) as total")
+            ->groupBy('regime_tributario')
+            ->pluck('total', 'regime')
+            ->toArray();
+
+        // Top 3 UFs
+        $topUfs = Participante::where('user_id', $userId)
+            ->whereNotNull('uf')
+            ->where('uf', '!=', '')
+            ->selectRaw('uf, COUNT(*) as total')
+            ->groupBy('uf')
+            ->orderByDesc('total')
+            ->limit(3)
+            ->pluck('total', 'uf')
+            ->toArray();
+
+        // Resumo da base para card visual
+        $resumoBase = [
+            'por_situacao' => [
+                'ativas' => $participantesStats['ativos'],
+                'inaptas' => $participantesStats['inaptos'],
+                'outras' => $participantesStats['total'] - $participantesStats['ativos'] - $participantesStats['inaptos'],
+            ],
+            'por_regime' => $porRegime,
+            'top_ufs' => $topUfs,
+            'total' => $participantesStats['total'],
+        ];
+
         // Filtro por grupo
         $grupoId = $request->get('grupo');
 
@@ -87,6 +135,8 @@ class MonitoramentoController extends Controller
 
         $data = [
             'stats' => $stats,
+            'participantesStats' => $participantesStats,
+            'resumoBase' => $resumoBase,
             'planos' => MonitoramentoPlano::ativos(),
             'participantes' => $participantes,
             'grupos' => $grupos,
@@ -351,7 +401,7 @@ class MonitoramentoController extends Controller
             ->first();
 
         // Carregar planos disponíveis
-        $planos = MonitoramentoPlano::ativos()->get();
+        $planos = MonitoramentoPlano::ativos();
 
         // Estatísticas do participante
         $estatisticas = [

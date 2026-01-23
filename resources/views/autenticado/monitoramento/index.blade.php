@@ -133,11 +133,13 @@
                     {{-- Planos estaticos enquanto nao tem banco --}}
                     @php
                         $planosEstaticos = [
-                            ['nome' => 'Basico', 'creditos' => 0, 'gratuito' => true, 'descricao' => 'Situacao Cadastral + Simples Nacional', 'consultas' => ['Situacao Cadastral', 'Simples Nacional']],
-                            ['nome' => 'Cadastral+', 'creditos' => 3, 'gratuito' => false, 'descricao' => 'CNPJ completo + SINTEGRA + IE', 'consultas' => ['CNPJ Completo', 'SINTEGRA', 'Inscricao Estadual']],
-                            ['nome' => 'Fiscal Federal', 'creditos' => 6, 'gratuito' => false, 'descricao' => 'CND Federal (PGFN) + FGTS', 'consultas' => ['CND Federal', 'FGTS']],
-                            ['nome' => 'Fiscal Completo', 'creditos' => 12, 'gratuito' => false, 'descricao' => 'Federal + Estadual + CNDT', 'consultas' => ['CND Federal', 'FGTS', 'CND Estadual', 'CNDT']],
-                            ['nome' => 'Due Diligence', 'creditos' => 18, 'gratuito' => false, 'descricao' => 'Completo + Protestos + Processos', 'consultas' => ['Todas CNDs', 'Protestos', 'Processos']],
+                            ['nome' => 'Basico', 'creditos' => 0, 'gratuito' => true, 'descricao' => 'Dados cadastrais completos + Simples/MEI', 'consultas' => ['Situacao Cadastral', 'Dados Cadastrais', 'Endereco', 'CNAEs', 'QSA', 'Simples Nacional', 'MEI']],
+                            ['nome' => 'Cadastral+', 'creditos' => 3, 'gratuito' => false, 'descricao' => 'Basico + SINTEGRA + Listas Restritivas', 'consultas' => ['Basico', 'SINTEGRA', 'TCU Consolidada']],
+                            ['nome' => 'Fiscal Federal', 'creditos' => 6, 'gratuito' => false, 'descricao' => 'Cadastral+ + CND Federal + CRF FGTS', 'consultas' => ['Cadastral+', 'CND Federal', 'CRF FGTS']],
+                            ['nome' => 'Fiscal Completo', 'creditos' => 12, 'gratuito' => false, 'descricao' => 'Fiscal Federal + CND Estadual + CNDT', 'consultas' => ['Fiscal Federal', 'CND Estadual', 'CNDT']],
+                            ['nome' => 'Due Diligence', 'creditos' => 16, 'gratuito' => false, 'descricao' => 'Fiscal Completo + Lista Devedores PGFN', 'consultas' => ['Fiscal Completo', 'Lista Devedores PGFN']],
+                            ['nome' => 'ESG', 'creditos' => 6, 'gratuito' => false, 'descricao' => 'Compliance ambiental e trabalhista', 'consultas' => ['Trabalho Escravo', 'IBAMA Autuacoes']],
+                            ['nome' => 'Completo', 'creditos' => 22, 'gratuito' => false, 'descricao' => 'Todas as consultas disponiveis', 'consultas' => ['Todas as consultas']],
                         ];
                     @endphp
                     @foreach($planosEstaticos as $plano)
@@ -174,11 +176,113 @@
             </div>
         </div>
 
+        {{-- Card Resumo da Base --}}
+        @if(($resumoBase['total'] ?? 0) > 0)
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Resumo da Base</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {{-- Por Situação Cadastral --}}
+                <div>
+                    <h3 class="text-sm font-medium text-gray-700 mb-3">Por Situação Cadastral</h3>
+                    <div class="space-y-2">
+                        @php
+                            $total = $resumoBase['total'];
+                            $ativas = $resumoBase['por_situacao']['ativas'] ?? 0;
+                            $inaptas = $resumoBase['por_situacao']['inaptas'] ?? 0;
+                            $outras = $resumoBase['por_situacao']['outras'] ?? 0;
+                        @endphp
+                        {{-- Barra Ativas --}}
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs text-gray-600 w-14 shrink-0">Ativas</span>
+                            <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-green-500 rounded-full" style="width: {{ $total > 0 ? ($ativas / $total * 100) : 0 }}%"></div>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-900 w-8 text-right shrink-0">{{ $ativas }}</span>
+                        </div>
+                        {{-- Barra Inaptas --}}
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs text-gray-600 w-14 shrink-0" title="Inaptas, Suspensas ou Baixadas">Inaptas</span>
+                            <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-red-500 rounded-full" style="width: {{ $total > 0 ? ($inaptas / $total * 100) : 0 }}%"></div>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-900 w-8 text-right shrink-0">{{ $inaptas }}</span>
+                        </div>
+                        {{-- Barra Outras --}}
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs text-gray-600 w-14 shrink-0" title="Sem situação definida">Outras</span>
+                            <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-gray-400 rounded-full" style="width: {{ $total > 0 ? ($outras / $total * 100) : 0 }}%"></div>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-900 w-8 text-right shrink-0">{{ $outras }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Por Regime --}}
+                <div>
+                    <h3 class="text-sm font-medium text-gray-700 mb-3">Por Regime Tributário</h3>
+                    <div class="space-y-2">
+                        @php
+                            $regimes = [
+                                'simples_nacional' => ['label' => 'Simples Nacional', 'color' => 'bg-blue-500'],
+                                'lucro_presumido' => ['label' => 'Lucro Presumido', 'color' => 'bg-purple-500'],
+                                'lucro_real' => ['label' => 'Lucro Real', 'color' => 'bg-amber-500'],
+                            ];
+                        @endphp
+                        @foreach($regimes as $key => $config)
+                            @php $count = $resumoBase['por_regime'][$key] ?? 0; @endphp
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs text-gray-600 w-28 shrink-0">{{ $config['label'] }}</span>
+                                <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                    <div class="h-full {{ $config['color'] }} rounded-full" style="width: {{ $total > 0 ? ($count / $total * 100) : 0 }}%"></div>
+                                </div>
+                                <span class="text-sm font-semibold text-gray-900 w-8 text-right shrink-0">{{ $count }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Top Estados --}}
+                <div>
+                    <h3 class="text-sm font-medium text-gray-700 mb-3">Top Estados (UF)</h3>
+                    <div class="space-y-2">
+                        @forelse($resumoBase['top_ufs'] ?? [] as $uf => $count)
+                            <div class="flex items-center gap-4 py-1">
+                                <span class="text-sm font-medium text-gray-900 w-8">{{ $uf }}</span>
+                                <span class="text-sm text-gray-600">{{ $count }} participantes</span>
+                            </div>
+                        @empty
+                            <p class="text-sm text-gray-400">Sem dados de UF</p>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         {{-- Lista de Participantes --}}
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
             <div class="px-6 py-4 border-b border-gray-200">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <h2 class="text-lg font-semibold text-gray-900">Meus Participantes</h2>
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900">Meus Participantes</h2>
+                        <p class="mt-1 text-sm text-gray-500">
+                            <strong class="text-gray-700">{{ $participantesStats['total'] ?? 0 }}</strong> total
+                            <span class="text-gray-400 mx-2">&bull;</span>
+                            <strong class="text-gray-700">{{ $participantesStats['ativos'] ?? 0 }}</strong> ativos
+                            <span class="text-gray-400 mx-2">&bull;</span>
+                            <strong class="text-gray-700">{{ $participantesStats['com_monitoramento'] ?? 0 }}</strong> monitorados
+                            @if(($participantesStats['novos_mes'] ?? 0) > 0)
+                                <span class="text-gray-400 mx-2">&bull;</span>
+                                <strong class="text-gray-700">+{{ $participantesStats['novos_mes'] }}</strong> este mes
+                            @endif
+                            @if(($participantesStats['inaptos'] ?? 0) > 0)
+                                <span class="text-gray-400 mx-2">&bull;</span>
+                                <strong class="text-gray-700">{{ $participantesStats['inaptos'] }}</strong> inaptos
+                            @endif
+                        </p>
+                    </div>
                     <div class="flex items-center gap-3">
                         {{-- Filtro por Grupo --}}
                         <select
@@ -226,7 +330,15 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-3 py-2 text-left">
-                                <input type="checkbox" id="select-all-participantes" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="select-all-participantes" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    <select id="select-modo-selecao" class="text-[10px] border border-gray-300 rounded bg-gray-50 text-gray-500 focus:ring-1 focus:ring-blue-500 cursor-pointer px-0.5 py-0 hover:bg-gray-100 h-5 w-7" title="Selecionar múltiplos">
+                                        <option value="">▾</option>
+                                        <option value="pagina">Pág</option>
+                                        <option value="todos">Todos</option>
+                                        <option value="nenhum">Limpar</option>
+                                    </select>
+                                </div>
                             </th>
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">CNPJ</th>
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Razao Social</th>
@@ -400,10 +512,10 @@
         </div>
 
         {{-- Acoes em massa (aparece quando seleciona participantes) --}}
-        <div id="acoes-massa" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white rounded-xl shadow-2xl px-6 py-4 z-50">
+        <div id="acoes-massa" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-white border border-gray-200 text-gray-900 rounded-xl shadow-2xl px-6 py-4 z-50">
             <div class="flex items-center gap-4">
                 <span class="text-sm"><strong id="count-selecionados">0</strong> participante(s) selecionado(s)</span>
-                <div class="h-6 w-px bg-gray-700"></div>
+                <div class="h-6 w-px bg-gray-300"></div>
                 <button type="button" id="btn-criar-monitoramento" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold transition hover:bg-blue-700">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
@@ -422,7 +534,7 @@
                     </svg>
                     Adicionar ao Grupo
                 </button>
-                <button type="button" id="btn-cancelar-selecao" class="inline-flex items-center p-2 rounded-lg text-gray-400 hover:text-white transition-colors">
+                <button type="button" id="btn-cancelar-selecao" class="inline-flex items-center p-2 rounded-lg text-gray-500 hover:text-gray-700 transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -458,11 +570,13 @@
             <div class="space-y-2" id="modal-monitorar-planos">
                 @php
                     $planosDisponiveis = [
-                        ['id' => 'basico', 'nome' => 'Basico', 'creditos' => 0, 'gratuito' => true, 'descricao' => 'Situacao Cadastral + Simples Nacional'],
-                        ['id' => 'cadastral', 'nome' => 'Cadastral+', 'creditos' => 3, 'gratuito' => false, 'descricao' => 'CNPJ completo + SINTEGRA + IE'],
-                        ['id' => 'fiscal_federal', 'nome' => 'Fiscal Federal', 'creditos' => 6, 'gratuito' => false, 'descricao' => 'CND Federal (PGFN) + FGTS'],
-                        ['id' => 'fiscal_completo', 'nome' => 'Fiscal Completo', 'creditos' => 12, 'gratuito' => false, 'descricao' => 'Federal + Estadual + CNDT'],
-                        ['id' => 'due_diligence', 'nome' => 'Due Diligence', 'creditos' => 18, 'gratuito' => false, 'descricao' => 'Completo + Protestos + Processos'],
+                        ['id' => 'basico', 'nome' => 'Basico', 'creditos' => 0, 'gratuito' => true, 'descricao' => 'Dados cadastrais + Simples/MEI'],
+                        ['id' => 'cadastral_plus', 'nome' => 'Cadastral+', 'creditos' => 3, 'gratuito' => false, 'descricao' => 'Basico + SINTEGRA + TCU Consolidada'],
+                        ['id' => 'fiscal_federal', 'nome' => 'Fiscal Federal', 'creditos' => 6, 'gratuito' => false, 'descricao' => 'Cadastral+ + CND Federal + CRF FGTS'],
+                        ['id' => 'fiscal_completo', 'nome' => 'Fiscal Completo', 'creditos' => 12, 'gratuito' => false, 'descricao' => 'Fiscal Federal + CND Estadual + CNDT'],
+                        ['id' => 'due_diligence', 'nome' => 'Due Diligence', 'creditos' => 16, 'gratuito' => false, 'descricao' => 'Fiscal Completo + Lista Devedores PGFN'],
+                        ['id' => 'esg', 'nome' => 'ESG', 'creditos' => 6, 'gratuito' => false, 'descricao' => 'Trabalho Escravo + IBAMA Autuacoes'],
+                        ['id' => 'completo', 'nome' => 'Completo', 'creditos' => 22, 'gratuito' => false, 'descricao' => 'Todas as consultas disponiveis'],
                     ];
                 @endphp
                 @foreach($planosDisponiveis as $plano)
@@ -771,6 +885,40 @@
                     checkbox.checked = false;
                 });
                 if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                // Resetar dropdown
+                const selectModo = document.getElementById('select-modo-selecao');
+                if (selectModo) selectModo.value = '';
+                atualizarSelecao();
+            });
+        }
+
+        // Dropdown de selecao (Pagina, Todos, Nenhum)
+        const selectModoSelecao = document.getElementById('select-modo-selecao');
+        if (selectModoSelecao) {
+            selectModoSelecao.addEventListener('change', function() {
+                const modo = selectModoSelecao.value;
+
+                if (modo === 'pagina') {
+                    // Seleciona apenas os visiveis (nao ocultos por busca)
+                    participanteCheckboxes.forEach(function(checkbox) {
+                        const row = checkbox.closest('tr');
+                        checkbox.checked = row && row.style.display !== 'none';
+                    });
+                } else if (modo === 'todos') {
+                    // Seleciona todos
+                    participanteCheckboxes.forEach(function(checkbox) {
+                        checkbox.checked = true;
+                    });
+                } else if (modo === 'nenhum') {
+                    // Desmarca todos
+                    participanteCheckboxes.forEach(function(checkbox) {
+                        checkbox.checked = false;
+                    });
+                }
+
+                // Resetar dropdown para "--"
+                selectModoSelecao.value = '';
+
                 atualizarSelecao();
             });
         }

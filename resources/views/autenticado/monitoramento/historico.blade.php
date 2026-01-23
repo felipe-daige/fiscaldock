@@ -52,10 +52,12 @@
                     <select id="filtro-plano" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Todos</option>
                         <option value="basico">Basico</option>
-                        <option value="cadastral">Cadastral+</option>
+                        <option value="cadastral_plus">Cadastral+</option>
                         <option value="fiscal_federal">Fiscal Federal</option>
                         <option value="fiscal_completo">Fiscal Completo</option>
                         <option value="due_diligence">Due Diligence</option>
+                        <option value="esg">ESG</option>
+                        <option value="completo">Completo</option>
                     </select>
                 </div>
 
@@ -302,10 +304,12 @@
                 if (plano) {
                     const planoNomes = {
                         'basico': 'basico',
-                        'cadastral': 'cadastral',
+                        'cadastral_plus': 'cadastral',
                         'fiscal_federal': 'fiscal federal',
                         'fiscal_completo': 'fiscal completo',
                         'due_diligence': 'due diligence',
+                        'esg': 'esg',
+                        'completo': 'completo',
                     };
                     if (!planoCell.includes(planoNomes[plano] || plano)) {
                         mostrar = false;
