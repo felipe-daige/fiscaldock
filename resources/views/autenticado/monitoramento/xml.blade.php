@@ -277,45 +277,37 @@
                         </div>
 
                         {{-- Formatos Aceitos --}}
+                        {{-- Formatos e Limites --}}
                         <div class="pt-4 border-t border-gray-200">
-                            <h4 class="text-sm font-semibold text-gray-900 mb-3">Formatos Aceitos</h4>
+                            <h4 class="text-sm font-semibold text-gray-900 mb-3">Formatos e Limites</h4>
                             <div class="space-y-3">
-                                <div class="flex items-start gap-3 p-3 bg-purple-50 rounded-lg border border-purple-100">
-                                    <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                                {{-- ZIP --}}
+                                <div class="p-3 bg-purple-50 rounded-lg border border-purple-100">
+                                    <div class="flex items-center gap-2 mb-1">
                                         <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
                                         </svg>
+                                        <span class="text-sm font-medium text-purple-900">Arquivo ZIP</span>
                                     </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-purple-900">Arquivo ZIP</p>
-                                        <p class="text-xs text-purple-700">Ate 5.000 XMLs dentro de um unico ZIP</p>
-                                    </div>
+                                    <ul class="text-xs text-purple-700 space-y-0.5 ml-6">
+                                        <li>1 arquivo ZIP por vez</li>
+                                        <li>Maximo 50 MB</li>
+                                        <li>Ate 5.000 XMLs dentro do ZIP</li>
+                                    </ul>
                                 </div>
-                                <div class="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                                    <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                                {{-- XMLs --}}
+                                <div class="p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                    <div class="flex items-center gap-2 mb-1">
                                         <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                         </svg>
+                                        <span class="text-sm font-medium text-blue-900">XMLs Avulsos</span>
                                     </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-blue-900">XMLs Avulsos</p>
-                                        <p class="text-xs text-blue-700">Ate 100 arquivos XML individuais</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Limites --}}
-                        <div class="pt-4 border-t border-gray-200">
-                            <h4 class="text-sm font-semibold text-gray-900 mb-3">Limites</h4>
-                            <div class="grid grid-cols-2 gap-2 text-xs">
-                                <div class="p-2 bg-gray-50 rounded-lg text-center">
-                                    <span class="font-semibold text-gray-900">50 MB</span>
-                                    <span class="text-gray-500 block">por arquivo</span>
-                                </div>
-                                <div class="p-2 bg-gray-50 rounded-lg text-center">
-                                    <span class="font-semibold text-gray-900">200 MB</span>
-                                    <span class="text-gray-500 block">total</span>
+                                    <ul class="text-xs text-blue-700 space-y-0.5 ml-6">
+                                        <li>Ate 100 arquivos por vez</li>
+                                        <li>Maximo 50 MB por arquivo</li>
+                                        <li>Maximo 200 MB total</li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
@@ -647,7 +639,6 @@
             const hasFiles = selectedFiles.length > 0;
             const validFiles = selectedFiles.filter(f => f.status === 'valid').length;
             const isValidating = selectedFiles.some(f => f.status === 'validating');
-            const totalXmls = selectedFiles.reduce((sum, f) => sum + (f.totalXmls || 0), 0);
 
             if (importarBtn) {
                 // Disable if: no tipo doc, no modo envio, no files, still validating, or no valid files
@@ -656,10 +647,6 @@
                 if (btnText) {
                     if (isValidating) {
                         btnText.textContent = 'Validando...';
-                    } else if (totalXmls > 0) {
-                        btnText.textContent = 'Importar ' + totalXmls + ' doc' + (totalXmls > 1 ? 's' : '');
-                    } else if (hasFiles) {
-                        btnText.textContent = 'Importar ' + selectedFiles.length + ' arquivo(s)';
                     } else {
                         btnText.textContent = 'Importar';
                     }
