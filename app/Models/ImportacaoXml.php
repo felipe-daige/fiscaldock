@@ -1,0 +1,119 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class ImportacaoXml extends Model
+{
+    protected $table = 'importacoes_xml';
+
+    protected $fillable = [
+        'user_id',
+        'cliente_id',
+        'tipo_documento',
+        'modo_envio',
+        'total_arquivos',
+        'total_xmls',
+        'tamanho_total_bytes',
+        'xmls_processados',
+        'xmls_com_erro',
+        'participantes_novos',
+        'participantes_atualizados',
+        'participantes_ignorados',
+        'status',
+        'erro_mensagem',
+        'participante_ids',
+        'erros_detalhados',
+        'iniciado_em',
+        'concluido_em',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'total_arquivos' => 'integer',
+            'total_xmls' => 'integer',
+            'tamanho_total_bytes' => 'integer',
+            'xmls_processados' => 'integer',
+            'xmls_com_erro' => 'integer',
+            'participantes_novos' => 'integer',
+            'participantes_atualizados' => 'integer',
+            'participantes_ignorados' => 'integer',
+            'participante_ids' => 'array',
+            'erros_detalhados' => 'array',
+            'iniciado_em' => 'datetime',
+            'concluido_em' => 'datetime',
+        ];
+    }
+
+    // Relacionamentos
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function cliente(): BelongsTo
+    {
+        return $this->belongsTo(Cliente::class);
+    }
+
+    public function chavesProcessadas(): HasMany
+    {
+        return $this->hasMany(XmlChaveProcessada::class, 'importacao_xml_id');
+    }
+
+    // Acessores
+
+    /**
+     * Total de participantes processados (novos + atualizados).
+     */
+    public function getTotalParticipantesAttribute(): int
+    {
+        return $this->participantes_novos + $this->participantes_atualizados;
+    }
+
+    /**
+     * Tamanho formatado em MB.
+     */
+    public function getTamanhoFormatadoAttribute(): string
+    {
+        $bytes = $this->tamanho_total_bytes;
+        if ($bytes >= 1048576) {
+            return number_format($bytes / 1048576, 2) . ' MB';
+        } elseif ($bytes >= 1024) {
+            return number_format($bytes / 1024, 2) . ' KB';
+        }
+        return $bytes . ' bytes';
+    }
+
+    // Scopes
+
+    public function scopeDoUsuario($query, int $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    public function scopePendentes($query)
+    {
+        return $query->where('status', 'pendente');
+    }
+
+    public function scopeProcessando($query)
+    {
+        return $query->where('status', 'processando');
+    }
+
+    public function scopeConcluidas($query)
+    {
+        return $query->where('status', 'concluido');
+    }
+
+    public function scopeComErro($query)
+    {
+        return $query->where('status', 'erro');
+    }
+}

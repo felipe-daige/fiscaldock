@@ -123,8 +123,62 @@ Continuous tracking of CNPJ tax status via subscriptions.
 
 **Routes:**
 - `/app/monitoramento/sped` - Import from SPED
+- `/app/monitoramento/xml` - Import from XML files (NF-e, NFS-e, CT-e)
 - `/app/monitoramento/avulso` - Single CNPJ query
 - `/app/monitoramento/participante/{id}` - View details
+
+### XML Import (NF-e, NFS-e, CT-e)
+Import participants from XML invoice files.
+
+**Models:** `ImportacaoXml`, `XmlChaveProcessada`
+
+**UI Flow:**
+1. User selects document type (NFE/NFSE/CTE)
+2. User selects upload mode (ZIP with multiple invoices OR individual XMLs)
+3. User optionally selects a client (to filter out client's CNPJ)
+4. User uploads files via dropzone
+5. Laravel saves files to disk, sends paths to n8n
+6. n8n processes XMLs, extracts CNPJs
+7. Results stored via progress API
+
+**Routes:**
+- `GET /app/monitoramento/xml` - Upload page
+- `POST /app/monitoramento/xml/importar` - Start import (saves files, triggers n8n)
+- `POST /app/monitoramento/xml/validar` - Validate file before upload (count XMLs in ZIP)
+- `GET /app/monitoramento/xml/progresso/stream` - SSE progress
+- `POST /api/monitoramento/xml/importacao/progress` - n8n sends progress
+
+**Payload Laravel → n8n (files saved to disk, only paths sent):**
+```json
+{
+  "user_id": 1,
+  "importacao_id": 456,
+  "tab_id": "uuid",
+  "tipo_documento": "NFE",
+  "modo_envio": "zip",
+  "cliente_id": 123,
+  "progress_url": "https://fiscaldock.com.br/api/monitoramento/xml/importacao/progress",
+  "pasta": "/var/www/html/storage/app/temp/xml-imports/456",
+  "arquivos": ["notas.zip"]
+}
+```
+
+**File Storage:**
+- Files saved to `storage/app/temp/xml-imports/{importacao_id}/`
+- Cleanup command: `php artisan xml:limpar-temp` (removes folders > 24h old)
+- Scheduled hourly via `routes/console.php`
+
+**Deduplication:**
+- `xml_chaves_processadas` table stores 44-char access keys
+- Same key = skip XML, increment counter
+- Same CNPJ = update existing participant, don't duplicate
+
+**Business Rules (n8n):**
+- ZIP: extract recursively (can have subfolders or ZIPs inside)
+- CPF (individual person): save but don't monitor
+- If client selected: ignore client's CNPJ, only save third parties
+
+**Limits:** 50MB/file, 200MB total, 100 files (XMLs mode), 5000 XMLs max (ZIP mode)
 
 ### API Strategy (via n8n)
 
@@ -148,6 +202,7 @@ All URLs via `config('services.webhook.*')`, NO defaults in code.
 | Monitoramento Import (Contribuições) | `WEBHOOK_MONITORAMENTO_IMPORTACAO_CONTRIBUICOES_URL` |
 | Monitoramento Import (Fiscal) | `WEBHOOK_MONITORAMENTO_IMPORTACAO_FISCAL_URL` |
 | Monitoramento Consulta | `WEBHOOK_MONITORAMENTO_CONSULTA_URL` |
+| Monitoramento Import XML | `WEBHOOK_MONITORAMENTO_IMPORTACAO_XML_URL` |
 
 ```php
 $url = config('services.webhook.sped_fiscal_url');  // Never use env() directly
@@ -158,10 +213,12 @@ $url = config('services.webhook.sped_fiscal_url');  // Never use env() directly
 **From n8n (X-API-Token header):**
 - `POST /api/data/receive/raf/csvfile` - Receive CSV reports
 - `POST /api/monitoramento/consulta/resultado` - Consultation results
-- `POST /api/monitoramento/sped/importacao-txt/progress` - Import progress
+- `POST /api/monitoramento/sped/importacao-txt/progress` - SPED import progress
+- `POST /api/monitoramento/xml/importacao/progress` - XML import progress
 
 **SSE (real-time):**
-- `GET /app/monitoramento/progresso/stream?tab_id=xxx`
+- `GET /app/monitoramento/progresso/stream?tab_id=xxx` - SPED progress
+- `GET /app/monitoramento/xml/progresso/stream?tab_id=xxx` - XML progress
 - `GET /api/data/notifications/stream`
 
 ## Progress System (user_id + tab_id)
