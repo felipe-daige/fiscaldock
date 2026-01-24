@@ -107,6 +107,7 @@ Route::middleware('auth')->group(function () {
     // Rotas de Monitoramento
     Route::prefix('app/monitoramento')->name('app.monitoramento.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'index'])->name('index');
+        Route::get('/planos', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'planos'])->name('planos');
         Route::get('/sped', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'importarSped'])->name('sped');
         Route::get('/avulso', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'consultaAvulsa'])->name('avulso');
         Route::get('/historico', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'historico'])->name('historico');
@@ -148,5 +149,11 @@ Route::middleware('auth')->group(function () {
 
         // Participantes por IDs (AJAX) - usado quando n8n envia participante_ids
         Route::post('/participantes/por-ids', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'participantesPorIds'])->name('participantes.por-ids');
+
+        // Importação de XMLs (NF-e, NFS-e, CT-e)
+        Route::get('/xml', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'index'])->name('xml');
+        Route::post('/xml/validar', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'validar'])->name('xml.validar');
+        Route::post('/xml/importar', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'importar'])->name('xml.importar');
+        Route::get('/xml/progresso/stream', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'streamProgresso'])->name('xml.progresso.stream');
     });
 });
