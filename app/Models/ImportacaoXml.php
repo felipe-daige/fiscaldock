@@ -19,10 +19,13 @@ class ImportacaoXml extends Model
         'total_xmls',
         'tamanho_total_bytes',
         'xmls_processados',
+        'xmls_novos',
+        'xmls_duplicados_processados',
         'xmls_com_erro',
         'participantes_novos',
         'participantes_atualizados',
         'participantes_ignorados',
+        'valor_total',
         'status',
         'erro_mensagem',
         'participante_ids',
@@ -38,10 +41,13 @@ class ImportacaoXml extends Model
             'total_xmls' => 'integer',
             'tamanho_total_bytes' => 'integer',
             'xmls_processados' => 'integer',
+            'xmls_novos' => 'integer',
+            'xmls_duplicados_processados' => 'integer',
             'xmls_com_erro' => 'integer',
             'participantes_novos' => 'integer',
             'participantes_atualizados' => 'integer',
             'participantes_ignorados' => 'integer',
+            'valor_total' => 'decimal:2',
             'participante_ids' => 'array',
             'erros_detalhados' => 'array',
             'iniciado_em' => 'datetime',
@@ -64,6 +70,11 @@ class ImportacaoXml extends Model
     public function chavesProcessadas(): HasMany
     {
         return $this->hasMany(XmlChaveProcessada::class, 'importacao_xml_id');
+    }
+
+    public function notasFiscais(): HasMany
+    {
+        return $this->hasMany(NotaFiscal::class, 'importacao_xml_id');
     }
 
     // Acessores

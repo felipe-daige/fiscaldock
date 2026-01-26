@@ -20,6 +20,16 @@
                         Importar do SPED
                     </a>
                     <a
+                        href="/app/monitoramento/xml"
+                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
+                        data-link
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Importar XMLs
+                    </a>
+                    <a
                         href="/app/monitoramento/avulso"
                         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700"
                         data-link
@@ -96,83 +106,52 @@
             </div>
         </div>
 
-        {{-- Planos Disponiveis --}}
-        <div class="mb-8">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Planos de Monitoramento</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                @forelse($planos ?? [] as $plano)
-                    <div class="bg-white rounded-xl border {{ $plano->is_gratuito ? 'border-green-200' : 'border-gray-200' }} shadow-sm p-6 hover:shadow-md transition-shadow">
-                        <div class="flex items-start justify-between gap-2 mb-3">
-                            <h3 class="font-semibold text-gray-900">{{ $plano->nome }}</h3>
-                            @if($plano->is_gratuito)
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700 whitespace-nowrap">
-                                    Gratis
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700 whitespace-nowrap">
-                                    {{ $plano->custo_creditos }} cred.
-                                </span>
-                            @endif
-                        </div>
-                        <p class="text-sm text-gray-600 mb-3">{{ $plano->descricao }}</p>
-                        <div class="text-xs text-gray-500">
-                            <strong>Consultas:</strong>
-                            <ul class="mt-1 space-y-1">
-                                @foreach($plano->consultas_incluidas ?? [] as $consulta)
-                                    <li class="flex items-center gap-1">
-                                        <svg class="w-3 h-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                        {{ ucfirst(str_replace('_', ' ', $consulta)) }}
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    </div>
-                @empty
-                    {{-- Planos estaticos enquanto nao tem banco --}}
+        {{-- Planos Disponiveis (Compacto) --}}
+        <div class="mb-6">
+            <div class="flex justify-center">
+                <div class="inline-flex flex-col items-center gap-3 p-4 rounded-2xl bg-white border border-gray-200 shadow-sm">
+                    {{-- Titulo --}}
+                    <span class="text-sm font-medium text-gray-700">Planos Disponiveis</span>
+
+                    {{-- Badges centralizados --}}
                     @php
-                        $planosEstaticos = [
-                            ['nome' => 'Basico', 'creditos' => 0, 'gratuito' => true, 'descricao' => 'Dados cadastrais completos + Simples/MEI', 'consultas' => ['Situacao Cadastral', 'Dados Cadastrais', 'Endereco', 'CNAEs', 'QSA', 'Simples Nacional', 'MEI']],
-                            ['nome' => 'Cadastral+', 'creditos' => 3, 'gratuito' => false, 'descricao' => 'Basico + SINTEGRA + Listas Restritivas', 'consultas' => ['Basico', 'SINTEGRA', 'TCU Consolidada']],
-                            ['nome' => 'Fiscal Federal', 'creditos' => 6, 'gratuito' => false, 'descricao' => 'Cadastral+ + CND Federal + CRF FGTS', 'consultas' => ['Cadastral+', 'CND Federal', 'CRF FGTS']],
-                            ['nome' => 'Fiscal Completo', 'creditos' => 12, 'gratuito' => false, 'descricao' => 'Fiscal Federal + CND Estadual + CNDT', 'consultas' => ['Fiscal Federal', 'CND Estadual', 'CNDT']],
-                            ['nome' => 'Due Diligence', 'creditos' => 16, 'gratuito' => false, 'descricao' => 'Fiscal Completo + Lista Devedores PGFN', 'consultas' => ['Fiscal Completo', 'Lista Devedores PGFN']],
-                            ['nome' => 'ESG', 'creditos' => 6, 'gratuito' => false, 'descricao' => 'Compliance ambiental e trabalhista', 'consultas' => ['Trabalho Escravo', 'IBAMA Autuacoes']],
-                            ['nome' => 'Completo', 'creditos' => 22, 'gratuito' => false, 'descricao' => 'Todas as consultas disponiveis', 'consultas' => ['Todas as consultas']],
+                        $planosCompactos = [
+                            ['codigo' => 'basico', 'nome' => 'Basico', 'creditos' => 0, 'cor' => 'green', 'descricao' => 'Dados cadastrais + Simples/MEI'],
+                            ['codigo' => 'cadastral_plus', 'nome' => 'Cadastral+', 'creditos' => 3, 'cor' => 'blue', 'descricao' => 'Basico + SINTEGRA + TCU'],
+                            ['codigo' => 'fiscal_federal', 'nome' => 'Fiscal Fed.', 'creditos' => 6, 'cor' => 'blue', 'descricao' => 'Cadastral+ + CND Federal + FGTS'],
+                            ['codigo' => 'fiscal_completo', 'nome' => 'Fiscal Comp.', 'creditos' => 12, 'cor' => 'blue', 'descricao' => 'Fiscal Federal + CND Estadual + CNDT'],
+                            ['codigo' => 'due_diligence', 'nome' => 'Due Diligence', 'creditos' => 16, 'cor' => 'purple', 'descricao' => 'Fiscal Completo + Lista PGFN'],
+                            ['codigo' => 'esg', 'nome' => 'ESG', 'creditos' => 6, 'cor' => 'emerald', 'descricao' => 'Trabalho Escravo + IBAMA'],
+                            ['codigo' => 'completo', 'nome' => 'Completo', 'creditos' => 22, 'cor' => 'amber', 'descricao' => 'Todas as consultas'],
                         ];
                     @endphp
-                    @foreach($planosEstaticos as $plano)
-                        <div class="bg-white rounded-xl border {{ $plano['gratuito'] ? 'border-green-200' : 'border-gray-200' }} shadow-sm p-6 hover:shadow-md transition-shadow">
-                            <div class="flex items-start justify-between gap-2 mb-3">
-                                <h3 class="font-semibold text-gray-900">{{ $plano['nome'] }}</h3>
-                                @if($plano['gratuito'])
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700 whitespace-nowrap">
-                                        Gratis
-                                    </span>
+                    <div class="flex items-center justify-center gap-2 flex-wrap">
+                        @foreach($planosCompactos as $plano)
+                            <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer shadow-sm hover:shadow-md hover:scale-105 transition-all
+                                @if($plano['cor'] === 'green') bg-green-100 text-green-700 hover:bg-green-200
+                                @elseif($plano['cor'] === 'blue') bg-blue-100 text-blue-700 hover:bg-blue-200
+                                @elseif($plano['cor'] === 'purple') bg-purple-100 text-purple-700 hover:bg-purple-200
+                                @elseif($plano['cor'] === 'emerald') bg-emerald-100 text-emerald-700 hover:bg-emerald-200
+                                @elseif($plano['cor'] === 'amber') bg-amber-100 text-amber-700 hover:bg-amber-200
+                                @endif"
+                                data-plano="{{ $plano['codigo'] }}"
+                                title="{{ $plano['descricao'] }}"
+                            >
+                                {{ $plano['nome'] }}
+                                @if($plano['creditos'] === 0)
+                                    <svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
                                 @else
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700 whitespace-nowrap">
-                                        {{ $plano['creditos'] }} cred.
-                                    </span>
+                                    <span class="opacity-75">{{ $plano['creditos'] }}</span>
                                 @endif
-                            </div>
-                            <p class="text-sm text-gray-600 mb-3">{{ $plano['descricao'] }}</p>
-                            <div class="text-xs text-gray-500">
-                                <strong>Consultas:</strong>
-                                <ul class="mt-1 space-y-1">
-                                    @foreach($plano['consultas'] as $consulta)
-                                        <li class="flex items-center gap-1">
-                                            <svg class="w-3 h-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                            </svg>
-                                            {{ $consulta }}
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        </div>
-                    @endforeach
-                @endforelse
+                            </span>
+                        @endforeach
+                    </div>
+
+                    {{-- Texto explicativo --}}
+                    <span class="text-xs text-gray-500">Clique em um plano para ver detalhes</span>
+                </div>
             </div>
         </div>
 
@@ -821,6 +800,120 @@
     </div>
 </div>
 
+{{-- Modal Detalhes do Plano --}}
+<div id="modal-detalhes-plano" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        {{-- Header --}}
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <h3 class="text-lg font-semibold text-gray-900" id="modal-plano-nome">Plano</h3>
+                    <span id="modal-plano-badge" class="px-2 py-1 rounded text-xs font-medium">0 cred</span>
+                </div>
+                <button type="button" class="modal-close text-gray-400 hover:text-gray-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        {{-- Body --}}
+        <div class="px-6 py-4">
+            <p class="text-sm text-gray-600 mb-4" id="modal-plano-descricao">Descricao do plano</p>
+
+            {{-- Secao 1: Consultas incluidas --}}
+            <div class="mb-5">
+                <h4 class="text-sm font-medium text-gray-700 mb-2">Consultas incluidas:</h4>
+                <ul id="modal-plano-consultas" class="space-y-1 text-sm text-gray-600">
+                    {{-- Lista de consultas sera preenchida via JS --}}
+                </ul>
+            </div>
+
+            {{-- Secao 2: Casos de Uso --}}
+            <div class="mb-5" id="modal-plano-casos-uso">
+                <h4 class="text-sm font-medium text-gray-700 mb-3">Ideal para:</h4>
+
+                {{-- Card Contador --}}
+                <div class="flex items-start gap-3 p-3 bg-blue-50 rounded-lg mb-2">
+                    <svg class="w-5 h-5 text-blue-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                    <div>
+                        <span class="font-medium text-blue-900 text-sm">Contadores</span>
+                        <p class="text-sm text-blue-700 mt-0.5" id="modal-plano-caso-contador">-</p>
+                    </div>
+                </div>
+
+                {{-- Card Empresario --}}
+                <div class="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
+                    <svg class="w-5 h-5 text-green-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                    <div>
+                        <span class="font-medium text-green-900 text-sm">Empresarios</span>
+                        <p class="text-sm text-green-700 mt-0.5" id="modal-plano-caso-empresario">-</p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Secao 3: Exemplo Pratico --}}
+            <div class="mb-5 p-3 bg-amber-50 border border-amber-200 rounded-lg" id="modal-plano-exemplo-container">
+                <div class="flex items-start gap-2">
+                    <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    </svg>
+                    <div>
+                        <span class="text-xs font-semibold text-amber-700 uppercase tracking-wide">Exemplo pratico</span>
+                        <p class="text-sm text-amber-900 mt-1" id="modal-plano-exemplo">-</p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Secao 4: Calculadora de Custo --}}
+            <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg" id="modal-plano-calculadora">
+                <h4 class="text-sm font-semibold text-gray-800 mb-3">Calcular custo mensal</h4>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    {{-- Input: Quantidade de CNPJs --}}
+                    <div>
+                        <label for="calc-qtd-cnpjs" class="block text-xs text-gray-600 mb-1">Quantidade de CNPJs</label>
+                        <input type="number" id="calc-qtd-cnpjs" min="1" value="10"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    {{-- Select: Frequencia --}}
+                    <div>
+                        <label for="calc-frequencia" class="block text-xs text-gray-600 mb-1">Frequencia</label>
+                        <select id="calc-frequencia" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="30">Mensal</option>
+                            <option value="15">Quinzenal</option>
+                            <option value="7">Semanal</option>
+                        </select>
+                    </div>
+                </div>
+
+                {{-- Resultado --}}
+                <div class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
+                    <span class="text-sm text-gray-600">Custo mensal estimado:</span>
+                    <div class="text-right">
+                        <span id="calc-resultado" class="text-lg font-bold text-blue-600">0</span>
+                        <span class="text-sm text-gray-500">creditos</span>
+                        <p class="text-xs text-gray-400">= R$ <span id="calc-valor-reais">0,00</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Footer --}}
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+            <button type="button" class="modal-close w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm hover:bg-gray-50">
+                Fechar
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
 (function() {
     'use strict';
@@ -1339,6 +1432,190 @@
                 console.error('Erro ao executar consulta:', error);
                 alert('Erro ao executar consulta. Tente novamente.');
             }
+        }
+
+        // =====================================================
+        // MODAL DETALHES DO PLANO
+        // =====================================================
+
+        const planosDetalhes = {
+            basico: {
+                nome: 'Basico',
+                creditos: 0,
+                gratuito: true,
+                descricao: 'Consulta gratuita com dados cadastrais completos da Receita Federal e situacao no Simples Nacional.',
+                consultas: ['Situacao Cadastral', 'Dados Cadastrais', 'Endereco', 'CNAEs', 'QSA (Socios)', 'Simples Nacional', 'MEI'],
+                casosUso: {
+                    contador: 'Consulta rapida de situacao cadastral ao receber novo cliente. Verificar se empresa esta ativa e qual o regime tributario.',
+                    empresario: 'Validar dados basicos de um potencial fornecedor ou parceiro antes de iniciar negociacao.',
+                },
+                exemploPratico: 'Um escritorio contabil recebe proposta de novo cliente. Com o plano Basico, verifica em segundos se o CNPJ esta ativo e se e optante do Simples Nacional.'
+            },
+            cadastral_plus: {
+                nome: 'Cadastral+',
+                creditos: 3,
+                gratuito: false,
+                descricao: 'Inclui dados do plano Basico mais consultas em listas restritivas e SINTEGRA.',
+                consultas: ['Tudo do Basico', 'SINTEGRA (inscricao estadual)', 'TCU Consolidada (CEIS, CNEP, CNJ)'],
+                casosUso: {
+                    contador: 'Validar Inscricao Estadual para operacoes interestaduais e verificar se cliente esta em lista de impedimentos.',
+                    empresario: 'Verificar se fornecedor pode participar de licitacoes (TCU/CEIS) e se tem IE ativa para emitir NF-e.',
+                },
+                exemploPratico: 'Empresa de logistica precisa verificar se transportadora contratada esta regular no SINTEGRA de todos estados onde opera e se nao esta impedida de licitar.'
+            },
+            fiscal_federal: {
+                nome: 'Fiscal Federal',
+                creditos: 6,
+                gratuito: false,
+                descricao: 'Inclui Cadastral+ mais certidoes negativas federais.',
+                consultas: ['Tudo do Cadastral+', 'CND Federal (PGFN/RFB)', 'CRF FGTS'],
+                casosUso: {
+                    contador: 'Obter certidoes exigidas em licitacoes: CND Federal (PGFN/RFB) e CRF do FGTS sao requisitos basicos de editais.',
+                    empresario: 'Exigir CNDs de fornecedores como pre-requisito contratual. Protege contra responsabilidade solidaria.',
+                },
+                exemploPratico: 'Escritorio prepara documentacao para cliente participar de pregao. Com Fiscal Federal, obtem as duas certidoes federais necessarias automaticamente.'
+            },
+            fiscal_completo: {
+                nome: 'Fiscal Completo',
+                creditos: 12,
+                gratuito: false,
+                descricao: 'Inclui Fiscal Federal mais certidoes estaduais e trabalhistas.',
+                consultas: ['Tudo do Fiscal Federal', 'CND Estadual', 'CNDT (Certidao Trabalhista)'],
+                casosUso: {
+                    contador: 'Kit completo para licitacoes: Federal + Estadual + Trabalhista. Atende 100% dos editais publicos.',
+                    empresario: 'Due diligence completa de fornecedores para atender Lei Anticorrupcao (Lei 12.846/13). Prova de diligencia em caso de auditoria.',
+                },
+                exemploPratico: 'Grande empresa precisa qualificar 50 fornecedores para renovacao de contratos. Com Fiscal Completo, obtem todas as certidoes de uma vez.'
+            },
+            due_diligence: {
+                nome: 'Due Diligence',
+                creditos: 16,
+                gratuito: false,
+                descricao: 'Inclui Fiscal Completo mais lista detalhada de devedores.',
+                consultas: ['Tudo do Fiscal Completo', 'Lista Devedores PGFN (valor da divida)'],
+                casosUso: {
+                    contador: 'Analise de risco financeiro de clientes: saber valor exato de divida federal, nao apenas se existe.',
+                    empresario: 'Avaliacao pre-aquisicao de empresa: conhecer passivo fiscal detalhado antes de M&A.',
+                },
+                exemploPratico: 'Investidor analisa compra de empresa. Lista PGFN mostra divida de R$ 2,3 milhoes - informacao crucial para negociacao.'
+            },
+            esg: {
+                nome: 'ESG',
+                creditos: 6,
+                gratuito: false,
+                descricao: 'Consultas de compliance ambiental e trabalhista.',
+                consultas: ['Cadastro de Trabalho Escravo', 'IBAMA Autuacoes'],
+                casosUso: {
+                    contador: 'Compliance de fornecedores para clientes que precisam reportar ESG. Trabalho escravo + IBAMA.',
+                    empresario: 'Evitar associacao com fornecedores na "lista suja" do trabalho escravo ou com autuacoes ambientais.',
+                },
+                exemploPratico: 'Industria textil precisa garantir que nenhum fornecedor esta na lista de trabalho escravo para manter certificacao de compliance.'
+            },
+            completo: {
+                nome: 'Completo',
+                creditos: 22,
+                gratuito: false,
+                descricao: 'Pacote completo com todas as consultas disponiveis.',
+                consultas: ['Todas as consultas dos demais planos'],
+                casosUso: {
+                    contador: 'Gestao de carteira de clientes: monitoramento mensal completo de todas as obrigacoes fiscais e compliance.',
+                    empresario: 'Programa de gestao de riscos de terceiros: monitoramento continuo de todos os fornecedores ativos.',
+                },
+                exemploPratico: 'Escritorio contabil monitora 200 clientes mensalmente. Recebe alertas automaticos quando qualquer certidao vence ou surgem pendencias.'
+            }
+        };
+
+        // Variavel para armazenar creditos do plano atual (para calculadora)
+        let planoAtualCreditos = 0;
+
+        // Funcao para calcular custo mensal
+        function calcularCusto() {
+            const qtd = parseInt(document.getElementById('calc-qtd-cnpjs').value) || 0;
+            const freqDias = parseInt(document.getElementById('calc-frequencia').value) || 30;
+
+            // Quantas consultas por mes: 30 dias / frequencia
+            const consultasPorMes = Math.floor(30 / freqDias);
+
+            // Custo total = CNPJs x consultas/mes x creditos/consulta
+            const custoMensal = qtd * consultasPorMes * planoAtualCreditos;
+
+            // R$ 1,00 por credito
+            const valorReais = custoMensal.toFixed(2).replace('.', ',');
+
+            document.getElementById('calc-resultado').textContent = custoMensal;
+            document.getElementById('calc-valor-reais').textContent = valorReais;
+        }
+
+        // Event listeners para recalcular
+        ['calc-qtd-cnpjs', 'calc-frequencia'].forEach(function(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', calcularCusto);
+                el.addEventListener('change', calcularCusto);
+            }
+        });
+
+        const modalDetalhesPlano = document.getElementById('modal-detalhes-plano');
+
+        document.querySelectorAll('[data-plano]').forEach(function(badge) {
+            badge.addEventListener('click', function() {
+                const codigoPlano = badge.dataset.plano;
+                const plano = planosDetalhes[codigoPlano];
+                if (!plano || !modalDetalhesPlano) return;
+
+                // Preencher modal
+                document.getElementById('modal-plano-nome').textContent = plano.nome;
+                document.getElementById('modal-plano-descricao').textContent = plano.descricao;
+
+                // Badge de creditos
+                const badgeEl = document.getElementById('modal-plano-badge');
+                if (plano.gratuito) {
+                    badgeEl.textContent = 'Gratis';
+                    badgeEl.className = 'px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700';
+                } else {
+                    badgeEl.textContent = plano.creditos + ' creditos';
+                    badgeEl.className = 'px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700';
+                }
+
+                // Lista de consultas
+                const listaEl = document.getElementById('modal-plano-consultas');
+                listaEl.innerHTML = plano.consultas.map(function(c) {
+                    return '<li class="flex items-center gap-2">' +
+                        '<svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>' +
+                        '</svg>' +
+                        c +
+                        '</li>';
+                }).join('');
+
+                // Casos de uso
+                if (plano.casosUso) {
+                    document.getElementById('modal-plano-caso-contador').textContent = plano.casosUso.contador || '-';
+                    document.getElementById('modal-plano-caso-empresario').textContent = plano.casosUso.empresario || '-';
+                }
+
+                // Exemplo pratico
+                if (plano.exemploPratico) {
+                    document.getElementById('modal-plano-exemplo').textContent = plano.exemploPratico;
+                }
+
+                // Atualizar creditos do plano atual e calcular custo
+                planoAtualCreditos = plano.creditos;
+                calcularCusto();
+
+                modalDetalhesPlano.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+
+        // Fechar modal detalhes plano clicando fora
+        if (modalDetalhesPlano) {
+            modalDetalhesPlano.addEventListener('click', function(e) {
+                if (e.target === modalDetalhesPlano) {
+                    modalDetalhesPlano.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }
+            });
         }
 
         console.log('[Monitoramento] Inicializacao concluida');

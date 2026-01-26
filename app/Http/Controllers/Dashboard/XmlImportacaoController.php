@@ -9,7 +9,6 @@ use App\Services\CreditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
@@ -70,7 +69,10 @@ class XmlImportacaoController extends Controller
     }
 
     /**
-     * Inicia importação de XMLs enviando para n8n.
+     * Inicia importação de XMLs enviando para n8n (sempre como ZIP).
+     *
+     * Se o modo de envio for 'xml' (arquivos avulsos), comprime em ZIP antes de enviar.
+     * Isso simplifica o workflow do n8n que sempre recebe um único ZIP.
      */
     public function importar(Request $request)
     {
@@ -87,6 +89,7 @@ class XmlImportacaoController extends Controller
             'tipo_documento' => 'required|in:NFE,NFSE,CTE',
             'modo_envio' => 'required|in:zip,xml',
             'cliente_id' => 'nullable|integer|exists:clientes,id',
+            'salvar_movimentacoes' => 'nullable|boolean',
             'tab_id' => 'required|string|max:36',
             'arquivos' => 'required|array|min:1|max:100',
             'arquivos.*.nome' => 'required|string|max:255',
@@ -143,78 +146,87 @@ class XmlImportacaoController extends Controller
                 'tamanho_bytes' => $tamanhoTotal,
             ]);
 
-            // Salvar arquivos em disco (mais eficiente que enviar base64)
-            $pasta = storage_path("app/temp/xml-imports/{$importacao->id}");
-            if (!is_dir($pasta)) {
-                mkdir($pasta, 0755, true);
-            }
+            // Preparar ZIP para n8n (sempre enviamos ZIP como arquivo)
+            $tempZipPath = null;
 
-            $nomesArquivos = [];
-            foreach ($validated['arquivos'] as $arquivo) {
-                $conteudo = base64_decode($arquivo['conteudo_base64']);
-                // Sanitizar nome do arquivo
-                $nomeSeguro = preg_replace('/[^a-zA-Z0-9._-]/', '_', $arquivo['nome']);
-                $caminhoArquivo = "{$pasta}/{$nomeSeguro}";
-                file_put_contents($caminhoArquivo, $conteudo);
-                $nomesArquivos[] = $nomeSeguro;
-            }
+            try {
+                if ($validated['modo_envio'] === 'zip') {
+                    // Já é ZIP - salvar em arquivo temporário e contar XMLs
+                    $arquivo = $validated['arquivos'][0];
+                    $tempZipPath = tempnam(sys_get_temp_dir(), 'xml_import_') . '.zip';
+                    file_put_contents($tempZipPath, base64_decode($arquivo['conteudo_base64']));
+                    $totalXmls = $this->contarXmlsNoZip($tempZipPath);
+                } else {
+                    // XMLs avulsos - comprimir em ZIP
+                    $resultado = $this->comprimirXmlsEmZip($validated['arquivos']);
+                    $tempZipPath = $resultado['path'];
+                    $totalXmls = $resultado['total'];
+                }
 
-            Log::info('XmlImportacao: arquivos salvos em disco', [
-                'importacao_id' => $importacao->id,
-                'pasta' => $pasta,
-                'arquivos' => $nomesArquivos,
-            ]);
+                $zipFileName = "importacao_{$importacao->id}.zip";
+                $zipFileSize = filesize($tempZipPath);
 
-            // Montar payload para n8n (apenas paths, sem base64)
-            $payload = [
-                'user_id' => $user->id,
-                'importacao_id' => $importacao->id,
-                'tab_id' => $validated['tab_id'],
-                'tipo_documento' => $validated['tipo_documento'],
-                'modo_envio' => $validated['modo_envio'],
-                'cliente_id' => $validated['cliente_id'] ?? null,
-                'progress_url' => url('/api/monitoramento/xml/importacao/progress'),
-                'pasta' => $pasta,
-                'arquivos' => $nomesArquivos,
-            ];
-
-            // Enviar para n8n (payload leve, apenas paths)
-            $response = Http::timeout(30)
-                ->withHeaders([
-                    'Content-Type' => 'application/json',
-                    'X-API-Token' => config('services.api.token'),
-                ])
-                ->post($webhookUrl, $payload);
-
-            if ($response->successful()) {
-                $importacao->update(['status' => 'processando']);
-
-                Log::info('XmlImportacao: enviado para n8n com sucesso', [
+                Log::info('XmlImportacao: enviando para n8n', [
                     'importacao_id' => $importacao->id,
-                    'response_status' => $response->status(),
+                    'modo_envio_original' => $validated['modo_envio'],
+                    'total_xmls' => $totalXmls,
+                    'zip_size_bytes' => $zipFileSize,
                 ]);
 
-                return response()->json([
-                    'success' => true,
-                    'importacao_id' => $importacao->id,
-                    'message' => 'Importação iniciada com sucesso.',
-                ]);
-            } else {
-                $importacao->update([
-                    'status' => 'erro',
-                    'erro_mensagem' => 'Erro ao enviar para processamento: ' . $response->status(),
-                ]);
+                // Enviar para n8n como multipart/form-data
+                $response = Http::timeout(120)
+                    ->withHeaders([
+                        'X-API-Token' => config('services.api.token'),
+                    ])
+                    ->attach('file', file_get_contents($tempZipPath), $zipFileName)
+                    ->post($webhookUrl, [
+                        'user_id' => $user->id,
+                        'importacao_id' => $importacao->id,
+                        'tab_id' => $validated['tab_id'],
+                        'tipo_documento' => $validated['tipo_documento'],
+                        'modo_envio' => $validated['modo_envio'],
+                        'cliente_id' => $validated['cliente_id'] ?? null,
+                        'cliente_cnpj' => $this->getClienteCnpj($validated['cliente_id'] ?? null),
+                        'salvar_movimentacoes' => $validated['salvar_movimentacoes'] ?? false,
+                        'total_xmls' => $totalXmls,
+                        'progress_url' => url('/api/monitoramento/xml/importacao/progress'),
+                    ]);
 
-                Log::error('XmlImportacao: erro na resposta do n8n', [
-                    'importacao_id' => $importacao->id,
-                    'response_status' => $response->status(),
-                    'response_body' => $response->body(),
-                ]);
+                if ($response->successful()) {
+                    $importacao->update(['status' => 'processando']);
 
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Erro ao iniciar processamento. Tente novamente.',
-                ], Response::HTTP_BAD_GATEWAY);
+                    Log::info('XmlImportacao: enviado para n8n com sucesso', [
+                        'importacao_id' => $importacao->id,
+                        'response_status' => $response->status(),
+                    ]);
+
+                    return response()->json([
+                        'success' => true,
+                        'importacao_id' => $importacao->id,
+                        'message' => 'Importação iniciada com sucesso.',
+                    ]);
+                } else {
+                    $importacao->update([
+                        'status' => 'erro',
+                        'erro_mensagem' => 'Erro ao enviar para processamento: ' . $response->status(),
+                    ]);
+
+                    Log::error('XmlImportacao: erro na resposta do n8n', [
+                        'importacao_id' => $importacao->id,
+                        'response_status' => $response->status(),
+                        'response_body' => $response->body(),
+                    ]);
+
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Erro ao iniciar processamento. Tente novamente.',
+                    ], Response::HTTP_BAD_GATEWAY);
+                }
+            } finally {
+                // Limpar arquivo temporário
+                if ($tempZipPath && file_exists($tempZipPath)) {
+                    @unlink($tempZipPath);
+                }
             }
 
         } catch (\Exception $e) {
@@ -236,6 +248,78 @@ class XmlImportacaoController extends Controller
                 'error' => 'Erro interno ao processar importação.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /**
+     * Comprime XMLs avulsos em um único arquivo ZIP temporário.
+     *
+     * IMPORTANTE: O chamador é responsável por deletar o arquivo temporário.
+     *
+     * @param array $arquivos Array de arquivos com nome e conteudo_base64
+     * @return array ['path' => string, 'total' => int]
+     */
+    private function comprimirXmlsEmZip(array $arquivos): array
+    {
+        $tempZip = tempnam(sys_get_temp_dir(), 'xml_import_') . '.zip';
+
+        $zip = new ZipArchive();
+        if ($zip->open($tempZip, ZipArchive::CREATE) !== true) {
+            throw new \RuntimeException('Não foi possível criar arquivo ZIP temporário');
+        }
+
+        foreach ($arquivos as $arquivo) {
+            $nome = $this->sanitizarNomeArquivo($arquivo['nome']);
+            $conteudo = base64_decode($arquivo['conteudo_base64']);
+            $zip->addFromString($nome, $conteudo);
+        }
+
+        $zip->close();
+
+        return [
+            'path' => $tempZip,
+            'total' => count($arquivos),
+        ];
+    }
+
+    /**
+     * Conta XMLs dentro de um arquivo ZIP.
+     *
+     * @param string $zipPath Caminho para o arquivo ZIP
+     * @return int Quantidade de XMLs encontrados
+     */
+    private function contarXmlsNoZip(string $zipPath): int
+    {
+        $zip = new ZipArchive();
+        if ($zip->open($zipPath) !== true) {
+            return 0;
+        }
+
+        $count = 0;
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $name = $zip->getNameIndex($i);
+            if ($name && str_ends_with(strtolower($name), '.xml')) {
+                $count++;
+            }
+        }
+
+        $zip->close();
+        return $count;
+    }
+
+    /**
+     * Sanitiza nome do arquivo para segurança.
+     */
+    private function sanitizarNomeArquivo(string $nome): string
+    {
+        $extensao = pathinfo($nome, PATHINFO_EXTENSION);
+        $nomeBase = pathinfo($nome, PATHINFO_FILENAME);
+        $nomeBaseSanitizado = preg_replace('/[^a-zA-Z0-9_-]/', '_', $nomeBase);
+
+        if (!in_array(strtolower($extensao), ['xml', 'zip'])) {
+            $extensao = 'xml';
+        }
+
+        return $nomeBaseSanitizado . '.' . strtolower($extensao);
     }
 
     /**
@@ -569,5 +653,170 @@ class XmlImportacaoController extends Controller
     {
         session(['url.intended' => $request->fullUrl()]);
         return redirect()->route('login');
+    }
+
+    /**
+     * Busca o CNPJ do cliente pelo ID.
+     *
+     * @param int|null $clienteId
+     * @return string|null CNPJ limpo (apenas numeros) ou null
+     */
+    private function getClienteCnpj(?int $clienteId): ?string
+    {
+        if (!$clienteId) {
+            return null;
+        }
+
+        $cliente = Cliente::find($clienteId);
+        if (!$cliente || empty($cliente->documento)) {
+            return null;
+        }
+
+        // Retorna apenas numeros (remove formatacao)
+        return preg_replace('/[^0-9]/', '', $cliente->documento);
+    }
+
+    /**
+     * Retorna os detalhes dos participantes e notas de uma importacao.
+     */
+    public function getParticipantes(Request $request, int $importacaoId): JsonResponse
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Usuario nao autenticado.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $userId = Auth::id();
+
+        // Buscar importacao
+        $importacao = ImportacaoXml::where('id', $importacaoId)
+            ->where('user_id', $userId)
+            ->first();
+
+        if (!$importacao) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Importacao nao encontrada.',
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        // Buscar participantes pelos IDs armazenados
+        $participantes = [];
+        $participantesNovos = 0;
+        $participantesAtualizados = 0;
+
+        if (!empty($importacao->participante_ids)) {
+            $participantesQuery = \App\Models\Participante::whereIn('id', $importacao->participante_ids)
+                ->where('user_id', $userId)
+                ->orderBy('razao_social')
+                ->get();
+
+            foreach ($participantesQuery as $p) {
+                // Determinar se e novo baseado no created_at vs iniciado_em da importacao
+                $isNovo = $p->created_at >= $importacao->iniciado_em;
+
+                if ($isNovo) {
+                    $participantesNovos++;
+                } else {
+                    $participantesAtualizados++;
+                }
+
+                $participantes[] = [
+                    'id' => $p->id,
+                    'cnpj' => $p->cnpj,
+                    'cnpj_formatado' => $p->cnpj_formatado,
+                    'razao_social' => $p->razao_social,
+                    'nome_fantasia' => $p->nome_fantasia,
+                    'uf' => $p->uf,
+                    'municipio' => $p->municipio,
+                    'crt' => $p->crt,
+                    'is_novo' => $isNovo,
+                ];
+            }
+        }
+
+        // Buscar notas fiscais da importacao
+        $notasFiscais = [];
+        $resumoFinanceiro = [
+            'valor_total' => 0,
+            'icms_total' => 0,
+            'icms_st_total' => 0,
+            'pis_cofins_total' => 0,
+            'ipi_total' => 0,
+            'tributos_total' => 0,
+            'qtd_entradas' => 0,
+            'qtd_saidas' => 0,
+            'qtd_devolucoes' => 0,
+        ];
+
+        $notasQuery = \App\Models\NotaFiscal::where('importacao_xml_id', $importacaoId)
+            ->where('user_id', $userId)
+            ->orderBy('data_emissao', 'desc')
+            ->get();
+
+        foreach ($notasQuery as $nota) {
+            // Acumular resumo financeiro
+            $resumoFinanceiro['valor_total'] += (float) $nota->valor_total;
+            $resumoFinanceiro['icms_total'] += (float) $nota->icms_valor;
+            $resumoFinanceiro['icms_st_total'] += (float) $nota->icms_st_valor;
+            $resumoFinanceiro['pis_cofins_total'] += (float) $nota->pis_valor + (float) $nota->cofins_valor;
+            $resumoFinanceiro['ipi_total'] += (float) $nota->ipi_valor;
+            $resumoFinanceiro['tributos_total'] += (float) $nota->tributos_total;
+
+            if ($nota->tipo_nota === \App\Models\NotaFiscal::TIPO_ENTRADA) {
+                $resumoFinanceiro['qtd_entradas']++;
+            } else {
+                $resumoFinanceiro['qtd_saidas']++;
+            }
+
+            if ($nota->finalidade === \App\Models\NotaFiscal::FINALIDADE_DEVOLUCAO) {
+                $resumoFinanceiro['qtd_devolucoes']++;
+            }
+
+            $notasFiscais[] = [
+                'id' => $nota->id,
+                'numero_nota' => $nota->numero_nota,
+                'serie' => $nota->serie,
+                'data_emissao' => $nota->data_emissao?->format('d/m/Y'),
+                'emit_cnpj' => $nota->emit_cnpj,
+                'emit_cnpj_formatado' => $nota->emit_cnpj_formatado,
+                'emit_razao_social' => $nota->emit_razao_social,
+                'emit_uf' => $nota->emit_uf,
+                'dest_cnpj' => $nota->dest_cnpj,
+                'dest_cnpj_formatado' => $nota->dest_cnpj_formatado,
+                'dest_razao_social' => $nota->dest_razao_social,
+                'dest_uf' => $nota->dest_uf,
+                'valor_total' => (float) $nota->valor_total,
+                'valor_formatado' => $nota->valor_formatado,
+                'icms_valor' => (float) $nota->icms_valor,
+                'tipo_nota' => $nota->tipo_nota,
+                'tipo_nota_desc' => $nota->tipo_nota_descricao,
+                'finalidade' => $nota->finalidade,
+                'finalidade_desc' => $nota->finalidade_descricao,
+                'natureza_operacao' => $nota->natureza_operacao,
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'importacao' => [
+                'id' => $importacao->id,
+                'tipo_documento' => $importacao->tipo_documento,
+                'total_xmls' => $importacao->total_xmls ?? $importacao->xmls_processados,
+                'xmls_processados' => $importacao->xmls_processados,
+                'status' => $importacao->status,
+                'concluido_em' => $importacao->concluido_em?->format('d/m/Y H:i'),
+            ],
+            'resumo_financeiro' => $resumoFinanceiro,
+            'notas_fiscais' => $notasFiscais,
+            'participantes' => $participantes,
+            'totais' => [
+                'participantes_novos' => $participantesNovos ?: $importacao->participantes_novos,
+                'participantes_atualizados' => $participantesAtualizados ?: $importacao->participantes_atualizados,
+                'notas_total' => count($notasFiscais),
+            ],
+        ]);
     }
 }

@@ -14,7 +14,8 @@ class XmlChaveProcessada extends Model
         'chave_acesso',
         'tipo_documento',
         'importacao_xml_id',
-        'participante_id',
+        'emit_participante_id',
+        'dest_participante_id',
         'processado_em',
     ];
 
@@ -37,9 +38,14 @@ class XmlChaveProcessada extends Model
         return $this->belongsTo(ImportacaoXml::class, 'importacao_xml_id');
     }
 
-    public function participante(): BelongsTo
+    public function emitente(): BelongsTo
     {
-        return $this->belongsTo(Participante::class);
+        return $this->belongsTo(Participante::class, 'emit_participante_id');
+    }
+
+    public function destinatario(): BelongsTo
+    {
+        return $this->belongsTo(Participante::class, 'dest_participante_id');
     }
 
     // Scopes

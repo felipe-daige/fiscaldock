@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('nome_fantasia')->nullable();
             $table->string('situacao_cadastral')->nullable();
             $table->string('regime_tributario')->nullable();
+            $table->string('uf', 2)->nullable();
             $table->string('cnpj_matriz', 14)->nullable()->index();
             $table->string('inscricao_estadual')->nullable();
             $table->string('suframa')->nullable();
@@ -29,6 +30,10 @@ return new class extends Migration
             $table->string('complemento')->nullable();
             $table->string('bairro')->nullable();
             $table->string('codigo_municipal')->nullable();
+            $table->string('cep', 8)->nullable();
+            $table->string('municipio', 100)->nullable();
+            $table->string('telefone', 20)->nullable();
+            $table->smallInteger('crt')->nullable(); // 1=Simples, 2=Excesso, 3=Normal
             $table->unsignedBigInteger('importacao_participante_id')->nullable()->index(); // FK sem constraint (criada depois)
             $table->string('origem_tipo'); // SPED_EFD_FISCAL, SPED_EFD_CONTRIB, NFE, NFSE, MANUAL
             $table->json('origem_ref')->nullable(); // {"arquivo": "...", "importado_em": "..."}

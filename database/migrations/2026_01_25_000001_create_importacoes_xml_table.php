@@ -21,10 +21,13 @@ return new class extends Migration
             $table->integer('total_xmls')->default(0);
             $table->bigInteger('tamanho_total_bytes')->default(0);
             $table->integer('xmls_processados')->default(0);
+            $table->integer('xmls_novos')->default(0);
+            $table->integer('xmls_duplicados_processados')->default(0);
             $table->integer('xmls_com_erro')->default(0);
             $table->integer('participantes_novos')->default(0);
             $table->integer('participantes_atualizados')->default(0);
             $table->integer('participantes_ignorados')->default(0);
+            $table->decimal('valor_total', 15, 2)->default(0); // Soma dos valores das notas
             $table->string('status', 20)->default('pendente'); // pendente, processando, concluido, erro
             $table->text('erro_mensagem')->nullable();
             $table->jsonb('participante_ids')->nullable();

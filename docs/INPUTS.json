@@ -1,0 +1,3303 @@
+INPUTS
+
+
+TODOS DADOS NOVOS
+
+[
+  {
+    "id": "29",
+    "user_id": "3",
+    "importacao_xml_id": "14",
+    "cliente_id": null,
+    "chave_acesso": "50240197551165000193550010000248021000214750",
+    "tipo_documento": "NFE",
+    "numero_nota": 24802,
+    "serie": 1,
+    "data_emissao": "2024-01-03T12:34:46.000Z",
+    "natureza_operacao": "RETORNO DE MERC OU BEM RECEBIDO PARA CONSERTO/REPARO",
+    "valor_total": "22000.00",
+    "tipo_nota": 1,
+    "finalidade": 1,
+    "chave_referenciada": "35231144373108000600550000000269561733449478",
+    "emit_cnpj": "97551165000193",
+    "emit_razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS",
+    "emit_uf": "MS",
+    "emit_participante_id": "69",
+    "dest_cnpj": "44373108000600",
+    "dest_razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+    "dest_uf": "SP",
+    "dest_participante_id": "70",
+    "icms_valor": "0.00",
+    "icms_st_valor": "0.00",
+    "pis_valor": "0.00",
+    "cofins_valor": "0.00",
+    "ipi_valor": "0.00",
+    "tributos_total": "6091.20",
+    "payload": {
+      "NFe": {
+        "xmlns": "http://www.portalfiscal.inf.br/nfe",
+        "infNFe": {
+          "Id": "NFe50240197551165000193550010000248021000214750",
+          "ide": {
+            "cDV": "0",
+            "NFref": {
+              "refNFe": "35231144373108000600550000000269561733449478"
+            },
+            "serie": "1",
+            "modelo": "55",
+            "indPres": "0",
+            "procEmi": "0",
+            "verProc": "000",
+            "ambiente": "1",
+            "indFinal": "1",
+            "codigo_uf": "50",
+            "tipo_nota": "1",
+            "numero_nota": "24802",
+            "tipo_emissao": "1",
+            "finalidade_nfe": "1",
+            "data_hora_emissao": "2024-01-03T08:34:46-04:00",
+            "natureza_operacao": "RETORNO DE MERC OU BEM RECEBIDO PARA CONSERTO/REPARO",
+            "codigo_numero_fiscal": "00021475",
+            "tipo_impressao_danfe": "1",
+            "identificador_destino": "2",
+            "data_hora_saida_entrada": "2024-01-03T09:46:46-04:00",
+            "codigo_municipio_fato_gerador": "5003702"
+          },
+          "pag": {
+            "detPag": {
+              "tPag": "01",
+              "vPag": "22000.00"
+            },
+            "vTroco": "0.00"
+          },
+          "dest": {
+            "IE": "470053570113",
+            "CNPJ": "44373108000600",
+            "IS_MATRIZ": false,
+            "indIEDest": "1",
+            "CNPJ_MATRIZ": "44373108000103",
+            "CNPJ_FORMATADO": "44.373.108/0006-00",
+            "nome_razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+            "CNPJ_MATRIZ_FORMATADO": "44.373.108/0001-03",
+            "endereco_destinatario": {
+              "UF": "SP",
+              "CEP": "19220000",
+              "fone": "1839929020",
+              "pais": "BRASIL",
+              "bairro": "ZONA RURAL",
+              "numero": "S/N",
+              "municipio": "NARANDIBA",
+              "logradouro": "EST MUNICIPAL NRD",
+              "codigo_pais": "1058",
+              "codigo_municipio": "3532207"
+            }
+          },
+          "emit": {
+            "IE": "283684410",
+            "CRT": "3",
+            "CNPJ": "97551165000193",
+            "IS_MATRIZ": true,
+            "CNPJ_MATRIZ": "97551165000193",
+            "nome_fantasia": "HIDRATOP",
+            "CNPJ_FORMATADO": "97.551.165/0001-93",
+            "endereco_emitente": {
+              "UF": "MS",
+              "CEP": "79841000",
+              "fone": "6734213006",
+              "pais": "BRASIL",
+              "bairro": "JD MARCIA",
+              "numero": "7110",
+              "municipio": "DOURADOS",
+              "logradouro": "AV  MARCELINO PIRES",
+              "codigo_pais": "1058",
+              "complemento": "HIDRATOP@GMAIL.COM",
+              "codigo_municipio": "5003702"
+            },
+            "nome_razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS",
+            "CNPJ_MATRIZ_FORMATADO": "97.551.165/0001-93"
+          },
+          "itens": [
+            {
+              "imposto": {
+                "PIS": {
+                  "PISOutr": {
+                    "CST": "99",
+                    "pPIS": "0.00",
+                    "vPIS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "ICMS": {
+                  "ICMS40": {
+                    "CST": "41",
+                    "orig": "0"
+                  }
+                },
+                "COFINS": {
+                  "COFINSOutr": {
+                    "CST": "99",
+                    "pCOFINS": "0.00",
+                    "vCOFINS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "valor_total_tributos": "406.40"
+              },
+              "produto": {
+                "NCM": "84339090",
+                "CEST": "0103500",
+                "CFOP": "6916",
+                "indTot": "1",
+                "cEANTrib": "SEM GTIN",
+                "codigo_ean": "SEM GTIN",
+                "codigo_produto": "002515",
+                "descricao_produto": "BOMBA 90/75  CB11487658 83001052 0031377764",
+                "unidade_comercial": "UN",
+                "valor_total_bruto": "2000.00",
+                "unidade_tributavel": "UN",
+                "quantidade_comercial": "2.0000",
+                "quantidade_tributavel": "2.0000",
+                "valor_unitario_comercial": "1000.0000",
+                "valor_unitario_tributavel": "1000.0000"
+              },
+              "numero_item": "1"
+            },
+            {
+              "imposto": {
+                "PIS": {
+                  "PISOutr": {
+                    "CST": "99",
+                    "pPIS": "0.00",
+                    "vPIS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "ICMS": {
+                  "ICMS40": {
+                    "CST": "41",
+                    "orig": "0"
+                  }
+                },
+                "COFINS": {
+                  "COFINSOutr": {
+                    "CST": "99",
+                    "pCOFINS": "0.00",
+                    "vCOFINS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "valor_total_tributos": "913.50"
+              },
+              "produto": {
+                "NCM": "84122190",
+                "CEST": "0102900",
+                "CFOP": "6916",
+                "indTot": "1",
+                "cEANTrib": "SEM GTIN",
+                "codigo_ean": "SEM GTIN",
+                "codigo_produto": "001879",
+                "descricao_produto": "MOTOR CHAR-LYNN 24  1043130006 CB11480559",
+                "unidade_comercial": "UN",
+                "valor_total_bruto": "3000.00",
+                "unidade_tributavel": "UN",
+                "quantidade_comercial": "3.0000",
+                "quantidade_tributavel": "3.0000",
+                "valor_unitario_comercial": "1000.0000",
+                "valor_unitario_tributavel": "1000.0000"
+              },
+              "numero_item": "2"
+            },
+            {
+              "imposto": {
+                "PIS": {
+                  "PISOutr": {
+                    "CST": "99",
+                    "pPIS": "0.00",
+                    "vPIS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "ICMS": {
+                  "ICMS40": {
+                    "CST": "41",
+                    "orig": "0"
+                  }
+                },
+                "COFINS": {
+                  "COFINSOutr": {
+                    "CST": "99",
+                    "pCOFINS": "0.00",
+                    "vCOFINS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "valor_total_tributos": "812.80"
+              },
+              "produto": {
+                "NCM": "84339090",
+                "CEST": "0109100",
+                "CFOP": "6916",
+                "indTot": "1",
+                "cEANTrib": "SEM GTIN",
+                "codigo_ean": "SEM GTIN",
+                "codigo_produto": "008127",
+                "descricao_produto": "MOTOR CHARLIN EIXO CONICO 24  CB11480557 105141100",
+                "unidade_comercial": "UN",
+                "valor_total_bruto": "4000.00",
+                "unidade_tributavel": "UN",
+                "quantidade_comercial": "4.0000",
+                "quantidade_tributavel": "4.0000",
+                "valor_unitario_comercial": "1000.0000",
+                "valor_unitario_tributavel": "1000.0000"
+              },
+              "numero_item": "3"
+            },
+            {
+              "imposto": {
+                "PIS": {
+                  "PISOutr": {
+                    "CST": "99",
+                    "pPIS": "0.00",
+                    "vPIS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "ICMS": {
+                  "ICMS40": {
+                    "CST": "41",
+                    "orig": "0"
+                  }
+                },
+                "COFINS": {
+                  "COFINSOutr": {
+                    "CST": "99",
+                    "pCOFINS": "0.00",
+                    "vCOFINS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "valor_total_tributos": "3045.00"
+              },
+              "produto": {
+                "NCM": "84122900",
+                "CEST": "0109100",
+                "CFOP": "6916",
+                "indTot": "1",
+                "cEANTrib": "SEM GTIN",
+                "codigo_ean": "SEM GTIN",
+                "codigo_produto": "002150",
+                "descricao_produto": "MOTOR CHAR-LYNN 30 CB11480572",
+                "unidade_comercial": "UN",
+                "valor_total_bruto": "10000.00",
+                "unidade_tributavel": "UN",
+                "quantidade_comercial": "10.0000",
+                "quantidade_tributavel": "10.0000",
+                "valor_unitario_comercial": "1000.0000",
+                "valor_unitario_tributavel": "1000.0000"
+              },
+              "numero_item": "4"
+            },
+            {
+              "imposto": {
+                "PIS": {
+                  "PISOutr": {
+                    "CST": "99",
+                    "pPIS": "0.00",
+                    "vPIS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "ICMS": {
+                  "ICMS40": {
+                    "CST": "41",
+                    "orig": "0"
+                  }
+                },
+                "COFINS": {
+                  "COFINSOutr": {
+                    "CST": "99",
+                    "pCOFINS": "0.00",
+                    "vCOFINS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "valor_total_tributos": "152.25"
+              },
+              "produto": {
+                "NCM": "84122110",
+                "CEST": "0109100",
+                "CFOP": "6916",
+                "indTot": "1",
+                "cEANTrib": "SEM GTIN",
+                "codigo_ean": "SEM GTIN",
+                "codigo_produto": "012600",
+                "descricao_produto": "PISTAO  CABINE JD AH216340/R",
+                "unidade_comercial": "UN",
+                "valor_total_bruto": "500.00",
+                "unidade_tributavel": "UN",
+                "quantidade_comercial": "1.0000",
+                "quantidade_tributavel": "1.0000",
+                "valor_unitario_comercial": "500.0000",
+                "valor_unitario_tributavel": "500.0000"
+              },
+              "numero_item": "5"
+            },
+            {
+              "imposto": {
+                "PIS": {
+                  "PISOutr": {
+                    "CST": "99",
+                    "pPIS": "0.00",
+                    "vPIS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "ICMS": {
+                  "ICMS40": {
+                    "CST": "41",
+                    "orig": "0"
+                  }
+                },
+                "COFINS": {
+                  "COFINSOutr": {
+                    "CST": "99",
+                    "pCOFINS": "0.00",
+                    "vCOFINS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "valor_total_tributos": "456.75"
+              },
+              "produto": {
+                "NCM": "84122110",
+                "CEST": "2108800",
+                "CFOP": "6916",
+                "indTot": "1",
+                "cEANTrib": "SEM GTIN",
+                "codigo_ean": "SEM GTIN",
+                "codigo_produto": "008033",
+                "descricao_produto": "PISTAO DV  LINHA CH   CXT10574",
+                "unidade_comercial": "UN",
+                "valor_total_bruto": "1500.00",
+                "unidade_tributavel": "UN",
+                "quantidade_comercial": "3.0000",
+                "quantidade_tributavel": "3.0000",
+                "valor_unitario_comercial": "500.0000",
+                "valor_unitario_tributavel": "500.0000"
+              },
+              "numero_item": "6"
+            },
+            {
+              "imposto": {
+                "PIS": {
+                  "PISOutr": {
+                    "CST": "99",
+                    "pPIS": "0.00",
+                    "vPIS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "ICMS": {
+                  "ICMS40": {
+                    "CST": "41",
+                    "orig": "0"
+                  }
+                },
+                "COFINS": {
+                  "COFINSOutr": {
+                    "CST": "99",
+                    "pCOFINS": "0.00",
+                    "vCOFINS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "valor_total_tributos": "304.50"
+              },
+              "produto": {
+                "NCM": "84122110",
+                "CEST": "0103100",
+                "CFOP": "6916",
+                "indTot": "1",
+                "cEANTrib": "SEM GTIN",
+                "codigo_ean": "SEM GTIN",
+                "codigo_produto": "012492",
+                "descricao_produto": "PISTAO TOMBO RECOND TESTON 2000129",
+                "unidade_comercial": "UN",
+                "valor_total_bruto": "1000.00",
+                "unidade_tributavel": "UN",
+                "quantidade_comercial": "1.0000",
+                "quantidade_tributavel": "1.0000",
+                "valor_unitario_comercial": "1000.0000",
+                "valor_unitario_tributavel": "1000.0000"
+              },
+              "numero_item": "7"
+            }
+          ],
+          "total": {
+            "ICMSTot": {
+              "vII": "0.00",
+              "vST": "0.00",
+              "vFCP": "0.00",
+              "vIPI": "0.00",
+              "vPIS": "0.00",
+              "vSeg": "0.00",
+              "vBCST": "0.00",
+              "vDesc": "0.00",
+              "vFCPST": "0.00",
+              "vFrete": "0.00",
+              "vOutro": "0.00",
+              "vCOFINS": "0.00",
+              "vFCPSTRet": "0.00",
+              "vIPIDevol": "0.00",
+              "vICMSDeson": "0.00",
+              "valor_icms": "0.00",
+              "valor_total_nota": "22000.00",
+              "valor_total_bruto": "22000.00",
+              "valor_base_calculo": "0.00",
+              "valor_total_tributos": "6091.20"
+            }
+          },
+          "transp": {
+            "vol": {
+              "qVol": "24",
+              "pesoB": "0.000",
+              "pesoL": "0.000"
+            },
+            "modFrete": "0"
+          },
+          "versao": "4.00",
+          "infAdic": {
+            "informacoes_complementares": "NOTA  REMESSA   26956"
+          },
+          "infRespTec": {
+            "CNPJ": "11172508000193",
+            "fone": "6740421180",
+            "email": "darijunior@dsoftsolutions.com.br",
+            "xContato": "Dari Agostinho Varini Junior"
+          }
+        },
+        "Signature": {
+          "xmlns": "http://www.w3.org/2000/09/xmldsig#",
+          "KeyInfo": {
+            "X509Data": {
+              "X509Certificate": "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"
+            }
+          },
+          "SignedInfo": {
+            "Reference": {
+              "URI": "#NFe50240197551165000193550010000248021000214750",
+              "Transforms": {
+                "Transform": [
+                  {
+                    "Algorithm": "http://www.w3.org/2000/09/xmldsig#enveloped-signature"
+                  },
+                  {
+                    "Algorithm": "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
+                  }
+                ]
+              },
+              "DigestValue": "SAipmU+fBA3HJWJ165zOklpOhEk=",
+              "DigestMethod": {
+                "Algorithm": "http://www.w3.org/2000/09/xmldsig#sha1"
+              }
+            },
+            "SignatureMethod": {
+              "Algorithm": "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
+            },
+            "CanonicalizationMethod": {
+              "Algorithm": "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
+            }
+          },
+          "SignatureValue": "6wMwoGotRY4vIjIcqhvqDraX0+mPQGgudXwnyVdx/MYN8lldxb6k7pa3wy2lUG8c9WC8gADCkgFpJPYs/NJQOU4DakXZH3b/H1L+t4EnsUKs0b4EAsNxQo18nNLk6jlcXvz39Kwox0jF/hragukqjvmtWnL0hk6FHXHyCPXRVPoIDNWhpCZ3kU3xNpllINL4mP3UTEgPl7fpoY+QKmS+XK9Nlq3fLOVvYkF2F2YG1oxw3mTtxmKeFUQM7Xn0G/pQchdCtAPcO5/t107atY2p6UhLh8mgOjc0Ohwq/iOKV72Mei3r5A/UGNUkjSMQ/KLq+NgBFyrxf9C2TQ/JfbuCFg=="
+        }
+      },
+      "xmlns": "http://www.portalfiscal.inf.br/nfe",
+      "versao": "4.00",
+      "protNFe": {
+        "xmlns": "http://www.portalfiscal.inf.br/nfe",
+        "versao": "4.00",
+        "infProt": {
+          "Id": "ID150240000158014",
+          "cStat": "100",
+          "chNFe": "50240197551165000193550010000248021000214750",
+          "nProt": "150240000158014",
+          "digVal": "SAipmU+fBA3HJWJ165zOklpOhEk=",
+          "xMotivo": "Autorizado o uso da NF-e",
+          "ambiente": "1",
+          "dhRecbto": "2024-01-03T09:32:49-04:00",
+          "verAplic": "MS_6.0.28"
+        }
+      },
+      "metadata": {
+        "index": "1",
+        "tab_id": "mkunzhga0pdbfbkdvir",
+        "user_id": "3",
+        "fileName": "50240197551165000193550010000248021000214750-nfe.xml",
+        "fileSize": "11.5 kB",
+        "binaryKey": "file0",
+        "cliente_id": "",
+        "modo_envio": "xml",
+        "total_xmls": "8",
+        "webhookUrl": "https://autowebhook.fiscaldock.com.br/webhook/monitoramento/getfile/xml",
+        "cliente_cnpj": "",
+        "progress_url": "http://31.97.93.93:8080/api/monitoramento/xml/importacao/progress",
+        "executionMode": "production",
+        "importacao_id": "14",
+        "tipo_documento": "NFE"
+      }
+    },
+    "created_at": null,
+    "updated_at": null
+  },
+  {
+    "id": "30",
+    "user_id": "3",
+    "importacao_xml_id": "14",
+    "cliente_id": null,
+    "chave_acesso": "50240197551165000193550010000248041000214770",
+    "tipo_documento": "NFE",
+    "numero_nota": 24804,
+    "serie": 1,
+    "data_emissao": "2024-01-03T13:02:05.000Z",
+    "natureza_operacao": "RETORNO DE MERC OU BEM RECEBIDO PARA CONSERTO/REPARO",
+    "valor_total": "1000.00",
+    "tipo_nota": 1,
+    "finalidade": 1,
+    "chave_referenciada": "35231044373108000600550000000267431162650581",
+    "emit_cnpj": "97551165000193",
+    "emit_razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS",
+    "emit_uf": "MS",
+    "emit_participante_id": "69",
+    "dest_cnpj": "44373108000600",
+    "dest_razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+    "dest_uf": "SP",
+    "dest_participante_id": "70",
+    "icms_valor": "0.00",
+    "icms_st_valor": "0.00",
+    "pis_valor": "0.00",
+    "cofins_valor": "0.00",
+    "ipi_valor": "0.00",
+    "tributos_total": "304.50",
+    "payload": {
+      "NFe": {
+        "xmlns": "http://www.portalfiscal.inf.br/nfe",
+        "infNFe": {
+          "Id": "NFe50240197551165000193550010000248041000214770",
+          "ide": {
+            "cDV": "0",
+            "NFref": {
+              "refNFe": "35231044373108000600550000000267431162650581"
+            },
+            "serie": "1",
+            "modelo": "55",
+            "indPres": "0",
+            "procEmi": "0",
+            "verProc": "000",
+            "ambiente": "1",
+            "indFinal": "1",
+            "codigo_uf": "50",
+            "tipo_nota": "1",
+            "numero_nota": "24804",
+            "tipo_emissao": "1",
+            "finalidade_nfe": "1",
+            "data_hora_emissao": "2024-01-03T09:02:05-04:00",
+            "natureza_operacao": "RETORNO DE MERC OU BEM RECEBIDO PARA CONSERTO/REPARO",
+            "codigo_numero_fiscal": "00021477",
+            "tipo_impressao_danfe": "1",
+            "identificador_destino": "2",
+            "data_hora_saida_entrada": "2024-01-03T10:14:05-04:00",
+            "codigo_municipio_fato_gerador": "5003702"
+          },
+          "pag": {
+            "detPag": {
+              "tPag": "01",
+              "vPag": "1000.00"
+            },
+            "vTroco": "0.00"
+          },
+          "dest": {
+            "IE": "470053570113",
+            "CNPJ": "44373108000600",
+            "IS_MATRIZ": false,
+            "indIEDest": "1",
+            "CNPJ_MATRIZ": "44373108000103",
+            "CNPJ_FORMATADO": "44.373.108/0006-00",
+            "nome_razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+            "CNPJ_MATRIZ_FORMATADO": "44.373.108/0001-03",
+            "endereco_destinatario": {
+              "UF": "SP",
+              "CEP": "19220000",
+              "fone": "1839929020",
+              "pais": "BRASIL",
+              "bairro": "ZONA RURAL",
+              "numero": "S/N",
+              "municipio": "NARANDIBA",
+              "logradouro": "EST MUNICIPAL NRD",
+              "codigo_pais": "1058",
+              "codigo_municipio": "3532207"
+            }
+          },
+          "emit": {
+            "IE": "283684410",
+            "CRT": "3",
+            "CNPJ": "97551165000193",
+            "IS_MATRIZ": true,
+            "CNPJ_MATRIZ": "97551165000193",
+            "nome_fantasia": "HIDRATOP",
+            "CNPJ_FORMATADO": "97.551.165/0001-93",
+            "endereco_emitente": {
+              "UF": "MS",
+              "CEP": "79841000",
+              "fone": "6734213006",
+              "pais": "BRASIL",
+              "bairro": "JD MARCIA",
+              "numero": "7110",
+              "municipio": "DOURADOS",
+              "logradouro": "AV  MARCELINO PIRES",
+              "codigo_pais": "1058",
+              "complemento": "HIDRATOP@GMAIL.COM",
+              "codigo_municipio": "5003702"
+            },
+            "nome_razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS",
+            "CNPJ_MATRIZ_FORMATADO": "97.551.165/0001-93"
+          },
+          "itens": {
+            "imposto": {
+              "PIS": {
+                "PISOutr": {
+                  "CST": "99",
+                  "pPIS": "0.00",
+                  "vPIS": "0.00",
+                  "valor_base_calculo": "0.00"
+                }
+              },
+              "ICMS": {
+                "ICMS40": {
+                  "CST": "41",
+                  "orig": "0"
+                }
+              },
+              "COFINS": {
+                "COFINSOutr": {
+                  "CST": "99",
+                  "pCOFINS": "0.00",
+                  "vCOFINS": "0.00",
+                  "valor_base_calculo": "0.00"
+                }
+              },
+              "valor_total_tributos": "304.50"
+            },
+            "produto": {
+              "NCM": "84122900",
+              "CEST": "0109100",
+              "CFOP": "6916",
+              "indTot": "1",
+              "cEANTrib": "SEM GTIN",
+              "codigo_ean": "SEM GTIN",
+              "codigo_produto": "002150",
+              "descricao_produto": "MOTOR CHAR-LYNN 30 CB11480572",
+              "unidade_comercial": "UN",
+              "valor_total_bruto": "1000.00",
+              "unidade_tributavel": "UN",
+              "quantidade_comercial": "1.0000",
+              "quantidade_tributavel": "1.0000",
+              "valor_unitario_comercial": "1000.0000",
+              "valor_unitario_tributavel": "1000.0000"
+            },
+            "numero_item": "1"
+          },
+          "total": {
+            "ICMSTot": {
+              "vII": "0.00",
+              "vST": "0.00",
+              "vFCP": "0.00",
+              "vIPI": "0.00",
+              "vPIS": "0.00",
+              "vSeg": "0.00",
+              "vBCST": "0.00",
+              "vDesc": "0.00",
+              "vFCPST": "0.00",
+              "vFrete": "0.00",
+              "vOutro": "0.00",
+              "vCOFINS": "0.00",
+              "vFCPSTRet": "0.00",
+              "vIPIDevol": "0.00",
+              "vICMSDeson": "0.00",
+              "valor_icms": "0.00",
+              "valor_total_nota": "1000.00",
+              "valor_total_bruto": "1000.00",
+              "valor_base_calculo": "0.00",
+              "valor_total_tributos": "304.50"
+            }
+          },
+          "transp": {
+            "vol": {
+              "qVol": "1",
+              "pesoB": "0.000",
+              "pesoL": "0.000"
+            },
+            "modFrete": "0"
+          },
+          "versao": "4.00",
+          "infAdic": {
+            "informacoes_complementares": "NOTA  REMESSA  26473"
+          },
+          "infRespTec": {
+            "CNPJ": "11172508000193",
+            "fone": "6740421180",
+            "email": "darijunior@dsoftsolutions.com.br",
+            "xContato": "Dari Agostinho Varini Junior"
+          }
+        },
+        "Signature": {
+          "xmlns": "http://www.w3.org/2000/09/xmldsig#",
+          "KeyInfo": {
+            "X509Data": {
+              "X509Certificate": "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"
+            }
+          },
+          "SignedInfo": {
+            "Reference": {
+              "URI": "#NFe50240197551165000193550010000248041000214770",
+              "Transforms": {
+                "Transform": [
+                  {
+                    "Algorithm": "http://www.w3.org/2000/09/xmldsig#enveloped-signature"
+                  },
+                  {
+                    "Algorithm": "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
+                  }
+                ]
+              },
+              "DigestValue": "BaU/eyAkjHpzWN99WwPxsb7Kf0k=",
+              "DigestMethod": {
+                "Algorithm": "http://www.w3.org/2000/09/xmldsig#sha1"
+              }
+            },
+            "SignatureMethod": {
+              "Algorithm": "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
+            },
+            "CanonicalizationMethod": {
+              "Algorithm": "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
+            }
+          },
+          "SignatureValue": "s/k7pKQpFF5qHAW2kYCtOqyx+ksJC4IZm3lpOugW0z+o5S320Be3HLeMDTBTsn7I3T95D7jOKWcPA6pqZ4QQ/T+4IqKIf/q9wwfKmxMd9u+I0E4Jsvbc/epwxkJP07cbyiysHdlocVwBfYhYustMc9wTW+Dz1YzzwIu6s0fjJz7c4QTY12w9DxGGQJFf+Qr0Bv0ZscqXKt2ELZLivw1UwUkf4EC6oJiQBaW/+/7rWhL3jbiOzKZGDz6l3W3JPleURqWOMgR0YhN00cNSG8HWootePgWHwd4xSPG4RKiSRD9MaAK0p7EFUHkBLHYsUSIhrCMMPyBv2yh6x8aRVDYbsA=="
+        }
+      },
+      "xmlns": "http://www.portalfiscal.inf.br/nfe",
+      "versao": "4.00",
+      "protNFe": {
+        "xmlns": "http://www.portalfiscal.inf.br/nfe",
+        "versao": "4.00",
+        "infProt": {
+          "Id": "ID150240000158016",
+          "cStat": "100",
+          "chNFe": "50240197551165000193550010000248041000214770",
+          "nProt": "150240000158016",
+          "digVal": "BaU/eyAkjHpzWN99WwPxsb7Kf0k=",
+          "xMotivo": "Autorizado o uso da NF-e",
+          "ambiente": "1",
+          "dhRecbto": "2024-01-03T09:32:49-04:00",
+          "verAplic": "MS_6.0.28"
+        }
+      },
+      "metadata": {
+        "index": "1",
+        "tab_id": "mkunzhga0pdbfbkdvir",
+        "user_id": "3",
+        "fileName": "50240197551165000193550010000248041000214770-nfe.xml",
+        "fileSize": "7.38 kB",
+        "binaryKey": "file1",
+        "cliente_id": "",
+        "modo_envio": "xml",
+        "total_xmls": "8",
+        "webhookUrl": "https://autowebhook.fiscaldock.com.br/webhook/monitoramento/getfile/xml",
+        "cliente_cnpj": "",
+        "progress_url": "http://31.97.93.93:8080/api/monitoramento/xml/importacao/progress",
+        "executionMode": "production",
+        "importacao_id": "14",
+        "tipo_documento": "NFE"
+      }
+    },
+    "created_at": null,
+    "updated_at": null
+  },
+  {
+    "id": "31",
+    "user_id": "3",
+    "importacao_xml_id": "14",
+    "cliente_id": null,
+    "chave_acesso": "50240197551165000193550010000248031000214765",
+    "tipo_documento": "NFE",
+    "numero_nota": 24803,
+    "serie": 1,
+    "data_emissao": "2024-01-03T12:52:59.000Z",
+    "natureza_operacao": "RETORNO DE MERC OU BEM RECEBIDO PARA CONSERTO/REPARO",
+    "valor_total": "10000.00",
+    "tipo_nota": 1,
+    "finalidade": 1,
+    "chave_referenciada": "35230744373108000600550000000261031181509834",
+    "emit_cnpj": "97551165000193",
+    "emit_razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS",
+    "emit_uf": "MS",
+    "emit_participante_id": "69",
+    "dest_cnpj": "44373108000600",
+    "dest_razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+    "dest_uf": "SP",
+    "dest_participante_id": "70",
+    "icms_valor": "0.00",
+    "icms_st_valor": "0.00",
+    "pis_valor": "0.00",
+    "cofins_valor": "0.00",
+    "ipi_valor": "0.00",
+    "tributos_total": "2741.10",
+    "payload": {
+      "NFe": {
+        "xmlns": "http://www.portalfiscal.inf.br/nfe",
+        "infNFe": {
+          "Id": "NFe50240197551165000193550010000248031000214765",
+          "ide": {
+            "cDV": "5",
+            "NFref": {
+              "refNFe": "35230744373108000600550000000261031181509834"
+            },
+            "serie": "1",
+            "modelo": "55",
+            "indPres": "0",
+            "procEmi": "0",
+            "verProc": "000",
+            "ambiente": "1",
+            "indFinal": "1",
+            "codigo_uf": "50",
+            "tipo_nota": "1",
+            "numero_nota": "24803",
+            "tipo_emissao": "1",
+            "finalidade_nfe": "1",
+            "data_hora_emissao": "2024-01-03T08:52:59-04:00",
+            "natureza_operacao": "RETORNO DE MERC OU BEM RECEBIDO PARA CONSERTO/REPARO",
+            "codigo_numero_fiscal": "00021476",
+            "tipo_impressao_danfe": "1",
+            "identificador_destino": "2",
+            "data_hora_saida_entrada": "2024-01-03T10:04:59-04:00",
+            "codigo_municipio_fato_gerador": "5003702"
+          },
+          "pag": {
+            "detPag": {
+              "tPag": "01",
+              "vPag": "10000.00"
+            },
+            "vTroco": "0.00"
+          },
+          "dest": {
+            "IE": "470053570113",
+            "CNPJ": "44373108000600",
+            "IS_MATRIZ": false,
+            "indIEDest": "1",
+            "CNPJ_MATRIZ": "44373108000103",
+            "CNPJ_FORMATADO": "44.373.108/0006-00",
+            "nome_razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+            "CNPJ_MATRIZ_FORMATADO": "44.373.108/0001-03",
+            "endereco_destinatario": {
+              "UF": "SP",
+              "CEP": "19220000",
+              "fone": "1839929020",
+              "pais": "BRASIL",
+              "bairro": "ZONA RURAL",
+              "numero": "S/N",
+              "municipio": "NARANDIBA",
+              "logradouro": "EST MUNICIPAL NRD",
+              "codigo_pais": "1058",
+              "codigo_municipio": "3532207"
+            }
+          },
+          "emit": {
+            "IE": "283684410",
+            "CRT": "3",
+            "CNPJ": "97551165000193",
+            "IS_MATRIZ": true,
+            "CNPJ_MATRIZ": "97551165000193",
+            "nome_fantasia": "HIDRATOP",
+            "CNPJ_FORMATADO": "97.551.165/0001-93",
+            "endereco_emitente": {
+              "UF": "MS",
+              "CEP": "79841000",
+              "fone": "6734213006",
+              "pais": "BRASIL",
+              "bairro": "JD MARCIA",
+              "numero": "7110",
+              "municipio": "DOURADOS",
+              "logradouro": "AV  MARCELINO PIRES",
+              "codigo_pais": "1058",
+              "complemento": "HIDRATOP@GMAIL.COM",
+              "codigo_municipio": "5003702"
+            },
+            "nome_razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS",
+            "CNPJ_MATRIZ_FORMATADO": "97.551.165/0001-93"
+          },
+          "itens": [
+            {
+              "imposto": {
+                "PIS": {
+                  "PISOutr": {
+                    "CST": "99",
+                    "pPIS": "0.00",
+                    "vPIS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "ICMS": {
+                  "ICMS40": {
+                    "CST": "41",
+                    "orig": "0"
+                  }
+                },
+                "COFINS": {
+                  "COFINSOutr": {
+                    "CST": "99",
+                    "pCOFINS": "0.00",
+                    "vCOFINS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "valor_total_tributos": "609.60"
+              },
+              "produto": {
+                "NCM": "84339090",
+                "CEST": "0109100",
+                "CFOP": "6916",
+                "indTot": "1",
+                "cEANTrib": "SEM GTIN",
+                "codigo_ean": "SEM GTIN",
+                "codigo_produto": "008127",
+                "descricao_produto": "MOTOR CHARLIN EIXO CONICO 24  CB11480557 105141100",
+                "unidade_comercial": "UN",
+                "valor_total_bruto": "3000.00",
+                "unidade_tributavel": "UN",
+                "quantidade_comercial": "3.0000",
+                "quantidade_tributavel": "3.0000",
+                "valor_unitario_comercial": "1000.0000",
+                "valor_unitario_tributavel": "1000.0000"
+              },
+              "numero_item": "1"
+            },
+            {
+              "imposto": {
+                "PIS": {
+                  "PISOutr": {
+                    "CST": "99",
+                    "pPIS": "0.00",
+                    "vPIS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "ICMS": {
+                  "ICMS40": {
+                    "CST": "41",
+                    "orig": "0"
+                  }
+                },
+                "COFINS": {
+                  "COFINSOutr": {
+                    "CST": "99",
+                    "pCOFINS": "0.00",
+                    "vCOFINS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "valor_total_tributos": "1827.00"
+              },
+              "produto": {
+                "NCM": "84122900",
+                "CEST": "0109100",
+                "CFOP": "6916",
+                "indTot": "1",
+                "cEANTrib": "SEM GTIN",
+                "codigo_ean": "SEM GTIN",
+                "codigo_produto": "002150",
+                "descricao_produto": "MOTOR CHAR-LYNN 30 CB11480572",
+                "unidade_comercial": "UN",
+                "valor_total_bruto": "6000.00",
+                "unidade_tributavel": "UN",
+                "quantidade_comercial": "6.0000",
+                "quantidade_tributavel": "6.0000",
+                "valor_unitario_comercial": "1000.0000",
+                "valor_unitario_tributavel": "1000.0000"
+              },
+              "numero_item": "2"
+            },
+            {
+              "imposto": {
+                "PIS": {
+                  "PISOutr": {
+                    "CST": "99",
+                    "pPIS": "0.00",
+                    "vPIS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "ICMS": {
+                  "ICMS40": {
+                    "CST": "41",
+                    "orig": "0"
+                  }
+                },
+                "COFINS": {
+                  "COFINSOutr": {
+                    "CST": "99",
+                    "pCOFINS": "0.00",
+                    "vCOFINS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "valor_total_tributos": "304.50"
+              },
+              "produto": {
+                "NCM": "84122190",
+                "CEST": "0109100",
+                "CFOP": "6916",
+                "indTot": "1",
+                "cEANTrib": "SEM GTIN",
+                "codigo_ean": "SEM GTIN",
+                "codigo_produto": "009088",
+                "descricao_produto": "MOTOR EX SECUNDARIO 3239210160 CB01463297",
+                "unidade_comercial": "UN",
+                "valor_total_bruto": "1000.00",
+                "unidade_tributavel": "UN",
+                "quantidade_comercial": "1.0000",
+                "quantidade_tributavel": "1.0000",
+                "valor_unitario_comercial": "1000.0000",
+                "valor_unitario_tributavel": "1000.0000"
+              },
+              "numero_item": "3"
+            }
+          ],
+          "total": {
+            "ICMSTot": {
+              "vII": "0.00",
+              "vST": "0.00",
+              "vFCP": "0.00",
+              "vIPI": "0.00",
+              "vPIS": "0.00",
+              "vSeg": "0.00",
+              "vBCST": "0.00",
+              "vDesc": "0.00",
+              "vFCPST": "0.00",
+              "vFrete": "0.00",
+              "vOutro": "0.00",
+              "vCOFINS": "0.00",
+              "vFCPSTRet": "0.00",
+              "vIPIDevol": "0.00",
+              "vICMSDeson": "0.00",
+              "valor_icms": "0.00",
+              "valor_total_nota": "10000.00",
+              "valor_total_bruto": "10000.00",
+              "valor_base_calculo": "0.00",
+              "valor_total_tributos": "2741.10"
+            }
+          },
+          "transp": {
+            "vol": {
+              "qVol": "10",
+              "pesoB": "0.000",
+              "pesoL": "0.000"
+            },
+            "modFrete": "0"
+          },
+          "versao": "4.00",
+          "infAdic": {
+            "informacoes_complementares": "NOTA  REMESSA  26103"
+          },
+          "infRespTec": {
+            "CNPJ": "11172508000193",
+            "fone": "6740421180",
+            "email": "darijunior@dsoftsolutions.com.br",
+            "xContato": "Dari Agostinho Varini Junior"
+          }
+        },
+        "Signature": {
+          "xmlns": "http://www.w3.org/2000/09/xmldsig#",
+          "KeyInfo": {
+            "X509Data": {
+              "X509Certificate": "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"
+            }
+          },
+          "SignedInfo": {
+            "Reference": {
+              "URI": "#NFe50240197551165000193550010000248031000214765",
+              "Transforms": {
+                "Transform": [
+                  {
+                    "Algorithm": "http://www.w3.org/2000/09/xmldsig#enveloped-signature"
+                  },
+                  {
+                    "Algorithm": "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
+                  }
+                ]
+              },
+              "DigestValue": "Ax7MV3YNjp2fuaNRMjz7aLMTiMg=",
+              "DigestMethod": {
+                "Algorithm": "http://www.w3.org/2000/09/xmldsig#sha1"
+              }
+            },
+            "SignatureMethod": {
+              "Algorithm": "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
+            },
+            "CanonicalizationMethod": {
+              "Algorithm": "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
+            }
+          },
+          "SignatureValue": "an6gGqP9sqLtw7bINEJmnjvuKsx0JlcDqzaOdlvFtjS1f6A/zxSjWPG5ADMIKL3h5GVEKBKgpi6LYcmUsqJ8tpDxTgaqQ5w6a2s1gBl08Xk3DJtUE8XBevaMJvQuZHOXYHGQ+tjaBhjB6l0q0K9Zul6trS7uZTd//0/1AzAK6FFNDLX66Ck4fP0bxxw9scij/teqb365Su/q9yC5+6iBcwPBYKkFRw8vDyDVFyg8hLjABZbuX6NTEc63sRPSZ4tMAq6LGmdLsXqmGH3x9tz6ziGNbp4eufgPFMY7rsad8z4XC/jNwoZ3eT6ShyjdCxtFqATnYXL1xJ8ZSDVFP03X2w=="
+        }
+      },
+      "xmlns": "http://www.portalfiscal.inf.br/nfe",
+      "versao": "4.00",
+      "protNFe": {
+        "xmlns": "http://www.portalfiscal.inf.br/nfe",
+        "versao": "4.00",
+        "infProt": {
+          "Id": "ID150240000158015",
+          "cStat": "100",
+          "chNFe": "50240197551165000193550010000248031000214765",
+          "nProt": "150240000158015",
+          "digVal": "Ax7MV3YNjp2fuaNRMjz7aLMTiMg=",
+          "xMotivo": "Autorizado o uso da NF-e",
+          "ambiente": "1",
+          "dhRecbto": "2024-01-03T09:32:49-04:00",
+          "verAplic": "MS_6.0.28"
+        }
+      },
+      "metadata": {
+        "index": "1",
+        "tab_id": "mkunzhga0pdbfbkdvir",
+        "user_id": "3",
+        "fileName": "50240197551165000193550010000248031000214765-nfe.xml",
+        "fileSize": "8.78 kB",
+        "binaryKey": "file2",
+        "cliente_id": "",
+        "modo_envio": "xml",
+        "total_xmls": "8",
+        "webhookUrl": "https://autowebhook.fiscaldock.com.br/webhook/monitoramento/getfile/xml",
+        "cliente_cnpj": "",
+        "progress_url": "http://31.97.93.93:8080/api/monitoramento/xml/importacao/progress",
+        "executionMode": "production",
+        "importacao_id": "14",
+        "tipo_documento": "NFE"
+      }
+    },
+    "created_at": null,
+    "updated_at": null
+  },
+  {
+    "id": "32",
+    "user_id": "3",
+    "importacao_xml_id": "14",
+    "cliente_id": null,
+    "chave_acesso": "50240197551165000193550010000248071000214802",
+    "tipo_documento": "NFE",
+    "numero_nota": 24807,
+    "serie": 1,
+    "data_emissao": "2024-01-03T13:23:15.000Z",
+    "natureza_operacao": "RETORNO DE MERC OU BEM RECEBIDO PARA CONSERTO/REPARO",
+    "valor_total": "500.00",
+    "tipo_nota": 1,
+    "finalidade": 1,
+    "chave_referenciada": "35230544373108000600550000000254791270037540",
+    "emit_cnpj": "97551165000193",
+    "emit_razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS",
+    "emit_uf": "MS",
+    "emit_participante_id": "69",
+    "dest_cnpj": "44373108000600",
+    "dest_razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+    "dest_uf": "SP",
+    "dest_participante_id": "70",
+    "icms_valor": "0.00",
+    "icms_st_valor": "0.00",
+    "pis_valor": "0.00",
+    "cofins_valor": "0.00",
+    "ipi_valor": "0.00",
+    "tributos_total": "152.25",
+    "payload": {
+      "NFe": {
+        "xmlns": "http://www.portalfiscal.inf.br/nfe",
+        "infNFe": {
+          "Id": "NFe50240197551165000193550010000248071000214802",
+          "ide": {
+            "cDV": "2",
+            "NFref": {
+              "refNFe": "35230544373108000600550000000254791270037540"
+            },
+            "serie": "1",
+            "modelo": "55",
+            "indPres": "0",
+            "procEmi": "0",
+            "verProc": "000",
+            "ambiente": "1",
+            "indFinal": "1",
+            "codigo_uf": "50",
+            "tipo_nota": "1",
+            "numero_nota": "24807",
+            "tipo_emissao": "1",
+            "finalidade_nfe": "1",
+            "data_hora_emissao": "2024-01-03T09:23:15-04:00",
+            "natureza_operacao": "RETORNO DE MERC OU BEM RECEBIDO PARA CONSERTO/REPARO",
+            "codigo_numero_fiscal": "00021480",
+            "tipo_impressao_danfe": "1",
+            "identificador_destino": "2",
+            "data_hora_saida_entrada": "2024-01-03T10:35:15-04:00",
+            "codigo_municipio_fato_gerador": "5003702"
+          },
+          "pag": {
+            "detPag": {
+              "tPag": "01",
+              "vPag": "500.00"
+            },
+            "vTroco": "0.00"
+          },
+          "dest": {
+            "IE": "470053570113",
+            "CNPJ": "44373108000600",
+            "IS_MATRIZ": false,
+            "indIEDest": "1",
+            "CNPJ_MATRIZ": "44373108000103",
+            "CNPJ_FORMATADO": "44.373.108/0006-00",
+            "nome_razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+            "CNPJ_MATRIZ_FORMATADO": "44.373.108/0001-03",
+            "endereco_destinatario": {
+              "UF": "SP",
+              "CEP": "19220000",
+              "fone": "1839929020",
+              "pais": "BRASIL",
+              "bairro": "ZONA RURAL",
+              "numero": "S/N",
+              "municipio": "NARANDIBA",
+              "logradouro": "EST MUNICIPAL NRD",
+              "codigo_pais": "1058",
+              "codigo_municipio": "3532207"
+            }
+          },
+          "emit": {
+            "IE": "283684410",
+            "CRT": "3",
+            "CNPJ": "97551165000193",
+            "IS_MATRIZ": true,
+            "CNPJ_MATRIZ": "97551165000193",
+            "nome_fantasia": "HIDRATOP",
+            "CNPJ_FORMATADO": "97.551.165/0001-93",
+            "endereco_emitente": {
+              "UF": "MS",
+              "CEP": "79841000",
+              "fone": "6734213006",
+              "pais": "BRASIL",
+              "bairro": "JD MARCIA",
+              "numero": "7110",
+              "municipio": "DOURADOS",
+              "logradouro": "AV  MARCELINO PIRES",
+              "codigo_pais": "1058",
+              "complemento": "HIDRATOP@GMAIL.COM",
+              "codigo_municipio": "5003702"
+            },
+            "nome_razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS",
+            "CNPJ_MATRIZ_FORMATADO": "97.551.165/0001-93"
+          },
+          "itens": {
+            "imposto": {
+              "PIS": {
+                "PISOutr": {
+                  "CST": "99",
+                  "pPIS": "0.00",
+                  "vPIS": "0.00",
+                  "valor_base_calculo": "0.00"
+                }
+              },
+              "ICMS": {
+                "ICMS40": {
+                  "CST": "41",
+                  "orig": "0"
+                }
+              },
+              "COFINS": {
+                "COFINSOutr": {
+                  "CST": "99",
+                  "pCOFINS": "0.00",
+                  "vCOFINS": "0.00",
+                  "valor_base_calculo": "0.00"
+                }
+              },
+              "valor_total_tributos": "152.25"
+            },
+            "produto": {
+              "NCM": "84122110",
+              "CEST": "0109100",
+              "CFOP": "6916",
+              "indTot": "1",
+              "cEANTrib": "SEM GTIN",
+              "codigo_ean": "SEM GTIN",
+              "codigo_produto": "002284",
+              "descricao_produto": "CILINDRO DO GIRO JOHN DEERE AH148694 AHC10734",
+              "unidade_comercial": "UN",
+              "valor_total_bruto": "500.00",
+              "unidade_tributavel": "UN",
+              "quantidade_comercial": "1.0000",
+              "quantidade_tributavel": "1.0000",
+              "valor_unitario_comercial": "500.0000",
+              "valor_unitario_tributavel": "500.0000"
+            },
+            "numero_item": "1"
+          },
+          "total": {
+            "ICMSTot": {
+              "vII": "0.00",
+              "vST": "0.00",
+              "vFCP": "0.00",
+              "vIPI": "0.00",
+              "vPIS": "0.00",
+              "vSeg": "0.00",
+              "vBCST": "0.00",
+              "vDesc": "0.00",
+              "vFCPST": "0.00",
+              "vFrete": "0.00",
+              "vOutro": "0.00",
+              "vCOFINS": "0.00",
+              "vFCPSTRet": "0.00",
+              "vIPIDevol": "0.00",
+              "vICMSDeson": "0.00",
+              "valor_icms": "0.00",
+              "valor_total_nota": "500.00",
+              "valor_total_bruto": "500.00",
+              "valor_base_calculo": "0.00",
+              "valor_total_tributos": "152.25"
+            }
+          },
+          "transp": {
+            "vol": {
+              "qVol": "1",
+              "pesoB": "0.000",
+              "pesoL": "0.000"
+            },
+            "modFrete": "0"
+          },
+          "versao": "4.00",
+          "infAdic": {
+            "informacoes_complementares": "NOTA  REMESSA  25479"
+          },
+          "infRespTec": {
+            "CNPJ": "11172508000193",
+            "fone": "6740421180",
+            "email": "darijunior@dsoftsolutions.com.br",
+            "xContato": "Dari Agostinho Varini Junior"
+          }
+        },
+        "Signature": {
+          "xmlns": "http://www.w3.org/2000/09/xmldsig#",
+          "KeyInfo": {
+            "X509Data": {
+              "X509Certificate": "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"
+            }
+          },
+          "SignedInfo": {
+            "Reference": {
+              "URI": "#NFe50240197551165000193550010000248071000214802",
+              "Transforms": {
+                "Transform": [
+                  {
+                    "Algorithm": "http://www.w3.org/2000/09/xmldsig#enveloped-signature"
+                  },
+                  {
+                    "Algorithm": "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
+                  }
+                ]
+              },
+              "DigestValue": "tJGFQutBMFEKXcftTuTbUr5MywQ=",
+              "DigestMethod": {
+                "Algorithm": "http://www.w3.org/2000/09/xmldsig#sha1"
+              }
+            },
+            "SignatureMethod": {
+              "Algorithm": "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
+            },
+            "CanonicalizationMethod": {
+              "Algorithm": "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
+            }
+          },
+          "SignatureValue": "GqkQIwCqGRmuAC2yEjsq/G7Bl2y0nL5IuUtvRFgxmzPFdzGHwWxByzHbLxz56KMhWLrDyhS0Yr9t/e5jrLX7EM4x71waUqUIhtrM7pWbZrIR6P2kNzqUt7FezfUp3C6V/PR4UaQ1jOj642cxSu2x/n3Zb6m0PiJuOOuf5/c5i6WnE4MmyiOAsd7II2Gu17+kbiGJjk+HEDKKjmTLOKTSNzRNjROtoufzx/IT7myRPlzH21gGZAQJApQzVoZfvkeFSqgkCa9N5F/JA7iCQatJ07q752iU8yS515tNklxUREMzEC72n84PQRZ9baSgCuzc2hUYWfJYwz9YsH1ydf6rPA=="
+        }
+      },
+      "xmlns": "http://www.portalfiscal.inf.br/nfe",
+      "versao": "4.00",
+      "protNFe": {
+        "xmlns": "http://www.portalfiscal.inf.br/nfe",
+        "versao": "4.00",
+        "infProt": {
+          "Id": "ID150240000158021",
+          "cStat": "100",
+          "chNFe": "50240197551165000193550010000248071000214802",
+          "nProt": "150240000158021",
+          "digVal": "tJGFQutBMFEKXcftTuTbUr5MywQ=",
+          "xMotivo": "Autorizado o uso da NF-e",
+          "ambiente": "1",
+          "dhRecbto": "2024-01-03T09:32:49-04:00",
+          "verAplic": "MS_6.0.28"
+        }
+      },
+      "metadata": {
+        "index": "1",
+        "tab_id": "mkunzhga0pdbfbkdvir",
+        "user_id": "3",
+        "fileName": "50240197551165000193550010000248071000214802-nfe.xml",
+        "fileSize": "7.39 kB",
+        "binaryKey": "file3",
+        "cliente_id": "",
+        "modo_envio": "xml",
+        "total_xmls": "8",
+        "webhookUrl": "https://autowebhook.fiscaldock.com.br/webhook/monitoramento/getfile/xml",
+        "cliente_cnpj": "",
+        "progress_url": "http://31.97.93.93:8080/api/monitoramento/xml/importacao/progress",
+        "executionMode": "production",
+        "importacao_id": "14",
+        "tipo_documento": "NFE"
+      }
+    },
+    "created_at": null,
+    "updated_at": null
+  },
+  {
+    "id": "33",
+    "user_id": "3",
+    "importacao_xml_id": "14",
+    "cliente_id": null,
+    "chave_acesso": "50240197551165000193550010000248061000214791",
+    "tipo_documento": "NFE",
+    "numero_nota": 24806,
+    "serie": 1,
+    "data_emissao": "2024-01-03T13:20:18.000Z",
+    "natureza_operacao": "RETORNO DE MERC OU BEM RECEBIDO PARA CONSERTO/REPARO",
+    "valor_total": "1500.00",
+    "tipo_nota": 1,
+    "finalidade": 1,
+    "chave_referenciada": "35230544373108000600550000000256201533311730",
+    "emit_cnpj": "97551165000193",
+    "emit_razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS",
+    "emit_uf": "MS",
+    "emit_participante_id": "69",
+    "dest_cnpj": "44373108000600",
+    "dest_razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+    "dest_uf": "SP",
+    "dest_participante_id": "70",
+    "icms_valor": "0.00",
+    "icms_st_valor": "0.00",
+    "pis_valor": "0.00",
+    "cofins_valor": "0.00",
+    "ipi_valor": "0.00",
+    "tributos_total": "456.75",
+    "payload": {
+      "NFe": {
+        "xmlns": "http://www.portalfiscal.inf.br/nfe",
+        "infNFe": {
+          "Id": "NFe50240197551165000193550010000248061000214791",
+          "ide": {
+            "cDV": "1",
+            "NFref": {
+              "refNFe": "35230544373108000600550000000256201533311730"
+            },
+            "serie": "1",
+            "modelo": "55",
+            "indPres": "0",
+            "procEmi": "0",
+            "verProc": "000",
+            "ambiente": "1",
+            "indFinal": "1",
+            "codigo_uf": "50",
+            "tipo_nota": "1",
+            "numero_nota": "24806",
+            "tipo_emissao": "1",
+            "finalidade_nfe": "1",
+            "data_hora_emissao": "2024-01-03T09:20:18-04:00",
+            "natureza_operacao": "RETORNO DE MERC OU BEM RECEBIDO PARA CONSERTO/REPARO",
+            "codigo_numero_fiscal": "00021479",
+            "tipo_impressao_danfe": "1",
+            "identificador_destino": "2",
+            "data_hora_saida_entrada": "2024-01-03T10:32:18-04:00",
+            "codigo_municipio_fato_gerador": "5003702"
+          },
+          "pag": {
+            "detPag": {
+              "tPag": "01",
+              "vPag": "1500.00"
+            },
+            "vTroco": "0.00"
+          },
+          "dest": {
+            "IE": "470053570113",
+            "CNPJ": "44373108000600",
+            "IS_MATRIZ": false,
+            "indIEDest": "1",
+            "CNPJ_MATRIZ": "44373108000103",
+            "CNPJ_FORMATADO": "44.373.108/0006-00",
+            "nome_razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+            "CNPJ_MATRIZ_FORMATADO": "44.373.108/0001-03",
+            "endereco_destinatario": {
+              "UF": "SP",
+              "CEP": "19220000",
+              "fone": "1839929020",
+              "pais": "BRASIL",
+              "bairro": "ZONA RURAL",
+              "numero": "S/N",
+              "municipio": "NARANDIBA",
+              "logradouro": "EST MUNICIPAL NRD",
+              "codigo_pais": "1058",
+              "codigo_municipio": "3532207"
+            }
+          },
+          "emit": {
+            "IE": "283684410",
+            "CRT": "3",
+            "CNPJ": "97551165000193",
+            "IS_MATRIZ": true,
+            "CNPJ_MATRIZ": "97551165000193",
+            "nome_fantasia": "HIDRATOP",
+            "CNPJ_FORMATADO": "97.551.165/0001-93",
+            "endereco_emitente": {
+              "UF": "MS",
+              "CEP": "79841000",
+              "fone": "6734213006",
+              "pais": "BRASIL",
+              "bairro": "JD MARCIA",
+              "numero": "7110",
+              "municipio": "DOURADOS",
+              "logradouro": "AV  MARCELINO PIRES",
+              "codigo_pais": "1058",
+              "complemento": "HIDRATOP@GMAIL.COM",
+              "codigo_municipio": "5003702"
+            },
+            "nome_razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS",
+            "CNPJ_MATRIZ_FORMATADO": "97.551.165/0001-93"
+          },
+          "itens": [
+            {
+              "imposto": {
+                "PIS": {
+                  "PISOutr": {
+                    "CST": "99",
+                    "pPIS": "0.00",
+                    "vPIS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "ICMS": {
+                  "ICMS40": {
+                    "CST": "41",
+                    "orig": "0"
+                  }
+                },
+                "COFINS": {
+                  "COFINSOutr": {
+                    "CST": "99",
+                    "pCOFINS": "0.00",
+                    "vCOFINS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "valor_total_tributos": "152.25"
+              },
+              "produto": {
+                "NCM": "84122110",
+                "CEST": "0109100",
+                "CFOP": "6916",
+                "indTot": "1",
+                "cEANTrib": "SEM GTIN",
+                "codigo_ean": "SEM GTIN",
+                "codigo_produto": "002284",
+                "descricao_produto": "CILINDRO DO GIRO JOHN DEERE AH148694 AHC10734",
+                "unidade_comercial": "UN",
+                "valor_total_bruto": "500.00",
+                "unidade_tributavel": "UN",
+                "quantidade_comercial": "1.0000",
+                "quantidade_tributavel": "1.0000",
+                "valor_unitario_comercial": "500.0000",
+                "valor_unitario_tributavel": "500.0000"
+              },
+              "numero_item": "1"
+            },
+            {
+              "imposto": {
+                "PIS": {
+                  "PISOutr": {
+                    "CST": "99",
+                    "pPIS": "0.00",
+                    "vPIS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "ICMS": {
+                  "ICMS40": {
+                    "CST": "41",
+                    "orig": "0"
+                  }
+                },
+                "COFINS": {
+                  "COFINSOutr": {
+                    "CST": "99",
+                    "pCOFINS": "0.00",
+                    "vCOFINS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "valor_total_tributos": "304.50"
+              },
+              "produto": {
+                "NCM": "84122110",
+                "CEST": "0104500",
+                "CFOP": "6916",
+                "indTot": "1",
+                "cEANTrib": "SEM GTIN",
+                "codigo_ean": "SEM GTIN",
+                "codigo_produto": "002308",
+                "descricao_produto": "CILINDRO SUSPENSAO CB11475577",
+                "unidade_comercial": "UN",
+                "valor_total_bruto": "1000.00",
+                "unidade_tributavel": "UN",
+                "quantidade_comercial": "2.0000",
+                "quantidade_tributavel": "2.0000",
+                "valor_unitario_comercial": "500.0000",
+                "valor_unitario_tributavel": "500.0000"
+              },
+              "numero_item": "2"
+            }
+          ],
+          "total": {
+            "ICMSTot": {
+              "vII": "0.00",
+              "vST": "0.00",
+              "vFCP": "0.00",
+              "vIPI": "0.00",
+              "vPIS": "0.00",
+              "vSeg": "0.00",
+              "vBCST": "0.00",
+              "vDesc": "0.00",
+              "vFCPST": "0.00",
+              "vFrete": "0.00",
+              "vOutro": "0.00",
+              "vCOFINS": "0.00",
+              "vFCPSTRet": "0.00",
+              "vIPIDevol": "0.00",
+              "vICMSDeson": "0.00",
+              "valor_icms": "0.00",
+              "valor_total_nota": "1500.00",
+              "valor_total_bruto": "1500.00",
+              "valor_base_calculo": "0.00",
+              "valor_total_tributos": "456.75"
+            }
+          },
+          "transp": {
+            "vol": {
+              "qVol": "3",
+              "pesoB": "0.000",
+              "pesoL": "0.000"
+            },
+            "modFrete": "0"
+          },
+          "versao": "4.00",
+          "infAdic": {
+            "informacoes_complementares": "NOTA  REMESSA  25620"
+          },
+          "infRespTec": {
+            "CNPJ": "11172508000193",
+            "fone": "6740421180",
+            "email": "darijunior@dsoftsolutions.com.br",
+            "xContato": "Dari Agostinho Varini Junior"
+          }
+        },
+        "Signature": {
+          "xmlns": "http://www.w3.org/2000/09/xmldsig#",
+          "KeyInfo": {
+            "X509Data": {
+              "X509Certificate": "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"
+            }
+          },
+          "SignedInfo": {
+            "Reference": {
+              "URI": "#NFe50240197551165000193550010000248061000214791",
+              "Transforms": {
+                "Transform": [
+                  {
+                    "Algorithm": "http://www.w3.org/2000/09/xmldsig#enveloped-signature"
+                  },
+                  {
+                    "Algorithm": "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
+                  }
+                ]
+              },
+              "DigestValue": "ddnHDpzoGmo9qipex60MT+n2xi8=",
+              "DigestMethod": {
+                "Algorithm": "http://www.w3.org/2000/09/xmldsig#sha1"
+              }
+            },
+            "SignatureMethod": {
+              "Algorithm": "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
+            },
+            "CanonicalizationMethod": {
+              "Algorithm": "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
+            }
+          },
+          "SignatureValue": "rkXDTZLcw56GplUh5Un01Sruj0uag1dxVY3DRdFY4rMHH8SWyw7h/T/dXaYxDmycMpDdyLxS5oSMsqrZFEhOR1y6j678UkXUFYoP/tcTvoB3aRsaAtx4n+kzoJWFxiCVnIqnNlfLvHrNyF3q/JnnmfkpRbsWcaiFI2G4tYEm+gVJVFFOsvs2IiV2L2jD7MmyJJEjLgfI4fMVr4BCvmqmURth7XpLqoZrAr00GtYAVgu8pOSrWYC7Y/qP9ZJRrZhI2etHN/FkSJ4qDU0WrcP+MqvCebeylAP7f20Lfws7A+ow+K8Dw/bDHiRaCo6w2ebG+GmIRoz5+Uo05iZwvdwR4w=="
+        }
+      },
+      "xmlns": "http://www.portalfiscal.inf.br/nfe",
+      "versao": "4.00",
+      "protNFe": {
+        "xmlns": "http://www.portalfiscal.inf.br/nfe",
+        "versao": "4.00",
+        "infProt": {
+          "Id": "ID150240000158020",
+          "cStat": "100",
+          "chNFe": "50240197551165000193550010000248061000214791",
+          "nProt": "150240000158020",
+          "digVal": "ddnHDpzoGmo9qipex60MT+n2xi8=",
+          "xMotivo": "Autorizado o uso da NF-e",
+          "ambiente": "1",
+          "dhRecbto": "2024-01-03T09:32:49-04:00",
+          "verAplic": "MS_6.0.28"
+        }
+      },
+      "metadata": {
+        "index": "1",
+        "tab_id": "mkunzhga0pdbfbkdvir",
+        "user_id": "3",
+        "fileName": "50240197551165000193550010000248061000214791-nfe.xml",
+        "fileSize": "8.07 kB",
+        "binaryKey": "file4",
+        "cliente_id": "",
+        "modo_envio": "xml",
+        "total_xmls": "8",
+        "webhookUrl": "https://autowebhook.fiscaldock.com.br/webhook/monitoramento/getfile/xml",
+        "cliente_cnpj": "",
+        "progress_url": "http://31.97.93.93:8080/api/monitoramento/xml/importacao/progress",
+        "executionMode": "production",
+        "importacao_id": "14",
+        "tipo_documento": "NFE"
+      }
+    },
+    "created_at": null,
+    "updated_at": null
+  },
+  {
+    "id": "34",
+    "user_id": "3",
+    "importacao_xml_id": "14",
+    "cliente_id": null,
+    "chave_acesso": "50240197551165000193550010000248091000214823",
+    "tipo_documento": "NFE",
+    "numero_nota": 24809,
+    "serie": 1,
+    "data_emissao": "2024-01-03T13:33:15.000Z",
+    "natureza_operacao": "RETORNO DE MERC OU BEM RECEBIDO PARA CONSERTO/REPARO",
+    "valor_total": "1000.00",
+    "tipo_nota": 1,
+    "finalidade": 1,
+    "chave_referenciada": "35230744373108000600550000000261031181509834",
+    "emit_cnpj": "97551165000193",
+    "emit_razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS",
+    "emit_uf": "MS",
+    "emit_participante_id": "69",
+    "dest_cnpj": "44373108000600",
+    "dest_razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+    "dest_uf": "SP",
+    "dest_participante_id": "70",
+    "icms_valor": "0.00",
+    "icms_st_valor": "0.00",
+    "pis_valor": "0.00",
+    "cofins_valor": "0.00",
+    "ipi_valor": "0.00",
+    "tributos_total": "304.50",
+    "payload": {
+      "NFe": {
+        "xmlns": "http://www.portalfiscal.inf.br/nfe",
+        "infNFe": {
+          "Id": "NFe50240197551165000193550010000248091000214823",
+          "ide": {
+            "cDV": "3",
+            "NFref": {
+              "refNFe": "35230744373108000600550000000261031181509834"
+            },
+            "serie": "1",
+            "modelo": "55",
+            "indPres": "0",
+            "procEmi": "0",
+            "verProc": "000",
+            "ambiente": "1",
+            "indFinal": "1",
+            "codigo_uf": "50",
+            "tipo_nota": "1",
+            "numero_nota": "24809",
+            "tipo_emissao": "1",
+            "finalidade_nfe": "1",
+            "data_hora_emissao": "2024-01-03T09:33:15-04:00",
+            "natureza_operacao": "RETORNO DE MERC OU BEM RECEBIDO PARA CONSERTO/REPARO",
+            "codigo_numero_fiscal": "00021482",
+            "tipo_impressao_danfe": "1",
+            "identificador_destino": "2",
+            "data_hora_saida_entrada": "2024-01-03T10:45:15-04:00",
+            "codigo_municipio_fato_gerador": "5003702"
+          },
+          "pag": {
+            "detPag": {
+              "tPag": "01",
+              "vPag": "1000.00"
+            },
+            "vTroco": "0.00"
+          },
+          "dest": {
+            "IE": "470053570113",
+            "CNPJ": "44373108000600",
+            "IS_MATRIZ": false,
+            "indIEDest": "1",
+            "CNPJ_MATRIZ": "44373108000103",
+            "CNPJ_FORMATADO": "44.373.108/0006-00",
+            "nome_razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+            "CNPJ_MATRIZ_FORMATADO": "44.373.108/0001-03",
+            "endereco_destinatario": {
+              "UF": "SP",
+              "CEP": "19220000",
+              "fone": "1839929020",
+              "pais": "BRASIL",
+              "bairro": "ZONA RURAL",
+              "numero": "S/N",
+              "municipio": "NARANDIBA",
+              "logradouro": "EST MUNICIPAL NRD",
+              "codigo_pais": "1058",
+              "codigo_municipio": "3532207"
+            }
+          },
+          "emit": {
+            "IE": "283684410",
+            "CRT": "3",
+            "CNPJ": "97551165000193",
+            "IS_MATRIZ": true,
+            "CNPJ_MATRIZ": "97551165000193",
+            "nome_fantasia": "HIDRATOP",
+            "CNPJ_FORMATADO": "97.551.165/0001-93",
+            "endereco_emitente": {
+              "UF": "MS",
+              "CEP": "79841000",
+              "fone": "6734213006",
+              "pais": "BRASIL",
+              "bairro": "JD MARCIA",
+              "numero": "7110",
+              "municipio": "DOURADOS",
+              "logradouro": "AV  MARCELINO PIRES",
+              "codigo_pais": "1058",
+              "complemento": "HIDRATOP@GMAIL.COM",
+              "codigo_municipio": "5003702"
+            },
+            "nome_razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS",
+            "CNPJ_MATRIZ_FORMATADO": "97.551.165/0001-93"
+          },
+          "itens": {
+            "imposto": {
+              "PIS": {
+                "PISOutr": {
+                  "CST": "99",
+                  "pPIS": "0.00",
+                  "vPIS": "0.00",
+                  "valor_base_calculo": "0.00"
+                }
+              },
+              "ICMS": {
+                "ICMS40": {
+                  "CST": "41",
+                  "orig": "0"
+                }
+              },
+              "COFINS": {
+                "COFINSOutr": {
+                  "CST": "99",
+                  "pCOFINS": "0.00",
+                  "vCOFINS": "0.00",
+                  "valor_base_calculo": "0.00"
+                }
+              },
+              "valor_total_tributos": "304.50"
+            },
+            "produto": {
+              "NCM": "84122900",
+              "CEST": "0103100",
+              "CFOP": "6916",
+              "indTot": "1",
+              "cEANTrib": "SEM GTIN",
+              "codigo_ean": "SEM GTIN",
+              "codigo_produto": "000266",
+              "descricao_produto": "MOTOR DESPONTADOR AXT11042",
+              "unidade_comercial": "UN",
+              "valor_total_bruto": "1000.00",
+              "unidade_tributavel": "UN",
+              "quantidade_comercial": "1.0000",
+              "quantidade_tributavel": "1.0000",
+              "valor_unitario_comercial": "1000.0000",
+              "valor_unitario_tributavel": "1000.0000"
+            },
+            "numero_item": "1"
+          },
+          "total": {
+            "ICMSTot": {
+              "vII": "0.00",
+              "vST": "0.00",
+              "vFCP": "0.00",
+              "vIPI": "0.00",
+              "vPIS": "0.00",
+              "vSeg": "0.00",
+              "vBCST": "0.00",
+              "vDesc": "0.00",
+              "vFCPST": "0.00",
+              "vFrete": "0.00",
+              "vOutro": "0.00",
+              "vCOFINS": "0.00",
+              "vFCPSTRet": "0.00",
+              "vIPIDevol": "0.00",
+              "vICMSDeson": "0.00",
+              "valor_icms": "0.00",
+              "valor_total_nota": "1000.00",
+              "valor_total_bruto": "1000.00",
+              "valor_base_calculo": "0.00",
+              "valor_total_tributos": "304.50"
+            }
+          },
+          "transp": {
+            "vol": {
+              "qVol": "1",
+              "pesoB": "0.000",
+              "pesoL": "0.000"
+            },
+            "modFrete": "0"
+          },
+          "versao": "4.00",
+          "infAdic": {
+            "informacoes_complementares": "NOTA  REMESSA  26103"
+          },
+          "infRespTec": {
+            "CNPJ": "11172508000193",
+            "fone": "6740421180",
+            "email": "darijunior@dsoftsolutions.com.br",
+            "xContato": "Dari Agostinho Varini Junior"
+          }
+        },
+        "Signature": {
+          "xmlns": "http://www.w3.org/2000/09/xmldsig#",
+          "KeyInfo": {
+            "X509Data": {
+              "X509Certificate": "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"
+            }
+          },
+          "SignedInfo": {
+            "Reference": {
+              "URI": "#NFe50240197551165000193550010000248091000214823",
+              "Transforms": {
+                "Transform": [
+                  {
+                    "Algorithm": "http://www.w3.org/2000/09/xmldsig#enveloped-signature"
+                  },
+                  {
+                    "Algorithm": "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
+                  }
+                ]
+              },
+              "DigestValue": "DiMa3w+eYPwpcyO3NhgMlRaGQqU=",
+              "DigestMethod": {
+                "Algorithm": "http://www.w3.org/2000/09/xmldsig#sha1"
+              }
+            },
+            "SignatureMethod": {
+              "Algorithm": "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
+            },
+            "CanonicalizationMethod": {
+              "Algorithm": "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
+            }
+          },
+          "SignatureValue": "NVIgwSuZobAx9rIElhkqkQqQLGB+iM+5z/eNISnlBNv4HRlR4vYcAao9gravgOBDdqyMiXzbzHMVIgWOqY2HBS+Xp7yJEWSilQREZplzwsX6Hpz/gMzqaBFV8VMXXbauRGwkMgm7vD7vUKZSXZMkD4zbjC7FoRtyDHaK46EszygZsrzCegn14fhOxxNTUEmz0qbCkV33OG81/orF3HEj3WEwuSqTu9QX79jIEFJ7pkymtIr5zuWfoLVpwl4v+0/yE0Kq33ckTUoV2VKeWkYSlTSJi9WZH4EtUIlmHWK3x5KU/sb/V1/F3Ng4090d51aCxF5lOgWu36XhHb+NRCbnWw=="
+        }
+      },
+      "xmlns": "http://www.portalfiscal.inf.br/nfe",
+      "versao": "4.00",
+      "protNFe": {
+        "xmlns": "http://www.portalfiscal.inf.br/nfe",
+        "versao": "4.00",
+        "infProt": {
+          "Id": "ID150240000158508",
+          "cStat": "100",
+          "chNFe": "50240197551165000193550010000248091000214823",
+          "nProt": "150240000158508",
+          "digVal": "DiMa3w+eYPwpcyO3NhgMlRaGQqU=",
+          "xMotivo": "Autorizado o uso da NF-e",
+          "ambiente": "1",
+          "dhRecbto": "2024-01-03T09:34:49-04:00",
+          "verAplic": "MS_6.0.28"
+        }
+      },
+      "metadata": {
+        "index": "1",
+        "tab_id": "mkunzhga0pdbfbkdvir",
+        "user_id": "3",
+        "fileName": "50240197551165000193550010000248091000214823-nfe.xml",
+        "fileSize": "7.38 kB",
+        "binaryKey": "file5",
+        "cliente_id": "",
+        "modo_envio": "xml",
+        "total_xmls": "8",
+        "webhookUrl": "https://autowebhook.fiscaldock.com.br/webhook/monitoramento/getfile/xml",
+        "cliente_cnpj": "",
+        "progress_url": "http://31.97.93.93:8080/api/monitoramento/xml/importacao/progress",
+        "executionMode": "production",
+        "importacao_id": "14",
+        "tipo_documento": "NFE"
+      }
+    },
+    "created_at": null,
+    "updated_at": null
+  },
+  {
+    "id": "35",
+    "user_id": "3",
+    "importacao_xml_id": "14",
+    "cliente_id": null,
+    "chave_acesso": "50240197551165000193550010000248081000214818",
+    "tipo_documento": "NFE",
+    "numero_nota": 24808,
+    "serie": 1,
+    "data_emissao": "2024-01-03T13:27:08.000Z",
+    "natureza_operacao": "RETORNO DE MERC OU BEM RECEBIDO PARA CONSERTO/REPARO",
+    "valor_total": "1000.00",
+    "tipo_nota": 1,
+    "finalidade": 1,
+    "chave_referenciada": "35231044373108000600550000000268511578345800",
+    "emit_cnpj": "97551165000193",
+    "emit_razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS",
+    "emit_uf": "MS",
+    "emit_participante_id": "69",
+    "dest_cnpj": "44373108000600",
+    "dest_razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+    "dest_uf": "SP",
+    "dest_participante_id": "70",
+    "icms_valor": "0.00",
+    "icms_st_valor": "0.00",
+    "pis_valor": "0.00",
+    "cofins_valor": "0.00",
+    "ipi_valor": "0.00",
+    "tributos_total": "304.50",
+    "payload": {
+      "NFe": {
+        "xmlns": "http://www.portalfiscal.inf.br/nfe",
+        "infNFe": {
+          "Id": "NFe50240197551165000193550010000248081000214818",
+          "ide": {
+            "cDV": "8",
+            "NFref": {
+              "refNFe": "35231044373108000600550000000268511578345800"
+            },
+            "serie": "1",
+            "modelo": "55",
+            "indPres": "0",
+            "procEmi": "0",
+            "verProc": "000",
+            "ambiente": "1",
+            "indFinal": "1",
+            "codigo_uf": "50",
+            "tipo_nota": "1",
+            "numero_nota": "24808",
+            "tipo_emissao": "1",
+            "finalidade_nfe": "1",
+            "data_hora_emissao": "2024-01-03T09:27:08-04:00",
+            "natureza_operacao": "RETORNO DE MERC OU BEM RECEBIDO PARA CONSERTO/REPARO",
+            "codigo_numero_fiscal": "00021481",
+            "tipo_impressao_danfe": "1",
+            "identificador_destino": "2",
+            "data_hora_saida_entrada": "2024-01-03T10:39:08-04:00",
+            "codigo_municipio_fato_gerador": "5003702"
+          },
+          "pag": {
+            "detPag": {
+              "tPag": "01",
+              "vPag": "1000.00"
+            },
+            "vTroco": "0.00"
+          },
+          "dest": {
+            "IE": "470053570113",
+            "CNPJ": "44373108000600",
+            "IS_MATRIZ": false,
+            "indIEDest": "1",
+            "CNPJ_MATRIZ": "44373108000103",
+            "CNPJ_FORMATADO": "44.373.108/0006-00",
+            "nome_razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+            "CNPJ_MATRIZ_FORMATADO": "44.373.108/0001-03",
+            "endereco_destinatario": {
+              "UF": "SP",
+              "CEP": "19220000",
+              "fone": "1839929020",
+              "pais": "BRASIL",
+              "bairro": "ZONA RURAL",
+              "numero": "S/N",
+              "municipio": "NARANDIBA",
+              "logradouro": "EST MUNICIPAL NRD",
+              "codigo_pais": "1058",
+              "codigo_municipio": "3532207"
+            }
+          },
+          "emit": {
+            "IE": "283684410",
+            "CRT": "3",
+            "CNPJ": "97551165000193",
+            "IS_MATRIZ": true,
+            "CNPJ_MATRIZ": "97551165000193",
+            "nome_fantasia": "HIDRATOP",
+            "CNPJ_FORMATADO": "97.551.165/0001-93",
+            "endereco_emitente": {
+              "UF": "MS",
+              "CEP": "79841000",
+              "fone": "6734213006",
+              "pais": "BRASIL",
+              "bairro": "JD MARCIA",
+              "numero": "7110",
+              "municipio": "DOURADOS",
+              "logradouro": "AV  MARCELINO PIRES",
+              "codigo_pais": "1058",
+              "complemento": "HIDRATOP@GMAIL.COM",
+              "codigo_municipio": "5003702"
+            },
+            "nome_razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS",
+            "CNPJ_MATRIZ_FORMATADO": "97.551.165/0001-93"
+          },
+          "itens": {
+            "imposto": {
+              "PIS": {
+                "PISOutr": {
+                  "CST": "99",
+                  "pPIS": "0.00",
+                  "vPIS": "0.00",
+                  "valor_base_calculo": "0.00"
+                }
+              },
+              "ICMS": {
+                "ICMS40": {
+                  "CST": "41",
+                  "orig": "0"
+                }
+              },
+              "COFINS": {
+                "COFINSOutr": {
+                  "CST": "99",
+                  "pCOFINS": "0.00",
+                  "vCOFINS": "0.00",
+                  "valor_base_calculo": "0.00"
+                }
+              },
+              "valor_total_tributos": "304.50"
+            },
+            "produto": {
+              "NCM": "84122110",
+              "CEST": "0103100",
+              "CFOP": "6916",
+              "indTot": "1",
+              "cEANTrib": "SEM GTIN",
+              "codigo_ean": "SEM GTIN",
+              "codigo_produto": "012490",
+              "descricao_produto": "PISTAO LEVANTE RECOND ANTONIOSI 712295/R",
+              "unidade_comercial": "UN",
+              "valor_total_bruto": "1000.00",
+              "unidade_tributavel": "UN",
+              "quantidade_comercial": "1.0000",
+              "quantidade_tributavel": "1.0000",
+              "valor_unitario_comercial": "1000.0000",
+              "valor_unitario_tributavel": "1000.0000"
+            },
+            "numero_item": "1"
+          },
+          "total": {
+            "ICMSTot": {
+              "vII": "0.00",
+              "vST": "0.00",
+              "vFCP": "0.00",
+              "vIPI": "0.00",
+              "vPIS": "0.00",
+              "vSeg": "0.00",
+              "vBCST": "0.00",
+              "vDesc": "0.00",
+              "vFCPST": "0.00",
+              "vFrete": "0.00",
+              "vOutro": "0.00",
+              "vCOFINS": "0.00",
+              "vFCPSTRet": "0.00",
+              "vIPIDevol": "0.00",
+              "vICMSDeson": "0.00",
+              "valor_icms": "0.00",
+              "valor_total_nota": "1000.00",
+              "valor_total_bruto": "1000.00",
+              "valor_base_calculo": "0.00",
+              "valor_total_tributos": "304.50"
+            }
+          },
+          "transp": {
+            "vol": {
+              "qVol": "1",
+              "pesoB": "0.000",
+              "pesoL": "0.000"
+            },
+            "modFrete": "0"
+          },
+          "versao": "4.00",
+          "infAdic": {
+            "informacoes_complementares": "NOTA  REMESSA  26851"
+          },
+          "infRespTec": {
+            "CNPJ": "11172508000193",
+            "fone": "6740421180",
+            "email": "darijunior@dsoftsolutions.com.br",
+            "xContato": "Dari Agostinho Varini Junior"
+          }
+        },
+        "Signature": {
+          "xmlns": "http://www.w3.org/2000/09/xmldsig#",
+          "KeyInfo": {
+            "X509Data": {
+              "X509Certificate": "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"
+            }
+          },
+          "SignedInfo": {
+            "Reference": {
+              "URI": "#NFe50240197551165000193550010000248081000214818",
+              "Transforms": {
+                "Transform": [
+                  {
+                    "Algorithm": "http://www.w3.org/2000/09/xmldsig#enveloped-signature"
+                  },
+                  {
+                    "Algorithm": "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
+                  }
+                ]
+              },
+              "DigestValue": "FlRqdIhfabExi5FzsyIdU+7EZk8=",
+              "DigestMethod": {
+                "Algorithm": "http://www.w3.org/2000/09/xmldsig#sha1"
+              }
+            },
+            "SignatureMethod": {
+              "Algorithm": "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
+            },
+            "CanonicalizationMethod": {
+              "Algorithm": "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
+            }
+          },
+          "SignatureValue": "alJm43v++yJ22zzyIMPLDgdLumlj9wwN3DSok0yYTyChvWPh6/lukRZk6F4qMkhsTz7Iso0Jyw2o8dCSkMBFK0NyyneSvBgDpM10mFvD1/A43xdLsQm8qWZ6kCBPgqVUNav8RVjSwR8y12rqQ02uQ1rTvwb7Hd7TAENd4Dl8NLdCqhXDpkvT9pLIrfePWsyYtcvzXpqtOSqzjuC1TYcGJCdpgFLCo6SMxrC5jIWbTaGUDSg288XLzGcCbstc8E1/57Mue+coNJpMOukI5u+92yVVvMiTUg7wsMzZLEoAmPVpPIYwzbTsNzf40F95nQMeniq/O0BVTgM05FwiYnkb7w=="
+        }
+      },
+      "xmlns": "http://www.portalfiscal.inf.br/nfe",
+      "versao": "4.00",
+      "protNFe": {
+        "xmlns": "http://www.portalfiscal.inf.br/nfe",
+        "versao": "4.00",
+        "infProt": {
+          "Id": "ID150240000158022",
+          "cStat": "100",
+          "chNFe": "50240197551165000193550010000248081000214818",
+          "nProt": "150240000158022",
+          "digVal": "FlRqdIhfabExi5FzsyIdU+7EZk8=",
+          "xMotivo": "Autorizado o uso da NF-e",
+          "ambiente": "1",
+          "dhRecbto": "2024-01-03T09:32:49-04:00",
+          "verAplic": "MS_6.0.28"
+        }
+      },
+      "metadata": {
+        "index": "1",
+        "tab_id": "mkunzhga0pdbfbkdvir",
+        "user_id": "3",
+        "fileName": "50240197551165000193550010000248081000214818-nfe.xml",
+        "fileSize": "7.39 kB",
+        "binaryKey": "file6",
+        "cliente_id": "",
+        "modo_envio": "xml",
+        "total_xmls": "8",
+        "webhookUrl": "https://autowebhook.fiscaldock.com.br/webhook/monitoramento/getfile/xml",
+        "cliente_cnpj": "",
+        "progress_url": "http://31.97.93.93:8080/api/monitoramento/xml/importacao/progress",
+        "executionMode": "production",
+        "importacao_id": "14",
+        "tipo_documento": "NFE"
+      }
+    },
+    "created_at": null,
+    "updated_at": null
+  },
+  {
+    "id": "36",
+    "user_id": "3",
+    "importacao_xml_id": "14",
+    "cliente_id": null,
+    "chave_acesso": "50240197551165000193550010000248051000214786",
+    "tipo_documento": "NFE",
+    "numero_nota": 24805,
+    "serie": 1,
+    "data_emissao": "2024-01-03T13:04:40.000Z",
+    "natureza_operacao": "RETORNO DE MERC OU BEM RECEBIDO PARA CONSERTO/REPARO",
+    "valor_total": "1000.00",
+    "tipo_nota": 1,
+    "finalidade": 1,
+    "chave_referenciada": "35230944373108000600550000000265741240482080",
+    "emit_cnpj": "97551165000193",
+    "emit_razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS",
+    "emit_uf": "MS",
+    "emit_participante_id": "69",
+    "dest_cnpj": "44373108000600",
+    "dest_razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+    "dest_uf": "SP",
+    "dest_participante_id": "70",
+    "icms_valor": "0.00",
+    "icms_st_valor": "0.00",
+    "pis_valor": "0.00",
+    "cofins_valor": "0.00",
+    "ipi_valor": "0.00",
+    "tributos_total": "304.50",
+    "payload": {
+      "NFe": {
+        "xmlns": "http://www.portalfiscal.inf.br/nfe",
+        "infNFe": {
+          "Id": "NFe50240197551165000193550010000248051000214786",
+          "ide": {
+            "cDV": "6",
+            "NFref": {
+              "refNFe": "35230944373108000600550000000265741240482080"
+            },
+            "serie": "1",
+            "modelo": "55",
+            "indPres": "0",
+            "procEmi": "0",
+            "verProc": "000",
+            "ambiente": "1",
+            "indFinal": "1",
+            "codigo_uf": "50",
+            "tipo_nota": "1",
+            "numero_nota": "24805",
+            "tipo_emissao": "1",
+            "finalidade_nfe": "1",
+            "data_hora_emissao": "2024-01-03T09:04:40-04:00",
+            "natureza_operacao": "RETORNO DE MERC OU BEM RECEBIDO PARA CONSERTO/REPARO",
+            "codigo_numero_fiscal": "00021478",
+            "tipo_impressao_danfe": "1",
+            "identificador_destino": "2",
+            "data_hora_saida_entrada": "2024-01-03T10:16:40-04:00",
+            "codigo_municipio_fato_gerador": "5003702"
+          },
+          "pag": {
+            "detPag": {
+              "tPag": "01",
+              "vPag": "1000.00"
+            },
+            "vTroco": "0.00"
+          },
+          "dest": {
+            "IE": "470053570113",
+            "CNPJ": "44373108000600",
+            "IS_MATRIZ": false,
+            "indIEDest": "1",
+            "CNPJ_MATRIZ": "44373108000103",
+            "CNPJ_FORMATADO": "44.373.108/0006-00",
+            "nome_razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+            "CNPJ_MATRIZ_FORMATADO": "44.373.108/0001-03",
+            "endereco_destinatario": {
+              "UF": "SP",
+              "CEP": "19220000",
+              "fone": "1839929020",
+              "pais": "BRASIL",
+              "bairro": "ZONA RURAL",
+              "numero": "S/N",
+              "municipio": "NARANDIBA",
+              "logradouro": "EST MUNICIPAL NRD",
+              "codigo_pais": "1058",
+              "codigo_municipio": "3532207"
+            }
+          },
+          "emit": {
+            "IE": "283684410",
+            "CRT": "3",
+            "CNPJ": "97551165000193",
+            "IS_MATRIZ": true,
+            "CNPJ_MATRIZ": "97551165000193",
+            "nome_fantasia": "HIDRATOP",
+            "CNPJ_FORMATADO": "97.551.165/0001-93",
+            "endereco_emitente": {
+              "UF": "MS",
+              "CEP": "79841000",
+              "fone": "6734213006",
+              "pais": "BRASIL",
+              "bairro": "JD MARCIA",
+              "numero": "7110",
+              "municipio": "DOURADOS",
+              "logradouro": "AV  MARCELINO PIRES",
+              "codigo_pais": "1058",
+              "complemento": "HIDRATOP@GMAIL.COM",
+              "codigo_municipio": "5003702"
+            },
+            "nome_razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS",
+            "CNPJ_MATRIZ_FORMATADO": "97.551.165/0001-93"
+          },
+          "itens": [
+            {
+              "imposto": {
+                "PIS": {
+                  "PISOutr": {
+                    "CST": "99",
+                    "pPIS": "0.00",
+                    "vPIS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "ICMS": {
+                  "ICMS40": {
+                    "CST": "41",
+                    "orig": "0"
+                  }
+                },
+                "COFINS": {
+                  "COFINSOutr": {
+                    "CST": "99",
+                    "pCOFINS": "0.00",
+                    "vCOFINS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "valor_total_tributos": "152.25"
+              },
+              "produto": {
+                "NCM": "84122110",
+                "CEST": "2108800",
+                "CFOP": "6916",
+                "indTot": "1",
+                "cEANTrib": "SEM GTIN",
+                "codigo_ean": "SEM GTIN",
+                "codigo_produto": "008033",
+                "descricao_produto": "PISTAO DV  LINHA CH   CXT10574",
+                "unidade_comercial": "UN",
+                "valor_total_bruto": "500.00",
+                "unidade_tributavel": "UN",
+                "quantidade_comercial": "1.0000",
+                "quantidade_tributavel": "1.0000",
+                "valor_unitario_comercial": "500.0000",
+                "valor_unitario_tributavel": "500.0000"
+              },
+              "numero_item": "1"
+            },
+            {
+              "imposto": {
+                "PIS": {
+                  "PISOutr": {
+                    "CST": "99",
+                    "pPIS": "0.00",
+                    "vPIS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "ICMS": {
+                  "ICMS40": {
+                    "CST": "41",
+                    "orig": "0"
+                  }
+                },
+                "COFINS": {
+                  "COFINSOutr": {
+                    "CST": "99",
+                    "pCOFINS": "0.00",
+                    "vCOFINS": "0.00",
+                    "valor_base_calculo": "0.00"
+                  }
+                },
+                "valor_total_tributos": "152.25"
+              },
+              "produto": {
+                "NCM": "84122110",
+                "CEST": "0109100",
+                "CFOP": "6916",
+                "indTot": "1",
+                "cEANTrib": "SEM GTIN",
+                "codigo_ean": "SEM GTIN",
+                "codigo_produto": "002284",
+                "descricao_produto": "CILINDRO DO GIRO JOHN DEERE AH148694 AHC10734",
+                "unidade_comercial": "UN",
+                "valor_total_bruto": "500.00",
+                "unidade_tributavel": "UN",
+                "quantidade_comercial": "1.0000",
+                "quantidade_tributavel": "1.0000",
+                "valor_unitario_comercial": "500.0000",
+                "valor_unitario_tributavel": "500.0000"
+              },
+              "numero_item": "2"
+            }
+          ],
+          "total": {
+            "ICMSTot": {
+              "vII": "0.00",
+              "vST": "0.00",
+              "vFCP": "0.00",
+              "vIPI": "0.00",
+              "vPIS": "0.00",
+              "vSeg": "0.00",
+              "vBCST": "0.00",
+              "vDesc": "0.00",
+              "vFCPST": "0.00",
+              "vFrete": "0.00",
+              "vOutro": "0.00",
+              "vCOFINS": "0.00",
+              "vFCPSTRet": "0.00",
+              "vIPIDevol": "0.00",
+              "vICMSDeson": "0.00",
+              "valor_icms": "0.00",
+              "valor_total_nota": "1000.00",
+              "valor_total_bruto": "1000.00",
+              "valor_base_calculo": "0.00",
+              "valor_total_tributos": "304.50"
+            }
+          },
+          "transp": {
+            "vol": {
+              "qVol": "2",
+              "pesoB": "0.000",
+              "pesoL": "0.000"
+            },
+            "modFrete": "0"
+          },
+          "versao": "4.00",
+          "infAdic": {
+            "informacoes_complementares": "NOTA  REMESSA  26574"
+          },
+          "infRespTec": {
+            "CNPJ": "11172508000193",
+            "fone": "6740421180",
+            "email": "darijunior@dsoftsolutions.com.br",
+            "xContato": "Dari Agostinho Varini Junior"
+          }
+        },
+        "Signature": {
+          "xmlns": "http://www.w3.org/2000/09/xmldsig#",
+          "KeyInfo": {
+            "X509Data": {
+              "X509Certificate": "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"
+            }
+          },
+          "SignedInfo": {
+            "Reference": {
+              "URI": "#NFe50240197551165000193550010000248051000214786",
+              "Transforms": {
+                "Transform": [
+                  {
+                    "Algorithm": "http://www.w3.org/2000/09/xmldsig#enveloped-signature"
+                  },
+                  {
+                    "Algorithm": "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
+                  }
+                ]
+              },
+              "DigestValue": "UsUgez0OLKyssR+5cCR7udwjzM4=",
+              "DigestMethod": {
+                "Algorithm": "http://www.w3.org/2000/09/xmldsig#sha1"
+              }
+            },
+            "SignatureMethod": {
+              "Algorithm": "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
+            },
+            "CanonicalizationMethod": {
+              "Algorithm": "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
+            }
+          },
+          "SignatureValue": "y9W/qxeWhnAHwbHncwnF039MkOc+0k86zL2/6ojp6kUdLVxeOCJiP4cbSSw8aVyX+auXKszgtRTZ31RiQAlZyHzrr6B5b+Usiw/iPXL4LHldv+WJuJtARpqF86UNEHe5zltFoNoyr9xnqPbaT0SoNRlzVnEUcv+0Wr0LqFvY1O/37loB2T3rPhGbOyNRMR5MjogFbalv1F8ylbhOzk/kDmabFiOeAKJzsOekWq4j97bVAWi9k732x2runcj1i22tWZchgs1q7/dGEBnFQwX/ZMLb4vsotvv/ccDnO5lVrdOIR0F+vFxc60OLFvGAZIYNGU29q0JO6+HnjPnSiWW6AA=="
+        }
+      },
+      "xmlns": "http://www.portalfiscal.inf.br/nfe",
+      "versao": "4.00",
+      "protNFe": {
+        "xmlns": "http://www.portalfiscal.inf.br/nfe",
+        "versao": "4.00",
+        "infProt": {
+          "Id": "ID150240000158019",
+          "cStat": "100",
+          "chNFe": "50240197551165000193550010000248051000214786",
+          "nProt": "150240000158019",
+          "digVal": "UsUgez0OLKyssR+5cCR7udwjzM4=",
+          "xMotivo": "Autorizado o uso da NF-e",
+          "ambiente": "1",
+          "dhRecbto": "2024-01-03T09:32:49-04:00",
+          "verAplic": "MS_6.0.28"
+        }
+      },
+      "metadata": {
+        "index": "1",
+        "tab_id": "mkunzhga0pdbfbkdvir",
+        "user_id": "3",
+        "fileName": "50240197551165000193550010000248051000214786-nfe.xml",
+        "fileSize": "8.07 kB",
+        "binaryKey": "file7",
+        "cliente_id": "",
+        "modo_envio": "xml",
+        "total_xmls": "8",
+        "webhookUrl": "https://autowebhook.fiscaldock.com.br/webhook/monitoramento/getfile/xml",
+        "cliente_cnpj": "",
+        "progress_url": "http://31.97.93.93:8080/api/monitoramento/xml/importacao/progress",
+        "executionMode": "production",
+        "importacao_id": "14",
+        "tipo_documento": "NFE"
+      }
+    },
+    "created_at": null,
+    "updated_at": null
+  }
+]
+
+
+TODOS NOTAS JA EXISTENTES:
+
+[
+  {
+    "metadata": {
+      "index": "1",
+      "user_id": "3",
+      "cliente_id": "",
+      "cliente_cnpj": "",
+      "importacao_id": "16",
+      "tab_id": "mkuorinjtcyclmgr8n8",
+      "tipo_documento": "NFE",
+      "modo_envio": "xml",
+      "total_xmls": "8",
+      "binaryKey": "file0",
+      "progress_url": "http://31.97.93.93:8080/api/monitoramento/xml/importacao/progress",
+      "fileName": "50240197551165000193550010000248021000214750-nfe.xml",
+      "fileSize": "11.5 kB",
+      "webhookUrl": "https://autowebhook.fiscaldock.com.br/webhook/monitoramento/getfile/xml",
+      "executionMode": "production"
+    },
+    "emissor": {
+      "id": "69",
+      "user_id": "3",
+      "cliente_id": null,
+      "cnpj": "97551165000193",
+      "razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS ",
+      "nome_fantasia": "HIDRATOP",
+      "situacao_cadastral": null,
+      "regime_tributario": null,
+      "uf": "MS",
+      "cnpj_matriz": "97551165000193",
+      "inscricao_estadual": "470053570113 ",
+      "suframa": null,
+      "endereco": "AV  MARCELINO PIRES",
+      "numero": "7110",
+      "complemento": "ZONA RURAL",
+      "bairro": "ZONA RURAL",
+      "codigo_municipal": "DOURADOS",
+      "cep": "79841000",
+      "municipio": "DOURADOS  ",
+      "telefone": "1839929020",
+      "crt": 0,
+      "importacao_participante_id": "0",
+      "origem_tipo": "NFE",
+      "origem_ref": {
+        "importacao_xml_id": "14"
+      },
+      "ultima_consulta_em": "2026-01-26T05:45:24.000Z",
+      "created_at": "2026-01-26T05:45:24.000Z",
+      "updated_at": "2026-01-26T05:45:24.000Z"
+    },
+    "destinatario": {
+      "id": "70",
+      "user_id": "3",
+      "cliente_id": null,
+      "cnpj": "44373108000600",
+      "razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+      "nome_fantasia": null,
+      "situacao_cadastral": null,
+      "regime_tributario": null,
+      "uf": "SP",
+      "cnpj_matriz": "44373108000103",
+      "inscricao_estadual": "470053570113",
+      "suframa": "",
+      "endereco": "EST MUNICIPAL NRD",
+      "numero": "S/N",
+      "complemento": null,
+      "bairro": "ZONA RURAL",
+      "codigo_municipal": "3532207 ",
+      "cep": "19220000",
+      "municipio": "NARANDIBA",
+      "telefone": "1839929020",
+      "crt": 3,
+      "importacao_participante_id": null,
+      "origem_tipo": "NFE",
+      "origem_ref": {
+        "importacao_xml_id": "14"
+      },
+      "ultima_consulta_em": "2026-01-26T05:45:25.000Z",
+      "created_at": "2026-01-26T05:45:25.000Z",
+      "updated_at": "2026-01-26T05:45:25.000Z"
+    }
+  },
+  {
+    "metadata": {
+      "index": "1",
+      "user_id": "3",
+      "cliente_id": "",
+      "cliente_cnpj": "",
+      "importacao_id": "16",
+      "tab_id": "mkuorinjtcyclmgr8n8",
+      "tipo_documento": "NFE",
+      "modo_envio": "xml",
+      "total_xmls": "8",
+      "binaryKey": "file1",
+      "progress_url": "http://31.97.93.93:8080/api/monitoramento/xml/importacao/progress",
+      "fileName": "50240197551165000193550010000248041000214770-nfe.xml",
+      "fileSize": "7.38 kB",
+      "webhookUrl": "https://autowebhook.fiscaldock.com.br/webhook/monitoramento/getfile/xml",
+      "executionMode": "production"
+    },
+    "emissor": {
+      "id": "69",
+      "user_id": "3",
+      "cliente_id": null,
+      "cnpj": "97551165000193",
+      "razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS ",
+      "nome_fantasia": "HIDRATOP",
+      "situacao_cadastral": null,
+      "regime_tributario": null,
+      "uf": "MS",
+      "cnpj_matriz": "97551165000193",
+      "inscricao_estadual": "470053570113 ",
+      "suframa": null,
+      "endereco": "AV  MARCELINO PIRES",
+      "numero": "7110",
+      "complemento": "ZONA RURAL",
+      "bairro": "ZONA RURAL",
+      "codigo_municipal": "DOURADOS",
+      "cep": "79841000",
+      "municipio": "DOURADOS  ",
+      "telefone": "1839929020",
+      "crt": 0,
+      "importacao_participante_id": "0",
+      "origem_tipo": "NFE",
+      "origem_ref": {
+        "importacao_xml_id": "14"
+      },
+      "ultima_consulta_em": "2026-01-26T05:45:24.000Z",
+      "created_at": "2026-01-26T05:45:24.000Z",
+      "updated_at": "2026-01-26T05:45:24.000Z"
+    },
+    "destinatario": {
+      "id": "70",
+      "user_id": "3",
+      "cliente_id": null,
+      "cnpj": "44373108000600",
+      "razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+      "nome_fantasia": null,
+      "situacao_cadastral": null,
+      "regime_tributario": null,
+      "uf": "SP",
+      "cnpj_matriz": "44373108000103",
+      "inscricao_estadual": "470053570113",
+      "suframa": "",
+      "endereco": "EST MUNICIPAL NRD",
+      "numero": "S/N",
+      "complemento": null,
+      "bairro": "ZONA RURAL",
+      "codigo_municipal": "3532207 ",
+      "cep": "19220000",
+      "municipio": "NARANDIBA",
+      "telefone": "1839929020",
+      "crt": 3,
+      "importacao_participante_id": null,
+      "origem_tipo": "NFE",
+      "origem_ref": {
+        "importacao_xml_id": "14"
+      },
+      "ultima_consulta_em": "2026-01-26T05:45:25.000Z",
+      "created_at": "2026-01-26T05:45:25.000Z",
+      "updated_at": "2026-01-26T05:45:25.000Z"
+    }
+  },
+  {
+    "metadata": {
+      "index": "1",
+      "user_id": "3",
+      "cliente_id": "",
+      "cliente_cnpj": "",
+      "importacao_id": "16",
+      "tab_id": "mkuorinjtcyclmgr8n8",
+      "tipo_documento": "NFE",
+      "modo_envio": "xml",
+      "total_xmls": "8",
+      "binaryKey": "file2",
+      "progress_url": "http://31.97.93.93:8080/api/monitoramento/xml/importacao/progress",
+      "fileName": "50240197551165000193550010000248031000214765-nfe.xml",
+      "fileSize": "8.78 kB",
+      "webhookUrl": "https://autowebhook.fiscaldock.com.br/webhook/monitoramento/getfile/xml",
+      "executionMode": "production"
+    },
+    "emissor": {
+      "id": "69",
+      "user_id": "3",
+      "cliente_id": null,
+      "cnpj": "97551165000193",
+      "razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS ",
+      "nome_fantasia": "HIDRATOP",
+      "situacao_cadastral": null,
+      "regime_tributario": null,
+      "uf": "MS",
+      "cnpj_matriz": "97551165000193",
+      "inscricao_estadual": "470053570113 ",
+      "suframa": null,
+      "endereco": "AV  MARCELINO PIRES",
+      "numero": "7110",
+      "complemento": "ZONA RURAL",
+      "bairro": "ZONA RURAL",
+      "codigo_municipal": "DOURADOS",
+      "cep": "79841000",
+      "municipio": "DOURADOS  ",
+      "telefone": "1839929020",
+      "crt": 0,
+      "importacao_participante_id": "0",
+      "origem_tipo": "NFE",
+      "origem_ref": {
+        "importacao_xml_id": "14"
+      },
+      "ultima_consulta_em": "2026-01-26T05:45:24.000Z",
+      "created_at": "2026-01-26T05:45:24.000Z",
+      "updated_at": "2026-01-26T05:45:24.000Z"
+    },
+    "destinatario": {
+      "id": "70",
+      "user_id": "3",
+      "cliente_id": null,
+      "cnpj": "44373108000600",
+      "razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+      "nome_fantasia": null,
+      "situacao_cadastral": null,
+      "regime_tributario": null,
+      "uf": "SP",
+      "cnpj_matriz": "44373108000103",
+      "inscricao_estadual": "470053570113",
+      "suframa": "",
+      "endereco": "EST MUNICIPAL NRD",
+      "numero": "S/N",
+      "complemento": null,
+      "bairro": "ZONA RURAL",
+      "codigo_municipal": "3532207 ",
+      "cep": "19220000",
+      "municipio": "NARANDIBA",
+      "telefone": "1839929020",
+      "crt": 3,
+      "importacao_participante_id": null,
+      "origem_tipo": "NFE",
+      "origem_ref": {
+        "importacao_xml_id": "14"
+      },
+      "ultima_consulta_em": "2026-01-26T05:45:25.000Z",
+      "created_at": "2026-01-26T05:45:25.000Z",
+      "updated_at": "2026-01-26T05:45:25.000Z"
+    }
+  },
+  {
+    "metadata": {
+      "index": "1",
+      "user_id": "3",
+      "cliente_id": "",
+      "cliente_cnpj": "",
+      "importacao_id": "16",
+      "tab_id": "mkuorinjtcyclmgr8n8",
+      "tipo_documento": "NFE",
+      "modo_envio": "xml",
+      "total_xmls": "8",
+      "binaryKey": "file3",
+      "progress_url": "http://31.97.93.93:8080/api/monitoramento/xml/importacao/progress",
+      "fileName": "50240197551165000193550010000248071000214802-nfe.xml",
+      "fileSize": "7.39 kB",
+      "webhookUrl": "https://autowebhook.fiscaldock.com.br/webhook/monitoramento/getfile/xml",
+      "executionMode": "production"
+    },
+    "emissor": {
+      "id": "69",
+      "user_id": "3",
+      "cliente_id": null,
+      "cnpj": "97551165000193",
+      "razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS ",
+      "nome_fantasia": "HIDRATOP",
+      "situacao_cadastral": null,
+      "regime_tributario": null,
+      "uf": "MS",
+      "cnpj_matriz": "97551165000193",
+      "inscricao_estadual": "470053570113 ",
+      "suframa": null,
+      "endereco": "AV  MARCELINO PIRES",
+      "numero": "7110",
+      "complemento": "ZONA RURAL",
+      "bairro": "ZONA RURAL",
+      "codigo_municipal": "DOURADOS",
+      "cep": "79841000",
+      "municipio": "DOURADOS  ",
+      "telefone": "1839929020",
+      "crt": 0,
+      "importacao_participante_id": "0",
+      "origem_tipo": "NFE",
+      "origem_ref": {
+        "importacao_xml_id": "14"
+      },
+      "ultima_consulta_em": "2026-01-26T05:45:24.000Z",
+      "created_at": "2026-01-26T05:45:24.000Z",
+      "updated_at": "2026-01-26T05:45:24.000Z"
+    },
+    "destinatario": {
+      "id": "70",
+      "user_id": "3",
+      "cliente_id": null,
+      "cnpj": "44373108000600",
+      "razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+      "nome_fantasia": null,
+      "situacao_cadastral": null,
+      "regime_tributario": null,
+      "uf": "SP",
+      "cnpj_matriz": "44373108000103",
+      "inscricao_estadual": "470053570113",
+      "suframa": "",
+      "endereco": "EST MUNICIPAL NRD",
+      "numero": "S/N",
+      "complemento": null,
+      "bairro": "ZONA RURAL",
+      "codigo_municipal": "3532207 ",
+      "cep": "19220000",
+      "municipio": "NARANDIBA",
+      "telefone": "1839929020",
+      "crt": 3,
+      "importacao_participante_id": null,
+      "origem_tipo": "NFE",
+      "origem_ref": {
+        "importacao_xml_id": "14"
+      },
+      "ultima_consulta_em": "2026-01-26T05:45:25.000Z",
+      "created_at": "2026-01-26T05:45:25.000Z",
+      "updated_at": "2026-01-26T05:45:25.000Z"
+    }
+  },
+  {
+    "metadata": {
+      "index": "1",
+      "user_id": "3",
+      "cliente_id": "",
+      "cliente_cnpj": "",
+      "importacao_id": "16",
+      "tab_id": "mkuorinjtcyclmgr8n8",
+      "tipo_documento": "NFE",
+      "modo_envio": "xml",
+      "total_xmls": "8",
+      "binaryKey": "file4",
+      "progress_url": "http://31.97.93.93:8080/api/monitoramento/xml/importacao/progress",
+      "fileName": "50240197551165000193550010000248061000214791-nfe.xml",
+      "fileSize": "8.07 kB",
+      "webhookUrl": "https://autowebhook.fiscaldock.com.br/webhook/monitoramento/getfile/xml",
+      "executionMode": "production"
+    },
+    "emissor": {
+      "id": "69",
+      "user_id": "3",
+      "cliente_id": null,
+      "cnpj": "97551165000193",
+      "razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS ",
+      "nome_fantasia": "HIDRATOP",
+      "situacao_cadastral": null,
+      "regime_tributario": null,
+      "uf": "MS",
+      "cnpj_matriz": "97551165000193",
+      "inscricao_estadual": "470053570113 ",
+      "suframa": null,
+      "endereco": "AV  MARCELINO PIRES",
+      "numero": "7110",
+      "complemento": "ZONA RURAL",
+      "bairro": "ZONA RURAL",
+      "codigo_municipal": "DOURADOS",
+      "cep": "79841000",
+      "municipio": "DOURADOS  ",
+      "telefone": "1839929020",
+      "crt": 0,
+      "importacao_participante_id": "0",
+      "origem_tipo": "NFE",
+      "origem_ref": {
+        "importacao_xml_id": "14"
+      },
+      "ultima_consulta_em": "2026-01-26T05:45:24.000Z",
+      "created_at": "2026-01-26T05:45:24.000Z",
+      "updated_at": "2026-01-26T05:45:24.000Z"
+    },
+    "destinatario": {
+      "id": "70",
+      "user_id": "3",
+      "cliente_id": null,
+      "cnpj": "44373108000600",
+      "razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+      "nome_fantasia": null,
+      "situacao_cadastral": null,
+      "regime_tributario": null,
+      "uf": "SP",
+      "cnpj_matriz": "44373108000103",
+      "inscricao_estadual": "470053570113",
+      "suframa": "",
+      "endereco": "EST MUNICIPAL NRD",
+      "numero": "S/N",
+      "complemento": null,
+      "bairro": "ZONA RURAL",
+      "codigo_municipal": "3532207 ",
+      "cep": "19220000",
+      "municipio": "NARANDIBA",
+      "telefone": "1839929020",
+      "crt": 3,
+      "importacao_participante_id": null,
+      "origem_tipo": "NFE",
+      "origem_ref": {
+        "importacao_xml_id": "14"
+      },
+      "ultima_consulta_em": "2026-01-26T05:45:25.000Z",
+      "created_at": "2026-01-26T05:45:25.000Z",
+      "updated_at": "2026-01-26T05:45:25.000Z"
+    }
+  },
+  {
+    "metadata": {
+      "index": "1",
+      "user_id": "3",
+      "cliente_id": "",
+      "cliente_cnpj": "",
+      "importacao_id": "16",
+      "tab_id": "mkuorinjtcyclmgr8n8",
+      "tipo_documento": "NFE",
+      "modo_envio": "xml",
+      "total_xmls": "8",
+      "binaryKey": "file5",
+      "progress_url": "http://31.97.93.93:8080/api/monitoramento/xml/importacao/progress",
+      "fileName": "50240197551165000193550010000248091000214823-nfe.xml",
+      "fileSize": "7.38 kB",
+      "webhookUrl": "https://autowebhook.fiscaldock.com.br/webhook/monitoramento/getfile/xml",
+      "executionMode": "production"
+    },
+    "emissor": {
+      "id": "69",
+      "user_id": "3",
+      "cliente_id": null,
+      "cnpj": "97551165000193",
+      "razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS ",
+      "nome_fantasia": "HIDRATOP",
+      "situacao_cadastral": null,
+      "regime_tributario": null,
+      "uf": "MS",
+      "cnpj_matriz": "97551165000193",
+      "inscricao_estadual": "470053570113 ",
+      "suframa": null,
+      "endereco": "AV  MARCELINO PIRES",
+      "numero": "7110",
+      "complemento": "ZONA RURAL",
+      "bairro": "ZONA RURAL",
+      "codigo_municipal": "DOURADOS",
+      "cep": "79841000",
+      "municipio": "DOURADOS  ",
+      "telefone": "1839929020",
+      "crt": 0,
+      "importacao_participante_id": "0",
+      "origem_tipo": "NFE",
+      "origem_ref": {
+        "importacao_xml_id": "14"
+      },
+      "ultima_consulta_em": "2026-01-26T05:45:24.000Z",
+      "created_at": "2026-01-26T05:45:24.000Z",
+      "updated_at": "2026-01-26T05:45:24.000Z"
+    },
+    "destinatario": {
+      "id": "70",
+      "user_id": "3",
+      "cliente_id": null,
+      "cnpj": "44373108000600",
+      "razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+      "nome_fantasia": null,
+      "situacao_cadastral": null,
+      "regime_tributario": null,
+      "uf": "SP",
+      "cnpj_matriz": "44373108000103",
+      "inscricao_estadual": "470053570113",
+      "suframa": "",
+      "endereco": "EST MUNICIPAL NRD",
+      "numero": "S/N",
+      "complemento": null,
+      "bairro": "ZONA RURAL",
+      "codigo_municipal": "3532207 ",
+      "cep": "19220000",
+      "municipio": "NARANDIBA",
+      "telefone": "1839929020",
+      "crt": 3,
+      "importacao_participante_id": null,
+      "origem_tipo": "NFE",
+      "origem_ref": {
+        "importacao_xml_id": "14"
+      },
+      "ultima_consulta_em": "2026-01-26T05:45:25.000Z",
+      "created_at": "2026-01-26T05:45:25.000Z",
+      "updated_at": "2026-01-26T05:45:25.000Z"
+    }
+  },
+  {
+    "metadata": {
+      "index": "1",
+      "user_id": "3",
+      "cliente_id": "",
+      "cliente_cnpj": "",
+      "importacao_id": "16",
+      "tab_id": "mkuorinjtcyclmgr8n8",
+      "tipo_documento": "NFE",
+      "modo_envio": "xml",
+      "total_xmls": "8",
+      "binaryKey": "file6",
+      "progress_url": "http://31.97.93.93:8080/api/monitoramento/xml/importacao/progress",
+      "fileName": "50240197551165000193550010000248081000214818-nfe.xml",
+      "fileSize": "7.39 kB",
+      "webhookUrl": "https://autowebhook.fiscaldock.com.br/webhook/monitoramento/getfile/xml",
+      "executionMode": "production"
+    },
+    "emissor": {
+      "id": "69",
+      "user_id": "3",
+      "cliente_id": null,
+      "cnpj": "97551165000193",
+      "razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS ",
+      "nome_fantasia": "HIDRATOP",
+      "situacao_cadastral": null,
+      "regime_tributario": null,
+      "uf": "MS",
+      "cnpj_matriz": "97551165000193",
+      "inscricao_estadual": "470053570113 ",
+      "suframa": null,
+      "endereco": "AV  MARCELINO PIRES",
+      "numero": "7110",
+      "complemento": "ZONA RURAL",
+      "bairro": "ZONA RURAL",
+      "codigo_municipal": "DOURADOS",
+      "cep": "79841000",
+      "municipio": "DOURADOS  ",
+      "telefone": "1839929020",
+      "crt": 0,
+      "importacao_participante_id": "0",
+      "origem_tipo": "NFE",
+      "origem_ref": {
+        "importacao_xml_id": "14"
+      },
+      "ultima_consulta_em": "2026-01-26T05:45:24.000Z",
+      "created_at": "2026-01-26T05:45:24.000Z",
+      "updated_at": "2026-01-26T05:45:24.000Z"
+    },
+    "destinatario": {
+      "id": "70",
+      "user_id": "3",
+      "cliente_id": null,
+      "cnpj": "44373108000600",
+      "razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+      "nome_fantasia": null,
+      "situacao_cadastral": null,
+      "regime_tributario": null,
+      "uf": "SP",
+      "cnpj_matriz": "44373108000103",
+      "inscricao_estadual": "470053570113",
+      "suframa": "",
+      "endereco": "EST MUNICIPAL NRD",
+      "numero": "S/N",
+      "complemento": null,
+      "bairro": "ZONA RURAL",
+      "codigo_municipal": "3532207 ",
+      "cep": "19220000",
+      "municipio": "NARANDIBA",
+      "telefone": "1839929020",
+      "crt": 3,
+      "importacao_participante_id": null,
+      "origem_tipo": "NFE",
+      "origem_ref": {
+        "importacao_xml_id": "14"
+      },
+      "ultima_consulta_em": "2026-01-26T05:45:25.000Z",
+      "created_at": "2026-01-26T05:45:25.000Z",
+      "updated_at": "2026-01-26T05:45:25.000Z"
+    }
+  },
+  {
+    "metadata": {
+      "index": "1",
+      "user_id": "3",
+      "cliente_id": "",
+      "cliente_cnpj": "",
+      "importacao_id": "16",
+      "tab_id": "mkuorinjtcyclmgr8n8",
+      "tipo_documento": "NFE",
+      "modo_envio": "xml",
+      "total_xmls": "8",
+      "binaryKey": "file7",
+      "progress_url": "http://31.97.93.93:8080/api/monitoramento/xml/importacao/progress",
+      "fileName": "50240197551165000193550010000248051000214786-nfe.xml",
+      "fileSize": "8.07 kB",
+      "webhookUrl": "https://autowebhook.fiscaldock.com.br/webhook/monitoramento/getfile/xml",
+      "executionMode": "production"
+    },
+    "emissor": {
+      "id": "69",
+      "user_id": "3",
+      "cliente_id": null,
+      "cnpj": "97551165000193",
+      "razao_social": "HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS ",
+      "nome_fantasia": "HIDRATOP",
+      "situacao_cadastral": null,
+      "regime_tributario": null,
+      "uf": "MS",
+      "cnpj_matriz": "97551165000193",
+      "inscricao_estadual": "470053570113 ",
+      "suframa": null,
+      "endereco": "AV  MARCELINO PIRES",
+      "numero": "7110",
+      "complemento": "ZONA RURAL",
+      "bairro": "ZONA RURAL",
+      "codigo_municipal": "DOURADOS",
+      "cep": "79841000",
+      "municipio": "DOURADOS  ",
+      "telefone": "1839929020",
+      "crt": 0,
+      "importacao_participante_id": "0",
+      "origem_tipo": "NFE",
+      "origem_ref": {
+        "importacao_xml_id": "14"
+      },
+      "ultima_consulta_em": "2026-01-26T05:45:24.000Z",
+      "created_at": "2026-01-26T05:45:24.000Z",
+      "updated_at": "2026-01-26T05:45:24.000Z"
+    },
+    "destinatario": {
+      "id": "70",
+      "user_id": "3",
+      "cliente_id": null,
+      "cnpj": "44373108000600",
+      "razao_social": "COCAL COMERCIO INDUSTRIA CANAA ACUCAR E ALCOOL LTDA",
+      "nome_fantasia": null,
+      "situacao_cadastral": null,
+      "regime_tributario": null,
+      "uf": "SP",
+      "cnpj_matriz": "44373108000103",
+      "inscricao_estadual": "470053570113",
+      "suframa": "",
+      "endereco": "EST MUNICIPAL NRD",
+      "numero": "S/N",
+      "complemento": null,
+      "bairro": "ZONA RURAL",
+      "codigo_municipal": "3532207 ",
+      "cep": "19220000",
+      "municipio": "NARANDIBA",
+      "telefone": "1839929020",
+      "crt": 3,
+      "importacao_participante_id": null,
+      "origem_tipo": "NFE",
+      "origem_ref": {
+        "importacao_xml_id": "14"
+      },
+      "ultima_consulta_em": "2026-01-26T05:45:25.000Z",
+      "created_at": "2026-01-26T05:45:25.000Z",
+      "updated_at": "2026-01-26T05:45:25.000Z"
+    }
+  }
+]

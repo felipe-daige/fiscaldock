@@ -39,3 +39,8 @@ Route::post('/monitoramento/sped/importacao-txt/progress', [DataReceiverControll
 // n8n envia resultado da consulta (ou pode escrever diretamente no PostgreSQL)
 Route::post('/monitoramento/consulta/resultado', [DataReceiverController::class, 'receiveMonitoramentoConsulta'])
     ->name('api.monitoramento.consulta.resultado');
+
+// Rota para receber progresso de importação de XMLs do Monitoramento
+// n8n envia progresso para Laravel armazenar em cache (SSE lê do cache)
+Route::post('/monitoramento/xml/importacao/progress', [DataReceiverController::class, 'receiveXmlImportacaoProgress'])
+    ->name('api.monitoramento.xml.importacao.progress');

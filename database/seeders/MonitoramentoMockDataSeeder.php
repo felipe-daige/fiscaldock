@@ -195,7 +195,7 @@ class MonitoramentoMockDataSeeder extends Seeder
             // Assinatura ativa, próxima execução no passado (pendente de execução)
             [
                 'participante_index' => 1,
-                'plano_codigo' => 'cadastral',
+                'plano_codigo' => 'cadastral_plus',
                 'status' => 'ativo',
                 'frequencia_dias' => 7,
                 'proxima_execucao_em' => Carbon::now()->subHours(5), // Há 5 horas (pendente!)
@@ -240,7 +240,7 @@ class MonitoramentoMockDataSeeder extends Seeder
             // Assinatura ativa, próxima execução no futuro (recém criada)
             [
                 'participante_index' => 6,
-                'plano_codigo' => 'cadastral',
+                'plano_codigo' => 'cadastral_plus',
                 'status' => 'ativo',
                 'frequencia_dias' => 7,
                 'proxima_execucao_em' => Carbon::now()->addDays(7),
@@ -335,7 +335,7 @@ class MonitoramentoMockDataSeeder extends Seeder
                 'created_at' => Carbon::now()->subDays(7),
             ],
             [
-                'plano_id' => $planos['cadastral']->id,
+                'plano_id' => $planos['cadastral_plus']->id,
                 'assinatura_id' => MonitoramentoAssinatura::where('participante_id', $participantes[1]->id)->first()?->id,
                 'tipo' => 'assinatura',
                 'status' => 'sucesso',
