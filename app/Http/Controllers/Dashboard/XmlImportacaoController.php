@@ -707,8 +707,14 @@ class XmlImportacaoController extends Controller
         $participantesNovos = 0;
         $participantesAtualizados = 0;
 
-        if (!empty($importacao->participante_ids)) {
-            $participantesQuery = \App\Models\Participante::whereIn('id', $importacao->participante_ids)
+        // Se participante_ids estiver vazio, tentar extrair das notas fiscais (fallback)
+        $participanteIds = $importacao->participante_ids;
+        if (empty($participanteIds)) {
+            $participanteIds = $this->extrairParticipanteIdsDasNotas($importacaoId, $userId);
+        }
+
+        if (!empty($participanteIds)) {
+            $participantesQuery = \App\Models\Participante::whereIn('id', $participanteIds)
                 ->where('user_id', $userId)
                 ->orderBy('razao_social')
                 ->get();
@@ -818,5 +824,60 @@ class XmlImportacaoController extends Controller
                 'notas_total' => count($notasFiscais),
             ],
         ]);
+    }
+
+    /**
+     * Extrai IDs de participantes das notas fiscais da importação (fallback).
+     *
+     * Usado quando participante_ids não foi preenchido no registro ImportacaoXml.
+     * Busca emit_participante_id e dest_participante_id únicos das notas.
+     * Salva os IDs no registro para próximas consultas.
+     *
+     * @param int $importacaoId ID da importação
+     * @param int $userId ID do usuário (para validação)
+     * @return array IDs únicos dos participantes
+     */
+    private function extrairParticipanteIdsDasNotas(int $importacaoId, int $userId): array
+    {
+        // Buscar IDs de emitentes
+        $emitIds = \App\Models\NotaFiscal::where('importacao_xml_id', $importacaoId)
+            ->where('user_id', $userId)
+            ->whereNotNull('emit_participante_id')
+            ->distinct()
+            ->pluck('emit_participante_id')
+            ->toArray();
+
+        // Buscar IDs de destinatários
+        $destIds = \App\Models\NotaFiscal::where('importacao_xml_id', $importacaoId)
+            ->where('user_id', $userId)
+            ->whereNotNull('dest_participante_id')
+            ->distinct()
+            ->pluck('dest_participante_id')
+            ->toArray();
+
+        // Combinar e remover duplicados
+        $participanteIds = array_values(array_unique(array_merge($emitIds, $destIds)));
+
+        // Se encontrou IDs, salvar no registro para próximas consultas
+        if (!empty($participanteIds)) {
+            try {
+                ImportacaoXml::where('id', $importacaoId)
+                    ->where('user_id', $userId)
+                    ->update(['participante_ids' => $participanteIds]);
+
+                Log::info('Fallback: participante_ids extraídos das notas fiscais', [
+                    'importacao_id' => $importacaoId,
+                    'user_id' => $userId,
+                    'total_ids' => count($participanteIds),
+                ]);
+            } catch (\Exception $e) {
+                Log::warning('Fallback: erro ao salvar participante_ids', [
+                    'importacao_id' => $importacaoId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return $participanteIds;
     }
 }
