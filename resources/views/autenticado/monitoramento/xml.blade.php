@@ -1432,10 +1432,11 @@
                         data.resumo_financeiro.qtd_devolucoes = qtdDevolucoes;
                     }
 
-                    // Mostrar resumo financeiro se houver notas
-                    if (dadosNotasFiscais.length > 0 && salvarMovimentacoesAtivo) {
+                    // Mostrar resumo financeiro e notas se houver notas (independente de salvarMovimentacoesAtivo)
+                    if (dadosNotasFiscais.length > 0) {
                         mostrarResumoFinanceiro(data.resumo_financeiro);
                         mostrarNotasFiscais(dadosNotasFiscais);
+                        configurarFiltrosNotas();
                     }
 
                     // Renderizar participantes
@@ -1443,11 +1444,6 @@
 
                     // Configurar filtros de participantes
                     configurarFiltrosParticipantes();
-
-                    // Configurar filtros de notas
-                    if (dadosNotasFiscais.length > 0 && salvarMovimentacoesAtivo) {
-                        configurarFiltrosNotas();
-                    }
                 } else {
                     if (participantesEmpty) {
                         participantesEmpty.textContent = data.error || 'Erro ao carregar participantes';
