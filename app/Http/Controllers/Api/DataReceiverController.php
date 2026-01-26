@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ImportacaoXml;
 use App\Models\MonitoramentoConsulta;
 use App\Models\Participante;
 use App\Models\User;
@@ -2106,6 +2107,11 @@ class DataReceiverController extends Controller
                 'has_dados' => !empty($validated['dados']),
             ]);
 
+            // Quando status é final, atualizar registro ImportacaoXml no banco
+            if (in_array($validated['status'], ['concluido', 'erro'])) {
+                $this->updateImportacaoXmlFromProgress($validated);
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Progresso atualizado.',
@@ -2133,6 +2139,108 @@ class DataReceiverController extends Controller
                 'success' => false,
                 'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Atualiza o registro ImportacaoXml quando o n8n envia status final.
+     *
+     * Chamado automaticamente quando status é "concluido" ou "erro".
+     * Persiste os dados de progresso no banco para que getParticipantes funcione.
+     */
+    private function updateImportacaoXmlFromProgress(array $validated): void
+    {
+        if (empty($validated['importacao_id'])) {
+            Log::warning('updateImportacaoXmlFromProgress: importacao_id não fornecido', [
+                'user_id' => $validated['user_id'],
+                'tab_id' => $validated['tab_id'],
+                'status' => $validated['status'],
+            ]);
+            return;
+        }
+
+        try {
+            $importacao = ImportacaoXml::where('id', $validated['importacao_id'])
+                ->where('user_id', $validated['user_id'])
+                ->first();
+
+            if (!$importacao) {
+                Log::warning('updateImportacaoXmlFromProgress: importacao não encontrada', [
+                    'importacao_id' => $validated['importacao_id'],
+                    'user_id' => $validated['user_id'],
+                ]);
+                return;
+            }
+
+            $dados = $validated['dados'] ?? [];
+
+            $updateData = [
+                'status' => $validated['status'],
+                'concluido_em' => now(),
+            ];
+
+            // Estatísticas de XMLs
+            if (isset($dados['xmls_processados'])) {
+                $updateData['xmls_processados'] = (int) $dados['xmls_processados'];
+            }
+            if (isset($dados['total_xmls'])) {
+                $updateData['total_xmls'] = (int) $dados['total_xmls'];
+            }
+            if (isset($dados['xmls_novos'])) {
+                $updateData['xmls_novos'] = (int) $dados['xmls_novos'];
+            }
+            if (isset($dados['xmls_duplicados_processados'])) {
+                $updateData['xmls_duplicados_processados'] = (int) $dados['xmls_duplicados_processados'];
+            }
+            if (isset($dados['xmls_com_erro'])) {
+                $updateData['xmls_com_erro'] = (int) $dados['xmls_com_erro'];
+            }
+
+            // Estatísticas de participantes
+            if (isset($dados['participantes_novos'])) {
+                $updateData['participantes_novos'] = (int) $dados['participantes_novos'];
+            }
+            if (isset($dados['participantes_atualizados'])) {
+                $updateData['participantes_atualizados'] = (int) $dados['participantes_atualizados'];
+            }
+            if (isset($dados['participantes_ignorados'])) {
+                $updateData['participantes_ignorados'] = (int) $dados['participantes_ignorados'];
+            }
+
+            // IDs dos participantes processados (crítico para getParticipantes)
+            if (!empty($dados['participante_ids'])) {
+                $updateData['participante_ids'] = array_values(array_unique(array_map('intval', $dados['participante_ids'])));
+            }
+
+            // Valor total das notas
+            if (isset($dados['valor_total'])) {
+                $updateData['valor_total'] = (float) $dados['valor_total'];
+            }
+
+            // Erros detalhados
+            if (!empty($dados['erros'])) {
+                $updateData['erros_detalhados'] = $dados['erros'];
+            }
+
+            // Mensagem de erro
+            if ($validated['status'] === 'erro' && !empty($validated['error_message'])) {
+                $updateData['erro_mensagem'] = $validated['error_message'];
+            }
+
+            $importacao->update($updateData);
+
+            Log::info('ImportacaoXml atualizada com dados do progresso', [
+                'importacao_id' => $importacao->id,
+                'status' => $validated['status'],
+                'participante_ids_count' => count($updateData['participante_ids'] ?? []),
+                'xmls_processados' => $updateData['xmls_processados'] ?? null,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erro ao atualizar ImportacaoXml do progresso', [
+                'importacao_id' => $validated['importacao_id'],
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 }

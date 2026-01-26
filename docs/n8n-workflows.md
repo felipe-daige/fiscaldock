@@ -302,6 +302,35 @@ ON CONFLICT (user_id, cnpj) DO UPDATE SET
 
 ---
 
+## Persistencia de Dados (ImportacaoXml)
+
+Quando o n8n envia progresso com status final (`concluido` ou `erro`), o Laravel atualiza automaticamente o registro `ImportacaoXml` com:
+
+- `status` - Status final
+- `participante_ids` - Array de IDs dos participantes processados
+- Estatisticas: `xmls_processados`, `participantes_novos`, `participantes_atualizados`
+- `concluido_em` - Timestamp de conclusao
+- `erros_detalhados` - Array de erros (se houver)
+
+### Fallback de participante_ids
+
+Se `participante_ids` estiver vazio ao chamar `getParticipantes()`, o Laravel extrai automaticamente os IDs das notas fiscais:
+
+```php
+// Busca emit_participante_id e dest_participante_id das notas
+$emitIds = NotaFiscal::where('importacao_xml_id', $id)->pluck('emit_participante_id');
+$destIds = NotaFiscal::where('importacao_xml_id', $id)->pluck('dest_participante_id');
+```
+
+Os IDs sao salvos no registro para proximas consultas.
+
+**Quando usar fallback:**
+- Importacoes antigas sem `participante_ids`
+- n8n nao enviou os IDs no progresso
+- Recuperacao de dados apos falha
+
+---
+
 ## Troubleshooting
 
 ### Erro 404 no endpoint de progresso
