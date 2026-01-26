@@ -31,6 +31,37 @@ class MonitoramentoController extends Controller
     ) {}
 
     /**
+     * Página instrucional com detalhes dos planos de consulta.
+     */
+    public function planos(Request $request)
+    {
+        $planosView = self::AUTH_VIEW_PREFIX . 'planos';
+
+        if (!view()->exists($planosView)) {
+            abort(404);
+        }
+
+        if (!Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        $user = Auth::user();
+
+        $data = [
+            'credits' => $this->creditService->getBalance($user),
+        ];
+
+        if ($this->isAjaxRequest($request)) {
+            $renderedView = view($planosView, $data)->render();
+            return response($renderedView)->header('Content-Type', 'text/html');
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, array_merge([
+            'initialView' => $planosView
+        ], $data));
+    }
+
+    /**
      * Dashboard principal do monitoramento - lista participantes e estatísticas.
      */
     public function index(Request $request)

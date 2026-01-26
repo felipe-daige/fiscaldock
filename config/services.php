@@ -47,6 +47,8 @@ return [
         'monitoramento_importacao_fiscal_url' => env('WEBHOOK_MONITORAMENTO_IMPORTACAO_FISCAL_URL'),
         // Webhook Monitoramento - consultas avulsas e de assinatura
         'monitoramento_consulta_url' => env('WEBHOOK_MONITORAMENTO_CONSULTA_URL'),
+        // Webhook Monitoramento - importação de XMLs (NF-e, NFS-e, CT-e)
+        'monitoramento_importacao_xml_url' => env('WEBHOOK_MONITORAMENTO_IMPORTACAO_XML_URL'),
         // Credenciais
         'username' => env('WEBHOOK_SPED_USERNAME'),
         'password' => env('WEBHOOK_SPED_PASSWORD'),

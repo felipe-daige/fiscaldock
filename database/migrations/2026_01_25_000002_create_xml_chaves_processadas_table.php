@@ -17,7 +17,8 @@ return new class extends Migration
             $table->string('chave_acesso', 44); // Chave de acesso NF-e/NFS-e/CT-e
             $table->string('tipo_documento', 10); // NFE, NFSE, CTE
             $table->foreignId('importacao_xml_id')->nullable()->constrained('importacoes_xml')->nullOnDelete();
-            $table->foreignId('participante_id')->nullable()->constrained('participantes')->nullOnDelete();
+            $table->foreignId('emit_participante_id')->nullable()->constrained('participantes')->nullOnDelete();
+            $table->foreignId('dest_participante_id')->nullable()->constrained('participantes')->nullOnDelete();
             $table->timestamp('processado_em')->nullable();
             $table->timestamps();
 

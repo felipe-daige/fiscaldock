@@ -24,6 +24,10 @@ class Participante extends Model
         'situacao_cadastral',
         'regime_tributario',
         'uf',
+        'cep',
+        'municipio',
+        'telefone',
+        'crt',
         'origem_tipo',
         'origem_ref',
         'ultima_consulta_em',
@@ -81,6 +85,22 @@ class Participante extends Model
     {
         return $this->belongsToMany(ParticipanteGrupo::class, 'participantes_grupos_pivot', 'participante_id', 'participantes_grupo_id')
             ->withTimestamps();
+    }
+
+    /**
+     * Notas fiscais onde o participante é o emitente.
+     */
+    public function notasComoEmitente(): HasMany
+    {
+        return $this->hasMany(NotaFiscal::class, 'emit_participante_id');
+    }
+
+    /**
+     * Notas fiscais onde o participante é o destinatário.
+     */
+    public function notasComoDestinatario(): HasMany
+    {
+        return $this->hasMany(NotaFiscal::class, 'dest_participante_id');
     }
 
     /**

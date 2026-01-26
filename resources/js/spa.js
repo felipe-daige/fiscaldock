@@ -2,13 +2,36 @@ import './bootstrap';
 
 document.addEventListener('DOMContentLoaded', () => {
     const app = document.getElementById('app');
-    
+
     // Sistema de gerenciamento de recursos globais
     window._spaResources = {
         intervals: [],
         swipers: [],
         listeners: []
     };
+
+    // Funcao para atualizar CSRF token apos navegacao SPA
+    async function atualizarCsrfToken() {
+        try {
+            const response = await fetch('/api/csrf-token', {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.csrf_token) {
+                    const meta = document.querySelector('meta[name="csrf-token"]');
+                    if (meta) {
+                        meta.setAttribute('content', data.csrf_token);
+                        console.log('[SPA] CSRF token atualizado');
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('[SPA] Erro ao atualizar CSRF token:', e);
+        }
+    }
 
     // Configuração de mapeamento para páginas com nomes de arquivo diferentes
     const _spaScriptOverrides = {
@@ -326,9 +349,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Trocar conteúdo
             app.innerHTML = html;
-            
+
             // Atualizar URL do browser
             history.pushState(null, '', url);
+
+            // Atualizar CSRF token após navegação SPA
+            atualizarCsrfToken();
             
             // Destacar link ativo
             destacarLinkAtivo(url);

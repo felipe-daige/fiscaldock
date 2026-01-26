@@ -35,6 +35,11 @@ Route::get('/agendar', [AuthController::class, 'showAgendar'])->name('agendar');
 Route::post('/agendar', [AuthController::class, 'agendar'])->name('agendar.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// Endpoint para obter CSRF token atualizado (usado pelo SPA)
+Route::get('/api/csrf-token', function () {
+    return response()->json(['csrf_token' => csrf_token()]);
+})->name('api.csrf-token');
+
 // Rotas autenticadas
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
@@ -155,5 +160,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/xml/validar', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'validar'])->name('xml.validar');
         Route::post('/xml/importar', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'importar'])->name('xml.importar');
         Route::get('/xml/progresso/stream', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'streamProgresso'])->name('xml.progresso.stream');
+        Route::get('/xml/importacao/{id}/participantes', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'getParticipantes'])->name('xml.importacao.participantes');
     });
 });

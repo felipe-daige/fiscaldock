@@ -2005,5 +2005,135 @@ class DataReceiverController extends Controller
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    /**
+     * Recebe progresso de importação de XMLs do Monitoramento (enviado pelo n8n).
+     *
+     * POST /api/monitoramento/xml/importacao/progress
+     *
+     * Payload esperado:
+     * {
+     *   "user_id": 1,
+     *   "tab_id": "uuid",
+     *   "importacao_id": 456,
+     *   "progresso": 45,
+     *   "status": "processando",
+     *   "mensagem": "Processando XML 67 de 150...",
+     *   "dados": {
+     *     "total_xmls": 150,
+     *     "xmls_processados": 67,
+     *     "participantes_novos": 23,
+     *     "participantes_atualizados": 15,
+     *     "erros": [{"arquivo": "x.xml", "motivo": "XML inválido"}]
+     *   }
+     * }
+     */
+    public function receiveXmlImportacaoProgress(Request $request)
+    {
+        try {
+            Log::info('Requisição recebida em receiveXmlImportacaoProgress', [
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'ip' => $request->ip(),
+                'headers' => [
+                    'x-api-token' => $request->hasHeader('X-API-Token') ? 'presente' : 'ausente',
+                    'content-type' => $request->header('Content-Type'),
+                ],
+                'body' => $request->all(),
+            ]);
+
+            // Verifica autenticação via token
+            if (!$this->isTokenValid($request)) {
+                Log::warning('Token inválido em receiveXmlImportacaoProgress');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Token de API inválido.',
+                ], Response::HTTP_UNAUTHORIZED);
+            }
+
+            // Validar payload
+            $validated = $request->validate([
+                'user_id' => 'required|integer|exists:users,id',
+                'tab_id' => 'required|string|max:36',
+                'progresso' => 'required|integer|min:0|max:100',
+                'mensagem' => 'nullable|string|max:255',
+                'status' => 'required|in:iniciando,processando,concluido,erro',
+                'importacao_id' => 'nullable|integer',
+                'error_code' => 'nullable|string|max:50',
+                'error_message' => 'nullable|string|max:500',
+                'dados' => 'nullable',
+            ]);
+
+            // Chave do cache: progresso:{user_id}:{tab_id}
+            $cacheKey = "progresso:{$validated['user_id']}:{$validated['tab_id']}";
+
+            // Dados para cache (repassa exatamente o que n8n enviou)
+            $cacheData = [
+                'user_id' => $validated['user_id'],
+                'tab_id' => $validated['tab_id'],
+                'progresso' => $validated['progresso'],
+                'mensagem' => $validated['mensagem'] ?? null,
+                'status' => $validated['status'],
+                'updated_at' => now()->toIso8601String(),
+            ];
+
+            // Adicionar importacao_id se fornecido
+            if (!empty($validated['importacao_id'])) {
+                $cacheData['importacao_id'] = $validated['importacao_id'];
+            }
+
+            // Adicionar campos de erro se fornecidos
+            if (!empty($validated['error_code'])) {
+                $cacheData['error_code'] = $validated['error_code'];
+            }
+            if (!empty($validated['error_message'])) {
+                $cacheData['error_message'] = $validated['error_message'];
+            }
+
+            // Sempre incluir campo dados no cache
+            $cacheData['dados'] = $validated['dados'] ?? [];
+
+            // Armazena em cache (TTL 10 minutos)
+            Cache::put($cacheKey, $cacheData, 600);
+
+            Log::info('Progresso XML armazenado em cache', [
+                'cache_key' => $cacheKey,
+                'user_id' => $validated['user_id'],
+                'tab_id' => $validated['tab_id'],
+                'progresso' => $validated['progresso'],
+                'status' => $validated['status'],
+                'has_error' => !empty($validated['error_code']),
+                'has_dados' => !empty($validated['dados']),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Progresso atualizado.',
+                'progresso' => $validated['progresso'],
+            ], Response::HTTP_OK);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Erro de validação em receiveXmlImportacaoProgress', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro de validação.',
+                'errors' => $e->errors(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        } catch (\Exception $e) {
+            Log::error('Erro inesperado em receiveXmlImportacaoProgress', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }
 

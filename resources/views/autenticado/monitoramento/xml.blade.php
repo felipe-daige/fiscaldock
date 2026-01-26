@@ -131,6 +131,25 @@
                             </p>
                         </div>
 
+                        {{-- Salvar Movimentacoes (Opcional) --}}
+                        <div class="mb-4">
+                            <label class="flex items-start gap-3 p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 transition" id="salvar-movimentacoes-label">
+                                <input
+                                    type="checkbox"
+                                    id="salvar-movimentacoes"
+                                    name="salvar_movimentacoes"
+                                    class="mt-0.5 w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                >
+                                <div>
+                                    <div class="font-medium text-gray-800 text-sm">Salvar movimentacoes fiscais</div>
+                                    <div class="text-xs text-gray-500 mt-0.5">
+                                        Alem dos participantes, guarda os dados completos de cada nota fiscal (valores, tributos, itens).
+                                        Permite consultas e relatorios futuros.
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
                         {{-- Dropzone --}}
                         <div class="mb-4">
                             <div id="xml-dropzone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 min-h-[180px] flex flex-col items-center justify-center transition-colors cursor-not-allowed bg-gray-100 opacity-60 pointer-events-none" role="button" tabindex="0" aria-disabled="true">
@@ -388,25 +407,21 @@
 
             {{-- Secao de Resultados (aparece apos importacao concluida) --}}
             <div id="resultado-importacao" class="hidden mt-4">
-                <div class="bg-white border border-green-200 rounded-lg shadow-sm">
-                    {{-- Header dos Resultados --}}
-                    <div class="px-6 py-4 border-b border-gray-200 bg-green-50">
+                <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                    {{-- Header dos Resultados - Clean --}}
+                    <div class="px-6 py-4 border-b border-gray-100">
                         <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="font-semibold text-gray-900">Importacao Concluida</h3>
-                                    <p class="text-sm text-gray-600" id="resultado-resumo">-</p>
-                                </div>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <h3 class="font-semibold text-gray-900">Importacao Concluida</h3>
+                                <span class="text-sm text-gray-500" id="resultado-resumo"></span>
                             </div>
                             <button
                                 type="button"
                                 id="btn-nova-importacao"
-                                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition"
                             >
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -416,48 +431,171 @@
                         </div>
                     </div>
 
-                    {{-- Estatisticas --}}
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div class="text-center p-3 bg-gray-50 rounded-lg">
-                                <p class="text-2xl font-bold text-gray-900" id="resultado-xmls">0</p>
-                                <p class="text-xs text-gray-500">XMLs Processados</p>
+                    {{-- Metricas Principais - Cards Uniformes --}}
+                    <div class="px-6 py-5 border-b border-gray-100">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div class="bg-gray-50 rounded-lg px-4 py-3 text-center">
+                                <span class="text-2xl font-semibold text-gray-900" id="resultado-xmls">0</span>
+                                <p class="text-xs text-gray-500 mt-0.5">XMLs processados</p>
                             </div>
-                            <div class="text-center p-3 bg-green-50 rounded-lg">
-                                <p class="text-2xl font-bold text-green-600" id="resultado-novos">0</p>
-                                <p class="text-xs text-gray-500">Novos Participantes</p>
+                            <div class="bg-gray-50 rounded-lg px-4 py-3 text-center">
+                                <span class="text-2xl font-semibold text-gray-900" id="resultado-total-participantes">0</span>
+                                <p class="text-xs text-gray-500 mt-0.5">participantes</p>
                             </div>
-                            <div class="text-center p-3 bg-blue-50 rounded-lg">
-                                <p class="text-2xl font-bold text-blue-600" id="resultado-atualizados">0</p>
-                                <p class="text-xs text-gray-500">Atualizados</p>
+                            <div class="bg-green-50 rounded-lg px-4 py-3 text-center">
+                                <span class="text-2xl font-semibold text-green-600" id="resultado-novos">0</span>
+                                <p class="text-xs text-gray-500 mt-0.5">novos</p>
                             </div>
-                            <div class="text-center p-3 bg-amber-50 rounded-lg">
-                                <p class="text-2xl font-bold text-amber-600" id="resultado-ignorados">0</p>
-                                <p class="text-xs text-gray-500">Ignorados/Erros</p>
+                            <div class="bg-blue-50 rounded-lg px-4 py-3 text-center">
+                                <span class="text-2xl font-semibold text-blue-600" id="resultado-atualizados">0</span>
+                                <p class="text-xs text-gray-500 mt-0.5">atualizados</p>
                             </div>
                         </div>
                     </div>
 
+                    {{-- Resumo Financeiro (visivel quando salvar_movimentacoes=true) --}}
+                    <div id="resultado-financeiro" class="hidden px-6 py-4 border-b border-gray-100">
+                        <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Resumo Financeiro</h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-3">
+                            <div class="bg-emerald-50 rounded-lg px-4 py-3 text-center">
+                                <span class="text-lg font-semibold text-emerald-700" id="resultado-valor-total">R$ 0,00</span>
+                                <p class="text-xs text-emerald-600 mt-0.5">Valor Total</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg px-4 py-3 text-center">
+                                <span class="text-lg font-semibold text-gray-700" id="resultado-qtd-entradas">0</span>
+                                <p class="text-xs text-gray-500 mt-0.5">Entradas</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg px-4 py-3 text-center">
+                                <span class="text-lg font-semibold text-gray-700" id="resultado-qtd-saidas">0</span>
+                                <p class="text-xs text-gray-500 mt-0.5">Saidas</p>
+                            </div>
+                            <div class="bg-amber-50 rounded-lg px-4 py-3 text-center">
+                                <span class="text-lg font-semibold text-amber-700" id="resultado-qtd-devolucoes">0</span>
+                                <p class="text-xs text-amber-600 mt-0.5">Devolucoes</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg px-4 py-3 text-center">
+                                <span class="text-lg font-semibold text-gray-700" id="resultado-ticket-medio">R$ 0,00</span>
+                                <p class="text-xs text-gray-500 mt-0.5">Ticket Medio</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 bg-gray-50 rounded-lg px-4 py-2">
+                            <span class="font-medium text-gray-600">Tributos:</span>
+                            <span>ICMS <span class="font-semibold text-gray-700" id="resultado-icms-total">R$ 0</span></span>
+                            <span class="text-gray-300">|</span>
+                            <span>PIS/COFINS <span class="font-semibold text-gray-700" id="resultado-pis-cofins">R$ 0</span></span>
+                            <span class="text-gray-300">|</span>
+                            <span>IPI <span class="font-semibold text-gray-700" id="resultado-ipi">R$ 0</span></span>
+                            <span class="text-gray-300">|</span>
+                            <span><span class="font-semibold text-gray-700" id="resultado-ufs-count">0</span> UFs</span>
+                        </div>
+                    </div>
+
+                    {{-- Notas Fiscais (visivel quando salvar_movimentacoes=true) --}}
+                    <div id="resultado-notas-container" class="hidden px-6 py-4 border-b border-gray-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Notas Fiscais</h4>
+                            <div class="flex gap-1 bg-gray-100 rounded-lg p-0.5" id="notas-filtros">
+                                <button type="button" class="notas-filtro-btn px-2.5 py-1 text-xs rounded-md bg-white text-gray-900 font-medium shadow-sm" data-filtro="todas">
+                                    Todas <span id="notas-count-todas">0</span>
+                                </button>
+                                <button type="button" class="notas-filtro-btn px-2.5 py-1 text-xs rounded-md text-gray-600 hover:text-gray-900" data-filtro="entradas">
+                                    Ent <span id="notas-count-entradas">0</span>
+                                </button>
+                                <button type="button" class="notas-filtro-btn px-2.5 py-1 text-xs rounded-md text-gray-600 hover:text-gray-900" data-filtro="saidas">
+                                    Sai <span id="notas-count-saidas">0</span>
+                                </button>
+                                <button type="button" class="notas-filtro-btn px-2.5 py-1 text-xs rounded-md text-gray-600 hover:text-gray-900" data-filtro="devolucoes">
+                                    Dev <span id="notas-count-devolucoes">0</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto max-h-[220px] overflow-y-auto border border-gray-100 rounded-lg">
+                            <table class="min-w-full text-xs">
+                                <thead class="sticky top-0 bg-gray-50">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left font-medium text-gray-600">N/Serie</th>
+                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Emissao</th>
+                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Emitente</th>
+                                        <th class="px-3 py-2 text-right font-medium text-gray-600">Valor</th>
+                                        <th class="px-3 py-2 text-right font-medium text-gray-600">ICMS</th>
+                                        <th class="px-3 py-2 text-center font-medium text-gray-600">Tipo</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="notas-tabela-body" class="bg-white divide-y divide-gray-100">
+                                    {{-- Notas serao inseridas aqui via JS --}}
+                                </tbody>
+                            </table>
+                        </div>
+                        <p id="notas-empty" class="hidden text-center text-gray-400 text-sm py-4">Nenhuma nota fiscal encontrada.</p>
+                    </div>
+
+                    {{-- Participantes Importados --}}
+                    <div id="resultado-participantes-container" class="hidden px-6 py-4 border-b border-gray-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Participantes</h4>
+                            <div class="flex gap-1 bg-gray-100 rounded-lg p-0.5" id="participantes-filtros">
+                                <button type="button" class="part-filtro-btn px-2.5 py-1 text-xs rounded-md bg-white text-gray-900 font-medium shadow-sm" data-filtro="todos">
+                                    Todos <span id="part-count-todos">0</span>
+                                </button>
+                                <button type="button" class="part-filtro-btn px-2.5 py-1 text-xs rounded-md text-gray-600 hover:text-gray-900" data-filtro="novos">
+                                    Novos <span id="part-count-novos">0</span>
+                                </button>
+                                <button type="button" class="part-filtro-btn px-2.5 py-1 text-xs rounded-md text-gray-600 hover:text-gray-900" data-filtro="atualizados">
+                                    Atual. <span id="part-count-atualizados">0</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto max-h-[220px] overflow-y-auto border border-gray-100 rounded-lg">
+                            <table class="min-w-full text-xs">
+                                <thead class="sticky top-0 bg-gray-50">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left font-medium text-gray-600">CNPJ</th>
+                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Razao Social</th>
+                                        <th class="px-3 py-2 text-center font-medium text-gray-600">UF</th>
+                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Municipio</th>
+                                        <th class="px-3 py-2 text-center font-medium text-gray-600">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="participantes-tabela-body" class="bg-white divide-y divide-gray-100">
+                                    {{-- Participantes serao inseridos aqui via JS --}}
+                                </tbody>
+                            </table>
+                        </div>
+                        <p id="participantes-empty" class="hidden text-center text-gray-400 text-sm py-4">Nenhum participante encontrado.</p>
+                        <p id="participantes-loading" class="hidden text-center text-gray-400 text-sm py-4">
+                            <svg class="inline w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>
+                            Carregando...
+                        </p>
+                    </div>
+
                     {{-- Erros detalhados (se houver) --}}
-                    <div id="resultado-erros-container" class="hidden px-6 py-4 border-b border-gray-200">
-                        <h4 class="text-sm font-semibold text-gray-900 mb-2">Erros encontrados:</h4>
-                        <div id="resultado-erros-lista" class="max-h-[150px] overflow-y-auto space-y-1 text-xs">
+                    <div id="resultado-erros-container" class="hidden px-6 py-4 border-b border-gray-100">
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                            <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Erros</h4>
+                        </div>
+                        <div id="resultado-erros-lista" class="max-h-[120px] overflow-y-auto space-y-1 text-xs">
                             {{-- Erros serao listados aqui --}}
                         </div>
                     </div>
 
-                    {{-- Acoes --}}
-                    <div class="px-6 py-4 bg-gray-50">
-                        <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
+                    {{-- Acoes - Simplificado --}}
+                    <div class="px-6 py-4">
+                        <div class="flex justify-end">
                             <a
                                 href="/app/monitoramento"
-                                class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm hover:bg-blue-700 transition"
+                                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition"
                                 data-link
                             >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-                                </svg>
                                 Ver Participantes
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
                             </a>
                         </div>
                     </div>
@@ -480,7 +618,38 @@
 
         console.log('[Monitoramento XML] Inicializando...');
 
-        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        // Funcao para obter CSRF token atualizado
+        function getCsrfToken() {
+            return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        }
+
+        // Funcao para atualizar o CSRF token na meta tag
+        async function refreshCsrfToken() {
+            try {
+                const response = await fetch('/api/csrf-token', {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.csrf_token) {
+                        const meta = document.querySelector('meta[name="csrf-token"]');
+                        if (meta) {
+                            meta.setAttribute('content', data.csrf_token);
+                            console.log('[Monitoramento XML] CSRF token atualizado');
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('[Monitoramento XML] Erro ao atualizar CSRF token:', e);
+            }
+        }
+
+        // Atualizar CSRF token ao inicializar (caso tenha ficado stale durante navegacao SPA)
+        refreshCsrfToken();
+
+        let csrf = getCsrfToken();
 
         // Identificador unico por aba
         const tabId = crypto.randomUUID ? crypto.randomUUID() :
@@ -512,6 +681,10 @@
         let selectedFiles = [];
         let eventSource = null;
         let importacaoEmAndamento = false;
+        let currentImportacaoId = null;
+        let dadosParticipantes = [];
+        let dadosNotasFiscais = [];
+        let salvarMovimentacoesAtivo = false;
 
         // Funcao para obter tipo de documento selecionado
         function getSelectedTipoDoc() {
@@ -702,7 +875,7 @@
         }
 
         // Validar arquivo via API (conta XMLs em ZIPs, detecta tipo)
-        async function validarArquivoApi(fileObj, index) {
+        async function validarArquivoApi(fileObj, index, retryCount = 0) {
             fileObj.status = 'validating';
             renderFilesList();
             updateImportButtonState();
@@ -713,7 +886,7 @@
                 const response = await fetch('/app/monitoramento/xml/validar', {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': csrf,
+                        'X-CSRF-TOKEN': getCsrfToken(),
                         'Accept': 'application/json',
                         'Content-Type': 'application/json'
                     },
@@ -725,6 +898,23 @@
                         }
                     })
                 });
+
+                // Handle CSRF token mismatch (419)
+                if (response.status === 419 && retryCount < 1) {
+                    console.log('[Monitoramento XML] CSRF token expirado, atualizando...');
+                    await refreshCsrfToken();
+                    return validarArquivoApi(fileObj, index, retryCount + 1);
+                }
+
+                // Handle auth error
+                if (response.status === 401) {
+                    fileObj.status = 'error';
+                    fileObj.error = 'Sessao expirada. Recarregue a pagina.';
+                    fileObj.totalXmls = 0;
+                    renderFilesList();
+                    updateImportButtonState();
+                    return;
+                }
 
                 const data = await response.json();
 
@@ -935,6 +1125,21 @@
             ocultarErro();
         }
 
+        // Event listener salvar movimentacoes
+        const salvarMovimentacoesCheckbox = document.getElementById('salvar-movimentacoes');
+        const salvarMovimentacoesLabel = document.getElementById('salvar-movimentacoes-label');
+        if (salvarMovimentacoesCheckbox && salvarMovimentacoesLabel) {
+            salvarMovimentacoesCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    salvarMovimentacoesLabel.classList.remove('border-gray-200', 'hover:border-blue-400');
+                    salvarMovimentacoesLabel.classList.add('border-blue-600', 'bg-blue-50');
+                } else {
+                    salvarMovimentacoesLabel.classList.remove('border-blue-600', 'bg-blue-50');
+                    salvarMovimentacoesLabel.classList.add('border-gray-200', 'hover:border-blue-400');
+                }
+            });
+        }
+
         // Event listeners tipo documento
         tipoDocRadios.forEach(radio => {
             radio.addEventListener('change', function() {
@@ -1100,7 +1305,28 @@
             if (progressoStats) progressoStats.classList.add('hidden');
             if (progressoErro) progressoErro.classList.add('hidden');
             if (resultadoContainer) resultadoContainer.classList.add('hidden');
+
+            // Resetar novas secoes
+            const financeiroContainer = document.getElementById('resultado-financeiro');
+            const notasContainer = document.getElementById('resultado-notas-container');
+            const participantesContainer = document.getElementById('resultado-participantes-container');
+            const errosContainer = document.getElementById('resultado-erros-container');
+
+            if (financeiroContainer) financeiroContainer.classList.add('hidden');
+            if (notasContainer) notasContainer.classList.add('hidden');
+            if (participantesContainer) participantesContainer.classList.add('hidden');
+            if (errosContainer) errosContainer.classList.add('hidden');
+
+            // Limpar dados
+            dadosParticipantes = [];
+            dadosNotasFiscais = [];
+
             atualizarIconeStatus('processando');
+        }
+
+        // Formatar valor em BRL
+        function formatarBRL(valor) {
+            return 'R$ ' + (valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         // Mostrar resultados
@@ -1111,21 +1337,26 @@
             const xmls = document.getElementById('resultado-xmls');
             const novos = document.getElementById('resultado-novos');
             const atualizados = document.getElementById('resultado-atualizados');
-            const ignorados = document.getElementById('resultado-ignorados');
+            const totalParticipantes = document.getElementById('resultado-total-participantes');
             const errosContainer = document.getElementById('resultado-erros-container');
             const errosLista = document.getElementById('resultado-erros-lista');
 
-            if (resumo) resumo.textContent = (dados.xmls_processados || 0) + ' XMLs processados';
-            if (xmls) xmls.textContent = dados.xmls_processados || 0;
-            if (novos) novos.textContent = dados.participantes_novos || 0;
-            if (atualizados) atualizados.textContent = dados.participantes_atualizados || 0;
-            if (ignorados) ignorados.textContent = (dados.participantes_ignorados || 0) + ((dados.erros && dados.erros.length) || 0);
+            const xmlsCount = dados.xmls_processados || 0;
+            const novosCount = dados.participantes_novos || 0;
+            const atualizadosCount = dados.participantes_atualizados || 0;
+            const totalCount = novosCount + atualizadosCount;
+
+            if (resumo) resumo.textContent = '';
+            if (xmls) xmls.textContent = xmlsCount;
+            if (novos) novos.textContent = novosCount;
+            if (atualizados) atualizados.textContent = atualizadosCount;
+            if (totalParticipantes) totalParticipantes.textContent = totalCount;
 
             // Erros detalhados
             if (dados.erros && dados.erros.length > 0 && errosContainer && errosLista) {
                 errosContainer.classList.remove('hidden');
                 errosLista.innerHTML = dados.erros.map(e =>
-                    '<div class="p-2 bg-red-50 rounded text-red-700">' +
+                    '<div class="py-1.5 px-2 bg-amber-50 rounded text-amber-700 border-l-2 border-amber-400">' +
                     '<span class="font-medium">' + (e.arquivo || 'XML') + ':</span> ' +
                     (e.motivo || 'Erro desconhecido') +
                     '</div>'
@@ -1135,7 +1366,307 @@
             }
 
             resultadoContainer.classList.remove('hidden');
+
+            // Carregar detalhes dos participantes e notas se temos importacao_id
+            if (currentImportacaoId) {
+                carregarDetalhesImportacao(currentImportacaoId);
+            }
+
             resultadoContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Carregar detalhes da importacao (participantes e notas)
+        async function carregarDetalhesImportacao(importacaoId) {
+            const participantesContainer = document.getElementById('resultado-participantes-container');
+            const participantesLoading = document.getElementById('participantes-loading');
+            const participantesEmpty = document.getElementById('participantes-empty');
+            const participantesBody = document.getElementById('participantes-tabela-body');
+
+            // Mostrar container de participantes e loading
+            if (participantesContainer) participantesContainer.classList.remove('hidden');
+            if (participantesLoading) participantesLoading.classList.remove('hidden');
+            if (participantesEmpty) participantesEmpty.classList.add('hidden');
+            if (participantesBody) participantesBody.innerHTML = '';
+
+            try {
+                const response = await fetch('/app/monitoramento/xml/importacao/' + importacaoId + '/participantes', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': getCsrfToken()
+                    },
+                    credentials: 'same-origin'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar detalhes');
+                }
+
+                const data = await response.json();
+
+                if (participantesLoading) participantesLoading.classList.add('hidden');
+
+                if (data.success) {
+                    // Armazenar dados
+                    dadosParticipantes = data.participantes || [];
+                    dadosNotasFiscais = data.notas_fiscais || [];
+
+                    // Atualizar totais
+                    const novosEl = document.getElementById('resultado-novos');
+                    const atualizadosEl = document.getElementById('resultado-atualizados');
+                    const totalPartEl = document.getElementById('resultado-total-participantes');
+                    if (data.totais) {
+                        const novosCount = data.totais.participantes_novos || 0;
+                        const atualizadosCount = data.totais.participantes_atualizados || 0;
+                        if (novosEl) novosEl.textContent = novosCount;
+                        if (atualizadosEl) atualizadosEl.textContent = atualizadosCount;
+                        if (totalPartEl) totalPartEl.textContent = novosCount + atualizadosCount;
+                    }
+
+                    // Calcular estatisticas adicionais
+                    const ufsUnicas = new Set(dadosParticipantes.map(p => p.uf).filter(Boolean));
+                    const qtdDevolucoes = dadosNotasFiscais.filter(n => n.finalidade === 4).length;
+
+                    if (data.resumo_financeiro) {
+                        data.resumo_financeiro.ufs_count = ufsUnicas.size;
+                        data.resumo_financeiro.qtd_devolucoes = qtdDevolucoes;
+                    }
+
+                    // Mostrar resumo financeiro se houver notas
+                    if (dadosNotasFiscais.length > 0 && salvarMovimentacoesAtivo) {
+                        mostrarResumoFinanceiro(data.resumo_financeiro);
+                        mostrarNotasFiscais(dadosNotasFiscais);
+                    }
+
+                    // Renderizar participantes
+                    renderizarParticipantes(dadosParticipantes, 'todos');
+
+                    // Configurar filtros de participantes
+                    configurarFiltrosParticipantes();
+
+                    // Configurar filtros de notas
+                    if (dadosNotasFiscais.length > 0 && salvarMovimentacoesAtivo) {
+                        configurarFiltrosNotas();
+                    }
+                } else {
+                    if (participantesEmpty) {
+                        participantesEmpty.textContent = data.error || 'Erro ao carregar participantes';
+                        participantesEmpty.classList.remove('hidden');
+                    }
+                }
+            } catch (err) {
+                console.error('[Monitoramento XML] Erro ao carregar detalhes:', err);
+                if (participantesLoading) participantesLoading.classList.add('hidden');
+                if (participantesEmpty) {
+                    participantesEmpty.textContent = 'Erro ao carregar participantes';
+                    participantesEmpty.classList.remove('hidden');
+                }
+            }
+        }
+
+        // Mostrar resumo financeiro
+        function mostrarResumoFinanceiro(resumo) {
+            const container = document.getElementById('resultado-financeiro');
+            if (!container || !resumo) return;
+
+            container.classList.remove('hidden');
+
+            const valorTotal = document.getElementById('resultado-valor-total');
+            const icmsTotal = document.getElementById('resultado-icms-total');
+            const pisCofins = document.getElementById('resultado-pis-cofins');
+            const ipi = document.getElementById('resultado-ipi');
+            const qtdEntradas = document.getElementById('resultado-qtd-entradas');
+            const qtdSaidas = document.getElementById('resultado-qtd-saidas');
+            const qtdDevolucoes = document.getElementById('resultado-qtd-devolucoes');
+            const ticketMedio = document.getElementById('resultado-ticket-medio');
+            const ufsCount = document.getElementById('resultado-ufs-count');
+
+            const icmsValue = (resumo.icms_total || 0) + (resumo.icms_st_total || 0);
+            const totalNotas = (resumo.qtd_entradas || 0) + (resumo.qtd_saidas || 0);
+            const ticketMedioValue = totalNotas > 0 ? (resumo.valor_total || 0) / totalNotas : 0;
+
+            if (valorTotal) valorTotal.textContent = formatarBRL(resumo.valor_total);
+            if (icmsTotal) icmsTotal.textContent = formatarBRLCompacto(icmsValue);
+            if (pisCofins) pisCofins.textContent = formatarBRLCompacto(resumo.pis_cofins_total);
+            if (ipi) ipi.textContent = formatarBRLCompacto(resumo.ipi_total);
+            if (qtdEntradas) qtdEntradas.textContent = resumo.qtd_entradas || 0;
+            if (qtdSaidas) qtdSaidas.textContent = resumo.qtd_saidas || 0;
+            if (qtdDevolucoes) qtdDevolucoes.textContent = resumo.qtd_devolucoes || 0;
+            if (ticketMedio) ticketMedio.textContent = formatarBRL(ticketMedioValue);
+            if (ufsCount) ufsCount.textContent = resumo.ufs_count || 0;
+        }
+
+        // Formatar BRL compacto (sem centavos para valores grandes)
+        function formatarBRLCompacto(valor) {
+            valor = valor || 0;
+            if (valor >= 1000) {
+                return 'R$ ' + Math.round(valor).toLocaleString('pt-BR');
+            }
+            return formatarBRL(valor);
+        }
+
+        // Mostrar notas fiscais
+        function mostrarNotasFiscais(notas) {
+            const container = document.getElementById('resultado-notas-container');
+            if (!container) return;
+
+            container.classList.remove('hidden');
+
+            // Atualizar contadores
+            const todas = notas.length;
+            const entradas = notas.filter(n => n.tipo_nota === 0).length;
+            const saidas = notas.filter(n => n.tipo_nota === 1).length;
+            const devolucoes = notas.filter(n => n.finalidade === 4).length;
+
+            const countTodas = document.getElementById('notas-count-todas');
+            const countEntradas = document.getElementById('notas-count-entradas');
+            const countSaidas = document.getElementById('notas-count-saidas');
+            const countDevolucoes = document.getElementById('notas-count-devolucoes');
+
+            if (countTodas) countTodas.textContent = todas;
+            if (countEntradas) countEntradas.textContent = entradas;
+            if (countSaidas) countSaidas.textContent = saidas;
+            if (countDevolucoes) countDevolucoes.textContent = devolucoes;
+
+            renderizarNotas(notas, 'todas');
+        }
+
+        // Renderizar tabela de notas
+        function renderizarNotas(notas, filtro) {
+            const tbody = document.getElementById('notas-tabela-body');
+            const emptyMsg = document.getElementById('notas-empty');
+            if (!tbody) return;
+
+            let notasFiltradas = notas;
+            if (filtro === 'entradas') {
+                notasFiltradas = notas.filter(n => n.tipo_nota === 0);
+            } else if (filtro === 'saidas') {
+                notasFiltradas = notas.filter(n => n.tipo_nota === 1);
+            } else if (filtro === 'devolucoes') {
+                notasFiltradas = notas.filter(n => n.finalidade === 4);
+            }
+
+            if (notasFiltradas.length === 0) {
+                tbody.innerHTML = '';
+                if (emptyMsg) emptyMsg.classList.remove('hidden');
+                return;
+            }
+
+            if (emptyMsg) emptyMsg.classList.add('hidden');
+
+            tbody.innerHTML = notasFiltradas.map(nota => {
+                const tipoClass = nota.tipo_nota === 0 ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
+                const tipoIcon = nota.tipo_nota === 0 ? '&#8595;' : '&#8593;';
+                const tipoText = nota.tipo_nota === 0 ? 'Ent' : 'Sai';
+
+                return '<tr class="hover:bg-gray-50" data-tipo="' + nota.tipo_nota + '" data-finalidade="' + nota.finalidade + '">' +
+                    '<td class="px-3 py-2 text-gray-900 whitespace-nowrap">' + (nota.numero_nota || '-') + '/' + (nota.serie || 1) + '</td>' +
+                    '<td class="px-3 py-2 text-gray-600 whitespace-nowrap">' + (nota.data_emissao || '-') + '</td>' +
+                    '<td class="px-3 py-2 text-gray-900 max-w-[200px] truncate" title="' + (nota.emit_razao_social || '') + '">' +
+                        (nota.emit_razao_social || nota.emit_cnpj_formatado || '-') +
+                    '</td>' +
+                    '<td class="px-3 py-2 text-right text-gray-900 whitespace-nowrap">' + (nota.valor_formatado || formatarBRL(nota.valor_total)) + '</td>' +
+                    '<td class="px-3 py-2 text-right text-gray-600 whitespace-nowrap">' + formatarBRL(nota.icms_valor) + '</td>' +
+                    '<td class="px-3 py-2 text-center whitespace-nowrap">' +
+                        '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ' + tipoClass + '">' +
+                        tipoIcon + ' ' + tipoText +
+                        '</span>' +
+                    '</td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        // Renderizar tabela de participantes
+        function renderizarParticipantes(participantes, filtro) {
+            const tbody = document.getElementById('participantes-tabela-body');
+            const emptyMsg = document.getElementById('participantes-empty');
+            if (!tbody) return;
+
+            let partsFiltrados = participantes;
+            if (filtro === 'novos') {
+                partsFiltrados = participantes.filter(p => p.is_novo);
+            } else if (filtro === 'atualizados') {
+                partsFiltrados = participantes.filter(p => !p.is_novo);
+            }
+
+            // Atualizar contadores
+            const countTodos = document.getElementById('part-count-todos');
+            const countNovos = document.getElementById('part-count-novos');
+            const countAtualizados = document.getElementById('part-count-atualizados');
+
+            if (countTodos) countTodos.textContent = participantes.length;
+            if (countNovos) countNovos.textContent = participantes.filter(p => p.is_novo).length;
+            if (countAtualizados) countAtualizados.textContent = participantes.filter(p => !p.is_novo).length;
+
+            if (partsFiltrados.length === 0) {
+                tbody.innerHTML = '';
+                if (emptyMsg) {
+                    emptyMsg.textContent = filtro === 'todos' ? 'Nenhum participante encontrado.' : 'Nenhum participante nesta categoria.';
+                    emptyMsg.classList.remove('hidden');
+                }
+                return;
+            }
+
+            if (emptyMsg) emptyMsg.classList.add('hidden');
+
+            tbody.innerHTML = partsFiltrados.map(p => {
+                const statusClass = p.is_novo ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
+                const statusText = p.is_novo ? 'Novo' : 'Atualizado';
+
+                return '<tr class="hover:bg-gray-50" data-novo="' + (p.is_novo ? '1' : '0') + '">' +
+                    '<td class="px-3 py-2 text-gray-900 whitespace-nowrap font-mono text-xs">' + (p.cnpj_formatado || p.cnpj || '-') + '</td>' +
+                    '<td class="px-3 py-2 text-gray-900 max-w-[200px] truncate" title="' + (p.razao_social || '') + '">' + (p.razao_social || '-') + '</td>' +
+                    '<td class="px-3 py-2 text-center text-gray-600">' + (p.uf || '-') + '</td>' +
+                    '<td class="px-3 py-2 text-gray-600 max-w-[150px] truncate" title="' + (p.municipio || '') + '">' + (p.municipio || '-') + '</td>' +
+                    '<td class="px-3 py-2 text-center">' +
+                        '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ' + statusClass + '">' +
+                        statusText +
+                        '</span>' +
+                    '</td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        // Configurar filtros de participantes
+        function configurarFiltrosParticipantes() {
+            const filtros = document.querySelectorAll('.part-filtro-btn');
+            filtros.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const filtro = this.dataset.filtro;
+
+                    // Atualizar visual dos botoes (tab style)
+                    filtros.forEach(b => {
+                        b.classList.remove('bg-white', 'text-gray-900', 'font-medium', 'shadow-sm');
+                        b.classList.add('text-gray-600', 'hover:text-gray-900');
+                    });
+                    this.classList.remove('text-gray-600', 'hover:text-gray-900');
+                    this.classList.add('bg-white', 'text-gray-900', 'font-medium', 'shadow-sm');
+
+                    // Re-renderizar
+                    renderizarParticipantes(dadosParticipantes, filtro);
+                });
+            });
+        }
+
+        // Configurar filtros de notas
+        function configurarFiltrosNotas() {
+            const filtros = document.querySelectorAll('.notas-filtro-btn');
+            filtros.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const filtro = this.dataset.filtro;
+
+                    // Atualizar visual dos botoes (tab style)
+                    filtros.forEach(b => {
+                        b.classList.remove('bg-white', 'text-gray-900', 'font-medium', 'shadow-sm');
+                        b.classList.add('text-gray-600', 'hover:text-gray-900');
+                    });
+                    this.classList.remove('text-gray-600', 'hover:text-gray-900');
+                    this.classList.add('bg-white', 'text-gray-900', 'font-medium', 'shadow-sm');
+
+                    // Re-renderizar
+                    renderizarNotas(dadosNotasFiscais, filtro);
+                });
+            });
         }
 
         // Conectar SSE
@@ -1244,25 +1775,48 @@
                     }));
 
                     const clienteSelect = document.getElementById('cliente-select');
+                    const salvarMovimentacoes = document.getElementById('salvar-movimentacoes');
                     const modoEnvio = getSelectedModoEnvio();
                     const payload = {
                         tipo_documento: tipoDoc,
                         modo_envio: modoEnvio,
                         tab_id: tabId,
                         cliente_id: clienteSelect ? clienteSelect.value || null : null,
+                        salvar_movimentacoes: salvarMovimentacoes ? salvarMovimentacoes.checked : false,
                         arquivos: arquivos
                     };
 
-                    const response = await fetch('/app/monitoramento/xml/importar', {
+                    let response = await fetch('/app/monitoramento/xml/importar', {
                         method: 'POST',
                         headers: {
-                            'X-CSRF-TOKEN': csrf,
+                            'X-CSRF-TOKEN': getCsrfToken(),
                             'Accept': 'application/json',
                             'Content-Type': 'application/json'
                         },
                         credentials: 'same-origin',
                         body: JSON.stringify(payload)
                     });
+
+                    // Handle CSRF token mismatch (419) - retry once
+                    if (response.status === 419) {
+                        console.log('[Monitoramento XML] CSRF token expirado no import, atualizando...');
+                        await refreshCsrfToken();
+                        response = await fetch('/app/monitoramento/xml/importar', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': getCsrfToken(),
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'same-origin',
+                            body: JSON.stringify(payload)
+                        });
+                    }
+
+                    // Handle auth error
+                    if (response.status === 401) {
+                        throw new Error('Sessao expirada. Recarregue a pagina para continuar.');
+                    }
 
                     const data = await response.json();
 
@@ -1271,6 +1825,10 @@
                     }
 
                     console.log('[Monitoramento XML] Importacao iniciada:', data);
+
+                    // Salvar dados da importacao
+                    currentImportacaoId = data.importacao_id || null;
+                    salvarMovimentacoesAtivo = payload.salvar_movimentacoes || false;
 
                     importacaoEmAndamento = true;
                     resetarProgresso();
@@ -1296,6 +1854,7 @@
         if (btnTentarNovamente) {
             btnTentarNovamente.addEventListener('click', function() {
                 importacaoEmAndamento = false;
+                currentImportacaoId = null;
                 if (eventSource) {
                     eventSource.close();
                     eventSource = null;
@@ -1311,6 +1870,8 @@
         if (btnNovaImportacao) {
             btnNovaImportacao.addEventListener('click', function() {
                 importacaoEmAndamento = false;
+                currentImportacaoId = null;
+                salvarMovimentacoesAtivo = false;
                 if (eventSource) {
                     eventSource.close();
                     eventSource = null;
