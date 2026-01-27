@@ -241,6 +241,200 @@
                         </div>
                     @endif
                 </div>
+
+                {{-- Notas Fiscais --}}
+                @if(($totalNotasFiscais ?? 0) > 0)
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-lg font-semibold text-gray-900">Notas Fiscais</h2>
+                            <span class="text-sm text-gray-500">{{ $totalNotasFiscais }} nota(s)</span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Data</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Numero/Serie</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Papel</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Contraparte</th>
+                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Valor</th>
+                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Acoes</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                @foreach($notasFiscais as $nota)
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                                            {{ $nota->data_emissao?->format('d/m/Y') ?? '-' }}
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
+                                                {{ $nota->tipo_documento }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap font-mono">
+                                            {{ $nota->numero_nota ?? '-' }}/{{ $nota->serie ?? '-' }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            @if($nota->papel === 'emitente')
+                                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
+                                                    Emitente
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
+                                                    Destinatario
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-900 max-w-[200px]">
+                                            <div class="truncate" title="{{ $nota->contraparte_razao }}">
+                                                {{ $nota->contraparte_razao ?? '-' }}
+                                            </div>
+                                            <div class="text-xs text-gray-500 font-mono">
+                                                @php
+                                                    $cpCnpj = $nota->contraparte_cnpj ?? '';
+                                                    if (strlen($cpCnpj) === 14) {
+                                                        $cpCnpj = preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $cpCnpj);
+                                                    }
+                                                @endphp
+                                                {{ $cpCnpj ?: '-' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-900 text-right whitespace-nowrap font-semibold">
+                                            R$ {{ number_format((float) $nota->valor_total, 2, ',', '.') }}
+                                        </td>
+                                        <td class="px-6 py-4 text-right whitespace-nowrap">
+                                            <div class="flex items-center justify-end gap-1">
+                                                <button
+                                                    type="button"
+                                                    class="btn-ver-nota inline-flex items-center p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                                    data-nota-id="{{ $nota->id }}"
+                                                    title="Ver detalhes"
+                                                >
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                    </svg>
+                                                </button>
+                                                @if($nota->contraparte_participante_id)
+                                                    <a
+                                                        href="/app/monitoramento/participante/{{ $nota->contraparte_participante_id }}"
+                                                        class="inline-flex items-center p-2 rounded-lg text-gray-500 hover:text-green-600 hover:bg-green-50 transition-colors"
+                                                        data-link
+                                                        title="Ver contraparte"
+                                                    >
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                                        </svg>
+                                                    </a>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @if($notasFiscais->hasPages())
+                        <div class="px-6 py-4 border-t border-gray-200">
+                            {{ $notasFiscais->appends(request()->except('notas_page'))->links() }}
+                        </div>
+                    @endif
+                </div>
+                @endif
+
+                {{-- XMLs Processados --}}
+                @if(($totalXmlsProcessados ?? 0) > 0)
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-lg font-semibold text-gray-900">XMLs Processados</h2>
+                            <span class="text-sm text-gray-500">{{ $totalXmlsProcessados }} XML(s)</span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Data Processamento</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Chave Acesso</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Papel</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Data Importacao</th>
+                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Acoes</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                @foreach($xmlsProcessados as $xml)
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                                            {{ $xml->processado_em?->format('d/m/Y H:i') ?? '-' }}
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
+                                                {{ $xml->tipo_documento }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap font-mono">
+                                            <span class="truncate max-w-[180px] inline-block" title="{{ $xml->chave_acesso }}">
+                                                {{ Str::limit($xml->chave_acesso, 20, '...') }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            @if($xml->papel === 'emitente')
+                                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
+                                                    Emitente
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
+                                                    Destinatario
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                                            {{ $xml->importacao?->created_at?->format('d/m/Y H:i') ?? '-' }}
+                                        </td>
+                                        <td class="px-6 py-4 text-right whitespace-nowrap">
+                                            <div class="flex items-center justify-end gap-1">
+                                                <button
+                                                    type="button"
+                                                    class="btn-copiar-chave inline-flex items-center p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                                    data-chave="{{ $xml->chave_acesso }}"
+                                                    title="Copiar chave de acesso"
+                                                >
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+                                                    </svg>
+                                                </button>
+                                                @if($xml->contraparte_participante_id)
+                                                    <a
+                                                        href="/app/monitoramento/participante/{{ $xml->contraparte_participante_id }}"
+                                                        class="inline-flex items-center p-2 rounded-lg text-gray-500 hover:text-green-600 hover:bg-green-50 transition-colors"
+                                                        data-link
+                                                        title="Ver contraparte"
+                                                    >
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                                        </svg>
+                                                    </a>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @if($xmlsProcessados->hasPages())
+                        <div class="px-6 py-4 border-t border-gray-200">
+                            {{ $xmlsProcessados->appends(request()->except('xmls_page'))->links() }}
+                        </div>
+                    @endif
+                </div>
+                @endif
             </div>
 
             {{-- Coluna Lateral --}}
@@ -352,6 +546,14 @@
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Creditos utilizados</span>
                             <span class="text-sm font-semibold text-gray-900">{{ $estatisticas['creditos_utilizados'] ?? 0 }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Notas fiscais</span>
+                            <span class="text-sm font-semibold text-gray-900">{{ $totalNotasFiscais ?? 0 }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">XMLs processados</span>
+                            <span class="text-sm font-semibold text-gray-900">{{ $totalXmlsProcessados ?? 0 }}</span>
                         </div>
                     </div>
                 </div>
@@ -501,6 +703,30 @@
             </div>
         </div>
         <div class="p-6" id="modal-consulta-content">
+            {{-- Conteudo sera preenchido via JavaScript --}}
+        </div>
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end">
+            <button type="button" class="modal-close px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
+                Fechar
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- Modal Ver Nota Fiscal --}}
+<div id="modal-ver-nota" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900">Detalhes da Nota Fiscal</h3>
+                <button type="button" class="modal-close text-gray-400 hover:text-gray-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="p-6" id="modal-nota-content">
             {{-- Conteudo sera preenchido via JavaScript --}}
         </div>
         <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end">
@@ -880,6 +1106,169 @@
             });
         });
 
+        // Ver detalhes da nota fiscal
+        const modalVerNota = document.getElementById('modal-ver-nota');
+        const modalNotaContent = document.getElementById('modal-nota-content');
+
+        document.querySelectorAll('.btn-ver-nota').forEach(function(btn) {
+            btn.addEventListener('click', async function() {
+                const notaId = this.dataset.notaId;
+
+                modalNotaContent.innerHTML = '<div class="flex items-center justify-center py-8"><svg class="animate-spin h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>';
+                modalVerNota.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+
+                try {
+                    const response = await fetch('/app/monitoramento/participante/nota-fiscal/' + notaId, {
+                        method: 'GET',
+                        headers: {
+                            'X-CSRF-TOKEN': csrf,
+                            'Accept': 'application/json',
+                        },
+                        credentials: 'same-origin',
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Erro ao carregar detalhes da nota');
+                    }
+
+                    const result = await response.json();
+                    if (result.success) {
+                        renderizarNotaFiscal(result.data);
+                    } else {
+                        throw new Error(result.message || 'Erro ao carregar detalhes');
+                    }
+                } catch (err) {
+                    console.error('[Monitoramento Participante] Erro:', err);
+                    modalNotaContent.innerHTML = '<div class="text-center py-8 text-red-600">Erro ao carregar detalhes. Tente novamente.</div>';
+                }
+            });
+        });
+
+        // Funcao para renderizar nota fiscal no modal
+        function renderizarNotaFiscal(data) {
+            let html = '<div class="space-y-6">';
+
+            // Dados do documento
+            html += '<div class="border-b border-gray-200 pb-4">';
+            html += '<h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Dados do Documento</h4>';
+            html += '<div class="bg-gray-50 rounded-lg p-3 mb-3">';
+            html += '<p class="text-xs text-gray-500">Chave de Acesso</p>';
+            html += '<p class="text-sm font-mono text-gray-900 break-all">' + (data.chave_acesso || '-') + '</p>';
+            html += '</div>';
+            html += '<div class="grid grid-cols-3 gap-4">';
+            html += '<div><p class="text-xs text-gray-500">Tipo</p><p class="text-sm font-semibold text-gray-900">' + (data.tipo_documento || '-') + '</p></div>';
+            html += '<div><p class="text-xs text-gray-500">Numero/Serie</p><p class="text-sm font-semibold text-gray-900">' + (data.numero_nota || '-') + '/' + (data.serie || '-') + '</p></div>';
+            html += '<div><p class="text-xs text-gray-500">Data Emissao</p><p class="text-sm font-semibold text-gray-900">' + (data.data_emissao || '-') + '</p></div>';
+            html += '</div>';
+            html += '<div class="mt-3">';
+            html += '<p class="text-xs text-gray-500">Natureza da Operacao</p>';
+            html += '<p class="text-sm text-gray-900">' + (data.natureza_operacao || '-') + '</p>';
+            html += '</div>';
+            html += '<div class="grid grid-cols-2 gap-4 mt-3">';
+            html += '<div><p class="text-xs text-gray-500">Tipo</p><p class="text-sm font-semibold text-gray-900">' + (data.tipo_nota || '-') + '</p></div>';
+            html += '<div><p class="text-xs text-gray-500">Finalidade</p><p class="text-sm font-semibold text-gray-900">' + (data.finalidade || '-') + '</p></div>';
+            html += '</div>';
+            html += '</div>';
+
+            // Emitente
+            html += '<div class="border-b border-gray-200 pb-4">';
+            html += '<h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Emitente</h4>';
+            html += '<div class="grid grid-cols-2 gap-4">';
+            html += '<div><p class="text-xs text-gray-500">CNPJ</p><p class="text-sm font-mono text-gray-900">' + (data.emit_cnpj || '-') + '</p></div>';
+            html += '<div><p class="text-xs text-gray-500">UF</p><p class="text-sm text-gray-900">' + (data.emit_uf || '-') + '</p></div>';
+            html += '</div>';
+            html += '<div class="mt-2"><p class="text-xs text-gray-500">Razao Social</p><p class="text-sm text-gray-900">' + (data.emit_razao_social || '-') + '</p></div>';
+            html += '</div>';
+
+            // Destinatario
+            html += '<div class="border-b border-gray-200 pb-4">';
+            html += '<h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Destinatario</h4>';
+            html += '<div class="grid grid-cols-2 gap-4">';
+            html += '<div><p class="text-xs text-gray-500">CNPJ</p><p class="text-sm font-mono text-gray-900">' + (data.dest_cnpj || '-') + '</p></div>';
+            html += '<div><p class="text-xs text-gray-500">UF</p><p class="text-sm text-gray-900">' + (data.dest_uf || '-') + '</p></div>';
+            html += '</div>';
+            html += '<div class="mt-2"><p class="text-xs text-gray-500">Razao Social</p><p class="text-sm text-gray-900">' + (data.dest_razao_social || '-') + '</p></div>';
+            html += '</div>';
+
+            // Valores
+            html += '<div>';
+            html += '<h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Valores</h4>';
+            html += '<div class="bg-blue-50 rounded-lg p-4 mb-3">';
+            html += '<p class="text-xs text-blue-600">Valor Total</p>';
+            html += '<p class="text-2xl font-bold text-blue-700">R$ ' + (data.valor_total || '0,00') + '</p>';
+            html += '</div>';
+            html += '<div class="grid grid-cols-3 gap-3">';
+            html += '<div class="bg-gray-50 rounded-lg p-3">';
+            html += '<p class="text-xs text-gray-500">ICMS</p>';
+            html += '<p class="text-sm font-semibold text-gray-900">R$ ' + (data.icms_valor || '0,00') + '</p>';
+            html += '</div>';
+            html += '<div class="bg-gray-50 rounded-lg p-3">';
+            html += '<p class="text-xs text-gray-500">ICMS-ST</p>';
+            html += '<p class="text-sm font-semibold text-gray-900">R$ ' + (data.icms_st_valor || '0,00') + '</p>';
+            html += '</div>';
+            html += '<div class="bg-gray-50 rounded-lg p-3">';
+            html += '<p class="text-xs text-gray-500">PIS</p>';
+            html += '<p class="text-sm font-semibold text-gray-900">R$ ' + (data.pis_valor || '0,00') + '</p>';
+            html += '</div>';
+            html += '<div class="bg-gray-50 rounded-lg p-3">';
+            html += '<p class="text-xs text-gray-500">COFINS</p>';
+            html += '<p class="text-sm font-semibold text-gray-900">R$ ' + (data.cofins_valor || '0,00') + '</p>';
+            html += '</div>';
+            html += '<div class="bg-gray-50 rounded-lg p-3">';
+            html += '<p class="text-xs text-gray-500">IPI</p>';
+            html += '<p class="text-sm font-semibold text-gray-900">R$ ' + (data.ipi_valor || '0,00') + '</p>';
+            html += '</div>';
+            html += '<div class="bg-amber-50 rounded-lg p-3">';
+            html += '<p class="text-xs text-amber-600">Total Tributos</p>';
+            html += '<p class="text-sm font-semibold text-amber-700">R$ ' + (data.tributos_total || '0,00') + '</p>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+
+            html += '</div>';
+
+            modalNotaContent.innerHTML = html;
+        }
+
+        // Copiar chave de acesso
+        document.querySelectorAll('.btn-copiar-chave').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const chave = this.dataset.chave;
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(chave).then(function() {
+                        window.showToast && window.showToast('Chave copiada para a area de transferencia!', 'success');
+                    }).catch(function() {
+                        fallbackCopyTextToClipboard(chave);
+                    });
+                } else {
+                    fallbackCopyTextToClipboard(chave);
+                }
+            });
+        });
+
+        // Fallback para copiar texto
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                document.execCommand('copy');
+                window.showToast && window.showToast('Chave copiada para a area de transferencia!', 'success');
+            } catch (err) {
+                window.showToast && window.showToast('Erro ao copiar chave', 'error');
+            }
+
+            document.body.removeChild(textArea);
+        }
+
         // Fechar modais
         document.querySelectorAll('.modal-close').forEach(function(btn) {
             btn.addEventListener('click', function() {
@@ -892,7 +1281,7 @@
         });
 
         // Fechar modal clicando fora
-        [modalConsultaAvulsa, modalCriarAssinatura, modalVerConsulta].forEach(function(modal) {
+        [modalConsultaAvulsa, modalCriarAssinatura, modalVerConsulta, modalVerNota].forEach(function(modal) {
             if (modal) {
                 modal.addEventListener('click', function(e) {
                     if (e.target === modal) {

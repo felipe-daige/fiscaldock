@@ -104,6 +104,22 @@ class Participante extends Model
     }
 
     /**
+     * XMLs processados onde o participante é o emitente.
+     */
+    public function xmlsComoEmitente(): HasMany
+    {
+        return $this->hasMany(XmlChaveProcessada::class, 'emit_participante_id');
+    }
+
+    /**
+     * XMLs processados onde o participante é o destinatário.
+     */
+    public function xmlsComoDestinatario(): HasMany
+    {
+        return $this->hasMany(XmlChaveProcessada::class, 'dest_participante_id');
+    }
+
+    /**
      * CNPJ formatado.
      */
     public function getCnpjFormatadoAttribute(): string

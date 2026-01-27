@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Process;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Http\JsonResponse;
 use ZipArchive;
@@ -284,20 +285,43 @@ class XmlImportacaoController extends Controller
     /**
      * Conta XMLs dentro de um arquivo ZIP.
      *
+     * Exclui arquivos na pasta __MACOSX (resource forks do Mac).
+     * Usa fallback com comando unzip se ZipArchive falhar.
+     * Retorna -1 se não conseguir contar (n8n fará a contagem).
+     *
      * @param string $zipPath Caminho para o arquivo ZIP
-     * @return int Quantidade de XMLs encontrados
+     * @return int Quantidade de XMLs encontrados, ou -1 se indisponível
      */
     private function contarXmlsNoZip(string $zipPath): int
     {
         $zip = new ZipArchive();
-        if ($zip->open($zipPath) !== true) {
+        $result = $zip->open($zipPath);
+
+        if ($result !== true) {
+            // Tentar fallback com unzip
+            $fallback = $this->validarZipComUnzip($zipPath);
+            if ($fallback['success']) {
+                return $fallback['total_xmls'] ?? 0;
+            }
+
+            // Verificar magic bytes como último recurso
+            $content = @file_get_contents($zipPath, false, null, 0, 4);
+            if ($content && $this->isValidZipMagicBytes($content)) {
+                Log::info('contarXmlsNoZip: ZIP aceito via magic bytes, contagem será feita pelo n8n', [
+                    'zipPath' => $zipPath,
+                ]);
+                return -1; // -1 indica que n8n fará a contagem
+            }
+
             return 0;
         }
 
         $count = 0;
         for ($i = 0; $i < $zip->numFiles; $i++) {
             $name = $zip->getNameIndex($i);
-            if ($name && str_ends_with(strtolower($name), '.xml')) {
+            if ($name &&
+                str_ends_with(strtolower($name), '.xml') &&
+                !str_starts_with($name, '__MACOSX/')) {
                 $count++;
             }
         }
@@ -497,9 +521,25 @@ class XmlImportacaoController extends Controller
 
     /**
      * Valida arquivo ZIP e conta XMLs dentro.
+     *
+     * Usa ZipArchive do PHP como método primário. Se falhar (comum com ZIPs
+     * criados no Mac via Finder), tenta fallback com comando `unzip` do sistema.
      */
     private function validarZip(string $content, string $fileName): JsonResponse
     {
+        // Detectar Apple Finder Bookmark (arquivo arrastado da Lixeira ou alias)
+        if ($this->isAppleBookmark($content)) {
+            Log::warning('Arquivo é Apple Finder Bookmark, não ZIP real', [
+                'arquivo' => $fileName,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Este arquivo é uma referência, não o ZIP real.',
+                'hint' => 'Tire o arquivo da Lixeira antes de enviar, ou use "Comprimir" novamente.',
+            ]);
+        }
+
         $tempFile = tempnam(sys_get_temp_dir(), 'xml_validate_');
         if (!$tempFile) {
             return response()->json([
@@ -515,16 +555,70 @@ class XmlImportacaoController extends Controller
             $result = $zip->open($tempFile);
 
             if ($result !== true) {
+                // Logar erro real para diagnóstico
+                Log::warning('ZipArchive falhou ao abrir arquivo', [
+                    'arquivo' => $fileName,
+                    'erro_codigo' => $result,
+                    'erro_mensagem' => $this->getZipArchiveErrorMessage($result),
+                ]);
+
+                // Tentar fallback com unzip do sistema (suporta mais formatos)
+                $fallback = $this->validarZipComUnzip($tempFile);
+
+                if ($fallback['success']) {
+                    Log::info('Fallback unzip funcionou', [
+                        'arquivo' => $fileName,
+                        'total_xmls' => $fallback['total_xmls'],
+                    ]);
+
+                    return response()->json([
+                        'success' => true,
+                        'tipo' => 'zip',
+                        'total_xmls' => $fallback['total_xmls'],
+                        'mensagem' => $fallback['total_xmls'] === 0 ? 'Nenhum XML encontrado no ZIP' : null,
+                    ]);
+                }
+
+                // Terceiro fallback: verificar magic bytes
+                // ZIPs do Mac (Archive Utility) às vezes usam formatos que as ferramentas
+                // não conseguem abrir para listar, mas o n8n (via Node.js) consegue extrair
+                if ($this->isValidZipMagicBytes($content)) {
+                    Log::info('Fallback magic bytes: ZIP aceito para processamento', [
+                        'arquivo' => $fileName,
+                        'ziparchive_erro' => $this->getZipArchiveErrorMessage($result),
+                        'unzip_erro' => $fallback['error'] ?? 'desconhecido',
+                    ]);
+
+                    return response()->json([
+                        'success' => true,
+                        'tipo' => 'zip',
+                        'total_xmls' => -1, // -1 indica que a contagem será feita pelo n8n
+                        'validacao_relaxada' => true,
+                        'mensagem' => 'ZIP aceito. A contagem será feita durante o processamento.',
+                    ]);
+                }
+
+                // Todos os métodos falharam - retornar erro detalhado com dica
+                Log::error('ZIP inválido: ZipArchive, unzip e magic bytes falharam', [
+                    'arquivo' => $fileName,
+                    'ziparchive_erro' => $this->getZipArchiveErrorMessage($result),
+                    'unzip_erro' => $fallback['error'] ?? 'desconhecido',
+                ]);
+
                 return response()->json([
                     'success' => false,
-                    'error' => 'ZIP corrompido ou inválido.',
+                    'error' => $this->getZipArchiveErrorMessage($result),
+                    'hint' => 'Se criado no Mac, tente: zip -r arquivo.zip pasta/',
                 ]);
             }
 
+            // Contar XMLs (excluindo __MACOSX que contém resource forks do Mac)
             $totalXmls = 0;
             for ($i = 0; $i < $zip->numFiles; $i++) {
                 $entryName = $zip->getNameIndex($i);
-                if ($entryName && str_ends_with(strtolower($entryName), '.xml')) {
+                if ($entryName &&
+                    str_ends_with(strtolower($entryName), '.xml') &&
+                    !str_starts_with($entryName, '__MACOSX/')) {
                     $totalXmls++;
                 }
             }
@@ -541,6 +635,121 @@ class XmlImportacaoController extends Controller
         } finally {
             @unlink($tempFile);
         }
+    }
+
+    /**
+     * Traduz códigos de erro do ZipArchive para mensagens amigáveis.
+     */
+    private function getZipArchiveErrorMessage(int $errorCode): string
+    {
+        return match ($errorCode) {
+            ZipArchive::ER_NOZIP => 'Arquivo não é um ZIP válido ou usa formato não suportado',
+            ZipArchive::ER_COMPNOTSUPP => 'Método de compressão não suportado pelo servidor',
+            ZipArchive::ER_INCONS => 'ZIP inconsistente (possível corrupção)',
+            ZipArchive::ER_CRC => 'Erro de CRC (arquivo corrompido)',
+            ZipArchive::ER_EOF => 'Arquivo truncado ou incompleto',
+            ZipArchive::ER_NOENT => 'Arquivo não encontrado',
+            ZipArchive::ER_OPEN => 'Não foi possível abrir o arquivo',
+            ZipArchive::ER_READ => 'Erro de leitura',
+            ZipArchive::ER_MEMORY => 'Erro de memória',
+            default => "Erro ao processar ZIP (código: {$errorCode})",
+        };
+    }
+
+    /**
+     * Valida ZIP usando comando `unzip` do sistema como fallback.
+     *
+     * O comando unzip suporta mais métodos de compressão que o ZipArchive do PHP,
+     * incluindo alguns formatos criados pelo Archive Utility do Mac.
+     *
+     * @return array{success: bool, total_xmls?: int, error?: string}
+     */
+    private function validarZipComUnzip(string $tempFile): array
+    {
+        // Verificar se unzip está disponível
+        $whichResult = Process::run(['which', 'unzip']);
+        if (!$whichResult->successful()) {
+            return ['success' => false, 'error' => 'unzip não disponível no sistema'];
+        }
+
+        // Testar integridade do ZIP
+        $testResult = Process::run(['unzip', '-t', $tempFile]);
+
+        if (!$testResult->successful()) {
+            return [
+                'success' => false,
+                'error' => trim($testResult->errorOutput()) ?: 'ZIP inválido',
+            ];
+        }
+
+        // Listar conteúdo e contar XMLs (excluindo __MACOSX)
+        $listResult = Process::run(['unzip', '-l', $tempFile]);
+
+        if (!$listResult->successful()) {
+            // ZIP é válido mas não conseguimos listar - retornar sucesso com 0 XMLs
+            return ['success' => true, 'total_xmls' => 0];
+        }
+
+        $output = $listResult->output();
+
+        // Contar arquivos .xml que NÃO estão em __MACOSX
+        $lines = explode("\n", $output);
+        $totalXmls = 0;
+
+        foreach ($lines as $line) {
+            // Formato típico: "  12345  2024-01-01 10:00   path/to/file.xml"
+            if (preg_match('/\.xml$/i', $line) && !preg_match('/__MACOSX/i', $line)) {
+                $totalXmls++;
+            }
+        }
+
+        return ['success' => true, 'total_xmls' => $totalXmls];
+    }
+
+    /**
+     * Verifica se o conteúdo tem magic bytes de um arquivo ZIP válido.
+     *
+     * ZIP files começam com "PK" (Phil Katz, criador do formato).
+     * Esta verificação é usada como último fallback quando ZipArchive
+     * e unzip falham em abrir o arquivo (comum com ZIPs do Mac).
+     *
+     * @param string $content Conteúdo binário do arquivo
+     * @return bool True se os magic bytes indicam um ZIP
+     */
+    private function isValidZipMagicBytes(string $content): bool
+    {
+        if (strlen($content) < 4) {
+            return false;
+        }
+
+        $magic = substr($content, 0, 4);
+
+        // ZIP magic numbers
+        return $magic === "PK\x03\x04"  // Normal ZIP (local file header)
+            || $magic === "PK\x05\x06"  // Empty ZIP (end of central directory)
+            || $magic === "PK\x07\x08"; // Spanned ZIP (data descriptor)
+    }
+
+    /**
+     * Verifica se o conteúdo é um Apple Finder Bookmark.
+     *
+     * Bookmarks são enviados pelo Finder quando o arquivo está na Lixeira
+     * ou é um alias. O conteúdo começa com "book" seguido de bytes nulos
+     * e contém "mark" nos primeiros 16 bytes.
+     *
+     * @param string $content Conteúdo binário do arquivo
+     * @return bool True se é um Apple Finder Bookmark
+     */
+    private function isAppleBookmark(string $content): bool
+    {
+        if (strlen($content) < 8) {
+            return false;
+        }
+
+        // Apple Bookmark magic: "book" seguido de bytes nulos, ou "mark" nos primeiros bytes
+        return substr($content, 0, 4) === 'book'
+            && substr($content, 4, 4) === "\x00\x00\x00\x00"
+            || str_contains(substr($content, 0, 16), 'mark');
     }
 
     /**
@@ -762,6 +971,19 @@ class XmlImportacaoController extends Controller
             ->orderBy('data_emissao', 'desc')
             ->get();
 
+        // Fallback: buscar por chaves processadas se não encontrou por importacao_xml_id
+        if ($notasQuery->isEmpty()) {
+            $chavesProcessadas = \App\Models\XmlChaveProcessada::where('importacao_xml_id', $importacaoId)
+                ->pluck('chave_acesso');
+
+            if ($chavesProcessadas->isNotEmpty()) {
+                $notasQuery = \App\Models\NotaFiscal::whereIn('chave_acesso', $chavesProcessadas)
+                    ->where('user_id', $userId)
+                    ->orderBy('data_emissao', 'desc')
+                    ->get();
+            }
+        }
+
         foreach ($notasQuery as $nota) {
             // Acumular resumo financeiro
             $resumoFinanceiro['valor_total'] += (float) $nota->valor_total;
@@ -797,6 +1019,9 @@ class XmlImportacaoController extends Controller
                 'valor_total' => (float) $nota->valor_total,
                 'valor_formatado' => $nota->valor_formatado,
                 'icms_valor' => (float) $nota->icms_valor,
+                'pis_valor' => (float) $nota->pis_valor,
+                'cofins_valor' => (float) $nota->cofins_valor,
+                'ipi_valor' => (float) $nota->ipi_valor,
                 'tipo_nota' => $nota->tipo_nota,
                 'tipo_nota_desc' => $nota->tipo_nota_descricao,
                 'finalidade' => $nota->finalidade,

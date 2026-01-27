@@ -421,7 +421,7 @@
                             <button
                                 type="button"
                                 id="btn-nova-importacao"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition shadow-sm"
                             >
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -499,10 +499,10 @@
                                     Todas <span id="notas-count-todas">0</span>
                                 </button>
                                 <button type="button" class="notas-filtro-btn px-2.5 py-1 text-xs rounded-md text-gray-600 hover:text-gray-900" data-filtro="entradas">
-                                    Ent <span id="notas-count-entradas">0</span>
+                                    Entrada <span id="notas-count-entradas">0</span>
                                 </button>
                                 <button type="button" class="notas-filtro-btn px-2.5 py-1 text-xs rounded-md text-gray-600 hover:text-gray-900" data-filtro="saidas">
-                                    Sai <span id="notas-count-saidas">0</span>
+                                    Saída <span id="notas-count-saidas">0</span>
                                 </button>
                                 <button type="button" class="notas-filtro-btn px-2.5 py-1 text-xs rounded-md text-gray-600 hover:text-gray-900" data-filtro="devolucoes">
                                     Dev <span id="notas-count-devolucoes">0</span>
@@ -518,6 +518,9 @@
                                         <th class="px-3 py-2 text-left font-medium text-gray-600">Emitente</th>
                                         <th class="px-3 py-2 text-right font-medium text-gray-600">Valor</th>
                                         <th class="px-3 py-2 text-right font-medium text-gray-600">ICMS</th>
+                                        <th class="px-3 py-2 text-right font-medium text-gray-600">PIS</th>
+                                        <th class="px-3 py-2 text-right font-medium text-gray-600">COFINS</th>
+                                        <th class="px-3 py-2 text-right font-medium text-gray-600">IPI</th>
                                         <th class="px-3 py-2 text-center font-medium text-gray-600">Tipo</th>
                                     </tr>
                                 </thead>
@@ -677,7 +680,7 @@
         const MAX_FILES = 100;
 
         // Estado
-        // File object structure: { file: File, status: 'pending'|'validating'|'valid'|'error', totalXmls: number|null, tipoDoc: string|null, error: string|null }
+        // File object structure: { file: File, status: 'pending'|'validating'|'valid'|'error', totalXmls: number|null, tipoDoc: string|null, error: string|null, hint: string|null }
         let selectedFiles = [];
         let eventSource = null;
         let importacaoEmAndamento = false;
@@ -920,8 +923,9 @@
 
                 if (data.success) {
                     fileObj.status = 'valid';
-                    fileObj.totalXmls = data.total_xmls || 1;
+                    fileObj.totalXmls = data.total_xmls === -1 ? -1 : (data.total_xmls || 1);
                     fileObj.tipoDoc = data.tipo_documento || null;
+                    fileObj.validacaoRelaxada = data.validacao_relaxada || false;
 
                     // Warn if ZIP has 0 XMLs
                     if (data.tipo === 'zip' && data.total_xmls === 0) {
@@ -930,6 +934,7 @@
                 } else {
                     fileObj.status = 'error';
                     fileObj.error = data.error || 'Erro na validacao';
+                    fileObj.hint = data.hint || null;
                     fileObj.totalXmls = 0;
                 }
             } catch (err) {
@@ -957,12 +962,17 @@
 
             let totalSize = 0;
             let totalXmls = 0;
+            let hasUnknownCount = false; // Indica se algum arquivo tem contagem indisponível (-1)
 
             selectedFiles.forEach((fileObj, index) => {
                 const file = fileObj.file;
                 totalSize += file.size;
                 if (fileObj.status === 'valid') {
-                    totalXmls += fileObj.totalXmls || 0;
+                    if (fileObj.totalXmls === -1) {
+                        hasUnknownCount = true;
+                    } else {
+                        totalXmls += fileObj.totalXmls || 0;
+                    }
                 }
 
                 const div = document.createElement('div');
@@ -981,8 +991,11 @@
                 } else if (fileObj.status === 'valid') {
                     const isZip = file.name.toLowerCase().endsWith('.zip');
                     if (isZip) {
-                        const xmlCount = fileObj.totalXmls || 0;
-                        if (xmlCount === 0) {
+                        const xmlCount = fileObj.totalXmls;
+                        if (xmlCount === -1) {
+                            // Contagem indisponível - será feita pelo n8n
+                            statusHtml = `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 flex-shrink-0" title="A contagem será feita durante o processamento">ZIP aceito</span>`;
+                        } else if (xmlCount === 0) {
                             statusHtml = `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700 flex-shrink-0">0 XMLs</span>`;
                         } else {
                             statusHtml = `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 flex-shrink-0">${xmlCount} XML${xmlCount > 1 ? 's' : ''}</span>`;
@@ -994,7 +1007,11 @@
                         statusHtml = `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 flex-shrink-0">XML</span>`;
                     }
                 } else if (fileObj.status === 'error') {
-                    statusHtml = `<span class="text-xs text-red-600 font-medium flex-shrink-0">${fileObj.error || 'Erro'}</span>`;
+                    let errorDisplay = fileObj.error || 'Erro';
+                    if (fileObj.hint) {
+                        errorDisplay += `<span class="block text-xs text-gray-500 font-normal mt-0.5">Dica: ${fileObj.hint}</span>`;
+                    }
+                    statusHtml = `<span class="text-xs text-red-600 font-medium flex-shrink-0">${errorDisplay}</span>`;
                 }
 
                 // Determine file icon based on type
@@ -1039,7 +1056,11 @@
             // Atualizar contadores
             const validCount = selectedFiles.filter(f => f.status === 'valid').length;
             if (filesCount) {
-                if (totalXmls > 0) {
+                if (hasUnknownCount) {
+                    // Tem arquivos com contagem indisponível
+                    const xmlText = totalXmls > 0 ? totalXmls + '+ XMLs' : 'XMLs a contar';
+                    filesCount.textContent = selectedFiles.length + ' arquivo(s) · ' + xmlText;
+                } else if (totalXmls > 0) {
                     filesCount.textContent = selectedFiles.length + ' arquivo(s) · ' + totalXmls + ' XMLs';
                 } else {
                     filesCount.textContent = selectedFiles.length + ' arquivo(s)';
@@ -1094,7 +1115,8 @@
                         status: 'pending',
                         totalXmls: null,
                         tipoDoc: null,
-                        error: null
+                        error: null,
+                        hint: null
                     };
                     selectedFiles.push(fileObj);
                     filesToValidate.push(fileObj);
@@ -1553,7 +1575,7 @@
             tbody.innerHTML = notasFiltradas.map(nota => {
                 const tipoClass = nota.tipo_nota === 0 ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
                 const tipoIcon = nota.tipo_nota === 0 ? '&#8595;' : '&#8593;';
-                const tipoText = nota.tipo_nota === 0 ? 'Ent' : 'Sai';
+                const tipoText = nota.tipo_nota === 0 ? 'Entrada' : 'Saída';
 
                 return '<tr class="hover:bg-gray-50" data-tipo="' + nota.tipo_nota + '" data-finalidade="' + nota.finalidade + '">' +
                     '<td class="px-3 py-2 text-gray-900 whitespace-nowrap">' + (nota.numero_nota || '-') + '/' + (nota.serie || 1) + '</td>' +
@@ -1563,6 +1585,9 @@
                     '</td>' +
                     '<td class="px-3 py-2 text-right text-gray-900 whitespace-nowrap">' + (nota.valor_formatado || formatarBRL(nota.valor_total)) + '</td>' +
                     '<td class="px-3 py-2 text-right text-gray-600 whitespace-nowrap">' + formatarBRL(nota.icms_valor) + '</td>' +
+                    '<td class="px-3 py-2 text-right text-gray-600 whitespace-nowrap">' + formatarBRL(nota.pis_valor) + '</td>' +
+                    '<td class="px-3 py-2 text-right text-gray-600 whitespace-nowrap">' + formatarBRL(nota.cofins_valor) + '</td>' +
+                    '<td class="px-3 py-2 text-right text-gray-600 whitespace-nowrap">' + formatarBRL(nota.ipi_valor) + '</td>' +
                     '<td class="px-3 py-2 text-center whitespace-nowrap">' +
                         '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ' + tipoClass + '">' +
                         tipoIcon + ' ' + tipoText +
@@ -1839,8 +1864,15 @@
                         alert('Erro: ' + err.message);
                     }
                     importarBtn.disabled = false;
-                    const totalXmls = selectedFiles.reduce((sum, f) => sum + (f.totalXmls || 0), 0);
-                    if (btnText) btnText.textContent = totalXmls > 0 ? 'Importar ' + totalXmls + ' docs' : 'Importar';
+                    const totalXmls = selectedFiles.reduce((sum, f) => sum + (f.totalXmls > 0 ? f.totalXmls : 0), 0);
+                    const hasUnknown = selectedFiles.some(f => f.totalXmls === -1);
+                    if (btnText) {
+                        if (hasUnknown) {
+                            btnText.textContent = totalXmls > 0 ? 'Importar ' + totalXmls + '+ docs' : 'Importar';
+                        } else {
+                            btnText.textContent = totalXmls > 0 ? 'Importar ' + totalXmls + ' docs' : 'Importar';
+                        }
+                    }
                 }
             });
         }

@@ -45,6 +45,27 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
     Route::get('/app/perfil', [DashboardController::class, 'perfil'])->name('app.perfil');
 
+    // Certidões (Placeholder)
+    Route::get('/app/certidoes', [DashboardController::class, 'certidoes'])->name('app.certidoes');
+    Route::get('/app/certidoes/emitir', [DashboardController::class, 'certidoesEmitir'])->name('app.certidoes.emitir');
+    Route::get('/app/certidoes/licitacao', [DashboardController::class, 'certidoesLicitacao'])->name('app.certidoes.licitacao');
+
+    // Consultas (Placeholder)
+    Route::get('/app/consultas/cpf', [DashboardController::class, 'consultarCpf'])->name('app.consultas.cpf');
+    Route::get('/app/consultas/simples', [DashboardController::class, 'consultarSimples'])->name('app.consultas.simples');
+
+    // Notas Fiscais (Placeholder)
+    Route::get('/app/notas/historico', [DashboardController::class, 'notasHistorico'])->name('app.notas.historico');
+
+    // Relatórios (Placeholder)
+    Route::get('/app/relatorios/diagnostico', [DashboardController::class, 'relatoriosDiagnostico'])->name('app.relatorios.diagnostico');
+    Route::get('/app/relatorios/exportar', [DashboardController::class, 'relatoriosExportar'])->name('app.relatorios.exportar');
+    Route::get('/app/alertas', [DashboardController::class, 'alertas'])->name('app.alertas');
+
+    // Usuário (Placeholder)
+    Route::get('/app/configuracoes', [DashboardController::class, 'configuracoes'])->name('app.configuracoes');
+    Route::get('/app/plano', [DashboardController::class, 'meuPlano'])->name('app.plano');
+
     Route::post('/app/sped/upload', SpedUploadController::class)->name('sped.upload');
 
     // Rotas de créditos
@@ -117,6 +138,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/avulso', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'consultaAvulsa'])->name('avulso');
         Route::get('/historico', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'historico'])->name('historico');
         Route::get('/participantes', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'listaParticipantes'])->name('participantes');
+        Route::get('/clientes', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'clientes'])->name('clientes');
+        Route::get('/participante/nota-fiscal/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'notaFiscalDetalhes'])->name('nota-fiscal.detalhes');
         Route::get('/participante/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'participante'])->name('participante');
         Route::get('/consulta/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'consultaDetalhes'])->name('consulta');
         Route::get('/participantes-raf/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'participantesRaf'])->name('participantes-raf');
