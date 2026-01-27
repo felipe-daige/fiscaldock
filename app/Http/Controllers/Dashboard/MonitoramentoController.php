@@ -8,9 +8,11 @@ use App\Models\ImportacaoParticipante;
 use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoConsulta;
 use App\Models\MonitoramentoPlano;
+use App\Models\NotaFiscal;
 use App\Models\Participante;
 use App\Models\ParticipanteGrupo;
 use App\Models\RafRelatorioProcessado;
+use App\Models\XmlChaveProcessada;
 use App\Services\CreditService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -400,6 +402,37 @@ class MonitoramentoController extends Controller
     }
 
     /**
+     * Monitoramento de clientes - visualiza status dos clientes monitorados.
+     */
+    public function clientes(Request $request)
+    {
+        $clientesView = self::AUTH_VIEW_PREFIX . 'clientes';
+
+        if (!view()->exists($clientesView)) {
+            abort(404);
+        }
+
+        if (!Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        $user = Auth::user();
+
+        $data = [
+            'credits' => $this->creditService->getBalance($user),
+        ];
+
+        if ($this->isAjaxRequest($request)) {
+            $renderedView = view($clientesView, $data)->render();
+            return response($renderedView)->header('Content-Type', 'text/html');
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, array_merge([
+            'initialView' => $clientesView
+        ], $data));
+    }
+
+    /**
      * Detalhes de um participante específico.
      */
     public function participante(Request $request, $id)
@@ -430,6 +463,61 @@ class MonitoramentoController extends Controller
             ->whereIn('status', ['ativo', 'pausado'])
             ->with('plano')
             ->first();
+
+        // Notas fiscais onde participante é emitente OU destinatário
+        $notasFiscais = NotaFiscal::where('user_id', $userId)
+            ->where(function ($query) use ($participante) {
+                $query->where('emit_participante_id', $participante->id)
+                      ->orWhere('dest_participante_id', $participante->id);
+            })
+            ->select([
+                'id', 'chave_acesso', 'tipo_documento', 'numero_nota', 'serie',
+                'data_emissao', 'valor_total', 'natureza_operacao', 'tipo_nota', 'finalidade',
+                'emit_participante_id', 'dest_participante_id',
+                'emit_cnpj', 'emit_razao_social', 'dest_cnpj', 'dest_razao_social',
+            ])
+            ->orderBy('data_emissao', 'desc')
+            ->paginate(10, ['*'], 'notas_page');
+
+        // Campo 'papel' e contraparte
+        $notasFiscais->getCollection()->transform(function ($nota) use ($participante) {
+            $nota->papel = $nota->emit_participante_id === $participante->id ? 'emitente' : 'destinatario';
+            $nota->contraparte_cnpj = $nota->papel === 'emitente' ? $nota->dest_cnpj : $nota->emit_cnpj;
+            $nota->contraparte_razao = $nota->papel === 'emitente' ? $nota->dest_razao_social : $nota->emit_razao_social;
+            $nota->contraparte_participante_id = $nota->papel === 'emitente' ? $nota->dest_participante_id : $nota->emit_participante_id;
+            return $nota;
+        });
+
+        // XMLs processados
+        $xmlsProcessados = XmlChaveProcessada::where('user_id', $userId)
+            ->where(function ($query) use ($participante) {
+                $query->where('emit_participante_id', $participante->id)
+                      ->orWhere('dest_participante_id', $participante->id);
+            })
+            ->with('importacao:id,created_at')
+            ->select([
+                'id', 'chave_acesso', 'tipo_documento', 'importacao_xml_id',
+                'emit_participante_id', 'dest_participante_id', 'processado_em',
+            ])
+            ->orderBy('processado_em', 'desc')
+            ->paginate(10, ['*'], 'xmls_page');
+
+        $xmlsProcessados->getCollection()->transform(function ($xml) use ($participante) {
+            $xml->papel = $xml->emit_participante_id === $participante->id ? 'emitente' : 'destinatario';
+            $xml->contraparte_participante_id = $xml->papel === 'emitente' ? $xml->dest_participante_id : $xml->emit_participante_id;
+            return $xml;
+        });
+
+        // Contadores
+        $totalNotasFiscais = NotaFiscal::where('user_id', $userId)
+            ->where(fn($q) => $q->where('emit_participante_id', $participante->id)
+                                ->orWhere('dest_participante_id', $participante->id))
+            ->count();
+
+        $totalXmlsProcessados = XmlChaveProcessada::where('user_id', $userId)
+            ->where(fn($q) => $q->where('emit_participante_id', $participante->id)
+                                ->orWhere('dest_participante_id', $participante->id))
+            ->count();
 
         // Carregar planos disponíveis
         $planos = MonitoramentoPlano::ativos();
@@ -462,6 +550,10 @@ class MonitoramentoController extends Controller
             'planos' => $planos,
             'estatisticas' => $estatisticas,
             'credits' => $credits,
+            'notasFiscais' => $notasFiscais,
+            'xmlsProcessados' => $xmlsProcessados,
+            'totalNotasFiscais' => $totalNotasFiscais,
+            'totalXmlsProcessados' => $totalXmlsProcessados,
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -520,6 +612,59 @@ class MonitoramentoController extends Controller
                 'detalhes' => [],
             ],
             'error_message' => $consulta->error_message,
+        ]);
+    }
+
+    /**
+     * Detalhes de uma nota fiscal (retorna JSON).
+     */
+    public function notaFiscalDetalhes(Request $request, $id)
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usuário não autenticado.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $userId = (int) Auth::id();
+
+        $nota = NotaFiscal::where('id', $id)
+            ->where('user_id', $userId)
+            ->first();
+
+        if (!$nota) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nota fiscal não encontrada.',
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'chave_acesso' => $nota->chave_acesso,
+                'tipo_documento' => $nota->tipo_documento,
+                'numero_nota' => $nota->numero_nota,
+                'serie' => $nota->serie,
+                'data_emissao' => $nota->data_emissao?->format('d/m/Y'),
+                'natureza_operacao' => $nota->natureza_operacao,
+                'valor_total' => number_format((float) $nota->valor_total, 2, ',', '.'),
+                'tipo_nota' => $nota->tipo_nota_descricao,
+                'finalidade' => $nota->finalidade_descricao,
+                'emit_cnpj' => $nota->emit_cnpj_formatado,
+                'emit_razao_social' => $nota->emit_razao_social,
+                'emit_uf' => $nota->emit_uf,
+                'dest_cnpj' => $nota->dest_cnpj_formatado,
+                'dest_razao_social' => $nota->dest_razao_social,
+                'dest_uf' => $nota->dest_uf,
+                'icms_valor' => number_format((float) ($nota->icms_valor ?? 0), 2, ',', '.'),
+                'icms_st_valor' => number_format((float) ($nota->icms_st_valor ?? 0), 2, ',', '.'),
+                'pis_valor' => number_format((float) ($nota->pis_valor ?? 0), 2, ',', '.'),
+                'cofins_valor' => number_format((float) ($nota->cofins_valor ?? 0), 2, ',', '.'),
+                'ipi_valor' => number_format((float) ($nota->ipi_valor ?? 0), 2, ',', '.'),
+                'tributos_total' => number_format((float) ($nota->tributos_total ?? 0), 2, ',', '.'),
+            ]
         ]);
     }
 

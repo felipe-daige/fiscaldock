@@ -402,9 +402,218 @@ class DashboardController extends Controller
     {
         // Instancia o controller da API e chama o método diretamente
         $apiController = app(RelatorioCompletoController::class);
-        
+
         // Chama o método da API passando a requisição atual
         return $apiController->confirmarRelatorioCompleto($request);
+    }
+
+    /**
+     * Renderiza uma página placeholder "Em construção" com dados customizados.
+     */
+    private function renderPlaceholder(Request $request, string $titulo, string $descricao, string $icone, array $features = [])
+    {
+        $placeholderView = self::AUTH_VIEW_PREFIX . 'placeholder';
+
+        if (!Auth::check()) {
+            if ($this->isAjaxRequest($request)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Você não está logado',
+                    'redirect' => '/login'
+                ]);
+            }
+            return redirect('/login');
+        }
+
+        $data = [
+            'titulo' => $titulo,
+            'descricao' => $descricao,
+            'icone' => $icone,
+            'features' => $features,
+        ];
+
+        if ($this->isAjaxRequest($request)) {
+            return view($placeholderView, $data);
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, array_merge([
+            'initialView' => $placeholderView
+        ], $data));
+    }
+
+    // ==================== CERTIDÕES ====================
+
+    public function certidoes(Request $request)
+    {
+        return $this->renderPlaceholder($request,
+            'Painel de CNDs',
+            'Gerencie todas as suas certidões negativas em um só lugar.',
+            'document-check',
+            [
+                'Visualizar status de todas as CNDs',
+                'Acompanhar vencimentos',
+                'Receber alertas automáticos',
+                'Histórico de emissões'
+            ]
+        );
+    }
+
+    public function certidoesEmitir(Request $request)
+    {
+        return $this->renderPlaceholder($request,
+            'Emitir Certidão Avulsa',
+            'Emita certidões negativas individualmente.',
+            'upload',
+            [
+                'Emitir CND Federal',
+                'Emitir CND Estadual',
+                'Emitir CND Municipal',
+                'Emitir FGTS e CNDT'
+            ]
+        );
+    }
+
+    public function certidoesLicitacao(Request $request)
+    {
+        return $this->renderPlaceholder($request,
+            'Kit Licitação',
+            'Gere o pacote completo de certidões para licitações.',
+            'package',
+            [
+                'Gerar todas as certidões em lote',
+                'Download em ZIP organizado',
+                'Verificação automática de validade',
+                'Relatório de conformidade'
+            ]
+        );
+    }
+
+    // ==================== CONSULTAS ====================
+
+    public function consultarCpf(Request $request)
+    {
+        return $this->renderPlaceholder($request,
+            'Consultar CPF',
+            'Consulte informações de pessoas físicas.',
+            'user',
+            [
+                'Verificar situação cadastral',
+                'Consultar restrições',
+                'Histórico de consultas',
+                'Exportar relatório'
+            ]
+        );
+    }
+
+    public function consultarSimples(Request $request)
+    {
+        return $this->renderPlaceholder($request,
+            'Simples Nacional',
+            'Consulte informações do Simples Nacional.',
+            'calculator',
+            [
+                'Verificar opção pelo Simples',
+                'Consultar data de opção/exclusão',
+                'Histórico de alterações',
+                'Alertas de desenquadramento'
+            ]
+        );
+    }
+
+    // ==================== NOTAS FISCAIS ====================
+
+    public function notasHistorico(Request $request)
+    {
+        return $this->renderPlaceholder($request,
+            'Histórico de Notas',
+            'Visualize o histórico de notas fiscais processadas.',
+            'clock',
+            [
+                'Buscar notas por período',
+                'Filtrar por tipo (NF-e, NFS-e, CT-e)',
+                'Exportar relatórios',
+                'Análise de tendências'
+            ]
+        );
+    }
+
+    // ==================== RELATÓRIOS ====================
+
+    public function relatoriosDiagnostico(Request $request)
+    {
+        return $this->renderPlaceholder($request,
+            'Diagnóstico Fiscal',
+            'Análise completa da situação fiscal dos seus clientes.',
+            'chart',
+            [
+                'Diagnóstico fiscal completo',
+                'Identificação de riscos',
+                'Recomendações de ação',
+                'Comparativo histórico'
+            ]
+        );
+    }
+
+    public function relatoriosExportar(Request $request)
+    {
+        return $this->renderPlaceholder($request,
+            'Exportar Dados',
+            'Exporte dados e relatórios em diversos formatos.',
+            'download',
+            [
+                'Exportar para Excel',
+                'Exportar para PDF',
+                'Exportar para CSV',
+                'Agendamento de relatórios'
+            ]
+        );
+    }
+
+    public function alertas(Request $request)
+    {
+        return $this->renderPlaceholder($request,
+            'Central de Alertas',
+            'Gerencie todos os alertas e notificações do sistema.',
+            'bell',
+            [
+                'Alertas de CNDs vencendo',
+                'Notificações de consultas',
+                'Alertas de risco fiscal',
+                'Configurar preferências'
+            ]
+        );
+    }
+
+    // ==================== USUÁRIO ====================
+
+    public function configuracoes(Request $request)
+    {
+        return $this->renderPlaceholder($request,
+            'Configurações',
+            'Configure suas preferências e integrações.',
+            'cog',
+            [
+                'Preferências de notificação',
+                'Configurar webhooks',
+                'Gerenciar integrações',
+                'Personalizar interface'
+            ]
+        );
+    }
+
+    public function meuPlano(Request $request)
+    {
+        return $this->renderPlaceholder($request,
+            'Meu Plano',
+            'Gerencie seu plano e créditos.',
+            'credit-card',
+            [
+                'Ver saldo de créditos',
+                'Histórico de consumo',
+                'Upgrade de plano',
+                'Comprar créditos adicionais'
+            ]
+        );
     }
 }
 
