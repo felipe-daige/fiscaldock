@@ -41,12 +41,25 @@ class DashboardController extends Controller
         }
 
         $user = Auth::user();
-        $data = $this->dashboardDataService->getDashboardData($user->id);
+        $userId = $user->id;
+
+        $kpis = $this->dashboardDataService->getKpis($userId, $user);
+        $busca = $request->get('busca');
+        $participantes = $this->dashboardDataService->getParticipantesPaginados($userId, $busca);
+
+        $data = [
+            'kpi_conformidade' => $kpis['conformidade'],
+            'kpi_impostos_recuperaveis' => $kpis['impostos_recuperaveis'],
+            'kpi_creditos' => $kpis['creditos'],
+            'kpi_alertas_criticos' => $kpis['alertas_criticos'],
+            'participantes' => $participantes,
+            'filtroBusca' => $busca ?? '',
+        ];
 
         if($this->isAjaxRequest($request)){
             return view($dashboardView, $data);
         }
-        
+
         // Para requisições não-AJAX, passar dados para o layout
         // As variáveis serão automaticamente disponíveis na view incluída
         return view(self::AUTH_LAYOUT_VIEW, array_merge([

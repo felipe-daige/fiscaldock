@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Participante extends Model
 {
@@ -117,6 +118,14 @@ class Participante extends Model
     public function xmlsComoDestinatario(): HasMany
     {
         return $this->hasMany(XmlChaveProcessada::class, 'dest_participante_id');
+    }
+
+    /**
+     * Score de risco do participante.
+     */
+    public function score(): HasOne
+    {
+        return $this->hasOne(ParticipanteScore::class);
     }
 
     /**
