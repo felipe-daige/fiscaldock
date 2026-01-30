@@ -527,7 +527,7 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-600">
-                                {{ $imp->novos ?? 0 }} novos / {{ $imp->duplicados ?? 0 }} duplicados
+                                {{ ($imp->novos ?? 0) + ($imp->duplicados ?? 0) }}
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-500">
                                 {{ $imp->created_at->format('d/m/Y H:i') }}
@@ -1051,6 +1051,8 @@
         // Variável para guardar o ID da importação atual e IDs dos participantes
         let importacaoAtualId = null;
         let participanteIdsFromSSE = null; // Array de IDs recebidos do n8n via SSE
+        let novosIdsFromSSE = null; // Array de IDs dos participantes NOVOS
+        let duplicadosIdsFromSSE = null; // Array de IDs dos participantes DUPLICADOS/ATUALIZADOS
         let participantesPage = 1;
         let participantesTotal = 0;
 
@@ -1096,9 +1098,42 @@
             }
 
             // Guardar IDs dos participantes se disponível (enviados pelo n8n)
-            if (dados.participante_ids && Array.isArray(dados.participante_ids)) {
-                participanteIdsFromSSE = dados.participante_ids;
-                console.log('[Monitoramento SPED] participanteIdsFromSSE setado, total:', participanteIdsFromSSE.length);
+            // Aceita participante_lita_geral_ids (novo) ou participante_ids (legado)
+            // Aceita tanto array quanto string separada por vírgulas
+            const idsGeral = dados.participante_lita_geral_ids || dados.participante_ids;
+            if (idsGeral) {
+                if (Array.isArray(idsGeral)) {
+                    participanteIdsFromSSE = idsGeral;
+                } else if (typeof idsGeral === 'string') {
+                    participanteIdsFromSSE = idsGeral.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
+                }
+                if (participanteIdsFromSSE && participanteIdsFromSSE.length > 0) {
+                    console.log('[Monitoramento SPED] participanteIdsFromSSE setado, total:', participanteIdsFromSSE.length);
+                }
+            }
+
+            // Guardar IDs dos participantes NOVOS (pode ser null)
+            if (dados.participante_novos_ids) {
+                if (Array.isArray(dados.participante_novos_ids)) {
+                    novosIdsFromSSE = dados.participante_novos_ids;
+                } else if (typeof dados.participante_novos_ids === 'string') {
+                    novosIdsFromSSE = dados.participante_novos_ids.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
+                }
+                if (novosIdsFromSSE && novosIdsFromSSE.length > 0) {
+                    console.log('[Monitoramento SPED] novosIdsFromSSE setado, total:', novosIdsFromSSE.length);
+                }
+            }
+
+            // Guardar IDs dos participantes DUPLICADOS/ATUALIZADOS
+            if (dados.participante_repetido_ids) {
+                if (Array.isArray(dados.participante_repetido_ids)) {
+                    duplicadosIdsFromSSE = dados.participante_repetido_ids;
+                } else if (typeof dados.participante_repetido_ids === 'string') {
+                    duplicadosIdsFromSSE = dados.participante_repetido_ids.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
+                }
+                if (duplicadosIdsFromSSE && duplicadosIdsFromSSE.length > 0) {
+                    console.log('[Monitoramento SPED] duplicadosIdsFromSSE setado, total:', duplicadosIdsFromSSE.length);
+                }
             }
 
             // Atualizar link de filtro se temos o ID da importação (do SSE ou do upload inicial)
@@ -1214,6 +1249,17 @@
                 return `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${r.class}">${r.label}</span>`;
             }
 
+            // Helper para badge de status da importação (Novo/Atualizado)
+            function getStatusImportacaoBadge(participanteId) {
+                if (novosIdsFromSSE && novosIdsFromSSE.includes(participanteId)) {
+                    return '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 ml-2">Novo</span>';
+                }
+                if (duplicadosIdsFromSSE && duplicadosIdsFromSSE.includes(participanteId)) {
+                    return '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700 ml-2">Atualizado</span>';
+                }
+                return '';
+            }
+
             participantes.forEach(p => {
                 const cnpjFormatado = p.cnpj ? p.cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5') : '-';
                 const situacaoClass = p.situacao_cadastral === 'ATIVA'
@@ -1223,7 +1269,7 @@
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-gray-50';
                 tr.innerHTML = `
-                    <td class="px-3 py-2 text-xs font-mono text-gray-900 whitespace-nowrap">${cnpjFormatado}</td>
+                    <td class="px-3 py-2 text-xs font-mono text-gray-900 whitespace-nowrap">${cnpjFormatado}${getStatusImportacaoBadge(p.id)}</td>
                     <td class="px-3 py-2 text-sm text-gray-900 max-w-[200px] truncate" title="${p.razao_social || ''}">${p.razao_social || '-'}</td>
                     <td class="px-2 py-2 text-center text-xs text-gray-600 w-12">${p.uf || '-'}</td>
                     <td class="px-2 py-2 text-center">${getRegimeBadge(p.regime_tributario)}</td>
@@ -1307,6 +1353,8 @@
                 // Limpar IDs armazenados
                 importacaoAtualId = null;
                 participanteIdsFromSSE = null;
+                novosIdsFromSSE = null;
+                duplicadosIdsFromSSE = null;
                 // Limpar arquivo selecionado
                 if (txtFileInput) txtFileInput.value = '';
                 const txtFileMeta = document.getElementById('txt-file-meta');
@@ -1518,6 +1566,8 @@
                 // Limpar IDs armazenados
                 importacaoAtualId = null;
                 participanteIdsFromSSE = null;
+                novosIdsFromSSE = null;
+                duplicadosIdsFromSSE = null;
             });
         }
 
