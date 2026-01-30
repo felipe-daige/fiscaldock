@@ -1606,7 +1606,12 @@ class MonitoramentoController extends Controller
 
         $user = Auth::user();
         $arquivo = $request->file('arquivo');
-        $webhookUrl = config('services.webhook.monitoramento_importacao_txt_url');
+        $tipoEfd = $request->tipo_efd;
+
+        // Selecionar webhook baseado no tipo de EFD
+        $webhookUrl = $tipoEfd === 'EFD Fiscal'
+            ? config('services.webhook.monitoramento_importacao_fiscal_url')
+            : config('services.webhook.monitoramento_importacao_contribuicoes_url');
 
         // Validar que o cliente pertence ao usuário (se fornecido)
         $clienteId = $request->input('cliente_id');
@@ -1623,7 +1628,12 @@ class MonitoramentoController extends Controller
         }
 
         if (empty($webhookUrl)) {
-            Log::error('Webhook URL para importação .txt não configurada (WEBHOOK_MONITORAMENTO_IMPORTACAO_TXT_URL)');
+            $configKey = $tipoEfd === 'EFD Fiscal'
+                ? 'WEBHOOK_MONITORAMENTO_IMPORTACAO_FISCAL_URL'
+                : 'WEBHOOK_MONITORAMENTO_IMPORTACAO_CONTRIBUICOES_URL';
+            Log::error("Webhook URL para importação .txt não configurada ({$configKey})", [
+                'tipo_efd' => $tipoEfd,
+            ]);
             return response()->json([
                 'success' => false,
                 'error' => 'Serviço de importação não configurado. Verifique as variáveis de ambiente.',
