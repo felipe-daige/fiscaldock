@@ -154,7 +154,7 @@ class MonitoramentoController extends Controller
             ->when($grupoId, function ($q) use ($grupoId) {
                 $q->whereHas('grupos', fn($q) => $q->where('participante_grupos.id', $grupoId));
             })
-            ->with(['assinaturas.plano', 'grupos', 'importacao', 'consultas' => function ($query) {
+            ->with(['assinaturas.plano', 'grupos', 'importacaoSped', 'importacaoXml', 'consultas' => function ($query) {
                 $query->latest('executado_em')->limit(1);
             }])
             ->orderBy('created_at', 'desc')
