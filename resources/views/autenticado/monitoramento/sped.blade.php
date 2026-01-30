@@ -489,6 +489,53 @@
             </div>
         </div>
 
+        {{-- Historico de Importacoes SPED --}}
+        @if(isset($importacoes) && $importacoes->count() > 0)
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm mt-6">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Ultimas Importacoes</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Arquivo</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Participantes</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach($importacoes as $imp)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ $imp->filename }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ $imp->tipo_efd }}</td>
+                            <td class="px-6 py-4">
+                                @if($imp->status === 'concluido')
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Concluido</span>
+                                @elseif($imp->status === 'processando')
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">Processando</span>
+                                @elseif($imp->status === 'erro')
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700">Erro</span>
+                                @else
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700">Pendente</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600">
+                                {{ $imp->novos ?? 0 }} novos / {{ $imp->duplicados ?? 0 }} duplicados
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                {{ $imp->created_at->format('d/m/Y H:i') }}
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
+
         {{-- Lista de Relatorios RAF --}}
         <div id="raf-relatorios-section" class="bg-white rounded-xl border border-gray-200 shadow-sm mt-6">
             <div class="px-6 py-4 border-b border-gray-200">
@@ -827,8 +874,16 @@
         const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
         // Identificador único por aba para isolar notificações SSE
-        const tabId = crypto.randomUUID ? crypto.randomUUID() :
+        // Usa 'let' para permitir regeneração ao tentar novamente
+        let tabId = crypto.randomUUID ? crypto.randomUUID() :
             (Date.now().toString(36) + Math.random().toString(36).substr(2));
+
+        // Função para gerar novo tabId
+        function regenerarTabId() {
+            tabId = crypto.randomUUID ? crypto.randomUUID() :
+                (Date.now().toString(36) + Math.random().toString(36).substr(2));
+            console.log('[Monitoramento SPED] Novo tabId gerado:', tabId);
+        }
 
         const modalVerParticipantes = document.getElementById('modal-ver-participantes');
         const modalConfirmarImportacao = document.getElementById('modal-confirmar-importacao');
@@ -1943,6 +1998,8 @@
                     eventSourceTxt.close();
                     eventSourceTxt = null;
                 }
+                // CRÍTICO: Regenerar tabId para evitar receber dados de erro do cache anterior
+                regenerarTabId();
                 ocultarProgresso();
                 limparArquivoTxt();
                 resetarProgresso();
