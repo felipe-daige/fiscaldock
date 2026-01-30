@@ -1,22 +1,22 @@
-{{-- Monitoramento - Planos de Consulta --}}
-<div class="min-h-screen bg-gray-50" id="monitoramento-planos-container">
+{{-- Consultas - Planos Disponiveis --}}
+<div class="min-h-screen bg-gray-50" id="consultas-planos-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {{-- Page Header --}}
         <div class="mb-8">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900">Planos de Consulta</h1>
-                    <p class="mt-1 text-sm text-gray-600">Escolha o nivel de informacao ideal para monitorar fornecedores e parceiros.</p>
+                    <p class="mt-1 text-sm text-gray-600">Escolha o nivel de informacao ideal para consultar fornecedores e parceiros.</p>
                 </div>
                 <a
-                    href="/app/monitoramento"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
+                    href="/app/consultas/nova"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-semibold"
                     data-link
                 >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
-                    Voltar
+                    Nova Consulta
                 </a>
             </div>
         </div>
@@ -257,7 +257,7 @@
                     {{-- Card Footer --}}
                     <div class="mt-auto p-6 pt-0">
                         <a
-                            href="/app/monitoramento/avulso"
+                            href="/app/consultas/nova"
                             data-link
                             class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg {{ $plano['codigo'] === 'enterprise' ? 'bg-slate-700 text-white hover:bg-slate-800' : ($plano['popular'] ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') }} text-sm font-semibold transition-colors"
                         >
@@ -281,8 +281,8 @@
                         </svg>
                     </div>
                     <div>
-                        <h2 class="text-lg font-semibold text-gray-900">Simule seu custo mensal</h2>
-                        <p class="text-sm text-gray-600">Calcule quanto voce gastaria monitorando seus participantes.</p>
+                        <h2 class="text-lg font-semibold text-gray-900">Simule seu custo</h2>
+                        <p class="text-sm text-gray-600">Calcule quanto voce gastaria consultando seus participantes.</p>
                     </div>
                 </div>
             </div>
@@ -353,7 +353,7 @@
                     <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <span>O plano Gratuito nao consome creditos. <a href="/app/creditos" data-link class="text-blue-600 hover:underline">Adquirir creditos</a></span>
+                    <span>O plano Gratuito nao consome creditos. <a href="/app/plano" data-link class="text-blue-600 hover:underline">Adquirir creditos</a></span>
                 </div>
             </div>
         </div>
@@ -364,14 +364,14 @@
 (function() {
     'use strict';
 
-    function initMonitoramentoPlanos() {
-        const container = document.getElementById('monitoramento-planos-container');
+    function initConsultasPlanos() {
+        const container = document.getElementById('consultas-planos-container');
         if (!container) return;
 
         if (container.dataset.initialized === '1') return;
         container.dataset.initialized = '1';
 
-        console.log('[Monitoramento Planos] Inicializando...');
+        console.log('[Consultas Planos] Inicializando...');
 
         // Calculadora
         const calcCnpjs = document.getElementById('calc-cnpjs');
@@ -402,17 +402,17 @@
         // Calculo inicial
         calcular();
 
-        console.log('[Monitoramento Planos] Inicializacao concluida');
+        console.log('[Consultas Planos] Inicializacao concluida');
     }
 
     // Expor globalmente para SPA
-    window.initMonitoramentoPlanos = initMonitoramentoPlanos;
+    window.initConsultasPlanos = initConsultasPlanos;
 
     // Auto-inicializar
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initMonitoramentoPlanos, { once: true });
+        document.addEventListener('DOMContentLoaded', initConsultasPlanos, { once: true });
     } else {
-        initMonitoramentoPlanos();
+        initConsultasPlanos();
     }
 })();
 </script>

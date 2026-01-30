@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
-use App\Models\ImportacaoParticipante;
+use App\Models\ImportacaoSped;
 use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoConsulta;
 use App\Models\MonitoramentoPlano;
@@ -348,8 +348,8 @@ class MonitoramentoController extends Controller
 
         // Query de participantes com filtros
         $participantesQuery = Participante::where('user_id', $userId)
-            ->with(['cliente', 'importacao'])
-            ->when($importacaoId, fn($q) => $q->where('importacao_participante_id', $importacaoId))
+            ->with(['cliente', 'importacaoSped'])
+            ->when($importacaoId, fn($q) => $q->where('importacao_sped_id', $importacaoId))
             ->when($clienteId, fn($q) => $q->where('cliente_id', $clienteId))
             ->when($origemTipo, fn($q) => $q->where('origem_tipo', $origemTipo))
             ->when($busca, function ($q) use ($busca) {
@@ -362,8 +362,8 @@ class MonitoramentoController extends Controller
 
         $participantes = $participantesQuery->paginate(50)->withQueryString();
 
-        // Buscar importações para o filtro
-        $importacoes = ImportacaoParticipante::where('user_id', $userId)
+        // Buscar importações SPED para o filtro
+        $importacoes = ImportacaoSped::where('user_id', $userId)
             ->where('status', 'concluido')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -2277,7 +2277,7 @@ class MonitoramentoController extends Controller
         $user = Auth::user();
 
         // Verificar se a importação pertence ao usuário
-        $importacao = ImportacaoParticipante::where('id', $importacaoId)
+        $importacao = ImportacaoSped::where('id', $importacaoId)
             ->where('user_id', $user->id)
             ->first();
 
@@ -2291,7 +2291,7 @@ class MonitoramentoController extends Controller
         // Buscar participantes dessa importação
         $perPage = $request->input('per_page', 10);
         $participantes = Participante::where('user_id', $user->id)
-            ->where('importacao_participante_id', $importacaoId)
+            ->where('importacao_sped_id', $importacaoId)
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
 

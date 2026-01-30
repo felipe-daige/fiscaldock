@@ -6,20 +6,25 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class ImportacaoParticipante extends Model
+class ImportacaoSped extends Model
 {
-    protected $table = 'importacoes_participantes';
+    protected $table = 'importacoes_sped';
 
     protected $fillable = [
         'user_id',
         'tipo_efd',
         'filename',
+        'arquivo_base64',
         'total_participantes',
         'total_cnpjs_unicos',
         'total_cpfs_unicos',
         'novos',
         'duplicados',
         'status',
+        'extrair_notas',
+        'total_notas',
+        'notas_extraidas',
+        'creditos_cobrados',
         'participante_ids',
         'iniciado_em',
         'concluido_em',
@@ -33,6 +38,10 @@ class ImportacaoParticipante extends Model
             'total_cpfs_unicos' => 'integer',
             'novos' => 'integer',
             'duplicados' => 'integer',
+            'extrair_notas' => 'boolean',
+            'total_notas' => 'integer',
+            'notas_extraidas' => 'integer',
+            'creditos_cobrados' => 'integer',
             'participante_ids' => 'array',
             'iniciado_em' => 'datetime',
             'concluido_em' => 'datetime',
@@ -48,7 +57,12 @@ class ImportacaoParticipante extends Model
 
     public function participantes(): HasMany
     {
-        return $this->hasMany(Participante::class, 'importacao_participante_id');
+        return $this->hasMany(Participante::class, 'importacao_sped_id');
+    }
+
+    public function notasSped(): HasMany
+    {
+        return $this->hasMany(NotaSped::class, 'importacao_sped_id');
     }
 
     // Acessores

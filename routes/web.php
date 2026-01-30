@@ -5,7 +5,11 @@ use App\Http\Controllers\CreditController;
 use App\Http\Controllers\Landing\LandingPageController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\RafController;
+use App\Http\Controllers\Dashboard\RafConsultaController;
 use App\Http\Controllers\Dashboard\ClienteController;
+use App\Http\Controllers\Dashboard\AnalyticsController;
+use App\Http\Controllers\Dashboard\RiskScoreController;
+use App\Http\Controllers\Dashboard\ValidacaoController;
 use App\Http\Controllers\SpedUploadController;
 use Illuminate\Support\Facades\Route;
 
@@ -83,17 +87,32 @@ Route::middleware('auth')->group(function () {
         Route::get('/inteligencia-tributaria', [DashboardController::class, 'inteligenciaTributaria'])->name('inteligencia-tributaria');
     });
 
-    // Rotas RAF (movidas de app/solucoes para app/raf)
-    Route::get('/app/raf', [DashboardController::class, 'raf'])->name('app.raf');
-    Route::post('/app/raf/upload', [DashboardController::class, 'uploadSped'])->name('app.raf.upload');
-    
-    // Rotas de histórico de relatórios RAF
-    Route::get('/app/raf/historico', [RafController::class, 'historico'])->name('app.raf.historico');
-    Route::get('/app/raf/detalhes/{id}', [RafController::class, 'detalhes'])->name('app.raf.detalhes');
-    Route::post('/app/raf/confirmar/{id}', [RafController::class, 'confirmar'])->name('app.raf.confirmar');
-    Route::post('/app/raf/cancelar/{id}', [RafController::class, 'cancelar'])->name('app.raf.cancelar');
-    Route::get('/app/raf/baixar/{id}', [RafController::class, 'baixar'])->name('app.raf.baixar');
-    Route::post('/app/raf/excluir/{id}', [RafController::class, 'excluir'])->name('app.raf.excluir');
+    // Rotas RAF Consulta (nova arquitetura - seleciona participantes existentes)
+    Route::prefix('app/raf')->name('app.raf.')->group(function () {
+        // Principal: seleção de participantes para consulta
+        Route::get('/consulta', [RafConsultaController::class, 'index'])->name('consulta');
+        Route::get('/consulta/participantes', [RafConsultaController::class, 'getParticipantes'])->name('consulta.participantes');
+        Route::get('/consulta/participantes/grupo/{id}', [RafConsultaController::class, 'getParticipantesGrupo'])->name('consulta.participantes.grupo');
+        Route::post('/consulta/calcular-custo', [RafConsultaController::class, 'calcularCusto'])->name('consulta.calcular-custo');
+        Route::post('/consulta/executar', [RafConsultaController::class, 'executar'])->name('consulta.executar');
+        Route::get('/consulta/progresso/stream', [RafConsultaController::class, 'streamProgresso'])->name('consulta.progresso.stream');
+        Route::get('/lote/{id}/baixar', [RafConsultaController::class, 'baixarLote'])->name('lote.baixar');
+
+        // Histórico unificado (novos lotes + legados)
+        Route::get('/historico', [RafConsultaController::class, 'historico'])->name('historico');
+
+        // Rotas legadas (compatibilidade com sistema antigo)
+        Route::get('/detalhes/{id}', [RafController::class, 'detalhes'])->name('detalhes');
+        Route::post('/confirmar/{id}', [RafController::class, 'confirmar'])->name('confirmar');
+        Route::post('/cancelar/{id}', [RafController::class, 'cancelar'])->name('cancelar');
+        Route::get('/baixar/{id}', [RafController::class, 'baixar'])->name('baixar');
+        Route::post('/excluir/{id}', [RafController::class, 'excluir'])->name('excluir');
+    });
+
+    // Redirect da rota antiga /app/raf para a nova
+    Route::get('/app/raf', function () {
+        return redirect()->route('app.raf.consulta');
+    });
 
     // Rota de Importação de SPED
     Route::get('/app/sped_importar', [DashboardController::class, 'spedImportar'])->name('app.sped.importar');
@@ -184,5 +203,57 @@ Route::middleware('auth')->group(function () {
         Route::post('/xml/importar', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'importar'])->name('xml.importar');
         Route::get('/xml/progresso/stream', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'streamProgresso'])->name('xml.progresso.stream');
         Route::get('/xml/importacao/{id}/participantes', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'getParticipantes'])->name('xml.importacao.participantes');
+    });
+
+    // BI Analytics
+    Route::prefix('app/analytics')->name('app.analytics.')->group(function () {
+        Route::get('/', [AnalyticsController::class, 'index'])->name('index');
+        Route::get('/faturamento', [AnalyticsController::class, 'faturamento'])->name('faturamento');
+        Route::get('/compras', [AnalyticsController::class, 'compras'])->name('compras');
+        Route::get('/tributos', [AnalyticsController::class, 'tributos'])->name('tributos');
+        Route::get('/resumo', [AnalyticsController::class, 'resumo'])->name('resumo');
+    });
+
+    // Risk Score
+    Route::prefix('app/risk')->name('app.risk.')->group(function () {
+        Route::get('/', [RiskScoreController::class, 'index'])->name('index');
+        Route::get('/dashboard', [RiskScoreController::class, 'dashboard'])->name('dashboard');
+        Route::get('/participante/{id}', [RiskScoreController::class, 'show'])->name('show');
+        Route::post('/participante/{id}/consultar', [RiskScoreController::class, 'consultar'])->name('consultar');
+        Route::post('/atualizar-lote', [RiskScoreController::class, 'atualizarEmLote'])->name('atualizar-lote');
+    });
+
+    // Validacao Contabil Inteligente (VCI)
+    Route::prefix('app/validacao')->name('app.validacao.')->group(function () {
+        Route::get('/', [ValidacaoController::class, 'index'])->name('index');
+        Route::get('/dashboard', [ValidacaoController::class, 'dashboard'])->name('dashboard');
+        Route::get('/alertas', [ValidacaoController::class, 'alertas'])->name('alertas');
+        Route::get('/nota/{id}', [ValidacaoController::class, 'notaDetalhes'])->name('nota');
+        Route::post('/calcular-custo', [ValidacaoController::class, 'calcularCusto'])->name('calcular-custo');
+        Route::post('/validar-notas', [ValidacaoController::class, 'validarNotas'])->name('validar-notas');
+        Route::post('/validar-importacao/{id}', [ValidacaoController::class, 'validarImportacao'])->name('validar-importacao');
+    });
+
+    // CONSULTAS (nova estrutura unificada - aliases para RAF)
+    Route::prefix('app/consultas')->name('app.consultas.')->group(function () {
+        // Nova Consulta (alias para RAF consulta)
+        Route::get('/nova', [RafConsultaController::class, 'index'])->name('nova');
+        Route::get('/nova/participantes', [RafConsultaController::class, 'getParticipantes'])->name('nova.participantes');
+        Route::get('/nova/participantes/grupo/{id}', [RafConsultaController::class, 'getParticipantesGrupo'])->name('nova.participantes.grupo');
+        Route::post('/nova/calcular-custo', [RafConsultaController::class, 'calcularCusto'])->name('nova.calcular-custo');
+        Route::post('/nova/executar', [RafConsultaController::class, 'executar'])->name('nova.executar');
+        Route::get('/nova/progresso/stream', [RafConsultaController::class, 'streamProgresso'])->name('nova.progresso.stream');
+
+        // Planos Disponiveis
+        Route::get('/planos', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'planos'])->name('planos');
+
+        // Historico (alias para RAF historico)
+        Route::get('/historico', [RafConsultaController::class, 'historico'])->name('historico');
+
+        // Download de lote
+        Route::get('/lote/{id}/baixar', [RafConsultaController::class, 'baixarLote'])->name('lote.baixar');
+
+        // Relatorios (mesmo que historico, mostra downloads disponiveis)
+        Route::get('/relatorios', [RafConsultaController::class, 'historico'])->name('relatorios');
     });
 });

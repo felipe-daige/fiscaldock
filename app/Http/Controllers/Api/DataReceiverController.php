@@ -8,6 +8,7 @@ use App\Models\MonitoramentoConsulta;
 use App\Models\Participante;
 use App\Models\User;
 use App\Models\RafConsultaPendente;
+use App\Models\RafLote;
 use App\Models\RafRelatorioProcessado;
 use App\Services\CreditService;
 use App\Services\Sped\SpedUploadService;
@@ -2241,6 +2242,373 @@ class DataReceiverController extends Controller
                 'importacao_id' => $validated['importacao_id'],
                 'error' => $e->getMessage(),
             ]);
+        }
+    }
+
+    /**
+     * Recebe progresso de consulta RAF (lotes) do n8n.
+     *
+     * POST /api/raf/lote/progress
+     *
+     * Payload esperado:
+     * {
+     *   "user_id": 1,
+     *   "tab_id": "uuid",
+     *   "raf_lote_id": 123,
+     *   "progresso": 45,
+     *   "mensagem": "Consultando CNPJ 12.345.678/0001-90...",
+     *   "status": "processando",
+     *   "error_code": null,
+     *   "error_message": null,
+     *   "dados": {
+     *     "cnpj_atual": "12345678000190",
+     *     "processados": 5,
+     *     "total": 10
+     *   },
+     *   "resultado_resumo": {...},
+     *   "report_csv_base64": "base64...",
+     *   "filename": "relatorio.csv"
+     * }
+     */
+    public function receiveRafLoteProgress(Request $request)
+    {
+        try {
+            Log::info('Requisição recebida em receiveRafLoteProgress', [
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'ip' => $request->ip(),
+                'headers' => [
+                    'x-api-token' => $request->hasHeader('X-API-Token') ? 'presente' : 'ausente',
+                    'content-type' => $request->header('Content-Type'),
+                ],
+                'body' => array_diff_key($request->all(), ['report_csv_base64' => '']),
+            ]);
+
+            // Verifica autenticação via token
+            if (!$this->isTokenValid($request)) {
+                Log::warning('Token inválido em receiveRafLoteProgress');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Token de API inválido.',
+                ], Response::HTTP_UNAUTHORIZED);
+            }
+
+            // Validar payload
+            $validated = $request->validate([
+                'user_id' => 'required|integer|exists:users,id',
+                'tab_id' => 'required|string|max:36',
+                'raf_lote_id' => 'required|integer|exists:raf_lotes,id',
+                'progresso' => 'required|integer|min:0|max:100',
+                'mensagem' => 'nullable|string|max:255',
+                'status' => 'required|in:iniciando,processando,concluido,erro',
+                'error_code' => 'nullable|string|max:50',
+                'error_message' => 'nullable|string|max:500',
+                'dados' => 'nullable',
+                'resultado_resumo' => 'nullable',
+                'report_csv_base64' => 'nullable|string',
+                'filename' => 'nullable|string|max:255',
+            ]);
+
+            // Chave do cache: progresso:{user_id}:{tab_id}
+            $cacheKey = "progresso:{$validated['user_id']}:{$validated['tab_id']}";
+
+            // Dados para cache (repassa exatamente o que n8n enviou, exceto CSV)
+            $cacheData = [
+                'user_id' => $validated['user_id'],
+                'tab_id' => $validated['tab_id'],
+                'raf_lote_id' => $validated['raf_lote_id'],
+                'progresso' => $validated['progresso'],
+                'mensagem' => $validated['mensagem'] ?? null,
+                'status' => $validated['status'],
+                'updated_at' => now()->toIso8601String(),
+            ];
+
+            // Adicionar campos de erro se fornecidos
+            if (!empty($validated['error_code'])) {
+                $cacheData['error_code'] = $validated['error_code'];
+            }
+            if (!empty($validated['error_message'])) {
+                $cacheData['error_message'] = $validated['error_message'];
+            }
+
+            // Sempre incluir campo dados no cache
+            $cacheData['dados'] = $validated['dados'] ?? [];
+
+            // Armazena em cache (TTL 10 minutos)
+            Cache::put($cacheKey, $cacheData, 600);
+
+            Log::info('Progresso RAF armazenado em cache', [
+                'cache_key' => $cacheKey,
+                'user_id' => $validated['user_id'],
+                'tab_id' => $validated['tab_id'],
+                'raf_lote_id' => $validated['raf_lote_id'],
+                'progresso' => $validated['progresso'],
+                'status' => $validated['status'],
+                'has_error' => !empty($validated['error_code']),
+                'has_dados' => !empty($validated['dados']),
+            ]);
+
+            // Quando status é final, atualizar registro RafLote no banco
+            if (in_array($validated['status'], ['concluido', 'erro'])) {
+                $this->updateRafLoteFromProgress($validated);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Progresso atualizado.',
+                'progresso' => $validated['progresso'],
+            ], Response::HTTP_OK);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Erro de validação em receiveRafLoteProgress', [
+                'errors' => $e->errors(),
+                'request_data' => array_diff_key($request->all(), ['report_csv_base64' => '']),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro de validação.',
+                'errors' => $e->errors(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        } catch (\Exception $e) {
+            Log::error('Erro inesperado em receiveRafLoteProgress', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => array_diff_key($request->all(), ['report_csv_base64' => '']),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Atualiza o registro RafLote quando o n8n envia status final.
+     *
+     * Chamado automaticamente quando status é "concluido" ou "erro".
+     * Persiste os dados de progresso no banco.
+     */
+    private function updateRafLoteFromProgress(array $validated): void
+    {
+        try {
+            $lote = RafLote::where('id', $validated['raf_lote_id'])
+                ->where('user_id', $validated['user_id'])
+                ->first();
+
+            if (!$lote) {
+                Log::warning('updateRafLoteFromProgress: lote não encontrado', [
+                    'raf_lote_id' => $validated['raf_lote_id'],
+                    'user_id' => $validated['user_id'],
+                ]);
+                return;
+            }
+
+            $updateData = [
+                'status' => $validated['status'],
+                'processado_em' => now(),
+            ];
+
+            // Se concluído, salvar resultado
+            if ($validated['status'] === 'concluido') {
+                if (!empty($validated['resultado_resumo'])) {
+                    $updateData['resultado_resumo'] = $validated['resultado_resumo'];
+                }
+                if (!empty($validated['report_csv_base64'])) {
+                    $updateData['report_csv_base64'] = $validated['report_csv_base64'];
+                }
+                if (!empty($validated['filename'])) {
+                    $updateData['filename'] = $validated['filename'];
+                }
+            }
+
+            // Se erro, salvar detalhes do erro
+            if ($validated['status'] === 'erro') {
+                $updateData['error_code'] = $validated['error_code'] ?? 'UNKNOWN_ERROR';
+                $updateData['error_message'] = $validated['error_message'] ?? 'Erro desconhecido';
+
+                // Estornar créditos em caso de erro
+                $this->refundRafLoteCredits($lote);
+            }
+
+            $lote->update($updateData);
+
+            Log::info('RafLote atualizado com dados do progresso', [
+                'raf_lote_id' => $lote->id,
+                'status' => $validated['status'],
+                'has_csv' => !empty($validated['report_csv_base64']),
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erro ao atualizar RafLote do progresso', [
+                'raf_lote_id' => $validated['raf_lote_id'],
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Estorna créditos de um lote RAF em caso de erro.
+     */
+    private function refundRafLoteCredits(RafLote $lote): void
+    {
+        if ($lote->creditos_cobrados <= 0) {
+            return;
+        }
+
+        try {
+            $user = User::find($lote->user_id);
+            if ($user) {
+                $this->creditService->add($user, $lote->creditos_cobrados);
+                Log::info('Créditos estornados para RAF lote com erro', [
+                    'raf_lote_id' => $lote->id,
+                    'user_id' => $lote->user_id,
+                    'creditos_estornados' => $lote->creditos_cobrados,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Erro ao estornar créditos do RAF lote', [
+                'raf_lote_id' => $lote->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Recebe resultado individual de consulta RAF por participante.
+     *
+     * Chamado pelo n8n para cada participante processado.
+     * Armazena em raf_lote_resultados para geração de relatórios on-demand.
+     *
+     * Payload esperado:
+     * {
+     *   "raf_lote_id": 123,
+     *   "user_id": 1,
+     *   "tab_id": "uuid",
+     *   "participante_id": 456,
+     *   "status": "sucesso",
+     *   "resultado_dados": {
+     *     "consultas_realizadas": ["situacao_cadastral", "sintegra"],
+     *     "situacao_cadastral": "ATIVA",
+     *     "razao_social": "EMPRESA LTDA",
+     *     ...
+     *   }
+     * }
+     */
+    public function receiveRafLoteResultado(Request $request)
+    {
+        try {
+            Log::info('Requisição recebida em receiveRafLoteResultado', [
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'ip' => $request->ip(),
+                'headers' => [
+                    'x-api-token' => $request->hasHeader('X-API-Token') ? 'presente' : 'ausente',
+                    'content-type' => $request->header('Content-Type'),
+                ],
+                'body' => array_diff_key($request->all(), ['resultado_dados' => '']),
+            ]);
+
+            // Verifica autenticação via token
+            if (!$this->isTokenValid($request)) {
+                Log::warning('Token inválido em receiveRafLoteResultado');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Token de API inválido.',
+                ], Response::HTTP_UNAUTHORIZED);
+            }
+
+            // Validar payload
+            $validated = $request->validate([
+                'raf_lote_id' => 'required|integer|exists:raf_lotes,id',
+                'user_id' => 'required|integer|exists:users,id',
+                'tab_id' => 'required|string|max:36',
+                'participante_id' => 'required|integer|exists:participantes,id',
+                'status' => 'required|in:sucesso,erro,timeout',
+                'resultado_dados' => 'nullable|array',
+                'error_message' => 'nullable|string|max:500',
+            ]);
+
+            // Verificar que o lote pertence ao usuário
+            $lote = RafLote::where('id', $validated['raf_lote_id'])
+                ->where('user_id', $validated['user_id'])
+                ->first();
+
+            if (!$lote) {
+                Log::warning('receiveRafLoteResultado: lote não pertence ao usuário', [
+                    'raf_lote_id' => $validated['raf_lote_id'],
+                    'user_id' => $validated['user_id'],
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Lote não encontrado para este usuário.',
+                ], Response::HTTP_NOT_FOUND);
+            }
+
+            // Verificar que o participante está no lote
+            $participanteNoLote = $lote->participantes()
+                ->where('participantes.id', $validated['participante_id'])
+                ->exists();
+
+            if (!$participanteNoLote) {
+                Log::warning('receiveRafLoteResultado: participante não pertence ao lote', [
+                    'raf_lote_id' => $validated['raf_lote_id'],
+                    'participante_id' => $validated['participante_id'],
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Participante não pertence a este lote.',
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            // Criar ou atualizar resultado
+            $resultado = \App\Models\RafLoteResultado::updateOrCreate(
+                [
+                    'raf_lote_id' => $validated['raf_lote_id'],
+                    'participante_id' => $validated['participante_id'],
+                ],
+                [
+                    'resultado_dados' => $validated['resultado_dados'] ?? null,
+                    'status' => $validated['status'],
+                    'error_message' => $validated['error_message'] ?? null,
+                    'consultado_em' => now(),
+                ]
+            );
+
+            Log::info('Resultado RAF armazenado', [
+                'raf_lote_id' => $validated['raf_lote_id'],
+                'participante_id' => $validated['participante_id'],
+                'status' => $validated['status'],
+                'resultado_id' => $resultado->id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Resultado armazenado.',
+                'resultado_id' => $resultado->id,
+            ], Response::HTTP_OK);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Erro de validação em receiveRafLoteResultado', [
+                'errors' => $e->errors(),
+                'request_data' => array_diff_key($request->all(), ['resultado_dados' => '']),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro de validação.',
+                'errors' => $e->errors(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        } catch (\Exception $e) {
+            Log::error('Erro inesperado em receiveRafLoteResultado', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => array_diff_key($request->all(), ['resultado_dados' => '']),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

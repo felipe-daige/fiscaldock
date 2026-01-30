@@ -19,7 +19,53 @@ FiscalDock - Laravel 12 app for Brazilian tax compliance. Processes SPED files (
 | Blade presentation | **ALL DB writes** |
 | Trigger n8n webhooks | External integrations |
 
-**Exceptions (Laravel writes):** `RafConsultaPendente`, `ImportacaoParticipante`, user sessions
+**Exceptions (Laravel writes):** `RafConsultaPendente`, `ImportacaoSped`, `NotaFiscal.validacao` (VCI), `NotaSped.validacao` (VCI), user sessions
+
+## Navegacao (Sidebar)
+
+Estrutura simplificada em 5 secoes principais:
+
+```
+PRINCIPAL
+├── Dashboard
+└── Alertas
+
+IMPORTACAO
+├── XMLs (NF-e/CT-e)
+├── SPED
+└── CNPJ Avulso
+
+CADASTROS
+├── Participantes
+└── Clientes
+    ├── Todos os Clientes
+    └── Novo Cliente
+
+CONSULTAS (unifica RAF + Monitoramento)
+├── Nova Consulta     → /app/consultas/nova
+├── Planos Disponiveis → /app/consultas/planos
+├── Historico         → /app/consultas/historico
+└── Relatorios        → /app/consultas/relatorios
+
+COMPLIANCE
+├── Score de Risco
+└── Validacao Contabil
+    ├── Dashboard
+    └── Alertas
+
+BI FISCAL
+└── Dashboard BI
+
+USUARIO (footer)
+├── Perfil
+├── Meu Plano
+├── Configuracoes
+└── Sair
+```
+
+**Rotas legadas mantidas para compatibilidade:**
+- `/app/raf/*` continua funcionando (redireciona internamente)
+- `/app/monitoramento/planos` → alias para `/app/consultas/planos`
 
 ## Commands
 
@@ -43,12 +89,106 @@ docker service update --image felipedaige/fiscaldock:X.X.X fiscaldock_scheduler
 
 ## Core Modules
 
-### RAF (Regime and Fiscal Analysis)
-1. User uploads SPED -> Laravel creates `RafConsultaPendente`, sends to n8n webhook
-2. n8n parses file, queries APIs, creates CSV -> sends to `/api/data/receive/raf/csvfile`
-3. Laravel stores in `RafRelatorioProcessado`, user confirms/cancels
+### Consultas (antigo RAF)
 
-**Models:** `RafConsultaPendente`, `RafRelatorioProcessado`, `RafParticipante`
+**Arquitetura v2.1:** Resultados no banco + Relatorios on-demand no Laravel
+
+1. Usuario acessa `/app/consultas/nova` e seleciona participantes ja importados
+2. Escolhe plano de consulta (gratuito a enterprise)
+3. Laravel debita creditos, cria `RafLote`, envia para n8n via webhook
+4. n8n consulta APIs (Minha Receita + InfoSimples conforme plano)
+5. n8n envia resultado de CADA participante para `POST /api/raf/lote/resultado`
+6. n8n envia progresso/status final para `POST /api/raf/lote/progress`
+7. Laravel gera CSV/PDF on-demand a partir de `raf_lote_resultados`
+
+**Vantagens da nova arquitetura:**
+- Relatorios customizados (logo, metadados, links)
+- Suporte a PDF alem de CSV
+- Dados persistidos para re-consulta
+- Calculo de score on-demand via `RiskScoreService`
+
+**Models:** `RafLote`, `RafLoteResultado` (novo), `RafConsultaPendente` (legado), `RafRelatorioProcessado` (legado)
+
+**Services:** `RafReportService` (geracao CSV/PDF), `RiskScoreService` (calculo de scores)
+
+**Routes (novas - preferir estas):**
+| Route | Description |
+|-------|-------------|
+| `GET /app/consultas/nova` | Tela de selecao de participantes |
+| `GET /app/consultas/nova/participantes` | AJAX lista participantes |
+| `POST /app/consultas/nova/calcular-custo` | Calcular custo antes de executar |
+| `POST /app/consultas/nova/executar` | Iniciar consulta |
+| `GET /app/consultas/nova/progresso/stream` | SSE progresso |
+| `GET /app/consultas/lote/{id}/baixar?formato=csv` | Download CSV (default) |
+| `GET /app/consultas/lote/{id}/baixar?formato=pdf` | Download PDF |
+| `GET /app/consultas/historico` | Historico unificado |
+| `GET /app/consultas/planos` | Lista de planos disponiveis |
+| `GET /app/consultas/relatorios` | Downloads disponiveis |
+| `POST /api/raf/lote/progress` | n8n envia progresso |
+| `POST /api/raf/lote/resultado` | n8n envia resultado por participante |
+
+**Routes legadas (compatibilidade):**
+| Route | Redireciona para |
+|-------|------------------|
+| `/app/raf/consulta` | Funciona (mesma view) |
+| `/app/raf/historico` | Funciona (mesma view) |
+| `/app/raf/lote/{id}/baixar` | Funciona (mesmo endpoint) |
+
+**Webhook payload (enviado ao n8n):**
+```json
+{
+  "user_id": 1,
+  "raf_lote_id": 123,
+  "tab_id": "uuid",
+  "plano_codigo": "licitacao",
+  "consultas_incluidas": ["situacao_cadastral", "sintegra", "cnd_federal"],
+  "participantes": [
+    {"id": 1, "cnpj": "12345678000190", "razao_social": "...", "uf": "SP"},
+    ...
+  ],
+  "progress_url": "https://fiscaldock.com.br/api/raf/lote/progress",
+  "resultado_url": "https://fiscaldock.com.br/api/raf/lote/resultado"
+}
+```
+
+**Resultado individual (n8n -> Laravel):**
+```json
+POST /api/raf/lote/resultado
+Header: X-API-Token: {token}
+
+{
+  "raf_lote_id": 123,
+  "user_id": 1,
+  "tab_id": "uuid",
+  "participante_id": 456,
+  "status": "sucesso",
+  "resultado_dados": {
+    "consultas_realizadas": ["situacao_cadastral", "sintegra", "cnd_federal"],
+    "situacao_cadastral": "ATIVA",
+    "razao_social": "EMPRESA LTDA",
+    "simples_nacional": true,
+    "mei": false,
+    "cnaes": {"principal": "6201-5/00"},
+    "sintegra": {"ie": "123456789", "situacao": "HABILITADO"},
+    "cnd_federal": {"status": "NEGATIVA", "validade": "2026-07-30"}
+  }
+}
+```
+
+**Progresso simplificado (n8n -> Laravel):**
+```json
+POST /api/raf/lote/progress
+{
+  "user_id": 1,
+  "tab_id": "uuid",
+  "raf_lote_id": 123,
+  "progresso": 100,
+  "status": "concluido",
+  "mensagem": "Processamento concluído",
+  "resultado_resumo": {"total": 50, "sucesso": 48, "erro": 2}
+}
+```
+Nota: `report_csv_base64` NAO e mais necessario no payload de progresso.
 
 ### Monitoramento (CNPJ Monitoring)
 Continuous tracking of CNPJ tax status via subscriptions.
@@ -76,6 +216,128 @@ Continuous tracking of CNPJ tax status via subscriptions.
 
 **Limits:** 50MB/file, 200MB total, 5000 XMLs max
 
+### BI Fiscal (Analytics)
+Dashboard gerencial para analise de faturamento, compras e tributos.
+
+**Models:** `NotaFiscal` (dados existentes)
+
+**Services:** `AnalyticsService`
+
+**Routes:**
+- `/app/analytics` - Dashboard principal com KPIs e graficos
+- `/app/analytics/faturamento` - API de dados de faturamento
+- `/app/analytics/compras` - API de dados de compras
+- `/app/analytics/tributos` - API de dados tributarios
+
+**Metricas disponiveis:**
+- Faturamento por periodo (mensal)
+- Top 10 clientes/fornecedores
+- Faturamento por UF
+- Entradas vs Saidas
+- Carga tributaria efetiva
+- Tributos por tipo (ICMS, PIS, COFINS, IPI)
+
+### Risk Score (Score de Risco)
+Avaliacao de risco fiscal e compliance de participantes.
+
+**Models:** `ParticipanteScore`, `Participante`
+
+**Services:** `RiskScoreService`
+
+**Routes:**
+- `/app/risk` - Dashboard de scores
+- `/app/risk/participante/{id}` - Detalhes do participante
+- `/app/risk/participante/{id}/consultar` - Atualizar score
+
+**Categorias de score (peso):**
+| Categoria | Peso | Fonte |
+|-----------|------|-------|
+| Cadastral | 15% | Situacao RF |
+| CND Federal | 20% | PGFN |
+| CND Estadual | 15% | SEFAZ |
+| FGTS | 10% | CRF |
+| Trabalhista | 10% | CNDT |
+| Compliance | 15% | CEIS/CNEP/TCU |
+| ESG | 10% | Trab. Escravo/IBAMA |
+| Protestos | 5% | IEPTB |
+
+**Classificacao:**
+- 0-20: Baixo risco (verde)
+- 21-50: Medio risco (amarelo)
+- 51-80: Alto risco (laranja)
+- 81-100: Critico (vermelho)
+
+### Validacao Contabil Inteligente (VCI)
+Sistema de analise e validacao de notas fiscais baseado em regras contabeis brasileiras.
+
+**Models:** `NotaFiscal` (campo `validacao` JSONB)
+
+**Services:** `ValidacaoContabilService`
+
+**Routes:**
+- `/app/validacao` - Dashboard principal de validacao
+- `/app/validacao/alertas` - Lista de alertas por nivel/categoria
+- `/app/validacao/nota/{id}` - Detalhes de validacao de nota
+- `POST /app/validacao/validar-notas` - Validar notas especificas
+- `POST /app/validacao/validar-importacao/{id}` - Validar toda importacao
+- `POST /app/validacao/calcular-custo` - Calcular custo antes de validar
+
+**Categorias de validacao (peso):**
+| Categoria | Peso | Descricao |
+|-----------|------|-----------|
+| Cadastral | 20% | CRT declarado vs situacao RF |
+| Tributacao | 25% | Aliquotas vs regime tributario |
+| CFOP/CST | 20% | Combinacoes validas |
+| Integridade | 15% | Soma tributos vs total |
+| NCM | 10% | NCMs genericos/invalidos |
+| Operacoes | 10% | Participante em listas restritivas |
+
+**Classificacao:**
+- 0-10: Conforme (verde)
+- 11-30: Atencao (amarelo)
+- 31-60: Irregular (laranja)
+- 61-100: Critico (vermelho)
+
+**Niveis de Alerta:**
+| Nivel | Cor | Acao |
+|-------|-----|------|
+| BLOQUEANTE | Vermelho | Impede aprovacao, requer correcao |
+| ATENCAO | Amarelo | Revisar manualmente |
+| INFO | Azul | Informativo apenas |
+
+**Precificacao:**
+| Camada | Custo |
+|--------|-------|
+| Regras Locais | GRATIS |
+| Validacao Completa | 1 cr/participante |
+| Deep Analysis | 3 cr/participante |
+
+**Estrutura do campo `validacao` (JSONB):**
+```json
+{
+  "score_total": 25,
+  "classificacao": "atencao",
+  "scores": {
+    "cadastral": 0,
+    "tributacao": 40,
+    "cfop_cst": 0,
+    "integridade": 0,
+    "ncm": 10,
+    "operacoes": 0
+  },
+  "alertas": [
+    {
+      "categoria": "tributacao",
+      "nivel": "atencao",
+      "codigo": "SIMPLES_ICMS_ALTO",
+      "mensagem": "Simples Nacional com ICMS destacado acima de 5%",
+      "detalhe": "Aliquota efetiva: 7.5%"
+    }
+  ],
+  "validado_em": "2026-01-28T10:30:00Z"
+}
+```
+
 ## Database - Tabelas Principais
 
 ### participantes
@@ -87,6 +349,8 @@ Continuous tracking of CNPJ tax status via subscriptions.
 | `uf`, `cep`, `municipio`, `telefone` | Address data |
 | `crt` | 1=Simples, 2=Excesso, 3=Normal |
 | `cliente_id` | FK to clientes (optional) |
+| `importacao_sped_id` | FK to importacoes_sped (optional) |
+| `importacao_xml_id` | FK to importacoes_xml (optional) |
 | `origem_tipo` | `SPED_EFD_FISCAL`, `SPED_EFD_CONTRIB`, `NFE`, `NFSE`, `CTE`, `MANUAL` |
 | `origem_ref` | JSONB with source details |
 
@@ -99,14 +363,100 @@ Continuous tracking of CNPJ tax status via subscriptions.
 | `finalidade` | smallint | 1=normal, 2=compl, 3=ajuste, 4=devolucao |
 | `emit/dest_participante_id` | FK | Link para participantes |
 | `payload` | JSONB | JSON completo do XML |
+| `validacao` | JSONB nullable | Resultado da validacao contabil (VCI) |
+
+### importacoes_sped (antes importacoes_participantes)
+Tracks SPED import jobs with status, counts, and optional nota extraction.
+
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `user_id` | FK | Owner |
+| `tipo_efd` | varchar(30) | EFD_FISCAL ou EFD_CONTRIB |
+| `filename` | varchar | Nome do arquivo |
+| `arquivo_base64` | text nullable | Conteudo do arquivo SPED em base64 |
+| `total_participantes` | int | Total no arquivo |
+| `total_cnpjs_unicos` | int | CNPJs unicos |
+| `total_cpfs_unicos` | int | CPFs unicos |
+| `novos` | int | Novos inseridos |
+| `duplicados` | int | Ja existiam |
+| `status` | varchar(20) | pendente, processando, concluido, erro |
+| `extrair_notas` | bool | Se deve extrair notas fiscais (feature futura) |
+| `total_notas` | int | Total de notas no arquivo |
+| `notas_extraidas` | int | Notas efetivamente extraidas |
+| `creditos_cobrados` | int | Creditos debitados pela extracao |
+| `participante_ids` | JSONB | Array de IDs criados |
 
 ### importacoes_xml
 Tracks XML import jobs with status, counts, and `participante_ids` array.
+
+### notas_sped
+Notas fiscais extraidas de arquivos SPED (separada de notas_fiscais para dados de XML).
+
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `user_id` | FK | Owner |
+| `cliente_id` | FK nullable | Cliente associado |
+| `importacao_sped_id` | FK | Importacao de origem |
+| `emit_participante_id` | FK nullable | Emitente |
+| `dest_participante_id` | FK nullable | Destinatario |
+| `tipo_efd` | varchar(30) | EFD_FISCAL ou EFD_CONTRIB |
+| `registro` | varchar(10) | Registro SPED origem (C100, C170, M100) |
+| `tipo_nota` | smallint | 0=entrada, 1=saida |
+| `modelo_doc` | varchar(2) | 55=NFe, 57=CTe, etc |
+| `serie`, `numero_nota` | varchar | Dados da nota |
+| `chave_acesso` | varchar(44) | Chave da NFe (quando disponivel) |
+| `data_emissao`, `data_entrada_saida` | date | Datas |
+| `valor_total` | decimal(15,2) | Valor total |
+| `valor_icms`, `valor_icms_st`, `valor_ipi` | decimal(15,2) | Tributos |
+| `valor_pis`, `valor_cofins` | decimal(15,2) | Contribuicoes |
+| `valor_frete`, `valor_desconto` | decimal(15,2) | Outros valores |
+| `cfop_principal` | varchar(4) | CFOP predominante |
+| `payload` | JSONB nullable | Dados completos (opcional) |
+| `validacao` | JSONB nullable | Resultado VCI |
 
 ### monitoramento_*
 - `monitoramento_planos` - Available plans
 - `monitoramento_assinaturas` - User subscriptions
 - `monitoramento_consultas` - Query history
+
+### raf_lotes (nova arquitetura RAF)
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `user_id` | FK | Owner |
+| `cliente_id` | FK nullable | Cliente associado |
+| `plano_id` | FK | Plano de consulta |
+| `status` | varchar(20) | pendente, processando, concluido, erro |
+| `total_participantes` | int | Quantidade de CNPJs |
+| `creditos_cobrados` | int | Creditos debitados |
+| `tab_id` | varchar(36) | UUID para SSE |
+| `resultado_resumo` | JSONB | Resumo do resultado |
+| `report_csv_base64` | text | CSV em base64 |
+| `error_code`, `error_message` | | Detalhes de erro |
+| `processado_em` | timestamp | Data conclusao |
+
+### raf_lote_participantes (pivot)
+| Campo | Descricao |
+|-------|-----------|
+| `raf_lote_id` | FK para raf_lotes |
+| `participante_id` | FK para participantes |
+
+### participante_scores
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `participante_id` | FK | Link para participante (unique) |
+| `user_id` | FK | Owner |
+| `score_cadastral` | smallint | Score situacao cadastral (0-100) |
+| `score_cnd_federal` | smallint | Score CND Federal (0-100) |
+| `score_cnd_estadual` | smallint | Score CND Estadual (0-100) |
+| `score_fgts` | smallint | Score FGTS/CRF (0-100) |
+| `score_trabalhista` | smallint | Score CNDT (0-100) |
+| `score_compliance` | smallint | Score CEIS/CNEP/TCU (0-100) |
+| `score_esg` | smallint | Score ESG (0-100) |
+| `score_protestos` | smallint | Score protestos (0-100) |
+| `score_total` | smallint | Score ponderado final (0-100) |
+| `classificacao` | varchar(20) | baixo, medio, alto, critico |
+| `ultima_consulta_em` | timestamp | Data ultima consulta |
+| `dados_consultados` | JSONB | Dados brutos da consulta |
 
 ### raf_*
 - `raf_consultas_pendentes` - Pending RAF analyses
@@ -116,13 +466,13 @@ Tracks XML import jobs with status, counts, and `participante_ids` array.
 
 All URLs via `config('services.webhook.*')`, NO defaults in code.
 
-| Operation | Env Variable |
-|-----------|--------------|
-| RAF Fiscal | `WEBHOOK_SPED_FISCAL_URL` |
-| RAF Contribuicoes | `WEBHOOK_SPED_CONTRIBUICOES_URL` |
-| Monitoramento SPED | `WEBHOOK_MONITORAMENTO_IMPORTACAO_*_URL` |
-| Monitoramento XML | `WEBHOOK_MONITORAMENTO_IMPORTACAO_XML_URL` |
-| Monitoramento Consulta | `WEBHOOK_MONITORAMENTO_CONSULTA_URL` |
+| Operation | Env Variable | Endpoint n8n |
+|-----------|--------------|--------------|
+| **Consultas Lotes** | `WEBHOOK_CONSULTAS_LOTES_URL` | `/webhook/consultas/lotes` |
+| Monitoramento SPED | `WEBHOOK_MONITORAMENTO_IMPORTACAO_*_URL` | |
+| Monitoramento XML | `WEBHOOK_MONITORAMENTO_IMPORTACAO_XML_URL` | |
+| RAF Fiscal (legado) | `WEBHOOK_SPED_FISCAL_URL` | |
+| RAF Contribuicoes (legado) | `WEBHOOK_SPED_CONTRIBUICOES_URL` | |
 
 ## API Endpoints
 
@@ -324,19 +674,26 @@ $this->creditService->refund($user, $amount);
 
 ### Planos de Monitoramento
 
-| Plano | Creditos | Inclui |
-|-------|----------|--------|
-| Basico | 0 | Dados gratuitos (Minha Receita) |
-| Cadastral+ | 3 | Basico + SINTEGRA + TCU |
-| Fiscal Federal | 6 | Cadastral+ + CND Federal + FGTS |
-| Fiscal Completo | 12 | Fiscal Federal + CND Estadual + CNDT |
-| Due Diligence | 16 | Fiscal Completo + Lista Devedores |
-| ESG | 6 | Trabalho Escravo + IBAMA |
-| Completo | 22 | Tudo |
+| Codigo | Nome | Creditos | Consultas Incluidas |
+|--------|------|----------|---------------------|
+| `gratuito` | Gratuito | 0 | situacao_cadastral, dados_cadastrais, endereco, cnaes, qsa, simples_nacional, mei |
+| `validacao` | Validacao | 4 | Gratuito + sintegra, tcu_consolidada |
+| `licitacao` | Licitacao | 10 | Validacao + cnd_federal, crf_fgts, cnd_estadual, cndt |
+| `compliance` | Compliance | 14 | Licitacao + protestos, lista_devedores_pgfn |
+| `due_diligence` | Due Diligence | 18 | Compliance + trabalho_escravo, ibama_autuacoes |
+| `enterprise` | Enterprise | 20 | Due Diligence + processos_cnj |
+
+**Personas por plano:**
+- **Gratuito**: Validar se CNPJ existe e esta ativo
+- **Validacao**: Contador PME validando IE e listas restritivas
+- **Licitacao**: Empresas em licitacoes publicas (CNDs obrigatorias)
+- **Compliance**: Gestao de terceiros com protestos e divida ativa
+- **Due Diligence**: M&A e investidores com analise ESG
+- **Enterprise**: Corporativo com due diligence juridico completo
 
 **Frequencias:** Diaria, Semanal, Quinzenal, Mensal
 
-**Exemplo:** 30 CNPJs, perfil Fiscal, semanal = 360 cr/ciclo = 1.440 cr/mes
+**Exemplo:** 30 CNPJs, perfil Licitacao, semanal = 300 cr/ciclo = 1.200 cr/mes
 
 ### Alertas do Monitoramento
 
@@ -361,6 +718,9 @@ $this->creditService->refund($user, $amount);
 | `CreditService` | Credit operations with transaction locking |
 | `CsvParserService` | Parses CSV from n8n responses |
 | `RegimeTributarioService` | Tax regime lookups |
+| `RiskScoreService` | Calcula e persiste scores de risco de participantes |
+| `AnalyticsService` | Agregacoes para BI Fiscal (faturamento, compras, tributos) |
+| `ValidacaoContabilService` | Validacao contabil de notas fiscais (VCI) |
 
 ## Frontend
 
@@ -413,4 +773,6 @@ Use `JSON.stringify()` em arrays no n8n:
 | `app/Http/Controllers/Api/DataReceiverController.php` | Recebe progresso |
 | `app/Http/Controllers/Dashboard/MonitoramentoController.php` | SSE SPED |
 | `app/Http/Controllers/Dashboard/XmlImportacaoController.php` | SSE XML |
+| `app/Http/Controllers/Dashboard/ValidacaoController.php` | Validacao Contabil |
+| `app/Services/ValidacaoContabilService.php` | Regras de validacao |
 | `routes/api.php` | Rotas API |

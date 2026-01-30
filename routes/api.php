@@ -44,3 +44,27 @@ Route::post('/monitoramento/consulta/resultado', [DataReceiverController::class,
 // n8n envia progresso para Laravel armazenar em cache (SSE lê do cache)
 Route::post('/monitoramento/xml/importacao/progress', [DataReceiverController::class, 'receiveXmlImportacaoProgress'])
     ->name('api.monitoramento.xml.importacao.progress');
+
+// Rota para receber progresso de consulta RAF (lotes) - LEGADO
+// n8n envia progresso e resultado final para Laravel armazenar em cache/banco
+Route::post('/raf/lote/progress', [DataReceiverController::class, 'receiveRafLoteProgress'])
+    ->name('api.raf.lote.progress');
+
+// Rota para receber resultado individual de consulta RAF (por participante) - LEGADO
+// n8n envia resultado de cada participante para armazenar em raf_lote_resultados
+Route::post('/raf/lote/resultado', [DataReceiverController::class, 'receiveRafLoteResultado'])
+    ->name('api.raf.lote.resultado');
+
+// ============================================
+// Consultas - Novo padrão (substitui RAF)
+// ============================================
+
+// Rota para receber progresso de consulta de lotes
+// n8n envia progresso para Laravel armazenar em cache (SSE lê do cache)
+Route::post('/consultas/lote/progress', [DataReceiverController::class, 'receiveRafLoteProgress'])
+    ->name('api.consultas.lote.progress');
+
+// Rota para receber resultado individual de consulta (por participante)
+// n8n envia resultado de cada participante para armazenar em raf_lote_resultados
+Route::post('/consultas/lote/resultado', [DataReceiverController::class, 'receiveRafLoteResultado'])
+    ->name('api.consultas.lote.resultado');

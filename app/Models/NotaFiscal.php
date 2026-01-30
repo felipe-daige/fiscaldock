@@ -38,6 +38,7 @@ class NotaFiscal extends Model
         'ipi_valor',
         'tributos_total',
         'payload',
+        'validacao',
     ];
 
     protected function casts(): array
@@ -56,6 +57,7 @@ class NotaFiscal extends Model
             'ipi_valor' => 'decimal:2',
             'tributos_total' => 'decimal:2',
             'payload' => 'array',
+            'validacao' => 'array',
         ];
     }
 
@@ -208,6 +210,84 @@ class NotaFiscal extends Model
             + (float) $this->ipi_valor;
     }
 
+    /**
+     * Verifica se a nota foi validada.
+     */
+    public function isValidada(): bool
+    {
+        return $this->validacao !== null;
+    }
+
+    /**
+     * Retorna o score total da validacao.
+     */
+    public function getValidacaoScoreAttribute(): ?int
+    {
+        return $this->validacao['score_total'] ?? null;
+    }
+
+    /**
+     * Retorna a classificacao da validacao.
+     */
+    public function getValidacaoClassificacaoAttribute(): ?string
+    {
+        return $this->validacao['classificacao'] ?? null;
+    }
+
+    /**
+     * Retorna os alertas da validacao.
+     */
+    public function getValidacaoAlertasAttribute(): array
+    {
+        return $this->validacao['alertas'] ?? [];
+    }
+
+    /**
+     * Retorna a data da validacao.
+     */
+    public function getValidadoEmAttribute(): ?string
+    {
+        return $this->validacao['validado_em'] ?? null;
+    }
+
+    /**
+     * Retorna a classe CSS para o badge de classificacao de validacao.
+     */
+    public function getValidacaoBadgeClassAttribute(): string
+    {
+        return match ($this->validacao_classificacao) {
+            'conforme' => 'bg-green-100 text-green-800',
+            'atencao' => 'bg-yellow-100 text-yellow-800',
+            'irregular' => 'bg-orange-100 text-orange-800',
+            'critico' => 'bg-red-100 text-red-800',
+            default => 'bg-gray-100 text-gray-700',
+        };
+    }
+
+    /**
+     * Retorna o label legivel para a classificacao de validacao.
+     */
+    public function getValidacaoClassificacaoLabelAttribute(): string
+    {
+        return match ($this->validacao_classificacao) {
+            'conforme' => 'Conforme',
+            'atencao' => 'Atencao',
+            'irregular' => 'Irregular',
+            'critico' => 'Critico',
+            default => 'Nao Validada',
+        };
+    }
+
+    /**
+     * Conta alertas por nivel.
+     */
+    public function countAlertasByNivel(string $nivel): int
+    {
+        return collect($this->validacao_alertas)
+            ->where('nivel', $nivel)
+            ->count();
+    }
+
     // Scopes
 
     public function scopeDoUsuario($query, int $userId)
@@ -253,5 +333,22 @@ class NotaFiscal extends Model
     public function scopeDoCliente($query, int $clienteId)
     {
         return $query->where('cliente_id', $clienteId);
+    }
+
+    public function scopeValidadas($query)
+    {
+        return $query->whereNotNull('validacao');
+    }
+
+    public function scopeNaoValidadas($query)
+    {
+        return $query->whereNull('validacao');
+    }
+
+    public function scopeComAlertasBloqueantes($query)
+    {
+        return $query->whereNotNull('validacao')
+            ->whereRaw("jsonb_array_length(validacao->'alertas') > 0")
+            ->whereRaw("EXISTS (SELECT 1 FROM jsonb_array_elements(validacao->'alertas') AS a WHERE a->>'nivel' = 'bloqueante')");
     }
 }
