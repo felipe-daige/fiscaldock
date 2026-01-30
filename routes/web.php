@@ -161,10 +161,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/participante/nota-fiscal/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'notaFiscalDetalhes'])->name('nota-fiscal.detalhes');
         Route::get('/participante/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'participante'])->name('participante');
         Route::get('/consulta/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'consultaDetalhes'])->name('consulta');
-        Route::get('/participantes-raf/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'participantesRaf'])->name('participantes-raf');
 
         // Acoes
-        Route::post('/importar-raf/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'importarDoRaf'])->name('importar-raf');
         Route::post('/adicionar-cnpj', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'adicionarCnpj'])->name('adicionar-cnpj');
         Route::post('/consulta-avulsa', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'executarConsultaAvulsa'])->name('consulta-avulsa');
 
