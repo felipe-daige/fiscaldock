@@ -1,0 +1,49 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        // Rename table importacoes_participantes -> importacoes_sped
+        Schema::rename('importacoes_participantes', 'importacoes_sped');
+
+        // Update FK column name in participantes
+        Schema::table('participantes', function (Blueprint $table) {
+            $table->renameColumn('importacao_participante_id', 'importacao_sped_id');
+        });
+
+        // Add columns for nota extraction (future feature)
+        Schema::table('importacoes_sped', function (Blueprint $table) {
+            $table->boolean('extrair_notas')->default(false)->after('status');
+            $table->integer('total_notas')->default(0)->after('duplicados');
+            $table->integer('notas_extraidas')->default(0)->after('total_notas');
+            $table->integer('creditos_cobrados')->default(0)->after('notas_extraidas');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        // Remove new columns first
+        Schema::table('importacoes_sped', function (Blueprint $table) {
+            $table->dropColumn(['extrair_notas', 'total_notas', 'notas_extraidas', 'creditos_cobrados']);
+        });
+
+        // Rename FK column back in participantes
+        Schema::table('participantes', function (Blueprint $table) {
+            $table->renameColumn('importacao_sped_id', 'importacao_participante_id');
+        });
+
+        // Rename table back
+        Schema::rename('importacoes_sped', 'importacoes_participantes');
+    }
+};

@@ -18,7 +18,8 @@ class Participante extends Model
     protected $fillable = [
         'user_id',
         'cliente_id',
-        'importacao_participante_id',
+        'importacao_sped_id',
+        'importacao_xml_id',
         'cnpj',
         'razao_social',
         'nome_fantasia',
@@ -56,11 +57,19 @@ class Participante extends Model
     }
 
     /**
-     * Importação que criou este participante (opcional).
+     * Importação SPED que criou este participante (opcional).
      */
-    public function importacao(): BelongsTo
+    public function importacaoSped(): BelongsTo
     {
-        return $this->belongsTo(ImportacaoParticipante::class, 'importacao_participante_id');
+        return $this->belongsTo(ImportacaoSped::class, 'importacao_sped_id');
+    }
+
+    /**
+     * Importação XML que criou este participante (opcional).
+     */
+    public function importacaoXml(): BelongsTo
+    {
+        return $this->belongsTo(ImportacaoXml::class, 'importacao_xml_id');
     }
 
     /**
@@ -89,7 +98,7 @@ class Participante extends Model
     }
 
     /**
-     * Notas fiscais onde o participante é o emitente.
+     * Notas fiscais (XML) onde o participante é o emitente.
      */
     public function notasComoEmitente(): HasMany
     {
@@ -97,11 +106,27 @@ class Participante extends Model
     }
 
     /**
-     * Notas fiscais onde o participante é o destinatário.
+     * Notas fiscais (XML) onde o participante é o destinatário.
      */
     public function notasComoDestinatario(): HasMany
     {
         return $this->hasMany(NotaFiscal::class, 'dest_participante_id');
+    }
+
+    /**
+     * Notas SPED onde o participante é o emitente.
+     */
+    public function notasSpedComoEmitente(): HasMany
+    {
+        return $this->hasMany(NotaSped::class, 'emit_participante_id');
+    }
+
+    /**
+     * Notas SPED onde o participante é o destinatário.
+     */
+    public function notasSpedComoDestinatario(): HasMany
+    {
+        return $this->hasMany(NotaSped::class, 'dest_participante_id');
     }
 
     /**

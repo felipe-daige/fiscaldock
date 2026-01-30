@@ -36,10 +36,10 @@ return [
     ],
 
     'webhook' => [
-        // Webhooks RAF - modalidade "gratuito" (apenas regime tributário)
+        // Webhooks RAF - modalidade "gratuito" (apenas regime tributário) - LEGADO
         'sped_contribuicoes_url' => env('WEBHOOK_SPED_CONTRIBUICOES_URL'),
         'sped_fiscal_url' => env('WEBHOOK_SPED_FISCAL_URL'),
-        // Webhooks RAF - modalidade "completa" (CND + regime tributário)
+        // Webhooks RAF - modalidade "completa" (CND + regime tributário) - LEGADO
         'sped_contribuicoes_completa_url' => env('WEBHOOK_SPED_CONTRIBUICOES_COMPLETA_URL'),
         'sped_fiscal_completa_url' => env('WEBHOOK_SPED_FISCAL_COMPLETA_URL'),
         // Webhook Monitoramento - importação de arquivo .txt (separado por tipo)
@@ -49,6 +49,10 @@ return [
         'monitoramento_consulta_url' => env('WEBHOOK_MONITORAMENTO_CONSULTA_URL'),
         // Webhook Monitoramento - importação de XMLs (NF-e, NFS-e, CT-e)
         'monitoramento_importacao_xml_url' => env('WEBHOOK_MONITORAMENTO_IMPORTACAO_XML_URL'),
+        // Webhook Consultas - consulta de lotes de participantes (substitui RAF)
+        'consultas_lotes_url' => env('WEBHOOK_CONSULTAS_LOTES_URL'),
+        // Webhook RAF - LEGADO (alias para consultas_lotes_url)
+        'raf_consulta_url' => env('WEBHOOK_RAF_CONSULTA_URL'),
         // Credenciais
         'username' => env('WEBHOOK_SPED_USERNAME'),
         'password' => env('WEBHOOK_SPED_PASSWORD'),

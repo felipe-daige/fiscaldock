@@ -51,6 +51,11 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
+# IMPORTANTE: Corrigir permissões DEPOIS de gerar caches
+# Os comandos acima rodam como root, mas PHP-FPM roda como www-data
+echo "Corrigindo permissões dos caches gerados..."
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
 echo "=== Caches gerados com sucesso ==="
 
 # Configurar PHP-FPM timeout para 1 hora
