@@ -11,7 +11,6 @@ use App\Models\MonitoramentoPlano;
 use App\Models\NotaFiscal;
 use App\Models\Participante;
 use App\Models\ParticipanteGrupo;
-use App\Models\RafRelatorioProcessado;
 use App\Models\XmlChaveProcessada;
 use App\Services\CreditService;
 use Carbon\Carbon;
@@ -206,23 +205,22 @@ class MonitoramentoController extends Controller
         $user = Auth::user();
         $userId = (int) $user->id;
 
-        // Buscar relatórios RAF processados do usuário
-        $relatorios = RafRelatorioProcessado::where('user_id', $userId)
-            ->whereNotNull('report_csv_base64')
-            ->with('cliente')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
         // Buscar clientes ativos do usuário para o select de associação
         $clientes = Cliente::where('user_id', $userId)
             ->where('ativo', true)
             ->orderBy('razao_social')
             ->get();
 
+        // Buscar últimas importações SPED do usuário
+        $importacoes = ImportacaoSped::where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
         $data = [
-            'relatorios' => $relatorios,
             'credits' => $this->creditService->getBalance($user),
             'clientes' => $clientes,
+            'importacoes' => $importacoes,
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -666,207 +664,6 @@ class MonitoramentoController extends Controller
                 'tributos_total' => number_format((float) ($nota->tributos_total ?? 0), 2, ',', '.'),
             ]
         ]);
-    }
-
-    /**
-     * Lista participantes de um relatório RAF para importação.
-     */
-    public function participantesRaf(Request $request, $id)
-    {
-        if (!Auth::check()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Usuário não autenticado.',
-            ], Response::HTTP_UNAUTHORIZED);
-        }
-
-        $user = Auth::user();
-
-        $relatorio = RafRelatorioProcessado::where('id', $id)
-            ->where('user_id', $user->id)
-            ->first();
-
-        if (!$relatorio || empty($relatorio->report_csv_base64)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Relatório não encontrado ou sem dados.',
-            ], Response::HTTP_NOT_FOUND);
-        }
-
-        try {
-            // Decodificar CSV base64
-            $csvContent = base64_decode($relatorio->report_csv_base64);
-            $lines = explode("\n", $csvContent);
-
-            $participantes = [];
-            $header = null;
-            $cnpjIndex = null;
-            $razaoSocialIndex = null;
-            $situacaoIndex = null;
-            $regimeIndex = null;
-
-            foreach ($lines as $lineNum => $line) {
-                $line = trim($line);
-                if (empty($line)) continue;
-
-                // Parse CSV line
-                $columns = str_getcsv($line, ';');
-
-                if ($lineNum === 0) {
-                    // Header - encontrar índices das colunas relevantes
-                    $header = array_map('strtolower', array_map('trim', $columns));
-
-                    foreach ($header as $idx => $col) {
-                        if (str_contains($col, 'cnpj') && !str_contains($col, 'empresa')) {
-                            $cnpjIndex = $idx;
-                        } elseif (str_contains($col, 'razao') || str_contains($col, 'razão')) {
-                            $razaoSocialIndex = $idx;
-                        } elseif (str_contains($col, 'situacao') || str_contains($col, 'situação')) {
-                            $situacaoIndex = $idx;
-                        } elseif (str_contains($col, 'regime')) {
-                            $regimeIndex = $idx;
-                        }
-                    }
-                    continue;
-                }
-
-                if ($cnpjIndex === null) continue;
-
-                $cnpj = preg_replace('/[^0-9]/', '', $columns[$cnpjIndex] ?? '');
-                if (strlen($cnpj) !== 14) continue;
-
-                $participantes[] = [
-                    'cnpj' => $cnpj,
-                    'cnpj_formatado' => preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $cnpj),
-                    'razao_social' => $razaoSocialIndex !== null ? ($columns[$razaoSocialIndex] ?? 'Não informado') : 'Não informado',
-                    'situacao' => $situacaoIndex !== null ? ($columns[$situacaoIndex] ?? 'Desconhecida') : 'Desconhecida',
-                    'regime' => $regimeIndex !== null ? ($columns[$regimeIndex] ?? 'Não informado') : 'Não informado',
-                ];
-            }
-
-            return response()->json([
-                'success' => true,
-                'relatorio' => [
-                    'id' => $relatorio->id,
-                    'cnpj_empresa' => $relatorio->cnpj_empresa_analisada,
-                    'razao_social' => $relatorio->razao_social_empresa,
-                    'document_type' => $relatorio->document_type,
-                    'total_participantes' => count($participantes),
-                ],
-                'participantes' => $participantes,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Erro ao extrair participantes do RAF', [
-                'relatorio_id' => $id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao processar dados do relatório.',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    /**
-     * Importa participantes de um relatório RAF.
-     */
-    public function importarDoRaf(Request $request, $id)
-    {
-        if (!Auth::check()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Usuário não autenticado.',
-            ], Response::HTTP_UNAUTHORIZED);
-        }
-
-        $user = Auth::user();
-        $participantesData = $request->input('participantes', []);
-
-        if (empty($participantesData)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Nenhum participante selecionado para importação.',
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
-        $relatorio = RafRelatorioProcessado::where('id', $id)
-            ->where('user_id', $user->id)
-            ->first();
-
-        if (!$relatorio) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Relatório não encontrado.',
-            ], Response::HTTP_NOT_FOUND);
-        }
-
-        $importados = 0;
-        $duplicados = 0;
-
-        try {
-            DB::beginTransaction();
-
-            foreach ($participantesData as $p) {
-                $cnpj = preg_replace('/[^0-9]/', '', $p['cnpj'] ?? '');
-                if (strlen($cnpj) !== 14) continue;
-
-                // Verificar se já existe
-                $existente = Participante::where('user_id', $user->id)
-                    ->where('cnpj', $cnpj)
-                    ->first();
-
-                if ($existente) {
-                    $duplicados++;
-                    continue;
-                }
-
-                Participante::create([
-                    'user_id' => $user->id,
-                    'cnpj' => $cnpj,
-                    'razao_social' => $p['razao_social'] ?? null,
-                    'situacao_cadastral' => $p['situacao'] ?? null,
-                    'regime_tributario' => $p['regime'] ?? null,
-                    'origem_tipo' => $relatorio->document_type === 'EFD Fiscal' ? 'SPED_EFD_FISCAL' : 'SPED_EFD_CONTRIB',
-                    'origem_ref' => ['raf_relatorio_id' => $relatorio->id],
-                ]);
-
-                $importados++;
-            }
-
-            DB::commit();
-
-            Log::info('Participantes importados do RAF', [
-                'user_id' => $user->id,
-                'relatorio_id' => $id,
-                'importados' => $importados,
-                'duplicados' => $duplicados,
-            ]);
-
-            $message = $importados . ' participante(s) importado(s) com sucesso.';
-            if ($duplicados > 0) {
-                $message .= ' ' . $duplicados . ' já existiam e foram ignorados.';
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => $message,
-                'importados' => $importados,
-                'duplicados' => $duplicados,
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Erro ao importar participantes do RAF', [
-                'user_id' => $user->id,
-                'relatorio_id' => $id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao importar participantes. Tente novamente.',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
     }
 
     /**
