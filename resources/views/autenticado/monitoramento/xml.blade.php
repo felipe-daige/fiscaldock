@@ -655,8 +655,16 @@
         let csrf = getCsrfToken();
 
         // Identificador unico por aba
-        const tabId = crypto.randomUUID ? crypto.randomUUID() :
+        // Usa 'let' para permitir regeneração ao tentar novamente
+        let tabId = crypto.randomUUID ? crypto.randomUUID() :
             (Date.now().toString(36) + Math.random().toString(36).substr(2));
+
+        // Função para gerar novo tabId
+        function regenerarTabId() {
+            tabId = crypto.randomUUID ? crypto.randomUUID() :
+                (Date.now().toString(36) + Math.random().toString(36).substr(2));
+            console.log('[XML Import] Novo tabId gerado:', tabId);
+        }
 
         // Elementos
         const dropzone = document.getElementById('xml-dropzone');
@@ -1887,6 +1895,8 @@
                     eventSource.close();
                     eventSource = null;
                 }
+                // CRÍTICO: Regenerar tabId para evitar receber dados de erro do cache anterior
+                regenerarTabId();
                 voltarAoUpload();
                 resetarProgresso();
                 updateImportButtonState();
