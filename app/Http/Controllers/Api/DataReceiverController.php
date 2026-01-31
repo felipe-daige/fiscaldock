@@ -1643,8 +1643,9 @@ class DataReceiverController extends Controller
             }
 
             // Detectar formato do payload (novo vs legado)
-            $hasNewFormat = $request->has('user_id') && $request->has('tab_id') && $request->has('progresso');
-            $hasLegacyFormat = $request->has('importacao_id');
+            // Novo formato: user_id + tab_id (progresso pode estar ausente em erros, default 0)
+            $hasNewFormat = $request->has('user_id') && $request->has('tab_id');
+            $hasLegacyFormat = $request->has('importacao_id') && !$hasNewFormat;
 
             if ($hasNewFormat) {
                 // Novo formato: n8n controla 100% do progresso
@@ -1707,7 +1708,7 @@ class DataReceiverController extends Controller
         $validated = $request->validate([
             'user_id' => 'required|integer|exists:users,id',
             'tab_id' => 'required|string|max:36',
-            'progresso' => 'required|integer|min:0|max:100',
+            'progresso' => 'nullable|integer|min:0|max:100',
             'mensagem' => 'nullable|string|max:255',
             'status' => 'required|in:iniciando,processando,concluido,erro',
             // Campos opcionais para erros
@@ -1731,7 +1732,7 @@ class DataReceiverController extends Controller
         $cacheData = [
             'user_id' => $validated['user_id'],
             'tab_id' => $validated['tab_id'],
-            'progresso' => $validated['progresso'],
+            'progresso' => $validated['progresso'] ?? 0,
             'mensagem' => $validated['mensagem'] ?? null,
             'status' => $validated['status'],
             'updated_at' => now()->toIso8601String(),
@@ -2604,6 +2605,119 @@ class DataReceiverController extends Controller
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'request_data' => array_diff_key($request->all(), ['resultado_dados' => '']),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Recebe alertas de consultas automáticas do n8n.
+     *
+     * Chamado pelo n8n quando consultas automáticas detectam situações críticas
+     * que requerem notificação ao usuário (empresa baixada, CND vencida, etc).
+     *
+     * Payload esperado:
+     * {
+     *   "user_id": 1,
+     *   "participante_id": 123,
+     *   "assinatura_id": 456,
+     *   "consulta_id": 789,
+     *   "alertas": [
+     *     {
+     *       "tipo": "situacao_cadastral",
+     *       "criticidade": "alta",
+     *       "mensagem": "Empresa com situação irregular na RF",
+     *       "dados": {...}
+     *     }
+     *   ]
+     * }
+     */
+    public function receiveConsultaAlertas(Request $request)
+    {
+        try {
+            Log::info('Requisição recebida em receiveConsultaAlertas', [
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'ip' => $request->ip(),
+                'headers' => [
+                    'x-api-token' => $request->hasHeader('X-API-Token') ? 'presente' : 'ausente',
+                    'content-type' => $request->header('Content-Type'),
+                ],
+                'body' => $request->all(),
+            ]);
+
+            // Verifica autenticação via token
+            if (!$this->isTokenValid($request)) {
+                Log::warning('Token inválido em receiveConsultaAlertas');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Token de API inválido.',
+                ], Response::HTTP_UNAUTHORIZED);
+            }
+
+            // Validar payload
+            $validated = $request->validate([
+                'user_id' => 'required|integer|exists:users,id',
+                'participante_id' => 'required|integer|exists:participantes,id',
+                'assinatura_id' => 'nullable|integer|exists:monitoramento_assinaturas,id',
+                'consulta_id' => 'nullable|integer|exists:monitoramento_consultas,id',
+                'alertas' => 'required|array|min:1',
+                'alertas.*.tipo' => 'required|string|max:50',
+                'alertas.*.criticidade' => 'required|in:baixa,media,alta,critica',
+                'alertas.*.mensagem' => 'required|string|max:500',
+                'alertas.*.dados' => 'nullable|array',
+            ]);
+
+            // Buscar participante para log
+            $participante = Participante::find($validated['participante_id']);
+
+            // Log dos alertas recebidos
+            Log::info('Alertas de consulta recebidos', [
+                'user_id' => $validated['user_id'],
+                'participante_id' => $validated['participante_id'],
+                'participante_cnpj' => $participante?->cnpj,
+                'participante_razao' => $participante?->razao_social,
+                'assinatura_id' => $validated['assinatura_id'] ?? null,
+                'consulta_id' => $validated['consulta_id'] ?? null,
+                'total_alertas' => count($validated['alertas']),
+                'alertas' => $validated['alertas'],
+            ]);
+
+            // TODO: Implementar sistema de notificações
+            // Opções futuras:
+            // 1. Criar tabela 'alertas' para persistir
+            // 2. Usar Laravel Notifications para email/push
+            // 3. Criar dashboard de alertas no frontend
+            // 4. Integrar com Slack/Discord para alertas críticos
+
+            // Por enquanto, apenas registramos no log
+            // Os alertas críticos ficam registrados para auditoria
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Alertas recebidos.',
+                'total_alertas' => count($validated['alertas']),
+            ], Response::HTTP_OK);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Erro de validação em receiveConsultaAlertas', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro de validação.',
+                'errors' => $e->errors(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        } catch (\Exception $e) {
+            Log::error('Erro inesperado em receiveConsultaAlertas', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all(),
             ]);
             return response()->json([
                 'success' => false,

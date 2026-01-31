@@ -68,3 +68,8 @@ Route::post('/consultas/lote/progress', [DataReceiverController::class, 'receive
 // n8n envia resultado de cada participante para armazenar em raf_lote_resultados
 Route::post('/consultas/lote/resultado', [DataReceiverController::class, 'receiveRafLoteResultado'])
     ->name('api.consultas.lote.resultado');
+
+// Rota para receber alertas de consultas automáticas
+// n8n envia alertas críticos para notificação do usuário
+Route::post('/consultas/alertas', [DataReceiverController::class, 'receiveConsultaAlertas'])
+    ->name('api.consultas.alertas');
