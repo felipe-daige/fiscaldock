@@ -124,8 +124,9 @@ docker service update --image felipedaige/fiscaldock:X.X.X fiscaldock_scheduler
 | `GET /app/consultas/historico` | Historico unificado |
 | `GET /app/consultas/planos` | Lista de planos disponiveis |
 | `GET /app/consultas/relatorios` | Downloads disponiveis |
-| `POST /api/raf/lote/progress` | n8n envia progresso |
-| `POST /api/raf/lote/resultado` | n8n envia resultado por participante |
+| `POST /api/consultas/lote/progress` | n8n envia progresso |
+| `POST /api/consultas/lote/resultado` | n8n envia resultado por participante |
+| `POST /api/consultas/alertas` | n8n envia alertas criticos (opcional) |
 
 **Routes legadas (compatibilidade):**
 | Route | Redireciona para |
@@ -468,7 +469,7 @@ All URLs via `config('services.webhook.*')`, NO defaults in code.
 
 | Operation | Env Variable | Endpoint n8n |
 |-----------|--------------|--------------|
-| **Consultas Lotes** | `WEBHOOK_CONSULTAS_LOTES_URL` | `/webhook/consultas/lotes` |
+| **Consultas Lotes** | `WEBHOOK_CONSULTAS_LOTES_URL` | `/webhook/consultas` |
 | Monitoramento SPED | `WEBHOOK_MONITORAMENTO_IMPORTACAO_*_URL` | |
 | Monitoramento XML | `WEBHOOK_MONITORAMENTO_IMPORTACAO_XML_URL` | |
 | RAF Fiscal (legado) | `WEBHOOK_SPED_FISCAL_URL` | |
@@ -477,6 +478,9 @@ All URLs via `config('services.webhook.*')`, NO defaults in code.
 ## API Endpoints
 
 **From n8n (X-API-Token header):**
+- `POST /api/consultas/lote/progress` - Progresso de consulta de lotes
+- `POST /api/consultas/lote/resultado` - Resultado individual por participante
+- `POST /api/consultas/alertas` - Alertas criticos de consultas automaticas
 - `POST /api/data/receive/raf/csvfile` - Receive CSV reports
 - `POST /api/monitoramento/consulta/resultado` - Consultation results
 - `POST /api/monitoramento/sped/importacao-txt/progress` - SPED progress
