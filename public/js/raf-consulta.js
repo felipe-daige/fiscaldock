@@ -20,7 +20,7 @@
             busca: ''
         },
         tabId: generateUUID(),
-        rafLoteId: null,
+        consultaLoteId: null,
         eventSource: null,
         credits: window.rafConsultaData?.credits || 0
     };
@@ -521,7 +521,7 @@
             }
 
             // Sucesso
-            state.rafLoteId = data.raf_lote_id;
+            state.consultaLoteId = data.consulta_lote_id;
             state.credits = data.novo_saldo;
             if (elements.resumoSaldo) elements.resumoSaldo.textContent = `${data.novo_saldo} créditos`;
 
@@ -591,8 +591,8 @@
         showModal('sucesso');
 
         // Link de download
-        if (elements.linkDownloadManual && state.rafLoteId) {
-            const downloadUrl = window.rafConsultaData.routes.baixarLote.replace('{id}', state.rafLoteId);
+        if (elements.linkDownloadManual && state.consultaLoteId) {
+            const downloadUrl = window.rafConsultaData.routes.baixarLote.replace('{id}', state.consultaLoteId);
             elements.linkDownloadManual.href = downloadUrl;
 
             // Iniciar download automatico

@@ -77,31 +77,41 @@
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Modo de Envio:</label>
                             <div class="grid grid-cols-2 gap-3">
-                                <label class="flex items-center p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-purple-400 modo-envio-label" data-modo="zip">
-                                    <input type="radio" name="modo-envio" value="zip" class="mr-3 w-4 h-4 text-purple-600 flex-shrink-0">
-                                    <div class="flex items-center gap-2 flex-1 min-w-0">
-                                        <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
-                                            <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
-                                            </svg>
-                                        </div>
-                                        <div>
+                                <label class="flex items-start p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-purple-400 modo-envio-label" data-modo="zip">
+                                    <input type="radio" name="modo-envio" value="zip" class="mt-1 mr-3 w-4 h-4 text-purple-600 flex-shrink-0">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <div class="flex-shrink-0 w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center">
+                                                <svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                                                </svg>
+                                            </div>
                                             <div class="font-semibold text-gray-800 text-sm">Arquivo ZIP</div>
-                                            <div class="text-xs text-gray-500">Um ZIP com multiplas notas</div>
+                                        </div>
+                                        <div class="mt-3 text-[10px] text-gray-500">
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-100 text-purple-700">50 MB</span>
+                                                <span>• até 5.000 XMLs</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </label>
-                                <label class="flex items-center p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 modo-envio-label" data-modo="xml">
-                                    <input type="radio" name="modo-envio" value="xml" class="mr-3 w-4 h-4 text-blue-600 flex-shrink-0">
-                                    <div class="flex items-center gap-2 flex-1 min-w-0">
-                                        <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg>
-                                        </div>
-                                        <div>
+                                <label class="flex items-start p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 modo-envio-label" data-modo="xml">
+                                    <input type="radio" name="modo-envio" value="xml" class="mt-1 mr-3 w-4 h-4 text-blue-600 flex-shrink-0">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <div class="flex-shrink-0 w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
+                                                <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                </svg>
+                                            </div>
                                             <div class="font-semibold text-gray-800 text-sm">XMLs Avulsos</div>
-                                            <div class="text-xs text-gray-500">Varios arquivos XML</div>
+                                        </div>
+                                        <div class="mt-3 text-[10px] text-gray-500">
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">100 arq</span>
+                                                <span>• 200 MB total</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </label>
@@ -160,8 +170,7 @@
                                 </div>
                                 <div class="space-y-1 text-center">
                                     <p class="text-sm font-medium text-gray-500" id="xml-dropzone-main-text">Selecione o tipo e modo de envio</p>
-                                    <p class="text-xs text-gray-400" id="xml-dropzone-sub-text">Escolha as opcoes acima para habilitar o envio</p>
-                                    <p class="text-xs text-gray-400 mt-2">Max: 50MB/arquivo | 200MB total</p>
+                                    <p class="text-xs text-gray-400" id="xml-dropzone-sub-text">Escolha as opções acima para habilitar o envio</p>
                                 </div>
                                 <input
                                     type="file"
@@ -270,63 +279,51 @@
                             </div>
                         </div>
 
-                        {{-- Secao Deduplicacao --}}
+                        {{-- Secao Planos Disponíveis --}}
                         <div class="pt-4 border-t border-gray-200">
-                            <h4 class="text-sm font-semibold text-gray-900 mb-3">Deduplicacao Inteligente</h4>
-                            <div class="space-y-2 text-xs text-gray-600">
-                                <div class="flex items-start gap-2">
-                                    <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span>Notas com mesma chave de acesso sao processadas apenas uma vez</span>
-                                </div>
-                                <div class="flex items-start gap-2">
-                                    <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span>CNPJs duplicados atualizam dados existentes</span>
-                                </div>
-                                <div class="flex items-start gap-2">
-                                    <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span>CPFs sao registrados mas nao entram em monitoramento</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Formatos Aceitos --}}
-                        {{-- Formatos e Limites --}}
-                        <div class="pt-4 border-t border-gray-200">
-                            <h4 class="text-sm font-semibold text-gray-900 mb-3">Formatos e Limites</h4>
-                            <div class="space-y-3">
-                                {{-- ZIP --}}
-                                <div class="p-3 bg-purple-50 rounded-lg border border-purple-100">
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
-                                        </svg>
-                                        <span class="text-sm font-medium text-purple-900">Arquivo ZIP</span>
+                            <h4 class="text-sm font-semibold text-gray-900 mb-3">Planos Disponíveis</h4>
+                            <div class="space-y-2">
+                                <div class="p-3 rounded-lg border border-gray-200 bg-gray-50">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs font-semibold text-gray-900">Básico</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">Grátis</span>
                                     </div>
-                                    <ul class="text-xs text-purple-700 space-y-0.5 ml-6">
-                                        <li>1 arquivo ZIP por vez</li>
-                                        <li>Maximo 50 MB</li>
-                                        <li>Ate 5.000 XMLs dentro do ZIP</li>
-                                    </ul>
+                                    <p class="text-xs text-gray-600">Situação Cadastral + Dados Cadastrais + Simples/MEI</p>
                                 </div>
-                                {{-- XMLs --}}
-                                <div class="p-3 bg-blue-50 rounded-lg border border-blue-100">
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                        </svg>
-                                        <span class="text-sm font-medium text-blue-900">XMLs Avulsos</span>
+                                <div class="p-3 rounded-lg border border-gray-200 bg-white">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs font-semibold text-gray-900">Cadastral+</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">3 créditos</span>
                                     </div>
-                                    <ul class="text-xs text-blue-700 space-y-0.5 ml-6">
-                                        <li>Ate 100 arquivos por vez</li>
-                                        <li>Maximo 50 MB por arquivo</li>
-                                        <li>Maximo 200 MB total</li>
-                                    </ul>
+                                    <p class="text-xs text-gray-600">Básico + SINTEGRA + TCU Consolidada</p>
+                                </div>
+                                <div class="p-3 rounded-lg border border-gray-200 bg-white">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs font-semibold text-gray-900">Fiscal Federal</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">6 créditos</span>
+                                    </div>
+                                    <p class="text-xs text-gray-600">Cadastral+ + CND Federal + CRF FGTS</p>
+                                </div>
+                                <div class="p-3 rounded-lg border border-gray-200 bg-white">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs font-semibold text-gray-900">Fiscal Completo</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">12 créditos</span>
+                                    </div>
+                                    <p class="text-xs text-gray-600">Fiscal Federal + CND Estadual + CNDT</p>
+                                </div>
+                                <div class="p-3 rounded-lg border border-gray-200 bg-white">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs font-semibold text-gray-900">Due Diligence</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-100 text-purple-700">16 créditos</span>
+                                    </div>
+                                    <p class="text-xs text-gray-600">Fiscal Completo + Lista Devedores PGFN</p>
+                                </div>
+                                <div class="p-3 rounded-lg border border-gray-200 bg-white">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs font-semibold text-gray-900">Completo</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700">22 créditos</span>
+                                    </div>
+                                    <p class="text-xs text-gray-600">Todas as consultas disponíveis</p>
                                 </div>
                             </div>
                         </div>

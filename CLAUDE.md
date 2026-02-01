@@ -139,7 +139,7 @@ docker service update --image felipedaige/fiscaldock:X.X.X fiscaldock_scheduler
 ```json
 {
   "user_id": 1,
-  "raf_lote_id": 123,
+  "consulta_lote_id": 123,
   "tab_id": "uuid",
   "plano_codigo": "licitacao",
   "consultas_incluidas": ["situacao_cadastral", "sintegra", "cnd_federal"],
@@ -158,7 +158,7 @@ POST /api/raf/lote/resultado
 Header: X-API-Token: {token}
 
 {
-  "raf_lote_id": 123,
+  "consulta_lote_id": 123,
   "user_id": 1,
   "tab_id": "uuid",
   "participante_id": 456,
@@ -182,7 +182,7 @@ POST /api/raf/lote/progress
 {
   "user_id": 1,
   "tab_id": "uuid",
-  "raf_lote_id": 123,
+  "consulta_lote_id": 123,
   "progresso": 100,
   "status": "concluido",
   "mensagem": "Processamento concluído",
@@ -435,10 +435,10 @@ Notas fiscais extraidas de arquivos SPED (separada de notas_fiscais para dados d
 | `error_code`, `error_message` | | Detalhes de erro |
 | `processado_em` | timestamp | Data conclusao |
 
-### raf_lote_participantes (pivot)
+### consulta_lote_participantes (pivot)
 | Campo | Descricao |
 |-------|-----------|
-| `raf_lote_id` | FK para raf_lotes |
+| `consulta_lote_id` | FK para consulta_lotes |
 | `participante_id` | FK para participantes |
 
 ### participante_scores

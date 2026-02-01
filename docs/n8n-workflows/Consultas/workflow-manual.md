@@ -23,7 +23,7 @@ X-API-Token: {API_TOKEN}
 ```json
 {
   "user_id": 1,
-  "raf_lote_id": 123,
+  "consulta_lote_id": 123,
   "tab_id": "550e8400-e29b-41d4-a716-446655440000",
   "plano_codigo": "licitacao",
   "consultas_incluidas": [
@@ -144,7 +144,7 @@ X-API-Token: {API_TOKEN}
 const input = $input.first().json;
 
 // Validar campos obrigatórios
-const required = ['user_id', 'raf_lote_id', 'tab_id', 'plano_codigo',
+const required = ['user_id', 'consulta_lote_id', 'tab_id', 'plano_codigo',
                   'consultas_incluidas', 'participantes', 'progress_url', 'resultado_url'];
 
 for (const field of required) {
@@ -162,7 +162,7 @@ if (!Array.isArray(input.participantes) || input.participantes.length === 0) {
 return [{
     json: {
         user_id: input.user_id,
-        raf_lote_id: input.raf_lote_id,
+        consulta_lote_id: input.consulta_lote_id,
         tab_id: input.tab_id,
         plano_codigo: input.plano_codigo,
         consultas_incluidas: input.consultas_incluidas,
@@ -193,7 +193,7 @@ return [{
 {
     "user_id": {{ $json.user_id }},
     "tab_id": "{{ $json.tab_id }}",
-    "raf_lote_id": {{ $json.raf_lote_id }},
+    "consulta_lote_id": {{ $json.consulta_lote_id }},
     "progresso": 0,
     "status": "processando",
     "mensagem": "Iniciando consultas..."
@@ -366,7 +366,7 @@ return [{
 
 ```json
 {
-    "raf_lote_id": {{ $('Validar Payload').item.json.raf_lote_id }},
+    "consulta_lote_id": {{ $('Validar Payload').item.json.consulta_lote_id }},
     "user_id": {{ $('Validar Payload').item.json.user_id }},
     "tab_id": "{{ $('Validar Payload').item.json.tab_id }}",
     "participante_id": {{ $json.id }},
@@ -395,7 +395,7 @@ const progresso = Math.round((atual / total) * 100);
 return {
     "user_id": $('Validar Payload').item.json.user_id,
     "tab_id": $('Validar Payload').item.json.tab_id,
-    "raf_lote_id": $('Validar Payload').item.json.raf_lote_id,
+    "consulta_lote_id": $('Validar Payload').item.json.consulta_lote_id,
     "progresso": progresso,
     "status": "processando",
     "mensagem": `Processando ${atual}/${total} participantes...`
@@ -417,7 +417,7 @@ return {
 {
     "user_id": {{ $json.user_id }},
     "tab_id": "{{ $json.tab_id }}",
-    "raf_lote_id": {{ $json.raf_lote_id }},
+    "consulta_lote_id": {{ $json.consulta_lote_id }},
     "progresso": 100,
     "status": "concluido",
     "mensagem": "Processamento concluído!",
@@ -462,7 +462,7 @@ Adicionar node de Error Trigger para capturar erros globais e notificar Laravel:
 {
     "user_id": {{ $json.user_id }},
     "tab_id": "{{ $json.tab_id }}",
-    "raf_lote_id": {{ $json.raf_lote_id }},
+    "consulta_lote_id": {{ $json.consulta_lote_id }},
     "progresso": 0,
     "status": "erro",
     "mensagem": "Erro no processamento",
@@ -483,7 +483,7 @@ curl -X POST https://autowebhook.fiscaldock.com.br/webhook/consultas \
   -H "X-API-Token: seu-token" \
   -d '{
     "user_id": 1,
-    "raf_lote_id": 999,
+    "consulta_lote_id": 999,
     "tab_id": "test-123",
     "plano_codigo": "gratuito",
     "consultas_incluidas": ["situacao_cadastral", "dados_cadastrais"],

@@ -2,8 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\RafLote;
-use App\Models\RafLoteResultado;
+use App\Models\ConsultaLote;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
 
@@ -16,7 +15,7 @@ class RafReportService
     /**
      * Gera CSV a partir dos resultados do lote.
      */
-    public function gerarCsv(RafLote $lote): string
+    public function gerarCsv(ConsultaLote $lote): string
     {
         $resultados = $this->getResultadosFormatados($lote);
 
@@ -30,7 +29,7 @@ class RafReportService
         $output = fopen('php://temp', 'r+');
 
         // BOM para UTF-8
-        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
 
         // Header
         fputcsv($output, $colunas, ';');
@@ -51,7 +50,7 @@ class RafReportService
     /**
      * Gera PDF a partir dos resultados do lote.
      */
-    public function gerarPdf(RafLote $lote): \Barryvdh\DomPDF\PDF
+    public function gerarPdf(ConsultaLote $lote): \Barryvdh\DomPDF\PDF
     {
         $resultados = $this->getResultadosFormatados($lote);
         $resumo = $this->calcularResumo($resultados);
@@ -80,13 +79,13 @@ class RafReportService
     /**
      * Retorna os resultados formatados para relatório.
      */
-    public function getResultadosFormatados(RafLote $lote): Collection
+    public function getResultadosFormatados(ConsultaLote $lote): Collection
     {
         $resultados = $lote->resultados()
             ->with('participante')
             ->get();
 
-        return $resultados->map(function (RafLoteResultado $resultado) {
+        return $resultados->map(function (ConsultaLoteResultado $resultado) {
             $participante = $resultado->participante;
             $dados = $resultado->resultado_dados ?? [];
             $scoreData = $resultado->calcularScore();
@@ -211,7 +210,7 @@ class RafReportService
     /**
      * Define colunas do CSV baseado no plano.
      */
-    private function getColunasCsv(RafLote $lote, Collection $resultados): array
+    private function getColunasCsv(ConsultaLote $lote, Collection $resultados): array
     {
         $colunas = [
             'CNPJ',

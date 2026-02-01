@@ -17,6 +17,7 @@ class SpedUploadController extends Controller
             'tipo_efd' => ['nullable', 'string'],
             'cliente_id' => ['nullable', 'integer'],
             'tab_id' => ['nullable', 'string', 'max:36'],
+            'extrair_notas' => ['nullable'],
         ]);
 
         $user = Auth::user();
@@ -24,6 +25,7 @@ class SpedUploadController extends Controller
         $tipoEfd = $request->input('tipo_efd', 'contribuicoes');
         $tabId = $request->input('tab_id');
         $clienteId = $request->input('cliente_id');
+        $extrairNotas = filter_var($request->input('extrair_notas', false), FILTER_VALIDATE_BOOLEAN);
 
         // Normalizar tipo_efd para formato do banco
         $tipoEfdNormalizado = str_contains(strtolower($tipoEfd), 'fiscal')
@@ -40,6 +42,7 @@ class SpedUploadController extends Controller
             'user_id' => $user->id,
             'tipo_efd' => $tipoEfdNormalizado,
             'is_fiscal' => $isFiscal,
+            'extrair_notas' => $extrairNotas,
             'tab_id' => $tabId,
             'filename' => $file->getClientOriginalName(),
             'file_size' => $file->getSize(),
@@ -60,6 +63,7 @@ class SpedUploadController extends Controller
             'tipo_efd' => $tipoEfdNormalizado,
             'filename' => $file->getClientOriginalName(),
             'status' => 'pendente',
+            'extrair_notas' => $extrairNotas,
             'iniciado_em' => now(),
         ]);
 
@@ -75,6 +79,7 @@ class SpedUploadController extends Controller
                 'tab_id' => $tabId,
                 'tipo_efd' => $tipoEfdNormalizado,
                 'cliente_id' => $clienteId,
+                'extrair_notas' => $extrairNotas,
                 'filename' => $file->getClientOriginalName(),
                 'progress_url' => url('/api/monitoramento/sped/importacao-txt/progress'),
             ];

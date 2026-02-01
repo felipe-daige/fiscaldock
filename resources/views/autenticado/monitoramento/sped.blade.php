@@ -89,6 +89,40 @@
                             </p>
                         </div>
 
+                        {{-- Opção Extrair Notas Fiscais --}}
+                        <div class="mb-4">
+                            <label class="flex items-start p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 transition has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                <input type="checkbox"
+                                       id="extrair-notas"
+                                       name="extrair_notas"
+                                       class="mt-1 mr-3 w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-semibold text-gray-800 text-sm">Extrair Notas Fiscais</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 border border-amber-200">
+                                            <svg class="w-2.5 h-2.5 mr-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                            </svg>
+                                            Beta
+                                        </span>
+                                    </div>
+                                    <div class="text-xs text-gray-600 mt-0.5">
+                                        Importa também as notas fiscais para análise de BI Fiscal
+                                    </div>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="inline-flex items-center gap-1 text-xs text-green-600">
+                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                            </svg>
+                                            Gratuito
+                                        </span>
+                                        <span class="text-xs text-gray-400">•</span>
+                                        <span class="text-xs text-gray-500">Em fase de testes</span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
                         {{-- Instruções --}}
                         <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                             <div class="flex items-start gap-2 mb-3">
@@ -240,49 +274,49 @@
                             <div class="p-3 rounded-lg border border-gray-200 bg-gray-50">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs font-semibold text-gray-900">Básico</span>
-                                    <span class="text-xs font-medium text-green-600">Grátis</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">Grátis</span>
                                 </div>
                                 <p class="text-xs text-gray-600">Situacao Cadastral + Dados Cadastrais + Simples/MEI</p>
                             </div>
                             <div class="p-3 rounded-lg border border-gray-200 bg-white">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs font-semibold text-gray-900">Cadastral+</span>
-                                    <span class="text-xs font-medium text-blue-600">3 créditos</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">3 créditos</span>
                                 </div>
                                 <p class="text-xs text-gray-600">Basico + SINTEGRA + TCU Consolidada (CEIS, CNEP, CNJ)</p>
                             </div>
                             <div class="p-3 rounded-lg border border-gray-200 bg-white">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs font-semibold text-gray-900">Fiscal Federal</span>
-                                    <span class="text-xs font-medium text-blue-600">6 créditos</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">6 créditos</span>
                                 </div>
                                 <p class="text-xs text-gray-600">Cadastral+ + CND Federal (PGFN) + CRF FGTS</p>
                             </div>
                             <div class="p-3 rounded-lg border border-gray-200 bg-white">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs font-semibold text-gray-900">Fiscal Completo</span>
-                                    <span class="text-xs font-medium text-blue-600">12 créditos</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">12 créditos</span>
                                 </div>
                                 <p class="text-xs text-gray-600">Fiscal Federal + CND Estadual + CNDT Trabalhista</p>
                             </div>
                             <div class="p-3 rounded-lg border border-gray-200 bg-white">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs font-semibold text-gray-900">Due Diligence</span>
-                                    <span class="text-xs font-medium text-purple-600">16 créditos</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-100 text-purple-700">16 créditos</span>
                                 </div>
                                 <p class="text-xs text-gray-600">Fiscal Completo + Lista Devedores PGFN</p>
                             </div>
                             <div class="p-3 rounded-lg border border-gray-200 bg-white">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs font-semibold text-gray-900">ESG</span>
-                                    <span class="text-xs font-medium text-green-700">6 créditos</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700">6 créditos</span>
                                 </div>
                                 <p class="text-xs text-gray-600">Trabalho Escravo + IBAMA Autuacoes</p>
                             </div>
                             <div class="p-3 rounded-lg border border-gray-200 bg-white">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs font-semibold text-gray-900">Completo</span>
-                                    <span class="text-xs font-medium text-amber-600">22 créditos</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700">22 créditos</span>
                                 </div>
                                 <p class="text-xs text-gray-600">Todas as consultas disponiveis</p>
                             </div>
@@ -398,6 +432,25 @@
                             <div class="text-center p-3 bg-yellow-50 rounded-lg">
                                 <p class="text-2xl font-bold text-yellow-600" id="resultado-duplicados">0</p>
                                 <p class="text-xs text-gray-500">Duplicados</p>
+                            </div>
+                        </div>
+                        {{-- Notas Fiscais Extraídas (aparece apenas se extrair_notas=true) --}}
+                        <div id="resultado-notas" class="hidden mt-4 pt-4 border-t border-gray-200">
+                            <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-2xl font-bold text-purple-700" id="notas-extraidas-count">0</p>
+                                        <p class="text-xs text-purple-600">Notas Fiscais Extraídas</p>
+                                    </div>
+                                </div>
+                                <a href="/app/analytics" class="text-sm text-purple-700 hover:text-purple-800 font-medium hover:underline" data-link>
+                                    Ver no BI Fiscal →
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -1091,6 +1144,19 @@
                 resultadoDuplicados.textContent = valor;
             }
 
+            // Exibir notas fiscais extraídas (se houver)
+            const resultadoNotas = document.getElementById('resultado-notas');
+            const notasExtraidasCount = document.getElementById('notas-extraidas-count');
+            const totalNotas = dados.notas_extraidas || dados.total_notas || 0;
+
+            if (totalNotas > 0 && resultadoNotas && notasExtraidasCount) {
+                notasExtraidasCount.textContent = totalNotas;
+                resultadoNotas.classList.remove('hidden');
+                console.log('[Monitoramento SPED] Notas extraídas:', totalNotas);
+            } else if (resultadoNotas) {
+                resultadoNotas.classList.add('hidden');
+            }
+
             // Guardar ID da importação se disponível nos dados do SSE
             if (dados.importacao_id) {
                 importacaoAtualId = dados.importacao_id;
@@ -1485,6 +1551,12 @@
                     const clienteSelect = document.getElementById('cliente-select');
                     if (clienteSelect && clienteSelect.value) {
                         formData.append('cliente_id', clienteSelect.value);
+                    }
+
+                    // Opção de extração de notas fiscais
+                    const extrairNotasCheckbox = document.getElementById('extrair-notas');
+                    if (extrairNotasCheckbox && extrairNotasCheckbox.checked) {
+                        formData.append('extrair_notas', '1');
                     }
 
                     const response = await fetch('/app/sped/upload', {
