@@ -30,6 +30,16 @@ class Participante extends Model
         'municipio',
         'telefone',
         'crt',
+        // Receita Federal fields
+        'capital_social',
+        'natureza_juridica',
+        'porte',
+        'data_inicio_atividade',
+        'cnae_principal',
+        'cnae_principal_descricao',
+        'cnaes_secundarios',
+        'qsa',
+        // Origin tracking
         'origem_tipo',
         'origem_ref',
         'ultima_consulta_em',
@@ -37,6 +47,10 @@ class Participante extends Model
 
     protected $casts = [
         'origem_ref' => 'array',
+        'cnaes_secundarios' => 'array',
+        'qsa' => 'array',
+        'capital_social' => 'decimal:2',
+        'data_inicio_atividade' => 'date',
         'ultima_consulta_em' => 'datetime',
     ];
 
@@ -162,6 +176,7 @@ class Participante extends Model
         if (strlen($cnpj) === 14) {
             return preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $cnpj);
         }
+
         return $this->cnpj;
     }
 

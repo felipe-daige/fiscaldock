@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
+use App\Models\ConsultaLote;
 use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\ParticipanteGrupo;
-use App\Models\RafLote;
 use App\Services\CreditService;
 use App\Services\RafReportService;
 use Illuminate\Http\JsonResponse;
@@ -43,19 +43,19 @@ class RafConsultaController extends Controller
     }
 
     /**
-     * Página principal de consulta RAF.
+     * Página principal de consulta.
      */
     public function index(Request $request)
     {
         $viewPrefix = $this->getViewPrefix();
         $viewName = str_ends_with($viewPrefix, 'consultas.') ? 'nova' : 'consulta';
-        $consultaView = $viewPrefix . $viewName;
+        $consultaView = $viewPrefix.$viewName;
 
-        if (!view()->exists($consultaView)) {
+        if (! view()->exists($consultaView)) {
             abort(404);
         }
 
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return $this->redirectToLogin($request);
         }
 
@@ -79,7 +79,7 @@ class RafConsultaController extends Controller
         $totalParticipantes = Participante::where('user_id', $user->id)->count();
 
         // Últimos lotes do usuário
-        $ultimosLotes = RafLote::where('user_id', $user->id)
+        $ultimosLotes = ConsultaLote::where('user_id', $user->id)
             ->with('plano')
             ->orderBy('created_at', 'desc')
             ->limit(10)
@@ -96,11 +96,12 @@ class RafConsultaController extends Controller
 
         if ($this->isAjaxRequest($request)) {
             $renderedView = view($consultaView, $data)->render();
+
             return response($renderedView)->header('Content-Type', 'text/html');
         }
 
         return view(self::AUTH_LAYOUT_VIEW, array_merge([
-            'initialView' => $consultaView
+            'initialView' => $consultaView,
         ], $data));
     }
 
@@ -109,7 +110,7 @@ class RafConsultaController extends Controller
      */
     public function getParticipantes(Request $request): JsonResponse
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return response()->json([
                 'success' => false,
                 'error' => 'Usuário não autenticado.',
@@ -133,30 +134,30 @@ class RafConsultaController extends Controller
             ->with(['grupos:id,nome,cor']);
 
         // Filtro por grupo
-        if (!empty($validated['grupo_id'])) {
+        if (! empty($validated['grupo_id'])) {
             $query->whereHas('grupos', function ($q) use ($validated) {
                 $q->where('participantes_grupos.id', $validated['grupo_id']);
             });
         }
 
         // Filtro por cliente
-        if (!empty($validated['cliente_id'])) {
+        if (! empty($validated['cliente_id'])) {
             $query->where('cliente_id', $validated['cliente_id']);
         }
 
         // Filtro por origem
-        if (!empty($validated['origem_tipo'])) {
+        if (! empty($validated['origem_tipo'])) {
             $query->where('origem_tipo', $validated['origem_tipo']);
         }
 
         // Filtro por busca (CNPJ ou razão social)
-        if (!empty($validated['busca'])) {
+        if (! empty($validated['busca'])) {
             $busca = $validated['busca'];
             $buscaLimpa = preg_replace('/[^0-9]/', '', $busca);
 
             $query->where(function ($q) use ($busca, $buscaLimpa) {
                 $q->where('razao_social', 'ILIKE', "%{$busca}%")
-                  ->orWhere('nome_fantasia', 'ILIKE', "%{$busca}%");
+                    ->orWhere('nome_fantasia', 'ILIKE', "%{$busca}%");
 
                 if (strlen($buscaLimpa) >= 3) {
                     $q->orWhere('cnpj', 'LIKE', "%{$buscaLimpa}%");
@@ -184,7 +185,7 @@ class RafConsultaController extends Controller
      */
     public function getParticipantesGrupo(Request $request, int $grupoId): JsonResponse
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return response()->json([
                 'success' => false,
                 'error' => 'Usuário não autenticado.',
@@ -197,7 +198,7 @@ class RafConsultaController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$grupo) {
+        if (! $grupo) {
             return response()->json([
                 'success' => false,
                 'error' => 'Grupo não encontrado.',
@@ -220,7 +221,7 @@ class RafConsultaController extends Controller
      */
     public function calcularCusto(Request $request): JsonResponse
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return response()->json([
                 'success' => false,
                 'error' => 'Usuário não autenticado.',
@@ -249,7 +250,7 @@ class RafConsultaController extends Controller
 
         $plano = MonitoramentoPlano::find($validated['plano_id']);
 
-        if (!$plano || !$plano->is_active) {
+        if (! $plano || ! $plano->is_active) {
             return response()->json([
                 'success' => false,
                 'error' => 'Plano não disponível.',
@@ -279,11 +280,11 @@ class RafConsultaController extends Controller
     }
 
     /**
-     * Executa a consulta RAF.
+     * Executa a consulta de lote.
      */
     public function executar(Request $request): JsonResponse
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return response()->json([
                 'success' => false,
                 'error' => 'Usuário não autenticado.',
@@ -314,7 +315,7 @@ class RafConsultaController extends Controller
 
         $plano = MonitoramentoPlano::find($validated['plano_id']);
 
-        if (!$plano || !$plano->is_active) {
+        if (! $plano || ! $plano->is_active) {
             return response()->json([
                 'success' => false,
                 'error' => 'Plano não disponível.',
@@ -326,7 +327,7 @@ class RafConsultaController extends Controller
         $custoTotal = $totalParticipantes * $plano->custo_creditos;
 
         // Verificar créditos (se não for gratuito)
-        if (!$plano->is_gratuito && !$this->creditService->hasEnough($user, $custoTotal)) {
+        if (! $plano->is_gratuito && ! $this->creditService->hasEnough($user, $custoTotal)) {
             return response()->json([
                 'success' => false,
                 'error' => 'Créditos insuficientes.',
@@ -341,6 +342,7 @@ class RafConsultaController extends Controller
 
         if (empty($webhookUrl)) {
             Log::error('Consultas: webhook não configurado (WEBHOOK_CONSULTAS_LOTES_URL)');
+
             return response()->json([
                 'success' => false,
                 'error' => 'Configuração de webhook ausente. Contate o suporte.',
@@ -349,9 +351,9 @@ class RafConsultaController extends Controller
 
         try {
             // Debitar créditos (se não for gratuito)
-            if (!$plano->is_gratuito) {
+            if (! $plano->is_gratuito) {
                 $debitado = $this->creditService->deduct($user, $custoTotal);
-                if (!$debitado) {
+                if (! $debitado) {
                     return response()->json([
                         'success' => false,
                         'error' => 'Falha ao debitar créditos. Tente novamente.',
@@ -360,11 +362,11 @@ class RafConsultaController extends Controller
             }
 
             // Criar lote
-            $lote = RafLote::create([
+            $lote = ConsultaLote::create([
                 'user_id' => $user->id,
                 'cliente_id' => $validated['cliente_id'] ?? null,
                 'plano_id' => $plano->id,
-                'status' => RafLote::STATUS_PROCESSANDO,
+                'status' => ConsultaLote::STATUS_PROCESSANDO,
                 'total_participantes' => $totalParticipantes,
                 'creditos_cobrados' => $custoTotal,
                 'tab_id' => $validated['tab_id'],
@@ -373,8 +375,8 @@ class RafConsultaController extends Controller
             // Associar participantes
             $lote->participantes()->attach($validated['participante_ids']);
 
-            Log::info('RafConsulta: lote criado', [
-                'raf_lote_id' => $lote->id,
+            Log::info('Consulta: lote criado', [
+                'consulta_lote_id' => $lote->id,
                 'user_id' => $user->id,
                 'plano' => $plano->codigo,
                 'total_participantes' => $totalParticipantes,
@@ -384,7 +386,7 @@ class RafConsultaController extends Controller
             // Preparar payload para n8n
             $payload = [
                 'user_id' => $user->id,
-                'raf_lote_id' => $lote->id,
+                'consulta_lote_id' => $lote->id,
                 'tab_id' => $validated['tab_id'],
                 'plano_codigo' => $plano->codigo,
                 'consultas_incluidas' => $plano->consultas_incluidas,
@@ -410,32 +412,32 @@ class RafConsultaController extends Controller
                 ->post($webhookUrl, $payload);
 
             if ($response->successful()) {
-                Log::info('RafConsulta: enviado para n8n com sucesso', [
-                    'raf_lote_id' => $lote->id,
+                Log::info('Consulta: enviado para n8n com sucesso', [
+                    'consulta_lote_id' => $lote->id,
                     'response_status' => $response->status(),
                 ]);
 
                 return response()->json([
                     'success' => true,
-                    'raf_lote_id' => $lote->id,
+                    'consulta_lote_id' => $lote->id,
                     'message' => 'Consulta iniciada com sucesso.',
                     'creditos_cobrados' => $custoTotal,
                     'novo_saldo' => $this->creditService->getBalance($user),
                 ]);
             } else {
                 // Falha no envio - estornar créditos e marcar erro
-                if (!$plano->is_gratuito) {
+                if (! $plano->is_gratuito) {
                     $this->creditService->add($user, $custoTotal);
                 }
 
                 $lote->update([
-                    'status' => RafLote::STATUS_ERRO,
+                    'status' => ConsultaLote::STATUS_ERRO,
                     'error_code' => 'WEBHOOK_ERROR',
-                    'error_message' => 'Erro ao enviar para processamento: ' . $response->status(),
+                    'error_message' => 'Erro ao enviar para processamento: '.$response->status(),
                 ]);
 
-                Log::error('RafConsulta: erro na resposta do n8n', [
-                    'raf_lote_id' => $lote->id,
+                Log::error('Consulta: erro na resposta do n8n', [
+                    'consulta_lote_id' => $lote->id,
                     'response_status' => $response->status(),
                     'response_body' => $response->body(),
                 ]);
@@ -447,7 +449,7 @@ class RafConsultaController extends Controller
             }
 
         } catch (\Exception $e) {
-            Log::error('RafConsulta: exceção ao executar', [
+            Log::error('Consulta: exceção ao executar', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -456,13 +458,13 @@ class RafConsultaController extends Controller
             // Se lote foi criado, marcar como erro
             if (isset($lote)) {
                 $lote->update([
-                    'status' => RafLote::STATUS_ERRO,
+                    'status' => ConsultaLote::STATUS_ERRO,
                     'error_code' => 'INTERNAL_ERROR',
                     'error_message' => $e->getMessage(),
                 ]);
 
                 // Estornar créditos
-                if (!$plano->is_gratuito && $custoTotal > 0) {
+                if (! $plano->is_gratuito && $custoTotal > 0) {
                     $this->creditService->add($user, $custoTotal);
                 }
             }
@@ -479,7 +481,7 @@ class RafConsultaController extends Controller
      */
     public function streamProgresso(Request $request)
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return response()->json([
                 'success' => false,
                 'error' => 'Usuário não autenticado.',
@@ -489,7 +491,7 @@ class RafConsultaController extends Controller
         $userId = auth()->id();
         $tabId = $request->query('tab_id');
 
-        if (!$tabId) {
+        if (! $tabId) {
             return response()->json([
                 'success' => false,
                 'error' => 'tab_id obrigatório.',
@@ -498,7 +500,7 @@ class RafConsultaController extends Controller
 
         $cacheKey = "progresso:{$userId}:{$tabId}";
 
-        Log::info('SSE RAF streamProgresso iniciado', [
+        Log::info('SSE Consulta streamProgresso iniciado', [
             'user_id' => $userId,
             'tab_id' => $tabId,
             'cache_key' => $cacheKey,
@@ -509,7 +511,7 @@ class RafConsultaController extends Controller
             $maxTentativas = 600; // 10 minutos
             $lastDataHash = null;
 
-            echo ": SSE connection established for RAF progress stream (user:{$userId}, tab:{$tabId})\n\n";
+            echo ": SSE connection established for consulta progress stream (user:{$userId}, tab:{$tabId})\n\n";
             if (ob_get_level() > 0) {
                 ob_flush();
             }
@@ -525,7 +527,7 @@ class RafConsultaController extends Controller
                         if ($currentHash !== $lastDataHash) {
                             $lastDataHash = $currentHash;
 
-                            echo "data: " . json_encode($data) . "\n\n";
+                            echo 'data: '.json_encode($data)."\n\n";
 
                             if (ob_get_level() > 0) {
                                 ob_flush();
@@ -533,7 +535,7 @@ class RafConsultaController extends Controller
                             flush();
 
                             if (in_array($data['status'] ?? '', ['concluido', 'erro'])) {
-                                Log::info('SSE RAF streamProgresso: status final recebido', [
+                                Log::info('SSE Consulta streamProgresso: status final recebido', [
                                     'user_id' => $userId,
                                     'tab_id' => $tabId,
                                     'status' => $data['status'],
@@ -545,7 +547,7 @@ class RafConsultaController extends Controller
                     }
 
                     if (connection_aborted()) {
-                        Log::info('SSE RAF streamProgresso: conexão abortada pelo cliente', [
+                        Log::info('SSE Consulta streamProgresso: conexão abortada pelo cliente', [
                             'user_id' => $userId,
                             'tab_id' => $tabId,
                         ]);
@@ -556,7 +558,7 @@ class RafConsultaController extends Controller
                     $tentativas++;
 
                 } catch (\Exception $e) {
-                    Log::error('SSE RAF streamProgresso: erro no loop', [
+                    Log::error('SSE Consulta streamProgresso: erro no loop', [
                         'user_id' => $userId,
                         'tab_id' => $tabId,
                         'error' => $e->getMessage(),
@@ -570,16 +572,16 @@ class RafConsultaController extends Controller
             }
 
             if ($tentativas >= $maxTentativas) {
-                echo "data: " . json_encode([
+                echo 'data: '.json_encode([
                     'status' => 'timeout',
                     'progresso' => 0,
                     'mensagem' => 'Tempo limite atingido. Verifique o histórico.',
-                ]) . "\n\n";
+                ])."\n\n";
                 if (ob_get_level() > 0) {
                     ob_flush();
                 }
                 flush();
-                Log::warning('SSE RAF streamProgresso: timeout', [
+                Log::warning('SSE Consulta streamProgresso: timeout', [
                     'user_id' => $userId,
                     'tab_id' => $tabId,
                 ]);
@@ -595,31 +597,29 @@ class RafConsultaController extends Controller
     /**
      * Download do relatório de um lote (CSV ou PDF).
      *
-     * Gera o relatório on-demand a partir dos dados em raf_lote_resultados.
+     * Gera o relatório on-demand a partir dos dados em consulta_resultados.
      * Fallback para report_csv_base64 se não houver resultados na nova tabela.
      *
-     * @param  Request  $request
-     * @param  int  $id
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function baixarLote(Request $request, int $id)
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login');
         }
 
         $user = Auth::user();
 
-        $lote = RafLote::where('id', $id)
+        $lote = ConsultaLote::where('id', $id)
             ->where('user_id', $user->id)
             ->with(['plano', 'resultados.participante'])
             ->first();
 
-        if (!$lote) {
+        if (! $lote) {
             abort(404, 'Lote não encontrado.');
         }
 
-        if (!$lote->isConcluido()) {
+        if (! $lote->isConcluido()) {
             abort(400, 'Lote ainda não foi processado.');
         }
 
@@ -629,32 +629,32 @@ class RafConsultaController extends Controller
         if ($lote->hasResultados()) {
             if ($formato === 'pdf') {
                 $pdf = $this->reportService->gerarPdf($lote);
-                $filename = "raf_lote_{$lote->id}.pdf";
+                $filename = "consulta_lote_{$lote->id}.pdf";
 
                 return $pdf->download($filename);
             }
 
             // CSV
             $csvContent = $this->reportService->gerarCsv($lote);
-            $filename = $lote->filename ?? "raf_lote_{$lote->id}.csv";
+            $filename = $lote->filename ?? "consulta_lote_{$lote->id}.csv";
 
             return response($csvContent)
                 ->header('Content-Type', 'text/csv; charset=utf-8')
-                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+                ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
         }
 
         // Fallback: usar CSV pré-gerado (compatibilidade com lotes antigos)
-        if (!empty($lote->report_csv_base64)) {
+        if (! empty($lote->report_csv_base64)) {
             if ($formato === 'pdf') {
                 abort(400, 'Formato PDF não disponível para este lote. Use CSV.');
             }
 
             $csvContent = base64_decode($lote->report_csv_base64);
-            $filename = $lote->filename ?? "raf_lote_{$lote->id}.csv";
+            $filename = $lote->filename ?? "consulta_lote_{$lote->id}.csv";
 
             return response($csvContent)
                 ->header('Content-Type', 'text/csv; charset=utf-8')
-                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+                ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
         }
 
         abort(404, 'Relatório não disponível.');
@@ -665,20 +665,20 @@ class RafConsultaController extends Controller
      */
     public function historico(Request $request)
     {
-        $historicoView = $this->getViewPrefix() . 'historico';
+        $historicoView = $this->getViewPrefix().'historico';
 
-        if (!view()->exists($historicoView)) {
+        if (! view()->exists($historicoView)) {
             abort(404);
         }
 
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return $this->redirectToLogin($request);
         }
 
         $user = Auth::user();
 
-        // Lotes novos (raf_lotes)
-        $lotes = RafLote::where('user_id', $user->id)
+        // Lotes novos (consulta_lotes)
+        $lotes = ConsultaLote::where('user_id', $user->id)
             ->with('plano')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
@@ -697,11 +697,12 @@ class RafConsultaController extends Controller
 
         if ($this->isAjaxRequest($request)) {
             $renderedView = view($historicoView, $data)->render();
+
             return response($renderedView)->header('Content-Type', 'text/html');
         }
 
         return view(self::AUTH_LAYOUT_VIEW, array_merge([
-            'initialView' => $historicoView
+            'initialView' => $historicoView,
         ], $data));
     }
 
@@ -719,6 +720,7 @@ class RafConsultaController extends Controller
     private function redirectToLogin(Request $request)
     {
         session(['url.intended' => $request->fullUrl()]);
+
         return redirect()->route('login');
     }
 }

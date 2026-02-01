@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ConsultaLote;
+use App\Models\ConsultaResultado;
 use App\Models\ImportacaoXml;
 use App\Models\MonitoramentoConsulta;
 use App\Models\Participante;
-use App\Models\User;
 use App\Models\RafConsultaPendente;
-use App\Models\RafLote;
 use App\Models\RafRelatorioProcessado;
+use App\Models\User;
 use App\Services\CreditService;
 use App\Services\Sped\SpedUploadService;
 use Illuminate\Http\Request;
@@ -24,6 +25,7 @@ class DataReceiverController extends Controller
         protected CreditService $creditService,
         protected SpedUploadService $spedUploadService
     ) {}
+
     /**
      * Recebe dados via HTTP POST.
      * Agora espera apenas 'id' e 'user_id' do n8n e busca dados do banco de dados.
@@ -43,22 +45,22 @@ class DataReceiverController extends Controller
                 ],
                 'body' => $request->all(),
             ]);
-            
+
             // Verifica autenticação via token ou sessão (opcional)
             $user = $this->authenticate($request);
-            
+
             // Processar payload - pode vir em formato n8n ou simples
             $rawData = $request->all();
             $receivedData = $rawData;
-            
+
             // Se é array numérico (formato n8n), extrair o primeiro elemento
-            if (is_array($rawData) && !empty($rawData) && array_keys($rawData) === range(0, count($rawData) - 1)) {
+            if (is_array($rawData) && ! empty($rawData) && array_keys($rawData) === range(0, count($rawData) - 1)) {
                 $firstItem = $rawData[0] ?? null;
                 if (is_array($firstItem) && isset($firstItem['data'])) {
                     $nestedData = $firstItem['data'];
                     if (isset($nestedData['data']) && is_array($nestedData['data'])) {
                         $receivedData = $nestedData['data'];
-                        if (isset($nestedData['user_id']) && !isset($receivedData['user_id'])) {
+                        if (isset($nestedData['user_id']) && ! isset($receivedData['user_id'])) {
                             $receivedData['user_id'] = $nestedData['user_id'];
                         }
                     } else {
@@ -70,14 +72,14 @@ class DataReceiverController extends Controller
             } elseif (is_array($rawData) && isset($rawData['data']) && is_array($rawData['data'])) {
                 if (isset($rawData['data']['data']) && is_array($rawData['data']['data'])) {
                     $receivedData = $rawData['data']['data'];
-                    if (isset($rawData['data']['user_id']) && !isset($receivedData['user_id'])) {
+                    if (isset($rawData['data']['user_id']) && ! isset($receivedData['user_id'])) {
                         $receivedData['user_id'] = $rawData['data']['user_id'];
                     }
                 } else {
                     $receivedData = $rawData['data'];
                 }
             }
-            
+
             Log::info('Dados processados (final)', [
                 'user_id' => $user?->id ?? null,
                 'data_keys' => is_array($receivedData) ? array_keys($receivedData) : 'não é array',
@@ -86,13 +88,13 @@ class DataReceiverController extends Controller
             ]);
 
             // Validar que temos 'id' e 'user_id'
-            if (!isset($receivedData['id']) || !isset($receivedData['user_id'])) {
+            if (! isset($receivedData['id']) || ! isset($receivedData['user_id'])) {
                 Log::warning('Payload inválido: faltam campos obrigatórios', [
                     'has_id' => isset($receivedData['id']),
                     'has_user_id' => isset($receivedData['user_id']),
                     'data_keys' => is_array($receivedData) ? array_keys($receivedData) : 'não é array',
                 ]);
-                
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Campos obrigatórios ausentes: id e user_id são necessários.',
@@ -110,19 +112,19 @@ class DataReceiverController extends Controller
 
             // Buscar registro do banco de dados
             $registro = RafConsultaPendente::find($id);
-            
-            if (!$registro) {
+
+            if (! $registro) {
                 Log::warning('Registro RAF não encontrado no banco de dados', [
                     'id' => $id,
                     'user_id' => $userId,
                 ]);
-                
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Registro não encontrado.',
                 ], Response::HTTP_NOT_FOUND);
             }
-            
+
             // Validar que o user_id corresponde
             if ((int) $registro->user_id !== $userId) {
                 Log::warning('Tentativa de acesso a registro de outro usuário', [
@@ -130,16 +132,16 @@ class DataReceiverController extends Controller
                     'expected_user_id' => $userId,
                     'actual_user_id' => $registro->user_id,
                 ]);
-                
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Acesso negado.',
                 ], Response::HTTP_FORBIDDEN);
             }
-            
+
             // Atualizar registro com valores do n8n (se enviados)
             $updated = false;
-            
+
             if (isset($receivedData['qtd_participantes'])) {
                 $registro->qtd_participantes = (int) $receivedData['qtd_participantes'];
                 $updated = true;
@@ -160,27 +162,27 @@ class DataReceiverController extends Controller
                 $registro->tab_id = $receivedData['tab_id'];
                 $updated = true;
             }
-            
+
             // IMPORTANTE: Limpar processing_started_at para permitir nova confirmação
             // Isso é necessário quando o n8n envia novos dados para o mesmo registro
             if ($registro->processing_started_at !== null) {
                 $registro->processing_started_at = null;
                 $updated = true;
             }
-            
+
             // Marcar que o n8n enviou os dados (orquestrador)
-            if (!$registro->n8n_received_at) {
+            if (! $registro->n8n_received_at) {
                 $registro->n8n_received_at = now();
                 $updated = true;
             }
-            
+
             // Salvar apenas se houver alterações
             if ($updated) {
                 $saved = $registro->save();
-                
+
                 // Recarregar do banco para confirmar que foi salvo
                 $registro->refresh();
-                
+
                 Log::info('Registro RAF atualizado com dados do n8n', [
                     'id' => $id,
                     'user_id' => $userId,
@@ -195,12 +197,12 @@ class DataReceiverController extends Controller
             // Buscar dados formatados
             $formattedData = $this->getRafConsultaFromDatabase($id, $userId);
 
-            if (!$formattedData) {
+            if (! $formattedData) {
                 Log::error('Erro ao formatar dados após marcar n8n_received_at', [
                     'id' => $id,
                     'user_id' => $userId,
                 ]);
-                
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Erro ao processar dados.',
@@ -231,24 +233,26 @@ class DataReceiverController extends Controller
                 'message' => 'Dados recebidos com sucesso.',
                 'data' => $responseData,
             ], Response::HTTP_OK);
-            
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::warning('Erro de validação na API', [
                 'errors' => $e->errors(),
                 'request_data' => $request->all(),
             ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erro de validação.',
                 'errors' => $e->errors(),
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
-            
+
         } catch (\Exception $e) {
             Log::error('Erro inesperado na API DataReceiverController', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'request_data' => $request->all(),
             ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
@@ -258,24 +262,25 @@ class DataReceiverController extends Controller
 
     /**
      * Busca dados de consulta RAF do banco de dados.
-     * 
-     * @param int $id ID do registro em raf_consulta_pendente
-     * @param int $userId ID do usuário (para validação)
+     *
+     * @param  int  $id  ID do registro em raf_consulta_pendente
+     * @param  int  $userId  ID do usuário (para validação)
      * @return array|null Dados formatados ou null se não encontrado
      */
     private function getRafConsultaFromDatabase(int $id, int $userId): ?array
     {
         try {
             $registro = RafConsultaPendente::find($id);
-            
-            if (!$registro) {
+
+            if (! $registro) {
                 Log::warning('Registro RAF não encontrado', [
                     'id' => $id,
                     'user_id' => $userId,
                 ]);
+
                 return null;
             }
-            
+
             // Validar que o user_id corresponde
             if ((int) $registro->user_id !== $userId) {
                 Log::warning('Tentativa de acesso a registro de outro usuário', [
@@ -283,9 +288,10 @@ class DataReceiverController extends Controller
                     'expected_user_id' => $userId,
                     'actual_user_id' => $registro->user_id,
                 ]);
+
                 return null;
             }
-            
+
             // Formatar dados no formato esperado pelo frontend
             return [
                 'id' => $registro->id,
@@ -299,7 +305,7 @@ class DataReceiverController extends Controller
                 'created_at' => $registro->created_at?->toIso8601String(),
                 'updated_at' => $registro->updated_at?->toIso8601String(),
             ];
-            
+
         } catch (\Exception $e) {
             Log::error('Erro ao buscar registro RAF do banco de dados', [
                 'id' => $id,
@@ -307,6 +313,7 @@ class DataReceiverController extends Controller
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return null;
         }
     }
@@ -320,41 +327,45 @@ class DataReceiverController extends Controller
         // Tenta autenticação via token API (para n8n)
         $apiToken = $request->header('X-API-Token') ?? $request->input('api_token');
         $expectedToken = config('services.api.token');
-        
-        if (!empty($apiToken) && !empty($expectedToken) && $apiToken === $expectedToken) {
+
+        if (! empty($apiToken) && ! empty($expectedToken) && $apiToken === $expectedToken) {
             // Token válido - busca user_id no payload (opcional)
             $userId = $request->input('user_id');
             if ($userId) {
                 $user = User::find($userId);
                 if ($user) {
                     Log::info('Usuário autenticado via token API com user_id', ['user_id' => $userId]);
+
                     return $user;
                 }
                 Log::warning('User ID não encontrado', ['user_id' => $userId]);
             }
-            
+
             // Se não tiver user_id, tenta pegar da sessão
             $user = Auth::user();
             if ($user) {
                 Log::info('Usuário autenticado via token API com sessão', ['user_id' => $user->id]);
+
                 return $user;
             }
-            
+
             // Se não tiver user_id nem sessão, busca o primeiro usuário
             $user = User::orderBy('id')->first();
             if ($user) {
                 Log::info('Usuário autenticado via token API (fallback para primeiro usuário)', ['user_id' => $user->id]);
+
                 return $user;
             }
-            
+
             Log::warning('Token válido mas nenhum usuário encontrado no sistema');
+
             return null;
         }
-        
+
         // Fallback: autenticação via sessão (para frontend)
         return Auth::user();
     }
-    
+
     /**
      * Verifica se o token API é válido.
      */
@@ -362,7 +373,8 @@ class DataReceiverController extends Controller
     {
         $apiToken = $request->header('X-API-Token') ?? $request->input('api_token');
         $expectedToken = config('services.api.token');
-        return !empty($apiToken) && !empty($expectedToken) && $apiToken === $expectedToken;
+
+        return ! empty($apiToken) && ! empty($expectedToken) && $apiToken === $expectedToken;
     }
 
     /**
@@ -394,16 +406,16 @@ class DataReceiverController extends Controller
             $receivedData = $rawData;
 
             // Se é array numérico (formato n8n), extrair o primeiro elemento
-            if (is_array($rawData) && !empty($rawData) && array_keys($rawData) === range(0, count($rawData) - 1)) {
+            if (is_array($rawData) && ! empty($rawData) && array_keys($rawData) === range(0, count($rawData) - 1)) {
                 $firstItem = $rawData[0] ?? null;
                 if (is_array($firstItem) && isset($firstItem['data'])) {
                     $nestedData = $firstItem['data'];
                     if (isset($nestedData['data']) && is_array($nestedData['data'])) {
                         $receivedData = $nestedData['data'];
-                        if (isset($nestedData['user_id']) && !isset($receivedData['user_id'])) {
+                        if (isset($nestedData['user_id']) && ! isset($receivedData['user_id'])) {
                             $receivedData['user_id'] = $nestedData['user_id'];
                         }
-                        if (isset($nestedData['id']) && !isset($receivedData['id'])) {
+                        if (isset($nestedData['id']) && ! isset($receivedData['id'])) {
                             $receivedData['id'] = $nestedData['id'];
                         }
                     } else {
@@ -415,10 +427,10 @@ class DataReceiverController extends Controller
             } elseif (is_array($rawData) && isset($rawData['data']) && is_array($rawData['data'])) {
                 if (isset($rawData['data']['data']) && is_array($rawData['data']['data'])) {
                     $receivedData = $rawData['data']['data'];
-                    if (isset($rawData['data']['user_id']) && !isset($receivedData['user_id'])) {
+                    if (isset($rawData['data']['user_id']) && ! isset($receivedData['user_id'])) {
                         $receivedData['user_id'] = $rawData['data']['user_id'];
                     }
-                    if (isset($rawData['data']['id']) && !isset($receivedData['id'])) {
+                    if (isset($rawData['data']['id']) && ! isset($receivedData['id'])) {
                         $receivedData['id'] = $rawData['data']['id'];
                     }
                 } else {
@@ -429,8 +441,8 @@ class DataReceiverController extends Controller
             // Validar apenas id e user_id (campos obrigatórios)
             if (empty($receivedData['id']) || empty($receivedData['user_id'])) {
                 Log::warning('Dados incompletos em receiveCsv', [
-                    'has_id' => !empty($receivedData['id']),
-                    'has_user_id' => !empty($receivedData['user_id']),
+                    'has_id' => ! empty($receivedData['id']),
+                    'has_user_id' => ! empty($receivedData['user_id']),
                 ]);
 
                 return response()->json([
@@ -450,7 +462,7 @@ class DataReceiverController extends Controller
             // Buscar registro no banco (já salvo pelo n8n)
             $relatorioProcessado = RafRelatorioProcessado::find($relatorioId);
 
-            if (!$relatorioProcessado) {
+            if (! $relatorioProcessado) {
                 Log::warning('Registro não encontrado em receiveCsv', [
                     'relatorio_id' => $relatorioId,
                     'user_id' => $userId,
@@ -495,6 +507,7 @@ class DataReceiverController extends Controller
                 'errors' => $e->errors(),
                 'request_data' => $request->all(),
             ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erro de validação.',
@@ -507,6 +520,7 @@ class DataReceiverController extends Controller
                 'trace' => $e->getTraceAsString(),
                 'request_data' => $request->all(),
             ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
@@ -523,25 +537,26 @@ class DataReceiverController extends Controller
     public function streamNotifications(Request $request)
     {
         $user = Auth::user();
-        
+
         // Obter relatorio_id da query string se fornecido
         $requestedRelatorioId = $request->query('relatorio_id');
         if ($requestedRelatorioId) {
             $requestedRelatorioId = (int) $requestedRelatorioId;
         }
-        
+
         // Obter tab_id da query string se fornecido
         $requestedTabId = $request->query('tab_id');
-        
+
         Log::info('SSE streamNotifications chamado', [
             'user_id' => $user?->id,
             'authenticated' => Auth::check(),
             'relatorio_id' => $requestedRelatorioId,
             'tab_id' => $requestedTabId,
         ]);
-        
-        if (!$user) {
+
+        if (! $user) {
             Log::warning('SSE: usuário não autenticado');
+
             return response('Unauthorized', 401);
         }
 
@@ -549,25 +564,25 @@ class DataReceiverController extends Controller
         return response()->stream(function () use ($user, $requestedRelatorioId, $requestedTabId) {
             // Enviar comentário inicial
             echo ": SSE connection established\n\n";
-            
+
             if (ob_get_level() > 0) {
                 ob_flush();
             }
             flush();
-            
+
             try {
                 Log::info('SSE: conexão estabelecida', ['user_id' => $user->id]);
             } catch (\Exception $e) {
                 // Ignorar erros de log
             }
-            
+
             $lastNotificationTime = null;
             $notifiedCsvIds = []; // IDs de CSVs já notificados nesta sessão
             $notifiedDataReadyIds = []; // IDs de data_ready já notificados nesta sessão
             $notifiedErrorIds = []; // IDs de erros já notificados nesta sessão
             $isFirstDbCheck = true; // Flag para primeira verificação no banco
             $connectionEstablishedAt = now(); // Timestamp de quando a conexão SSE foi estabelecida
-            
+
             while (true) {
                 try {
                     // ========================================
@@ -581,19 +596,19 @@ class DataReceiverController extends Controller
                         ->whereNotNull('resume_url')
                         ->whereNotNull('valor_total_consulta')
                         ->whereNotIn('id', $notifiedDataReadyIds);
-                    
+
                     // Filtrar por tab_id se fornecido para isolar notificações entre abas
                     // IMPORTANTE: Também incluir registros sem tab_id, pois o n8n pode criar
                     // novos registros sem tab_id quando envia dados para /api/data/receive
                     if ($requestedTabId) {
                         $pendenteQuery->where(function ($q) use ($requestedTabId) {
                             $q->where('tab_id', $requestedTabId)
-                              ->orWhereNull('tab_id'); // Incluir registros sem tab_id
+                                ->orWhereNull('tab_id'); // Incluir registros sem tab_id
                         });
                     }
-                    
+
                     $pendente = $pendenteQuery->orderBy('n8n_received_at', 'desc')->first();
-                    
+
                     if ($pendente) {
                         // Enviar notificação data_ready
                         // Converter valores para float pois campos decimal vêm como string do banco
@@ -609,23 +624,23 @@ class DataReceiverController extends Controller
                                 'custo_unitario' => (float) $pendente->custo_unitario,
                             ],
                         ];
-                        
+
                         $data = json_encode($dataReadyNotification);
                         echo "data: {$data}\n\n";
-                        
+
                         if (ob_get_level() > 0) {
                             ob_flush();
                         }
                         flush();
-                        
+
                         // Marcar como notificado
                         $notifiedDataReadyIds[] = $pendente->id;
-                        
+
                         // Atualizar lastNotificationTime
                         if ($pendente->n8n_received_at) {
                             $lastNotificationTime = $pendente->n8n_received_at;
                         }
-                        
+
                         try {
                             Log::info('SSE: data_ready enviado do banco de dados', [
                                 'user_id' => $user->id,
@@ -635,7 +650,7 @@ class DataReceiverController extends Controller
                             // Ignorar erros de log
                         }
                     }
-                    
+
                     // ========================================
                     // 2. Verificar erros de processamento
                     // ========================================
@@ -644,29 +659,29 @@ class DataReceiverController extends Controller
                     // Usar uma margem pequena de 3 segundos para evitar race conditions,
                     // mas não muito grande para evitar pegar erros de envios anteriores.
                     $errorTimeThreshold = $connectionEstablishedAt->copy()->subSeconds(3);
-                    
+
                     $errorQuery = RafConsultaPendente::where('user_id', $user->id)
                         ->where('status', 'error')
                         ->whereNotNull('error_at')
                         ->whereNotIn('id', $notifiedErrorIds)
                         ->where('error_at', '>=', $errorTimeThreshold);
-                    
+
                     // Se temos tab_id ou relatorio_id específico, filtrar por eles
                     // Isso garante que só pegamos erros relevantes para esta sessão
                     if ($requestedTabId && $requestedRelatorioId) {
                         // Buscar por tab_id OU relatorio_id
                         $errorQuery->where(function ($q) use ($requestedRelatorioId, $requestedTabId) {
                             $q->where('tab_id', $requestedTabId)
-                              ->orWhere('id', $requestedRelatorioId);
+                                ->orWhere('id', $requestedRelatorioId);
                         });
                     } elseif ($requestedTabId) {
                         $errorQuery->where('tab_id', $requestedTabId);
                     } elseif ($requestedRelatorioId) {
                         $errorQuery->where('id', $requestedRelatorioId);
                     }
-                    
+
                     $errorConsulta = $errorQuery->orderBy('error_at', 'desc')->first();
-                    
+
                     if ($errorConsulta) {
                         // Enviar notificação de erro
                         // Incluir tab_id para permitir que o frontend valide pelo tab_id
@@ -682,23 +697,23 @@ class DataReceiverController extends Controller
                                 'recoverable' => true, // Pode ser baseado no error_code no futuro
                             ],
                         ];
-                        
+
                         $data = json_encode($errorNotification);
                         echo "data: {$data}\n\n";
-                        
+
                         if (ob_get_level() > 0) {
                             ob_flush();
                         }
                         flush();
-                        
+
                         // Marcar como notificado
                         $notifiedErrorIds[] = $errorConsulta->id;
-                        
+
                         // Atualizar lastNotificationTime
                         if ($errorConsulta->error_at) {
                             $lastNotificationTime = $errorConsulta->error_at;
                         }
-                        
+
                         try {
                             Log::info('SSE: error enviado do banco de dados', [
                                 'user_id' => $user->id,
@@ -709,7 +724,7 @@ class DataReceiverController extends Controller
                             // Ignorar erros de log
                         }
                     }
-                    
+
                     // ========================================
                     // 3. Verificar banco de dados para CSV pronto
                     // ========================================
@@ -717,7 +732,7 @@ class DataReceiverController extends Controller
                         ->whereNotNull('report_csv_base64')
                         ->where('report_csv_base64', '!=', '')
                         ->whereNotIn('id', $notifiedCsvIds);
-                    
+
                     // Se estamos aguardando um relatorio_id específico, pode ser da consulta pendente
                     if ($requestedRelatorioId) {
                         // Logar apenas na primeira iteração para evitar poluição de logs
@@ -727,7 +742,7 @@ class DataReceiverController extends Controller
                                 'requested_relatorio_id' => $requestedRelatorioId,
                             ]);
                         }
-                        
+
                         // Primeiro tentar buscar diretamente pelo ID
                         // Criar uma nova query para não modificar a query base
                         $idQuery = RafRelatorioProcessado::where('user_id', $user->id)
@@ -735,23 +750,23 @@ class DataReceiverController extends Controller
                             ->where('report_csv_base64', '!=', '')
                             ->where('id', $requestedRelatorioId)
                             ->whereNotIn('id', $notifiedCsvIds);
-                        
+
                         $csvFromDb = $idQuery->first();
-                        
+
                         // Se não encontrou, pode ser que o ID seja da consulta pendente
                         // Buscar pela consulta pendente e então pelo resume_url
-                        if (!$csvFromDb) {
+                        if (! $csvFromDb) {
                             $consultaPendenteQuery = RafConsultaPendente::where('id', $requestedRelatorioId)
                                 ->where('user_id', $user->id);
-                            
+
                             // Filtrar por tab_id se fornecido para isolar notificações entre abas
                             if ($requestedTabId) {
                                 $consultaPendenteQuery->where('tab_id', $requestedTabId);
                             }
-                            
+
                             $consultaPendente = $consultaPendenteQuery->first();
-                            
-                            if ($consultaPendente && !empty($consultaPendente->resume_url)) {
+
+                            if ($consultaPendente && ! empty($consultaPendente->resume_url)) {
                                 // Buscar o relatório processado pelo resume_url
                                 // IMPORTANTE: Quando há requestedRelatorioId específico, NÃO aplicar whereNotIn
                                 // porque o usuário está aguardando especificamente esse relatório
@@ -769,15 +784,15 @@ class DataReceiverController extends Controller
                         // Isso evita retornar relatórios antigos instantaneamente.
                         // Sempre filtrar por relatórios criados após a conexão SSE
                         $query->where('updated_at', '>', $connectionEstablishedAt);
-                        
+
                         $csvFromDb = $query->orderBy('updated_at', 'desc')->first();
                     }
-                    
+
                     // Marcar que já fez a primeira verificação
                     if ($isFirstDbCheck) {
                         $isFirstDbCheck = false;
                     }
-                    
+
                     if ($csvFromDb) {
                         Log::info('SSE: CSV encontrado no banco, preparando notificacao', [
                             'user_id' => $user->id,
@@ -787,17 +802,17 @@ class DataReceiverController extends Controller
                             'filename' => $csvFromDb->filename,
                             'updated_at' => $csvFromDb->updated_at,
                         ]);
-                        
+
                         // Enviar notificação csv_ready do banco de dados
                         // Usar filename do banco ou fallback para nome genérico
-                        $csvFilename = !empty($csvFromDb->filename) 
-                            ? $csvFromDb->filename 
-                            : 'raf_relatorio_' . $csvFromDb->id . '.csv';
-                        
+                        $csvFilename = ! empty($csvFromDb->filename)
+                            ? $csvFromDb->filename
+                            : 'raf_relatorio_'.$csvFromDb->id.'.csv';
+
                         // Se estamos aguardando um relatorio_id específico (da consulta pendente),
                         // usar esse ID na notificação para que o frontend reconheça
                         $relatorioIdParaNotificacao = $requestedRelatorioId ?? $csvFromDb->id;
-                        
+
                         // Obter tab_id da consulta pendente se disponível
                         $tabIdParaNotificacao = null;
                         if ($requestedRelatorioId) {
@@ -808,7 +823,7 @@ class DataReceiverController extends Controller
                                 $tabIdParaNotificacao = $consultaPendenteParaTabId->tab_id;
                             }
                         }
-                        
+
                         $csvNotificationData = [
                             'type' => 'csv_ready',
                             'user_id' => $user->id,
@@ -839,26 +854,26 @@ class DataReceiverController extends Controller
                             'qnt_cnd_regular' => $csvFromDb->qnt_cnd_regular ?? 0,
                             'qnt_cnd_pendencia' => $csvFromDb->qnt_cnd_pendencia ?? 0,
                         ];
-                        
+
                         Log::info('SSE: Enviando notificacao csv_ready', [
                             'notification_data' => $csvNotificationData,
                         ]);
-                        
+
                         $data = json_encode([
                             'type' => 'csv_ready',
                             'data' => $csvNotificationData,
                         ]);
                         echo "data: {$data}\n\n";
-                        
+
                         if (ob_get_level() > 0) {
                             ob_flush();
                         }
                         flush();
-                        
+
                         // Marcar como notificado
                         $notifiedCsvIds[] = $csvFromDb->id;
                         $lastNotificationTime = $csvFromDb->updated_at;
-                        
+
                         try {
                             Log::info('SSE: csv_ready enviado do banco de dados com sucesso', [
                                 'user_id' => $user->id,
@@ -871,10 +886,10 @@ class DataReceiverController extends Controller
                     }
                     // Nota: Não logar quando CSV não é encontrado para evitar poluição de logs
                     // O sistema faz polling a cada segundo até o CSV estar disponível
-                    
+
                     // Aguardar 1 segundo antes da próxima verificação (mais responsivo)
                     usleep(1000000); // 1 segundo em microsegundos
-                    
+
                     // Verificar se a conexão ainda está ativa
                     if (connection_aborted()) {
                         break;
@@ -908,20 +923,20 @@ class DataReceiverController extends Controller
      * Busca CSV do banco de dados por ID do relatório.
      * Aceita tanto ID de raf_relatorio_processado quanto ID de raf_consulta_pendente.
      * Retorna o CSV decodificado do base64 armazenado na tabela raf_relatorio_processado.
-     * 
-     * @param int $id ID do relatório (pode ser de raf_relatorio_processado ou raf_consulta_pendente)
+     *
+     * @param  int  $id  ID do relatório (pode ser de raf_relatorio_processado ou raf_consulta_pendente)
      * @return \Illuminate\Http\Response|\Illuminate\Http\JsonResponse
      */
     public function getCsv(int $id)
     {
         try {
             $user = Auth::user();
-            
-            if (!$user) {
+
+            if (! $user) {
                 Log::warning('getCsv: usuário não autenticado', [
                     'id' => $id,
                 ]);
-                
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Usuário não autenticado.',
@@ -930,34 +945,34 @@ class DataReceiverController extends Controller
 
             // Primeiro tentar buscar diretamente em raf_relatorio_processado
             $relatorio = RafRelatorioProcessado::find($id);
-            
+
             // Se não encontrou, pode ser que o ID seja da consulta pendente
             // Buscar pela consulta pendente e então pelo resume_url
-            if (!$relatorio) {
+            if (! $relatorio) {
                 $consultaPendente = RafConsultaPendente::where('id', $id)
                     ->where('user_id', $user->id)
                     ->first();
-                
-                if ($consultaPendente && !empty($consultaPendente->resume_url)) {
+
+                if ($consultaPendente && ! empty($consultaPendente->resume_url)) {
                     // Buscar o relatório processado pelo resume_url
                     $relatorio = RafRelatorioProcessado::where('resume_url', $consultaPendente->resume_url)
                         ->where('user_id', $user->id)
                         ->first();
                 }
             }
-            
-            if (!$relatorio) {
+
+            if (! $relatorio) {
                 Log::warning('Relatório não encontrado em getCsv', [
                     'id' => $id,
                     'user_id' => $user?->id,
                 ]);
-                
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Relatório não encontrado.',
                 ], Response::HTTP_NOT_FOUND);
             }
-            
+
             // Validar que o relatório pertence ao usuário autenticado
             if ((int) $relatorio->user_id !== $user->id) {
                 Log::warning('Tentativa de acesso a relatório de outro usuário em getCsv', [
@@ -965,26 +980,26 @@ class DataReceiverController extends Controller
                     'authenticated_user_id' => $user->id,
                     'relatorio_user_id' => $relatorio->user_id,
                 ]);
-                
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Acesso negado.',
                 ], Response::HTTP_FORBIDDEN);
             }
-            
+
             // Validar que tem CSV em base64
             if (empty($relatorio->report_csv_base64)) {
                 Log::warning('Relatório sem CSV em base64', [
                     'id' => $id,
                     'user_id' => $user->id,
                 ]);
-                
+
                 return response()->json([
                     'success' => false,
                     'message' => 'CSV não disponível para este relatório.',
                 ], Response::HTTP_NOT_FOUND);
             }
-            
+
             // Decodificar base64 para CSV
             try {
                 $csvContent = base64_decode($relatorio->report_csv_base64, true);
@@ -997,43 +1012,43 @@ class DataReceiverController extends Controller
                     'user_id' => $user->id,
                     'error' => $e->getMessage(),
                 ]);
-                
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Erro ao decodificar CSV.',
                 ], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
-            
+
             // Usar filename do banco ou fallback para nome genérico
-            $filename = !empty($relatorio->filename) 
-                ? $relatorio->filename 
-                : 'raf_relatorio_' . $id . '.csv';
-            
+            $filename = ! empty($relatorio->filename)
+                ? $relatorio->filename
+                : 'raf_relatorio_'.$id.'.csv';
+
             // Garantir extensão .csv
-            if (!str_ends_with(strtolower($filename), '.csv')) {
+            if (! str_ends_with(strtolower($filename), '.csv')) {
                 $filename .= '.csv';
             }
-            
+
             Log::info('CSV recuperado do banco com sucesso', [
                 'id' => $id,
                 'user_id' => $user->id,
                 'csv_size' => strlen($csvContent),
                 'filename' => $filename,
             ]);
-            
+
             // Retornar CSV como resposta de texto
             return response($csvContent, 200, [
                 'Content-Type' => 'text/csv;charset=utf-8',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Erro inesperado em getCsv', [
                 'id' => $id,
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
@@ -1044,8 +1059,7 @@ class DataReceiverController extends Controller
     /**
      * Confirma o uso de créditos e envia approved/denied para o resume_url.
      * Recebe id e user_id, faz query na tabela raf_consulta_pendente e envia webhook.
-     * 
-     * @param Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function confirmCredits(Request $request)
@@ -1069,7 +1083,7 @@ class DataReceiverController extends Controller
 
             // Verificar autenticação do usuário
             $user = Auth::user();
-            if (!$user || (int) $user->id !== $userId) {
+            if (! $user || (int) $user->id !== $userId) {
                 Log::warning('Tentativa de confirmação com user_id diferente do autenticado', [
                     'authenticated_user_id' => $user?->id,
                     'requested_user_id' => $userId,
@@ -1086,7 +1100,7 @@ class DataReceiverController extends Controller
                 ->where('user_id', $userId)
                 ->first();
 
-            if (!$registro) {
+            if (! $registro) {
                 Log::warning('Registro não encontrado para confirmação de créditos', [
                     'id' => $id,
                     'user_id' => $userId,
@@ -1126,7 +1140,7 @@ class DataReceiverController extends Controller
             ]);
 
             // Verificar se tem créditos suficientes
-            if (!$this->creditService->hasEnough($user, $valorCreditos)) {
+            if (! $this->creditService->hasEnough($user, $valorCreditos)) {
                 Log::warning('Créditos insuficientes para operação', [
                     'user_id' => $userId,
                     'saldo_atual' => $saldoAtual,
@@ -1136,7 +1150,7 @@ class DataReceiverController extends Controller
                 // Envia denied para o webhook
                 $webhookResult = $this->spedUploadService->sendWebhookStatus($resumeUrl, 'denied');
 
-                if (!$webhookResult['success']) {
+                if (! $webhookResult['success']) {
                     Log::error('Falha ao enviar denied para webhook', [
                         'resume_url' => $resumeUrl,
                         'error' => $webhookResult['message'] ?? 'Erro desconhecido',
@@ -1155,7 +1169,7 @@ class DataReceiverController extends Controller
             // Descontar os créditos
             $deducted = $this->creditService->deduct($user, $valorCreditos);
 
-            if (!$deducted) {
+            if (! $deducted) {
                 Log::error('Falha ao descontar créditos', [
                     'user_id' => $userId,
                     'valor' => $valorCreditos,
@@ -1164,7 +1178,7 @@ class DataReceiverController extends Controller
                 // Envia denied para o webhook
                 $webhookResult = $this->spedUploadService->sendWebhookStatus($resumeUrl, 'denied');
 
-                if (!$webhookResult['success']) {
+                if (! $webhookResult['success']) {
                     Log::error('Falha ao enviar denied para webhook após falha no desconto', [
                         'resume_url' => $resumeUrl,
                         'error' => $webhookResult['message'] ?? 'Erro desconhecido',
@@ -1180,7 +1194,7 @@ class DataReceiverController extends Controller
             // Enviar approved para o webhook
             $webhookResult = $this->spedUploadService->sendWebhookStatus($resumeUrl, 'approved');
 
-            if (!$webhookResult['success']) {
+            if (! $webhookResult['success']) {
                 // Reembolsar os créditos em caso de falha no webhook
                 $this->creditService->add($user, $valorCreditos);
 
@@ -1264,7 +1278,7 @@ class DataReceiverController extends Controller
             $receivedData = $rawData;
 
             // Se é array numérico (formato n8n), extrair o primeiro elemento
-            if (is_array($rawData) && !empty($rawData) && array_keys($rawData) === range(0, count($rawData) - 1)) {
+            if (is_array($rawData) && ! empty($rawData) && array_keys($rawData) === range(0, count($rawData) - 1)) {
                 $firstItem = $rawData[0] ?? null;
                 if (is_array($firstItem) && isset($firstItem['data'])) {
                     $nestedData = $firstItem['data'];
@@ -1307,7 +1321,7 @@ class DataReceiverController extends Controller
             // Verificar se resume_url é false (arquivo inválido, não há consulta para buscar por resume_url)
             $resumeUrl = $validated['resume_url'];
             $isInvalidFile = ($resumeUrl === false || $resumeUrl === 'false');
-            
+
             if ($isInvalidFile) {
                 $resumeUrl = null;
             }
@@ -1334,13 +1348,13 @@ class DataReceiverController extends Controller
                     'user_id' => $userIdToSearch,
                     'tab_id' => $tabIdToSearch,
                 ]);
-                
+
                 $consulta = RafConsultaPendente::where('user_id', $userIdToSearch)
                     ->where('tab_id', $tabIdToSearch)
                     ->where('created_at', '>=', now()->subMinutes(30))
                     ->orderBy('created_at', 'desc')
                     ->first();
-                    
+
                 if ($consulta) {
                     Log::info('Consulta encontrada por tab_id para erro de arquivo inválido', [
                         'consulta_id' => $consulta->id,
@@ -1364,7 +1378,7 @@ class DataReceiverController extends Controller
             }
 
             // Estratégia 1: Buscar por resume_url se fornecido e válido (apenas se não for arquivo inválido)
-            if (!$consulta && !$isInvalidFile && !empty($resumeUrl) && is_string($resumeUrl)) {
+            if (! $consulta && ! $isInvalidFile && ! empty($resumeUrl) && is_string($resumeUrl)) {
                 Log::debug('receiveError: Buscando por resume_url', ['resume_url' => $resumeUrl]);
                 $consulta = RafConsultaPendente::where('resume_url', $resumeUrl)->first();
                 if ($consulta) {
@@ -1373,7 +1387,7 @@ class DataReceiverController extends Controller
             }
 
             // Estratégia 2: Se não encontrou e temos id/user_id, buscar por eles
-            if (!$consulta && isset($validated['id']) && isset($validated['user_id'])) {
+            if (! $consulta && isset($validated['id']) && isset($validated['user_id'])) {
                 Log::debug('receiveError: Buscando por id/user_id', [
                     'id' => $validated['id'],
                     'user_id' => $validated['user_id'],
@@ -1387,7 +1401,7 @@ class DataReceiverController extends Controller
             }
 
             // Estratégia 3: Buscar por tab_id + user_id (para casos não-invalidos também)
-            if (!$consulta && $userIdToSearch && $tabIdToSearch) {
+            if (! $consulta && $userIdToSearch && $tabIdToSearch) {
                 Log::debug('receiveError: Buscando por tab_id (caso não-inválido)', [
                     'user_id' => $userIdToSearch,
                     'tab_id' => $tabIdToSearch,
@@ -1398,7 +1412,7 @@ class DataReceiverController extends Controller
                     ->where('created_at', '>=', now()->subMinutes(30))
                     ->orderBy('created_at', 'desc')
                     ->first();
-                    
+
                 if ($consulta) {
                     Log::info('Consulta encontrada por tab_id para atualizar com erro', [
                         'consulta_id' => $consulta->id,
@@ -1414,7 +1428,7 @@ class DataReceiverController extends Controller
             }
 
             // Estratégia 4: Se ainda não encontrou, buscar consulta mais recente do usuário
-            if (!$consulta && $userIdToSearch) {
+            if (! $consulta && $userIdToSearch) {
                 Log::debug('receiveError: Buscando consulta mais recente do usuário', ['user_id' => $userIdToSearch]);
                 $consulta = RafConsultaPendente::where('user_id', $userIdToSearch)
                     ->where('status', 'pending')
@@ -1434,7 +1448,7 @@ class DataReceiverController extends Controller
                     'error_message' => $validated['error_message'],
                     'error_at' => now(),
                 ]);
-                
+
                 Log::info('Consulta existente atualizada com erro', [
                     'consulta_id' => $consulta->id,
                     'user_id' => $consulta->user_id,
@@ -1442,7 +1456,7 @@ class DataReceiverController extends Controller
                     'error_code' => $validated['error_code'],
                     'is_invalid_file' => $isInvalidFile,
                 ]);
-                
+
                 // Se é arquivo inválido, retornar sucesso (SSE vai notificar o usuário)
                 if ($isInvalidFile) {
                     return response()->json([
@@ -1462,7 +1476,7 @@ class DataReceiverController extends Controller
                         'error_message' => $validated['error_message'],
                         'error_at' => now(),
                     ]);
-                    
+
                     Log::info('Registro de erro criado (fallback - consulta não encontrada)', [
                         'consulta_id' => $consulta->id,
                         'user_id' => $userIdToSearch,
@@ -1470,7 +1484,7 @@ class DataReceiverController extends Controller
                         'error_code' => $validated['error_code'],
                         'is_invalid_file' => $isInvalidFile,
                     ]);
-                    
+
                     // Se é arquivo inválido, retornar sucesso (SSE vai notificar o usuário)
                     if ($isInvalidFile) {
                         return response()->json([
@@ -1494,7 +1508,7 @@ class DataReceiverController extends Controller
             }
 
             // Obter usuário da consulta se não foi autenticado via token
-            if (!$user) {
+            if (! $user) {
                 $user = $consulta->user;
             }
 
@@ -1537,13 +1551,13 @@ class DataReceiverController extends Controller
                 'credits_refunded' => $creditsRefunded,
                 'error_at' => now(),
             ];
-            
+
             // Atualizar tab_id se foi enviado e a consulta não tinha (para garantir notificação na aba correta)
             $tabIdFromPayload = $receivedData['tab_id'] ?? $validated['tab_id'] ?? null;
             if ($tabIdFromPayload && empty($consulta->tab_id)) {
                 $updateData['tab_id'] = $tabIdFromPayload;
             }
-            
+
             $consulta->update($updateData);
 
             Log::warning('Erro recebido do n8n e registrado', [
@@ -1634,8 +1648,9 @@ class DataReceiverController extends Controller
             ]);
 
             // Verifica autenticação via token
-            if (!$this->isTokenValid($request)) {
+            if (! $this->isTokenValid($request)) {
                 Log::warning('Token inválido em receiveImportacaoTxtProgress');
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Token de API inválido.',
@@ -1645,7 +1660,7 @@ class DataReceiverController extends Controller
             // Detectar formato do payload (novo vs legado)
             // Novo formato: user_id + tab_id (progresso pode estar ausente em erros, default 0)
             $hasNewFormat = $request->has('user_id') && $request->has('tab_id');
-            $hasLegacyFormat = $request->has('importacao_id') && !$hasNewFormat;
+            $hasLegacyFormat = $request->has('importacao_id') && ! $hasNewFormat;
 
             if ($hasNewFormat) {
                 // Novo formato: n8n controla 100% do progresso
@@ -1657,6 +1672,7 @@ class DataReceiverController extends Controller
                 Log::warning('Formato de payload não reconhecido em receiveImportacaoTxtProgress', [
                     'request_data' => $request->all(),
                 ]);
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Formato de payload inválido. Use user_id+tab_id+progresso ou importacao_id.',
@@ -1668,6 +1684,7 @@ class DataReceiverController extends Controller
                 'errors' => $e->errors(),
                 'request_data' => $request->all(),
             ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erro de validação.',
@@ -1680,6 +1697,7 @@ class DataReceiverController extends Controller
                 'trace' => $e->getTraceAsString(),
                 'request_data' => $request->all(),
             ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
@@ -1702,7 +1720,7 @@ class DataReceiverController extends Controller
             'has_dados_key' => $request->has('dados'),
             'dados_is_array' => is_array($request->input('dados')),
             'dados_type' => gettype($request->input('dados')),
-            'dados_not_empty' => !empty($request->input('dados')),
+            'dados_not_empty' => ! empty($request->input('dados')),
         ]);
 
         $validated = $request->validate([
@@ -1722,7 +1740,7 @@ class DataReceiverController extends Controller
         // Debug: logar dados após validação
         Log::info('DEBUG handleNewProgressFormat - after validation', [
             'validated_has_dados' => isset($validated['dados']),
-            'validated_dados_not_empty' => !empty($validated['dados'] ?? null),
+            'validated_dados_not_empty' => ! empty($validated['dados'] ?? null),
         ]);
 
         // Chave do cache: progresso:{user_id}:{tab_id}
@@ -1739,10 +1757,10 @@ class DataReceiverController extends Controller
         ];
 
         // Adicionar campos de erro se fornecidos
-        if (!empty($validated['error_code'])) {
+        if (! empty($validated['error_code'])) {
             $cacheData['error_code'] = $validated['error_code'];
         }
-        if (!empty($validated['error_message'])) {
+        if (! empty($validated['error_message'])) {
             $cacheData['error_message'] = $validated['error_message'];
         }
 
@@ -1759,8 +1777,8 @@ class DataReceiverController extends Controller
             'tab_id' => $validated['tab_id'],
             'progresso' => $validated['progresso'],
             'status' => $validated['status'],
-            'has_error' => !empty($validated['error_code']),
-            'has_dados' => !empty($validated['dados']),
+            'has_error' => ! empty($validated['error_code']),
+            'has_dados' => ! empty($validated['dados']),
         ]);
 
         return response()->json([
@@ -1810,7 +1828,7 @@ class DataReceiverController extends Controller
         ];
 
         // Se houver mensagem de erro, incluir
-        if (!empty($validated['error_message'])) {
+        if (! empty($validated['error_message'])) {
             $cacheData['error_message'] = $validated['error_message'];
         }
 
@@ -1872,8 +1890,9 @@ class DataReceiverController extends Controller
             ]);
 
             // Verifica autenticação via token
-            if (!$this->isTokenValid($request)) {
+            if (! $this->isTokenValid($request)) {
                 Log::warning('Token inválido em receiveMonitoramentoConsulta');
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Token de API inválido.',
@@ -1901,10 +1920,11 @@ class DataReceiverController extends Controller
             // Buscar consulta
             $consulta = MonitoramentoConsulta::find($consultaId);
 
-            if (!$consulta) {
+            if (! $consulta) {
                 Log::warning('Consulta não encontrada em receiveMonitoramentoConsulta', [
                     'consulta_id' => $consultaId,
                 ]);
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Consulta não encontrada.',
@@ -1947,7 +1967,7 @@ class DataReceiverController extends Controller
             ]);
 
             // Atualizar participante se dados foram fornecidos
-            if (isset($validated['participante']) && !empty($validated['participante'])) {
+            if (isset($validated['participante']) && ! empty($validated['participante'])) {
                 $participante = Participante::find($consulta->participante_id);
 
                 if ($participante) {
@@ -1958,7 +1978,7 @@ class DataReceiverController extends Controller
                         'ultima_consulta_em' => now(),
                     ]);
 
-                    if (!empty($participanteUpdate)) {
+                    if (! empty($participanteUpdate)) {
                         $participante->update($participanteUpdate);
 
                         Log::info('Participante atualizado com dados da consulta', [
@@ -1990,6 +2010,7 @@ class DataReceiverController extends Controller
                 'errors' => $e->errors(),
                 'request_data' => $request->all(),
             ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erro de validação.',
@@ -2002,6 +2023,7 @@ class DataReceiverController extends Controller
                 'trace' => $e->getTraceAsString(),
                 'request_data' => $request->all(),
             ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
@@ -2046,8 +2068,9 @@ class DataReceiverController extends Controller
             ]);
 
             // Verifica autenticação via token
-            if (!$this->isTokenValid($request)) {
+            if (! $this->isTokenValid($request)) {
                 Log::warning('Token inválido em receiveXmlImportacaoProgress');
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Token de API inválido.',
@@ -2081,15 +2104,15 @@ class DataReceiverController extends Controller
             ];
 
             // Adicionar importacao_id se fornecido
-            if (!empty($validated['importacao_id'])) {
+            if (! empty($validated['importacao_id'])) {
                 $cacheData['importacao_id'] = $validated['importacao_id'];
             }
 
             // Adicionar campos de erro se fornecidos
-            if (!empty($validated['error_code'])) {
+            if (! empty($validated['error_code'])) {
                 $cacheData['error_code'] = $validated['error_code'];
             }
-            if (!empty($validated['error_message'])) {
+            if (! empty($validated['error_message'])) {
                 $cacheData['error_message'] = $validated['error_message'];
             }
 
@@ -2105,8 +2128,8 @@ class DataReceiverController extends Controller
                 'tab_id' => $validated['tab_id'],
                 'progresso' => $validated['progresso'],
                 'status' => $validated['status'],
-                'has_error' => !empty($validated['error_code']),
-                'has_dados' => !empty($validated['dados']),
+                'has_error' => ! empty($validated['error_code']),
+                'has_dados' => ! empty($validated['dados']),
             ]);
 
             // Quando status é final, atualizar registro ImportacaoXml no banco
@@ -2125,6 +2148,7 @@ class DataReceiverController extends Controller
                 'errors' => $e->errors(),
                 'request_data' => $request->all(),
             ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erro de validação.',
@@ -2137,6 +2161,7 @@ class DataReceiverController extends Controller
                 'trace' => $e->getTraceAsString(),
                 'request_data' => $request->all(),
             ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
@@ -2158,6 +2183,7 @@ class DataReceiverController extends Controller
                 'tab_id' => $validated['tab_id'],
                 'status' => $validated['status'],
             ]);
+
             return;
         }
 
@@ -2166,11 +2192,12 @@ class DataReceiverController extends Controller
                 ->where('user_id', $validated['user_id'])
                 ->first();
 
-            if (!$importacao) {
+            if (! $importacao) {
                 Log::warning('updateImportacaoXmlFromProgress: importacao não encontrada', [
                     'importacao_id' => $validated['importacao_id'],
                     'user_id' => $validated['user_id'],
                 ]);
+
                 return;
             }
 
@@ -2210,7 +2237,7 @@ class DataReceiverController extends Controller
             }
 
             // IDs dos participantes processados (crítico para getParticipantes)
-            if (!empty($dados['participante_ids'])) {
+            if (! empty($dados['participante_ids'])) {
                 $updateData['participante_ids'] = array_values(array_unique(array_map('intval', $dados['participante_ids'])));
             }
 
@@ -2220,12 +2247,12 @@ class DataReceiverController extends Controller
             }
 
             // Erros detalhados
-            if (!empty($dados['erros'])) {
+            if (! empty($dados['erros'])) {
                 $updateData['erros_detalhados'] = $dados['erros'];
             }
 
             // Mensagem de erro
-            if ($validated['status'] === 'erro' && !empty($validated['error_message'])) {
+            if ($validated['status'] === 'erro' && ! empty($validated['error_message'])) {
                 $updateData['erro_mensagem'] = $validated['error_message'];
             }
 
@@ -2286,8 +2313,9 @@ class DataReceiverController extends Controller
             ]);
 
             // Verifica autenticação via token
-            if (!$this->isTokenValid($request)) {
+            if (! $this->isTokenValid($request)) {
                 Log::warning('Token inválido em receiveRafLoteProgress');
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Token de API inválido.',
@@ -2298,7 +2326,7 @@ class DataReceiverController extends Controller
             $validated = $request->validate([
                 'user_id' => 'required|integer|exists:users,id',
                 'tab_id' => 'required|string|max:36',
-                'raf_lote_id' => 'required|integer|exists:raf_lotes,id',
+                'consulta_lote_id' => 'required|integer|exists:consulta_lotes,id',
                 'progresso' => 'required|integer|min:0|max:100',
                 'mensagem' => 'nullable|string|max:255',
                 'status' => 'required|in:iniciando,processando,concluido,erro',
@@ -2317,7 +2345,7 @@ class DataReceiverController extends Controller
             $cacheData = [
                 'user_id' => $validated['user_id'],
                 'tab_id' => $validated['tab_id'],
-                'raf_lote_id' => $validated['raf_lote_id'],
+                'consulta_lote_id' => $validated['consulta_lote_id'],
                 'progresso' => $validated['progresso'],
                 'mensagem' => $validated['mensagem'] ?? null,
                 'status' => $validated['status'],
@@ -2325,10 +2353,10 @@ class DataReceiverController extends Controller
             ];
 
             // Adicionar campos de erro se fornecidos
-            if (!empty($validated['error_code'])) {
+            if (! empty($validated['error_code'])) {
                 $cacheData['error_code'] = $validated['error_code'];
             }
-            if (!empty($validated['error_message'])) {
+            if (! empty($validated['error_message'])) {
                 $cacheData['error_message'] = $validated['error_message'];
             }
 
@@ -2338,20 +2366,20 @@ class DataReceiverController extends Controller
             // Armazena em cache (TTL 10 minutos)
             Cache::put($cacheKey, $cacheData, 600);
 
-            Log::info('Progresso RAF armazenado em cache', [
+            Log::info('Progresso consulta armazenado em cache', [
                 'cache_key' => $cacheKey,
                 'user_id' => $validated['user_id'],
                 'tab_id' => $validated['tab_id'],
-                'raf_lote_id' => $validated['raf_lote_id'],
+                'consulta_lote_id' => $validated['consulta_lote_id'],
                 'progresso' => $validated['progresso'],
                 'status' => $validated['status'],
-                'has_error' => !empty($validated['error_code']),
-                'has_dados' => !empty($validated['dados']),
+                'has_error' => ! empty($validated['error_code']),
+                'has_dados' => ! empty($validated['dados']),
             ]);
 
-            // Quando status é final, atualizar registro RafLote no banco
+            // Quando status é final, atualizar registro ConsultaLote no banco
             if (in_array($validated['status'], ['concluido', 'erro'])) {
-                $this->updateRafLoteFromProgress($validated);
+                $this->updateConsultaLoteFromProgress($validated);
             }
 
             return response()->json([
@@ -2365,6 +2393,7 @@ class DataReceiverController extends Controller
                 'errors' => $e->errors(),
                 'request_data' => array_diff_key($request->all(), ['report_csv_base64' => '']),
             ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erro de validação.',
@@ -2377,6 +2406,7 @@ class DataReceiverController extends Controller
                 'trace' => $e->getTraceAsString(),
                 'request_data' => array_diff_key($request->all(), ['report_csv_base64' => '']),
             ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
@@ -2385,23 +2415,24 @@ class DataReceiverController extends Controller
     }
 
     /**
-     * Atualiza o registro RafLote quando o n8n envia status final.
+     * Atualiza o registro ConsultaLote quando o n8n envia status final.
      *
      * Chamado automaticamente quando status é "concluido" ou "erro".
      * Persiste os dados de progresso no banco.
      */
-    private function updateRafLoteFromProgress(array $validated): void
+    private function updateConsultaLoteFromProgress(array $validated): void
     {
         try {
-            $lote = RafLote::where('id', $validated['raf_lote_id'])
+            $lote = ConsultaLote::where('id', $validated['consulta_lote_id'])
                 ->where('user_id', $validated['user_id'])
                 ->first();
 
-            if (!$lote) {
-                Log::warning('updateRafLoteFromProgress: lote não encontrado', [
-                    'raf_lote_id' => $validated['raf_lote_id'],
+            if (! $lote) {
+                Log::warning('updateConsultaLoteFromProgress: lote não encontrado', [
+                    'consulta_lote_id' => $validated['consulta_lote_id'],
                     'user_id' => $validated['user_id'],
                 ]);
+
                 return;
             }
 
@@ -2412,13 +2443,13 @@ class DataReceiverController extends Controller
 
             // Se concluído, salvar resultado
             if ($validated['status'] === 'concluido') {
-                if (!empty($validated['resultado_resumo'])) {
+                if (! empty($validated['resultado_resumo'])) {
                     $updateData['resultado_resumo'] = $validated['resultado_resumo'];
                 }
-                if (!empty($validated['report_csv_base64'])) {
+                if (! empty($validated['report_csv_base64'])) {
                     $updateData['report_csv_base64'] = $validated['report_csv_base64'];
                 }
-                if (!empty($validated['filename'])) {
+                if (! empty($validated['filename'])) {
                     $updateData['filename'] = $validated['filename'];
                 }
             }
@@ -2429,29 +2460,29 @@ class DataReceiverController extends Controller
                 $updateData['error_message'] = $validated['error_message'] ?? 'Erro desconhecido';
 
                 // Estornar créditos em caso de erro
-                $this->refundRafLoteCredits($lote);
+                $this->refundConsultaLoteCredits($lote);
             }
 
             $lote->update($updateData);
 
-            Log::info('RafLote atualizado com dados do progresso', [
-                'raf_lote_id' => $lote->id,
+            Log::info('ConsultaLote atualizado com dados do progresso', [
+                'consulta_lote_id' => $lote->id,
                 'status' => $validated['status'],
-                'has_csv' => !empty($validated['report_csv_base64']),
+                'has_csv' => ! empty($validated['report_csv_base64']),
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Erro ao atualizar RafLote do progresso', [
-                'raf_lote_id' => $validated['raf_lote_id'],
+            Log::error('Erro ao atualizar ConsultaLote do progresso', [
+                'consulta_lote_id' => $validated['consulta_lote_id'],
                 'error' => $e->getMessage(),
             ]);
         }
     }
 
     /**
-     * Estorna créditos de um lote RAF em caso de erro.
+     * Estorna créditos de um lote de consulta em caso de erro.
      */
-    private function refundRafLoteCredits(RafLote $lote): void
+    private function refundConsultaLoteCredits(ConsultaLote $lote): void
     {
         if ($lote->creditos_cobrados <= 0) {
             return;
@@ -2461,29 +2492,29 @@ class DataReceiverController extends Controller
             $user = User::find($lote->user_id);
             if ($user) {
                 $this->creditService->add($user, $lote->creditos_cobrados);
-                Log::info('Créditos estornados para RAF lote com erro', [
-                    'raf_lote_id' => $lote->id,
+                Log::info('Créditos estornados para consulta lote com erro', [
+                    'consulta_lote_id' => $lote->id,
                     'user_id' => $lote->user_id,
                     'creditos_estornados' => $lote->creditos_cobrados,
                 ]);
             }
         } catch (\Exception $e) {
-            Log::error('Erro ao estornar créditos do RAF lote', [
-                'raf_lote_id' => $lote->id,
+            Log::error('Erro ao estornar créditos do consulta lote', [
+                'consulta_lote_id' => $lote->id,
                 'error' => $e->getMessage(),
             ]);
         }
     }
 
     /**
-     * Recebe resultado individual de consulta RAF por participante.
+     * Recebe resultado individual de consulta por participante.
      *
      * Chamado pelo n8n para cada participante processado.
-     * Armazena em raf_lote_resultados para geração de relatórios on-demand.
+     * Armazena em consulta_resultados para geração de relatórios on-demand.
      *
      * Payload esperado:
      * {
-     *   "raf_lote_id": 123,
+     *   "consulta_lote_id": 123,
      *   "user_id": 1,
      *   "tab_id": "uuid",
      *   "participante_id": 456,
@@ -2496,10 +2527,10 @@ class DataReceiverController extends Controller
      *   }
      * }
      */
-    public function receiveRafLoteResultado(Request $request)
+    public function receiveConsultaLoteResultado(Request $request)
     {
         try {
-            Log::info('Requisição recebida em receiveRafLoteResultado', [
+            Log::info('Requisição recebida em receiveConsultaLoteResultado', [
                 'url' => $request->fullUrl(),
                 'method' => $request->method(),
                 'ip' => $request->ip(),
@@ -2511,8 +2542,9 @@ class DataReceiverController extends Controller
             ]);
 
             // Verifica autenticação via token
-            if (!$this->isTokenValid($request)) {
-                Log::warning('Token inválido em receiveRafLoteResultado');
+            if (! $this->isTokenValid($request)) {
+                Log::warning('Token inválido em receiveConsultaLoteResultado');
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Token de API inválido.',
@@ -2521,7 +2553,7 @@ class DataReceiverController extends Controller
 
             // Validar payload
             $validated = $request->validate([
-                'raf_lote_id' => 'required|integer|exists:raf_lotes,id',
+                'consulta_lote_id' => 'required|integer|exists:consulta_lotes,id',
                 'user_id' => 'required|integer|exists:users,id',
                 'tab_id' => 'required|string|max:36',
                 'participante_id' => 'required|integer|exists:participantes,id',
@@ -2531,15 +2563,16 @@ class DataReceiverController extends Controller
             ]);
 
             // Verificar que o lote pertence ao usuário
-            $lote = RafLote::where('id', $validated['raf_lote_id'])
+            $lote = ConsultaLote::where('id', $validated['consulta_lote_id'])
                 ->where('user_id', $validated['user_id'])
                 ->first();
 
-            if (!$lote) {
-                Log::warning('receiveRafLoteResultado: lote não pertence ao usuário', [
-                    'raf_lote_id' => $validated['raf_lote_id'],
+            if (! $lote) {
+                Log::warning('receiveConsultaLoteResultado: lote não pertence ao usuário', [
+                    'consulta_lote_id' => $validated['consulta_lote_id'],
                     'user_id' => $validated['user_id'],
                 ]);
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Lote não encontrado para este usuário.',
@@ -2551,11 +2584,12 @@ class DataReceiverController extends Controller
                 ->where('participantes.id', $validated['participante_id'])
                 ->exists();
 
-            if (!$participanteNoLote) {
-                Log::warning('receiveRafLoteResultado: participante não pertence ao lote', [
-                    'raf_lote_id' => $validated['raf_lote_id'],
+            if (! $participanteNoLote) {
+                Log::warning('receiveConsultaLoteResultado: participante não pertence ao lote', [
+                    'consulta_lote_id' => $validated['consulta_lote_id'],
                     'participante_id' => $validated['participante_id'],
                 ]);
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Participante não pertence a este lote.',
@@ -2563,9 +2597,9 @@ class DataReceiverController extends Controller
             }
 
             // Criar ou atualizar resultado
-            $resultado = \App\Models\RafLoteResultado::updateOrCreate(
+            $resultado = ConsultaResultado::updateOrCreate(
                 [
-                    'raf_lote_id' => $validated['raf_lote_id'],
+                    'consulta_lote_id' => $validated['consulta_lote_id'],
                     'participante_id' => $validated['participante_id'],
                 ],
                 [
@@ -2576,8 +2610,8 @@ class DataReceiverController extends Controller
                 ]
             );
 
-            Log::info('Resultado RAF armazenado', [
-                'raf_lote_id' => $validated['raf_lote_id'],
+            Log::info('Resultado consulta armazenado', [
+                'consulta_lote_id' => $validated['consulta_lote_id'],
                 'participante_id' => $validated['participante_id'],
                 'status' => $validated['status'],
                 'resultado_id' => $resultado->id,
@@ -2590,10 +2624,11 @@ class DataReceiverController extends Controller
             ], Response::HTTP_OK);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::warning('Erro de validação em receiveRafLoteResultado', [
+            Log::warning('Erro de validação em receiveConsultaLoteResultado', [
                 'errors' => $e->errors(),
                 'request_data' => array_diff_key($request->all(), ['resultado_dados' => '']),
             ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erro de validação.',
@@ -2601,11 +2636,12 @@ class DataReceiverController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
 
         } catch (\Exception $e) {
-            Log::error('Erro inesperado em receiveRafLoteResultado', [
+            Log::error('Erro inesperado em receiveConsultaLoteResultado', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'request_data' => array_diff_key($request->all(), ['resultado_dados' => '']),
             ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erro interno do servidor.',
@@ -2650,8 +2686,9 @@ class DataReceiverController extends Controller
             ]);
 
             // Verifica autenticação via token
-            if (!$this->isTokenValid($request)) {
+            if (! $this->isTokenValid($request)) {
                 Log::warning('Token inválido em receiveConsultaAlertas');
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Token de API inválido.',
@@ -2707,6 +2744,7 @@ class DataReceiverController extends Controller
                 'errors' => $e->errors(),
                 'request_data' => $request->all(),
             ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erro de validação.',
@@ -2719,6 +2757,7 @@ class DataReceiverController extends Controller
                 'trace' => $e->getTraceAsString(),
                 'request_data' => $request->all(),
             ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erro interno do servidor.',
@@ -2726,4 +2765,3 @@ class DataReceiverController extends Controller
         }
     }
 }
-
