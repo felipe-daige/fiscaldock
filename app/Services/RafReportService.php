@@ -105,6 +105,8 @@ class RafReportService
                 'situacao_cadastral' => $dados['situacao_cadastral'] ?? null,
                 'simples_nacional' => $this->formatarBoolean($dados['simples_nacional'] ?? null),
                 'mei' => $this->formatarBoolean($dados['mei'] ?? null),
+                'regime_tributario' => $this->formatarCrt($dados['crt'] ?? $participante->crt),
+                'cnae_principal' => $this->formatarCnaePrincipal($dados['cnaes'] ?? null),
                 'cnaes' => $dados['cnaes'] ?? null,
                 'qsa' => $dados['qsa'] ?? null,
 
@@ -213,14 +215,15 @@ class RafReportService
      */
     private function getColunasCsv(ConsultaLote $lote, Collection $resultados): array
     {
+        // Colunas base do plano gratuito (sem UF)
         $colunas = [
             'CNPJ',
             'Razao Social',
-            'UF',
-            'Status Consulta',
             'Situacao Cadastral',
+            'Regime Tributario',
             'Simples Nacional',
             'MEI',
+            'CNAE Principal',
         ];
 
         $plano = $lote->plano;
@@ -288,11 +291,11 @@ class RafReportService
             $linha[] = match ($coluna) {
                 'CNPJ' => $resultado['cnpj'],
                 'Razao Social' => $resultado['razao_social'],
-                'UF' => $resultado['uf'],
-                'Status Consulta' => $resultado['status_consulta'],
                 'Situacao Cadastral' => $resultado['situacao_cadastral'],
+                'Regime Tributario' => $resultado['regime_tributario'],
                 'Simples Nacional' => $resultado['simples_nacional'],
                 'MEI' => $resultado['mei'],
+                'CNAE Principal' => $resultado['cnae_principal'],
                 'SINTEGRA IE' => $resultado['sintegra_ie'],
                 'SINTEGRA Situacao' => $resultado['sintegra_situacao'],
                 'CND Federal Status' => $resultado['cnd_federal_status'],
@@ -367,5 +370,49 @@ class RafReportService
             'critico' => 'Risco Critico',
             default => 'Nao Avaliado',
         };
+    }
+
+    /**
+     * Formata CRT para nome legível.
+     */
+    private function formatarCrt(?int $crt): string
+    {
+        return match ($crt) {
+            1 => 'Simples Nacional',
+            2 => 'Simples Excesso',
+            3 => 'Lucro Presumido/Real',
+            default => '',
+        };
+    }
+
+    /**
+     * Extrai e formata CNAE principal.
+     */
+    private function formatarCnaePrincipal(?array $cnaes): string
+    {
+        if (empty($cnaes)) {
+            return '';
+        }
+
+        // Pode vir como {'principal': {...}} ou como array direto
+        $principal = $cnaes['principal'] ?? ($cnaes[0] ?? null);
+
+        if (empty($principal)) {
+            return '';
+        }
+
+        // Pode ser string ou objeto com código/descrição
+        if (is_string($principal)) {
+            return $principal;
+        }
+
+        $codigo = $principal['codigo'] ?? $principal['code'] ?? '';
+        $descricao = $principal['descricao'] ?? $principal['description'] ?? '';
+
+        if ($codigo && $descricao) {
+            return "{$codigo} - {$descricao}";
+        }
+
+        return $codigo ?: $descricao;
     }
 }

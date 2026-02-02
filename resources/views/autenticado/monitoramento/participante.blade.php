@@ -166,6 +166,14 @@
                                     <h2 class="text-lg font-semibold text-gray-900">Dados da Ultima Consulta</h2>
                                     <p class="text-xs text-gray-500 mt-1">
                                         Consultado em {{ $ultimaConsulta->consultado_em?->format('d/m/Y H:i') }}
+                                        @if($ultimaConsulta->lote)
+                                        <span class="mx-1">|</span>
+                                        <a href="/app/consultas/historico?lote={{ $ultimaConsulta->lote->id }}"
+                                           class="text-blue-600 hover:text-blue-800 hover:underline"
+                                           data-link>
+                                            Lote #{{ $ultimaConsulta->lote->id }}
+                                        </a>
+                                        @endif
                                     </p>
                                 </div>
                                 <div class="flex items-center gap-2">
@@ -347,6 +355,34 @@
                                     </div>
                                 </div>
                                 @endif
+
+                                {{-- Mapa de Localizacao --}}
+                                @php
+                                    $enderecoCompleto = trim(implode(', ', array_filter([
+                                        $end['logradouro'] ?? '',
+                                        $end['numero'] ?? '',
+                                        $end['bairro'] ?? '',
+                                        $end['municipio'] ?? '',
+                                        $end['uf'] ?? '',
+                                        'Brasil'
+                                    ])));
+                                    $cepMapa = preg_replace('/\D/', '', $end['cep'] ?? '');
+                                @endphp
+                                <div id="participante-mapa-container" class="mt-4">
+                                    <div id="participante-mapa"
+                                         class="h-48 rounded-lg border border-gray-200 bg-gray-100"
+                                         data-endereco="{{ $enderecoCompleto }}"
+                                         data-cep="{{ $cepMapa }}">
+                                    </div>
+                                    <p id="mapa-loading" class="text-xs text-gray-500 mt-1 text-center">
+                                        <svg class="animate-spin inline w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Carregando mapa...
+                                    </p>
+                                    <p id="mapa-error" class="hidden text-xs text-red-500 mt-1 text-center"></p>
+                                </div>
                             </div>
                             @endif
 
@@ -363,18 +399,23 @@
                                     </dd>
                                 </div>
                                 @endif
-                                @if(isset($dados['cnaes']['secundarios']) && count($dados['cnaes']['secundarios']) > 0)
+                                @php
+                                    $cnaesSecundariosValidos = isset($dados['cnaes']['secundarios'])
+                                        ? array_filter($dados['cnaes']['secundarios'], fn($c) => !empty($c['codigo']) || !empty($c['descricao']))
+                                        : [];
+                                @endphp
+                                @if(count($cnaesSecundariosValidos) > 0)
                                 <div class="bg-gray-50 rounded-lg p-3">
-                                    <dt class="text-xs text-gray-500 font-semibold mb-2">CNAEs Secundarios ({{ count($dados['cnaes']['secundarios']) }})</dt>
+                                    <dt class="text-xs text-gray-500 font-semibold mb-2">CNAEs Secundarios ({{ count($cnaesSecundariosValidos) }})</dt>
                                     <dd class="space-y-1 max-h-40 overflow-y-auto">
-                                        @foreach(array_slice($dados['cnaes']['secundarios'], 0, 10) as $cnae)
+                                        @foreach(array_slice($cnaesSecundariosValidos, 0, 10) as $cnae)
                                         <div class="text-xs text-gray-700">
                                             <span class="font-mono text-gray-500">{{ $cnae['codigo'] ?? '' }}</span>
                                             - {{ Str::limit($cnae['descricao'] ?? '', 60) }}
                                         </div>
                                         @endforeach
-                                        @if(count($dados['cnaes']['secundarios']) > 10)
-                                        <p class="text-xs text-gray-400 mt-2">... e mais {{ count($dados['cnaes']['secundarios']) - 10 }} CNAEs</p>
+                                        @if(count($cnaesSecundariosValidos) > 10)
+                                        <p class="text-xs text-gray-400 mt-2">... e mais {{ count($cnaesSecundariosValidos) - 10 }} CNAEs</p>
                                         @endif
                                     </dd>
                                 </div>
@@ -663,6 +704,75 @@
                         </div>
                     @endif
                 </div>
+
+                {{-- Consultas em Lote --}}
+                @if(isset($lotesDoParticipante) && $lotesDoParticipante->count() > 0)
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-lg font-semibold text-gray-900">Consultas em Lote</h2>
+                            <span class="text-sm text-gray-500">{{ $lotesDoParticipante->count() }} lote(s)</span>
+                        </div>
+                    </div>
+                    <div class="divide-y divide-gray-200">
+                        @php
+                            $lotePlanoBadgeColors = [
+                                'gratuito' => 'bg-gray-100 text-gray-700',
+                                'validacao' => 'bg-blue-100 text-blue-700',
+                                'licitacao' => 'bg-purple-100 text-purple-700',
+                                'compliance' => 'bg-amber-100 text-amber-700',
+                                'due_diligence' => 'bg-rose-100 text-rose-700',
+                                'enterprise' => 'bg-indigo-100 text-indigo-700',
+                            ];
+                        @endphp
+                        @foreach($lotesDoParticipante as $lote)
+                        <div class="px-6 py-4 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-900">Lote #{{ $lote->id }}</p>
+                                        <p class="text-xs text-gray-500">{{ $lote->created_at->format('d/m/Y H:i') }}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    @if($lote->plano)
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $lotePlanoBadgeColors[$lote->plano->codigo] ?? 'bg-gray-100 text-gray-700' }}">
+                                        {{ $lote->plano->nome }}
+                                    </span>
+                                    @endif
+                                    @php
+                                        $loteStatusColors = [
+                                            'pendente' => 'bg-gray-100 text-gray-700',
+                                            'processando' => 'bg-blue-100 text-blue-700',
+                                            'concluido' => 'bg-green-100 text-green-700',
+                                            'erro' => 'bg-red-100 text-red-700',
+                                        ];
+                                    @endphp
+                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium {{ $loteStatusColors[$lote->status] ?? 'bg-gray-100 text-gray-700' }}">
+                                        {{ ucfirst($lote->status) }}
+                                    </span>
+                                    <a href="/app/consultas/historico?lote={{ $lote->id }}"
+                                       class="inline-flex items-center p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                       data-link
+                                       title="Ver detalhes do lote">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
 
                 {{-- Notas Fiscais --}}
                 @if(($totalNotasFiscais ?? 0) > 0)
@@ -1713,6 +1823,99 @@
                 });
             }
         });
+
+        // Inicializar mapa de localizacao
+        var mapContainer = document.getElementById('participante-mapa');
+        if (mapContainer && typeof L !== 'undefined') {
+            var endereco = mapContainer.dataset.endereco;
+            var cep = (mapContainer.dataset.cep || '').replace(/\D/g, '');
+            var loadingEl = document.getElementById('mapa-loading');
+            var errorEl = document.getElementById('mapa-error');
+
+            // Verifica se tem endereco valido
+            if (!endereco || endereco.trim() === '' || endereco.trim() === 'Brasil') {
+                if (loadingEl) loadingEl.classList.add('hidden');
+                var mapaContainerEl = document.getElementById('participante-mapa-container');
+                if (mapaContainerEl) mapaContainerEl.classList.add('hidden');
+            } else {
+                // Funcao para inicializar mapa com coordenadas
+                function initMap(lat, lon) {
+                    var map = L.map('participante-mapa').setView([lat, lon], 16);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                        maxZoom: 19
+                    }).addTo(map);
+                    L.marker([lat, lon]).addTo(map)
+                        .bindPopup('<strong>Localizacao</strong><br>' + endereco)
+                        .openPopup();
+                    setTimeout(function() { map.invalidateSize(); }, 100);
+                }
+
+                // Funcao para mostrar erro
+                function showMapError(msg) {
+                    if (loadingEl) loadingEl.classList.add('hidden');
+                    if (errorEl) {
+                        errorEl.textContent = msg || 'Endereco nao encontrado';
+                        errorEl.classList.remove('hidden');
+                    }
+                    mapContainer.classList.add('hidden');
+                }
+
+                // Funcao para geocodificar via Nominatim (fallback)
+                function geocodeWithNominatim(addr) {
+                    var url = 'https://nominatim.openstreetmap.org/search?' + new URLSearchParams({
+                        q: addr,
+                        format: 'json',
+                        limit: 1,
+                        countrycodes: 'br'
+                    });
+
+                    fetch(url, {
+                        headers: { 'User-Agent': 'FiscalDock/1.0 (contato@fiscaldock.com.br)' }
+                    })
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        if (loadingEl) loadingEl.classList.add('hidden');
+                        if (data && data.length > 0) {
+                            initMap(parseFloat(data[0].lat), parseFloat(data[0].lon));
+                        } else {
+                            showMapError('Endereco nao encontrado no mapa');
+                        }
+                    })
+                    .catch(function(err) {
+                        console.error('[Mapa] Erro Nominatim:', err);
+                        showMapError('Erro ao carregar mapa');
+                    });
+                }
+
+                // Tentar primeiro por CEP usando BrasilAPI (mais confiavel para BR)
+                if (cep && cep.length === 8) {
+                    fetch('https://brasilapi.com.br/api/cep/v2/' + cep)
+                    .then(function(res) {
+                        if (!res.ok) throw new Error('CEP nao encontrado');
+                        return res.json();
+                    })
+                    .then(function(data) {
+                        if (loadingEl) loadingEl.classList.add('hidden');
+                        if (data.location && data.location.coordinates && data.location.coordinates.latitude && data.location.coordinates.longitude) {
+                            initMap(data.location.coordinates.latitude, data.location.coordinates.longitude);
+                        } else {
+                            // CEP encontrado mas sem coordenadas - tentar Nominatim
+                            console.log('[Mapa] CEP sem coordenadas, tentando Nominatim...');
+                            geocodeWithNominatim(endereco);
+                        }
+                    })
+                    .catch(function(err) {
+                        console.log('[Mapa] BrasilAPI falhou, tentando Nominatim...', err);
+                        // Fallback para Nominatim
+                        geocodeWithNominatim(endereco);
+                    });
+                } else {
+                    // Sem CEP valido - usar Nominatim diretamente
+                    geocodeWithNominatim(endereco);
+                }
+            }
+        }
 
         console.log('[Monitoramento Participante] Inicializacao concluida');
     }
