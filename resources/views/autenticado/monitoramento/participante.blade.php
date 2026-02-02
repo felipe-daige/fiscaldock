@@ -177,17 +177,28 @@
                             </div>
                         </div>
                         <div class="p-6 space-y-6">
-                            {{-- Dados Cadastrais Atualizados --}}
-                            @if(in_array('situacao_cadastral', $consultasRealizadas) || in_array('dados_cadastrais', $consultasRealizadas) || isset($dados['situacao_cadastral']))
+                            {{-- Situacao e Regime --}}
+                            @if(isset($dados['situacao_cadastral']) || isset($dados['regime_tributario']) || isset($dados['simples_nacional']))
                             <div>
-                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Situacao Cadastral</h3>
-                                <dl class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Situacao e Regime Tributario</h3>
+                                <dl class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                     <div class="bg-gray-50 rounded-lg p-3">
-                                        <dt class="text-xs text-gray-500">Situacao</dt>
+                                        <dt class="text-xs text-gray-500">Situacao Cadastral</dt>
                                         <dd class="mt-1 text-sm font-semibold {{ ($dados['situacao_cadastral'] ?? '') === 'ATIVA' ? 'text-green-600' : 'text-red-600' }}">
                                             {{ $dados['situacao_cadastral'] ?? '-' }}
                                         </dd>
                                     </div>
+                                    @if(isset($dados['regime_tributario']))
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">Regime Tributario</dt>
+                                        <dd class="mt-1 text-sm font-semibold text-purple-600">
+                                            {{ $dados['regime_tributario'] }}
+                                            @if(isset($dados['regime_tributario_ano']))
+                                            <span class="text-xs text-gray-400">({{ $dados['regime_tributario_ano'] }})</span>
+                                            @endif
+                                        </dd>
+                                    </div>
+                                    @endif
                                     @if(isset($dados['simples_nacional']))
                                     <div class="bg-gray-50 rounded-lg p-3">
                                         <dt class="text-xs text-gray-500">Simples Nacional</dt>
@@ -199,12 +210,125 @@
                                     @if(isset($dados['mei']))
                                     <div class="bg-gray-50 rounded-lg p-3">
                                         <dt class="text-xs text-gray-500">MEI</dt>
-                                        <dd class="mt-1 text-sm font-semibold text-gray-900">
+                                        <dd class="mt-1 text-sm font-semibold {{ $dados['mei'] ? 'text-blue-600' : 'text-gray-600' }}">
                                             {{ $dados['mei'] ? 'Sim' : 'Nao' }}
                                         </dd>
                                     </div>
                                     @endif
                                 </dl>
+                            </div>
+                            @endif
+
+                            {{-- Dados Cadastrais Completos --}}
+                            @if(isset($dados['razao_social']) || isset($dados['natureza_juridica']) || isset($dados['porte']))
+                            <div class="border-t border-gray-200 pt-4">
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Dados Cadastrais</h3>
+                                <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    @if(isset($dados['razao_social']))
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">Razao Social</dt>
+                                        <dd class="mt-1 text-sm text-gray-900">{{ $dados['razao_social'] }}</dd>
+                                    </div>
+                                    @endif
+                                    @if(isset($dados['nome_fantasia']) && $dados['nome_fantasia'])
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">Nome Fantasia</dt>
+                                        <dd class="mt-1 text-sm text-gray-900">{{ $dados['nome_fantasia'] }}</dd>
+                                    </div>
+                                    @endif
+                                    @if(isset($dados['natureza_juridica']))
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">Natureza Juridica</dt>
+                                        <dd class="mt-1 text-sm text-gray-900">{{ $dados['natureza_juridica'] }}</dd>
+                                    </div>
+                                    @endif
+                                    @if(isset($dados['porte']))
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">Porte</dt>
+                                        <dd class="mt-1 text-sm text-gray-900">{{ $dados['porte'] }}</dd>
+                                    </div>
+                                    @endif
+                                    @if(isset($dados['capital_social']))
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">Capital Social</dt>
+                                        <dd class="mt-1 text-sm font-semibold text-gray-900">R$ {{ number_format($dados['capital_social'], 2, ',', '.') }}</dd>
+                                    </div>
+                                    @endif
+                                    @if(isset($dados['data_inicio_atividade']))
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">Inicio Atividade</dt>
+                                        <dd class="mt-1 text-sm text-gray-900">{{ \Carbon\Carbon::parse($dados['data_inicio_atividade'])->format('d/m/Y') }}</dd>
+                                    </div>
+                                    @endif
+                                </dl>
+                            </div>
+                            @endif
+
+                            {{-- Endereco --}}
+                            @if(isset($dados['endereco']) && is_array($dados['endereco']))
+                            <div class="border-t border-gray-200 pt-4">
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Endereco</h3>
+                                @php $end = $dados['endereco']; @endphp
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <p class="text-sm text-gray-900">
+                                        {{ $end['logradouro'] ?? '' }}{{ isset($end['numero']) ? ', ' . $end['numero'] : '' }}
+                                        @if(isset($end['complemento']) && $end['complemento'])
+                                        - {{ $end['complemento'] }}
+                                        @endif
+                                    </p>
+                                    <p class="text-sm text-gray-600 mt-1">
+                                        {{ $end['bairro'] ?? '' }} - {{ $end['municipio'] ?? '' }}/{{ $end['uf'] ?? '' }}
+                                    </p>
+                                    @if(isset($end['cep']))
+                                    <p class="text-sm text-gray-500 mt-1 font-mono">CEP: {{ preg_replace('/(\d{5})(\d{3})/', '$1-$2', $end['cep']) }}</p>
+                                    @endif
+                                </div>
+                                @if(isset($dados['telefone_1']) && $dados['telefone_1'])
+                                <div class="mt-3 flex gap-4">
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">Telefone</dt>
+                                        <dd class="mt-1 text-sm font-mono text-gray-900">{{ $dados['telefone_1'] }}</dd>
+                                    </div>
+                                    @if(isset($dados['telefone_2']) && $dados['telefone_2'])
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">Telefone 2</dt>
+                                        <dd class="mt-1 text-sm font-mono text-gray-900">{{ $dados['telefone_2'] }}</dd>
+                                    </div>
+                                    @endif
+                                </div>
+                                @endif
+                            </div>
+                            @endif
+
+                            {{-- CNAEs --}}
+                            @if(isset($dados['cnaes']) && is_array($dados['cnaes']))
+                            <div class="border-t border-gray-200 pt-4">
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Atividades Economicas (CNAEs)</h3>
+                                @if(isset($dados['cnaes']['principal']))
+                                <div class="bg-blue-50 rounded-lg p-3 mb-3">
+                                    <dt class="text-xs text-blue-600 font-semibold">CNAE Principal</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">
+                                        <span class="font-mono text-blue-700">{{ $dados['cnaes']['principal']['codigo'] ?? '' }}</span>
+                                        - {{ $dados['cnaes']['principal']['descricao'] ?? '' }}
+                                    </dd>
+                                </div>
+                                @endif
+                                @if(isset($dados['cnaes']['secundarios']) && count($dados['cnaes']['secundarios']) > 0)
+                                <div class="bg-gray-50 rounded-lg p-3">
+                                    <dt class="text-xs text-gray-500 font-semibold mb-2">CNAEs Secundarios ({{ count($dados['cnaes']['secundarios']) }})</dt>
+                                    <dd class="space-y-1 max-h-40 overflow-y-auto">
+                                        @foreach(array_slice($dados['cnaes']['secundarios'], 0, 10) as $cnae)
+                                        <div class="text-xs text-gray-700">
+                                            <span class="font-mono text-gray-500">{{ $cnae['codigo'] ?? '' }}</span>
+                                            - {{ Str::limit($cnae['descricao'] ?? '', 60) }}
+                                        </div>
+                                        @endforeach
+                                        @if(count($dados['cnaes']['secundarios']) > 10)
+                                        <p class="text-xs text-gray-400 mt-2">... e mais {{ count($dados['cnaes']['secundarios']) - 10 }} CNAEs</p>
+                                        @endif
+                                    </dd>
+                                </div>
+                                @endif
                             </div>
                             @endif
 
