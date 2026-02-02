@@ -198,7 +198,7 @@
                     </div>
 
                     {{-- Card Resumo --}}
-                    <div class="bg-white rounded-lg border border-gray-200">
+                    <div id="card-resumo-consulta" class="bg-white rounded-lg border border-gray-200">
                         <div class="px-5 py-4">
                             <div class="flex items-center justify-between mb-3">
                                 <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Total</span>

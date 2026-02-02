@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         monitoramentoSped: null, // Código inline na view
         monitoramentoAvulso: null, // Código inline na view
         monitoramentoHistorico: null, // Código inline na view
+        monitoramentoParticipante: null, // Código inline na view
         consultas: null, // Código inline ou arquivo externo já carregado
     };
 
@@ -68,6 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (segmentos[1] === 'solucoes' && segmentos[2]) {
                     // Subpáginas de soluções: usar o slug da subpágina
                     baseSlug = segmentos[2];
+                } else if (segmentos[1] === 'monitoramento' && segmentos[2] === 'participante') {
+                    // Rota de participante específico: /app/monitoramento/participante/{id}
+                    baseSlug = 'monitoramentoParticipante';
                 } else {
                     baseSlug = segmentos[1] || 'dashboard';
                 }
@@ -102,6 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
         '/app/monitoramento/sped': 'initMonitoramentoSped',
         '/app/monitoramento/avulso': 'initMonitoramentoAvulso',
         '/app/monitoramento/historico': 'initMonitoramentoHistorico',
+        // Nota: /app/monitoramento/participante/{id} é tratada dinamicamente em obterInfoPagina()
         '/app/perfil': 'initPerfil',
         '/dashboard': 'initDashboard',
         '/sobre': 'initSobre',
