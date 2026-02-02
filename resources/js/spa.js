@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         monitoramentoSped: null, // Código inline na view
         monitoramentoAvulso: null, // Código inline na view
         monitoramentoHistorico: null, // Código inline na view
+        consultas: null, // Código inline ou arquivo externo já carregado
     };
 
     // Converte slug (com hífen/underscore) para camelCase

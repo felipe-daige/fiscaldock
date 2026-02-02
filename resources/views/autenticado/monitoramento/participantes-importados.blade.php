@@ -26,9 +26,9 @@
             <div class="flex flex-col lg:flex-row lg:items-end gap-4">
                 {{-- Filtro por importacao --}}
                 <div class="flex-1 min-w-[200px]">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Importacao</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Importação</label>
                     <select name="importacao" id="filtro-importacao" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="">Todas as importacoes</option>
+                        <option value="">Todas as importações</option>
                         @foreach($importacoes ?? [] as $imp)
                             <option value="{{ $imp->id }}" {{ ($filtros['importacao'] ?? '') == $imp->id ? 'selected' : '' }}>
                                 {{ $imp->filename ?? 'Importacao #' . $imp->id }} - {{ $imp->created_at->format('d/m/Y H:i') }}
@@ -71,7 +71,7 @@
                             type="text"
                             name="busca"
                             id="busca-participantes"
-                            placeholder="CNPJ ou Razao Social..."
+                            placeholder="CNPJ ou Razão Social..."
                             value="{{ $filtros['busca'] ?? '' }}"
                             class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
@@ -93,6 +93,26 @@
             </div>
         </form>
 
+        {{-- Estatísticas --}}
+        <div class="mb-6 grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                <p class="text-sm text-gray-500">Total de participantes</p>
+                <p class="text-2xl font-bold text-gray-900">{{ $participantes->total() ?? 0 }}</p>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                <p class="text-sm text-gray-500">Nesta página</p>
+                <p class="text-2xl font-bold text-gray-900">{{ $participantes->count() ?? 0 }}</p>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                <p class="text-sm text-gray-500">Total de importações</p>
+                <p class="text-2xl font-bold text-gray-900">{{ count($importacoes ?? []) }}</p>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                <p class="text-sm text-gray-500">Seus créditos</p>
+                <p class="text-2xl font-bold text-blue-600">{{ $credits ?? 0 }}</p>
+            </div>
+        </div>
+
         {{-- Acoes em lote (aparece quando ha selecao) --}}
         <div id="acoes-lote" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
             <div class="flex items-center justify-between">
@@ -101,15 +121,14 @@
                     <span class="text-sm font-medium text-blue-900">participante(s) selecionado(s)</span>
                 </div>
                 <div class="flex gap-2">
-                    <button type="button" id="btn-monitorar-selecionados" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700" disabled title="Em breve">
+                    <button type="button" id="btn-monitorar-selecionados" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
-                        Monitorar (em breve)
+                        Consultar Selecionados
                     </button>
                     <button type="button" id="btn-limpar-selecao" class="px-4 py-2 rounded-lg border border-blue-300 bg-white text-blue-700 text-sm font-semibold shadow-sm transition hover:bg-blue-50">
-                        Limpar selecao
+                        Limpar seleção
                     </button>
                 </div>
             </div>
@@ -125,8 +144,8 @@
                                 <input type="checkbox" id="select-all" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                             </th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">CNPJ</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Razao Social</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Situacao</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Razão Social</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Situação</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Cliente</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Origem</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Data</th>
@@ -233,26 +252,6 @@
                 </div>
             @endif
         </div>
-
-        {{-- Resumo --}}
-        <div class="mt-6 grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-                <p class="text-sm text-gray-500">Total de participantes</p>
-                <p class="text-2xl font-bold text-gray-900">{{ $participantes->total() ?? 0 }}</p>
-            </div>
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-                <p class="text-sm text-gray-500">Nesta pagina</p>
-                <p class="text-2xl font-bold text-gray-900">{{ $participantes->count() ?? 0 }}</p>
-            </div>
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-                <p class="text-sm text-gray-500">Total de importacoes</p>
-                <p class="text-2xl font-bold text-gray-900">{{ count($importacoes ?? []) }}</p>
-            </div>
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-                <p class="text-sm text-gray-500">Seus creditos</p>
-                <p class="text-2xl font-bold text-blue-600">{{ $credits ?? 0 }}</p>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -326,13 +325,16 @@
             });
         }
 
-        // Botao monitorar (preparado para implementacao futura)
+        // Botao consultar selecionados
         if (btnMonitorar) {
             btnMonitorar.addEventListener('click', function() {
                 const selecionados = Array.from(document.querySelectorAll('.checkbox-participante:checked')).map(cb => cb.value);
-                console.log('[Monitoramento Participantes] Participantes selecionados para monitoramento:', selecionados);
-                // TODO: Implementar modal de selecao de plano
-                alert('Funcionalidade de monitoramento em lote sera implementada em breve!');
+                if (selecionados.length === 0) {
+                    alert('Selecione pelo menos um participante.');
+                    return;
+                }
+                // Redirecionar para nova consulta com IDs pre-selecionados
+                window.location.href = '/app/consultas/nova?participantes=' + selecionados.join(',');
             });
         }
 

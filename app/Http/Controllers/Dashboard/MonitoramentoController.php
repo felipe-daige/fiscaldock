@@ -359,7 +359,7 @@ class MonitoramentoController extends Controller
             })
             ->orderBy('created_at', 'desc');
 
-        $participantes = $participantesQuery->paginate(50)->withQueryString();
+        $participantes = $participantesQuery->paginate(20)->withQueryString();
 
         // Buscar importações SPED para o filtro
         $importacoes = ImportacaoSped::where('user_id', $userId)
@@ -521,22 +521,31 @@ class MonitoramentoController extends Controller
         // Carregar planos disponíveis
         $planos = MonitoramentoPlano::ativos();
 
-        // Estatísticas do participante
+        // Estatísticas do participante - combinar ambos sistemas
+        $monitoramentoTotal = MonitoramentoConsulta::where('participante_id', $participante->id)
+            ->where('user_id', $userId)->count();
+        $monitoramentoSucesso = MonitoramentoConsulta::where('participante_id', $participante->id)
+            ->where('user_id', $userId)->where('status', 'sucesso')->count();
+        $monitoramentoErro = MonitoramentoConsulta::where('participante_id', $participante->id)
+            ->where('user_id', $userId)->where('status', 'erro')->count();
+        $monitoramentoCreditos = MonitoramentoConsulta::where('participante_id', $participante->id)
+            ->where('user_id', $userId)->sum('creditos_cobrados');
+
+        // Consultas em lote (sistema novo)
+        $consultaLoteTotal = ConsultaResultado::where('participante_id', $participante->id)
+            ->whereHas('lote', fn ($q) => $q->where('user_id', $userId))->count();
+        $consultaLoteSucesso = ConsultaResultado::where('participante_id', $participante->id)
+            ->whereHas('lote', fn ($q) => $q->where('user_id', $userId))
+            ->where('status', 'sucesso')->count();
+        $consultaLoteErro = ConsultaResultado::where('participante_id', $participante->id)
+            ->whereHas('lote', fn ($q) => $q->where('user_id', $userId))
+            ->whereIn('status', ['erro', 'timeout'])->count();
+
         $estatisticas = [
-            'total_consultas' => MonitoramentoConsulta::where('participante_id', $participante->id)
-                ->where('user_id', $userId)
-                ->count(),
-            'consultas_sucesso' => MonitoramentoConsulta::where('participante_id', $participante->id)
-                ->where('user_id', $userId)
-                ->where('status', 'sucesso')
-                ->count(),
-            'consultas_erro' => MonitoramentoConsulta::where('participante_id', $participante->id)
-                ->where('user_id', $userId)
-                ->where('status', 'erro')
-                ->count(),
-            'creditos_utilizados' => MonitoramentoConsulta::where('participante_id', $participante->id)
-                ->where('user_id', $userId)
-                ->sum('creditos_cobrados'),
+            'total_consultas' => $monitoramentoTotal + $consultaLoteTotal,
+            'consultas_sucesso' => $monitoramentoSucesso + $consultaLoteSucesso,
+            'consultas_erro' => $monitoramentoErro + $consultaLoteErro,
+            'creditos_utilizados' => $monitoramentoCreditos,
         ];
 
         // Buscar última consulta com sucesso para o participante (sistema de consultas em lote)
