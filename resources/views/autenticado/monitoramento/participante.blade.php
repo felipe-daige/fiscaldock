@@ -220,7 +220,7 @@
                             @endif
 
                             {{-- Dados Cadastrais Completos --}}
-                            @if(isset($dados['razao_social']) || isset($dados['natureza_juridica']) || isset($dados['porte']))
+                            @if(isset($dados['razao_social']) || isset($dados['natureza_juridica']) || isset($dados['capital_social']))
                             <div class="border-t border-gray-200 pt-4">
                                 <h3 class="text-sm font-semibold text-gray-700 mb-3">Dados Cadastrais</h3>
                                 <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -240,12 +240,6 @@
                                     <div class="bg-gray-50 rounded-lg p-3">
                                         <dt class="text-xs text-gray-500">Natureza Juridica</dt>
                                         <dd class="mt-1 text-sm text-gray-900">{{ $dados['natureza_juridica'] }}</dd>
-                                    </div>
-                                    @endif
-                                    @if(isset($dados['porte']))
-                                    <div class="bg-gray-50 rounded-lg p-3">
-                                        <dt class="text-xs text-gray-500">Porte</dt>
-                                        <dd class="mt-1 text-sm text-gray-900">{{ $dados['porte'] }}</dd>
                                     </div>
                                     @endif
                                     @if(isset($dados['capital_social']))
