@@ -153,6 +153,254 @@
                     </div>
                 </div>
 
+                {{-- Dados da Ultima Consulta --}}
+                @if($ultimaConsulta && $ultimaConsulta->resultado_dados)
+                    @php
+                        $dados = $ultimaConsulta->resultado_dados;
+                        $consultasRealizadas = $dados['consultas_realizadas'] ?? [];
+                    @endphp
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-900">Dados da Ultima Consulta</h2>
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        Consultado em {{ $ultimaConsulta->consultado_em?->format('d/m/Y H:i') }}
+                                        @if($ultimaConsulta->lote?->plano)
+                                            | Plano: {{ $ultimaConsulta->lote->plano->nome }}
+                                        @endif
+                                    </p>
+                                </div>
+                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
+                                    Atualizado
+                                </span>
+                            </div>
+                        </div>
+                        <div class="p-6 space-y-6">
+                            {{-- Dados Cadastrais Atualizados --}}
+                            @if(in_array('situacao_cadastral', $consultasRealizadas) || in_array('dados_cadastrais', $consultasRealizadas) || isset($dados['situacao_cadastral']))
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Situacao Cadastral</h3>
+                                <dl class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">Situacao</dt>
+                                        <dd class="mt-1 text-sm font-semibold {{ ($dados['situacao_cadastral'] ?? '') === 'ATIVA' ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ $dados['situacao_cadastral'] ?? '-' }}
+                                        </dd>
+                                    </div>
+                                    @if(isset($dados['simples_nacional']))
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">Simples Nacional</dt>
+                                        <dd class="mt-1 text-sm font-semibold {{ $dados['simples_nacional'] ? 'text-blue-600' : 'text-gray-600' }}">
+                                            {{ $dados['simples_nacional'] ? 'Optante' : 'Nao Optante' }}
+                                        </dd>
+                                    </div>
+                                    @endif
+                                    @if(isset($dados['mei']))
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">MEI</dt>
+                                        <dd class="mt-1 text-sm font-semibold text-gray-900">
+                                            {{ $dados['mei'] ? 'Sim' : 'Nao' }}
+                                        </dd>
+                                    </div>
+                                    @endif
+                                </dl>
+                            </div>
+                            @endif
+
+                            {{-- SINTEGRA --}}
+                            @if(in_array('sintegra', $consultasRealizadas) && isset($dados['sintegra']))
+                            <div class="border-t border-gray-200 pt-4">
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">SINTEGRA</h3>
+                                <dl class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">Inscricao Estadual</dt>
+                                        <dd class="mt-1 text-sm font-mono text-gray-900">{{ $dados['sintegra']['ie'] ?? '-' }}</dd>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">Situacao IE</dt>
+                                        <dd class="mt-1 text-sm font-semibold {{ ($dados['sintegra']['situacao'] ?? '') === 'HABILITADO' ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ $dados['sintegra']['situacao'] ?? '-' }}
+                                        </dd>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">Regime Apuracao</dt>
+                                        <dd class="mt-1 text-sm text-gray-900">{{ $dados['sintegra']['regime_apuracao'] ?? '-' }}</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                            @endif
+
+                            {{-- CNDs --}}
+                            @if(in_array('cnd_federal', $consultasRealizadas) || in_array('cnd_estadual', $consultasRealizadas) || in_array('crf_fgts', $consultasRealizadas) || in_array('cndt', $consultasRealizadas) || isset($dados['cnd_federal']) || isset($dados['cnd_estadual']) || isset($dados['crf_fgts']) || isset($dados['cndt']))
+                            <div class="border-t border-gray-200 pt-4">
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Certidoes Negativas</h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    @if(isset($dados['cnd_federal']))
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">CND Federal</dt>
+                                        <dd class="mt-1 text-sm font-semibold {{ ($dados['cnd_federal']['status'] ?? '') === 'NEGATIVA' ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ $dados['cnd_federal']['status'] ?? '-' }}
+                                        </dd>
+                                        @if(isset($dados['cnd_federal']['data_validade']))
+                                        <dd class="text-xs text-gray-500 mt-1">Val: {{ $dados['cnd_federal']['data_validade'] }}</dd>
+                                        @endif
+                                    </div>
+                                    @endif
+                                    @if(isset($dados['cnd_estadual']))
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">CND Estadual</dt>
+                                        <dd class="mt-1 text-sm font-semibold {{ ($dados['cnd_estadual']['status'] ?? '') === 'NEGATIVA' ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ $dados['cnd_estadual']['status'] ?? '-' }}
+                                        </dd>
+                                        @if(isset($dados['cnd_estadual']['data_validade']))
+                                        <dd class="text-xs text-gray-500 mt-1">Val: {{ $dados['cnd_estadual']['data_validade'] }}</dd>
+                                        @endif
+                                    </div>
+                                    @endif
+                                    @if(isset($dados['crf_fgts']))
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">CRF (FGTS)</dt>
+                                        <dd class="mt-1 text-sm font-semibold {{ ($dados['crf_fgts']['situacao'] ?? '') === 'REGULAR' ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ $dados['crf_fgts']['situacao'] ?? '-' }}
+                                        </dd>
+                                        @if(isset($dados['crf_fgts']['data_validade']))
+                                        <dd class="text-xs text-gray-500 mt-1">Val: {{ $dados['crf_fgts']['data_validade'] }}</dd>
+                                        @endif
+                                    </div>
+                                    @endif
+                                    @if(isset($dados['cndt']))
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">CNDT (Trabalhista)</dt>
+                                        <dd class="mt-1 text-sm font-semibold {{ ($dados['cndt']['status'] ?? '') === 'NEGATIVA' ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ $dados['cndt']['status'] ?? '-' }}
+                                        </dd>
+                                        @if(isset($dados['cndt']['data_validade']))
+                                        <dd class="text-xs text-gray-500 mt-1">Val: {{ $dados['cndt']['data_validade'] }}</dd>
+                                        @endif
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                            @endif
+
+                            {{-- Compliance (TCU/CEIS/CNEP) --}}
+                            @if(in_array('tcu_consolidada', $consultasRealizadas) && isset($dados['tcu_consolidada']))
+                            <div class="border-t border-gray-200 pt-4">
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Compliance</h3>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">CEIS</dt>
+                                        <dd class="mt-1 text-sm font-semibold {{ !($dados['tcu_consolidada']['ceis'] ?? false) ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ ($dados['tcu_consolidada']['ceis'] ?? false) ? 'Consta' : 'Nada consta' }}
+                                        </dd>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">CNEP</dt>
+                                        <dd class="mt-1 text-sm font-semibold {{ !($dados['tcu_consolidada']['cnep'] ?? false) ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ ($dados['tcu_consolidada']['cnep'] ?? false) ? 'Consta' : 'Nada consta' }}
+                                        </dd>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">Acordao TCU</dt>
+                                        <dd class="mt-1 text-sm font-semibold {{ !($dados['tcu_consolidada']['acordao_tcu'] ?? false) ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ ($dados['tcu_consolidada']['acordao_tcu'] ?? false) ? 'Consta' : 'Nada consta' }}
+                                        </dd>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">Licitacao Impedida</dt>
+                                        <dd class="mt-1 text-sm font-semibold {{ !($dados['tcu_consolidada']['licitacao_impedida'] ?? false) ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ ($dados['tcu_consolidada']['licitacao_impedida'] ?? false) ? 'Sim' : 'Nao' }}
+                                        </dd>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
+                            {{-- QSA (Socios) --}}
+                            @if(in_array('qsa', $consultasRealizadas) && !empty($dados['qsa']))
+                            <div class="border-t border-gray-200 pt-4">
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Quadro Societario (QSA)</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full text-sm">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">CPF/CNPJ</th>
+                                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Qualificacao</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-100">
+                                            @foreach($dados['qsa'] as $socio)
+                                            <tr>
+                                                <td class="px-3 py-2 text-gray-900">{{ $socio['nome'] ?? '-' }}</td>
+                                                <td class="px-3 py-2 text-gray-600 font-mono">{{ $socio['cpf_cnpj'] ?? '-' }}</td>
+                                                <td class="px-3 py-2 text-gray-600">{{ $socio['qualificacao'] ?? '-' }}</td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            @endif
+
+                            {{-- Protestos --}}
+                            @if(in_array('protestos', $consultasRealizadas) && isset($dados['protestos']))
+                            <div class="border-t border-gray-200 pt-4">
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Protestos</h3>
+                                @if(empty($dados['protestos']))
+                                    <p class="text-sm text-green-600 font-medium">Nenhum protesto encontrado</p>
+                                @else
+                                    <div class="bg-red-50 rounded-lg p-4">
+                                        <p class="text-sm font-semibold text-red-700">{{ count($dados['protestos']) }} protesto(s) encontrado(s)</p>
+                                        <p class="text-xs text-red-600 mt-1">Consulte o relatorio completo para detalhes</p>
+                                    </div>
+                                @endif
+                            </div>
+                            @endif
+
+                            {{-- ESG --}}
+                            @if((in_array('trabalho_escravo', $consultasRealizadas) || in_array('ibama_autuacoes', $consultasRealizadas)) && (isset($dados['trabalho_escravo']) || isset($dados['ibama_autuacoes'])))
+                            <div class="border-t border-gray-200 pt-4">
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">ESG</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    @if(isset($dados['trabalho_escravo']))
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">Lista Trabalho Escravo</dt>
+                                        <dd class="mt-1 text-sm font-semibold {{ !$dados['trabalho_escravo'] ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ $dados['trabalho_escravo'] ? 'Consta' : 'Nada consta' }}
+                                        </dd>
+                                    </div>
+                                    @endif
+                                    @if(isset($dados['ibama_autuacoes']))
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <dt class="text-xs text-gray-500">Autuacoes IBAMA</dt>
+                                        <dd class="mt-1 text-sm font-semibold {{ empty($dados['ibama_autuacoes']) ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ empty($dados['ibama_autuacoes']) ? 'Nenhuma' : count($dados['ibama_autuacoes']) . ' autuacao(oes)' }}
+                                        </dd>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                @else
+                    {{-- Estado vazio - nenhuma consulta realizada --}}
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h2 class="text-lg font-semibold text-gray-900">Dados da Ultima Consulta</h2>
+                        </div>
+                        <div class="p-6 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                            </svg>
+                            <p class="mt-2 text-sm text-gray-500">Nenhuma consulta realizada para este participante</p>
+                            <p class="mt-1 text-xs text-gray-400">Clique em "Consulta Avulsa" para obter dados atualizados</p>
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Historico de Consultas --}}
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
                     <div class="px-6 py-4 border-b border-gray-200">

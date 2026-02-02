@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
+use App\Models\ConsultaResultado;
 use App\Models\ImportacaoSped;
 use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoConsulta;
@@ -538,6 +539,13 @@ class MonitoramentoController extends Controller
                 ->sum('creditos_cobrados'),
         ];
 
+        // Buscar última consulta com sucesso para o participante (sistema de consultas em lote)
+        $ultimaConsulta = ConsultaResultado::where('participante_id', $participante->id)
+            ->where('status', ConsultaResultado::STATUS_SUCESSO)
+            ->with(['lote:id,plano_id,created_at', 'lote.plano:id,nome,codigo'])
+            ->orderBy('consultado_em', 'desc')
+            ->first();
+
         // Saldo de créditos do usuário
         $credits = $this->creditService->getBalance($user);
 
@@ -552,6 +560,7 @@ class MonitoramentoController extends Controller
             'xmlsProcessados' => $xmlsProcessados,
             'totalNotasFiscais' => $totalNotasFiscais,
             'totalXmlsProcessados' => $totalXmlsProcessados,
+            'ultimaConsulta' => $ultimaConsulta,
         ];
 
         if ($this->isAjaxRequest($request)) {
