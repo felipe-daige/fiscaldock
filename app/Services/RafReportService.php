@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ConsultaLote;
+use App\Models\ConsultaResultado;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
 
@@ -85,7 +86,7 @@ class RafReportService
             ->with('participante')
             ->get();
 
-        return $resultados->map(function (ConsultaLoteResultado $resultado) {
+        return $resultados->map(function (ConsultaResultado $resultado) {
             $participante = $resultado->participante;
             $dados = $resultado->resultado_dados ?? [];
             $scoreData = $resultado->calcularScore();
