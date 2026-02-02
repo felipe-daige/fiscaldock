@@ -150,149 +150,60 @@
                     </div>
                 </div>
 
-                {{-- Tabela de Participantes --}}
+                {{-- Ultimas Consultas --}}
                 <div class="bg-white rounded-lg border border-gray-200">
-                    <div class="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                         <div>
-                            <h2 class="text-sm font-semibold text-gray-900">Participantes</h2>
-                            <p class="text-xs text-gray-500 mt-0.5">
-                                {{ $participantes->total() ?? 0 }} registro(s)
-                                @if(!empty($filtroBusca))
-                                    para "{{ $filtroBusca }}"
-                                @endif
-                            </p>
+                            <h2 class="text-sm font-semibold text-gray-900">Ultimas Consultas</h2>
+                            <p class="text-xs text-gray-500 mt-0.5">Suas consultas mais recentes</p>
                         </div>
-                        <div class="w-full sm:w-64">
-                            <div class="relative">
-                                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                </svg>
-                                <input
-                                    type="text"
-                                    id="busca-participante"
-                                    placeholder="Buscar CNPJ ou nome..."
-                                    value="{{ $filtroBusca ?? '' }}"
-                                    class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
-                                >
-                            </div>
-                        </div>
+                        <a href="/app/consultas/historico" data-link class="text-xs text-gray-500 hover:text-gray-700">
+                            Ver todas
+                        </a>
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-100">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th scope="col" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Participante
-                                    </th>
-                                    <th scope="col" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Situacao
-                                    </th>
-                                    <th scope="col" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        UF
-                                    </th>
-                                    <th scope="col" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Score
-                                    </th>
-                                    <th scope="col" class="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-100">
-                                @forelse($participantes as $participante)
-                                    <tr class="hover:bg-gray-50 transition-colors">
-                                        {{-- Nome e CNPJ --}}
-                                        <td class="px-5 py-4">
-                                            <div class="text-sm font-medium text-gray-900">
-                                                {{ $participante->nome_fantasia ?: $participante->razao_social ?: '-' }}
-                                            </div>
-                                            <div class="text-xs text-gray-500 font-mono">{{ $participante->cnpj_formatado }}</div>
-                                        </td>
-
-                                        {{-- Situacao --}}
-                                        <td class="px-5 py-4 whitespace-nowrap">
-                                            @php
-                                                $situacao = strtoupper($participante->situacao_cadastral ?? '');
-                                                $situacaoClass = match($situacao) {
-                                                    'ATIVA' => 'bg-emerald-50 text-emerald-700',
-                                                    'SUSPENSA' => 'bg-amber-50 text-amber-700',
-                                                    'BAIXADA', 'INAPTA', 'NULA' => 'bg-red-50 text-red-700',
-                                                    default => 'bg-gray-100 text-gray-600',
-                                                };
-                                                $situacaoLabel = $situacao ?: 'N/D';
-                                            @endphp
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $situacaoClass }}">
-                                                {{ $situacaoLabel }}
+                    <div class="divide-y divide-gray-100">
+                        @forelse($ultimasConsultas as $consulta)
+                            <div class="px-5 py-3 hover:bg-gray-50 transition-colors">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-medium text-gray-900">
+                                                {{ $consulta->plano?->nome ?? 'Consulta' }}
                                             </span>
-                                        </td>
-
-                                        {{-- UF --}}
-                                        <td class="px-5 py-4 whitespace-nowrap">
-                                            <span class="text-sm text-gray-600">{{ $participante->uf ?: '-' }}</span>
-                                        </td>
-
-                                        {{-- Score --}}
-                                        <td class="px-5 py-4 whitespace-nowrap">
-                                            @if($participante->score)
-                                                @php
-                                                    $score = $participante->score;
-                                                    $scoreTotal = $score->score_total;
-                                                    $classificacao = $score->classificacao;
-                                                    $scoreClass = match($classificacao) {
-                                                        'baixo' => 'bg-emerald-50 text-emerald-700',
-                                                        'medio' => 'bg-amber-50 text-amber-700',
-                                                        'alto' => 'bg-orange-50 text-orange-700',
-                                                        'critico' => 'bg-red-50 text-red-700',
-                                                        default => 'bg-gray-100 text-gray-600',
-                                                    };
-                                                @endphp
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $scoreClass }}">
-                                                    {{ $scoreTotal }}
-                                                </span>
-                                            @else
-                                                <span class="text-xs text-gray-400">-</span>
-                                            @endif
-                                        </td>
-
-                                        {{-- Acoes --}}
-                                        <td class="px-5 py-4 whitespace-nowrap text-right">
-                                            <a href="/app/risk/participante/{{ $participante->id }}" data-link class="text-gray-500 hover:text-gray-700 text-sm">
-                                                <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                                </svg>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="px-5 py-12 text-center">
-                                            <div class="text-gray-400">
-                                                <svg class="mx-auto h-10 w-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                                </svg>
-                                                <p class="mt-2 text-sm text-gray-500">Nenhum participante encontrado</p>
-                                                <p class="mt-1 text-xs text-gray-400">
-                                                    @if(!empty($filtroBusca))
-                                                        Tente uma busca diferente
-                                                    @else
-                                                        Importe XMLs ou SPEDs para comecar
-                                                    @endif
-                                                </p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                                            @php
+                                                $badge = $consulta->status_badge;
+                                            @endphp
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $badge['class'] }}">
+                                                {{ $badge['label'] }}
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                                            <span>{{ $consulta->total_participantes }} participante(s)</span>
+                                            <span>{{ $consulta->created_at->format('d/m/Y H:i') }}</span>
+                                        </div>
+                                    </div>
+                                    @if($consulta->isConcluido())
+                                        <a href="/app/consultas/lote/{{ $consulta->id }}/baixar" class="text-gray-400 hover:text-gray-600">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                            </svg>
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        @empty
+                            <div class="px-5 py-8 text-center">
+                                <svg class="mx-auto h-10 w-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                </svg>
+                                <p class="mt-2 text-sm text-gray-500">Nenhuma consulta realizada</p>
+                                <a href="/app/consultas/nova" data-link class="mt-2 inline-block text-xs font-medium text-gray-600 hover:text-gray-900">
+                                    Fazer primeira consulta
+                                </a>
+                            </div>
+                        @endforelse
                     </div>
-
-                    {{-- Paginacao --}}
-                    @if($participantes->hasPages())
-                        <div class="px-5 py-3 border-t border-gray-100">
-                            {{ $participantes->links() }}
-                        </div>
-                    @endif
                 </div>
 
             </div>
@@ -412,58 +323,3 @@
 
     </div>
 </div>
-
-{{-- Script de busca com debounce --}}
-<script>
-(function() {
-    const input = document.getElementById('busca-participante');
-    if (!input) return;
-
-    let debounceTimer;
-    const debounceDelay = 400;
-
-    input.addEventListener('input', function() {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(function() {
-            const busca = input.value.trim();
-            const url = new URL(window.location.href);
-
-            if (busca) {
-                url.searchParams.set('busca', busca);
-            } else {
-                url.searchParams.delete('busca');
-            }
-
-            url.searchParams.delete('page');
-
-            if (window.spa && typeof window.spa.navigate === 'function') {
-                window.spa.navigate(url.pathname + url.search);
-            } else {
-                window.location.href = url.toString();
-            }
-        }, debounceDelay);
-    });
-
-    input.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            clearTimeout(debounceTimer);
-            const busca = input.value.trim();
-            const url = new URL(window.location.href);
-
-            if (busca) {
-                url.searchParams.set('busca', busca);
-            } else {
-                url.searchParams.delete('busca');
-            }
-
-            url.searchParams.delete('page');
-
-            if (window.spa && typeof window.spa.navigate === 'function') {
-                window.spa.navigate(url.pathname + url.search);
-            } else {
-                window.location.href = url.toString();
-            }
-        }
-    });
-})();
-</script>

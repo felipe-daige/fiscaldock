@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\RelatorioCompletoController;
 use App\Models\Cliente;
+use App\Models\ConsultaLote;
 use App\Services\Dashboard\DashboardDataService;
 use App\Services\Sped\SpedUploadService;
 use Illuminate\Http\Request;
@@ -44,16 +45,19 @@ class DashboardController extends Controller
         $userId = $user->id;
 
         $kpis = $this->dashboardDataService->getKpis($userId, $user);
-        $busca = $request->get('busca');
-        $participantes = $this->dashboardDataService->getParticipantesPaginados($userId, $busca);
+
+        $ultimasConsultas = ConsultaLote::where('user_id', $userId)
+            ->with('plano:id,nome,codigo')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
 
         $data = [
             'kpi_conformidade' => $kpis['conformidade'],
             'kpi_impostos_recuperaveis' => $kpis['impostos_recuperaveis'],
             'kpi_creditos' => $kpis['creditos'],
             'kpi_alertas_criticos' => $kpis['alertas_criticos'],
-            'participantes' => $participantes,
-            'filtroBusca' => $busca ?? '',
+            'ultimasConsultas' => $ultimasConsultas,
         ];
 
         if($this->isAjaxRequest($request)){

@@ -2282,7 +2282,7 @@ class DataReceiverController extends Controller
      * {
      *   "user_id": 1,
      *   "tab_id": "uuid",
-     *   "raf_lote_id": 123,
+     *   "consulta_lote_id": 123,
      *   "progresso": 45,
      *   "mensagem": "Consultando CNPJ 12.345.678/0001-90...",
      *   "status": "processando",

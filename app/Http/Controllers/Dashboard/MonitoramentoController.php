@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
+use App\Models\ConsultaLote;
 use App\Models\ConsultaResultado;
 use App\Models\ImportacaoSped;
 use App\Models\MonitoramentoAssinatura;
@@ -555,6 +556,16 @@ class MonitoramentoController extends Controller
             ->orderBy('consultado_em', 'desc')
             ->first();
 
+        // Buscar lotes que incluem este participante (para histórico de consultas em lote)
+        $lotesDoParticipante = ConsultaLote::whereHas('resultados', function ($q) use ($participante) {
+            $q->where('participante_id', $participante->id);
+        })
+            ->where('user_id', $userId)
+            ->with('plano:id,nome,codigo')
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
         // Saldo de créditos do usuário
         $credits = $this->creditService->getBalance($user);
 
@@ -570,6 +581,7 @@ class MonitoramentoController extends Controller
             'totalNotasFiscais' => $totalNotasFiscais,
             'totalXmlsProcessados' => $totalXmlsProcessados,
             'ultimaConsulta' => $ultimaConsulta,
+            'lotesDoParticipante' => $lotesDoParticipante,
         ];
 
         if ($this->isAjaxRequest($request)) {
