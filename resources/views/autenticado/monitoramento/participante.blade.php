@@ -166,14 +166,29 @@
                                     <h2 class="text-lg font-semibold text-gray-900">Dados da Ultima Consulta</h2>
                                     <p class="text-xs text-gray-500 mt-1">
                                         Consultado em {{ $ultimaConsulta->consultado_em?->format('d/m/Y H:i') }}
-                                        @if($ultimaConsulta->lote?->plano)
-                                            | Plano: {{ $ultimaConsulta->lote->plano->nome }}
-                                        @endif
                                     </p>
                                 </div>
-                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
-                                    Atualizado
-                                </span>
+                                <div class="flex items-center gap-2">
+                                    @if($ultimaConsulta->lote?->plano)
+                                    @php
+                                        $planoBadgeColors = [
+                                            'gratuito' => 'bg-gray-100 text-gray-700',
+                                            'validacao' => 'bg-blue-100 text-blue-700',
+                                            'licitacao' => 'bg-purple-100 text-purple-700',
+                                            'compliance' => 'bg-amber-100 text-amber-700',
+                                            'due_diligence' => 'bg-rose-100 text-rose-700',
+                                            'enterprise' => 'bg-indigo-100 text-indigo-700',
+                                        ];
+                                        $badgeColor = $planoBadgeColors[$ultimaConsulta->lote->plano->codigo] ?? 'bg-gray-100 text-gray-700';
+                                    @endphp
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $badgeColor }}">
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        {{ $ultimaConsulta->lote->plano->nome }}
+                                    </span>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                         <div class="p-6 space-y-6">
@@ -191,27 +206,44 @@
                                     @if(isset($dados['regime_tributario']))
                                     <div class="bg-gray-50 rounded-lg p-3">
                                         <dt class="text-xs text-gray-500">Regime Tributario</dt>
-                                        <dd class="mt-1 text-sm font-semibold text-purple-600">
+                                        <dd class="mt-1 text-sm font-medium text-gray-700">
                                             {{ $dados['regime_tributario'] }}
-                                            @if(isset($dados['regime_tributario_ano']))
-                                            <span class="text-xs text-gray-400">({{ $dados['regime_tributario_ano'] }})</span>
-                                            @endif
                                         </dd>
                                     </div>
                                     @endif
                                     @if(isset($dados['simples_nacional']))
                                     <div class="bg-gray-50 rounded-lg p-3">
                                         <dt class="text-xs text-gray-500">Simples Nacional</dt>
-                                        <dd class="mt-1 text-sm font-semibold {{ $dados['simples_nacional'] ? 'text-blue-600' : 'text-gray-600' }}">
-                                            {{ $dados['simples_nacional'] ? 'Optante' : 'Nao Optante' }}
+                                        <dd class="mt-1 flex items-center gap-1.5">
+                                            @if($dados['simples_nacional'])
+                                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span class="text-sm font-medium text-green-700">Optante</span>
+                                            @else
+                                            <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span class="text-sm text-gray-500">-</span>
+                                            @endif
                                         </dd>
                                     </div>
                                     @endif
                                     @if(isset($dados['mei']))
                                     <div class="bg-gray-50 rounded-lg p-3">
                                         <dt class="text-xs text-gray-500">MEI</dt>
-                                        <dd class="mt-1 text-sm font-semibold {{ $dados['mei'] ? 'text-blue-600' : 'text-gray-600' }}">
-                                            {{ $dados['mei'] ? 'Sim' : 'Nao' }}
+                                        <dd class="mt-1 flex items-center gap-1.5">
+                                            @if($dados['mei'])
+                                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span class="text-sm font-medium text-green-700">Sim</span>
+                                            @else
+                                            <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span class="text-sm text-gray-500">-</span>
+                                            @endif
                                         </dd>
                                     </div>
                                     @endif
@@ -277,18 +309,42 @@
                                     <p class="text-sm text-gray-500 mt-1 font-mono">CEP: {{ preg_replace('/(\d{5})(\d{3})/', '$1-$2', $end['cep']) }}</p>
                                     @endif
                                 </div>
-                                @if(isset($dados['telefone_1']) && $dados['telefone_1'])
-                                <div class="mt-3 flex gap-4">
+                                {{-- Telefones empilhados com icone --}}
+                                @if((isset($dados['telefone_1']) && $dados['telefone_1']) || (isset($dados['telefone_2']) && $dados['telefone_2']))
+                                <div class="mt-3">
                                     <div class="bg-gray-50 rounded-lg p-3">
-                                        <dt class="text-xs text-gray-500">Telefone</dt>
-                                        <dd class="mt-1 text-sm font-mono text-gray-900">{{ $dados['telefone_1'] }}</dd>
+                                        <dt class="text-xs text-gray-500 mb-2">Telefones</dt>
+                                        <dd class="space-y-2">
+                                            @php
+                                                // Funcao para formatar telefone
+                                                $formatarTelefone = function($tel) {
+                                                    $tel = preg_replace('/\D/', '', $tel);
+                                                    if (strlen($tel) === 11) {
+                                                        return '(' . substr($tel, 0, 2) . ') ' . substr($tel, 2, 5) . '-' . substr($tel, 7);
+                                                    } elseif (strlen($tel) === 10) {
+                                                        return '(' . substr($tel, 0, 2) . ') ' . substr($tel, 2, 4) . '-' . substr($tel, 6);
+                                                    }
+                                                    return $tel;
+                                                };
+                                            @endphp
+                                            @if(isset($dados['telefone_1']) && $dados['telefone_1'])
+                                            <div class="flex items-center gap-2">
+                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                                </svg>
+                                                <span class="text-sm font-mono text-gray-900">{{ $formatarTelefone($dados['telefone_1']) }}</span>
+                                            </div>
+                                            @endif
+                                            @if(isset($dados['telefone_2']) && $dados['telefone_2'])
+                                            <div class="flex items-center gap-2">
+                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                                </svg>
+                                                <span class="text-sm font-mono text-gray-900">{{ $formatarTelefone($dados['telefone_2']) }}</span>
+                                            </div>
+                                            @endif
+                                        </dd>
                                     </div>
-                                    @if(isset($dados['telefone_2']) && $dados['telefone_2'])
-                                    <div class="bg-gray-50 rounded-lg p-3">
-                                        <dt class="text-xs text-gray-500">Telefone 2</dt>
-                                        <dd class="mt-1 text-sm font-mono text-gray-900">{{ $dados['telefone_2'] }}</dd>
-                                    </div>
-                                    @endif
                                 </div>
                                 @endif
                             </div>
