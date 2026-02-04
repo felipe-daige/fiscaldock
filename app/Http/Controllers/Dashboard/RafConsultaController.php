@@ -677,21 +677,15 @@ class RafConsultaController extends Controller
 
         $user = Auth::user();
 
-        // Lotes novos (consulta_lotes)
+        // Lotes de consultas
         $lotes = ConsultaLote::where('user_id', $user->id)
             ->with('plano')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        // Relatórios legados (raf_relatorio_processado) - para compatibilidade
-        $relatoriosLegados = \App\Models\RafRelatorioProcessado::where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->limit(50)
-            ->get();
-
         $data = [
             'lotes' => $lotes,
-            'relatoriosLegados' => $relatoriosLegados,
+            'relatoriosLegados' => collect([]), // Tabelas legadas removidas
             'credits' => $this->creditService->getBalance($user),
         ];
 
