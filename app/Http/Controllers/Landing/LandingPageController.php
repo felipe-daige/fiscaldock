@@ -5,15 +5,9 @@ namespace App\Http\Controllers\Landing;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
-use Symfony\Component\HttpFoundation\Response;
-use App\Services\Sped\SpedUploadService;
 
 class LandingPageController extends Controller
 {
-    public function __construct(
-        protected SpedUploadService $spedUploadService
-    ) {}
     /**
      * Tema padrão usado nas páginas públicas.
      */
@@ -65,128 +59,6 @@ class LandingPageController extends Controller
 
     public function inteligenciaTributaria(Request $request){
         return $this->renderLanding($request, 'inteligencia_tributaria');
-    }
-
-    public function raf(Request $request){
-        return $this->renderLanding($request, 'raf');
-    }
-
-    /**
-     * Endpoint público para upload de SPED (EFD Contribuições) que encaminha
-     * o arquivo ao webhook e retorna JSON para renderização da tabela/CSV.
-     */
-    public function uploadSpedPublic(Request $request)
-    {
-        // Define timeout de 1 hora (3600 segundos) para processamento SPED
-        set_time_limit(3600);
-        
-        try {
-            $validated = $request->validate([
-                'tipo' => 'required|in:EFD Contribuições,EFD Fiscal',
-                'sped' => 'required|file|mimes:txt,text/plain|max:10240', // 10 MB
-            ]);
-        } catch (ValidationException $e) {
-            $errors = $e->errors();
-            $errorMessages = [];
-
-            if (isset($errors['sped'])) {
-                $errorMessages = array_merge($errorMessages, $errors['sped']);
-            }
-            if (isset($errors['tipo'])) {
-                $errorMessages = array_merge($errorMessages, $errors['tipo']);
-            }
-
-            $message = !empty($errorMessages)
-                ? implode(', ', $errorMessages)
-                : 'Dados inválidos';
-
-            return response()->json([
-                'success' => false,
-                'message' => $message,
-                'errors' => $errors,
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        $file = $request->file('sped');
-        $originalName = $file->getClientOriginalName();
-        
-        $result = $this->spedUploadService->uploadAndProcess(
-            $file,
-            $validated['tipo'],
-            $originalName,
-            false, // isAuthenticated = false para endpoint público
-            'gratuito', // modalidade padrão
-            null // user_id = null para endpoint público
-        );
-
-        if (!$result['success']) {
-            $statusCode = $result['message'] === 'Webhook não configurado.' 
-                ? Response::HTTP_BAD_GATEWAY 
-                : (str_contains($result['message'] ?? '', 'erro') 
-                    ? Response::HTTP_BAD_GATEWAY 
-                    : Response::HTTP_BAD_GATEWAY);
-            
-            // Se o resultado contém status code, usar ele
-            if (isset($result['status'])) {
-                $statusCode = $result['status'];
-            }
-            
-            return response()->json($result, $statusCode);
-        }
-
-        // Se precisa de confirmação, incluir resume_url na resposta para permitir polling
-        if (isset($result['needs_confirmation']) && $result['needs_confirmation'] && isset($result['resume_url'])) {
-            return response()->json([
-                'success' => true,
-                'needs_confirmation' => true,
-                'resume_url' => $result['resume_url'],
-                'valor_total_consulta' => $result['valor_total_consulta'] ?? 0,
-                'qtd_participantes_unicos' => $result['qtd_participantes_unicos'] ?? 0,
-                'custo_unitario' => $result['custo_unitario'] ?? 0,
-                'message' => 'Processamento em andamento. Aguarde...',
-            ]);
-        }
-
-        return response()->json($result);
-    }
-
-    /**
-     * Endpoint público para cancelar processamento de SPED.
-     * Não requer autenticação, apenas resume_url.
-     */
-    public function cancelSpedPublic(Request $request)
-    {
-        try {
-            $validated = $request->validate([
-                'resume_url' => 'required|url',
-            ]);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'URL de retomada (resume_url) é obrigatória.',
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        $resumeUrl = $validated['resume_url'];
-
-        \Illuminate\Support\Facades\Log::info('Cancelamento de processamento público', [
-            'resume_url' => $resumeUrl,
-        ]);
-
-        // Envia 'answer: decline' para o webhook
-        $result = $this->spedUploadService->confirmAndResume($resumeUrl, 'decline');
-
-        if (!$result['success'] && $result['message'] !== 'Operação cancelada pelo usuário.') {
-            \Illuminate\Support\Facades\Log::warning('Falha ao enviar cancelamento para webhook (público)', [
-                'resume_url' => $resumeUrl,
-                'error' => $result['message'] ?? 'Erro desconhecido',
-            ]);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Operação cancelada com sucesso.',
-        ]);
     }
 
     /**

@@ -49,16 +49,6 @@ class User extends Authenticatable
         return $this->hasMany(ClienteSolicitacao::class);
     }
 
-    public function rafConsultasPendentes()
-    {
-        return $this->hasMany(RafConsultaPendente::class);
-    }
-
-    public function rafRelatoriosProcessados()
-    {
-        return $this->hasMany(RafRelatorioProcessado::class);
-    }
-
     public function privateDocuments()
     {
         return $this->hasMany(PrivateDocument::class);
@@ -68,5 +58,16 @@ class User extends Authenticatable
     public function empresas()
     {
         return $this->clientes();
+    }
+
+    /**
+     * Retorna a empresa propria do usuario (is_empresa_propria = true).
+     */
+    public function empresaPropria(): ?Cliente
+    {
+        return $this->clientes()
+            ->where('is_empresa_propria', true)
+            ->where('tipo_pessoa', 'PJ')
+            ->first();
     }
 }

@@ -5,9 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class NotaSped extends Model
+class SpedNota extends Model
 {
-    protected $table = 'notas_sped';
+    protected $table = 'sped_notas';
 
     protected $fillable = [
         'user_id',
@@ -21,7 +21,7 @@ class NotaSped extends Model
         'modelo_doc',
         'serie',
         'numero_nota',
-        'chave_acesso',
+        'nfe_id',
         'data_emissao',
         'data_entrada_saida',
         'valor_total',
@@ -68,9 +68,9 @@ class NotaSped extends Model
         return $this->belongsTo(Cliente::class);
     }
 
-    public function importacaoSped(): BelongsTo
+    public function importacao(): BelongsTo
     {
-        return $this->belongsTo(ImportacaoSped::class, 'importacao_sped_id');
+        return $this->belongsTo(SpedImportacao::class, 'importacao_sped_id');
     }
 
     public function emitente(): BelongsTo

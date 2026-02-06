@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\NotaFiscal;
+use App\Models\XmlNota;
 use App\Models\Participante;
 use App\Models\User;
 use App\Services\ValidacaoContabilService;
@@ -19,9 +19,9 @@ beforeEach(function () {
         'origem_tipo' => 'MANUAL',
     ]);
 
-    $this->nota = NotaFiscal::create([
+    $this->nota = XmlNota::create([
         'user_id' => $this->user->id,
-        'chave_acesso' => str_repeat('1', 44),
+        'nfe_id' => str_repeat('1', 44),
         'tipo_documento' => 'NFE',
         'numero_nota' => 1234,
         'serie' => 1,
@@ -146,9 +146,9 @@ test('api validar notas executa corretamente', function () {
 
 test('classificacao conforme para nota sem problemas', function () {
     // Criar nota sem problemas
-    $notaOk = NotaFiscal::create([
+    $notaOk = XmlNota::create([
         'user_id' => $this->user->id,
-        'chave_acesso' => str_repeat('2', 44),
+        'nfe_id' => str_repeat('2', 44),
         'tipo_documento' => 'NFE',
         'numero_nota' => 5678,
         'serie' => 1,
@@ -184,9 +184,9 @@ test('classificacao conforme para nota sem problemas', function () {
 });
 
 test('detecta ncm generico', function () {
-    $notaComNcmGenerico = NotaFiscal::create([
+    $notaComNcmGenerico = XmlNota::create([
         'user_id' => $this->user->id,
-        'chave_acesso' => str_repeat('3', 44),
+        'nfe_id' => str_repeat('3', 44),
         'tipo_documento' => 'NFE',
         'numero_nota' => 9999,
         'serie' => 1,
@@ -220,9 +220,9 @@ test('detecta ncm generico', function () {
 
 test('detecta cfop inconsistente com tipo nota', function () {
     // Nota de saida (tipo_nota=1) com CFOP de entrada (1xxx)
-    $notaInconsistente = NotaFiscal::create([
+    $notaInconsistente = XmlNota::create([
         'user_id' => $this->user->id,
-        'chave_acesso' => str_repeat('4', 44),
+        'nfe_id' => str_repeat('4', 44),
         'tipo_documento' => 'NFE',
         'numero_nota' => 8888,
         'serie' => 1,

@@ -75,7 +75,7 @@ class Participante extends Model
      */
     public function importacaoSped(): BelongsTo
     {
-        return $this->belongsTo(ImportacaoSped::class, 'importacao_sped_id');
+        return $this->belongsTo(SpedImportacao::class, 'importacao_sped_id');
     }
 
     /**
@@ -83,7 +83,7 @@ class Participante extends Model
      */
     public function importacaoXml(): BelongsTo
     {
-        return $this->belongsTo(ImportacaoXml::class, 'importacao_xml_id');
+        return $this->belongsTo(XmlImportacao::class, 'importacao_xml_id');
     }
 
     /**
@@ -112,19 +112,19 @@ class Participante extends Model
     }
 
     /**
-     * Notas fiscais (XML) onde o participante é o emitente.
+     * Notas XML onde o participante é o emitente.
      */
-    public function notasComoEmitente(): HasMany
+    public function notasXmlComoEmitente(): HasMany
     {
-        return $this->hasMany(NotaFiscal::class, 'emit_participante_id');
+        return $this->hasMany(XmlNota::class, 'emit_participante_id');
     }
 
     /**
-     * Notas fiscais (XML) onde o participante é o destinatário.
+     * Notas XML onde o participante é o destinatário.
      */
-    public function notasComoDestinatario(): HasMany
+    public function notasXmlComoDestinatario(): HasMany
     {
-        return $this->hasMany(NotaFiscal::class, 'dest_participante_id');
+        return $this->hasMany(XmlNota::class, 'dest_participante_id');
     }
 
     /**
@@ -132,7 +132,7 @@ class Participante extends Model
      */
     public function notasSpedComoEmitente(): HasMany
     {
-        return $this->hasMany(NotaSped::class, 'emit_participante_id');
+        return $this->hasMany(SpedNota::class, 'emit_participante_id');
     }
 
     /**
@@ -140,23 +140,7 @@ class Participante extends Model
      */
     public function notasSpedComoDestinatario(): HasMany
     {
-        return $this->hasMany(NotaSped::class, 'dest_participante_id');
-    }
-
-    /**
-     * XMLs processados onde o participante é o emitente.
-     */
-    public function xmlsComoEmitente(): HasMany
-    {
-        return $this->hasMany(XmlChaveProcessada::class, 'emit_participante_id');
-    }
-
-    /**
-     * XMLs processados onde o participante é o destinatário.
-     */
-    public function xmlsComoDestinatario(): HasMany
-    {
-        return $this->hasMany(XmlChaveProcessada::class, 'dest_participante_id');
+        return $this->hasMany(SpedNota::class, 'dest_participante_id');
     }
 
     /**

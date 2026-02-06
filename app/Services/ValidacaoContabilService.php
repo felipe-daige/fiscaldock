@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\NotaFiscal;
+use App\Models\XmlNota;
 use App\Models\Participante;
 use App\Models\ParticipanteScore;
 use Illuminate\Support\Facades\DB;
@@ -41,7 +41,7 @@ class ValidacaoContabilService
     /**
      * Valida uma nota fiscal individual.
      */
-    public function validarNota(NotaFiscal $nota, bool $incluirOperacoes = true): array
+    public function validarNota(XmlNota $nota, bool $incluirOperacoes = true): array
     {
         $alertas = [];
         $scores = [];
@@ -84,7 +84,7 @@ class ValidacaoContabilService
      */
     public function validarImportacao(int $importacaoId, int $userId): array
     {
-        $notas = NotaFiscal::where('importacao_xml_id', $importacaoId)
+        $notas = XmlNota::where('importacao_xml_id', $importacaoId)
             ->where('user_id', $userId)
             ->get();
 
@@ -154,7 +154,7 @@ class ValidacaoContabilService
      */
     public function validarNotas(array $notaIds, int $userId): array
     {
-        $notas = NotaFiscal::whereIn('id', $notaIds)
+        $notas = XmlNota::whereIn('id', $notaIds)
             ->where('user_id', $userId)
             ->get();
 
@@ -214,7 +214,7 @@ class ValidacaoContabilService
      */
     public function calcularCusto(array $notaIds, int $userId, string $tipo = 'completa'): array
     {
-        $notas = NotaFiscal::whereIn('id', $notaIds)
+        $notas = XmlNota::whereIn('id', $notaIds)
             ->where('user_id', $userId)
             ->get();
 
@@ -251,7 +251,7 @@ class ValidacaoContabilService
      */
     public function getEstatisticas(int $userId): array
     {
-        $totais = NotaFiscal::where('user_id', $userId)
+        $totais = XmlNota::where('user_id', $userId)
             ->select(
                 DB::raw('COUNT(*) as total'),
                 DB::raw("COUNT(CASE WHEN validacao IS NOT NULL THEN 1 END) as validadas"),
@@ -326,7 +326,7 @@ class ValidacaoContabilService
 
     // ============ Metodos de validacao individual ============
 
-    private function validarCadastral(NotaFiscal $nota, array &$alertas): int
+    private function validarCadastral(XmlNota $nota, array &$alertas): int
     {
         $score = 0;
         $payload = $nota->payload ?? [];
@@ -401,7 +401,7 @@ class ValidacaoContabilService
         return min(100, $score);
     }
 
-    private function validarTributacao(NotaFiscal $nota, array &$alertas): int
+    private function validarTributacao(XmlNota $nota, array &$alertas): int
     {
         $score = 0;
         $payload = $nota->payload ?? [];
@@ -483,7 +483,7 @@ class ValidacaoContabilService
         return min(100, $score);
     }
 
-    private function validarCfopCst(NotaFiscal $nota, array &$alertas): int
+    private function validarCfopCst(XmlNota $nota, array &$alertas): int
     {
         $score = 0;
         $payload = $nota->payload ?? [];
@@ -600,7 +600,7 @@ class ValidacaoContabilService
         return min(100, $score);
     }
 
-    private function validarIntegridade(NotaFiscal $nota, array &$alertas): int
+    private function validarIntegridade(XmlNota $nota, array &$alertas): int
     {
         $score = 0;
         $payload = $nota->payload ?? [];
@@ -682,7 +682,7 @@ class ValidacaoContabilService
         return min(100, $score);
     }
 
-    private function validarNcm(NotaFiscal $nota, array &$alertas): int
+    private function validarNcm(XmlNota $nota, array &$alertas): int
     {
         $score = 0;
         $payload = $nota->payload ?? [];
@@ -759,7 +759,7 @@ class ValidacaoContabilService
         return min(100, $score);
     }
 
-    private function validarOperacoes(NotaFiscal $nota, array &$alertas): int
+    private function validarOperacoes(XmlNota $nota, array &$alertas): int
     {
         $score = 0;
 

@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\NotaFiscal;
+use App\Models\XmlNota;
 use Illuminate\Support\Facades\DB;
 
 class AnalyticsService
@@ -12,9 +12,9 @@ class AnalyticsService
      */
     public function getFaturamentoPorPeriodo(int $userId, ?string $dataInicio = null, ?string $dataFim = null, ?int $clienteId = null): array
     {
-        $query = NotaFiscal::where('user_id', $userId)
-            ->where('tipo_nota', NotaFiscal::TIPO_SAIDA)
-            ->where('finalidade', '!=', NotaFiscal::FINALIDADE_DEVOLUCAO);
+        $query = XmlNota::where('user_id', $userId)
+            ->where('tipo_nota', XmlNota::TIPO_SAIDA)
+            ->where('finalidade', '!=', XmlNota::FINALIDADE_DEVOLUCAO);
 
         if ($dataInicio) {
             $query->where('data_emissao', '>=', $dataInicio);
@@ -52,9 +52,9 @@ class AnalyticsService
      */
     public function getTopClientes(int $userId, int $limit = 10, ?string $dataInicio = null, ?string $dataFim = null, ?int $clienteId = null): array
     {
-        $query = NotaFiscal::where('user_id', $userId)
-            ->where('tipo_nota', NotaFiscal::TIPO_SAIDA)
-            ->where('finalidade', '!=', NotaFiscal::FINALIDADE_DEVOLUCAO);
+        $query = XmlNota::where('user_id', $userId)
+            ->where('tipo_nota', XmlNota::TIPO_SAIDA)
+            ->where('finalidade', '!=', XmlNota::FINALIDADE_DEVOLUCAO);
 
         if ($dataInicio) {
             $query->where('data_emissao', '>=', $dataInicio);
@@ -94,9 +94,9 @@ class AnalyticsService
      */
     public function getTopFornecedores(int $userId, int $limit = 10, ?string $dataInicio = null, ?string $dataFim = null, ?int $clienteId = null): array
     {
-        $query = NotaFiscal::where('user_id', $userId)
-            ->where('tipo_nota', NotaFiscal::TIPO_ENTRADA)
-            ->where('finalidade', '!=', NotaFiscal::FINALIDADE_DEVOLUCAO);
+        $query = XmlNota::where('user_id', $userId)
+            ->where('tipo_nota', XmlNota::TIPO_ENTRADA)
+            ->where('finalidade', '!=', XmlNota::FINALIDADE_DEVOLUCAO);
 
         if ($dataInicio) {
             $query->where('data_emissao', '>=', $dataInicio);
@@ -136,7 +136,7 @@ class AnalyticsService
      */
     public function getCargaTributaria(int $userId, ?string $dataInicio = null, ?string $dataFim = null, ?int $clienteId = null): array
     {
-        $query = NotaFiscal::where('user_id', $userId);
+        $query = XmlNota::where('user_id', $userId);
 
         if ($dataInicio) {
             $query->where('data_emissao', '>=', $dataInicio);
@@ -189,8 +189,8 @@ class AnalyticsService
      */
     public function getEntradasVsSaidas(int $userId, ?string $dataInicio = null, ?string $dataFim = null, ?int $clienteId = null): array
     {
-        $query = NotaFiscal::where('user_id', $userId)
-            ->where('finalidade', '!=', NotaFiscal::FINALIDADE_DEVOLUCAO);
+        $query = XmlNota::where('user_id', $userId)
+            ->where('finalidade', '!=', XmlNota::FINALIDADE_DEVOLUCAO);
 
         if ($dataInicio) {
             $query->where('data_emissao', '>=', $dataInicio);
@@ -233,8 +233,8 @@ class AnalyticsService
      */
     public function getDevolucoes(int $userId, ?string $dataInicio = null, ?string $dataFim = null, ?int $clienteId = null): array
     {
-        $query = NotaFiscal::where('user_id', $userId)
-            ->where('finalidade', NotaFiscal::FINALIDADE_DEVOLUCAO);
+        $query = XmlNota::where('user_id', $userId)
+            ->where('finalidade', XmlNota::FINALIDADE_DEVOLUCAO);
 
         if ($dataInicio) {
             $query->where('data_emissao', '>=', $dataInicio);
@@ -272,7 +272,7 @@ class AnalyticsService
      */
     public function getResumoGeral(int $userId, ?int $clienteId = null): array
     {
-        $query = NotaFiscal::where('user_id', $userId);
+        $query = XmlNota::where('user_id', $userId);
 
         if ($clienteId) {
             $query->where('cliente_id', $clienteId);
@@ -308,9 +308,9 @@ class AnalyticsService
      */
     public function getFaturamentoPorUf(int $userId, ?string $dataInicio = null, ?string $dataFim = null, ?int $clienteId = null): array
     {
-        $query = NotaFiscal::where('user_id', $userId)
-            ->where('tipo_nota', NotaFiscal::TIPO_SAIDA)
-            ->where('finalidade', '!=', NotaFiscal::FINALIDADE_DEVOLUCAO)
+        $query = XmlNota::where('user_id', $userId)
+            ->where('tipo_nota', XmlNota::TIPO_SAIDA)
+            ->where('finalidade', '!=', XmlNota::FINALIDADE_DEVOLUCAO)
             ->whereNotNull('dest_uf');
 
         if ($dataInicio) {
@@ -348,7 +348,7 @@ class AnalyticsService
      */
     public function getTributosPorTipo(int $userId, ?string $dataInicio = null, ?string $dataFim = null, ?int $clienteId = null): array
     {
-        $query = NotaFiscal::where('user_id', $userId);
+        $query = XmlNota::where('user_id', $userId);
 
         if ($dataInicio) {
             $query->where('data_emissao', '>=', $dataInicio);

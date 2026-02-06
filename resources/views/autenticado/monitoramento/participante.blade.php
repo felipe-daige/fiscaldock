@@ -877,96 +877,6 @@
                     @endif
                 </div>
                 @endif
-
-                {{-- XMLs Processados --}}
-                @if(($totalXmlsProcessados ?? 0) > 0)
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <h2 class="text-lg font-semibold text-gray-900">XMLs Processados</h2>
-                            <span class="text-sm text-gray-500">{{ $totalXmlsProcessados }} XML(s)</span>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Data Processamento</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Chave Acesso</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Papel</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Data Importacao</th>
-                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Acoes</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                @foreach($xmlsProcessados as $xml)
-                                    <tr class="hover:bg-gray-50 transition-colors">
-                                        <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                                            {{ $xml->processado_em?->format('d/m/Y H:i') ?? '-' }}
-                                        </td>
-                                        <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
-                                            <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
-                                                {{ $xml->tipo_documento }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap font-mono">
-                                            <span class="truncate max-w-[180px] inline-block" title="{{ $xml->chave_acesso }}">
-                                                {{ Str::limit($xml->chave_acesso, 20, '...') }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            @if($xml->papel === 'emitente')
-                                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
-                                                    Emitente
-                                                </span>
-                                            @else
-                                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
-                                                    Destinatario
-                                                </span>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                                            {{ $xml->importacao?->created_at?->format('d/m/Y H:i') ?? '-' }}
-                                        </td>
-                                        <td class="px-6 py-4 text-right whitespace-nowrap">
-                                            <div class="flex items-center justify-end gap-1">
-                                                <button
-                                                    type="button"
-                                                    class="btn-copiar-chave inline-flex items-center p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                                                    data-chave="{{ $xml->chave_acesso }}"
-                                                    title="Copiar chave de acesso"
-                                                >
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
-                                                    </svg>
-                                                </button>
-                                                @if($xml->contraparte_participante_id)
-                                                    <a
-                                                        href="/app/monitoramento/participante/{{ $xml->contraparte_participante_id }}"
-                                                        class="inline-flex items-center p-2 rounded-lg text-gray-500 hover:text-green-600 hover:bg-green-50 transition-colors"
-                                                        data-link
-                                                        title="Ver contraparte"
-                                                    >
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                                        </svg>
-                                                    </a>
-                                                @endif
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    @if($xmlsProcessados->hasPages())
-                        <div class="px-6 py-4 border-t border-gray-200">
-                            {{ $xmlsProcessados->appends(request()->except('xmls_page'))->links() }}
-                        </div>
-                    @endif
-                </div>
-                @endif
             </div>
 
             {{-- Coluna Lateral --}}
@@ -1082,10 +992,6 @@
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Notas fiscais</span>
                             <span class="text-sm font-semibold text-gray-900">{{ $totalNotasFiscais ?? 0 }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">XMLs processados</span>
-                            <span class="text-sm font-semibold text-gray-900">{{ $totalXmlsProcessados ?? 0 }}</span>
                         </div>
                     </div>
                 </div>
@@ -1686,7 +1592,7 @@
             html += '<h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Dados do Documento</h4>';
             html += '<div class="bg-gray-50 rounded-lg p-3 mb-3">';
             html += '<p class="text-xs text-gray-500">Chave de Acesso</p>';
-            html += '<p class="text-sm font-mono text-gray-900 break-all">' + (data.chave_acesso || '-') + '</p>';
+            html += '<p class="text-sm font-mono text-gray-900 break-all">' + (data.nfe_id || '-') + '</p>';
             html += '</div>';
             html += '<div class="grid grid-cols-3 gap-4">';
             html += '<div><p class="text-xs text-gray-500">Tipo</p><p class="text-sm font-semibold text-gray-900">' + (data.tipo_documento || '-') + '</p></div>';

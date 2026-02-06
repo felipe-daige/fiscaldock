@@ -6,14 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\ConsultaLote;
 use App\Models\ConsultaResultado;
-use App\Models\ImportacaoSped;
 use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoConsulta;
 use App\Models\MonitoramentoPlano;
-use App\Models\NotaFiscal;
 use App\Models\Participante;
 use App\Models\ParticipanteGrupo;
-use App\Models\XmlChaveProcessada;
+use App\Models\SpedImportacao;
+use App\Models\XmlNota;
 use App\Services\CreditService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -214,7 +213,7 @@ class MonitoramentoController extends Controller
             ->get();
 
         // Buscar últimas importações SPED do usuário
-        $importacoes = ImportacaoSped::where('user_id', $userId)
+        $importacoes = SpedImportacao::where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
@@ -363,7 +362,7 @@ class MonitoramentoController extends Controller
         $participantes = $participantesQuery->paginate(20)->withQueryString();
 
         // Buscar importações SPED para o filtro
-        $importacoes = ImportacaoSped::where('user_id', $userId)
+        $importacoes = SpedImportacao::where('user_id', $userId)
             ->where('status', 'concluido')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -465,13 +464,13 @@ class MonitoramentoController extends Controller
             ->first();
 
         // Notas fiscais onde participante é emitente OU destinatário
-        $notasFiscais = NotaFiscal::where('user_id', $userId)
+        $notasFiscais = XmlNota::where('user_id', $userId)
             ->where(function ($query) use ($participante) {
                 $query->where('emit_participante_id', $participante->id)
                       ->orWhere('dest_participante_id', $participante->id);
             })
             ->select([
-                'id', 'chave_acesso', 'tipo_documento', 'numero_nota', 'serie',
+                'id', 'nfe_id', 'tipo_documento', 'numero_nota', 'serie',
                 'data_emissao', 'valor_total', 'natureza_operacao', 'tipo_nota', 'finalidade',
                 'emit_participante_id', 'dest_participante_id',
                 'emit_cnpj', 'emit_razao_social', 'dest_cnpj', 'dest_razao_social',
@@ -488,33 +487,8 @@ class MonitoramentoController extends Controller
             return $nota;
         });
 
-        // XMLs processados
-        $xmlsProcessados = XmlChaveProcessada::where('user_id', $userId)
-            ->where(function ($query) use ($participante) {
-                $query->where('emit_participante_id', $participante->id)
-                      ->orWhere('dest_participante_id', $participante->id);
-            })
-            ->with('importacao:id,created_at')
-            ->select([
-                'id', 'chave_acesso', 'tipo_documento', 'importacao_xml_id',
-                'emit_participante_id', 'dest_participante_id', 'processado_em',
-            ])
-            ->orderBy('processado_em', 'desc')
-            ->paginate(10, ['*'], 'xmls_page');
-
-        $xmlsProcessados->getCollection()->transform(function ($xml) use ($participante) {
-            $xml->papel = $xml->emit_participante_id === $participante->id ? 'emitente' : 'destinatario';
-            $xml->contraparte_participante_id = $xml->papel === 'emitente' ? $xml->dest_participante_id : $xml->emit_participante_id;
-            return $xml;
-        });
-
-        // Contadores
-        $totalNotasFiscais = NotaFiscal::where('user_id', $userId)
-            ->where(fn($q) => $q->where('emit_participante_id', $participante->id)
-                                ->orWhere('dest_participante_id', $participante->id))
-            ->count();
-
-        $totalXmlsProcessados = XmlChaveProcessada::where('user_id', $userId)
+        // Contador de notas fiscais (usado como totalXmlsProcessados também, já que são equivalentes)
+        $totalNotasFiscais = XmlNota::where('user_id', $userId)
             ->where(fn($q) => $q->where('emit_participante_id', $participante->id)
                                 ->orWhere('dest_participante_id', $participante->id))
             ->count();
@@ -577,9 +551,7 @@ class MonitoramentoController extends Controller
             'estatisticas' => $estatisticas,
             'credits' => $credits,
             'notasFiscais' => $notasFiscais,
-            'xmlsProcessados' => $xmlsProcessados,
             'totalNotasFiscais' => $totalNotasFiscais,
-            'totalXmlsProcessados' => $totalXmlsProcessados,
             'ultimaConsulta' => $ultimaConsulta,
             'lotesDoParticipante' => $lotesDoParticipante,
         ];
@@ -657,7 +629,7 @@ class MonitoramentoController extends Controller
 
         $userId = (int) Auth::id();
 
-        $nota = NotaFiscal::where('id', $id)
+        $nota = XmlNota::where('id', $id)
             ->where('user_id', $userId)
             ->first();
 
@@ -671,7 +643,7 @@ class MonitoramentoController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'chave_acesso' => $nota->chave_acesso,
+                'nfe_id' => $nota->nfe_id,
                 'tipo_documento' => $nota->tipo_documento,
                 'numero_nota' => $nota->numero_nota,
                 'serie' => $nota->serie,
@@ -2114,7 +2086,7 @@ class MonitoramentoController extends Controller
         $user = Auth::user();
 
         // Verificar se a importação pertence ao usuário
-        $importacao = ImportacaoSped::where('id', $importacaoId)
+        $importacao = SpedImportacao::where('id', $importacaoId)
             ->where('user_id', $user->id)
             ->first();
 
