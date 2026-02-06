@@ -17,7 +17,7 @@ class PrivCpfOperacao extends Model
         'cpf_id',
         'cnpj_empresa',
         'tipo_participacao',
-        'chave_acesso',
+        'nfe_id',
         'modelo',
         'serie',
         'numero_doc',

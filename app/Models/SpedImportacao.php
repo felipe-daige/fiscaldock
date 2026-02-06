@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class ImportacaoSped extends Model
+class SpedImportacao extends Model
 {
-    protected $table = 'importacoes_sped';
+    protected $table = 'sped_importacoes';
 
     protected $fillable = [
         'user_id',
@@ -60,9 +60,9 @@ class ImportacaoSped extends Model
         return $this->hasMany(Participante::class, 'importacao_sped_id');
     }
 
-    public function notasSped(): HasMany
+    public function notas(): HasMany
     {
-        return $this->hasMany(NotaSped::class, 'importacao_sped_id');
+        return $this->hasMany(SpedNota::class, 'importacao_sped_id');
     }
 
     // Acessores

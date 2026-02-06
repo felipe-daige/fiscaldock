@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class ImportacaoXml extends Model
+class XmlImportacao extends Model
 {
-    protected $table = 'importacoes_xml';
+    protected $table = 'xml_importacoes';
 
     protected $fillable = [
         'user_id',
@@ -67,14 +67,18 @@ class ImportacaoXml extends Model
         return $this->belongsTo(Cliente::class);
     }
 
-    public function chavesProcessadas(): HasMany
+    public function notas(): HasMany
     {
-        return $this->hasMany(XmlChaveProcessada::class, 'importacao_xml_id');
+        return $this->hasMany(XmlNota::class, 'importacao_xml_id');
     }
 
+    /**
+     * Alias para notas() - mantido para compatibilidade.
+     * @deprecated Use notas() instead
+     */
     public function notasFiscais(): HasMany
     {
-        return $this->hasMany(NotaFiscal::class, 'importacao_xml_id');
+        return $this->notas();
     }
 
     // Acessores

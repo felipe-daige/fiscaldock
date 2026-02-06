@@ -170,7 +170,7 @@
                     </div>
                     <div class="flex justify-between">
                         <dt class="text-gray-500">Chave de Acesso</dt>
-                        <dd class="font-mono text-xs text-gray-900 break-all">{{ $nota->chave_acesso }}</dd>
+                        <dd class="font-mono text-xs text-gray-900 break-all">{{ $nota->nfe_id }}</dd>
                     </div>
                 </dl>
             </div>

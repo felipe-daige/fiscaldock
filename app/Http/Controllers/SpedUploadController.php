@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ImportacaoSped;
+use App\Models\SpedImportacao;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -58,7 +58,7 @@ class SpedUploadController extends Controller
         }
 
         // Criar registro ANTES de enviar para n8n
-        $importacao = ImportacaoSped::create([
+        $importacao = SpedImportacao::create([
             'user_id' => $user->id,
             'tipo_efd' => $tipoEfdNormalizado,
             'filename' => $file->getClientOriginalName(),
@@ -67,7 +67,7 @@ class SpedUploadController extends Controller
             'iniciado_em' => now(),
         ]);
 
-        Log::info('SpedUpload: registro ImportacaoSped criado', [
+        Log::info('SpedUpload: registro SpedImportacao criado', [
             'importacao_id' => $importacao->id,
             'user_id' => $user->id,
         ]);

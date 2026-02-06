@@ -2,7 +2,7 @@
 
 namespace App\Services\Dashboard;
 
-use App\Models\NotaFiscal;
+use App\Models\XmlNota;
 use App\Models\Participante;
 use App\Models\User;
 use App\Services\CreditService;
@@ -52,9 +52,9 @@ class DashboardDataService
      */
     public function getImpostosRecuperaveis(int $userId): float
     {
-        $total = NotaFiscal::where('user_id', $userId)
-            ->where('tipo_nota', NotaFiscal::TIPO_ENTRADA)
-            ->where('finalidade', '!=', NotaFiscal::FINALIDADE_DEVOLUCAO)
+        $total = XmlNota::where('user_id', $userId)
+            ->where('tipo_nota', XmlNota::TIPO_ENTRADA)
+            ->where('finalidade', '!=', XmlNota::FINALIDADE_DEVOLUCAO)
             ->select(DB::raw('SUM(COALESCE(pis_valor, 0) + COALESCE(cofins_valor, 0)) as total'))
             ->value('total');
 
@@ -76,7 +76,7 @@ class DashboardDataService
             ->count();
 
         // Notas com alertas bloqueantes
-        $notasBloqueantes = NotaFiscal::where('user_id', $userId)
+        $notasBloqueantes = XmlNota::where('user_id', $userId)
             ->whereNotNull('validacao')
             ->whereRaw("EXISTS (SELECT 1 FROM jsonb_array_elements(validacao->'alertas') AS a WHERE a->>'nivel' = 'bloqueante')")
             ->count();

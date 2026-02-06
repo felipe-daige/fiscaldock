@@ -5,15 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class NotaFiscal extends Model
+class XmlNota extends Model
 {
-    protected $table = 'notas_fiscais';
+    protected $table = 'xml_notas';
 
     protected $fillable = [
         'user_id',
         'importacao_xml_id',
         'cliente_id',
-        'chave_acesso',
+        'nfe_id',
         'tipo_documento',
         'numero_nota',
         'serie',
@@ -27,10 +27,12 @@ class NotaFiscal extends Model
         'emit_razao_social',
         'emit_uf',
         'emit_participante_id',
+        'emit_cliente_id',
         'dest_cnpj',
         'dest_razao_social',
         'dest_uf',
         'dest_participante_id',
+        'dest_cliente_id',
         'icms_valor',
         'icms_st_valor',
         'pis_valor',
@@ -63,12 +65,16 @@ class NotaFiscal extends Model
 
     // Constantes para tipo_nota
     public const TIPO_ENTRADA = 0;
+
     public const TIPO_SAIDA = 1;
 
     // Constantes para finalidade
     public const FINALIDADE_NORMAL = 1;
+
     public const FINALIDADE_COMPLEMENTAR = 2;
+
     public const FINALIDADE_AJUSTE = 3;
+
     public const FINALIDADE_DEVOLUCAO = 4;
 
     // Relacionamentos
@@ -78,9 +84,17 @@ class NotaFiscal extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function importacao(): BelongsTo
+    {
+        return $this->belongsTo(XmlImportacao::class, 'importacao_xml_id');
+    }
+
+    /**
+     * Alias for importacao() - kept for compatibility.
+     */
     public function importacaoXml(): BelongsTo
     {
-        return $this->belongsTo(ImportacaoXml::class, 'importacao_xml_id');
+        return $this->importacao();
     }
 
     public function emitente(): BelongsTo
@@ -98,17 +112,27 @@ class NotaFiscal extends Model
         return $this->belongsTo(Cliente::class);
     }
 
+    public function emitCliente(): BelongsTo
+    {
+        return $this->belongsTo(Cliente::class, 'emit_cliente_id');
+    }
+
+    public function destCliente(): BelongsTo
+    {
+        return $this->belongsTo(Cliente::class, 'dest_cliente_id');
+    }
+
     /**
-     * Nota fiscal referenciada (para devoluções).
+     * Nota XML referenciada (para devoluções).
      */
-    public function notaReferenciada(): ?NotaFiscal
+    public function notaReferenciada(): ?XmlNota
     {
         if (! $this->chave_referenciada) {
             return null;
         }
 
         return static::where('user_id', $this->user_id)
-            ->where('chave_acesso', $this->chave_referenciada)
+            ->where('nfe_id', $this->chave_referenciada)
             ->first();
     }
 
@@ -170,6 +194,38 @@ class NotaFiscal extends Model
     public function isSaida(): bool
     {
         return $this->tipo_nota === self::TIPO_SAIDA;
+    }
+
+    /**
+     * Verifica se o emitente é empresa própria.
+     */
+    public function isEmitenteProprio(): bool
+    {
+        return $this->emitCliente?->is_empresa_propria === true;
+    }
+
+    /**
+     * Verifica se o destinatário é empresa própria.
+     */
+    public function isDestinatarioProprio(): bool
+    {
+        return $this->destCliente?->is_empresa_propria === true;
+    }
+
+    /**
+     * Verifica se é uma venda própria (empresa própria como emitente).
+     */
+    public function isVendaPropria(): bool
+    {
+        return $this->isEmitenteProprio();
+    }
+
+    /**
+     * Verifica se é uma compra própria (empresa própria como destinatário).
+     */
+    public function isCompraPropria(): bool
+    {
+        return $this->isDestinatarioProprio();
     }
 
     /**
@@ -350,5 +406,48 @@ class NotaFiscal extends Model
         return $query->whereNotNull('validacao')
             ->whereRaw("jsonb_array_length(validacao->'alertas') > 0")
             ->whereRaw("EXISTS (SELECT 1 FROM jsonb_array_elements(validacao->'alertas') AS a WHERE a->>'nivel' = 'bloqueante')");
+    }
+
+    /**
+     * Notas onde a empresa própria é o emitente (vendas próprias).
+     */
+    public function scopeVendasProprias($query)
+    {
+        return $query->whereHas('emitCliente', fn ($q) => $q->where('is_empresa_propria', true));
+    }
+
+    /**
+     * Notas onde a empresa própria é o destinatário (compras próprias).
+     */
+    public function scopeComprasProprias($query)
+    {
+        return $query->whereHas('destCliente', fn ($q) => $q->where('is_empresa_propria', true));
+    }
+
+    /**
+     * Notas de um cliente específico (como emitente ou destinatário).
+     */
+    public function scopeNotasDeCliente($query, int $clienteId)
+    {
+        return $query->where(function ($q) use ($clienteId) {
+            $q->where('emit_cliente_id', $clienteId)
+                ->orWhere('dest_cliente_id', $clienteId);
+        });
+    }
+
+    /**
+     * Notas entre empresa própria e clientes (operações internas).
+     */
+    public function scopeOperacoesInternas($query)
+    {
+        return $query->where(function ($q) {
+            $q->where(function ($sub) {
+                $sub->whereHas('emitCliente', fn ($q2) => $q2->where('is_empresa_propria', true))
+                    ->whereHas('destCliente', fn ($q2) => $q2->where('is_empresa_propria', false));
+            })->orWhere(function ($sub) {
+                $sub->whereHas('emitCliente', fn ($q2) => $q2->where('is_empresa_propria', false))
+                    ->whereHas('destCliente', fn ($q2) => $q2->where('is_empresa_propria', true));
+            });
+        });
     }
 }

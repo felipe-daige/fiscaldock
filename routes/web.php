@@ -4,12 +4,12 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CreditController;
 use App\Http\Controllers\Landing\LandingPageController;
 use App\Http\Controllers\Dashboard\DashboardController;
-use App\Http\Controllers\Dashboard\RafController;
 use App\Http\Controllers\Dashboard\RafConsultaController;
 use App\Http\Controllers\Dashboard\ClienteController;
 use App\Http\Controllers\Dashboard\AnalyticsController;
 use App\Http\Controllers\Dashboard\RiskScoreController;
 use App\Http\Controllers\Dashboard\ValidacaoController;
+use App\Http\Controllers\Dashboard\MinhaEmpresaController;
 use App\Http\Controllers\SpedUploadController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,9 +29,6 @@ Route::get('/solucoes/importacao-xml', [LandingPageController::class, 'importaca
 Route::get('/solucoes/conciliacao-bancaria', [LandingPageController::class, 'conciliacaoBancaria'])->name('solucoes.conciliacao-bancaria');
 Route::get('/solucoes/gestao-cnds', [LandingPageController::class, 'gestaoCnds'])->name('solucoes.gestao-cnds');
 Route::get('/solucoes/inteligencia-tributaria', [LandingPageController::class, 'inteligenciaTributaria'])->name('solucoes.inteligencia-tributaria');
-Route::get('/solucoes/raf', [LandingPageController::class, 'raf'])->name('solucoes.raf');
-Route::post('/raf/upload-public', [LandingPageController::class, 'uploadSpedPublic'])->name('raf.upload.public');
-Route::post('/raf/cancel-public', [LandingPageController::class, 'cancelSpedPublic'])->name('raf.cancel.public');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -75,8 +72,6 @@ Route::middleware('auth')->group(function () {
     // Rotas de créditos
     Route::prefix('app/credits')->name('app.credits.')->group(function () {
         Route::get('/balance', [CreditController::class, 'balance'])->name('balance');
-        Route::post('/confirm', [CreditController::class, 'confirm'])->name('confirm');
-        Route::post('/cancel', [CreditController::class, 'cancel'])->name('cancel');
     });
 
     Route::prefix('app/solucoes')->name('app.solucoes.')->group(function () {
@@ -98,15 +93,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/consulta/progresso/stream', [RafConsultaController::class, 'streamProgresso'])->name('consulta.progresso.stream');
         Route::get('/lote/{id}/baixar', [RafConsultaController::class, 'baixarLote'])->name('lote.baixar');
 
-        // Histórico unificado (novos lotes + legados)
+        // Histórico unificado
         Route::get('/historico', [RafConsultaController::class, 'historico'])->name('historico');
-
-        // Rotas legadas (compatibilidade com sistema antigo)
-        Route::get('/detalhes/{id}', [RafController::class, 'detalhes'])->name('detalhes');
-        Route::post('/confirmar/{id}', [RafController::class, 'confirmar'])->name('confirmar');
-        Route::post('/cancelar/{id}', [RafController::class, 'cancelar'])->name('cancelar');
-        Route::get('/baixar/{id}', [RafController::class, 'baixar'])->name('baixar');
-        Route::post('/excluir/{id}', [RafController::class, 'excluir'])->name('excluir');
     });
 
     // Redirect da rota antiga /app/raf para a nova
@@ -201,6 +189,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/xml/importar', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'importar'])->name('xml.importar');
         Route::get('/xml/progresso/stream', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'streamProgresso'])->name('xml.progresso.stream');
         Route::get('/xml/importacao/{id}/participantes', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'getParticipantes'])->name('xml.importacao.participantes');
+        Route::post('/xml/importacao/{id}/salvar-cnpjs', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'salvarCnpjsNovos'])->name('xml.importacao.salvar-cnpjs');
     });
 
     // BI Analytics
@@ -230,6 +219,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/calcular-custo', [ValidacaoController::class, 'calcularCusto'])->name('calcular-custo');
         Route::post('/validar-notas', [ValidacaoController::class, 'validarNotas'])->name('validar-notas');
         Route::post('/validar-importacao/{id}', [ValidacaoController::class, 'validarImportacao'])->name('validar-importacao');
+    });
+
+    // Minha Empresa
+    Route::prefix('app/minha-empresa')->name('app.minha-empresa.')->group(function () {
+        Route::get('/', [MinhaEmpresaController::class, 'index'])->name('index');
+        Route::get('/configurar', [MinhaEmpresaController::class, 'configurar'])->name('configurar');
+        Route::post('/definir-principal', [MinhaEmpresaController::class, 'definirPrincipal'])->name('definir-principal');
+        Route::get('/historico', [MinhaEmpresaController::class, 'historico'])->name('historico');
     });
 
     // CONSULTAS (nova estrutura unificada - aliases para RAF)

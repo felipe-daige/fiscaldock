@@ -365,22 +365,36 @@
                 </div>
 
                 {{-- Stats em tempo real --}}
-                <div id="progresso-stats" class="grid grid-cols-4 gap-3 mb-4 hidden">
+                <div id="progresso-stats" class="grid grid-cols-5 gap-2 mb-4 hidden">
                     <div class="text-center p-2 bg-gray-50 rounded-lg">
                         <p class="text-lg font-bold text-gray-900" id="stat-xmls-processados">0</p>
                         <p class="text-xs text-gray-500">Processados</p>
                     </div>
                     <div class="text-center p-2 bg-green-50 rounded-lg">
-                        <p class="text-lg font-bold text-green-600" id="stat-participantes-novos">0</p>
-                        <p class="text-xs text-gray-500">Novos</p>
+                        <p class="text-lg font-bold text-green-600" id="stat-notas-novas">0</p>
+                        <p class="text-xs text-gray-500">Novas</p>
+                    </div>
+                    <div class="text-center p-2 bg-amber-50 rounded-lg">
+                        <p class="text-lg font-bold text-amber-600" id="stat-notas-duplicadas">0</p>
+                        <p class="text-xs text-gray-500">Duplicadas</p>
                     </div>
                     <div class="text-center p-2 bg-blue-50 rounded-lg">
-                        <p class="text-lg font-bold text-blue-600" id="stat-participantes-atualizados">0</p>
-                        <p class="text-xs text-gray-500">Atualizados</p>
+                        <p class="text-lg font-bold text-blue-600" id="stat-participantes-novos">0</p>
+                        <p class="text-xs text-gray-500">Part. Novos</p>
                     </div>
                     <div class="text-center p-2 bg-red-50 rounded-lg">
                         <p class="text-lg font-bold text-red-600" id="stat-erros">0</p>
                         <p class="text-xs text-gray-500">Erros</p>
+                    </div>
+                </div>
+
+                {{-- Nota atual sendo processada --}}
+                <div id="progresso-nota-atual" class="hidden mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                    <div class="flex items-center gap-2 text-sm">
+                        <svg class="w-4 h-4 text-blue-500 animate-pulse flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <span class="text-blue-700 font-medium" id="nota-atual-info">-</span>
                     </div>
                 </div>
 
@@ -430,23 +444,174 @@
 
                     {{-- Metricas Principais - Cards Uniformes --}}
                     <div class="px-6 py-5 border-b border-gray-100">
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
                             <div class="bg-gray-50 rounded-lg px-4 py-3 text-center">
                                 <span class="text-2xl font-semibold text-gray-900" id="resultado-xmls">0</span>
                                 <p class="text-xs text-gray-500 mt-0.5">XMLs processados</p>
                             </div>
-                            <div class="bg-gray-50 rounded-lg px-4 py-3 text-center">
-                                <span class="text-2xl font-semibold text-gray-900" id="resultado-total-participantes">0</span>
-                                <p class="text-xs text-gray-500 mt-0.5">participantes</p>
-                            </div>
                             <div class="bg-green-50 rounded-lg px-4 py-3 text-center">
-                                <span class="text-2xl font-semibold text-green-600" id="resultado-novos">0</span>
-                                <p class="text-xs text-gray-500 mt-0.5">novos</p>
+                                <span class="text-2xl font-semibold text-green-600" id="resultado-notas-novas">0</span>
+                                <p class="text-xs text-gray-500 mt-0.5">notas novas</p>
+                            </div>
+                            <div class="bg-amber-50 rounded-lg px-4 py-3 text-center">
+                                <span class="text-2xl font-semibold text-amber-600" id="resultado-notas-duplicadas">0</span>
+                                <p class="text-xs text-gray-500 mt-0.5">duplicadas</p>
                             </div>
                             <div class="bg-blue-50 rounded-lg px-4 py-3 text-center">
-                                <span class="text-2xl font-semibold text-blue-600" id="resultado-atualizados">0</span>
-                                <p class="text-xs text-gray-500 mt-0.5">atualizados</p>
+                                <span class="text-2xl font-semibold text-blue-600" id="resultado-total-participantes">0</span>
+                                <p class="text-xs text-gray-500 mt-0.5">participantes</p>
                             </div>
+                            <div class="bg-red-50 rounded-lg px-4 py-3 text-center">
+                                <span class="text-2xl font-semibold text-red-600" id="resultado-xmls-erro">0</span>
+                                <p class="text-xs text-gray-500 mt-0.5">com erro</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Resumo de Titularidade (identificacao de CNPJs) --}}
+                    <div id="resultado-titularidade" class="hidden px-6 py-4 border-b border-gray-100">
+                        <div class="flex items-center gap-2 mb-3">
+                            <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </svg>
+                            <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Identificacao de CNPJs</h4>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            <div class="bg-indigo-50 rounded-lg px-4 py-3">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                                    <span class="text-xs font-medium text-indigo-700">Sua Empresa</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Emitente:</span>
+                                    <span class="font-semibold text-indigo-700" id="tit-propria-emit">0</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Destinatario:</span>
+                                    <span class="font-semibold text-indigo-700" id="tit-propria-dest">0</span>
+                                </div>
+                            </div>
+                            <div class="bg-emerald-50 rounded-lg px-4 py-3">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                    <span class="text-xs font-medium text-emerald-700">Clientes Cadastrados</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Emitente:</span>
+                                    <span class="font-semibold text-emerald-700" id="tit-cliente-emit">0</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Destinatario:</span>
+                                    <span class="font-semibold text-emerald-700" id="tit-cliente-dest">0</span>
+                                </div>
+                            </div>
+                            <div class="bg-gray-100 rounded-lg px-4 py-3">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+                                    <span class="text-xs font-medium text-gray-600">Terceiros</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Emitente:</span>
+                                    <span class="font-semibold text-gray-700" id="tit-terceiro-emit">0</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Destinatario:</span>
+                                    <span class="font-semibold text-gray-700" id="tit-terceiro-dest">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- CNPJs Novos (preview para usuario decidir) --}}
+                    <div id="resultado-cnpjs-novos-container" class="hidden px-6 py-4 border-b border-gray-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                                </svg>
+                                <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide">CNPJs Novos Encontrados</h4>
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-orange-100 text-orange-700" id="cnpjs-novos-count-badge">0</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" id="btn-selecionar-todos-cnpjs" class="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                                    Selecionar todos
+                                </button>
+                                <button type="button" id="btn-salvar-cnpjs-selecionados"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-orange-600 text-white hover:bg-orange-700 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled>
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <span id="btn-salvar-cnpjs-text">Salvar Selecionados</span>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-3">
+                            Estes CNPJs nao existiam no sistema. Selecione quais deseja salvar como participante ou cliente.
+                        </p>
+                        <div id="cnpjs-novos-lista" class="overflow-x-auto max-h-[280px] overflow-y-auto border border-orange-100 rounded-lg">
+                            <table class="min-w-full text-xs">
+                                <thead class="sticky top-0 bg-orange-50">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left font-medium text-orange-700 w-8">
+                                            <input type="checkbox" id="cnpjs-novos-check-all" class="w-3.5 h-3.5 text-orange-600 rounded">
+                                        </th>
+                                        <th class="px-3 py-2 text-left font-medium text-orange-700">CNPJ</th>
+                                        <th class="px-3 py-2 text-left font-medium text-orange-700">Razao Social</th>
+                                        <th class="px-3 py-2 text-center font-medium text-orange-700">UF</th>
+                                        <th class="px-3 py-2 text-center font-medium text-orange-700">Polo</th>
+                                        <th class="px-3 py-2 text-center font-medium text-orange-700">Notas</th>
+                                        <th class="px-3 py-2 text-left font-medium text-orange-700">Salvar como</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cnpjs-novos-tabela-body" class="bg-white divide-y divide-orange-100">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="cnpjs-novos-truncated-msg" class="hidden mt-2 text-xs text-orange-600">
+                            Exibindo 500 de <span id="cnpjs-novos-total-count">0</span> CNPJs novos.
+                        </div>
+                        <div id="cnpjs-novos-salvos-msg" class="hidden mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <div class="flex items-center gap-2 text-sm text-green-700">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span id="cnpjs-novos-salvos-text">CNPJs salvos com sucesso!</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Duplicadas Detectadas --}}
+                    <div id="resultado-duplicadas-container" class="hidden px-6 py-4 border-b border-gray-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                                <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Notas Duplicadas Ignoradas</h4>
+                            </div>
+                            <button type="button" id="btn-toggle-duplicadas" class="text-xs text-amber-600 hover:text-amber-700 font-medium">
+                                Ver detalhes
+                            </button>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">
+                            <span id="duplicadas-count" class="font-semibold text-amber-600">0</span> notas ja existiam no sistema e foram ignoradas.
+                        </p>
+                        <div id="duplicadas-lista" class="hidden overflow-x-auto max-h-[180px] overflow-y-auto border border-amber-100 rounded-lg">
+                            <table class="min-w-full text-xs">
+                                <thead class="sticky top-0 bg-amber-50">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left font-medium text-amber-700">N/Serie</th>
+                                        <th class="px-3 py-2 text-left font-medium text-amber-700">Emitente</th>
+                                        <th class="px-3 py-2 text-left font-medium text-amber-700">Data</th>
+                                        <th class="px-3 py-2 text-right font-medium text-amber-700">Valor</th>
+                                        <th class="px-3 py-2 text-left font-medium text-amber-700">Importada em</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="duplicadas-tabela-body" class="bg-white divide-y divide-amber-100">
+                                    {{-- Duplicadas serao inseridas aqui via JS --}}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
@@ -692,6 +857,7 @@
         let currentImportacaoId = null;
         let dadosParticipantes = [];
         let dadosNotasFiscais = [];
+        let dadosCnpjsNovos = [];
         let salvarMovimentacoesAtivo = false;
 
         // Funcao para obter tipo de documento selecionado
@@ -1286,18 +1452,39 @@
             if (progressoPorcentagem) progressoPorcentagem.textContent = progresso + '%';
             if (progressoMensagem) progressoMensagem.textContent = mensagem;
 
-            // Stats
-            if (dados.total_xmls !== undefined) {
+            // Stats em tempo real durante processamento
+            if (dados.total_xmls !== undefined || dados.xml_atual !== undefined) {
                 if (progressoStats) progressoStats.classList.remove('hidden');
+
                 const statXmls = document.getElementById('stat-xmls-processados');
-                const statNovos = document.getElementById('stat-participantes-novos');
-                const statAtualizados = document.getElementById('stat-participantes-atualizados');
+                const statNotasNovas = document.getElementById('stat-notas-novas');
+                const statNotasDuplicadas = document.getElementById('stat-notas-duplicadas');
+                const statPartNovos = document.getElementById('stat-participantes-novos');
                 const statErros = document.getElementById('stat-erros');
 
-                if (statXmls) statXmls.textContent = dados.xmls_processados || 0;
-                if (statNovos) statNovos.textContent = dados.participantes_novos || 0;
-                if (statAtualizados) statAtualizados.textContent = dados.participantes_atualizados || 0;
-                if (statErros) statErros.textContent = (dados.erros && dados.erros.length) || 0;
+                // Contadores em tempo real (campos novos)
+                if (statXmls) statXmls.textContent = dados.xml_atual || dados.xmls_processados || 0;
+                if (statNotasNovas) statNotasNovas.textContent = dados.novas || dados.xmls_novos || 0;
+                if (statNotasDuplicadas) statNotasDuplicadas.textContent = dados.duplicadas || dados.xmls_duplicados || 0;
+                if (statPartNovos) statPartNovos.textContent = dados.participantes_novos || 0;
+                if (statErros) statErros.textContent = dados.erros || dados.xmls_com_erro || 0;
+            }
+
+            // Exibir nota atual sendo processada
+            const notaAtualContainer = document.getElementById('progresso-nota-atual');
+            const notaAtualInfo = document.getElementById('nota-atual-info');
+            if (dados.nota_atual && notaAtualContainer && notaAtualInfo) {
+                notaAtualContainer.classList.remove('hidden');
+                const nota = dados.nota_atual;
+                const cnpjFormatado = nota.emit_cnpj ?
+                    nota.emit_cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5') :
+                    '';
+                notaAtualInfo.textContent = 'NF ' + (nota.numero || '-') + ' - ' +
+                    (nota.emit_razao || 'Emitente') +
+                    (cnpjFormatado ? ' (' + cnpjFormatado + ')' : '') +
+                    (nota.valor ? ' - R$ ' + nota.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '');
+            } else if (notaAtualContainer && status === 'concluido') {
+                notaAtualContainer.classList.add('hidden');
             }
 
             atualizarIconeStatus(status);
@@ -1333,16 +1520,45 @@
             if (progressoErro) progressoErro.classList.add('hidden');
             if (resultadoContainer) resultadoContainer.classList.add('hidden');
 
-            // Resetar novas secoes
+            // Resetar stats em tempo real
+            const statXmls = document.getElementById('stat-xmls-processados');
+            const statNotasNovas = document.getElementById('stat-notas-novas');
+            const statNotasDuplicadas = document.getElementById('stat-notas-duplicadas');
+            const statPartNovos = document.getElementById('stat-participantes-novos');
+            const statErros = document.getElementById('stat-erros');
+            if (statXmls) statXmls.textContent = '0';
+            if (statNotasNovas) statNotasNovas.textContent = '0';
+            if (statNotasDuplicadas) statNotasDuplicadas.textContent = '0';
+            if (statPartNovos) statPartNovos.textContent = '0';
+            if (statErros) statErros.textContent = '0';
+
+            // Ocultar nota atual
+            const notaAtualContainer = document.getElementById('progresso-nota-atual');
+            if (notaAtualContainer) notaAtualContainer.classList.add('hidden');
+
+            // Resetar secoes de resultado
             const financeiroContainer = document.getElementById('resultado-financeiro');
             const notasContainer = document.getElementById('resultado-notas-container');
             const participantesContainer = document.getElementById('resultado-participantes-container');
             const errosContainer = document.getElementById('resultado-erros-container');
+            const titularidadeContainer = document.getElementById('resultado-titularidade');
+            const duplicadasContainer = document.getElementById('resultado-duplicadas-container');
+            const duplicadasLista = document.getElementById('duplicadas-lista');
 
             if (financeiroContainer) financeiroContainer.classList.add('hidden');
             if (notasContainer) notasContainer.classList.add('hidden');
             if (participantesContainer) participantesContainer.classList.add('hidden');
             if (errosContainer) errosContainer.classList.add('hidden');
+            if (titularidadeContainer) titularidadeContainer.classList.add('hidden');
+            if (duplicadasContainer) duplicadasContainer.classList.add('hidden');
+            if (duplicadasLista) duplicadasLista.classList.add('hidden');
+
+            // Resetar CNPJs novos
+            const cnpjsNovosContainer = document.getElementById('resultado-cnpjs-novos-container');
+            const cnpjsNovosSalvosMsg = document.getElementById('cnpjs-novos-salvos-msg');
+            if (cnpjsNovosContainer) cnpjsNovosContainer.classList.add('hidden');
+            if (cnpjsNovosSalvosMsg) cnpjsNovosSalvosMsg.classList.add('hidden');
+            dadosCnpjsNovos = [];
 
             // Limpar dados
             dadosParticipantes = [];
@@ -1360,37 +1576,117 @@
         function mostrarResultados(dados) {
             if (!resultadoContainer) return;
 
+            // Elementos principais
             const resumo = document.getElementById('resultado-resumo');
             const xmls = document.getElementById('resultado-xmls');
-            const novos = document.getElementById('resultado-novos');
-            const atualizados = document.getElementById('resultado-atualizados');
+            const notasNovas = document.getElementById('resultado-notas-novas');
+            const notasDuplicadas = document.getElementById('resultado-notas-duplicadas');
             const totalParticipantes = document.getElementById('resultado-total-participantes');
+            const xmlsErro = document.getElementById('resultado-xmls-erro');
             const errosContainer = document.getElementById('resultado-erros-container');
             const errosLista = document.getElementById('resultado-erros-lista');
 
+            // Extrair contadores do payload (novos campos)
             const xmlsCount = dados.xmls_processados || 0;
-            const novosCount = dados.participantes_novos || 0;
-            const atualizadosCount = dados.participantes_atualizados || 0;
-            const totalCount = novosCount + atualizadosCount;
+            const novasCount = dados.xmls_novos || 0;
+            const duplicadasCount = dados.xmls_duplicados || 0;
+            const errosCount = dados.xmls_com_erro || 0;
+            const partNovos = dados.participantes_novos || 0;
+            const partAtualizados = dados.participantes_atualizados || 0;
+            const totalPartCount = partNovos + partAtualizados;
 
             if (resumo) resumo.textContent = '';
             if (xmls) xmls.textContent = xmlsCount;
-            if (novos) novos.textContent = novosCount;
-            if (atualizados) atualizados.textContent = atualizadosCount;
-            if (totalParticipantes) totalParticipantes.textContent = totalCount;
+            if (notasNovas) notasNovas.textContent = novasCount;
+            if (notasDuplicadas) notasDuplicadas.textContent = duplicadasCount;
+            if (totalParticipantes) totalParticipantes.textContent = totalPartCount;
+            if (xmlsErro) xmlsErro.textContent = errosCount;
+
+            // Resumo de Titularidade
+            const titularidadeContainer = document.getElementById('resultado-titularidade');
+            if (dados.resumo_titularidade && titularidadeContainer) {
+                titularidadeContainer.classList.remove('hidden');
+                const tit = dados.resumo_titularidade;
+                const titPropriaEmit = document.getElementById('tit-propria-emit');
+                const titPropriaDest = document.getElementById('tit-propria-dest');
+                const titClienteEmit = document.getElementById('tit-cliente-emit');
+                const titClienteDest = document.getElementById('tit-cliente-dest');
+                const titTerceiroEmit = document.getElementById('tit-terceiro-emit');
+                const titTerceiroDest = document.getElementById('tit-terceiro-dest');
+
+                if (titPropriaEmit) titPropriaEmit.textContent = tit.propria_emit || 0;
+                if (titPropriaDest) titPropriaDest.textContent = tit.propria_dest || 0;
+                if (titClienteEmit) titClienteEmit.textContent = tit.cliente_emit || 0;
+                if (titClienteDest) titClienteDest.textContent = tit.cliente_dest || 0;
+                if (titTerceiroEmit) titTerceiroEmit.textContent = tit.terceiro_emit || 0;
+                if (titTerceiroDest) titTerceiroDest.textContent = tit.terceiro_dest || 0;
+            } else if (titularidadeContainer) {
+                titularidadeContainer.classList.add('hidden');
+            }
+
+            // Duplicadas detectadas
+            const duplicadasContainer = document.getElementById('resultado-duplicadas-container');
+            const duplicadasLista = document.getElementById('duplicadas-lista');
+            const duplicadasBody = document.getElementById('duplicadas-tabela-body');
+            const duplicadasCountEl = document.getElementById('duplicadas-count');
+            const btnToggleDuplicadas = document.getElementById('btn-toggle-duplicadas');
+
+            if (dados.duplicadas_detectadas && dados.duplicadas_detectadas.length > 0 && duplicadasContainer) {
+                duplicadasContainer.classList.remove('hidden');
+                if (duplicadasCountEl) duplicadasCountEl.textContent = dados.duplicadas_detectadas.length;
+
+                // Renderizar tabela de duplicadas
+                if (duplicadasBody) {
+                    duplicadasBody.innerHTML = dados.duplicadas_detectadas.slice(0, 100).map(dup => {
+                        const cnpjFmt = dup.emit_cnpj ?
+                            dup.emit_cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5') : '-';
+                        return '<tr class="hover:bg-amber-50">' +
+                            '<td class="px-3 py-2 text-gray-900 whitespace-nowrap">' + (dup.numero_nota || '-') + '</td>' +
+                            '<td class="px-3 py-2 text-gray-900 max-w-[180px] truncate" title="' + (dup.emit_razao || '') + '">' +
+                                (dup.emit_razao || cnpjFmt) +
+                            '</td>' +
+                            '<td class="px-3 py-2 text-gray-600 whitespace-nowrap">' + (dup.data_emissao || '-') + '</td>' +
+                            '<td class="px-3 py-2 text-right text-gray-900 whitespace-nowrap">' + formatarBRL(dup.valor) + '</td>' +
+                            '<td class="px-3 py-2 text-gray-500 whitespace-nowrap text-xs">' +
+                                (dup.existente_importado_em ? dup.existente_importado_em.substring(0, 10) : '-') +
+                            '</td>' +
+                        '</tr>';
+                    }).join('');
+
+                    // Adicionar aviso se houver mais de 100
+                    if (dados.duplicadas_detectadas.length > 100) {
+                        duplicadasBody.innerHTML += '<tr><td colspan="5" class="px-3 py-2 text-center text-xs text-amber-600">... e mais ' + (dados.duplicadas_detectadas.length - 100) + ' duplicadas</td></tr>';
+                    }
+                }
+
+                // Toggle para mostrar/ocultar lista
+                if (btnToggleDuplicadas && duplicadasLista) {
+                    btnToggleDuplicadas.onclick = function() {
+                        duplicadasLista.classList.toggle('hidden');
+                        this.textContent = duplicadasLista.classList.contains('hidden') ? 'Ver detalhes' : 'Ocultar';
+                    };
+                }
+            } else if (duplicadasContainer) {
+                duplicadasContainer.classList.add('hidden');
+            }
 
             // Erros detalhados
-            if (dados.erros && dados.erros.length > 0 && errosContainer && errosLista) {
+            const errosDetectados = dados.erros_detectados || dados.erros || [];
+            if (errosDetectados.length > 0 && errosContainer && errosLista) {
                 errosContainer.classList.remove('hidden');
-                errosLista.innerHTML = dados.erros.map(e =>
-                    '<div class="py-1.5 px-2 bg-amber-50 rounded text-amber-700 border-l-2 border-amber-400">' +
+                errosLista.innerHTML = errosDetectados.map(e =>
+                    '<div class="py-1.5 px-2 bg-red-50 rounded text-red-700 border-l-2 border-red-400">' +
                     '<span class="font-medium">' + (e.arquivo || 'XML') + ':</span> ' +
-                    (e.motivo || 'Erro desconhecido') +
+                    (e.erro || e.motivo || 'Erro desconhecido') +
+                    (e.detalhe ? '<span class="block text-xs text-red-500 mt-0.5">' + e.detalhe + '</span>' : '') +
                     '</div>'
                 ).join('');
             } else if (errosContainer) {
                 errosContainer.classList.add('hidden');
             }
+
+            // CNPJs novos (preview para usuario decidir)
+            mostrarCnpjsNovos(dados);
 
             resultadoContainer.classList.remove('hidden');
 
@@ -1400,6 +1696,225 @@
             }
 
             resultadoContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Mostrar CNPJs novos encontrados durante importacao
+        function mostrarCnpjsNovos(dados) {
+            const container = document.getElementById('resultado-cnpjs-novos-container');
+            const tbody = document.getElementById('cnpjs-novos-tabela-body');
+            const countBadge = document.getElementById('cnpjs-novos-count-badge');
+            const truncatedMsg = document.getElementById('cnpjs-novos-truncated-msg');
+            const totalCountEl = document.getElementById('cnpjs-novos-total-count');
+            const salvosMsg = document.getElementById('cnpjs-novos-salvos-msg');
+
+            if (!container || !tbody) return;
+
+            const cnpjsNovos = dados.cnpjs_novos || [];
+            dadosCnpjsNovos = cnpjsNovos;
+
+            if (cnpjsNovos.length === 0) {
+                container.classList.add('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            if (salvosMsg) salvosMsg.classList.add('hidden');
+            if (countBadge) countBadge.textContent = dados.cnpjs_novos_total || cnpjsNovos.length;
+
+            // Mostrar aviso se truncado
+            if (dados.cnpjs_novos_truncated && truncatedMsg && totalCountEl) {
+                truncatedMsg.classList.remove('hidden');
+                totalCountEl.textContent = dados.cnpjs_novos_total || '500+';
+            } else if (truncatedMsg) {
+                truncatedMsg.classList.add('hidden');
+            }
+
+            // Formatar CNPJ
+            function fmtCnpj(c) {
+                if (!c || c.length !== 14) return c || '-';
+                return c.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+            }
+
+            // Renderizar tabela
+            tbody.innerHTML = cnpjsNovos.map(function(cnpj, idx) {
+                const polos = (cnpj.visto_como || []).map(function(p) {
+                    return p === 'emit'
+                        ? '<span class="inline-flex items-center px-1 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-700">Emit</span>'
+                        : '<span class="inline-flex items-center px-1 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">Dest</span>';
+                }).join(' ');
+
+                return '<tr class="hover:bg-orange-50" data-cnpj="' + cnpj.cnpj + '">' +
+                    '<td class="px-3 py-2"><input type="checkbox" class="cnpj-novo-check w-3.5 h-3.5 text-orange-600 rounded" data-idx="' + idx + '"></td>' +
+                    '<td class="px-3 py-2 text-gray-900 whitespace-nowrap font-mono">' + fmtCnpj(cnpj.cnpj) + '</td>' +
+                    '<td class="px-3 py-2 text-gray-900 max-w-[200px] truncate" title="' + (cnpj.razao_social || '') + '">' + (cnpj.razao_social || '-') + '</td>' +
+                    '<td class="px-3 py-2 text-center text-gray-600">' + (cnpj.uf || '-') + '</td>' +
+                    '<td class="px-3 py-2 text-center">' + polos + '</td>' +
+                    '<td class="px-3 py-2 text-center text-gray-600">' + (cnpj.contagem_notas || 0) + '</td>' +
+                    '<td class="px-3 py-2">' +
+                        '<select class="cnpj-novo-tipo text-xs border border-gray-300 rounded px-1.5 py-1" data-idx="' + idx + '">' +
+                            '<option value="participante">Participante</option>' +
+                            '<option value="cliente">Cliente</option>' +
+                        '</select>' +
+                    '</td>' +
+                '</tr>';
+            }).join('');
+
+            // Configurar event listeners
+            configurarCnpjsNovosEventos();
+        }
+
+        // Configurar eventos de selecao e salvamento de CNPJs novos
+        function configurarCnpjsNovosEventos() {
+            const checkAll = document.getElementById('cnpjs-novos-check-all');
+            const btnSelecionarTodos = document.getElementById('btn-selecionar-todos-cnpjs');
+            const btnSalvar = document.getElementById('btn-salvar-cnpjs-selecionados');
+            const btnSalvarText = document.getElementById('btn-salvar-cnpjs-text');
+
+            function getCheckboxes() {
+                return document.querySelectorAll('.cnpj-novo-check');
+            }
+
+            function getSelectedCount() {
+                return document.querySelectorAll('.cnpj-novo-check:checked').length;
+            }
+
+            function updateSalvarBtn() {
+                const count = getSelectedCount();
+                if (btnSalvar) btnSalvar.disabled = count === 0;
+                if (btnSalvarText) btnSalvarText.textContent = count > 0 ? 'Salvar ' + count + ' Selecionado' + (count > 1 ? 's' : '') : 'Salvar Selecionados';
+            }
+
+            // Check all
+            if (checkAll) {
+                checkAll.addEventListener('change', function() {
+                    getCheckboxes().forEach(function(cb) { cb.checked = checkAll.checked; });
+                    updateSalvarBtn();
+                });
+            }
+
+            // Selecionar todos button
+            if (btnSelecionarTodos) {
+                btnSelecionarTodos.addEventListener('click', function() {
+                    const allChecked = getSelectedCount() === getCheckboxes().length;
+                    getCheckboxes().forEach(function(cb) { cb.checked = !allChecked; });
+                    if (checkAll) checkAll.checked = !allChecked;
+                    btnSelecionarTodos.textContent = allChecked ? 'Selecionar todos' : 'Desmarcar todos';
+                    updateSalvarBtn();
+                });
+            }
+
+            // Individual checkboxes
+            getCheckboxes().forEach(function(cb) {
+                cb.addEventListener('change', function() {
+                    updateSalvarBtn();
+                    if (checkAll) {
+                        checkAll.checked = getSelectedCount() === getCheckboxes().length;
+                    }
+                });
+            });
+
+            // Salvar selecionados
+            if (btnSalvar) {
+                btnSalvar.addEventListener('click', async function() {
+                    const selecionados = [];
+                    getCheckboxes().forEach(function(cb) {
+                        if (!cb.checked) return;
+                        const idx = parseInt(cb.dataset.idx);
+                        const cnpjData = dadosCnpjsNovos[idx];
+                        if (!cnpjData) return;
+
+                        const selectEl = document.querySelector('.cnpj-novo-tipo[data-idx="' + idx + '"]');
+                        const salvarComo = selectEl ? selectEl.value : 'participante';
+
+                        selecionados.push({
+                            cnpj: cnpjData.cnpj,
+                            salvar_como: salvarComo,
+                            razao_social: cnpjData.razao_social || null,
+                            nome_fantasia: cnpjData.nome_fantasia || null,
+                            uf: cnpjData.uf || null,
+                            cep: cnpjData.cep || null,
+                            municipio: cnpjData.municipio || null,
+                            telefone: cnpjData.telefone || null,
+                            crt: cnpjData.crt || null,
+                        });
+                    });
+
+                    if (selecionados.length === 0) return;
+
+                    btnSalvar.disabled = true;
+                    if (btnSalvarText) btnSalvarText.textContent = 'Salvando...';
+
+                    try {
+                        let response = await fetch('/app/monitoramento/xml/importacao/' + currentImportacaoId + '/salvar-cnpjs', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': getCsrfToken(),
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'same-origin',
+                            body: JSON.stringify({ cnpjs: selecionados })
+                        });
+
+                        // Handle CSRF token mismatch
+                        if (response.status === 419) {
+                            await refreshCsrfToken();
+                            response = await fetch('/app/monitoramento/xml/importacao/' + currentImportacaoId + '/salvar-cnpjs', {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': getCsrfToken(),
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json'
+                                },
+                                credentials: 'same-origin',
+                                body: JSON.stringify({ cnpjs: selecionados })
+                            });
+                        }
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            const salvosMsg = document.getElementById('cnpjs-novos-salvos-msg');
+                            const salvosMsgText = document.getElementById('cnpjs-novos-salvos-text');
+                            if (salvosMsg) salvosMsg.classList.remove('hidden');
+                            if (salvosMsgText) {
+                                const msg = data.total_criados + ' CNPJ' + (data.total_criados > 1 ? 's' : '') + ' salvo' + (data.total_criados > 1 ? 's' : '') + ' com sucesso!';
+                                salvosMsgText.textContent = data.total_erros > 0
+                                    ? msg + ' (' + data.total_erros + ' com erro)'
+                                    : msg;
+                            }
+
+                            // Desabilitar checkboxes salvos
+                            getCheckboxes().forEach(function(cb) {
+                                if (cb.checked) {
+                                    cb.disabled = true;
+                                    const tr = cb.closest('tr');
+                                    if (tr) tr.classList.add('opacity-50');
+                                }
+                            });
+                            if (btnSalvarText) btnSalvarText.textContent = 'Salvos!';
+
+                            // Recarregar detalhes da importacao para refletir novos participantes
+                            if (currentImportacaoId) {
+                                carregarDetalhesImportacao(currentImportacaoId);
+                            }
+
+                            if (window.showToast) {
+                                window.showToast(data.total_criados + ' CNPJs salvos com sucesso!', 'success');
+                            }
+                        } else {
+                            throw new Error(data.error || 'Erro ao salvar CNPJs');
+                        }
+                    } catch (err) {
+                        console.error('[Monitoramento XML] Erro ao salvar CNPJs novos:', err);
+                        if (window.showToast) {
+                            window.showToast('Erro: ' + err.message, 'error');
+                        }
+                        btnSalvar.disabled = false;
+                        if (btnSalvarText) btnSalvarText.textContent = 'Salvar Selecionados';
+                    }
+                });
+            }
         }
 
         // Carregar detalhes da importacao (participantes e notas)

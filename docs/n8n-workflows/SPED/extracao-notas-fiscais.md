@@ -121,7 +121,7 @@ for (const line of lines) {
             situacao: campos[5] || '00',                // 00=regular
             serie: campos[6] || '',
             numero_nota: campos[7] || '',
-            chave_acesso: campos[8] || null,            // 44 dígitos
+            nfe_id: campos[8] || null,            // 44 dígitos
             data_emissao: parseDataSped(campos[9]),
             data_entrada_saida: parseDataSped(campos[10]),
             valor_total: parseFloat((campos[11] || '0').replace(',', '.')) || 0,
@@ -132,7 +132,7 @@ for (const line of lines) {
         };
 
         // Só adicionar se tiver dados mínimos
-        if (nota.numero_nota || nota.chave_acesso) {
+        if (nota.numero_nota || nota.nfe_id) {
             notas.push(nota);
         }
     }
@@ -163,7 +163,7 @@ for (const line of lines) {
             situacao: campos[4] || '00',
             serie: campos[5] || '',
             numero_nota: campos[7] || '',
-            chave_acesso: campos[8] || null,  // CHV_NFSE
+            nfe_id: campos[8] || null,  // CHV_NFSE
             data_emissao: parseDataSped(campos[9]),
             data_entrada_saida: parseDataSped(campos[10]),
             valor_total: parseFloat((campos[11] || '0').replace(',', '.')) || 0,
@@ -172,7 +172,7 @@ for (const line of lines) {
             valor_ipi: 0,
         };
 
-        if (nota.numero_nota || nota.chave_acesso) {
+        if (nota.numero_nota || nota.nfe_id) {
             notas.push(nota);
         }
     }
@@ -206,7 +206,7 @@ INSERT INTO notas_sped (
     modelo_doc,
     serie,
     numero_nota,
-    chave_acesso,
+    nfe_id,
     data_emissao,
     data_entrada_saida,
     valor_total,
@@ -230,7 +230,7 @@ INSERT INTO notas_sped (
     $9,   -- modelo_doc
     $10,  -- serie
     $11,  -- numero_nota
-    $12,  -- chave_acesso
+    $12,  -- nfe_id
     $13,  -- data_emissao
     $14,  -- data_entrada_saida
     $15,  -- valor_total
@@ -243,8 +243,8 @@ INSERT INTO notas_sped (
     NOW(),
     NOW()
 )
-ON CONFLICT (user_id, importacao_sped_id, chave_acesso)
-WHERE chave_acesso IS NOT NULL
+ON CONFLICT (user_id, importacao_sped_id, nfe_id)
+WHERE nfe_id IS NOT NULL
 DO UPDATE SET
     updated_at = NOW()
 RETURNING id;
@@ -254,8 +254,8 @@ RETURNING id;
 
 ```sql
 CREATE UNIQUE INDEX notas_sped_unique_chave
-ON notas_sped (user_id, importacao_sped_id, chave_acesso)
-WHERE chave_acesso IS NOT NULL;
+ON notas_sped (user_id, importacao_sped_id, nfe_id)
+WHERE nfe_id IS NOT NULL;
 ```
 
 ---
@@ -379,7 +379,7 @@ LIMIT 5;
 SELECT
     ns.id,
     ns.numero_nota,
-    ns.chave_acesso,
+    ns.nfe_id,
     ns.valor_total,
     ns.tipo_nota,
     p.razao_social as participante
@@ -411,7 +411,7 @@ LIMIT 10;
 ## Próximos Passos
 
 1. [ ] Implementar Code Node no n8n
-2. [ ] Criar índice único parcial para `chave_acesso`
+2. [ ] Criar índice único parcial para `nfe_id`
 3. [ ] Testar com arquivos EFD Fiscal reais
 4. [ ] Testar com arquivos EFD Contribuições reais
 5. [ ] Implementar VCI nas notas SPED

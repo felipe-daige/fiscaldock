@@ -22,10 +22,12 @@ class Cliente extends Model
         'faturamento_anual',
         'preparacao_reforma',
         'ativo',
+        'is_empresa_propria',
     ];
 
     protected $casts = [
         'ativo' => 'boolean',
+        'is_empresa_propria' => 'boolean',
     ];
 
     // Relacionamentos
@@ -63,6 +65,14 @@ class Cliente extends Model
     public function isPessoaJuridica(): bool
     {
         return $this->tipo_pessoa === 'PJ';
+    }
+
+    /**
+     * Scope para filtrar empresas proprias do usuario.
+     */
+    public function scopeEmpresaPropria($query)
+    {
+        return $query->where('is_empresa_propria', true);
     }
 
     public function getDocumentoFormatadoAttribute(): string

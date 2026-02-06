@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
-use App\Models\ImportacaoXml;
+use App\Models\Participante;
+use App\Models\XmlImportacao;
+use App\Models\XmlNota;
 use App\Services\CreditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
@@ -48,7 +51,7 @@ class XmlImportacaoController extends Controller
             ->get();
 
         // Últimas importações do usuário
-        $importacoes = ImportacaoXml::where('user_id', $user->id)
+        $importacoes = XmlImportacao::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
@@ -127,7 +130,7 @@ class XmlImportacaoController extends Controller
 
         try {
             // Criar registro de importação
-            $importacao = ImportacaoXml::create([
+            $importacao = XmlImportacao::create([
                 'user_id' => $user->id,
                 'cliente_id' => $validated['cliente_id'] ?? null,
                 'tipo_documento' => $validated['tipo_documento'],
@@ -900,7 +903,7 @@ class XmlImportacaoController extends Controller
         $userId = Auth::id();
 
         // Buscar importacao
-        $importacao = ImportacaoXml::where('id', $importacaoId)
+        $importacao = XmlImportacao::where('id', $importacaoId)
             ->where('user_id', $userId)
             ->first();
 
@@ -966,23 +969,12 @@ class XmlImportacaoController extends Controller
             'qtd_devolucoes' => 0,
         ];
 
-        $notasQuery = \App\Models\NotaFiscal::where('importacao_xml_id', $importacaoId)
+        $notasQuery = \App\Models\XmlNota::where('importacao_xml_id', $importacaoId)
             ->where('user_id', $userId)
             ->orderBy('data_emissao', 'desc')
             ->get();
 
-        // Fallback: buscar por chaves processadas se não encontrou por importacao_xml_id
-        if ($notasQuery->isEmpty()) {
-            $chavesProcessadas = \App\Models\XmlChaveProcessada::where('importacao_xml_id', $importacaoId)
-                ->pluck('chave_acesso');
-
-            if ($chavesProcessadas->isNotEmpty()) {
-                $notasQuery = \App\Models\NotaFiscal::whereIn('chave_acesso', $chavesProcessadas)
-                    ->where('user_id', $userId)
-                    ->orderBy('data_emissao', 'desc')
-                    ->get();
-            }
-        }
+        // Nota: xml_chaves_processadas foi eliminada - deduplicação agora usa xml_notas diretamente
 
         foreach ($notasQuery as $nota) {
             // Acumular resumo financeiro
@@ -993,13 +985,13 @@ class XmlImportacaoController extends Controller
             $resumoFinanceiro['ipi_total'] += (float) $nota->ipi_valor;
             $resumoFinanceiro['tributos_total'] += (float) $nota->tributos_total;
 
-            if ($nota->tipo_nota === \App\Models\NotaFiscal::TIPO_ENTRADA) {
+            if ($nota->tipo_nota === \App\Models\XmlNota::TIPO_ENTRADA) {
                 $resumoFinanceiro['qtd_entradas']++;
             } else {
                 $resumoFinanceiro['qtd_saidas']++;
             }
 
-            if ($nota->finalidade === \App\Models\NotaFiscal::FINALIDADE_DEVOLUCAO) {
+            if ($nota->finalidade === \App\Models\XmlNota::FINALIDADE_DEVOLUCAO) {
                 $resumoFinanceiro['qtd_devolucoes']++;
             }
 
@@ -1052,9 +1044,174 @@ class XmlImportacaoController extends Controller
     }
 
     /**
+     * Salva CNPJs novos descobertos durante importacao como participantes e/ou clientes.
+     *
+     * Chamado pelo frontend apos o usuario revisar a lista de CNPJs novos
+     * e decidir quais salvar. Cria os registros e atualiza as FKs em xml_notas.
+     */
+    public function salvarCnpjsNovos(Request $request, int $importacaoId): JsonResponse
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Usuario nao autenticado.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $userId = Auth::id();
+
+        // Validar que a importacao pertence ao usuario
+        $importacao = XmlImportacao::where('id', $importacaoId)
+            ->where('user_id', $userId)
+            ->first();
+
+        if (!$importacao) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Importacao nao encontrada.',
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        $validated = $request->validate([
+            'cnpjs' => 'required|array|min:1|max:500',
+            'cnpjs.*.cnpj' => 'required|string|size:14',
+            'cnpjs.*.salvar_como' => 'required|in:participante,cliente',
+            'cnpjs.*.razao_social' => 'nullable|string|max:255',
+            'cnpjs.*.nome_fantasia' => 'nullable|string|max:255',
+            'cnpjs.*.uf' => 'nullable|string|max:2',
+            'cnpjs.*.cep' => 'nullable|string|max:10',
+            'cnpjs.*.municipio' => 'nullable|string|max:255',
+            'cnpjs.*.telefone' => 'nullable|string|max:20',
+            'cnpjs.*.crt' => 'nullable|integer|in:1,2,3',
+        ]);
+
+        $criados = [];
+        $erros = [];
+
+        try {
+            DB::beginTransaction();
+
+            foreach ($validated['cnpjs'] as $cnpjData) {
+                $cnpj = $cnpjData['cnpj'];
+
+                try {
+                    $clienteId = null;
+
+                    // Se salvar como cliente, criar o registro em clientes primeiro
+                    if ($cnpjData['salvar_como'] === 'cliente') {
+                        $cliente = Cliente::firstOrCreate(
+                            [
+                                'user_id' => $userId,
+                                'documento' => $cnpj,
+                            ],
+                            [
+                                'tipo_pessoa' => 'PJ',
+                                'razao_social' => $cnpjData['razao_social'] ?? null,
+                                'nome' => $cnpjData['nome_fantasia'] ?? $cnpjData['razao_social'] ?? null,
+                                'ativo' => true,
+                                'is_empresa_propria' => false,
+                            ]
+                        );
+                        $clienteId = $cliente->id;
+                    }
+
+                    // Criar participante (upsert para evitar conflitos)
+                    $participante = Participante::updateOrCreate(
+                        [
+                            'user_id' => $userId,
+                            'cnpj' => $cnpj,
+                        ],
+                        [
+                            'razao_social' => $cnpjData['razao_social'] ?? null,
+                            'nome_fantasia' => $cnpjData['nome_fantasia'] ?? null,
+                            'uf' => $cnpjData['uf'] ?? null,
+                            'cep' => $cnpjData['cep'] ?? null,
+                            'municipio' => $cnpjData['municipio'] ?? null,
+                            'telefone' => $cnpjData['telefone'] ?? null,
+                            'crt' => $cnpjData['crt'] ?? null,
+                            'cliente_id' => $clienteId,
+                            'importacao_xml_id' => $importacaoId,
+                            'origem_tipo' => $importacao->tipo_documento ?? 'NFE',
+                        ]
+                    );
+
+                    // Atualizar xml_notas: preencher FKs onde CNPJ coincide e participante_id e NULL
+                    XmlNota::where('importacao_xml_id', $importacaoId)
+                        ->where('user_id', $userId)
+                        ->where('emit_cnpj', $cnpj)
+                        ->whereNull('emit_participante_id')
+                        ->update([
+                            'emit_participante_id' => $participante->id,
+                            'emit_cliente_id' => $clienteId,
+                        ]);
+
+                    XmlNota::where('importacao_xml_id', $importacaoId)
+                        ->where('user_id', $userId)
+                        ->where('dest_cnpj', $cnpj)
+                        ->whereNull('dest_participante_id')
+                        ->update([
+                            'dest_participante_id' => $participante->id,
+                            'dest_cliente_id' => $clienteId,
+                        ]);
+
+                    $criados[] = [
+                        'cnpj' => $cnpj,
+                        'participante_id' => $participante->id,
+                        'cliente_id' => $clienteId,
+                        'salvo_como' => $cnpjData['salvar_como'],
+                    ];
+                } catch (\Exception $e) {
+                    Log::warning('salvarCnpjsNovos: erro ao salvar CNPJ', [
+                        'cnpj' => $cnpj,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $erros[] = [
+                        'cnpj' => $cnpj,
+                        'erro' => $e->getMessage(),
+                    ];
+                }
+            }
+
+            // Atualizar participante_ids na importacao
+            $novosIds = array_column($criados, 'participante_id');
+            $idsAtuais = $importacao->participante_ids ?? [];
+            $idsMerged = array_values(array_unique(array_merge($idsAtuais, $novosIds)));
+            $importacao->update(['participante_ids' => $idsMerged]);
+
+            DB::commit();
+
+            Log::info('salvarCnpjsNovos: concluido', [
+                'importacao_id' => $importacaoId,
+                'user_id' => $userId,
+                'criados' => count($criados),
+                'erros' => count($erros),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'criados' => $criados,
+                'erros' => $erros,
+                'total_criados' => count($criados),
+                'total_erros' => count($erros),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('salvarCnpjsNovos: erro geral', [
+                'importacao_id' => $importacaoId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Erro ao salvar CNPJs: ' . $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
      * Extrai IDs de participantes das notas fiscais da importação (fallback).
      *
-     * Usado quando participante_ids não foi preenchido no registro ImportacaoXml.
+     * Usado quando participante_ids não foi preenchido no registro XmlImportacao.
      * Busca emit_participante_id e dest_participante_id únicos das notas.
      * Salva os IDs no registro para próximas consultas.
      *
@@ -1065,7 +1222,7 @@ class XmlImportacaoController extends Controller
     private function extrairParticipanteIdsDasNotas(int $importacaoId, int $userId): array
     {
         // Buscar IDs de emitentes
-        $emitIds = \App\Models\NotaFiscal::where('importacao_xml_id', $importacaoId)
+        $emitIds = \App\Models\XmlNota::where('importacao_xml_id', $importacaoId)
             ->where('user_id', $userId)
             ->whereNotNull('emit_participante_id')
             ->distinct()
@@ -1073,7 +1230,7 @@ class XmlImportacaoController extends Controller
             ->toArray();
 
         // Buscar IDs de destinatários
-        $destIds = \App\Models\NotaFiscal::where('importacao_xml_id', $importacaoId)
+        $destIds = \App\Models\XmlNota::where('importacao_xml_id', $importacaoId)
             ->where('user_id', $userId)
             ->whereNotNull('dest_participante_id')
             ->distinct()
@@ -1086,7 +1243,7 @@ class XmlImportacaoController extends Controller
         // Se encontrou IDs, salvar no registro para próximas consultas
         if (!empty($participanteIds)) {
             try {
-                ImportacaoXml::where('id', $importacaoId)
+                XmlImportacao::where('id', $importacaoId)
                     ->where('user_id', $userId)
                     ->update(['participante_ids' => $participanteIds]);
 

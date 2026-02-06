@@ -158,16 +158,16 @@
                                     {{ $importacao->tipo_documento ?? 'XML' }} - {{ $importacao->created_at->format('d/m/Y H:i') }}
                                 </p>
                                 <p class="text-xs text-gray-500 mt-1">
-                                    {{ $importacao->notas_fiscais_count ?? 0 }} nota(s) |
+                                    {{ $importacao->notas_count ?? 0 }} nota(s) |
                                     {{ $importacao->notas_validadas_count ?? 0 }} validada(s)
                                 </p>
                             </div>
                             <div class="flex items-center gap-2 ml-4">
-                                @if(($importacao->notas_validadas_count ?? 0) < ($importacao->notas_fiscais_count ?? 0))
+                                @if(($importacao->notas_validadas_count ?? 0) < ($importacao->notas_count ?? 0))
                                     <button type="button"
                                             class="btn-validar-importacao inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold shadow-sm hover:bg-blue-700 transition"
                                             data-id="{{ $importacao->id }}"
-                                            data-notas="{{ $importacao->notas_fiscais_count }}">
+                                            data-notas="{{ $importacao->notas_count }}">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                                         </svg>

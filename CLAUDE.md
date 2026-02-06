@@ -19,7 +19,7 @@ FiscalDock - Laravel 12 app for Brazilian tax compliance. Processes SPED files (
 | Blade presentation | **ALL DB writes** |
 | Trigger n8n webhooks | External integrations |
 
-**Exceptions (Laravel writes):** `RafConsultaPendente`, `ImportacaoSped`, `NotaFiscal.validacao` (VCI), `NotaSped.validacao` (VCI), user sessions
+**Exceptions (Laravel writes):** `RafConsultaPendente`, `SpedImportacao`, `XmlNota.validacao` (VCI), `SpedNota.validacao` (VCI), `salvar-cnpjs` (pos-import user-initiated), user sessions
 
 ## Navegacao (Sidebar)
 
@@ -205,22 +205,163 @@ Continuous tracking of CNPJ tax status via subscriptions.
 
 ### XML Import (NF-e, NFS-e, CT-e)
 
-**Models:** `ImportacaoXml`, `XmlChaveProcessada`, `NotaFiscal`
+**Models:** `XmlImportacao`, `XmlNota`
 
-**Flow:** User uploads XMLs -> Laravel sends ZIP to n8n -> n8n extracts participantes + optional notas_fiscais -> Progress via SSE
+**Flow:** User uploads XMLs -> Laravel sends ZIP to n8n -> n8n extracts participantes + optional xml_notas -> Progress via SSE
 
 | Route | Description |
 |-------|-------------|
 | `POST /app/monitoramento/xml/importar` | Start import |
 | `POST /api/monitoramento/xml/importacao/progress` | n8n sends progress |
 | `GET /app/monitoramento/xml/progresso/stream` | SSE progress |
+| `POST /app/monitoramento/xml/importacao/{id}/salvar-cnpjs` | Save new CNPJs as participantes/clientes (post-import) |
 
 **Limits:** 50MB/file, 200MB total, 5000 XMLs max
+
+**Payload de Progresso Durante Processamento (n8n -> Laravel):**
+```json
+POST /api/monitoramento/xml/importacao/progress
+Header: X-API-Token: {token}
+
+{
+  "user_id": 1,
+  "tab_id": "uuid-da-aba",
+  "importacao_id": 123,
+  "progresso": 45,
+  "status": "processando",
+  "mensagem": "Processando Nota 45/100: NF 12345 - EMPRESA LTDA",
+  "dados": {
+    "xml_atual": 45,
+    "total_xmls": 100,
+    "novas": 42,
+    "duplicadas": 2,
+    "erros": 1,
+    "participantes_novos": 8,
+    "nota_atual": {
+      "numero": "12345",
+      "emit_razao": "EMPRESA LTDA",
+      "emit_cnpj": "11222333000181",
+      "valor": 1500.00
+    }
+  }
+}
+```
+
+**Payload Final (status=concluido):**
+```json
+{
+  "user_id": 1,
+  "tab_id": "uuid-da-aba",
+  "importacao_id": 123,
+  "progresso": 100,
+  "status": "concluido",
+  "mensagem": "Importacao concluida! 95 notas processadas, 3 duplicadas, 2 erros.",
+  "dados": {
+    "xmls_processados": 100,
+    "xmls_novos": 95,
+    "xmls_duplicados": 3,
+    "xmls_com_erro": 2,
+    "participantes_novos": 15,
+    "participantes_atualizados": 8,
+    "valor_total": 125000.50,
+
+    "resumo_titularidade": {
+      "propria_emit": 22,
+      "propria_dest": 35,
+      "cliente_emit": 18,
+      "cliente_dest": 12,
+      "terceiro_emit": 55,
+      "terceiro_dest": 48
+    },
+
+    "duplicadas_detectadas": [
+      {
+        "nfe_id": "35260111222333000181550010000000011234567890",
+        "numero_nota": "12345",
+        "emit_cnpj": "11222333000181",
+        "emit_razao": "EMPRESA LTDA",
+        "data_emissao": "2026-01-15",
+        "valor": 1500.00,
+        "existente_id": 456,
+        "existente_importado_em": "2026-01-10T14:30:00Z"
+      }
+    ],
+
+    "erros_detectados": [
+      {
+        "arquivo": "nfe_001.xml",
+        "erro": "XML mal formado",
+        "detalhe": "Tag <emit> nao fechada"
+      }
+    ],
+
+    "participante_ids": [1, 2, 3, 4, 5],
+
+    "cnpjs_novos": [
+      {
+        "cnpj": "12345678000190",
+        "razao_social": "EMPRESA NOVA LTDA",
+        "nome_fantasia": "EMPRESA NOVA",
+        "uf": "SP",
+        "cep": "01310100",
+        "municipio": "SAO PAULO",
+        "telefone": "1133334444",
+        "crt": null,
+        "visto_como": ["emit", "dest"],
+        "contagem_notas": 5
+      }
+    ],
+    "cnpjs_novos_truncated": false,
+    "cnpjs_novos_total": 15
+  }
+}
+```
+
+**Campos do `dados` (durante processamento):**
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `xml_atual` | int | XML sendo processado |
+| `total_xmls` | int | Total de XMLs |
+| `novas` | int | Notas novas inseridas |
+| `duplicadas` | int | Notas duplicadas ignoradas |
+| `erros` | int | XMLs com erro |
+| `participantes_novos` | int | Participantes novos criados |
+| `nota_atual` | object | Dados da nota sendo processada |
+
+**Campos do `dados` (payload final):**
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `xmls_processados` | int | Total de XMLs processados |
+| `xmls_novos` | int | Notas novas inseridas |
+| `xmls_duplicados` | int | Notas duplicadas ignoradas |
+| `xmls_com_erro` | int | XMLs com erro |
+| `participantes_novos` | int | Participantes novos criados |
+| `participantes_atualizados` | int | Participantes atualizados |
+| `valor_total` | decimal | Valor total das notas |
+| `resumo_titularidade` | object | Contadores por titularidade |
+| `duplicadas_detectadas` | array | Lista de notas duplicadas (max 100) |
+| `erros_detectados` | array | Lista de erros encontrados |
+| `participante_ids` | array | IDs dos participantes importados |
+| `cnpjs_novos` | array | CNPJs desconhecidos para preview (max 500) |
+| `cnpjs_novos_truncated` | bool | Se lista foi truncada em 500 |
+| `cnpjs_novos_total` | int | Total real de CNPJs novos |
+
+**Titularidade (calculada pelo n8n para stats/contadores, NAO armazenada em xml_notas):**
+| Valor Raw | Condicao | Acao |
+|-----------|----------|------|
+| `propria` | CNPJ em `clientes` com `is_empresa_propria = true` | UPSERT participante (com cliente_id) |
+| `cliente` | CNPJ em `clientes` com `is_empresa_propria = false` | UPSERT participante (com cliente_id) |
+| `participante` | CNPJ em `participantes` (nao em clientes) | UPSERT participante |
+| `novo` | CNPJ nao encontrado em nenhuma tabela | **NAO** cria participante |
+
+**Derivacao em Laravel:** `xml_notas.emit_participante_id -> participante.cliente_id -> cliente.is_empresa_propria`
+
+**CNPJs novos:** Enviados no payload final como `cnpjs_novos[]`. Usuario decide via preview no frontend (POST `/app/monitoramento/xml/importacao/{id}/salvar-cnpjs`).
 
 ### BI Fiscal (Analytics)
 Dashboard gerencial para analise de faturamento, compras e tributos.
 
-**Models:** `NotaFiscal` (dados existentes)
+**Models:** `XmlNota` (dados existentes)
 
 **Services:** `AnalyticsService`
 
@@ -271,7 +412,7 @@ Avaliacao de risco fiscal e compliance de participantes.
 ### Validacao Contabil Inteligente (VCI)
 Sistema de analise e validacao de notas fiscais baseado em regras contabeis brasileiras.
 
-**Models:** `NotaFiscal` (campo `validacao` JSONB)
+**Models:** `XmlNota` (campo `validacao` JSONB)
 
 **Services:** `ValidacaoContabilService`
 
@@ -350,23 +491,26 @@ Sistema de analise e validacao de notas fiscais baseado em regras contabeis bras
 | `uf`, `cep`, `municipio`, `telefone` | Address data |
 | `crt` | 1=Simples, 2=Excesso, 3=Normal |
 | `cliente_id` | FK to clientes (optional) |
-| `importacao_sped_id` | FK to importacoes_sped (optional) |
-| `importacao_xml_id` | FK to importacoes_xml (optional) |
+| `importacao_sped_id` | FK to sped_importacoes (optional) |
+| `importacao_xml_id` | FK to xml_importacoes (optional) |
 | `origem_tipo` | `SPED_EFD_FISCAL`, `SPED_EFD_CONTRIB`, `NFE`, `NFSE`, `CTE`, `MANUAL` |
 | `origem_ref` | JSONB with source details |
 
-### notas_fiscais
+### xml_notas (antes notas_fiscais)
 | Campo | Tipo | Descricao |
 |-------|------|-----------|
 | `cliente_id` | FK nullable | Link para clientes |
-| `chave_acesso` | string(44) | Chave unica da nota |
+| `nfe_id` | string(44) | Chave unica da nota |
 | `tipo_nota` | smallint | 0=entrada, 1=saida |
 | `finalidade` | smallint | 1=normal, 2=compl, 3=ajuste, 4=devolucao |
-| `emit/dest_participante_id` | FK | Link para participantes |
+| `emit/dest_participante_id` | FK nullable | Link para participantes |
+| `emit/dest_cliente_id` | FK nullable | Cliente do emit/dest (denormalizado de participante.cliente_id, para BI) |
 | `payload` | JSONB | JSON completo do XML |
 | `validacao` | JSONB nullable | Resultado da validacao contabil (VCI) |
 
-### importacoes_sped (antes importacoes_participantes)
+**Titularidade:** Derivada via `xml_notas.emit_cliente_id -> cliente.is_empresa_propria` (shortcut) ou cadeia completa `emit_participante_id -> participante.cliente_id -> cliente.is_empresa_propria`. `emit_cliente_id`/`dest_cliente_id` sao denormalizacoes preventivas para queries BI sem JOIN duplo.
+
+### sped_importacoes (antes importacoes_sped)
 Tracks SPED import jobs with status, counts, and optional nota extraction.
 
 | Campo | Tipo | Descricao |
@@ -387,17 +531,17 @@ Tracks SPED import jobs with status, counts, and optional nota extraction.
 | `creditos_cobrados` | int | Creditos debitados pela extracao |
 | `participante_ids` | JSONB | Array de IDs criados |
 
-### importacoes_xml
+### xml_importacoes (antes importacoes_xml)
 Tracks XML import jobs with status, counts, and `participante_ids` array.
 
-### notas_sped
-Notas fiscais extraidas de arquivos SPED (separada de notas_fiscais para dados de XML).
+### sped_notas (antes notas_sped)
+Notas fiscais extraidas de arquivos SPED (separada de xml_notas para dados de XML).
 
 | Campo | Tipo | Descricao |
 |-------|------|-----------|
 | `user_id` | FK | Owner |
 | `cliente_id` | FK nullable | Cliente associado |
-| `importacao_sped_id` | FK | Importacao de origem |
+| `importacao_sped_id` | FK | Importacao de origem (sped_importacoes) |
 | `emit_participante_id` | FK nullable | Emitente |
 | `dest_participante_id` | FK nullable | Destinatario |
 | `tipo_efd` | varchar(30) | EFD_FISCAL ou EFD_CONTRIB |
@@ -405,7 +549,7 @@ Notas fiscais extraidas de arquivos SPED (separada de notas_fiscais para dados d
 | `tipo_nota` | smallint | 0=entrada, 1=saida |
 | `modelo_doc` | varchar(2) | 55=NFe, 57=CTe, etc |
 | `serie`, `numero_nota` | varchar | Dados da nota |
-| `chave_acesso` | varchar(44) | Chave da NFe (quando disponivel) |
+| `nfe_id` | varchar(44) | Chave da NFe (quando disponivel) |
 | `data_emissao`, `data_entrada_saida` | date | Datas |
 | `valor_total` | decimal(15,2) | Valor total |
 | `valor_icms`, `valor_icms_st`, `valor_ipi` | decimal(15,2) | Tributos |
@@ -524,19 +668,19 @@ Cache key: `progresso:{user_id}:{tab_id}` (TTL 10min)
 
 **Fluxo:**
 ```
-WEBHOOK (ZIP) -> EXTRAIR -> LOOP XMLs -> INSERT participantes/notas -> UPDATE importacoes_xml -> PROGRESSO 100%
+WEBHOOK (ZIP) -> EXTRAIR -> LOOP XMLs -> INSERT participantes/notas -> UPDATE xml_importacoes -> PROGRESSO 100%
 ```
 
 **Webhook campos recebidos:**
 | Campo | Tipo | Descricao |
 |-------|------|-----------|
 | `user_id` | int | ID do usuario |
-| `importacao_id` | int | ID em importacoes_xml |
+| `importacao_id` | int | ID em xml_importacoes |
 | `tab_id` | string | UUID da aba (SSE) |
 | `tipo_documento` | string | `NFE`, `NFSE` ou `CTE` |
 | `cliente_id` | int/null | ID do cliente |
 | `cliente_cnpj` | string/null | CNPJ para comparacao |
-| `salvar_movimentacoes` | bool | Salvar em notas_fiscais? |
+| `salvar_movimentacoes` | bool | Salvar em xml_notas? |
 | `progress_url` | string | URL para progresso |
 | `arquivo_url` | string | URL do ZIP |
 
@@ -567,17 +711,48 @@ RETURNING id, (xmax = 0) AS is_new;
 | `telefone` | `emit.enderEmit.fone` | `dest.enderDest.fone` |
 | `crt` | `emit.CRT` | NULL |
 
-**Mapeamento XML -> DB (notas_fiscais):**
+**Mapeamento XML -> DB (xml_notas):**
 | Campo DB | Origem JSON |
 |----------|-------------|
-| `chave_acesso` | `protNFe.infProt.chNFe` |
+| `nfe_id` | `protNFe.infProt.chNFe` |
 | `numero_nota` | `ide.nNF` |
 | `serie` | `ide.serie` |
 | `data_emissao` | `ide.dhEmi` |
 | `valor_total` | `total.ICMSTot.vNF` |
 | `tipo_nota` | `ide.tpNF` (0=entrada, 1=saida) |
 | `finalidade` | `ide.finNFe` (1=normal, 4=devolucao) |
+| `emit_participante_id` | Resultado do UPSERT participante (NULL se CNPJ novo) |
+| `dest_participante_id` | Resultado do UPSERT participante (NULL se CNPJ novo) |
 | `payload` | TODO O JSON |
+
+**SQL Titularidade Expandida (buscar em clientes + participantes):**
+```sql
+WITH cnpjs AS (
+    SELECT 'emit' AS polo, $1::varchar AS cnpj
+    UNION ALL
+    SELECT 'dest' AS polo, $2::varchar AS cnpj
+),
+cliente_check AS (
+    SELECT c.polo, c.cnpj, cl.id AS cliente_id,
+        CASE WHEN cl.is_empresa_propria = true THEN 'propria'
+             WHEN cl.id IS NOT NULL THEN 'cliente'
+             ELSE NULL END AS titularidade_cliente
+    FROM cnpjs c
+    LEFT JOIN clientes cl ON REGEXP_REPLACE(cl.documento, '[^0-9]', '', 'g') = c.cnpj AND cl.user_id = $3
+),
+participante_check AS (
+    SELECT c.polo, c.cnpj, p.id AS participante_id
+    FROM cnpjs c
+    LEFT JOIN participantes p ON p.cnpj = c.cnpj AND p.user_id = $3
+)
+SELECT cc.polo, cc.cnpj, cc.cliente_id, pc.participante_id,
+    CASE WHEN cc.titularidade_cliente IS NOT NULL THEN cc.titularidade_cliente
+         WHEN pc.participante_id IS NOT NULL THEN 'participante'
+         ELSE 'novo' END AS titularidade
+FROM cliente_check cc LEFT JOIN participante_check pc ON cc.polo = pc.polo;
+```
+**Retorna:** `propria` | `cliente` | `participante` | `novo`
+**Acao:** `propria/cliente/participante` → UPSERT participante. `novo` → skip (acumula em `cnpjs_novos_map`).
 
 ### Workflow SPED (EFD Fiscal/Contribuicoes)
 

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
-use App\Models\ImportacaoXml;
-use App\Models\NotaFiscal;
+use App\Models\XmlImportacao;
+use App\Models\XmlNota;
 use App\Services\CreditService;
 use App\Services\ValidacaoContabilService;
 use Illuminate\Http\Request;
@@ -35,9 +35,9 @@ class ValidacaoController extends Controller
         $estatisticas = $this->validacaoService->getEstatisticas($userId);
 
         // Importacoes com notas para validar
-        $importacoes = ImportacaoXml::where('user_id', $userId)
+        $importacoes = XmlImportacao::where('user_id', $userId)
             ->where('status', 'concluido')
-            ->withCount(['notasFiscais', 'notasFiscais as notas_validadas_count' => function ($q) {
+            ->withCount(['notas', 'notas as notas_validadas_count' => function ($q) {
                 $q->whereNotNull('validacao');
             }])
             ->orderByDesc('created_at')
@@ -45,7 +45,7 @@ class ValidacaoController extends Controller
             ->get();
 
         // Notas com alertas bloqueantes (ultimas 10)
-        $notasCriticas = NotaFiscal::where('user_id', $userId)
+        $notasCriticas = XmlNota::where('user_id', $userId)
             ->whereNotNull('validacao')
             ->whereRaw("EXISTS (SELECT 1 FROM jsonb_array_elements(validacao->'alertas') AS a WHERE a->>'nivel' = 'bloqueante')")
             ->with(['emitente', 'destinatario'])
@@ -90,7 +90,7 @@ class ValidacaoController extends Controller
         if ($request->has('nota_ids') && ! empty($request->input('nota_ids'))) {
             $notaIds = $request->input('nota_ids');
         } elseif ($request->has('importacao_id')) {
-            $notaIds = NotaFiscal::where('importacao_xml_id', $request->input('importacao_id'))
+            $notaIds = XmlNota::where('importacao_xml_id', $request->input('importacao_id'))
                 ->where('user_id', $userId)
                 ->pluck('id')
                 ->toArray();
@@ -179,12 +179,12 @@ class ValidacaoController extends Controller
         $user = Auth::user();
 
         // Verificar se a importacao pertence ao usuario
-        $importacao = ImportacaoXml::where('id', $id)
+        $importacao = XmlImportacao::where('id', $id)
             ->where('user_id', $userId)
             ->firstOrFail();
 
         // Obter IDs das notas
-        $notaIds = NotaFiscal::where('importacao_xml_id', $id)
+        $notaIds = XmlNota::where('importacao_xml_id', $id)
             ->where('user_id', $userId)
             ->pluck('id')
             ->toArray();
@@ -233,7 +233,7 @@ class ValidacaoController extends Controller
 
         $userId = Auth::id();
 
-        $nota = NotaFiscal::where('id', $id)
+        $nota = XmlNota::where('id', $id)
             ->where('user_id', $userId)
             ->with(['emitente', 'destinatario', 'importacaoXml'])
             ->firstOrFail();
@@ -271,7 +271,7 @@ class ValidacaoController extends Controller
         $nivel = $request->input('nivel'); // bloqueante, atencao, info
         $categoria = $request->input('categoria');
 
-        $query = NotaFiscal::where('user_id', $userId)
+        $query = XmlNota::where('user_id', $userId)
             ->whereNotNull('validacao')
             ->with(['emitente', 'destinatario']);
 
@@ -288,7 +288,7 @@ class ValidacaoController extends Controller
         $notas = $query->orderByDesc('updated_at')->paginate(20);
 
         // Contar alertas por nivel
-        $contadores = NotaFiscal::where('user_id', $userId)
+        $contadores = XmlNota::where('user_id', $userId)
             ->whereNotNull('validacao')
             ->select(
                 \DB::raw("(SELECT COUNT(*) FROM jsonb_array_elements(validacao->'alertas') AS a WHERE a->>'nivel' = 'bloqueante') as bloqueantes"),
@@ -334,7 +334,7 @@ class ValidacaoController extends Controller
         ];
 
         // Ultimas notas validadas
-        $ultimasValidadas = NotaFiscal::where('user_id', $userId)
+        $ultimasValidadas = XmlNota::where('user_id', $userId)
             ->whereNotNull('validacao')
             ->with(['emitente:id,cnpj,razao_social'])
             ->orderByDesc('updated_at')

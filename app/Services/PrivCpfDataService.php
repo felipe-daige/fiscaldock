@@ -87,19 +87,19 @@ class PrivCpfDataService
 
     /**
      * Registra uma operação/documento fiscal.
-     * Valida se chave_acesso já existe para evitar duplicatas.
+     * Valida se nfe_id já existe para evitar duplicatas.
      *
      * @param array $data Dados da operação
-     * @return PrivCpfOperacao|null Retorna null se chave_acesso já existe
+     * @return PrivCpfOperacao|null Retorna null se nfe_id já existe
      */
     public function registrarOperacao(array $data): ?PrivCpfOperacao
     {
-        // Validar se chave_acesso já existe (se fornecida)
-        if (!empty($data['chave_acesso'])) {
-            $exists = PrivCpfOperacao::where('chave_acesso', $data['chave_acesso'])->exists();
+        // Validar se nfe_id já existe (se fornecida)
+        if (!empty($data['nfe_id'])) {
+            $exists = PrivCpfOperacao::where('nfe_id', $data['nfe_id'])->exists();
             if ($exists) {
-                Log::debug('Operação já registrada (chave_acesso duplicada)', [
-                    'chave_acesso' => $data['chave_acesso'],
+                Log::debug('Operação já registrada (nfe_id duplicada)', [
+                    'nfe_id' => $data['nfe_id'],
                 ]);
                 return null;
             }
@@ -210,7 +210,7 @@ class PrivCpfDataService
             $operacao['cpf_id'] = $cadastro->id;
             $operacaoRegistrada = $this->registrarOperacao($operacao);
 
-            // Se a operação já existia (chave_acesso duplicada), não atualiza relacionamento
+            // Se a operação já existia (nfe_id duplicada), não atualiza relacionamento
             if (!$operacaoRegistrada) {
                 return;
             }
