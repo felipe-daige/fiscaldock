@@ -136,7 +136,7 @@ class AuthController extends Controller
                 'cargo' => 'required|string|max:255',
                 'cnpj' => 'required|string|max:18',
                 'faturamento' => 'required|string',
-                'preparacao_reforma' => 'required|string|in:sim,parcialmente,nao',
+                'desafio_principal' => 'required|string|max:100',
             ], [
                 'nome.required' => 'O campo nome é obrigatório',
                 'nome.string' => 'O campo nome deve ser uma string',
@@ -178,6 +178,11 @@ class AuthController extends Controller
                 'email' => $request->email,
                 'telefone' => $request->telefone,
                 'password' => Hash::make($request->senha),
+                'empresa' => $request->empresa,
+                'cargo' => $request->cargo,
+                'cnpj' => $request->cnpj,
+                'faturamento_anual' => $request->faturamento,
+                'desafio_principal' => $request->desafio_principal,
             ]);
 
             // Detectar se é CPF ou CNPJ baseado no tamanho do documento
@@ -193,7 +198,7 @@ class AuthController extends Controller
                 'telefone' => $request->telefone,
                 'email' => $request->email,
                 'faturamento_anual' => $request->faturamento,
-                'preparacao_reforma' => $request->preparacao_reforma,
+                'preparacao_reforma' => $request->desafio_principal,
                 'is_empresa_propria' => $tipoPessoa === 'PJ', // Marca como empresa propria se for PJ
             ]);
 

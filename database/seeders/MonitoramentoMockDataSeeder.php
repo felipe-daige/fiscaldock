@@ -33,21 +33,12 @@ class MonitoramentoMockDataSeeder extends Seeder
      */
     public function run(): void
     {
-        // Buscar ou criar usuário de teste
-        $user = User::firstOrCreate(
-            ['email' => 'test@example.com'],
-            [
-                'name' => 'Test',
-                'sobrenome' => 'User',
-                'telefone' => '(11) 99999-9999',
-                'password' => bcrypt('password'),
-                'credits' => 100, // 100 créditos para testes
-            ]
-        );
+        // Buscar usuário principal (criado pelo DatabaseSeeder)
+        $user = User::where('email', 'felipedaige@gmail.com')->first();
 
-        // Garantir que o usuário tem créditos suficientes
-        if ($user->credits < 100) {
-            $user->update(['credits' => 100]);
+        if (! $user) {
+            $this->command->error('Usuário felipedaige@gmail.com não encontrado. Execute DatabaseSeeder primeiro.');
+            return;
         }
 
         $this->command->info("Usuário de teste: {$user->email} (ID: {$user->id}, Créditos: {$user->credits})");
@@ -186,7 +177,7 @@ class MonitoramentoMockDataSeeder extends Seeder
             // Assinatura ativa, próxima execução no passado (pendente de execução)
             [
                 'participante_index' => 0,
-                'plano_codigo' => 'fiscal_federal',
+                'plano_codigo' => 'licitacao',
                 'status' => 'ativo',
                 'frequencia_dias' => 15,
                 'proxima_execucao_em' => Carbon::now()->subHours(2), // Há 2 horas (pendente!)
@@ -195,7 +186,7 @@ class MonitoramentoMockDataSeeder extends Seeder
             // Assinatura ativa, próxima execução no passado (pendente de execução)
             [
                 'participante_index' => 1,
-                'plano_codigo' => 'cadastral_plus',
+                'plano_codigo' => 'validacao',
                 'status' => 'ativo',
                 'frequencia_dias' => 7,
                 'proxima_execucao_em' => Carbon::now()->subHours(5), // Há 5 horas (pendente!)
@@ -204,7 +195,7 @@ class MonitoramentoMockDataSeeder extends Seeder
             // Assinatura ativa, próxima execução no futuro
             [
                 'participante_index' => 2,
-                'plano_codigo' => 'fiscal_completo',
+                'plano_codigo' => 'compliance',
                 'status' => 'ativo',
                 'frequencia_dias' => 30,
                 'proxima_execucao_em' => Carbon::now()->addDays(10),
@@ -222,7 +213,7 @@ class MonitoramentoMockDataSeeder extends Seeder
             // Assinatura pausada (não será executada)
             [
                 'participante_index' => 4,
-                'plano_codigo' => 'fiscal_federal',
+                'plano_codigo' => 'licitacao',
                 'status' => 'pausado',
                 'frequencia_dias' => 15,
                 'proxima_execucao_em' => Carbon::now()->subDays(1),
@@ -231,7 +222,7 @@ class MonitoramentoMockDataSeeder extends Seeder
             // Assinatura cancelada (não será executada)
             [
                 'participante_index' => 5,
-                'plano_codigo' => 'basico',
+                'plano_codigo' => 'gratuito',
                 'status' => 'cancelado',
                 'frequencia_dias' => 1,
                 'proxima_execucao_em' => null,
@@ -240,7 +231,7 @@ class MonitoramentoMockDataSeeder extends Seeder
             // Assinatura ativa, próxima execução no futuro (recém criada)
             [
                 'participante_index' => 6,
-                'plano_codigo' => 'cadastral_plus',
+                'plano_codigo' => 'validacao',
                 'status' => 'ativo',
                 'frequencia_dias' => 7,
                 'proxima_execucao_em' => Carbon::now()->addDays(7),
@@ -300,11 +291,11 @@ class MonitoramentoMockDataSeeder extends Seeder
                 'created_at' => Carbon::now()->subDays(3),
             ],
             [
-                'plano_id' => $planos['fiscal_federal']->id,
+                'plano_id' => $planos['licitacao']->id,
                 'assinatura_id' => null,
                 'tipo' => 'avulso',
                 'status' => 'sucesso',
-                'creditos_cobrados' => 6,
+                'creditos_cobrados' => 10,
                 'situacao_geral' => 'regular',
                 'tem_pendencias' => false,
                 'proxima_validade' => Carbon::now()->addMonths(3),
@@ -335,7 +326,7 @@ class MonitoramentoMockDataSeeder extends Seeder
                 'created_at' => Carbon::now()->subDays(7),
             ],
             [
-                'plano_id' => $planos['cadastral_plus']->id,
+                'plano_id' => $planos['validacao']->id,
                 'assinatura_id' => MonitoramentoAssinatura::where('participante_id', $participantes[1]->id)->first()?->id,
                 'tipo' => 'assinatura',
                 'status' => 'sucesso',
@@ -366,7 +357,7 @@ class MonitoramentoMockDataSeeder extends Seeder
                 'created_at' => Carbon::now()->subDays(16),
             ],
             [
-                'plano_id' => $planos['fiscal_federal']->id,
+                'plano_id' => $planos['licitacao']->id,
                 'assinatura_id' => MonitoramentoAssinatura::where('participante_id', $participantes[4]->id)->first()?->id,
                 'tipo' => 'assinatura',
                 'status' => 'sucesso',
@@ -404,7 +395,7 @@ class MonitoramentoMockDataSeeder extends Seeder
                 'created_at' => Carbon::now()->subDays(1),
             ],
             [
-                'plano_id' => $planos['basico']->id,
+                'plano_id' => $planos['gratuito']->id,
                 'assinatura_id' => null,
                 'tipo' => 'avulso',
                 'status' => 'erro',
@@ -428,7 +419,7 @@ class MonitoramentoMockDataSeeder extends Seeder
                 'created_at' => Carbon::now()->subMinutes(5),
             ],
             [
-                'plano_id' => $planos['fiscal_completo']->id,
+                'plano_id' => $planos['enterprise']->id,
                 'assinatura_id' => null,
                 'tipo' => 'avulso',
                 'status' => 'processando',

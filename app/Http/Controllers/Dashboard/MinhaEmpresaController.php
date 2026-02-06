@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\Participante;
-use App\Models\RafLoteResultado;
+use App\Models\ConsultaResultado;
 use App\Services\RiskScoreService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -51,7 +51,7 @@ class MinhaEmpresaController extends Controller
         $score = $participante->score;
 
         // Buscar ultima consulta RAF
-        $ultimaConsulta = RafLoteResultado::where('participante_id', $participante->id)
+        $ultimaConsulta = ConsultaResultado::where('participante_id', $participante->id)
             ->where('status', 'sucesso')
             ->latest('consultado_em')
             ->first();
@@ -173,7 +173,7 @@ class MinhaEmpresaController extends Controller
 
         $consultas = collect();
         if ($participante) {
-            $consultas = RafLoteResultado::where('participante_id', $participante->id)
+            $consultas = ConsultaResultado::where('participante_id', $participante->id)
                 ->with('lote')
                 ->latest('consultado_em')
                 ->paginate(20);
