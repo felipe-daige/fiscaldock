@@ -172,6 +172,9 @@ class AuthController extends Controller
         DB::beginTransaction();
 
         try{
+            $documento = preg_replace('/\D/', '', $request->cnpj);
+            $tipoPessoa = strlen($documento) <= 11 ? 'PF' : 'PJ';
+
             $user = User::create([
                 'name' => $request->nome,
                 'sobrenome' => $request->sobrenome,
@@ -180,19 +183,15 @@ class AuthController extends Controller
                 'password' => Hash::make($request->senha),
                 'empresa' => $request->empresa,
                 'cargo' => $request->cargo,
-                'cnpj' => $request->cnpj,
+                'cnpj' => $documento,
                 'faturamento_anual' => $request->faturamento,
                 'desafio_principal' => $request->desafio_principal,
             ]);
 
-            // Detectar se é CPF ou CNPJ baseado no tamanho do documento
-            $documento = preg_replace('/\D/', '', $request->cnpj);
-            $tipoPessoa = strlen($documento) <= 11 ? 'PF' : 'PJ';
-
             $cliente = Cliente::create([
                 'user_id' => $user->id,
                 'tipo_pessoa' => $tipoPessoa,
-                'documento' => $request->cnpj,
+                'documento' => $documento,
                 'nome' => $request->empresa,
                 'razao_social' => $tipoPessoa === 'PJ' ? $request->empresa : null,
                 'telefone' => $request->telefone,

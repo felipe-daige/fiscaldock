@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -29,6 +30,13 @@ class Cliente extends Model
         'ativo' => 'boolean',
         'is_empresa_propria' => 'boolean',
     ];
+
+    protected function documento(): Attribute
+    {
+        return Attribute::make(
+            set: fn (?string $value) => $value ? preg_replace('/\D/', '', $value) : null,
+        );
+    }
 
     // Relacionamentos
     public function user()

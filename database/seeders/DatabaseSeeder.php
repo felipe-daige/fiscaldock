@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Cliente;
+use App\Models\ClienteEndereco;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -25,20 +26,33 @@ class DatabaseSeeder extends Seeder
             'password' => 'password',
             'empresa' => 'F. DEVECCHI DAIGE E CIA LTDA',
             'cargo' => 'Socio-Administrador',
-            'cnpj' => '63.112.970/0001-07',
+            'cnpj' => '00000000000191',
             'credits' => 100,
         ]);
 
         // Criar cliente (empresa própria)
-        Cliente::create([
+        $cliente = Cliente::create([
             'user_id' => $user->id,
             'tipo_pessoa' => 'PJ',
-            'documento' => '63.112.970/0001-07',
-            'nome' => 'F. DEVECCHI DAIGE E CIA LTDA',
-            'razao_social' => 'F. DEVECCHI DAIGE E CIA LTDA',
+            'documento' => '00000000000191',
+            'nome' => 'F. FiscalDock e Cia LTDA',
+            'razao_social' => 'F. FiscalDock e Cia LTDA',
             'telefone' => '67 999844366',
             'email' => 'admin@fiscaldock.test',
             'is_empresa_propria' => true,
+        ]);
+
+        // Endereço da empresa
+        ClienteEndereco::create([
+            'cliente_id' => $cliente->id,
+            'tipo' => 'principal',
+            'cep' => '01310100',
+            'logradouro' => 'Avenida Paulista',
+            'numero' => '6385',
+            'complemento' => 'Sala 7',
+            'bairro' => 'Bela Vista',
+            'cidade' => 'Sao Paulo',
+            'estado' => 'MS',
         ]);
 
         // Popular planos de monitoramento

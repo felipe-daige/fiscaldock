@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\Participante;
+use App\Models\XmlNota;
 use App\Models\ConsultaResultado;
 use App\Services\RiskScoreService;
 use Illuminate\Http\Request;
@@ -37,6 +38,8 @@ class MinhaEmpresaController extends Controller
             ]);
         }
 
+        $empresa->load('endereco');
+
         // Buscar ou criar participante correspondente ao CNPJ da empresa
         $cnpjLimpo = preg_replace('/\D/', '', $empresa->documento);
         $participante = Participante::firstOrCreate(
@@ -65,6 +68,10 @@ class MinhaEmpresaController extends Controller
         // Alertas recentes
         $alertas = $this->gerarAlertas($certidoes, $score);
 
+        // Contagens para KPIs
+        $totalParticipantes = Participante::where('user_id', $user->id)->count();
+        $totalNotas = XmlNota::where('user_id', $user->id)->count();
+
         $data = [
             'empresa' => $empresa,
             'participante' => $participante,
@@ -73,6 +80,8 @@ class MinhaEmpresaController extends Controller
             'dadosConsulta' => $dadosConsulta,
             'certidoes' => $certidoes,
             'alertas' => $alertas,
+            'totalParticipantes' => $totalParticipantes,
+            'totalNotas' => $totalNotas,
         ];
 
         return $this->render($request, 'index', $data);

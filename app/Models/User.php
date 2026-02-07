@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -36,6 +37,13 @@ class User extends Authenticatable
             'password' => 'hashed',
             'credits' => 'integer',
         ];
+    }
+
+    protected function cnpj(): Attribute
+    {
+        return Attribute::make(
+            set: fn (?string $value) => $value ? preg_replace('/\D/', '', $value) : null,
+        );
     }
 
     // Relacionamentos
