@@ -61,13 +61,13 @@
                             $creditos = $kpi_creditos ?? 0;
                         @endphp
                         <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Creditos</p>
-                        <p class="text-3xl font-semibold text-gray-900">
+                        <p class="text-3xl font-semibold text-green-600">
                             {{ number_format($creditos, 0, ',', '.') }}
                         </p>
                         <p class="text-xs text-gray-400 mt-2">Disponiveis para consultas</p>
                     </div>
-                    <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center ml-4">
-                        <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center ml-4">
+                        <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
                         </svg>
                     </div>

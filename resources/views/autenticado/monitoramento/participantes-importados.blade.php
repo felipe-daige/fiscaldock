@@ -94,7 +94,7 @@
         </form>
 
         {{-- Estatísticas --}}
-        <div class="mb-6 grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div class="mb-6 grid grid-cols-4 gap-4">
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
                 <p class="text-sm text-gray-500">Total de participantes</p>
                 <p class="text-2xl font-bold text-gray-900">{{ $participantes->total() ?? 0 }}</p>
@@ -109,7 +109,7 @@
             </div>
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
                 <p class="text-sm text-gray-500">Seus créditos</p>
-                <p class="text-2xl font-bold text-blue-600">{{ $credits ?? 0 }}</p>
+                <p class="text-2xl font-bold text-green-600">{{ $credits ?? 0 }}</p>
             </div>
         </div>
 
@@ -154,7 +154,7 @@
                     </thead>
                     <tbody class="divide-y divide-gray-200" id="participantes-tbody">
                         @forelse($participantes ?? [] as $part)
-                            <tr class="hover:bg-gray-50 transition-colors" data-participante-id="{{ $part->id }}">
+                            <tr class="hover:bg-gray-50 transition-colors cursor-pointer" data-participante-id="{{ $part->id }}" data-href="/app/monitoramento/participante/{{ $part->id }}">
                                 <td class="px-4 py-4">
                                     <input type="checkbox" class="checkbox-participante w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" value="{{ $part->id }}">
                                 </td>
@@ -199,17 +199,14 @@
                                     {{ $part->created_at->format('d/m/Y') }}
                                 </td>
                                 <td class="px-4 py-4 text-right whitespace-nowrap">
-                                    <a
-                                        href="/app/monitoramento/participante/{{ $part->id }}"
-                                        class="inline-flex items-center p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                                        title="Ver detalhes"
-                                        data-link
-                                    >
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    <button type="button" class="acoes-btn p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                                        data-id="{{ $part->id }}"
+                                        data-nome="{{ $part->razao_social }}"
+                                        data-cnpj="{{ $part->cnpj_formatado }}">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
                                         </svg>
-                                    </a>
+                                    </button>
                                 </td>
                             </tr>
                         @empty
@@ -251,6 +248,68 @@
                     {{ $participantes->links() }}
                 </div>
             @endif
+        </div>
+    </div>
+
+    {{-- Modal de acoes do participante --}}
+    <div id="modal-acoes" class="hidden fixed inset-0 z-50">
+        <div class="flex items-center justify-center p-4">
+            <div class="fixed inset-0 bg-black/20 transition-opacity" id="modal-acoes-overlay"></div>
+            <div class="relative bg-white rounded-xl shadow-lg ring-1 ring-gray-200 w-56 py-1 z-10">
+                <div class="px-3 py-2 border-b border-gray-100">
+                    <p class="text-sm font-semibold text-gray-900 truncate" id="modal-acoes-nome"></p>
+                    <p class="text-xs text-gray-500 font-mono" id="modal-acoes-cnpj"></p>
+                </div>
+                <a id="modal-acoes-ver" href="#"
+                   class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                   data-link>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    Ver detalhes
+                </a>
+                <button type="button" id="modal-acoes-excluir"
+                    class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal de confirmacao de exclusao --}}
+    <div id="modal-excluir-participante" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="fixed inset-0 bg-black/50 transition-opacity" id="modal-excluir-overlay"></div>
+            <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6 z-10">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900">Excluir participante?</h3>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-700 mb-2">
+                        <span class="font-medium" id="modal-excluir-cnpj"></span> — <span id="modal-excluir-nome"></span>
+                    </p>
+                    <p class="text-sm text-gray-500">
+                        Todo o historico associado sera removido (assinaturas, consultas, scores). As notas fiscais onde este participante aparece serao mantidas.
+                    </p>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" id="btn-cancelar-exclusao" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
+                        Cancelar
+                    </button>
+                    <button type="button" id="btn-confirmar-exclusao" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm transition hover:bg-red-700">
+                        Excluir
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -344,6 +403,144 @@
             formFiltros.addEventListener('submit', function(e) {
                 // Deixar o form submeter normalmente se SPA router nao estiver ativo
                 // Ou podemos forcar reload da pagina
+            });
+        }
+
+        // === Clique na linha abre perfil do participante ===
+        const tbody = document.getElementById('participantes-tbody');
+        if (tbody) {
+            tbody.addEventListener('click', function(e) {
+                // Ignorar cliques em checkbox, botoes e links
+                if (e.target.closest('input[type="checkbox"], button, a')) return;
+
+                const row = e.target.closest('tr[data-href]');
+                if (!row) return;
+
+                // Navegar via SPA
+                const href = row.dataset.href;
+                if (href && window.navigateTo) {
+                    window.navigateTo(href);
+                } else if (href) {
+                    window.location.href = href;
+                }
+            });
+        }
+
+        // === Exclusao de participante com modal ===
+        const modal = document.getElementById('modal-excluir-participante');
+        const modalOverlay = document.getElementById('modal-excluir-overlay');
+        const modalCnpj = document.getElementById('modal-excluir-cnpj');
+        const modalNome = document.getElementById('modal-excluir-nome');
+        const btnCancelar = document.getElementById('btn-cancelar-exclusao');
+        const btnConfirmar = document.getElementById('btn-confirmar-exclusao');
+        let participanteIdParaExcluir = null;
+
+        function abrirModalExclusao(id, cnpj, nome) {
+            participanteIdParaExcluir = id;
+            if (modalCnpj) modalCnpj.textContent = cnpj;
+            if (modalNome) modalNome.textContent = nome || 'Sem razao social';
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function fecharModalExclusao() {
+            if (modal) modal.classList.add('hidden');
+            participanteIdParaExcluir = null;
+        }
+
+        // === Modal de acoes (kebab menu) ===
+        const modalAcoes = document.getElementById('modal-acoes');
+        const modalAcoesOverlay = document.getElementById('modal-acoes-overlay');
+        const modalAcoesNome = document.getElementById('modal-acoes-nome');
+        const modalAcoesCnpj = document.getElementById('modal-acoes-cnpj');
+        const modalAcoesVer = document.getElementById('modal-acoes-ver');
+        const modalAcoesExcluir = document.getElementById('modal-acoes-excluir');
+        let acaoParticipanteId = null;
+
+        function abrirModalAcoes(id, nome, cnpj) {
+            acaoParticipanteId = id;
+            if (modalAcoesNome) modalAcoesNome.textContent = nome || 'Sem razao social';
+            if (modalAcoesCnpj) modalAcoesCnpj.textContent = cnpj || '';
+            if (modalAcoesVer) modalAcoesVer.href = '/app/monitoramento/participante/' + id;
+            if (modalAcoes) modalAcoes.classList.remove('hidden');
+        }
+
+        function fecharModalAcoes() {
+            if (modalAcoes) modalAcoes.classList.add('hidden');
+            acaoParticipanteId = null;
+        }
+
+        // Abrir modal ao clicar no kebab
+        container.addEventListener('click', function(e) {
+            const acaoBtn = e.target.closest('.acoes-btn');
+            if (acaoBtn) {
+                e.stopPropagation();
+                abrirModalAcoes(acaoBtn.dataset.id, acaoBtn.dataset.nome, acaoBtn.dataset.cnpj);
+            }
+        });
+
+        // Fechar modal ao clicar no overlay
+        if (modalAcoesOverlay) modalAcoesOverlay.addEventListener('click', fecharModalAcoes);
+
+        // "Ver detalhes" — fechar modal (SPA navega via data-link)
+        if (modalAcoesVer) {
+            modalAcoesVer.addEventListener('click', fecharModalAcoes);
+        }
+
+        // "Excluir" — fechar modal de acoes, abrir modal de exclusao
+        if (modalAcoesExcluir) {
+            modalAcoesExcluir.addEventListener('click', function() {
+                var id = acaoParticipanteId;
+                var cnpj = modalAcoesCnpj ? modalAcoesCnpj.textContent : '';
+                var nome = modalAcoesNome ? modalAcoesNome.textContent : '';
+                fecharModalAcoes();
+                abrirModalExclusao(id, cnpj, nome);
+            });
+        }
+
+        if (btnCancelar) btnCancelar.addEventListener('click', fecharModalExclusao);
+        if (modalOverlay) modalOverlay.addEventListener('click', fecharModalExclusao);
+
+        if (btnConfirmar) {
+            btnConfirmar.addEventListener('click', async function() {
+                if (!participanteIdParaExcluir) return;
+
+                btnConfirmar.disabled = true;
+                btnConfirmar.textContent = 'Excluindo...';
+
+                try {
+                    const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+                    const res = await fetch('/app/monitoramento/participante/' + participanteIdParaExcluir, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': tokenMeta ? tokenMeta.content : '',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                    });
+
+                    const data = await res.json();
+
+                    if (!res.ok || !data.success) {
+                        throw new Error(data.error || 'Erro ao excluir participante');
+                    }
+
+                    window.showToast && window.showToast(data.message || 'Participante excluido com sucesso!', 'success');
+
+                    // Remover linha da tabela
+                    const row = document.querySelector('tr[data-participante-id="' + participanteIdParaExcluir + '"]');
+                    if (row) row.remove();
+
+                    fecharModalExclusao();
+                    atualizarAcoesLote();
+
+                } catch (err) {
+                    console.error('[Monitoramento Participantes] Erro:', err);
+                    window.showToast && window.showToast(err.message || 'Erro ao excluir participante', 'error');
+                    fecharModalExclusao();
+                } finally {
+                    btnConfirmar.disabled = false;
+                    btnConfirmar.textContent = 'Excluir';
+                }
             });
         }
 

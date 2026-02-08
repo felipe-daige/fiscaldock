@@ -1587,6 +1587,83 @@ class MonitoramentoController extends Controller
     }
 
     /**
+     * Exclui um participante e seus registros associados (cascades do DB).
+     * Notas fiscais (xml_notas, sped_notas) ficam com participante_id = NULL.
+     */
+    public function excluirParticipante(Request $request, $id)
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Usuário não autenticado.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = Auth::user();
+        $userId = (int) $user->id;
+
+        $participante = Participante::where('id', $id)
+            ->where('user_id', $userId)
+            ->first();
+
+        if (!$participante) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Participante não encontrado.',
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        // Contar registros associados antes de deletar
+        $assinaturas = MonitoramentoAssinatura::where('participante_id', $participante->id)->count();
+        $consultas = MonitoramentoConsulta::where('participante_id', $participante->id)->count();
+        $scores = $participante->score()->exists() ? 1 : 0;
+        $notasXml = XmlNota::where('user_id', $userId)
+            ->where(fn($q) => $q->where('emit_participante_id', $participante->id)
+                                ->orWhere('dest_participante_id', $participante->id))
+            ->count();
+        $consultaLoteResultados = ConsultaResultado::where('participante_id', $participante->id)->count();
+
+        try {
+            $razaoSocial = $participante->razao_social;
+            $cnpj = $participante->cnpj;
+
+            // DB cascades handle: assinaturas, consultas, scores, pivot grupos, consulta_lote_resultados
+            // xml_notas/sped_notas: SET NULL on participante_id
+            $participante->delete();
+
+            Log::info('Participante excluído', [
+                'user_id' => $userId,
+                'participante_id' => $id,
+                'cnpj' => $cnpj,
+                'deletados' => compact('assinaturas', 'consultas', 'scores', 'consultaLoteResultados'),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Participante excluído com sucesso.',
+                'deletados' => [
+                    'assinaturas' => $assinaturas,
+                    'consultas' => $consultas,
+                    'scores' => $scores,
+                    'consulta_lote_resultados' => $consultaLoteResultados,
+                    'notas_desvinculadas' => $notasXml,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao excluir participante', [
+                'user_id' => $userId,
+                'participante_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Erro ao excluir participante. Tente novamente.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
      * Recebe arquivo .txt e envia para n8n processar.
      * Laravel não valida/extrai CNPJs - apenas repassa o arquivo em base64.
      */
