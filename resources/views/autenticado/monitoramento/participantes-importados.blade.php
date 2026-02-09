@@ -256,33 +256,28 @@
 
 {{-- Modais (fora do container para overlay correto) --}}
 
-{{-- Modal de acoes do participante --}}
-<div id="modal-acoes" class="hidden fixed inset-0 z-50">
-    <div class="flex items-center justify-center p-4">
-        <div class="fixed inset-0 bg-black/20 transition-opacity" id="modal-acoes-overlay"></div>
-        <div class="relative bg-white rounded-xl shadow-lg ring-1 ring-gray-200 w-56 py-1 z-10">
-            <div class="px-3 py-2 border-b border-gray-100">
-                <p class="text-sm font-semibold text-gray-900 truncate" id="modal-acoes-nome"></p>
-                <p class="text-xs text-gray-500 font-mono" id="modal-acoes-cnpj"></p>
-            </div>
-            <a id="modal-acoes-ver" href="#"
-               class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-               data-link>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                </svg>
-                Ver detalhes
-            </a>
-            <button type="button" id="modal-acoes-excluir"
-                class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                </svg>
-                Excluir
-            </button>
-        </div>
+{{-- Dropdown de acoes do participante (menu kebab) --}}
+<div id="dropdown-acoes" class="hidden fixed z-[9999] bg-white rounded-xl shadow-lg ring-1 ring-gray-200 w-56 py-1">
+    <div class="px-3 py-2 border-b border-gray-100">
+        <p class="text-sm font-semibold text-gray-900 truncate" id="dropdown-acoes-nome"></p>
+        <p class="text-xs text-gray-500 font-mono" id="dropdown-acoes-cnpj"></p>
     </div>
+    <a id="dropdown-acoes-ver" href="#"
+       class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+       data-link>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+        </svg>
+        Ver detalhes
+    </a>
+    <button type="button" id="dropdown-acoes-excluir"
+        class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+        </svg>
+        Excluir
+    </button>
 </div>
 
 {{-- Modal de confirmacao de exclusao --}}
@@ -451,52 +446,109 @@
             participanteIdParaExcluir = null;
         }
 
-        // === Modal de acoes (kebab menu) ===
-        const modalAcoes = document.getElementById('modal-acoes');
-        const modalAcoesOverlay = document.getElementById('modal-acoes-overlay');
-        const modalAcoesNome = document.getElementById('modal-acoes-nome');
-        const modalAcoesCnpj = document.getElementById('modal-acoes-cnpj');
-        const modalAcoesVer = document.getElementById('modal-acoes-ver');
-        const modalAcoesExcluir = document.getElementById('modal-acoes-excluir');
+        // === Dropdown de acoes (kebab menu) ===
+        const dropdownAcoes = document.getElementById('dropdown-acoes');
+        const dropdownAcoesNome = document.getElementById('dropdown-acoes-nome');
+        const dropdownAcoesCnpj = document.getElementById('dropdown-acoes-cnpj');
+        const dropdownAcoesVer = document.getElementById('dropdown-acoes-ver');
+        const dropdownAcoesExcluir = document.getElementById('dropdown-acoes-excluir');
         let acaoParticipanteId = null;
+        let dropdownBtnAtual = null;
 
-        function abrirModalAcoes(id, nome, cnpj) {
+        function posicionarDropdown(btnElement) {
+            if (!dropdownAcoes || !btnElement) return;
+            // Temporarily show to measure height
+            dropdownAcoes.style.visibility = 'hidden';
+            dropdownAcoes.classList.remove('hidden');
+            const dropdownHeight = dropdownAcoes.offsetHeight;
+            const dropdownWidth = dropdownAcoes.offsetWidth;
+            dropdownAcoes.classList.add('hidden');
+            dropdownAcoes.style.visibility = '';
+
+            const rect = btnElement.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const spaceAbove = rect.top;
+
+            // Horizontal: align right edge of dropdown with right edge of button
+            let left = rect.right - dropdownWidth;
+            if (left < 8) left = 8;
+
+            // Vertical: prefer below, fall back to above
+            let top;
+            if (spaceBelow >= dropdownHeight + 4) {
+                top = rect.bottom + 4;
+            } else if (spaceAbove >= dropdownHeight + 4) {
+                top = rect.top - dropdownHeight - 4;
+            } else {
+                top = rect.bottom + 4;
+            }
+
+            dropdownAcoes.style.top = top + 'px';
+            dropdownAcoes.style.left = left + 'px';
+        }
+
+        function abrirDropdownAcoes(btnElement, id, nome, cnpj) {
+            // Toggle: if clicking the same button, close
+            if (!dropdownAcoes.classList.contains('hidden') && dropdownBtnAtual === btnElement) {
+                fecharDropdownAcoes();
+                return;
+            }
             acaoParticipanteId = id;
-            if (modalAcoesNome) modalAcoesNome.textContent = nome || 'Sem razao social';
-            if (modalAcoesCnpj) modalAcoesCnpj.textContent = cnpj || '';
-            if (modalAcoesVer) modalAcoesVer.href = '/app/monitoramento/participante/' + id;
-            if (modalAcoes) modalAcoes.classList.remove('hidden');
+            dropdownBtnAtual = btnElement;
+            if (dropdownAcoesNome) dropdownAcoesNome.textContent = nome || 'Sem razao social';
+            if (dropdownAcoesCnpj) dropdownAcoesCnpj.textContent = cnpj || '';
+            if (dropdownAcoesVer) dropdownAcoesVer.href = '/app/monitoramento/participante/' + id;
+            posicionarDropdown(btnElement);
+            dropdownAcoes.classList.remove('hidden');
         }
 
-        function fecharModalAcoes() {
-            if (modalAcoes) modalAcoes.classList.add('hidden');
-            acaoParticipanteId = null;
+        function fecharDropdownAcoes() {
+            if (dropdownAcoes) dropdownAcoes.classList.add('hidden');
+            dropdownBtnAtual = null;
         }
 
-        // Abrir modal ao clicar no kebab
+        // Abrir dropdown ao clicar no kebab
         container.addEventListener('click', function(e) {
             const acaoBtn = e.target.closest('.acoes-btn');
             if (acaoBtn) {
                 e.stopPropagation();
-                abrirModalAcoes(acaoBtn.dataset.id, acaoBtn.dataset.nome, acaoBtn.dataset.cnpj);
+                abrirDropdownAcoes(acaoBtn, acaoBtn.dataset.id, acaoBtn.dataset.nome, acaoBtn.dataset.cnpj);
             }
         });
 
-        // Fechar modal ao clicar no overlay
-        if (modalAcoesOverlay) modalAcoesOverlay.addEventListener('click', fecharModalAcoes);
+        // Close on click outside
+        document.addEventListener('click', function(e) {
+            if (dropdownAcoes && !dropdownAcoes.classList.contains('hidden') && !dropdownAcoes.contains(e.target)) {
+                fecharDropdownAcoes();
+            }
+        });
 
-        // "Ver detalhes" — fechar modal (SPA navega via data-link)
-        if (modalAcoesVer) {
-            modalAcoesVer.addEventListener('click', fecharModalAcoes);
+        // Close on Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && dropdownAcoes && !dropdownAcoes.classList.contains('hidden')) {
+                fecharDropdownAcoes();
+            }
+        });
+
+        // Close on scroll (capture mode to catch scrolling in any container)
+        window.addEventListener('scroll', function() {
+            if (dropdownAcoes && !dropdownAcoes.classList.contains('hidden')) {
+                fecharDropdownAcoes();
+            }
+        }, true);
+
+        // "Ver detalhes" — fechar dropdown (SPA navega via data-link)
+        if (dropdownAcoesVer) {
+            dropdownAcoesVer.addEventListener('click', fecharDropdownAcoes);
         }
 
-        // "Excluir" — fechar modal de acoes, abrir modal de exclusao
-        if (modalAcoesExcluir) {
-            modalAcoesExcluir.addEventListener('click', function() {
-                var id = acaoParticipanteId;
-                var cnpj = modalAcoesCnpj ? modalAcoesCnpj.textContent : '';
-                var nome = modalAcoesNome ? modalAcoesNome.textContent : '';
-                fecharModalAcoes();
+        // "Excluir" — fechar dropdown, abrir modal de exclusao
+        if (dropdownAcoesExcluir) {
+            dropdownAcoesExcluir.addEventListener('click', function() {
+                const id = acaoParticipanteId;
+                const cnpj = dropdownAcoesCnpj ? dropdownAcoesCnpj.textContent : '';
+                const nome = dropdownAcoesNome ? dropdownAcoesNome.textContent : '';
+                fecharDropdownAcoes();
                 abrirModalExclusao(id, cnpj, nome);
             });
         }

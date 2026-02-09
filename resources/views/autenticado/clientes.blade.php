@@ -274,40 +274,35 @@
 
 {{-- Modais (fora do container para overlay correto) --}}
 
-{{-- Modal de acoes do cliente (kebab menu) --}}
-<div id="modal-acoes" class="hidden fixed inset-0 z-50">
-    <div class="flex items-center justify-center p-4">
-        <div class="fixed inset-0 bg-black/20 transition-opacity" id="modal-acoes-overlay"></div>
-        <div class="relative bg-white rounded-xl shadow-lg ring-1 ring-gray-200 w-56 py-1 z-10">
-            <div class="px-3 py-2 border-b border-gray-100">
-                <p class="text-sm font-semibold text-gray-900 truncate" id="modal-acoes-nome"></p>
-                <p class="text-xs text-gray-500 font-mono" id="modal-acoes-documento"></p>
-            </div>
-            <button type="button" id="modal-acoes-ver"
-               class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                </svg>
-                Ver detalhes
-            </button>
-            <a id="modal-acoes-editar" href="#"
-               class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-               data-link>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                </svg>
-                Editar
-            </a>
-            <button type="button" id="modal-acoes-excluir"
-                class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                </svg>
-                Excluir
-            </button>
-        </div>
+{{-- Dropdown de acoes do cliente (menu kebab) --}}
+<div id="dropdown-acoes" class="hidden fixed z-[9999] bg-white rounded-xl shadow-lg ring-1 ring-gray-200 w-56 py-1">
+    <div class="px-3 py-2 border-b border-gray-100">
+        <p class="text-sm font-semibold text-gray-900 truncate" id="dropdown-acoes-nome"></p>
+        <p class="text-xs text-gray-500 font-mono" id="dropdown-acoes-documento"></p>
     </div>
+    <button type="button" id="dropdown-acoes-ver"
+       class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+        </svg>
+        Ver detalhes
+    </button>
+    <a id="dropdown-acoes-editar" href="#"
+       class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+       data-link>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+        </svg>
+        Editar
+    </a>
+    <button type="button" id="dropdown-acoes-excluir"
+        class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+        </svg>
+        Excluir
+    </button>
 </div>
 
 {{-- Modal de detalhes do cliente --}}
@@ -654,64 +649,122 @@
             });
         }
 
-        // === Modal de acoes (kebab) ===
-        var modalAcoes = document.getElementById('modal-acoes');
-        var modalAcoesOverlay = document.getElementById('modal-acoes-overlay');
-        var modalAcoesNome = document.getElementById('modal-acoes-nome');
-        var modalAcoesDocumento = document.getElementById('modal-acoes-documento');
-        var modalAcoesVer = document.getElementById('modal-acoes-ver');
-        var modalAcoesEditar = document.getElementById('modal-acoes-editar');
-        var modalAcoesExcluir = document.getElementById('modal-acoes-excluir');
+        // === Dropdown de acoes (kebab) ===
+        var dropdownAcoes = document.getElementById('dropdown-acoes');
+        var dropdownAcoesNome = document.getElementById('dropdown-acoes-nome');
+        var dropdownAcoesDocumento = document.getElementById('dropdown-acoes-documento');
+        var dropdownAcoesVer = document.getElementById('dropdown-acoes-ver');
+        var dropdownAcoesEditar = document.getElementById('dropdown-acoes-editar');
+        var dropdownAcoesExcluir = document.getElementById('dropdown-acoes-excluir');
         var acaoClienteId = null;
         var acaoClienteNome = null;
         var acaoClienteDocumento = null;
+        var dropdownBtnAtual = null;
 
-        function abrirModalAcoes(id, nome, documento) {
+        function posicionarDropdown(btnElement) {
+            if (!dropdownAcoes || !btnElement) return;
+            // Temporarily show to measure height
+            dropdownAcoes.style.visibility = 'hidden';
+            dropdownAcoes.classList.remove('hidden');
+            var dropdownHeight = dropdownAcoes.offsetHeight;
+            var dropdownWidth = dropdownAcoes.offsetWidth;
+            dropdownAcoes.classList.add('hidden');
+            dropdownAcoes.style.visibility = '';
+
+            var rect = btnElement.getBoundingClientRect();
+            var spaceBelow = window.innerHeight - rect.bottom;
+            var spaceAbove = rect.top;
+
+            // Horizontal: align right edge of dropdown with right edge of button
+            var left = rect.right - dropdownWidth;
+            if (left < 8) left = 8;
+
+            // Vertical: prefer below, fall back to above
+            var top;
+            if (spaceBelow >= dropdownHeight + 4) {
+                top = rect.bottom + 4;
+            } else if (spaceAbove >= dropdownHeight + 4) {
+                top = rect.top - dropdownHeight - 4;
+            } else {
+                top = rect.bottom + 4;
+            }
+
+            dropdownAcoes.style.top = top + 'px';
+            dropdownAcoes.style.left = left + 'px';
+        }
+
+        function abrirDropdownAcoes(btnElement, id, nome, documento) {
+            // Toggle: if clicking the same button, close
+            if (!dropdownAcoes.classList.contains('hidden') && dropdownBtnAtual === btnElement) {
+                fecharDropdownAcoes();
+                return;
+            }
             acaoClienteId = id;
             acaoClienteNome = nome;
             acaoClienteDocumento = documento;
-            if (modalAcoesNome) modalAcoesNome.textContent = nome || 'Sem nome';
-            if (modalAcoesDocumento) modalAcoesDocumento.textContent = documento || '';
-            if (modalAcoesEditar) modalAcoesEditar.href = '/app/novo_cliente?id=' + id;
-            if (modalAcoes) modalAcoes.classList.remove('hidden');
+            dropdownBtnAtual = btnElement;
+            if (dropdownAcoesNome) dropdownAcoesNome.textContent = nome || 'Sem nome';
+            if (dropdownAcoesDocumento) dropdownAcoesDocumento.textContent = documento || '';
+            if (dropdownAcoesEditar) dropdownAcoesEditar.href = '/app/novo_cliente?id=' + id;
+            posicionarDropdown(btnElement);
+            dropdownAcoes.classList.remove('hidden');
         }
 
-        function fecharModalAcoes() {
-            if (modalAcoes) modalAcoes.classList.add('hidden');
-            acaoClienteId = null;
+        function fecharDropdownAcoes() {
+            if (dropdownAcoes) dropdownAcoes.classList.add('hidden');
+            dropdownBtnAtual = null;
         }
 
         container.addEventListener('click', function(e) {
             var acaoBtn = e.target.closest('.acoes-btn');
             if (acaoBtn) {
                 e.stopPropagation();
-                abrirModalAcoes(acaoBtn.dataset.id, acaoBtn.dataset.nome, acaoBtn.dataset.documento);
+                abrirDropdownAcoes(acaoBtn, acaoBtn.dataset.id, acaoBtn.dataset.nome, acaoBtn.dataset.documento);
             }
         });
 
-        if (modalAcoesOverlay) modalAcoesOverlay.addEventListener('click', fecharModalAcoes);
+        // Close on click outside
+        document.addEventListener('click', function(e) {
+            if (dropdownAcoes && !dropdownAcoes.classList.contains('hidden') && !dropdownAcoes.contains(e.target)) {
+                fecharDropdownAcoes();
+            }
+        });
+
+        // Close on Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && dropdownAcoes && !dropdownAcoes.classList.contains('hidden')) {
+                fecharDropdownAcoes();
+            }
+        });
+
+        // Close on scroll (capture mode to catch scrolling in any container)
+        window.addEventListener('scroll', function() {
+            if (dropdownAcoes && !dropdownAcoes.classList.contains('hidden')) {
+                fecharDropdownAcoes();
+            }
+        }, true);
 
         // "Ver detalhes" -> abre modal de detalhes
-        if (modalAcoesVer) {
-            modalAcoesVer.addEventListener('click', function() {
+        if (dropdownAcoesVer) {
+            dropdownAcoesVer.addEventListener('click', function() {
                 var id = acaoClienteId;
-                fecharModalAcoes();
+                fecharDropdownAcoes();
                 abrirModalDetalhes(id);
             });
         }
 
-        // "Editar" -> fechar modal (SPA navega via data-link)
-        if (modalAcoesEditar) {
-            modalAcoesEditar.addEventListener('click', fecharModalAcoes);
+        // "Editar" -> fechar dropdown (SPA navega via data-link)
+        if (dropdownAcoesEditar) {
+            dropdownAcoesEditar.addEventListener('click', fecharDropdownAcoes);
         }
 
-        // "Excluir" -> fechar modal de acoes, abrir modal de exclusao
-        if (modalAcoesExcluir) {
-            modalAcoesExcluir.addEventListener('click', function() {
+        // "Excluir" -> fechar dropdown, abrir modal de exclusao
+        if (dropdownAcoesExcluir) {
+            dropdownAcoesExcluir.addEventListener('click', function() {
                 var id = acaoClienteId;
                 var nome = acaoClienteNome;
                 var documento = acaoClienteDocumento;
-                fecharModalAcoes();
+                fecharDropdownAcoes();
                 abrirModalExclusao(id, nome, documento);
             });
         }
