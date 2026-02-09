@@ -160,7 +160,7 @@
                 </div>
 
                 {{-- Coluna Direita: Tipo de Analise e Resumo (1/3) --}}
-                <div class="space-y-4">
+                <div class="space-y-4 lg:sticky lg:top-4 lg:self-start">
                     {{-- Card Tipo de Analise --}}
                     <div class="bg-white rounded-lg border border-gray-200">
                         <div class="px-5 py-4 border-b border-gray-100">
@@ -171,7 +171,7 @@
                         </div>
                         <div class="p-4 space-y-2">
                             @foreach($planos as $plano)
-                                <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 hover:bg-gray-50 transition plano-label" data-plano-id="{{ $plano->id }}">
+                                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition plano-label {{ $loop->first ? 'border-blue-500 bg-blue-50/60 ring-2 ring-blue-100' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-500/8' }}" data-plano-id="{{ $plano->id }}">
                                     <input
                                         type="radio"
                                         name="plano_id"
@@ -228,6 +228,16 @@
                             <button type="button" id="btn-gerar-relatorio" class="w-full mt-4 py-2.5 rounded-lg text-sm font-medium transition" style="background-color: #d1d5db; color: #6b7280; cursor: not-allowed;" disabled>
                                 Executar Consulta
                             </button>
+                        </div>
+                    </div>
+
+                    {{-- Card Consultas Incluidas --}}
+                    <div id="card-consultas-incluidas" class="bg-white rounded-lg border border-gray-200">
+                        <div class="px-5 py-4 border-b border-gray-100">
+                            <h3 class="text-sm font-semibold text-gray-900">Consultas Incluidas</h3>
+                        </div>
+                        <div id="lista-consultas-incluidas" class="p-4 space-y-1">
+                            {{-- Preenchido via JS --}}
                         </div>
                     </div>
                 </div>
@@ -300,7 +310,7 @@
 
 {{-- Dados para JS --}}
 <script>
-    window.rafConsultaData = {
+    window.consultaData = {
         credits: {{ $credits ?? 0 }},
         csrfToken: '{{ csrf_token() }}',
         routes: {
@@ -310,7 +320,15 @@
             executar: '/app/consultas/nova/executar',
             progressoStream: '/app/consultas/nova/progresso/stream',
             baixarLote: '/app/consultas/lote/{id}/baixar'
+        },
+        planos: {
+            @foreach($planos as $plano)
+                {{ $plano->id }}: {
+                    codigo: '{{ $plano->codigo }}',
+                    consultas: {!! json_encode($plano->consultas_incluidas) !!}
+                },
+            @endforeach
         }
     };
 </script>
-<script src="/js/raf-consulta.js"></script>
+<script src="/js/consulta-lote.js"></script>

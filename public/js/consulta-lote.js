@@ -1,9 +1,37 @@
 /**
- * RAF Consulta - JavaScript
- * Gerencia selecao de participantes e execucao de consultas RAF.
+ * Consulta Lote - JavaScript
+ * Gerencia selecao de participantes e execucao de consultas em lote.
  */
 (function() {
     'use strict';
+
+    // Nomes amigaveis das consultas
+    const CONSULTA_NOMES = {
+        situacao_cadastral: 'Situacao Cadastral',
+        dados_cadastrais: 'Dados Cadastrais',
+        endereco: 'Endereco',
+        cnaes: 'CNAEs',
+        qsa: 'Quadro Societario (QSA)',
+        simples_nacional: 'Simples Nacional',
+        mei: 'MEI',
+        sintegra: 'SINTEGRA',
+        tcu_consolidada: 'TCU Consolidada',
+        cnd_federal: 'CND Federal (PGFN)',
+        crf_fgts: 'CRF/FGTS',
+        cnd_estadual: 'CND Estadual',
+        cndt: 'CNDT (Trabalhista)',
+        protestos: 'Protestos',
+        lista_devedores_pgfn: 'Lista Devedores PGFN',
+        trabalho_escravo: 'Trabalho Escravo',
+        ibama_autuacoes: 'IBAMA Autuacoes',
+        processos_cnj: 'Processos CNJ'
+    };
+
+    // Consultas gratuitas (Minha Receita)
+    const CONSULTAS_GRATUITAS = [
+        'situacao_cadastral', 'dados_cadastrais', 'endereco',
+        'cnaes', 'qsa', 'simples_nacional', 'mei'
+    ];
 
     // Estado global
     const state = {
@@ -22,7 +50,7 @@
         tabId: generateUUID(),
         consultaLoteId: null,
         eventSource: null,
-        credits: window.rafConsultaData?.credits || 0
+        credits: window.consultaData?.credits || 0
     };
 
     // Elementos DOM
@@ -45,10 +73,12 @@
                     state.selectedIds.add(numId);
                 }
             });
-            console.log('[RAF Consulta] Pre-selecionados da URL:', state.selectedIds.size, 'participantes');
+            console.log('[Consulta Lote] Pre-selecionados da URL:', state.selectedIds.size, 'participantes');
         }
 
         loadParticipantes();
+        updatePlanoStyles();
+        updateConsultasIncluidas();
         updateResumo();
     }
 
@@ -126,7 +156,11 @@
 
         // Planos
         document.querySelectorAll('input[name="plano_id"]').forEach(radio => {
-            radio.addEventListener('change', updateResumo);
+            radio.addEventListener('change', () => {
+                updatePlanoStyles();
+                updateConsultasIncluidas();
+                updateResumo();
+            });
         });
 
         // Acoes
@@ -172,7 +206,7 @@
         if (state.filters.busca) params.append('busca', state.filters.busca);
 
         try {
-            const response = await fetch(`${window.rafConsultaData.routes.getParticipantes}?${params}`, {
+            const response = await fetch(`${window.consultaData.routes.getParticipantes}?${params}`, {
                 headers: {
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
@@ -342,7 +376,7 @@
         if (state.filters.busca) params.append('busca', state.filters.busca);
 
         try {
-            const response = await fetch(`${window.rafConsultaData.routes.getParticipantes}?${params}`, {
+            const response = await fetch(`${window.consultaData.routes.getParticipantes}?${params}`, {
                 headers: {
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
@@ -436,6 +470,56 @@
     }
 
     /**
+     * Atualiza estilos visuais dos labels de plano (selected vs unselected).
+     */
+    function updatePlanoStyles() {
+        document.querySelectorAll('.plano-label').forEach(label => {
+            const radio = label.querySelector('input[type="radio"]');
+            if (radio.checked) {
+                label.classList.remove('border-gray-200', 'hover:border-gray-300', 'hover:bg-gray-500/8');
+                label.classList.add('border-blue-500', 'bg-blue-50/60', 'ring-2', 'ring-blue-100');
+            } else {
+                label.classList.remove('border-blue-500', 'bg-blue-50/60', 'ring-2', 'ring-blue-100');
+                label.classList.add('border-gray-200', 'hover:border-gray-300', 'hover:bg-gray-500/8');
+            }
+        });
+    }
+
+    /**
+     * Atualiza lista de consultas incluidas no card lateral.
+     */
+    function updateConsultasIncluidas() {
+        const container = document.getElementById('lista-consultas-incluidas');
+        if (!container) return;
+
+        const planoRadio = document.querySelector('input[name="plano_id"]:checked');
+        if (!planoRadio) return;
+
+        const planoId = planoRadio.value;
+        const planoData = window.consultaData?.planos?.[planoId];
+        if (!planoData || !planoData.consultas) {
+            container.innerHTML = '<p class="text-xs text-gray-400">Nenhuma consulta disponivel.</p>';
+            return;
+        }
+
+        const checkSvg = '<svg class="w-3.5 h-3.5 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+
+        container.innerHTML = planoData.consultas.map(consulta => {
+            const nome = CONSULTA_NOMES[consulta] || consulta;
+            const isGratuita = CONSULTAS_GRATUITAS.includes(consulta);
+            const badge = isGratuita
+                ? '<span class="px-1.5 py-0.5 bg-green-50 text-green-600 text-[10px] font-medium rounded">Gratis</span>'
+                : '<span class="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-medium rounded">1 cr</span>';
+
+            return `<div class="flex items-center gap-2 py-1">
+                ${checkSvg}
+                <span class="text-xs text-gray-700 flex-1">${nome}</span>
+                ${badge}
+            </div>`;
+        }).join('');
+    }
+
+    /**
      * Atualiza resumo de custos.
      */
     function updateResumo() {
@@ -496,12 +580,12 @@
         updateProgresso(0, 'Iniciando consulta...');
 
         try {
-            const response = await fetch(window.rafConsultaData.routes.executar, {
+            const response = await fetch(window.consultaData.routes.executar, {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': window.rafConsultaData.csrfToken,
+                    'X-CSRF-TOKEN': window.consultaData.csrfToken,
                     'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
@@ -517,7 +601,7 @@
             try {
                 data = await response.json();
             } catch (e) {
-                console.error('RAF Consulta: resposta invalida do servidor', e);
+                console.error('Consulta Lote: resposta invalida do servidor', e);
                 hideModal('progresso');
                 showModal('erro');
                 if (elements.erroMensagem) elements.erroMensagem.textContent = 'Resposta invalida do servidor.';
@@ -530,7 +614,7 @@
                 showModal('erro');
                 const errorMsg = data?.error || `Erro ${response.status}: ${response.statusText}`;
                 if (elements.erroMensagem) elements.erroMensagem.textContent = errorMsg;
-                console.error('RAF Consulta erro:', errorMsg, data);
+                console.error('Consulta Lote erro:', errorMsg, data);
                 return;
             }
 
@@ -543,7 +627,7 @@
             iniciarSSE();
 
         } catch (error) {
-            console.error('RAF Consulta excecao:', error);
+            console.error('Consulta Lote excecao:', error);
             hideModal('progresso');
             showModal('erro');
             if (elements.erroMensagem) {
@@ -560,7 +644,7 @@
             state.eventSource.close();
         }
 
-        const url = `${window.rafConsultaData.routes.progressoStream}?tab_id=${state.tabId}`;
+        const url = `${window.consultaData.routes.progressoStream}?tab_id=${state.tabId}`;
         state.eventSource = new EventSource(url);
 
         state.eventSource.onmessage = function(event) {
@@ -606,7 +690,7 @@
 
         // Link de download
         if (elements.linkDownloadManual && state.consultaLoteId) {
-            const downloadUrl = window.rafConsultaData.routes.baixarLote.replace('{id}', state.consultaLoteId);
+            const downloadUrl = window.consultaData.routes.baixarLote.replace('{id}', state.consultaLoteId);
             elements.linkDownloadManual.href = downloadUrl;
 
             // Iniciar download automatico
@@ -710,5 +794,5 @@
     }
 
     // Expor funcao de inicializacao para SPA
-    window.initRafConsulta = init;
+    window.initConsultaLote = init;
 })();

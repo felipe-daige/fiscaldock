@@ -1,5 +1,5 @@
 {{-- RAF Consulta - Selecao de Participantes --}}
-<div class="min-h-screen bg-gray-50" id="raf-consulta-container">
+<div class="min-h-screen bg-gray-50" id="consulta-lote-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {{-- Page Header --}}
         <div class="mb-6">
@@ -297,7 +297,7 @@
 
 {{-- Dados para JS --}}
 <script>
-    window.rafConsultaData = {
+    window.consultaData = {
         credits: {{ $credits ?? 0 }},
         csrfToken: '{{ csrf_token() }}',
         routes: {
@@ -310,4 +310,4 @@
         }
     };
 </script>
-<script src="/js/raf-consulta.js"></script>
+<script src="/js/consulta-lote.js"></script>

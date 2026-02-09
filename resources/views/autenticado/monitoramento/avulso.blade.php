@@ -83,128 +83,160 @@
                             </p>
                         </div>
 
-                        {{-- Selecao do Plano --}}
+                        {{-- Selecao do Plano - Radios hidden + Card visual --}}
+                        @php
+                            // Metadata visual por codigo de plano (DB)
+                            $planoMeta = [
+                                'gratuito' => [
+                                    'cor' => 'green',
+                                    'icone' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+                                    'consultas_display' => ['Situacao Cadastral (Ativa, Inapta, Baixada)', 'Dados Cadastrais Completos', 'CNAEs Principal e Secundarios', 'Quadro Societario (QSA)', 'Simples Nacional e MEI'],
+                                    'casos_uso' => ['Validar se CNPJ existe e esta ativo', 'Conferir regime tributario para emissao de NF', 'Identificar socios antes de negociar'],
+                                ],
+                                'validacao' => [
+                                    'cor' => 'blue',
+                                    'icone' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+                                    'consultas_display' => ['Tudo do Gratuito', 'SINTEGRA (Inscricao Estadual)', 'TCU Consolidada (CEIS, CNEP, CNJ)'],
+                                    'casos_uso' => ['Validar IE para operacoes interestaduais', 'Verificar se empresa esta em lista de impedidos', 'Qualificar fornecedores antes de cadastrar'],
+                                ],
+                                'licitacao' => [
+                                    'cor' => 'blue',
+                                    'icone' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+                                    'consultas_display' => ['Tudo do Validacao', 'CND Federal (PGFN/RFB)', 'CRF FGTS (Regularidade)', 'CND Estadual (ICMS)', 'CNDT Trabalhista (TST)'],
+                                    'casos_uso' => ['Editais e licitacoes publicas', 'Verificar regularidade fiscal federal', 'Homologar fornecedores em licitacoes'],
+                                    'promo' => true,
+                                ],
+                                'compliance' => [
+                                    'cor' => 'purple',
+                                    'icone' => 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
+                                    'consultas_display' => ['Tudo do Licitacao', 'Protestos', 'Lista Devedores PGFN'],
+                                    'casos_uso' => ['Gestao de terceiros', 'Compliance com Lei Anticorrupcao', 'Monitoramento de fornecedores criticos'],
+                                ],
+                                'due_diligence' => [
+                                    'cor' => 'amber',
+                                    'icone' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7',
+                                    'consultas_display' => ['Tudo do Compliance', 'Trabalho Escravo (MTE)', 'IBAMA Autuacoes'],
+                                    'casos_uso' => ['Analise pre-aquisicao (M&A)', 'Due diligence ESG', 'Compliance socioambiental'],
+                                ],
+                                'enterprise' => [
+                                    'cor' => 'slate',
+                                    'icone' => 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
+                                    'consultas_display' => ['Tudo do Due Diligence', 'Processos Judiciais (CNJ)'],
+                                    'casos_uso' => ['Due diligence juridico completo', 'Analise de litigios antes de contratar', 'Monitoramento corporativo de alto nivel'],
+                                ],
+                            ];
+
+                            // Gerar $planosDetalhados a partir dos planos do DB
+                            $planosDetalhados = [];
+                            foreach ($planos as $p) {
+                                $meta = $planoMeta[$p->codigo] ?? ['cor' => 'gray', 'icone' => 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'consultas_display' => [], 'casos_uso' => []];
+                                $planosDetalhados[] = [
+                                    'codigo' => $p->codigo,
+                                    'nome' => $p->nome,
+                                    'creditos' => $p->custo_creditos,
+                                    'creditos_original' => null,
+                                    'promo' => $meta['promo'] ?? false,
+                                    'gratuito' => $p->is_gratuito,
+                                    'descricao' => $p->descricao,
+                                    'cor' => $meta['cor'],
+                                    'icone' => $meta['icone'],
+                                    'consultas' => $meta['consultas_display'],
+                                    'casos_uso' => $meta['casos_uso'],
+                                ];
+                            }
+
+                            $corClasses = [
+                                'green' => ['bg' => 'bg-green-100', 'text' => 'text-green-700', 'icon' => 'text-green-600', 'badge' => 'bg-green-100 text-green-700', 'border' => 'border-green-200', 'btn' => 'bg-green-600 hover:bg-green-700'],
+                                'blue' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-700', 'icon' => 'text-blue-600', 'badge' => 'bg-blue-100 text-blue-700', 'border' => 'border-blue-200', 'btn' => 'bg-blue-600 hover:bg-blue-700'],
+                                'purple' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-700', 'icon' => 'text-purple-600', 'badge' => 'bg-purple-100 text-purple-700', 'border' => 'border-purple-200', 'btn' => 'bg-purple-600 hover:bg-purple-700'],
+                                'amber' => ['bg' => 'bg-amber-100', 'text' => 'text-amber-700', 'icon' => 'text-amber-600', 'badge' => 'bg-amber-100 text-amber-700', 'border' => 'border-amber-200', 'btn' => 'bg-amber-600 hover:bg-amber-700'],
+                                'slate' => ['bg' => 'bg-slate-100', 'text' => 'text-slate-700', 'icon' => 'text-slate-600', 'badge' => 'bg-slate-100 text-slate-700', 'border' => 'border-slate-200', 'btn' => 'bg-slate-700 hover:bg-slate-800'],
+                            ];
+                        @endphp
+
+                        {{-- Hidden radio inputs (sr-only) --}}
+                        <div class="sr-only" id="planos-grid">
+                            @foreach($planos as $index => $plano)
+                                @php
+                                    $pdMatch = collect($planosDetalhados)->firstWhere('codigo', $plano->codigo);
+                                    $creditosEfetivos = $pdMatch ? $pdMatch['creditos'] : $plano->custo_creditos;
+                                @endphp
+                                <input
+                                    type="radio"
+                                    name="plano"
+                                    value="{{ $plano->codigo }}"
+                                    data-creditos="{{ $creditosEfetivos }}"
+                                    {{ $index === 0 ? 'checked' : '' }}
+                                >
+                            @endforeach
+                        </div>
+
+                        {{-- Card: Plano Selecionado --}}
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Tipo de consulta:
+                                Plano selecionado:
                             </label>
-                            <div class="space-y-2" id="planos-grid">
-                                @php
-                                    $planosEstaticos = [
-                                        ['codigo' => 'basico', 'nome' => 'Basico', 'creditos' => 0, 'gratuito' => true, 'descricao' => 'Dados cadastrais + Simples/MEI'],
-                                        ['codigo' => 'cadastral_plus', 'nome' => 'Cadastral+', 'creditos' => 3, 'gratuito' => false, 'descricao' => 'Basico + SINTEGRA + TCU Consolidada'],
-                                        ['codigo' => 'fiscal_federal', 'nome' => 'Fiscal Federal', 'creditos' => 6, 'gratuito' => false, 'descricao' => 'Cadastral+ + CND Federal + CRF FGTS'],
-                                        ['codigo' => 'fiscal_completo', 'nome' => 'Fiscal Completo', 'creditos' => 12, 'gratuito' => false, 'descricao' => 'Fiscal Federal + CND Estadual + CNDT'],
-                                        ['codigo' => 'due_diligence', 'nome' => 'Due Diligence', 'creditos' => 16, 'gratuito' => false, 'descricao' => 'Fiscal Completo + Lista Devedores PGFN'],
-                                        ['codigo' => 'esg', 'nome' => 'ESG', 'creditos' => 6, 'gratuito' => false, 'descricao' => 'Trabalho Escravo + IBAMA Autuacoes'],
-                                        ['codigo' => 'completo', 'nome' => 'Completo', 'creditos' => 22, 'gratuito' => false, 'descricao' => 'Todas as consultas disponiveis'],
-                                    ];
-
-                                    $planosDetalhados = [
-                                        [
-                                            'codigo' => 'basico', 'nome' => 'Basico', 'creditos' => 0, 'gratuito' => true,
-                                            'cor' => 'green',
-                                            'icone' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-                                            'descricao' => 'Validacao rapida de dados cadastrais e regime tributario.',
-                                            'consultas' => ['Situacao Cadastral (Ativa, Inapta, Baixada)', 'Dados Cadastrais Completos', 'CNAEs Principal e Secundarios', 'Quadro Societario (QSA)', 'Simples Nacional e MEI'],
-                                            'casos_uso' => ['Validar se CNPJ existe e esta ativo', 'Conferir regime tributario para emissao de NF', 'Identificar socios antes de negociar'],
-                                        ],
-                                        [
-                                            'codigo' => 'cadastral_plus', 'nome' => 'Cadastral+', 'creditos' => 3, 'gratuito' => false,
-                                            'cor' => 'blue',
-                                            'icone' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
-                                            'descricao' => 'Inclui inscricao estadual e verificacao em listas restritivas.',
-                                            'consultas' => ['Tudo do Basico', 'SINTEGRA (Inscricao Estadual)', 'TCU Consolidada (CEIS, CNEP, CNJ)'],
-                                            'casos_uso' => ['Validar IE para operacoes interestaduais', 'Verificar se empresa esta em lista de impedidos', 'Qualificar fornecedores antes de cadastrar'],
-                                        ],
-                                        [
-                                            'codigo' => 'fiscal_federal', 'nome' => 'Fiscal Federal', 'creditos' => 6, 'gratuito' => false,
-                                            'cor' => 'blue',
-                                            'icone' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-                                            'descricao' => 'CNDs federais obrigatorias para contratos publicos.',
-                                            'consultas' => ['Tudo do Cadastral+', 'CND Federal (PGFN/RFB)', 'CRF FGTS (Regularidade)'],
-                                            'casos_uso' => ['Emitir CNDs para editais publicos', 'Verificar regularidade fiscal federal', 'Homologar fornecedores em licitacoes'],
-                                        ],
-                                        [
-                                            'codigo' => 'fiscal_completo', 'nome' => 'Fiscal Completo', 'creditos' => 12, 'gratuito' => false,
-                                            'cor' => 'purple',
-                                            'icone' => 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
-                                            'descricao' => 'Pacote completo de certidoes fiscais e trabalhistas.',
-                                            'consultas' => ['Tudo do Fiscal Federal', 'CND Estadual (ICMS)', 'CNDT Trabalhista (TST)'],
-                                            'casos_uso' => ['Renovar contratos com orgaos publicos', 'Compliance trabalhista e fiscal completo', 'Monitoramento de fornecedores criticos'],
-                                        ],
-                                        [
-                                            'codigo' => 'due_diligence', 'nome' => 'Due Diligence', 'creditos' => 16, 'gratuito' => false,
-                                            'cor' => 'amber',
-                                            'icone' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7',
-                                            'descricao' => 'Analise aprofundada com divida ativa detalhada.',
-                                            'consultas' => ['Tudo do Fiscal Completo', 'Lista de Devedores PGFN (divida detalhada)'],
-                                            'casos_uso' => ['Analise pre-aquisicao (M&A)', 'Gestao continua de terceiros', 'Compliance com Lei Anticorrupcao'],
-                                        ],
-                                        [
-                                            'codigo' => 'esg', 'nome' => 'ESG', 'creditos' => 6, 'gratuito' => false,
-                                            'cor' => 'green',
-                                            'icone' => 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
-                                            'descricao' => 'Compliance ambiental e trabalhista para ESG.',
-                                            'consultas' => ['Lista de Trabalho Escravo (MTE)', 'IBAMA - Autuacoes Ambientais'],
-                                            'casos_uso' => ['Atender requisitos ESG de investidores', 'Verificar compliance socioambiental', 'Due diligence ambiental e trabalhista'],
-                                        ],
-                                        [
-                                            'codigo' => 'completo', 'nome' => 'Completo', 'creditos' => 22, 'gratuito' => false,
-                                            'cor' => 'slate',
-                                            'icone' => 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
-                                            'descricao' => 'Todas as consultas disponiveis em um unico pacote.',
-                                            'consultas' => ['Tudo do Due Diligence', 'Trabalho Escravo + IBAMA', 'Processos Judiciais (CNJ)'],
-                                            'casos_uso' => ['Due diligence juridico completo', 'Analise de litigios antes de contratar', 'Monitoramento corporativo de alto nivel'],
-                                        ],
-                                    ];
-
-                                    $corClasses = [
-                                        'green' => ['bg' => 'bg-green-100', 'text' => 'text-green-700', 'icon' => 'text-green-600', 'badge' => 'bg-green-100 text-green-700', 'border' => 'border-green-200', 'btn' => 'bg-green-600 hover:bg-green-700'],
-                                        'blue' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-700', 'icon' => 'text-blue-600', 'badge' => 'bg-blue-100 text-blue-700', 'border' => 'border-blue-200', 'btn' => 'bg-blue-600 hover:bg-blue-700'],
-                                        'purple' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-700', 'icon' => 'text-purple-600', 'badge' => 'bg-purple-100 text-purple-700', 'border' => 'border-purple-200', 'btn' => 'bg-purple-600 hover:bg-purple-700'],
-                                        'amber' => ['bg' => 'bg-amber-100', 'text' => 'text-amber-700', 'icon' => 'text-amber-600', 'badge' => 'bg-amber-100 text-amber-700', 'border' => 'border-amber-200', 'btn' => 'bg-amber-600 hover:bg-amber-700'],
-                                        'slate' => ['bg' => 'bg-slate-100', 'text' => 'text-slate-700', 'icon' => 'text-slate-600', 'badge' => 'bg-slate-100 text-slate-700', 'border' => 'border-slate-200', 'btn' => 'bg-slate-700 hover:bg-slate-800'],
-                                    ];
-                                @endphp
-
-                                @foreach($planos ?? $planosEstaticos as $index => $plano)
-                                    @php
-                                        $codigo = is_array($plano) ? $plano['codigo'] : $plano->codigo;
-                                        $nome = is_array($plano) ? $plano['nome'] : $plano->nome;
-                                        $creditos = is_array($plano) ? $plano['creditos'] : $plano->custo_creditos;
-                                        $gratuito = is_array($plano) ? $plano['gratuito'] : $plano->is_gratuito;
-                                        $descricao = is_array($plano) ? $plano['descricao'] : $plano->descricao;
-                                    @endphp
-                                    <label class="plano-option relative cursor-pointer block">
-                                        <input
-                                            type="radio"
-                                            name="plano"
-                                            value="{{ $codigo }}"
-                                            data-creditos="{{ $creditos }}"
-                                            class="sr-only peer"
-                                            {{ $index === 0 ? 'checked' : '' }}
-                                        >
-                                        <div class="p-3 rounded-lg border-2 border-gray-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:bg-gray-50 transition-colors">
-                                            <div class="flex items-center justify-between">
-                                                <div class="flex items-center gap-2">
-                                                    <span class="text-sm font-semibold text-gray-900">{{ $nome }}</span>
-                                                    <span class="text-xs text-gray-500">- {{ $descricao }}</span>
-                                                </div>
-                                                @if($gratuito)
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
-                                                        Gratis
-                                                    </span>
-                                                @else
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
-                                                        {{ $creditos }} cred.
-                                                    </span>
-                                                @endif
+                            <div id="plano-display-card" class="rounded-lg border border-gray-200 border-l-4 border-l-green-500 bg-white overflow-hidden">
+                                <div class="p-4">
+                                    {{-- Header: icon + name + badge --}}
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center gap-3.5">
+                                            <div id="plano-display-icon-wrapper" class="flex-shrink-0 w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+                                                <svg id="plano-display-icon" class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <span id="plano-display-nome" class="text-sm font-bold text-gray-900">{{ $planosDetalhados[0]['nome'] ?? 'Gratuito' }}</span>
+                                                <p id="plano-display-descricao" class="text-xs text-gray-500 mt-0.5">{{ $planosDetalhados[0]['descricao'] ?? '' }}</p>
                                             </div>
                                         </div>
-                                    </label>
-                                @endforeach
+                                        <span id="plano-display-badge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 whitespace-nowrap flex-shrink-0 ml-2">
+                                            Gratis
+                                        </span>
+                                    </div>
+
+                                    {{-- Consultas incluidas --}}
+                                    <div class="mb-3">
+                                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Consultas incluidas</p>
+                                        <ul id="plano-display-consultas" class="space-y-0.5">
+                                            <li class="flex items-center gap-1.5 text-[11px] text-gray-600">
+                                                <svg class="w-3 h-3 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                                Situacao Cadastral
+                                            </li>
+                                            <li class="flex items-center gap-1.5 text-[11px] text-gray-600">
+                                                <svg class="w-3 h-3 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                                Dados Cadastrais Completos
+                                            </li>
+                                            <li class="flex items-center gap-1.5 text-[11px] text-gray-600">
+                                                <svg class="w-3 h-3 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                                CNAEs Principal e Secundarios
+                                            </li>
+                                            <li class="flex items-center gap-1.5 text-[11px] text-gray-600">
+                                                <svg class="w-3 h-3 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                                Quadro Societario (QSA)
+                                            </li>
+                                            <li class="flex items-center gap-1.5 text-[11px] text-gray-600">
+                                                <svg class="w-3 h-3 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                                Simples Nacional e MEI
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    {{-- Botao Alterar plano --}}
+                                    <button
+                                        type="button"
+                                        id="btn-alterar-plano"
+                                        class="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                                        </svg>
+                                        Alterar plano
+                                    </button>
+                                </div>
                             </div>
+                            <p class="mt-1.5 text-xs text-gray-400">Clique em "Alterar plano" para ver todos os planos disponiveis.</p>
                         </div>
 
                         {{-- Resumo e Submit --}}
@@ -307,19 +339,35 @@
                                             default => 'bg-gray-100 text-gray-600',
                                         };
                                     @endphp
-                                    <button
-                                        type="button"
-                                        class="badge-plano group w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer text-left"
-                                        data-slide-index="{{ $idx }}"
-                                    >
-                                        <div class="flex-1 min-w-0">
-                                            <span class="text-xs font-semibold text-gray-800 group-hover:text-gray-900 transition-colors">{{ $pd['nome'] }}</span>
-                                            <p class="text-xs text-gray-400 group-hover:text-gray-500 transition-colors truncate">{{ $pd['descricao'] }}</p>
-                                        </div>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $badgeCor }} transition-colors whitespace-nowrap flex-shrink-0">
-                                            {{ $pd['gratuito'] ? 'Gratis' : $pd['creditos'] . ' cred.' }}
-                                        </span>
-                                    </button>
+                                    @if($pd['promo'] ?? false)
+                                        <button
+                                            type="button"
+                                            class="badge-plano group w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-amber-200 bg-amber-50 hover:bg-amber-100 hover:border-amber-300 transition-colors cursor-pointer text-left"
+                                            data-slide-index="{{ $idx }}"
+                                        >
+                                            <div class="flex-1 min-w-0">
+                                                <span class="text-xs font-semibold text-gray-800 group-hover:text-gray-900 transition-colors">{{ $pd['nome'] }}</span>
+                                                <p class="text-xs text-gray-400 group-hover:text-gray-500 transition-colors truncate">{{ $pd['descricao'] }}</p>
+                                            </div>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 whitespace-nowrap flex-shrink-0">
+                                                {{ $pd['creditos'] }} cred.
+                                            </span>
+                                        </button>
+                                    @else
+                                        <button
+                                            type="button"
+                                            class="badge-plano group w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer text-left"
+                                            data-slide-index="{{ $idx }}"
+                                        >
+                                            <div class="flex-1 min-w-0">
+                                                <span class="text-xs font-semibold text-gray-800 group-hover:text-gray-900 transition-colors">{{ $pd['nome'] }}</span>
+                                                <p class="text-xs text-gray-400 group-hover:text-gray-500 transition-colors truncate">{{ $pd['descricao'] }}</p>
+                                            </div>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $badgeCor }} transition-colors whitespace-nowrap flex-shrink-0">
+                                                {{ $pd['gratuito'] ? 'Gratis' : $pd['creditos'] . ' cred.' }}
+                                            </span>
+                                        </button>
+                                    @endif
                                 @endforeach
                             </div>
                             <p class="text-xs text-gray-400 mt-2">Clique para ver detalhes.</p>
@@ -392,7 +440,7 @@
 
         {{-- Modal: Carousel de Planos --}}
         <div id="modal-planos-carousel" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-            <div class="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] flex flex-col relative">
+            <div class="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] flex flex-col relative overflow-visible">
                 {{-- Modal Header --}}
                 <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
                     <div class="flex items-center gap-2">
@@ -402,7 +450,7 @@
                         <h3 class="text-base font-semibold text-gray-900">Detalhes dos Planos</h3>
                     </div>
                     <div class="flex items-center gap-3">
-                        <span id="carousel-counter" class="text-xs text-gray-400">1 / 7</span>
+                        <span id="carousel-counter" class="text-xs text-gray-400">1 / {{ count($planosDetalhados) }}</span>
                         <button type="button" id="btn-fechar-carousel" class="p-1 text-gray-400 hover:text-gray-600 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -412,12 +460,12 @@
                 </div>
 
                 {{-- Navigation arrows (overlay) --}}
-                <button type="button" id="swiper-planos-prev" class="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:bg-white hover:text-gray-700 hover:shadow-lg transition-all cursor-pointer">
+                <button type="button" id="swiper-planos-prev" class="absolute -left-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:bg-white hover:text-gray-700 hover:shadow-lg transition-all cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                     </svg>
                 </button>
-                <button type="button" id="swiper-planos-next" class="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:bg-white hover:text-gray-700 hover:shadow-lg transition-all cursor-pointer">
+                <button type="button" id="swiper-planos-next" class="absolute -right-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:bg-white hover:text-gray-700 hover:shadow-lg transition-all cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
@@ -430,7 +478,7 @@
                             @foreach($planosDetalhados as $idx => $pd)
                                 @php $cores = $corClasses[$pd['cor']]; @endphp
                                 <div class="swiper-slide">
-                                    <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 140px);">
+                                    <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 200px);">
                                         {{-- Plan header --}}
                                         <div class="flex items-center gap-3 mb-4">
                                             <div class="flex-shrink-0 w-10 h-10 rounded-lg {{ $cores['bg'] }} flex items-center justify-center">
@@ -440,11 +488,17 @@
                                             </div>
                                             <div class="flex-1">
                                                 <h4 class="text-lg font-bold text-gray-900">{{ $pd['nome'] }}</h4>
-                                                <span class="text-sm {{ $pd['gratuito'] ? 'text-green-600 font-medium' : 'text-gray-500' }}">
-                                                    {{ $pd['gratuito'] ? 'Gratuito' : $pd['creditos'] . ' creditos/CNPJ' }}
-                                                </span>
+                                                @if($pd['promo'] ?? false)
+                                                    <span class="text-sm text-amber-700 font-semibold">{{ $pd['creditos'] }} cred./CNPJ</span>
+                                                @else
+                                                    <span class="text-sm {{ $pd['gratuito'] ? 'text-green-600 font-medium' : 'text-gray-500' }}">
+                                                        {{ $pd['gratuito'] ? 'Gratuito' : $pd['creditos'] . ' creditos/CNPJ' }}
+                                                    </span>
+                                                @endif
                                             </div>
-                                            @if($pd['gratuito'])
+                                            @if($pd['promo'] ?? false)
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">{{ $pd['creditos'] }} cred.</span>
+                                            @elseif($pd['gratuito'])
                                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Gratis</span>
                                             @else
                                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $cores['badge'] }}">{{ $pd['creditos'] }} cred.</span>
@@ -453,6 +507,10 @@
 
                                         {{-- Description --}}
                                         <p class="text-sm text-gray-600 mb-4">{{ $pd['descricao'] }}</p>
+
+                                        @if($pd['promo'] ?? false)
+                                            <p class="text-xs text-amber-600/80 mb-4">&#x1f3f7;&#xfe0e; {{ $pd['creditos'] }} cred./CNPJ — promo por tempo limitado</p>
+                                        @endif
 
                                         {{-- Consultas incluidas --}}
                                         <div class="mb-4">
@@ -484,23 +542,27 @@
                                             </ul>
                                         </div>
 
-                                        {{-- Selecionar este plano --}}
-                                        <button
-                                            type="button"
-                                            class="btn-selecionar-plano w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg {{ $cores['btn'] }} text-white text-sm font-semibold transition-colors"
-                                            data-plano-codigo="{{ $pd['codigo'] }}"
-                                        >
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                            </svg>
-                                            Selecionar este plano
-                                        </button>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                     </div>
 
+                </div>
+
+                {{-- Footer fixo: botao selecionar --}}
+                <div class="px-6 pb-4 pt-3 border-t border-gray-100 flex-shrink-0">
+                    <button
+                        type="button"
+                        id="btn-selecionar-plano-footer"
+                        class="btn-selecionar-plano w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-semibold transition-colors"
+                        data-plano-codigo="{{ $planosDetalhados[0]['codigo'] ?? '' }}"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Selecionar este plano
+                    </button>
                 </div>
 
                 {{-- Pagination dots --}}
@@ -664,6 +726,98 @@
             btnConsultar.disabled = cnpj.length !== 14;
         }
 
+        // Dados dos planos para atualizar card visual (gerado do DB)
+        var totalPlanos = {{ count($planosDetalhados) }};
+        var planosData = {!! json_encode(
+            collect($planosDetalhados)->mapWithKeys(function ($p, $idx) {
+                return [$p['codigo'] => [
+                    'nome' => $p['nome'],
+                    'creditos' => $p['creditos'],
+                    'creditos_original' => $p['creditos_original'] ?? null,
+                    'promo' => $p['promo'] ?? false,
+                    'cor' => $p['cor'],
+                    'slideIndex' => $idx,
+                    'descricao' => $p['descricao'],
+                    'icone' => $p['icone'],
+                    'consultas' => $p['consultas'],
+                ]];
+            })
+        ) !!};
+
+        var corClasses = {
+            'green':  { bg: 'bg-green-100',  icon: 'text-green-600',  badge: 'bg-green-100 text-green-700',   borderL: 'border-l-green-500',  check: 'text-green-500' },
+            'blue':   { bg: 'bg-blue-100',   icon: 'text-blue-600',   badge: 'bg-blue-100 text-blue-700',     borderL: 'border-l-blue-500',   check: 'text-blue-500' },
+            'purple': { bg: 'bg-purple-100', icon: 'text-purple-600', badge: 'bg-purple-100 text-purple-700', borderL: 'border-l-purple-500', check: 'text-purple-500' },
+            'amber':  { bg: 'bg-amber-100',  icon: 'text-amber-600',  badge: 'bg-amber-100 text-amber-700',   borderL: 'border-l-amber-500',  check: 'text-amber-500' },
+            'slate':  { bg: 'bg-slate-100',  icon: 'text-slate-600',  badge: 'bg-slate-100 text-slate-700',   borderL: 'border-l-slate-500',  check: 'text-slate-500' }
+        };
+
+        var allBorderLClasses = ['border-l-green-500', 'border-l-blue-500', 'border-l-purple-500', 'border-l-amber-500', 'border-l-slate-500'];
+        var allBgClasses = ['bg-green-100', 'bg-blue-100', 'bg-purple-100', 'bg-amber-100', 'bg-slate-100'];
+        var allIconClasses = ['text-green-600', 'text-blue-600', 'text-purple-600', 'text-amber-600', 'text-slate-600'];
+        var allBadgeClasses = ['bg-green-100', 'text-green-700', 'bg-blue-100', 'text-blue-700', 'bg-purple-100', 'text-purple-700', 'bg-amber-100', 'text-amber-700', 'bg-slate-100', 'text-slate-700'];
+        var allCheckClasses = ['text-green-500', 'text-blue-500', 'text-purple-500', 'text-amber-500', 'text-slate-500'];
+
+        function atualizarPlanoDisplay() {
+            var planoSelecionado = document.querySelector('input[name="plano"]:checked');
+            if (!planoSelecionado) return;
+
+            var codigo = planoSelecionado.value;
+            var plano = planosData[codigo];
+            if (!plano) return;
+
+            var cores = corClasses[plano.cor] || corClasses['green'];
+            var card = document.getElementById('plano-display-card');
+            var iconWrapper = document.getElementById('plano-display-icon-wrapper');
+            var icon = document.getElementById('plano-display-icon');
+            var nome = document.getElementById('plano-display-nome');
+            var descricao = document.getElementById('plano-display-descricao');
+            var badge = document.getElementById('plano-display-badge');
+            var consultasList = document.getElementById('plano-display-consultas');
+
+            if (!card) return;
+
+            // Update border-l color
+            allBorderLClasses.forEach(function(c) { card.classList.remove(c); });
+            card.classList.add(cores.borderL);
+
+            // Update icon wrapper bg
+            allBgClasses.forEach(function(c) { iconWrapper.classList.remove(c); });
+            iconWrapper.classList.add(cores.bg);
+
+            // Update icon color and path
+            allIconClasses.forEach(function(c) { icon.classList.remove(c); });
+            icon.classList.add(cores.icon);
+            var pathEl = icon.querySelector('path');
+            if (pathEl) pathEl.setAttribute('d', plano.icone);
+
+            // Update name and description
+            nome.textContent = plano.nome;
+            descricao.textContent = plano.descricao;
+
+            // Update badge
+            allBadgeClasses.forEach(function(c) { badge.classList.remove(c); });
+
+            if (plano.promo) {
+                badge.classList.add('bg-amber-100', 'text-amber-700');
+                badge.textContent = plano.creditos + ' cred.';
+            } else {
+                cores.badge.split(' ').forEach(function(c) { badge.classList.add(c); });
+                badge.textContent = plano.creditos === 0 ? 'Gratis' : plano.creditos + ' cred.';
+            }
+
+            // Update consultas list
+            var checkColor = cores.check;
+            var html = '';
+            plano.consultas.forEach(function(consulta) {
+                html += '<li class="flex items-center gap-1.5 text-[11px] text-gray-600">' +
+                    '<svg class="w-3 h-3 ' + checkColor + ' flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' +
+                    consulta +
+                    '</li>';
+            });
+            consultasList.innerHTML = html;
+        }
+
         // Event listeners
         if (cnpjInput) {
             cnpjInput.addEventListener('input', function(e) {
@@ -674,7 +828,10 @@
 
         // Mudanca de plano
         document.querySelectorAll('input[name="plano"]').forEach(function(radio) {
-            radio.addEventListener('change', atualizarCalculos);
+            radio.addEventListener('change', function() {
+                atualizarCalculos();
+                atualizarPlanoDisplay();
+            });
         });
 
         // Busca de participantes
@@ -819,7 +976,7 @@
                 const cnpj = extrairCnpj(cnpjInput.value);
                 if (cnpj.length !== 14) {
                     if (window.showToast) {
-                        window.showToast('warning', 'Por favor, insira um CNPJ valido com 14 digitos.');
+                        window.showToast('Por favor, insira um CNPJ valido com 14 digitos.', 'warning');
                     } else {
                         alert('Por favor, insira um CNPJ valido com 14 digitos.');
                     }
@@ -829,7 +986,7 @@
                 const planoSelecionado = document.querySelector('input[name="plano"]:checked');
                 if (!planoSelecionado) {
                     if (window.showToast) {
-                        window.showToast('warning', 'Por favor, selecione um tipo de consulta.');
+                        window.showToast('Por favor, selecione um tipo de consulta.', 'warning');
                     } else {
                         alert('Por favor, selecione um tipo de consulta.');
                     }
@@ -881,7 +1038,7 @@
                         iniciarSSE(tabId);
 
                         if (window.showToast) {
-                            window.showToast('success', 'Consulta iniciada!');
+                            window.showToast('Consulta iniciada!', 'success');
                         }
                     } else {
                         throw new Error(data.error || data.message || 'Erro ao realizar consulta');
@@ -913,6 +1070,7 @@
                     swiperPlanos.slideToLoop(startIndex || 0, 0);
                     swiperPlanos.update();
                     updateCounter(startIndex || 0);
+                    updateFooterButton(startIndex || 0);
                     return;
                 }
 
@@ -932,11 +1090,13 @@
                     on: {
                         slideChange: function() {
                             updateCounter(this.realIndex);
+                            updateFooterButton(this.realIndex);
                         },
                     },
                 });
 
                 updateCounter(startIndex || 0);
+                updateFooterButton(startIndex || 0);
             }, 50);
         }
 
@@ -949,8 +1109,21 @@
         function updateCounter(index) {
             var counter = document.getElementById('carousel-counter');
             if (counter) {
-                counter.textContent = (index + 1) + ' / 7';
+                counter.textContent = (index + 1) + ' / ' + totalPlanos;
             }
+        }
+
+        var footerBtnCodigos = {!! json_encode(collect($planosDetalhados)->pluck('codigo')->values()) !!};
+        var footerBtnCores = {!! json_encode(collect($planosDetalhados)->map(fn($p) => $corClasses[$p['cor']]['btn'])->values()) !!};
+        var allFooterBtnClasses = ['bg-green-600', 'hover:bg-green-700', 'bg-blue-600', 'hover:bg-blue-700', 'bg-purple-600', 'hover:bg-purple-700', 'bg-amber-600', 'hover:bg-amber-700', 'bg-slate-700', 'hover:bg-slate-800'];
+
+        function updateFooterButton(index) {
+            var btn = document.getElementById('btn-selecionar-plano-footer');
+            if (!btn) return;
+            btn.dataset.planoCodigo = footerBtnCodigos[index] || '';
+            allFooterBtnClasses.forEach(function(c) { btn.classList.remove(c); });
+            var corStr = footerBtnCores[index] || 'bg-blue-600 hover:bg-blue-700';
+            corStr.split(' ').forEach(function(c) { btn.classList.add(c); });
         }
 
         // Close modal: overlay click
@@ -988,6 +1161,19 @@
             });
         });
 
+        // "Alterar plano" button -> open carousel at current plan's slide
+        var btnAlterarPlano = document.getElementById('btn-alterar-plano');
+        if (btnAlterarPlano) {
+            btnAlterarPlano.addEventListener('click', function() {
+                var planoSelecionado = document.querySelector('input[name="plano"]:checked');
+                var slideIndex = 0;
+                if (planoSelecionado && planosData[planoSelecionado.value]) {
+                    slideIndex = planosData[planoSelecionado.value].slideIndex;
+                }
+                showPlanosModal(slideIndex);
+            });
+        }
+
         // "Selecionar este plano" buttons
         document.querySelectorAll('.btn-selecionar-plano').forEach(function(btn) {
             btn.addEventListener('click', function() {
@@ -1000,13 +1186,14 @@
                 hidePlanosModal();
 
                 if (window.showToast) {
-                    window.showToast('success', 'Plano selecionado!');
+                    window.showToast('Plano selecionado!', 'success');
                 }
             });
         });
 
-        // Inicializar calculos
+        // Inicializar calculos e display do plano
         atualizarCalculos();
+        atualizarPlanoDisplay();
 
         console.log('[Monitoramento Avulso] Inicializacao concluida');
     }

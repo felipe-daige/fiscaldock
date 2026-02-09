@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\RelatorioCompletoController;
 use App\Models\Cliente;
 use App\Models\ConsultaLote;
+use App\Models\Participante;
+use App\Models\XmlNota;
 use App\Services\Dashboard\DashboardDataService;
 use App\Services\Sped\SpedUploadService;
 use Illuminate\Http\Request;
@@ -270,6 +272,66 @@ class DashboardController extends Controller
         return view(self::AUTH_LAYOUT_VIEW, array_merge([
             'initialView' => $autenticadoView
         ], $data));
+    }
+
+    public function clienteDetalhes(Request $request, int $id)
+    {
+        if (!Auth::check()) {
+            return response()->json(['success' => false, 'message' => 'Nao autenticado'], 401);
+        }
+
+        $cliente = Cliente::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->with(['endereco', 'funcionarios'])
+            ->first();
+
+        if (!$cliente) {
+            return response()->json(['success' => false, 'message' => 'Cliente nao encontrado'], 404);
+        }
+
+        $totalParticipantes = Participante::where('user_id', Auth::id())
+            ->where('cliente_id', $cliente->id)
+            ->count();
+
+        $totalNotas = XmlNota::where('user_id', Auth::id())
+            ->where('cliente_id', $cliente->id)
+            ->count();
+
+        return response()->json([
+            'success' => true,
+            'cliente' => [
+                'id' => $cliente->id,
+                'nome' => $cliente->nome,
+                'razao_social' => $cliente->razao_social,
+                'documento_formatado' => $cliente->documento_formatado,
+                'tipo_pessoa' => $cliente->tipo_pessoa,
+                'email' => $cliente->email,
+                'telefone' => $cliente->telefone,
+                'ativo' => $cliente->ativo,
+                'is_empresa_propria' => $cliente->is_empresa_propria,
+                'faturamento_anual' => $cliente->faturamento_anual,
+                'created_at' => $cliente->created_at?->format('d/m/Y H:i'),
+            ],
+            'endereco' => $cliente->endereco ? [
+                'logradouro' => $cliente->endereco->logradouro,
+                'numero' => $cliente->endereco->numero,
+                'complemento' => $cliente->endereco->complemento,
+                'bairro' => $cliente->endereco->bairro,
+                'cidade' => $cliente->endereco->cidade,
+                'estado' => $cliente->endereco->estado,
+                'cep' => $cliente->endereco->cep,
+            ] : null,
+            'funcionarios' => $cliente->funcionarios->map(fn ($f) => [
+                'nome_completo' => $f->nome_completo,
+                'email' => $f->email,
+                'cargo' => $f->cargo,
+                'nivel_acesso' => $f->nivel_acesso,
+            ])->toArray(),
+            'stats' => [
+                'total_participantes' => $totalParticipantes,
+                'total_notas' => $totalNotas,
+            ],
+        ]);
     }
 
     public function consultarInscricaoEstadual(Request $request){

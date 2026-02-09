@@ -251,64 +251,68 @@
         </div>
     </div>
 
-    {{-- Modal de acoes do participante --}}
-    <div id="modal-acoes" class="hidden fixed inset-0 z-50">
-        <div class="flex items-center justify-center p-4">
-            <div class="fixed inset-0 bg-black/20 transition-opacity" id="modal-acoes-overlay"></div>
-            <div class="relative bg-white rounded-xl shadow-lg ring-1 ring-gray-200 w-56 py-1 z-10">
-                <div class="px-3 py-2 border-b border-gray-100">
-                    <p class="text-sm font-semibold text-gray-900 truncate" id="modal-acoes-nome"></p>
-                    <p class="text-xs text-gray-500 font-mono" id="modal-acoes-cnpj"></p>
-                </div>
-                <a id="modal-acoes-ver" href="#"
-                   class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                   data-link>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                    </svg>
-                    Ver detalhes
-                </a>
-                <button type="button" id="modal-acoes-excluir"
-                    class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                    </svg>
-                    Excluir
-                </button>
+    </div>
+</div>
+
+{{-- Modais (fora do container para overlay correto) --}}
+
+{{-- Modal de acoes do participante --}}
+<div id="modal-acoes" class="hidden fixed inset-0 z-50">
+    <div class="flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/20 transition-opacity" id="modal-acoes-overlay"></div>
+        <div class="relative bg-white rounded-xl shadow-lg ring-1 ring-gray-200 w-56 py-1 z-10">
+            <div class="px-3 py-2 border-b border-gray-100">
+                <p class="text-sm font-semibold text-gray-900 truncate" id="modal-acoes-nome"></p>
+                <p class="text-xs text-gray-500 font-mono" id="modal-acoes-cnpj"></p>
             </div>
+            <a id="modal-acoes-ver" href="#"
+               class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+               data-link>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+                Ver detalhes
+            </a>
+            <button type="button" id="modal-acoes-excluir"
+                class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+                Excluir
+            </button>
         </div>
     </div>
+</div>
 
-    {{-- Modal de confirmacao de exclusao --}}
-    <div id="modal-excluir-participante" class="hidden fixed inset-0 z-50 overflow-y-auto">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="fixed inset-0 bg-black/50 transition-opacity" id="modal-excluir-overlay"></div>
-            <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6 z-10">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-900">Excluir participante?</h3>
+{{-- Modal de confirmacao de exclusao --}}
+<div id="modal-excluir-participante" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-black/50 transition-opacity" id="modal-excluir-overlay"></div>
+        <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6 z-10">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
                 </div>
-                <div class="mb-4">
-                    <p class="text-sm text-gray-700 mb-2">
-                        <span class="font-medium" id="modal-excluir-cnpj"></span> — <span id="modal-excluir-nome"></span>
-                    </p>
-                    <p class="text-sm text-gray-500">
-                        Todo o historico associado sera removido (assinaturas, consultas, scores). As notas fiscais onde este participante aparece serao mantidas.
-                    </p>
-                </div>
-                <div class="flex justify-end gap-3">
-                    <button type="button" id="btn-cancelar-exclusao" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
-                        Cancelar
-                    </button>
-                    <button type="button" id="btn-confirmar-exclusao" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm transition hover:bg-red-700">
-                        Excluir
-                    </button>
-                </div>
+                <h3 class="text-lg font-semibold text-gray-900">Excluir participante?</h3>
+            </div>
+            <div class="mb-4">
+                <p class="text-sm text-gray-700 mb-2">
+                    <span class="font-medium" id="modal-excluir-cnpj"></span> — <span id="modal-excluir-nome"></span>
+                </p>
+                <p class="text-sm text-gray-500">
+                    Todo o historico associado sera removido (assinaturas, consultas, scores). As notas fiscais onde este participante aparece serao mantidas.
+                </p>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button type="button" id="btn-cancelar-exclusao" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-confirmar-exclusao" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm transition hover:bg-red-700">
+                    Excluir
+                </button>
             </div>
         </div>
     </div>
