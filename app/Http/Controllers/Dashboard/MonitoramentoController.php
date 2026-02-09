@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class MonitoramentoController extends Controller
@@ -1051,208 +1052,206 @@ class MonitoramentoController extends Controller
     }
 
     /**
-     * Executa consulta avulsa.
+     * Executa consulta avulsa (mesmo fluxo da consulta em lote).
      */
     public function executarConsultaAvulsa(Request $request)
     {
         if (!Auth::check()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Usuário não autenticado.',
+                'error' => 'Usuário não autenticado.',
             ], Response::HTTP_UNAUTHORIZED);
         }
 
         $user = Auth::user();
-        $cnpjsInput = $request->input('cnpjs', '');
-        $planoId = $request->input('plano_id');
+
+        // Frontend envia: cnpj (singular), plano (codigo string), tab_id
+        $cnpjRaw = $request->input('cnpj', '');
+        $planoCodigo = $request->input('plano', '');
+        $tabId = $request->input('tab_id', Str::uuid()->toString());
         $clienteId = $request->input('cliente_id');
 
-        // Aceita string separada por vírgula, quebra de linha ou array
-        if (is_string($cnpjsInput)) {
-            $cnpjs = preg_split('/[,;\n\r]+/', $cnpjsInput);
-        } else {
-            $cnpjs = $cnpjsInput;
-        }
+        $cnpj = preg_replace('/[^0-9]/', '', trim($cnpjRaw));
 
-        $cnpjs = array_filter(array_map(function ($cnpj) {
-            return preg_replace('/[^0-9]/', '', trim($cnpj));
-        }, $cnpjs), function ($cnpj) {
-            return strlen($cnpj) === 14;
-        });
-
-        if (empty($cnpjs) || empty($planoId)) {
+        if (strlen($cnpj) !== 14 || empty($planoCodigo)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Dados incompletos. Informe CNPJs válidos e selecione um plano.',
+                'error' => 'Dados incompletos. Informe um CNPJ válido e selecione um plano.',
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        // Buscar plano no banco
-        $plano = MonitoramentoPlano::find($planoId);
+        // Buscar plano por código
+        $plano = MonitoramentoPlano::porCodigo($planoCodigo);
 
         if (!$plano || !$plano->is_active) {
             return response()->json([
                 'success' => false,
-                'message' => 'Plano não encontrado ou inativo.',
+                'error' => 'Plano não encontrado ou inativo.',
             ], Response::HTTP_NOT_FOUND);
         }
 
-        $totalCreditos = count($cnpjs) * $plano->custo_creditos;
-        $saldoAtual = $this->creditService->getBalance($user);
+        $custoTotal = $plano->custo_creditos;
 
-        if ($totalCreditos > 0 && !$this->creditService->hasEnough($user, $totalCreditos)) {
+        // Verificar créditos (se não for gratuito)
+        if (!$plano->is_gratuito && !$this->creditService->hasEnough($user, $custoTotal)) {
             return response()->json([
                 'success' => false,
-                'insufficient_credits' => true,
-                'credits' => $saldoAtual,
-                'required' => $totalCreditos,
-                'message' => 'Créditos insuficientes. Você precisa de ' . $totalCreditos . ' créditos.',
+                'error' => 'Créditos insuficientes.',
+                'creditos_necessarios' => $custoTotal,
+                'creditos_disponiveis' => $this->creditService->getBalance($user),
             ], Response::HTTP_PAYMENT_REQUIRED);
         }
 
-        // Verificar se webhook está configurado
-        $webhookUrl = config('services.webhook.monitoramento_consulta_url');
+        // Verificar webhook configurado (mesmo padrão do RafConsultaController)
+        $webhookUrl = config('services.webhook.consultas_lotes_url')
+            ?: config('services.webhook.raf_consulta_url');
+
         if (empty($webhookUrl)) {
-            Log::warning('Webhook de monitoramento não configurado', [
-                'user_id' => $user->id,
-            ]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Serviço de consulta temporariamente indisponível. Tente novamente mais tarde.',
-            ], Response::HTTP_SERVICE_UNAVAILABLE);
-        }
-
-        try {
-            DB::beginTransaction();
-
-            $consultasCriadas = [];
-            $consultasParaN8n = [];
-
-            foreach ($cnpjs as $cnpj) {
-                // Criar ou buscar participante
-                $participante = Participante::firstOrCreate(
-                    ['user_id' => $user->id, 'cnpj' => $cnpj],
-                    [
-                        'origem_tipo' => 'MANUAL',
-                        'cliente_id' => $clienteId,
-                    ]
-                );
-
-                // Se já existe mas não tem cliente associado, atualizar
-                if ($clienteId && !$participante->cliente_id) {
-                    $participante->update(['cliente_id' => $clienteId]);
-                }
-
-                // Criar consulta
-                $consulta = MonitoramentoConsulta::create([
-                    'user_id' => $user->id,
-                    'participante_id' => $participante->id,
-                    'plano_id' => $plano->id,
-                    'tipo' => 'avulso',
-                    'status' => 'pendente',
-                    'creditos_cobrados' => $plano->custo_creditos,
-                ]);
-
-                $consultasCriadas[] = $consulta->id;
-
-                // Preparar dados para envio ao n8n
-                $consultasParaN8n[] = [
-                    'consulta_id' => $consulta->id,
-                    'participante_id' => $participante->id,
-                    'cnpj' => $cnpj,
-                    'uf' => $participante->uf ?? null,
-                ];
-            }
-
-            // Descontar créditos
-            if ($totalCreditos > 0) {
-                $this->creditService->deduct($user, $totalCreditos);
-            }
-
-            DB::commit();
-
-            Log::info('Consulta avulsa criada', [
-                'user_id' => $user->id,
-                'total_cnpjs' => count($cnpjs),
-                'plano_id' => $planoId,
-                'total_creditos' => $totalCreditos,
-                'consultas' => $consultasCriadas,
-            ]);
-
-            // Enviar para n8n webhook para processamento
-            $this->enviarConsultasParaN8n($user, $plano, $consultasParaN8n);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Consulta iniciada para ' . count($cnpjs) . ' CNPJ(s). Os resultados serão processados em breve.',
-                'creditos_cobrados' => $totalCreditos,
-                'saldo_restante' => $this->creditService->getBalance($user),
-                'consultas_ids' => $consultasCriadas,
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Erro ao criar consulta avulsa', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-            ]);
+            Log::error('Consulta avulsa: webhook não configurado (WEBHOOK_CONSULTAS_LOTES_URL)');
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao processar consulta. Tente novamente.',
+                'error' => 'Configuração de webhook ausente. Contate o suporte.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-    }
-
-    /**
-     * Envia consultas para o n8n webhook para processamento.
-     * n8n fará as consultas às APIs e atualizará o banco diretamente.
-     */
-    private function enviarConsultasParaN8n($user, MonitoramentoPlano $plano, array $consultas): void
-    {
-        $webhookUrl = config('services.webhook.monitoramento_consulta_url');
-
-        if (empty($webhookUrl)) {
-            Log::warning('Webhook de monitoramento não configurado');
-            return;
-        }
 
         try {
+            // Debitar créditos (se não for gratuito)
+            if (!$plano->is_gratuito) {
+                $debitado = $this->creditService->deduct($user, $custoTotal);
+                if (!$debitado) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Falha ao debitar créditos. Tente novamente.',
+                    ], Response::HTTP_INTERNAL_SERVER_ERROR);
+                }
+            }
+
+            // Criar ou buscar participante
+            $participante = Participante::firstOrCreate(
+                ['user_id' => $user->id, 'cnpj' => $cnpj],
+                [
+                    'origem_tipo' => 'MANUAL',
+                    'cliente_id' => $clienteId,
+                ]
+            );
+
+            // Se já existe mas não tem cliente associado, atualizar
+            if ($clienteId && !$participante->cliente_id) {
+                $participante->update(['cliente_id' => $clienteId]);
+            }
+
+            // Criar lote (mesmo modelo da consulta em lote)
+            $lote = ConsultaLote::create([
+                'user_id' => $user->id,
+                'cliente_id' => $clienteId,
+                'plano_id' => $plano->id,
+                'status' => ConsultaLote::STATUS_PROCESSANDO,
+                'total_participantes' => 1,
+                'creditos_cobrados' => $custoTotal,
+                'tab_id' => $tabId,
+            ]);
+
+            // Associar participante ao lote via pivot
+            $lote->participantes()->attach($participante->id);
+
+            Log::info('Consulta avulsa: lote criado', [
+                'consulta_lote_id' => $lote->id,
+                'user_id' => $user->id,
+                'plano' => $plano->codigo,
+                'cnpj' => $cnpj,
+                'creditos_cobrados' => $custoTotal,
+            ]);
+
+            // Preparar payload (mesmo formato do RafConsultaController)
             $payload = [
                 'user_id' => $user->id,
+                'consulta_lote_id' => $lote->id,
+                'tab_id' => $tabId,
                 'plano_codigo' => $plano->codigo,
-                'plano_nome' => $plano->nome,
-                'consultas_incluidas' => $plano->consultas_incluidas ?? [],
-                'custo_creditos' => $plano->custo_creditos,
-                'consultas' => $consultas,
-                'callback_url' => url('/api/monitoramento/consulta/resultado'),
-                'timestamp' => now()->toIso8601String(),
+                'consultas_incluidas' => $plano->consultas_incluidas,
+                'participantes' => [[
+                    'id' => $participante->id,
+                    'cnpj' => preg_replace('/[^0-9]/', '', $participante->cnpj),
+                    'razao_social' => $participante->razao_social,
+                    'uf' => $participante->uf,
+                    'crt' => $participante->crt,
+                ]],
+                'progress_url' => url('/api/consultas/lote/progress'),
+                'resultado_url' => url('/api/consultas/lote/resultado'),
             ];
 
-            $response = Http::timeout(30)
+            // Enviar para n8n
+            $response = Http::timeout(60)
                 ->withHeaders([
-                    'Content-Type' => 'application/json',
                     'X-API-Token' => config('services.api.token'),
+                    'Content-Type' => 'application/json',
                 ])
                 ->post($webhookUrl, $payload);
 
             if ($response->successful()) {
-                Log::info('Consultas enviadas para n8n com sucesso', [
-                    'user_id' => $user->id,
-                    'total_consultas' => count($consultas),
-                    'plano' => $plano->codigo,
+                Log::info('Consulta avulsa: enviado para n8n com sucesso', [
+                    'consulta_lote_id' => $lote->id,
+                    'response_status' => $response->status(),
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'consulta_lote_id' => $lote->id,
+                    'tab_id' => $tabId,
+                    'message' => 'Consulta iniciada com sucesso.',
+                    'creditos_cobrados' => $custoTotal,
+                    'novo_saldo' => $this->creditService->getBalance($user),
                 ]);
             } else {
-                Log::error('Erro ao enviar consultas para n8n', [
-                    'user_id' => $user->id,
-                    'status' => $response->status(),
-                    'body' => $response->body(),
+                // Falha no envio - estornar créditos e marcar erro
+                if (!$plano->is_gratuito) {
+                    $this->creditService->add($user, $custoTotal);
+                }
+
+                $lote->update([
+                    'status' => ConsultaLote::STATUS_ERRO,
+                    'error_code' => 'WEBHOOK_ERROR',
+                    'error_message' => 'Erro ao enviar para processamento: ' . $response->status(),
                 ]);
+
+                Log::error('Consulta avulsa: erro na resposta do n8n', [
+                    'consulta_lote_id' => $lote->id,
+                    'response_status' => $response->status(),
+                    'response_body' => $response->body(),
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Erro ao iniciar processamento. Créditos foram estornados.',
+                ], Response::HTTP_BAD_GATEWAY);
             }
+
         } catch (\Exception $e) {
-            Log::error('Exceção ao enviar consultas para n8n', [
+            Log::error('Consulta avulsa: exceção ao executar', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
+
+            // Se lote foi criado, marcar como erro
+            if (isset($lote)) {
+                $lote->update([
+                    'status' => ConsultaLote::STATUS_ERRO,
+                    'error_code' => 'INTERNAL_ERROR',
+                    'error_message' => $e->getMessage(),
+                ]);
+
+                // Estornar créditos
+                if (!$plano->is_gratuito && $custoTotal > 0) {
+                    $this->creditService->add($user, $custoTotal);
+                }
+            }
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Erro interno ao processar consulta.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
