@@ -8,8 +8,19 @@
     <meta name="description" content="O FiscalDock que transforma SPED e documentos em ações, relatórios e previsibilidade. Centralize arquivos fiscais, identifique pendências e automatize cobranças.">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('binary_files/logo/Logo FiscalDock.png') }}">
+
+    <!-- Open Graph (WhatsApp, Facebook) -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="FiscalDock | Transforme SPED em Ações e Relatórios">
+    <meta property="og:description" content="Centralize arquivos fiscais, identifique pendências e automatize cobranças.">
+    <meta property="og:image" content="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}">
+
+    <!-- Twitter Card (X) -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="FiscalDock | Transforme SPED em Ações e Relatórios">
+    <meta name="twitter:description" content="Centralize arquivos fiscais, identifique pendências e automatize cobranças.">
+    <meta name="twitter:image" content="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}">
 
     <!-- Fallback crítico do CTA (caso o CSS do Vite não carregue) -->
     <style>
@@ -63,7 +74,6 @@
                             <a href="/solucoes/importacao-xml" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-t-lg">Importação de XMLs</a>
                             <a href="/solucoes/conciliacao-bancaria" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Conciliação Bancária</a>
                             <a href="/solucoes/gestao-cnds" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Gestão de CNDs</a>
-                            <a href="/solucoes/raf" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">RAF</a>
                             <a href="/solucoes/inteligencia-tributaria" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Inteligência Tributária</a>
                             <a href="/solucoes" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-b-lg">Ver Todas as Soluções</a>
                         </div>
@@ -121,7 +131,7 @@
         @if(isset($initialView))
             @include("landing_page.$initialView")
         @else
-            @include('landing_page.inicio_public')
+            @include('landing_page.paginas.inicio')
         @endif
     </main>
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Relatorio RAF - Lote #{{ $lote->id }}</title>
+    <title>Relatorio de Consulta - Lote #{{ $lote->id }}</title>
     <style>
         * {
             margin: 0;
@@ -289,7 +289,7 @@
                 <div class="logo-subtitle">Compliance Fiscal Inteligente</div>
             </div>
             <div class="header-right">
-                <div class="report-title">Relatorio de Analise Fiscal (RAF)</div>
+                <div class="report-title">Relatorio de Analise Fiscal</div>
                 <div class="report-meta">
                     Lote #{{ $lote->id }} | Plano: {{ $plano->nome ?? 'N/A' }} | Gerado em: {{ $gerado_em }}
                 </div>

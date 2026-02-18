@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 class AuthController extends Controller
 {
     public function showLogin(Request $request){
-        if(!view()->exists("landing_page.login_public")){
+        if(!view()->exists("landing_page.auth.login")){
             abort(404);
         }
 
@@ -29,14 +29,14 @@ class AuthController extends Controller
             }
             return redirect('/dashboard');
         }
-        
+
         if($request->ajax()){
-            return view("landing_page.login_public");
+            return view("landing_page.auth.login");
         }
-        return view("landing_page.layout_public", ['initialView' => 'login_public']);
+        return view("landing_page.layouts.public", ['initialView' => 'auth.login']);
     }
     public function showAgendar(Request $request){
-        if(!view()->exists("landing_page.agendar_public")){
+        if(!view()->exists("landing_page.auth.agendar")){
             abort(404);
         }
 
@@ -50,11 +50,11 @@ class AuthController extends Controller
             }
             return redirect('/dashboard');
         }
-        
+
         if($request->ajax()){
-            return view("landing_page.agendar_public");
+            return view("landing_page.auth.agendar");
         }
-        return view("landing_page.layout_public", ['initialView' => 'agendar_public']);
+        return view("landing_page.layouts.public", ['initialView' => 'auth.agendar']);
     }
 
     public function login(Request $request){

@@ -234,14 +234,13 @@
                                         </th>
                                         <th class="w-40 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CNPJ</th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Razao Social</th>
-                                        <th class="w-16 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">UF</th>
-                                        <th class="w-12"></th>
+                                        <th class="w-32 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tabela-participantes" class="divide-y divide-gray-100">
                                     {{-- Preenchido via JS --}}
                                     <tr id="loading-row">
-                                        <td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                                        <td colspan="4" class="px-4 py-8 text-center text-gray-500">
                                             <svg class="animate-spin h-5 w-5 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24">
                                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -419,35 +418,6 @@
                     </div>
                 </div>
             </div>
-            {{-- Modal: Confirmacao de Exclusao --}}
-            <div id="modal-excluir-participante" class="hidden fixed inset-0 z-50 overflow-y-auto">
-                <div id="modal-excluir-overlay" class="fixed inset-0 bg-black/50 transition-opacity"></div>
-                <div class="flex min-h-full items-center justify-center p-4">
-                    <div class="relative bg-white rounded-lg shadow-lg max-w-sm w-full p-6">
-                        <div class="text-center">
-                            <div class="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </div>
-                            <h3 class="text-sm font-semibold text-gray-900 mb-1">Excluir participante?</h3>
-                            <p class="text-xs text-gray-500 mb-1">
-                                <span id="modal-excluir-cnpj" class="font-mono font-medium text-gray-700"></span>
-                            </p>
-                            <p id="modal-excluir-nome" class="text-xs text-gray-500 mb-4 truncate"></p>
-                            <div class="flex gap-2">
-                                <button type="button" id="btn-cancelar-exclusao" class="flex-1 py-2 border border-gray-200 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm font-medium">
-                                    Cancelar
-                                </button>
-                                <button type="button" id="btn-confirmar-exclusao" class="flex-1 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-medium">
-                                    Excluir
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             {{-- Modal: Carousel de Planos --}}
             <div id="modal-planos-carousel-lote" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
                 <div class="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] flex flex-col relative overflow-visible">
@@ -672,13 +642,13 @@
         var lr = document.getElementById('loading-row');
         if (lr) lr.style.display = 'none';
         var tb = document.getElementById('tabela-participantes');
-        if (tb) tb.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-sm text-red-500">Erro ao carregar. Clique em Atualizar.</td></tr>';
+        if (tb) tb.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-sm text-red-500">Erro ao carregar. Clique em Atualizar.</td></tr>';
 
         window.reloadParticipantes = function() {
             if (typeof window.initConsultaLote === 'function') {
                 window.initConsultaLote();
             } else {
-                if (tb) tb.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500"><span class="text-sm">Carregando...</span></td></tr>';
+                if (tb) tb.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-500"><span class="text-sm">Carregando...</span></td></tr>';
                 forceLoadScript();
             }
         };

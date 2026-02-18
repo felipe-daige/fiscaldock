@@ -146,13 +146,6 @@
             radioTipoCliente: document.getElementById('radio-tipo-cliente'),
             containerSelectCliente: document.getElementById('container-select-cliente'),
 
-            // Modal Excluir
-            modalExcluir: document.getElementById('modal-excluir-participante'),
-            modalExcluirOverlay: document.getElementById('modal-excluir-overlay'),
-            modalExcluirCnpj: document.getElementById('modal-excluir-cnpj'),
-            modalExcluirNome: document.getElementById('modal-excluir-nome'),
-            btnCancelarExclusao: document.getElementById('btn-cancelar-exclusao'),
-            btnConfirmarExclusao: document.getElementById('btn-confirmar-exclusao')
         };
     }
 
@@ -229,11 +222,6 @@
             elements.radioTipoCliente.addEventListener('change', toggleSelectCliente);
         }
 
-        // Modal Excluir
-        if (elements.btnCancelarExclusao) elements.btnCancelarExclusao.addEventListener('click', hideDeleteModal);
-        if (elements.btnConfirmarExclusao) elements.btnConfirmarExclusao.addEventListener('click', confirmarExclusao);
-        if (elements.modalExcluirOverlay) elements.modalExcluirOverlay.addEventListener('click', hideDeleteModal);
-
         // Modais
         if (elements.btnFecharSucesso) elements.btnFecharSucesso.addEventListener('click', () => hideModal('sucesso'));
         if (elements.btnFecharErro) elements.btnFecharErro.addEventListener('click', () => hideModal('erro'));
@@ -292,7 +280,7 @@
         if (!participantes || participantes.length === 0) {
             elements.tabelaBody.innerHTML = `
                 <tr>
-                    <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">
+                    <td colspan="4" class="px-4 py-8 text-center text-sm text-gray-500">
                         Nenhum participante encontrado.
                     </td>
                 </tr>
@@ -310,6 +298,11 @@
             const cnpjFormatado = formatCnpj(p.cnpj);
             const escNome = (p.razao_social || '').replace(/"/g, '&quot;');
 
+            const clienteNome = p.cliente?.razao_social || '';
+            const clienteHtml = clienteNome
+                ? `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 max-w-full truncate">${clienteNome}</span>`
+                : '<span class="text-gray-300">&mdash;</span>';
+
             tr.innerHTML = `
                 <td class="w-10 px-4 py-3">
                     <input type="checkbox" class="checkbox-participante w-4 h-4 text-gray-600 rounded border-gray-300" data-id="${p.id}" ${isSelected ? 'checked' : ''}>
@@ -319,25 +312,14 @@
                     <div class="text-sm font-medium text-gray-900">${p.razao_social || '-'}</div>
                     ${p.nome_fantasia ? `<div class="text-xs text-gray-500">${p.nome_fantasia}</div>` : ''}
                 </td>
-                <td class="w-16 px-4 py-3 text-sm text-gray-600 text-center">${p.uf || '-'}</td>
-                <td class="w-12 px-2 py-3 text-center">
-                    <button type="button" class="btn-excluir-participante p-1 text-gray-400 hover:text-red-500 transition rounded" data-id="${p.id}" data-cnpj="${cnpjFormatado}" data-nome="${escNome}" title="Excluir">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                    </button>
+                <td class="w-32 px-4 py-3 text-sm text-gray-500 truncate" title="${clienteNome}">
+                    ${clienteHtml}
                 </td>
             `;
 
             // Evento de checkbox
             const checkbox = tr.querySelector('.checkbox-participante');
             checkbox.addEventListener('change', () => toggleParticipante(p.id, checkbox.checked));
-
-            // Evento de excluir
-            const btnExcluir = tr.querySelector('.btn-excluir-participante');
-            btnExcluir.addEventListener('click', function() {
-                showDeleteModal(parseInt(this.dataset.id), this.dataset.cnpj, this.dataset.nome);
-            });
 
             elements.tabelaBody.appendChild(tr);
         });
@@ -622,7 +604,7 @@
     }
 
     /**
-     * Executa a consulta RAF.
+     * Executa a consulta.
      */
     async function executarConsulta() {
         const participanteIds = Array.from(state.selectedIds);
@@ -806,7 +788,7 @@
         if (elements.tabelaBody) {
             elements.tabelaBody.innerHTML = `
                 <tr>
-                    <td colspan="5" class="px-4 py-8 text-center text-sm text-red-500">
+                    <td colspan="4" class="px-4 py-8 text-center text-sm text-red-500">
                         ${message}
                     </td>
                 </tr>
@@ -1030,75 +1012,6 @@
         if (!elements.containerSelectCliente) return;
         var isCliente = elements.radioTipoCliente?.checked || false;
         elements.containerSelectCliente.classList.toggle('hidden', !isCliente);
-    }
-
-    // ==========================================
-    // Excluir Participante (Modal + Delete)
-    // ==========================================
-
-    var deleteParticipanteId = null;
-
-    function showDeleteModal(id, cnpj, nome) {
-        deleteParticipanteId = id;
-        if (elements.modalExcluirCnpj) elements.modalExcluirCnpj.textContent = cnpj;
-        if (elements.modalExcluirNome) elements.modalExcluirNome.textContent = nome || '';
-        if (elements.modalExcluir) elements.modalExcluir.classList.remove('hidden');
-    }
-
-    function hideDeleteModal() {
-        deleteParticipanteId = null;
-        if (elements.modalExcluir) elements.modalExcluir.classList.add('hidden');
-    }
-
-    async function confirmarExclusao() {
-        if (!deleteParticipanteId) return;
-
-        var id = deleteParticipanteId;
-        var btn = elements.btnConfirmarExclusao;
-        if (btn) {
-            btn.disabled = true;
-            btn.textContent = 'Excluindo...';
-        }
-
-        try {
-            var response = await fetch('/app/monitoramento/participante/' + id, {
-                method: 'DELETE',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': window.consultaData.csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-
-            var data;
-            try {
-                data = await response.json();
-            } catch (e) {
-                data = {};
-            }
-
-            if (response.ok && (data.success !== false)) {
-                // Remove da selecao
-                state.selectedIds.delete(id);
-                updateContadorSelecionados();
-                updateResumo();
-
-                // Reload tabela
-                await loadParticipantes();
-                updateCheckboxTodos();
-            } else {
-                alert(data.error || data.message || 'Erro ao excluir participante.');
-            }
-        } catch (error) {
-            console.error('Erro ao excluir participante:', error);
-            alert('Erro de conexao. Tente novamente.');
-        } finally {
-            if (btn) {
-                btn.disabled = false;
-                btn.textContent = 'Excluir';
-            }
-            hideDeleteModal();
-        }
     }
 
     // ==========================================

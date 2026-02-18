@@ -208,7 +208,7 @@ class ClienteController extends Controller
             ->with(['endereco', 'funcionarios'])
             ->findOrFail($id);
 
-        $viewName = 'autenticado.novo_cliente';
+        $viewName = 'autenticado.clientes.novo';
         $data = ['cliente' => $cliente];
 
         if ($request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {

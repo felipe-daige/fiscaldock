@@ -646,14 +646,14 @@ class DataReceiverController extends Controller
     }
 
     /**
-     * Recebe progresso de consulta RAF (lotes) do n8n.
+     * Recebe progresso de consulta de lotes do n8n.
      *
      * POST /api/consultas/lote/progress
      */
-    public function receiveRafLoteProgress(Request $request)
+    public function receiveConsultaLoteProgress(Request $request)
     {
         try {
-            Log::info('Requisição recebida em receiveRafLoteProgress', [
+            Log::info('Requisição recebida em receiveConsultaLoteProgress', [
                 'url' => $request->fullUrl(),
                 'method' => $request->method(),
                 'ip' => $request->ip(),
@@ -666,7 +666,7 @@ class DataReceiverController extends Controller
 
             // Verifica autenticação via token
             if (! $this->isTokenValid($request)) {
-                Log::warning('Token inválido em receiveRafLoteProgress');
+                Log::warning('Token inválido em receiveConsultaLoteProgress');
 
                 return response()->json([
                     'success' => false,
@@ -741,7 +741,7 @@ class DataReceiverController extends Controller
             ], Response::HTTP_OK);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::warning('Erro de validação em receiveRafLoteProgress', [
+            Log::warning('Erro de validação em receiveConsultaLoteProgress', [
                 'errors' => $e->errors(),
                 'request_data' => array_diff_key($request->all(), ['report_csv_base64' => '']),
             ]);
@@ -753,7 +753,7 @@ class DataReceiverController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
 
         } catch (\Exception $e) {
-            Log::error('Erro inesperado em receiveRafLoteProgress', [
+            Log::error('Erro inesperado em receiveConsultaLoteProgress', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'request_data' => array_diff_key($request->all(), ['report_csv_base64' => '']),

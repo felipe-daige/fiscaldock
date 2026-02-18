@@ -14,51 +14,51 @@ class LandingPageController extends Controller
     protected string $themeClass = 'theme-default';
 
     public function inicio(Request $request){
-        return $this->renderLanding($request, 'inicio');
+        return $this->renderLanding($request, 'paginas.inicio');
     }
 
     public function solucoes(Request $request){
-        return $this->renderLanding($request, 'solucoes');
+        return $this->renderLanding($request, 'solucoes.index');
     }
 
     public function sobre(Request $request){
-        return $this->renderLanding($request, 'sobre');
+        return $this->renderLanding($request, 'paginas.sobre');
     }
 
     public function beneficios(Request $request){
-        return $this->renderLanding($request, 'beneficios');
+        return $this->renderLanding($request, 'paginas.beneficios');
     }
 
     public function impactos(Request $request){
-        return $this->renderLanding($request, 'impactos');
+        return $this->renderLanding($request, 'paginas.impactos');
     }
 
     public function faq(Request $request){
-        return $this->renderLanding($request, 'faq');
+        return $this->renderLanding($request, 'paginas.faq');
     }
 
     public function precos(Request $request){
-        return $this->renderLanding($request, 'precos');
+        return $this->renderLanding($request, 'paginas.precos');
     }
 
     public function questionario(Request $request){
-        return $this->renderLanding($request, 'questionario');
+        return $this->renderLanding($request, 'paginas.questionario');
     }
 
     public function importacaoXml(Request $request){
-        return $this->renderLanding($request, 'importacao_xml');
+        return $this->renderLanding($request, 'solucoes.importacao_xml');
     }
 
     public function conciliacaoBancaria(Request $request){
-        return $this->renderLanding($request, 'conciliacao_bancaria');
+        return $this->renderLanding($request, 'solucoes.conciliacao_bancaria');
     }
 
     public function gestaoCnds(Request $request){
-        return $this->renderLanding($request, 'gestao_cnds');
+        return $this->renderLanding($request, 'solucoes.gestao_cnds');
     }
 
     public function inteligenciaTributaria(Request $request){
-        return $this->renderLanding($request, 'inteligencia_tributaria');
+        return $this->renderLanding($request, 'solucoes.inteligencia_tributaria');
     }
 
     /**
@@ -66,9 +66,7 @@ class LandingPageController extends Controller
      * usuários autenticados para o dashboard.
      */
     private function renderLanding(Request $request, string $viewName){
-        // Todas as views da landing page agora têm sufixo _public
-        $actualViewName = $viewName . '_public';
-        $fullViewName = "landing_page.$actualViewName";
+        $fullViewName = "landing_page.$viewName";
 
         if(!view()->exists($fullViewName)){
             abort(404);
@@ -90,8 +88,8 @@ class LandingPageController extends Controller
             return view($fullViewName);
         }
 
-        return view("landing_page.layout_public", [
-            'initialView' => $actualViewName,
+        return view("landing_page.layouts.public", [
+            'initialView' => $viewName,
             'themeClass' => $this->themeClass
         ]);
     }

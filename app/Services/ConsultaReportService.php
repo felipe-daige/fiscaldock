@@ -7,7 +7,7 @@ use App\Models\ConsultaResultado;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
 
-class RafReportService
+class ConsultaReportService
 {
     public function __construct(
         protected RiskScoreService $riskScoreService
@@ -65,7 +65,7 @@ class RafReportService
             'gerado_em' => now()->format('d/m/Y H:i'),
         ];
 
-        $pdf = Pdf::loadView('reports.raf-lote', $data);
+        $pdf = Pdf::loadView('reports.consulta-lote', $data);
 
         $pdf->setPaper('a4', 'landscape');
         $pdf->setOptions([

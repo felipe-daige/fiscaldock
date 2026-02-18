@@ -1409,9 +1409,8 @@ class MonitoramentoController extends Controller
             ], Response::HTTP_PAYMENT_REQUIRED);
         }
 
-        // Verificar webhook configurado (mesmo padrão do RafConsultaController)
-        $webhookUrl = config('services.webhook.consultas_lotes_url')
-            ?: config('services.webhook.raf_consulta_url');
+        // Verificar webhook configurado (mesmo padrão do ConsultaController)
+        $webhookUrl = config('services.webhook.consultas_lotes_url');
 
         if (empty($webhookUrl)) {
             Log::error('Consulta avulsa: webhook não configurado (WEBHOOK_CONSULTAS_LOTES_URL)');
@@ -1470,7 +1469,7 @@ class MonitoramentoController extends Controller
                 'creditos_cobrados' => $custoTotal,
             ]);
 
-            // Preparar payload (mesmo formato do RafConsultaController)
+            // Preparar payload (mesmo formato do ConsultaController)
             $payload = [
                 'user_id' => $user->id,
                 'consulta_lote_id' => $lote->id,

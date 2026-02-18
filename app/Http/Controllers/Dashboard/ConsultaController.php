@@ -9,7 +9,7 @@ use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\ParticipanteGrupo;
 use App\Services\CreditService;
-use App\Services\RafReportService;
+use App\Services\ConsultaReportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,28 +18,18 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
-class RafConsultaController extends Controller
+class ConsultaController extends Controller
 {
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
 
     public function __construct(
         protected CreditService $creditService,
-        protected RafReportService $reportService
+        protected ConsultaReportService $reportService
     ) {}
 
-    /**
-     * Determina o prefixo da view baseado na rota atual.
-     * Suporta tanto /app/raf/* quanto /app/consultas/*
-     */
     private function getViewPrefix(): string
     {
-        $currentPath = request()->path();
-
-        if (str_starts_with($currentPath, 'app/consultas')) {
-            return 'autenticado.consultas.';
-        }
-
-        return 'autenticado.raf.';
+        return 'autenticado.consultas.';
     }
 
     /**
@@ -47,9 +37,7 @@ class RafConsultaController extends Controller
      */
     public function index(Request $request)
     {
-        $viewPrefix = $this->getViewPrefix();
-        $viewName = str_ends_with($viewPrefix, 'consultas.') ? 'nova' : 'consulta';
-        $consultaView = $viewPrefix.$viewName;
+        $consultaView = $this->getViewPrefix().'nova';
 
         if (! view()->exists($consultaView)) {
             abort(404);
@@ -131,7 +119,7 @@ class RafConsultaController extends Controller
         $perPage = $validated['per_page'] ?? 50;
 
         $query = Participante::where('user_id', $user->id)
-            ->with(['grupos:id,nome,cor']);
+            ->with(['grupos:id,nome,cor', 'cliente:id,razao_social']);
 
         // Filtro por grupo
         if (! empty($validated['grupo_id'])) {
@@ -336,9 +324,7 @@ class RafConsultaController extends Controller
             ], Response::HTTP_PAYMENT_REQUIRED);
         }
 
-        // Verificar webhook configurado (novo padrão com fallback para legado)
-        $webhookUrl = config('services.webhook.consultas_lotes_url')
-            ?: config('services.webhook.raf_consulta_url');
+        $webhookUrl = config('services.webhook.consultas_lotes_url');
 
         if (empty($webhookUrl)) {
             Log::error('Consultas: webhook não configurado (WEBHOOK_CONSULTAS_LOTES_URL)');
@@ -739,6 +725,9 @@ class RafConsultaController extends Controller
             $message = 'CNPJ já cadastrado. Vinculado ao cliente.';
         }
 
+        // Load cliente relationship for response
+        $participante->load('cliente:id,razao_social');
+
         return response()->json([
             'success' => true,
             'is_new' => $isNew,
@@ -747,6 +736,10 @@ class RafConsultaController extends Controller
                 'cnpj' => $participante->cnpj,
                 'razao_social' => $participante->razao_social,
                 'uf' => $participante->uf,
+                'cliente' => $participante->cliente ? [
+                    'id' => $participante->cliente->id,
+                    'razao_social' => $participante->cliente->razao_social,
+                ] : null,
             ],
             'message' => $message,
         ]);

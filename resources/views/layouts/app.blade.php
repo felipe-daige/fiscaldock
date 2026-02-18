@@ -8,9 +8,20 @@
     <meta name="description" content="Prepare sua empresa para a Reforma Tributária de 2026 com soluções inteligentes. Otimize créditos, automatize processos e garanta conformidade fiscal.">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
-    
+    <link rel="icon" type="image/png" href="{{ asset('binary_files/logo/Logo FiscalDock.png') }}">
+
+    <!-- Open Graph (WhatsApp, Facebook) -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="FiscalDock | Soluções Inteligentes">
+    <meta property="og:description" content="Prepare sua empresa para a Reforma Tributária de 2026 com soluções inteligentes.">
+    <meta property="og:image" content="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}">
+
+    <!-- Twitter Card (X) -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="FiscalDock | Soluções Inteligentes">
+    <meta name="twitter:description" content="Prepare sua empresa para a Reforma Tributária de 2026 com soluções inteligentes.">
+    <meta name="twitter:image" content="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}">
+
     @vite(['resources/css/app.css', 'resources/js/spa.js'])
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">

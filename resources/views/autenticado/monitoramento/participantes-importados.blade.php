@@ -118,7 +118,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white text-sm font-bold" id="count-selecionados">0</span>
-                    <span class="text-sm font-medium text-blue-900">participante(s) selecionado(s)</span>
+                    <span class="text-sm font-medium text-blue-900"><span id="participantes-selecionados-label">participantes selecionados</span></span>
                 </div>
                 <div class="flex gap-2">
                     <button type="button" id="btn-exportar" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-blue-300 bg-white text-blue-700 text-sm font-semibold shadow-sm transition hover:bg-blue-50">
@@ -318,7 +318,10 @@
                     <span class="font-medium" id="modal-excluir-cnpj"></span> — <span id="modal-excluir-nome"></span>
                 </p>
                 <p class="text-sm text-gray-500">
-                    Todo o historico associado sera removido (assinaturas, consultas, scores). As notas fiscais onde este participante aparece serao mantidas.
+                    Todo o histórico associado será removido permanentemente, incluindo assinaturas, consultas e scores. As notas fiscais onde este participante aparece serão mantidas.
+                </p>
+                <p class="text-sm text-red-600 font-medium mt-2">
+                    Esta ação não pode ser desfeita.
                 </p>
             </div>
             <div class="flex justify-end gap-3">
@@ -344,14 +347,14 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                     </svg>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-900">Excluir <span id="modal-bulk-delete-count">0</span> participante(s)?</h3>
+                <h3 class="text-lg font-semibold text-gray-900">Excluir <span id="modal-bulk-delete-count">0</span> <span id="modal-bulk-delete-label">participantes</span>?</h3>
             </div>
             <div class="mb-4">
                 <p class="text-sm text-gray-500 mb-2">
-                    Todo o historico associado sera removido (assinaturas, consultas, scores). As notas fiscais onde estes participantes aparecem serao mantidas.
+                    Todo o histórico associado será removido permanentemente, incluindo assinaturas, consultas e scores. As notas fiscais onde estes participantes aparecem serão mantidas.
                 </p>
                 <p class="text-sm text-red-600 font-medium">
-                    Esta acao nao pode ser desfeita.
+                    Esta ação não pode ser desfeita.
                 </p>
             </div>
             <div class="flex justify-end gap-3">
@@ -401,6 +404,8 @@
             if (countSelecionados) {
                 countSelecionados.textContent = count;
             }
+            const labelSelecionados = document.getElementById('participantes-selecionados-label');
+            if (labelSelecionados) labelSelecionados.textContent = count === 1 ? 'participante selecionado' : 'participantes selecionados';
 
             if (acoesLote) {
                 if (count > 0) {
@@ -469,6 +474,7 @@
         const modalBulkDelete = document.getElementById('modal-bulk-delete');
         const modalBulkDeleteOverlay = document.getElementById('modal-bulk-delete-overlay');
         const modalBulkDeleteCount = document.getElementById('modal-bulk-delete-count');
+        const modalBulkDeleteLabel = document.getElementById('modal-bulk-delete-label');
         const btnCancelarBulkDelete = document.getElementById('btn-cancelar-bulk-delete');
         const btnConfirmarBulkDelete = document.getElementById('btn-confirmar-bulk-delete');
 
@@ -476,6 +482,7 @@
             const ids = getIdsSelecionados();
             if (ids.length === 0) return;
             if (modalBulkDeleteCount) modalBulkDeleteCount.textContent = ids.length;
+            if (modalBulkDeleteLabel) modalBulkDeleteLabel.textContent = ids.length === 1 ? 'participante' : 'participantes';
             if (modalBulkDelete) modalBulkDelete.classList.remove('hidden');
         }
 
@@ -514,7 +521,7 @@
                         throw new Error(data.error || data.message || 'Erro ao excluir participantes');
                     }
 
-                    window.showToast && window.showToast(data.message || 'Participantes excluidos com sucesso!', 'success');
+                    window.showToast && window.showToast(data.message || 'Participantes excluídos com sucesso!', 'success');
 
                     // Remover linhas da tabela
                     ids.forEach(function(id) {
@@ -580,7 +587,7 @@
         function abrirModalExclusao(id, cnpj, nome) {
             participanteIdParaExcluir = id;
             if (modalCnpj) modalCnpj.textContent = cnpj;
-            if (modalNome) modalNome.textContent = nome || 'Sem razao social';
+            if (modalNome) modalNome.textContent = nome || 'Sem razão social';
             if (modal) modal.classList.remove('hidden');
         }
 
@@ -639,7 +646,7 @@
             }
             acaoParticipanteId = id;
             dropdownBtnAtual = btnElement;
-            if (dropdownAcoesNome) dropdownAcoesNome.textContent = nome || 'Sem razao social';
+            if (dropdownAcoesNome) dropdownAcoesNome.textContent = nome || 'Sem razão social';
             if (dropdownAcoesCnpj) dropdownAcoesCnpj.textContent = cnpj || '';
             if (dropdownAcoesVer) dropdownAcoesVer.href = '/app/monitoramento/participante/' + id;
             if (dropdownAcoesEditar) dropdownAcoesEditar.href = '/app/monitoramento/participante/' + id + '/editar';
@@ -725,7 +732,7 @@
                         throw new Error(data.error || 'Erro ao excluir participante');
                     }
 
-                    window.showToast && window.showToast(data.message || 'Participante excluido com sucesso!', 'success');
+                    window.showToast && window.showToast(data.message || 'Participante excluído com sucesso!', 'success');
 
                     // Remover linha da tabela
                     const row = document.querySelector('tr[data-participante-id="' + participanteIdParaExcluir + '"]');

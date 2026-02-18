@@ -122,7 +122,7 @@
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white text-sm font-bold" id="clientes-selecionados-count">0</span>
-                        <span class="text-sm font-medium text-blue-900">cliente(s) selecionado(s)</span>
+                        <span class="text-sm font-medium text-blue-900"><span id="clientes-selecionados-label">clientes selecionados</span></span>
                     </div>
                     <div class="flex gap-2">
                         <button type="button" id="btn-exportar" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-blue-300 bg-white text-blue-700 text-sm font-semibold shadow-sm transition hover:bg-blue-50">
@@ -461,7 +461,10 @@
                     <span class="font-medium" id="modal-excluir-documento"></span> - <span id="modal-excluir-nome"></span>
                 </p>
                 <p class="text-sm text-gray-500">
-                    Todo o historico associado sera removido (enderecos, funcionarios, solicitacoes). Os participantes vinculados serao mantidos.
+                    Todo o histórico associado será removido permanentemente, incluindo endereços, funcionários e solicitações. Os participantes vinculados serão mantidos.
+                </p>
+                <p class="text-sm text-red-600 font-medium mt-2">
+                    Esta ação não pode ser desfeita.
                 </p>
             </div>
             <div class="flex justify-end gap-3">
@@ -487,14 +490,14 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                     </svg>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-900">Excluir <span id="modal-bulk-delete-count">0</span> cliente(s)?</h3>
+                <h3 class="text-lg font-semibold text-gray-900">Excluir <span id="modal-bulk-delete-count">0</span> <span id="modal-bulk-delete-label">clientes</span>?</h3>
             </div>
             <div class="mb-4">
                 <p class="text-sm text-gray-500 mb-2">
-                    Todo o historico associado sera removido (enderecos, funcionarios, solicitacoes). Os participantes vinculados serao mantidos.
+                    Todo o histórico associado será removido permanentemente, incluindo endereços, funcionários e solicitações. Os participantes vinculados serão mantidos.
                 </p>
                 <p class="text-sm text-red-600 font-medium">
-                    Esta acao nao pode ser desfeita.
+                    Esta ação não pode ser desfeita.
                 </p>
             </div>
             <div class="flex justify-end gap-3">
@@ -585,6 +588,8 @@
             var count = clientesSelecionados.size;
 
             if (countEl) countEl.textContent = count;
+            var labelSelecionados = document.getElementById('clientes-selecionados-label');
+            if (labelSelecionados) labelSelecionados.textContent = count === 1 ? 'cliente selecionado' : 'clientes selecionados';
             if (acoesLote) {
                 if (count > 0) {
                     acoesLote.classList.remove('hidden');
@@ -678,12 +683,14 @@
         var modalBulkDelete = document.getElementById('modal-bulk-delete');
         var modalBulkDeleteOverlay = document.getElementById('modal-bulk-delete-overlay');
         var modalBulkDeleteCount = document.getElementById('modal-bulk-delete-count');
+        var modalBulkDeleteLabel = document.getElementById('modal-bulk-delete-label');
         var btnCancelarBulkDelete = document.getElementById('btn-cancelar-bulk-delete');
         var btnConfirmarBulkDelete = document.getElementById('btn-confirmar-bulk-delete');
 
         function abrirModalBulkDelete() {
             if (clientesSelecionados.size === 0) return;
             if (modalBulkDeleteCount) modalBulkDeleteCount.textContent = clientesSelecionados.size;
+            if (modalBulkDeleteLabel) modalBulkDeleteLabel.textContent = clientesSelecionados.size === 1 ? 'cliente' : 'clientes';
             if (modalBulkDelete) modalBulkDelete.classList.remove('hidden');
         }
 
@@ -720,7 +727,7 @@
                     if (!data.success) {
                         throw new Error(data.message || 'Erro ao excluir clientes');
                     }
-                    if (window.showToast) window.showToast(data.message || 'Clientes excluidos com sucesso!', 'success');
+                    if (window.showToast) window.showToast(data.message || 'Clientes excluídos com sucesso!', 'success');
 
                     // Remover linhas da tabela
                     ids.forEach(function(id) {
@@ -1113,7 +1120,7 @@
                     if (!data.success) {
                         throw new Error(data.message || 'Erro ao excluir cliente');
                     }
-                    if (window.showToast) window.showToast(data.message || 'Cliente excluido com sucesso!', 'success');
+                    if (window.showToast) window.showToast(data.message || 'Cliente excluído com sucesso!', 'success');
 
                     // Remover linha da tabela
                     var row = container.querySelector('tr[data-cliente-id="' + clienteIdParaExcluir + '"]');

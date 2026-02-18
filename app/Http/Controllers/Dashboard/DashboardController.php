@@ -26,7 +26,7 @@ class DashboardController extends Controller
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
 
     public function dashboard(Request $request){
-        $dashboardView = self::AUTH_VIEW_PREFIX . 'dashboard';
+        $dashboardView = self::AUTH_VIEW_PREFIX . 'dashboard.index';
 
         if(!view()->exists($dashboardView)){
             abort(404);
@@ -116,119 +116,12 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function solucoes(Request $request){
-        return $this->renderAutenticado($request, 'solucoes');
-    }
-
-    public function importacaoXml(Request $request){
-        return $this->renderAutenticado($request, 'importacao_xml');
-    }
-
-    public function conciliacaoBancaria(Request $request){
-        return $this->renderAutenticado($request, 'conciliacao_bancaria');
-    }
-
-    public function gestaoCnds(Request $request){
-        return $this->renderAutenticado($request, 'gestao_cnds');
-    }
-
-    public function inteligenciaTributaria(Request $request){
-        return $this->renderAutenticado($request, 'inteligencia_tributaria');
-    }
-
-    public function raf(Request $request){
-        $autenticadoView = self::AUTH_VIEW_PREFIX . 'raf';
-
-        if(!view()->exists($autenticadoView)){
-            abort(404);
-        }
-
-        if(!Auth::check()){
-            if($this->isAjaxRequest($request)){
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Você não está logado',
-                    'redirect' => '/login'
-                ]);
-            }
-            return redirect('/login');
-        }
-
-        // Buscar clientes do usuário logado (ativos)
-        $clientes = Cliente::where('user_id', Auth::id())
-            ->where('ativo', true)
-            ->select('id', 'nome', 'razao_social', 'documento', 'tipo_pessoa')
-            ->orderBy('nome')
-            ->get();
-
-        if($this->isAjaxRequest($request)){
-            return view($autenticadoView, ['clientes' => $clientes]);
-        }
-        
-        return view(self::AUTH_LAYOUT_VIEW, [
-            'initialView' => $autenticadoView,
-            'clientes' => $clientes
-        ]);
-    }
-
-    public function spedImportar(Request $request){
-        return $this->renderAutenticado($request, 'sped_importar');
-    }
-
-    public function spedAnaliseRisco(Request $request){
-        return $this->renderAutenticado($request, 'sped_analise_risco');
-    }
-
-    public function validarXml(Request $request){
-        return $this->renderAutenticado($request, 'validar_xml');
-    }
-
-    public function xmlAnaliseRisco(Request $request){
-        return $this->renderAutenticado($request, 'xml_analise_risco');
-    }
-
     public function novoCliente(Request $request){
-        return $this->renderAutenticado($request, 'novo_cliente');
-    }
-
-    public function consultarCliente(Request $request){
-        $autenticadoView = self::AUTH_VIEW_PREFIX . 'consultar_cliente';
-
-        if(!view()->exists($autenticadoView)){
-            abort(404);
-        }
-
-        if(!Auth::check()){
-            if($this->isAjaxRequest($request)){
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Você não está logado',
-                    'redirect' => '/login'
-                ]);
-            }
-            return redirect('/login');
-        }
-
-        // Buscar clientes PJ do usuário logado
-        $clientes = Cliente::where('user_id', Auth::id())
-            ->where('tipo_pessoa', 'PJ')
-            ->where('ativo', true)
-            ->select('id', 'nome', 'documento')
-            ->orderBy('nome')
-            ->get();
-
-        if($this->isAjaxRequest($request)){
-            return view($autenticadoView, ['clientes' => $clientes]);
-        }
-        
-        return view(self::AUTH_LAYOUT_VIEW, [
-            'initialView' => $autenticadoView,
-            'clientes' => $clientes
-        ]);
+        return $this->renderAutenticado($request, 'clientes.novo');
     }
 
     public function clientes(Request $request){
-        $autenticadoView = self::AUTH_VIEW_PREFIX . 'clientes';
+        $autenticadoView = self::AUTH_VIEW_PREFIX . 'clientes.index';
 
         if(!view()->exists($autenticadoView)){
             abort(404);
@@ -334,20 +227,8 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function consultarInscricaoEstadual(Request $request){
-        return $this->renderAutenticado($request, 'consultar_inscricao_estadual');
-    }
-
-    public function consultarListasRestritivas(Request $request){
-        return $this->renderAutenticado($request, 'consultar_listas_restritivas');
-    }
-
-    public function consultarCnpj(Request $request){
-        return $this->renderAutenticado($request, 'consultar_cnpj');
-    }
-
     public function perfil(Request $request){
-        $perfilView = self::AUTH_VIEW_PREFIX . 'perfil';
+        $perfilView = self::AUTH_VIEW_PREFIX . 'usuario.perfil';
 
         if(!view()->exists($perfilView)){
             abort(404);
@@ -491,7 +372,7 @@ class DashboardController extends Controller
      */
     private function renderPlaceholder(Request $request, string $titulo, string $descricao, string $icone, array $features = [])
     {
-        $placeholderView = self::AUTH_VIEW_PREFIX . 'placeholder';
+        $placeholderView = self::AUTH_VIEW_PREFIX . 'partials.placeholder';
 
         if (!Auth::check()) {
             if ($this->isAjaxRequest($request)) {
@@ -518,134 +399,6 @@ class DashboardController extends Controller
         return view(self::AUTH_LAYOUT_VIEW, array_merge([
             'initialView' => $placeholderView
         ], $data));
-    }
-
-    // ==================== CERTIDÕES ====================
-
-    public function certidoes(Request $request)
-    {
-        return $this->renderPlaceholder($request,
-            'Painel de CNDs',
-            'Gerencie todas as suas certidões negativas em um só lugar.',
-            'document-check',
-            [
-                'Visualizar status de todas as CNDs',
-                'Acompanhar vencimentos',
-                'Receber alertas automáticos',
-                'Histórico de emissões'
-            ]
-        );
-    }
-
-    public function certidoesEmitir(Request $request)
-    {
-        return $this->renderPlaceholder($request,
-            'Emitir Certidão Avulsa',
-            'Emita certidões negativas individualmente.',
-            'upload',
-            [
-                'Emitir CND Federal',
-                'Emitir CND Estadual',
-                'Emitir CND Municipal',
-                'Emitir FGTS e CNDT'
-            ]
-        );
-    }
-
-    public function certidoesLicitacao(Request $request)
-    {
-        return $this->renderPlaceholder($request,
-            'Kit Licitação',
-            'Gere o pacote completo de certidões para licitações.',
-            'package',
-            [
-                'Gerar todas as certidões em lote',
-                'Download em ZIP organizado',
-                'Verificação automática de validade',
-                'Relatório de conformidade'
-            ]
-        );
-    }
-
-    // ==================== CONSULTAS ====================
-
-    public function consultarCpf(Request $request)
-    {
-        return $this->renderPlaceholder($request,
-            'Consultar CPF',
-            'Consulte informações de pessoas físicas.',
-            'user',
-            [
-                'Verificar situação cadastral',
-                'Consultar restrições',
-                'Histórico de consultas',
-                'Exportar relatório'
-            ]
-        );
-    }
-
-    public function consultarSimples(Request $request)
-    {
-        return $this->renderPlaceholder($request,
-            'Simples Nacional',
-            'Consulte informações do Simples Nacional.',
-            'calculator',
-            [
-                'Verificar opção pelo Simples',
-                'Consultar data de opção/exclusão',
-                'Histórico de alterações',
-                'Alertas de desenquadramento'
-            ]
-        );
-    }
-
-    // ==================== NOTAS FISCAIS ====================
-
-    public function notasHistorico(Request $request)
-    {
-        return $this->renderPlaceholder($request,
-            'Histórico de Notas',
-            'Visualize o histórico de notas fiscais processadas.',
-            'clock',
-            [
-                'Buscar notas por período',
-                'Filtrar por tipo (NF-e, NFS-e, CT-e)',
-                'Exportar relatórios',
-                'Análise de tendências'
-            ]
-        );
-    }
-
-    // ==================== RELATÓRIOS ====================
-
-    public function relatoriosDiagnostico(Request $request)
-    {
-        return $this->renderPlaceholder($request,
-            'Diagnóstico Fiscal',
-            'Análise completa da situação fiscal dos seus clientes.',
-            'chart',
-            [
-                'Diagnóstico fiscal completo',
-                'Identificação de riscos',
-                'Recomendações de ação',
-                'Comparativo histórico'
-            ]
-        );
-    }
-
-    public function relatoriosExportar(Request $request)
-    {
-        return $this->renderPlaceholder($request,
-            'Exportar Dados',
-            'Exporte dados e relatórios em diversos formatos.',
-            'download',
-            [
-                'Exportar para Excel',
-                'Exportar para PDF',
-                'Exportar para CSV',
-                'Agendamento de relatórios'
-            ]
-        );
     }
 
     public function alertas(Request $request)

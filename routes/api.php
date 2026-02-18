@@ -23,12 +23,12 @@ Route::post('/monitoramento/xml/importacao/progress', [DataReceiverController::c
     ->name('api.monitoramento.xml.importacao.progress');
 
 // ============================================
-// Consultas - Novo padrão (substitui RAF legado)
+// Consultas de lotes
 // ============================================
 
 // Rota para receber progresso de consulta de lotes
 // n8n envia progresso para Laravel armazenar em cache (SSE lê do cache)
-Route::post('/consultas/lote/progress', [DataReceiverController::class, 'receiveRafLoteProgress'])
+Route::post('/consultas/lote/progress', [DataReceiverController::class, 'receiveConsultaLoteProgress'])
     ->name('api.consultas.lote.progress');
 
 // Rota para receber resultado individual de consulta (por participante)

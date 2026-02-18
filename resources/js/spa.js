@@ -35,9 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Configuração de mapeamento para páginas com nomes de arquivo diferentes
     const _spaScriptOverrides = {
-        importacaoXml: '/js/importacao_xml.js',
-        raf: null, // Código inline na view, não há arquivo externo
-        rafHistorico: null, // Código inline na view, não há arquivo externo
         monitoramento: null, // Código inline na view
         monitoramentoSped: null, // Código inline na view
         monitoramentoAvulso: null, // Código inline na view
@@ -68,10 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (segmentos.length > 0) {
             if (segmentos[0] === 'app') {
                 // Rotas autenticadas
-                if (segmentos[1] === 'solucoes' && segmentos[2]) {
-                    // Subpáginas de soluções: usar o slug da subpágina
-                    baseSlug = segmentos[2];
-                } else if (segmentos[1] === 'monitoramento' && segmentos[2] === 'participante') {
+                if (segmentos[1] === 'monitoramento' && segmentos[2] === 'participante') {
                     // Rota de participante específico: /app/monitoramento/participante/{id}
                     baseSlug = 'monitoramentoParticipante';
                 } else {
@@ -97,13 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
         '/login': 'initLogin',
         '/agendar': 'initAgendar',
         '/solucoes': 'initSolucoes',
-        '/app/solucoes': 'initSolucoes',
-        '/app/solucoes/importacao-xml': 'initImportacaoXml',
-        '/app/solucoes/conciliacao-bancaria': 'initConciliacaoBancaria',
-        '/app/solucoes/gestao-cnds': 'initGestaoCnds',
-        '/app/solucoes/inteligencia-tributaria': 'initInteligenciaTributaria',
-        '/app/raf': 'initRaf',
-        '/app/raf/historico': 'initRafHistorico',
         '/app/monitoramento': 'initMonitoramento',
         '/app/monitoramento/sped': 'initMonitoramentoSped',
         '/app/monitoramento/avulso': 'initMonitoramentoAvulso',
@@ -209,14 +196,14 @@ document.addEventListener('DOMContentLoaded', () => {
             window._cleanupFunctions = {};
         }
         
-        // Desconectar SSE se existir (para páginas RAF)
+        // Desconectar SSE se existir (para páginas de consulta)
         // Usar try-catch para evitar erro se disconnectSSE não estiver definida
         try {
             if (typeof window.disconnectSSE === 'function') {
                 window.disconnectSSE();
             }
         } catch (error) {
-            // Ignorar erro se disconnectSSE não estiver definida (página RAF não foi carregada)
+            // Ignorar erro se disconnectSSE não estiver definida (página de consulta não foi carregada)
         }
     }
     
@@ -759,7 +746,5 @@ document.addEventListener('DOMContentLoaded', () => {
     // 10. CARREGAR JAVASCRIPT NA PRIMEIRA CARGA
     carregarJavaScriptInicial();
 
-    // Funções no-op para rotas sem JS específico
-    window.initRaf = window.initRaf || function() {};
 });
 

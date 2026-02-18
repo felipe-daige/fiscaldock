@@ -4,7 +4,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CreditController;
 use App\Http\Controllers\Landing\LandingPageController;
 use App\Http\Controllers\Dashboard\DashboardController;
-use App\Http\Controllers\Dashboard\RafConsultaController;
+use App\Http\Controllers\Dashboard\ConsultaController;
 use App\Http\Controllers\Dashboard\ClienteController;
 use App\Http\Controllers\Dashboard\AnalyticsController;
 use App\Http\Controllers\Dashboard\RiskScoreController;
@@ -46,21 +46,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
     Route::get('/app/perfil', [DashboardController::class, 'perfil'])->name('app.perfil');
 
-    // Certidões (Placeholder)
-    Route::get('/app/certidoes', [DashboardController::class, 'certidoes'])->name('app.certidoes');
-    Route::get('/app/certidoes/emitir', [DashboardController::class, 'certidoesEmitir'])->name('app.certidoes.emitir');
-    Route::get('/app/certidoes/licitacao', [DashboardController::class, 'certidoesLicitacao'])->name('app.certidoes.licitacao');
-
-    // Consultas (Placeholder)
-    Route::get('/app/consultas/cpf', [DashboardController::class, 'consultarCpf'])->name('app.consultas.cpf');
-    Route::get('/app/consultas/simples', [DashboardController::class, 'consultarSimples'])->name('app.consultas.simples');
-
-    // Notas Fiscais (Placeholder)
-    Route::get('/app/notas/historico', [DashboardController::class, 'notasHistorico'])->name('app.notas.historico');
-
-    // Relatórios (Placeholder)
-    Route::get('/app/relatorios/diagnostico', [DashboardController::class, 'relatoriosDiagnostico'])->name('app.relatorios.diagnostico');
-    Route::get('/app/relatorios/exportar', [DashboardController::class, 'relatoriosExportar'])->name('app.relatorios.exportar');
     Route::get('/app/alertas', [DashboardController::class, 'alertas'])->name('app.alertas');
 
     // Usuário (Placeholder)
@@ -74,52 +59,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/balance', [CreditController::class, 'balance'])->name('balance');
     });
 
-    Route::prefix('app/solucoes')->name('app.solucoes.')->group(function () {
-        Route::get('/', [DashboardController::class, 'solucoes'])->name('index');
-        Route::get('/importacao-xml', [DashboardController::class, 'importacaoXml'])->name('importacao-xml');
-        Route::get('/conciliacao-bancaria', [DashboardController::class, 'conciliacaoBancaria'])->name('conciliacao-bancaria');
-        Route::get('/gestao-cnds', [DashboardController::class, 'gestaoCnds'])->name('gestao-cnds');
-        Route::get('/inteligencia-tributaria', [DashboardController::class, 'inteligenciaTributaria'])->name('inteligencia-tributaria');
-    });
-
-    // Rotas RAF Consulta (nova arquitetura - seleciona participantes existentes)
-    Route::prefix('app/raf')->name('app.raf.')->group(function () {
-        // Principal: seleção de participantes para consulta
-        Route::get('/consulta', [RafConsultaController::class, 'index'])->name('consulta');
-        Route::get('/consulta/participantes', [RafConsultaController::class, 'getParticipantes'])->name('consulta.participantes');
-        Route::get('/consulta/participantes/grupo/{id}', [RafConsultaController::class, 'getParticipantesGrupo'])->name('consulta.participantes.grupo');
-        Route::post('/consulta/calcular-custo', [RafConsultaController::class, 'calcularCusto'])->name('consulta.calcular-custo');
-        Route::post('/consulta/executar', [RafConsultaController::class, 'executar'])->name('consulta.executar');
-        Route::get('/consulta/progresso/stream', [RafConsultaController::class, 'streamProgresso'])->name('consulta.progresso.stream');
-        Route::get('/lote/{id}/baixar', [RafConsultaController::class, 'baixarLote'])->name('lote.baixar');
-
-        // Histórico unificado
-        Route::get('/historico', [RafConsultaController::class, 'historico'])->name('historico');
-    });
-
-    // Redirect da rota antiga /app/raf para a nova
-    Route::get('/app/raf', function () {
-        return redirect()->route('app.raf.consulta');
-    });
-
-    // Rota de Importação de SPED
-    Route::get('/app/sped_importar', [DashboardController::class, 'spedImportar'])->name('app.sped.importar');
-
-    // Rota de Análise de Risco SPED
-    Route::get('/app/sped-analise-risco', [DashboardController::class, 'spedAnaliseRisco'])->name('app.sped.analise.risco');
-
-    // Rota de validação de XML
-    Route::get('/app/validar_xml', [DashboardController::class, 'validarXml'])->name('app.validar_xml');
-    
-    // Rota de Análise de Risco XMLs
-    Route::get('/app/xml_analise_risco', [DashboardController::class, 'xmlAnaliseRisco'])->name('app.xml.analise.risco');
-    
     // Rota de Novo Cliente (formulário de cadastro)
     Route::get('/app/novo_cliente', [DashboardController::class, 'novoCliente'])->name('app.novo.cliente');
     Route::post('/app/novo_cliente', [ClienteController::class, 'store'])->name('app.cliente.store');
-    
-    // Rota de Consultar Cliente (análise de risco)
-    Route::get('/app/consultar_cliente', [DashboardController::class, 'consultarCliente'])->name('app.consultar.cliente');
     
     // Rota de Clientes
     Route::get('/app/clientes', [DashboardController::class, 'clientes'])->name('app.clientes');
@@ -129,19 +71,6 @@ Route::middleware('auth')->group(function () {
     Route::delete('/app/cliente/{id}', [ClienteController::class, 'destroy'])->name('app.cliente.destroy');
     Route::get('/app/cliente/{id}', [DashboardController::class, 'clienteDetalhes'])->name('app.cliente.detalhes');
     
-    // Rota de Consultar Inscrição Estadual
-    Route::get('/app/consultar', [DashboardController::class, 'consultarInscricaoEstadual'])->name('app.consultar');
-    
-    // Rota de Consultar Listas Restritivas
-    Route::get('/app/consultar_listas_restritivas', [DashboardController::class, 'consultarListasRestritivas'])->name('app.consultar.listas.restritivas');
-    
-    // Rota de Consultar CNPJ
-    Route::get('/app/consultar_cnpj', [DashboardController::class, 'consultarCnpj'])->name('app.consultar.cnpj');
-    
-    // Rota SSE para notificações em tempo real
-    Route::get('/api/data/notifications/stream', [\App\Http\Controllers\Api\DataReceiverController::class, 'streamNotifications'])
-        ->name('api.data.notifications.stream');
-
     // Rotas de Monitoramento
     Route::prefix('app/monitoramento')->name('app.monitoramento.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'index'])->name('index');
@@ -246,16 +175,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/historico', [MinhaEmpresaController::class, 'historico'])->name('historico');
     });
 
-    // CONSULTAS (nova estrutura unificada - aliases para RAF)
+    // CONSULTAS (estrutura unificada)
     Route::prefix('app/consultas')->name('app.consultas.')->group(function () {
-        // Nova Consulta (alias para RAF consulta)
-        Route::get('/nova', [RafConsultaController::class, 'index'])->name('nova');
-        Route::get('/nova/participantes', [RafConsultaController::class, 'getParticipantes'])->name('nova.participantes');
-        Route::get('/nova/participantes/grupo/{id}', [RafConsultaController::class, 'getParticipantesGrupo'])->name('nova.participantes.grupo');
-        Route::post('/nova/calcular-custo', [RafConsultaController::class, 'calcularCusto'])->name('nova.calcular-custo');
-        Route::post('/nova/executar', [RafConsultaController::class, 'executar'])->name('nova.executar');
-        Route::post('/nova/adicionar-cnpj', [RafConsultaController::class, 'adicionarCnpj'])->name('nova.adicionar-cnpj');
-        Route::get('/nova/progresso/stream', [RafConsultaController::class, 'streamProgresso'])->name('nova.progresso.stream');
+        // Nova Consulta
+        Route::get('/nova', [ConsultaController::class, 'index'])->name('nova');
+        Route::get('/nova/participantes', [ConsultaController::class, 'getParticipantes'])->name('nova.participantes');
+        Route::get('/nova/participantes/grupo/{id}', [ConsultaController::class, 'getParticipantesGrupo'])->name('nova.participantes.grupo');
+        Route::post('/nova/calcular-custo', [ConsultaController::class, 'calcularCusto'])->name('nova.calcular-custo');
+        Route::post('/nova/executar', [ConsultaController::class, 'executar'])->name('nova.executar');
+        Route::post('/nova/adicionar-cnpj', [ConsultaController::class, 'adicionarCnpj'])->name('nova.adicionar-cnpj');
+        Route::get('/nova/progresso/stream', [ConsultaController::class, 'streamProgresso'])->name('nova.progresso.stream');
 
         // Consulta Avulsa (redirect para Nova Consulta)
         Route::get('/avulso', fn () => redirect('/app/consultas/nova', 301))->name('avulso');
@@ -263,13 +192,13 @@ Route::middleware('auth')->group(function () {
         // Planos Disponiveis
         Route::get('/planos', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'planos'])->name('planos');
 
-        // Historico (alias para RAF historico)
-        Route::get('/historico', [RafConsultaController::class, 'historico'])->name('historico');
+        // Historico
+        Route::get('/historico', [ConsultaController::class, 'historico'])->name('historico');
 
         // Download de lote
-        Route::get('/lote/{id}/baixar', [RafConsultaController::class, 'baixarLote'])->name('lote.baixar');
+        Route::get('/lote/{id}/baixar', [ConsultaController::class, 'baixarLote'])->name('lote.baixar');
 
         // Relatorios (mesmo que historico, mostra downloads disponiveis)
-        Route::get('/relatorios', [RafConsultaController::class, 'historico'])->name('relatorios');
+        Route::get('/relatorios', [ConsultaController::class, 'historico'])->name('relatorios');
     });
 });
