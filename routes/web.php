@@ -123,6 +123,8 @@ Route::middleware('auth')->group(function () {
     
     // Rota de Clientes
     Route::get('/app/clientes', [DashboardController::class, 'clientes'])->name('app.clientes');
+    Route::get('/app/cliente/{id}/editar', [ClienteController::class, 'edit'])->name('app.cliente.edit');
+    Route::put('/app/cliente/{id}', [ClienteController::class, 'update'])->name('app.cliente.update');
     Route::get('/app/cliente/{id}', [DashboardController::class, 'clienteDetalhes'])->name('app.cliente.detalhes');
     
     // Rota de Consultar Inscrição Estadual
@@ -143,13 +145,19 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'index'])->name('index');
         Route::get('/planos', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'planos'])->name('planos');
         Route::get('/sped', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'importarSped'])->name('sped');
-        Route::get('/avulso', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'consultaAvulsa'])->name('avulso');
+        Route::get('/avulso', function () {
+            return redirect('/app/consultas/avulso', 301);
+        })->name('avulso');
         Route::get('/historico', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'historico'])->name('historico');
         Route::get('/participantes', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'listaParticipantes'])->name('participantes');
         Route::get('/clientes', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'clientes'])->name('clientes');
         Route::get('/participante/nota-fiscal/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'notaFiscalDetalhes'])->name('nota-fiscal.detalhes');
         Route::get('/participante/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'participante'])->name('participante');
         Route::get('/consulta/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'consultaDetalhes'])->name('consulta');
+
+        // Novo Participante (formulário manual)
+        Route::get('/novo-participante', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'novoParticipante'])->name('novo-participante');
+        Route::post('/novo-participante', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'storeParticipante'])->name('novo-participante.store');
 
         // Acoes
         Route::post('/adicionar-cnpj', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'adicionarCnpj'])->name('adicionar-cnpj');
@@ -178,6 +186,10 @@ Route::middleware('auth')->group(function () {
         Route::delete('/grupos/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'excluirGrupo'])->name('grupos.excluir');
         Route::post('/participantes/associar-grupo', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'associarGrupo'])->name('participantes.associar-grupo');
         Route::delete('/participante/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'excluirParticipante'])->name('participante.excluir');
+
+        // Editar Participante
+        Route::get('/participante/{id}/editar', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'editParticipante'])->name('participante.editar');
+        Route::put('/participante/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'updateParticipante'])->name('participante.update');
 
         // Participantes por importação (AJAX)
         Route::get('/participantes/por-importacao/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'participantesPorImportacao'])->name('participantes.por-importacao');
@@ -239,7 +251,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/nova/participantes/grupo/{id}', [RafConsultaController::class, 'getParticipantesGrupo'])->name('nova.participantes.grupo');
         Route::post('/nova/calcular-custo', [RafConsultaController::class, 'calcularCusto'])->name('nova.calcular-custo');
         Route::post('/nova/executar', [RafConsultaController::class, 'executar'])->name('nova.executar');
+        Route::post('/nova/adicionar-cnpj', [RafConsultaController::class, 'adicionarCnpj'])->name('nova.adicionar-cnpj');
         Route::get('/nova/progresso/stream', [RafConsultaController::class, 'streamProgresso'])->name('nova.progresso.stream');
+
+        // Consulta Avulsa (redirect para Nova Consulta)
+        Route::get('/avulso', fn () => redirect('/app/consultas/nova', 301))->name('avulso');
 
         // Planos Disponiveis
         Route::get('/planos', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'planos'])->name('planos');

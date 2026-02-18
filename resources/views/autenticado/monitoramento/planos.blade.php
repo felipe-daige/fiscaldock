@@ -6,7 +6,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900">Planos de Consulta</h1>
-                    <p class="mt-1 text-sm text-gray-600">Escolha o nivel de informacao ideal para monitorar fornecedores e parceiros.</p>
+                    <p class="mt-1 text-sm text-gray-600">Escolha o nível de informação ideal para consultar fornecedores e parceiros.</p>
                 </div>
                 <a
                     href="/app/monitoramento"
@@ -30,7 +30,7 @@
                 <div>
                     <h3 class="text-sm font-semibold text-blue-900">Como funcionam os planos?</h3>
                     <p class="text-sm text-blue-800 mt-1">
-                        Cada plano agrupa um conjunto de consultas. Quanto mais completo, mais informacoes voce obtem sobre a regularidade fiscal, trabalhista e socioambiental dos seus parceiros. O custo e por CNPJ consultado.
+                        Cada plano agrupa um conjunto de consultas. Quanto mais completo, mais informações você obtém sobre a regularidade fiscal, trabalhista e socioambiental dos seus parceiros. O custo é por CNPJ consultado.
                     </p>
                 </div>
             </div>
@@ -38,131 +38,116 @@
 
         {{-- Grid de Planos --}}
         @php
-            $planos = [
-                [
-                    'codigo' => 'gratuito',
-                    'nome' => 'Gratuito',
-                    'creditos' => 0,
-                    'gratuito' => true,
-                    'popular' => false,
+            // Metadata visual por codigo (mesmo padrao de avulso.blade.php)
+            $planoMeta = [
+                'gratuito' => [
                     'cor' => 'green',
                     'icone' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-                    'descricao' => 'Validacao rapida de dados cadastrais e regime tributario.',
-                    'consultas' => [
-                        'Situacao Cadastral (Ativa, Inapta, Baixada)',
+                    'consultas_display' => [
+                        'Situação Cadastral (Ativa, Inapta, Baixada)',
                         'Dados Cadastrais Completos',
-                        'CNAEs Principal e Secundarios',
-                        'Quadro Societario (QSA)',
+                        'CNAEs Principal e Secundários',
+                        'Quadro Societário (QSA)',
                         'Simples Nacional e MEI',
                     ],
                     'casos_uso' => [
-                        'Validar se CNPJ existe e esta ativo',
-                        'Conferir regime tributario para emissao de NF',
-                        'Identificar socios antes de negociar',
+                        'Verificar se o CNPJ está ativo na Receita Federal',
+                        'Confirmar regime tributário antes de emitir NF',
+                        'Consultar sócios e quadro societário (QSA)',
                     ],
                 ],
-                [
-                    'codigo' => 'validacao',
-                    'nome' => 'Validacao',
-                    'creditos' => 4,
-                    'gratuito' => false,
-                    'popular' => false,
+                'validacao' => [
                     'cor' => 'blue',
                     'icone' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
-                    'descricao' => 'Inclui inscricao estadual e verificacao em listas restritivas.',
-                    'consultas' => [
+                    'consultas_display' => [
                         'Tudo do Gratuito',
-                        'SINTEGRA (Inscricao Estadual)',
+                        'SINTEGRA (Inscrição Estadual)',
                         'TCU Consolidada (CEIS, CNEP, CNJ)',
                     ],
                     'casos_uso' => [
-                        'Validar IE para operacoes interestaduais',
-                        'Verificar se empresa esta em lista de impedidos',
-                        'Qualificar fornecedores antes de cadastrar',
+                        'Conferir Inscrição Estadual em operações interestaduais',
+                        'Verificar impedimentos no CEIS, CNEP e TCU',
+                        'Qualificar fornecedores antes do cadastro',
                     ],
                 ],
-                [
-                    'codigo' => 'licitacao',
-                    'nome' => 'Licitacao',
-                    'creditos' => 10,
-                    'gratuito' => false,
-                    'popular' => true,
+                'licitacao' => [
                     'cor' => 'blue',
                     'icone' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-                    'descricao' => 'CNDs obrigatorias para editais e contratos publicos.',
-                    'consultas' => [
-                        'Tudo do Validacao',
+                    'consultas_display' => [
+                        'Tudo do Validação',
                         'CND Federal (PGFN/RFB)',
                         'CRF FGTS (Regularidade)',
                         'CND Estadual (ICMS)',
                         'CNDT Trabalhista (TST)',
                     ],
                     'casos_uso' => [
-                        'Emitir documentacao para editais publicos',
-                        'Homologar fornecedores em licitacoes',
-                        'Renovar contratos com orgaos publicos',
+                        'Preparar documentação completa para editais públicos',
+                        'Homologar fornecedores com todas as CNDs exigidas',
+                        'Renovar contratos com órgãos públicos',
                     ],
+                    'promo' => true,
                 ],
-                [
-                    'codigo' => 'compliance',
-                    'nome' => 'Compliance',
-                    'creditos' => 14,
-                    'gratuito' => false,
-                    'popular' => false,
+                'compliance' => [
                     'cor' => 'purple',
                     'icone' => 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
-                    'descricao' => 'Monitoramento completo com protestos e divida ativa.',
-                    'consultas' => [
-                        'Tudo do Licitacao',
+                    'consultas_display' => [
+                        'Tudo do Licitação',
                         'Protestos (IEPTB)',
                         'Lista de Devedores PGFN',
                     ],
                     'casos_uso' => [
-                        'Gestao continua de terceiros e fornecedores',
-                        'Compliance com Lei Anticorrupcao (12.846/13)',
-                        'Monitorar saude financeira de parceiros criticos',
+                        'Gestão contínua de risco de terceiros e fornecedores',
+                        'Atender à Lei Anticorrupção (Lei 12.846/2013)',
+                        'Monitorar protestos e dívidas de parceiros críticos',
                     ],
                 ],
-                [
-                    'codigo' => 'due_diligence',
-                    'nome' => 'Due Diligence',
-                    'creditos' => 18,
-                    'gratuito' => false,
-                    'popular' => false,
+                'due_diligence' => [
                     'cor' => 'amber',
                     'icone' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7',
-                    'descricao' => 'Analise profunda com compliance ESG.',
-                    'consultas' => [
+                    'consultas_display' => [
                         'Tudo do Compliance',
                         'Lista de Trabalho Escravo (MTE)',
-                        'IBAMA - Autuacoes Ambientais',
+                        'IBAMA - Autuações Ambientais',
                     ],
                     'casos_uso' => [
-                        'Analise pre-aquisicao (M&A)',
-                        'Atender requisitos ESG de investidores',
-                        'Due diligence de parceiros estrategicos',
+                        'Análise pré-aquisição em operações de M&A',
+                        'Atender requisitos ESG exigidos por investidores',
+                        'Avaliar riscos trabalhistas e ambientais do alvo',
                     ],
                 ],
-                [
-                    'codigo' => 'enterprise',
-                    'nome' => 'Enterprise',
-                    'creditos' => 20,
-                    'gratuito' => false,
-                    'popular' => false,
+                'enterprise' => [
                     'cor' => 'slate',
                     'icone' => 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
-                    'descricao' => 'Todas as consultas disponiveis incluindo processos judiciais.',
-                    'consultas' => [
+                    'consultas_display' => [
                         'Tudo do Due Diligence',
                         'Processos Judiciais (CNJ)',
                     ],
                     'casos_uso' => [
-                        'Due diligence juridico completo',
-                        'Analise de litigios antes de contratar',
-                        'Monitoramento corporativo de alto nivel',
+                        'Due diligence jurídico e operacional completo',
+                        'Mapear litígios ativos antes de fechar contrato',
+                        'Relatório corporativo de risco para comitês internos',
                     ],
                 ],
             ];
+
+            // Merge DB data + visual metadata
+            $planosDetalhados = [];
+            foreach ($planos as $p) {
+                $meta = $planoMeta[$p->codigo] ?? ['cor' => 'gray', 'icone' => 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'consultas_display' => [], 'casos_uso' => []];
+                $planosDetalhados[] = [
+                    'codigo' => $p->codigo,
+                    'nome' => $p->nome,
+                    'creditos' => $p->custo_creditos,
+                    'gratuito' => $p->is_gratuito,
+                    'descricao' => $p->descricao,
+                    'cor' => $meta['cor'],
+                    'icone' => $meta['icone'],
+                    'consultas' => $meta['consultas_display'],
+                    'casos_uso' => $meta['casos_uso'],
+                    'popular' => $p->codigo === 'licitacao',
+                    'promo' => $meta['promo'] ?? false,
+                ];
+            }
 
             $corClasses = [
                 'green' => ['bg' => 'bg-green-100', 'text' => 'text-green-700', 'icon' => 'text-green-600', 'badge' => 'bg-green-100 text-green-700', 'border' => 'border-green-200'],
@@ -173,12 +158,59 @@
             ];
         @endphp
 
+        <style>
+            @keyframes shimmer-border {
+                0% { background-position: 200% center; }
+                100% { background-position: -200% center; }
+            }
+            @keyframes promo-pulse {
+                0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.15); }
+                50% { box-shadow: 0 0 20px 4px rgba(245,158,11,0.10); }
+            }
+            .promo-card {
+                background: linear-gradient(to bottom, #fffbeb, white 50%) padding-box,
+                            linear-gradient(90deg, #f59e0b, #ea580c, #f97316, #f59e0b) border-box;
+                background-size: 100% 100%, 300% 100%;
+                border-color: transparent;
+                animation: shimmer-border 4s linear infinite, promo-pulse 3s ease-in-out infinite;
+            }
+            @keyframes card-slide-in {
+                from {
+                    opacity: 0;
+                    transform: translateY(60px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            .plan-card-animate {
+                opacity: 0;
+                animation: card-slide-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            @media (prefers-reduced-motion: reduce) {
+                .plan-card-animate {
+                    opacity: 1;
+                    animation: none;
+                }
+            }
+        </style>
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            @foreach($planos as $plano)
+            @foreach($planosDetalhados as $plano)
                 @php $cores = $corClasses[$plano['cor']]; @endphp
-                <div class="bg-white rounded-xl border {{ $plano['codigo'] === 'enterprise' ? 'border-2 border-slate-400 ring-2 ring-slate-100' : ($plano['popular'] ? 'border-2 border-blue-500 ring-2 ring-blue-100' : 'border-gray-200') }} shadow-sm flex flex-col relative hover:shadow-md transition-shadow">
-                    {{-- Badge Popular --}}
-                    @if($plano['popular'])
+                <div class="bg-white rounded-xl border {{ $plano['codigo'] === 'enterprise' ? 'border-2 border-slate-400 ring-2 ring-slate-100' : ($plano['popular'] && !$plano['promo'] ? 'border-2 border-blue-500 ring-2 ring-blue-100' : ($plano['promo'] ? 'border-2' : 'border-gray-200')) }} {{ $plano['promo'] ? 'promo-card shadow-lg' : 'shadow-sm' }} flex flex-col relative hover:shadow-md transition-shadow plan-card-animate" style="animation-delay: {{ $loop->index * 0.12 }}s">
+                    {{-- Badge Popular / Promo --}}
+                    @if($plano['promo'])
+                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white shadow-sm">
+                                Mais Popular
+                            </span>
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm" style="background: linear-gradient(to right, #f59e0b, #ea580c)">
+                                20% OFF
+                            </span>
+                        </div>
+                    @elseif($plano['popular'])
                         <div class="absolute -top-3 left-1/2 -translate-x-1/2">
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white shadow-sm">
                                 Mais Popular
@@ -203,14 +235,21 @@
                                 </div>
                                 <div>
                                     <h3 class="text-lg font-bold text-gray-900">{{ $plano['nome'] }}</h3>
-                                    @if($plano['gratuito'])
+                                    @if($plano['promo'])
+                                        <span class="text-sm text-gray-400 line-through">10 cred./CNPJ</span>
+                                        <span class="text-sm font-bold text-amber-600">{{ $plano['creditos'] }} creditos/CNPJ</span>
+                                    @elseif($plano['gratuito'])
                                         <span class="text-sm font-medium text-green-600">Gratuito</span>
                                     @else
-                                        <span class="text-sm text-gray-500">{{ $plano['creditos'] }} creditos/CNPJ</span>
+                                        <span class="text-sm text-gray-500">{{ $plano['creditos'] }} créditos/CNPJ</span>
                                     @endif
                                 </div>
                             </div>
-                            @if($plano['gratuito'])
+                            @if($plano['promo'])
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
+                                    {{ $plano['creditos'] }} cred.
+                                </span>
+                            @elseif($plano['gratuito'])
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
                                     Gratis
                                 </span>
@@ -223,9 +262,23 @@
 
                         <p class="text-sm text-gray-600 mb-5">{{ $plano['descricao'] }}</p>
 
+                        @if($plano['promo'])
+                            <div class="flex items-center gap-2.5 border border-amber-200 rounded-lg px-3 py-2.5 mb-5" style="background: linear-gradient(to right, #fffbeb, #fff7ed)">
+                                <span class="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"></path>
+                                    </svg>
+                                </span>
+                                <div>
+                                    <p class="text-xs font-bold text-amber-800">Promocao por tempo limitado</p>
+                                    <p class="text-xs text-amber-700">De <span class="line-through">10</span> por <strong>8 creditos</strong>/CNPJ — economia de 20%</p>
+                                </div>
+                            </div>
+                        @endif
+
                         {{-- Consultas Incluidas --}}
                         <div class="mb-5">
-                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Consultas incluidas</p>
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Consultas incluídas</p>
                             <ul class="space-y-1.5">
                                 @foreach($plano['consultas'] as $consulta)
                                     <li class="flex items-start gap-2 text-sm text-gray-700">
@@ -259,7 +312,8 @@
                         <a
                             href="/app/monitoramento/avulso"
                             data-link
-                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg {{ $plano['codigo'] === 'enterprise' ? 'bg-slate-700 text-white hover:bg-slate-800' : ($plano['popular'] ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') }} text-sm font-semibold transition-colors"
+                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg {{ $plano['promo'] ? 'text-white' : ($plano['codigo'] === 'enterprise' ? 'bg-slate-700 text-white hover:bg-slate-800' : ($plano['popular'] ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')) }} text-sm font-semibold transition-colors"
+                            {!! $plano['promo'] ? 'style="background: linear-gradient(to right, #f59e0b, #ea580c)"' : '' !!}
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -282,7 +336,7 @@
                     </div>
                     <div>
                         <h2 class="text-lg font-semibold text-gray-900">Simule seu custo mensal</h2>
-                        <p class="text-sm text-gray-600">Calcule quanto voce gastaria monitorando seus participantes.</p>
+                        <p class="text-sm text-gray-600">Calcule quanto você gastaria monitorando seus participantes.</p>
                     </div>
                 </div>
             </div>
@@ -329,12 +383,11 @@
                             id="calc-plano"
                             class="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
-                            <option value="0">Gratuito (0 cred.)</option>
-                            <option value="4">Validacao (4 cred.)</option>
-                            <option value="10" selected>Licitacao (10 cred.)</option>
-                            <option value="14">Compliance (14 cred.)</option>
-                            <option value="18">Due Diligence (18 cred.)</option>
-                            <option value="20">Enterprise (20 cred.)</option>
+                            @foreach($planosDetalhados as $plano)
+                                <option value="{{ $plano['creditos'] }}" {{ $plano['codigo'] === 'licitacao' ? 'selected' : '' }}>
+                                    {{ $plano['nome'] }} ({{ $plano['creditos'] }} cred.)
+                                </option>
+                            @endforeach
                         </select>
                     </div>
 

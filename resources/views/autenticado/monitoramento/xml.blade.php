@@ -48,26 +48,50 @@
                         {{-- Selecao Tipo Documento --}}
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Documento:</label>
-                            <div class="grid grid-cols-3 gap-2">
-                                <label class="flex items-center p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 tipo-doc-label" data-tipo="NFE">
-                                    <input type="radio" name="tipo-documento" value="NFE" class="mr-2 w-4 h-4 text-blue-600 flex-shrink-0">
+                            <div class="space-y-2">
+                                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition tipo-doc-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-tipo="NFE">
+                                    <input type="radio" name="tipo-documento" value="NFE" class="w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
+                                    <div class="flex-shrink-0 w-7 h-7 rounded-md bg-blue-100 flex items-center justify-center">
+                                        <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                    </div>
                                     <div class="flex-1 min-w-0">
-                                        <div class="font-semibold text-gray-800 text-sm">NF-e</div>
-                                        <div class="text-xs text-gray-500">Nota Fiscal</div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-medium text-gray-900">NF-e</span>
+                                            <span class="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">Gratis</span>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-0.5 truncate">Nota Fiscal Eletronica</p>
                                     </div>
                                 </label>
-                                <label class="flex items-center p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 tipo-doc-label" data-tipo="NFSE">
-                                    <input type="radio" name="tipo-documento" value="NFSE" class="mr-2 w-4 h-4 text-blue-600 flex-shrink-0">
+                                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition tipo-doc-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-tipo="NFSE">
+                                    <input type="radio" name="tipo-documento" value="NFSE" class="w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
+                                    <div class="flex-shrink-0 w-7 h-7 rounded-md bg-green-100 flex items-center justify-center">
+                                        <svg class="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
                                     <div class="flex-1 min-w-0">
-                                        <div class="font-semibold text-gray-800 text-sm">NFS-e</div>
-                                        <div class="text-xs text-gray-500">Servicos</div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-medium text-gray-900">NFS-e</span>
+                                            <span class="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">Gratis</span>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-0.5 truncate">Nota Fiscal de Servicos</p>
                                     </div>
                                 </label>
-                                <label class="flex items-center p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 tipo-doc-label" data-tipo="CTE">
-                                    <input type="radio" name="tipo-documento" value="CTE" class="mr-2 w-4 h-4 text-blue-600 flex-shrink-0">
+                                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition tipo-doc-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-tipo="CTE">
+                                    <input type="radio" name="tipo-documento" value="CTE" class="w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
+                                    <div class="flex-shrink-0 w-7 h-7 rounded-md bg-amber-100 flex items-center justify-center">
+                                        <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path>
+                                        </svg>
+                                    </div>
                                     <div class="flex-1 min-w-0">
-                                        <div class="font-semibold text-gray-800 text-sm">CT-e</div>
-                                        <div class="text-xs text-gray-500">Transporte</div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-medium text-gray-900">CT-e</span>
+                                            <span class="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">Gratis</span>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-0.5 truncate">Conhecimento de Transporte</p>
                                     </div>
                                 </label>
                             </div>
@@ -76,43 +100,35 @@
                         {{-- Selecao Modo de Envio --}}
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Modo de Envio:</label>
-                            <div class="grid grid-cols-2 gap-3">
-                                <label class="flex items-start p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-purple-400 modo-envio-label" data-modo="zip">
-                                    <input type="radio" name="modo-envio" value="zip" class="mt-1 mr-3 w-4 h-4 text-purple-600 flex-shrink-0">
+                            <div class="space-y-2">
+                                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition modo-envio-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-modo="zip">
+                                    <input type="radio" name="modo-envio" value="zip" class="w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
+                                    <div class="flex-shrink-0 w-7 h-7 rounded-md bg-purple-100 flex items-center justify-center">
+                                        <svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                                        </svg>
+                                    </div>
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center gap-2">
-                                            <div class="flex-shrink-0 w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center">
-                                                <svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
-                                                </svg>
-                                            </div>
-                                            <div class="font-semibold text-gray-800 text-sm">Arquivo ZIP</div>
+                                            <span class="text-sm font-medium text-gray-900">Arquivo ZIP</span>
+                                            <span class="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">50 MB</span>
                                         </div>
-                                        <div class="mt-3 text-[10px] text-gray-500">
-                                            <div class="flex items-center gap-1.5">
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-100 text-purple-700">50 MB</span>
-                                                <span>• até 5.000 XMLs</span>
-                                            </div>
-                                        </div>
+                                        <p class="text-xs text-gray-500 mt-0.5 truncate">Envie um ZIP com ate 5.000 XMLs</p>
                                     </div>
                                 </label>
-                                <label class="flex items-start p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 modo-envio-label" data-modo="xml">
-                                    <input type="radio" name="modo-envio" value="xml" class="mt-1 mr-3 w-4 h-4 text-blue-600 flex-shrink-0">
+                                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition modo-envio-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-modo="xml">
+                                    <input type="radio" name="modo-envio" value="xml" class="w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
+                                    <div class="flex-shrink-0 w-7 h-7 rounded-md bg-blue-100 flex items-center justify-center">
+                                        <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                    </div>
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center gap-2">
-                                            <div class="flex-shrink-0 w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
-                                                <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                </svg>
-                                            </div>
-                                            <div class="font-semibold text-gray-800 text-sm">XMLs Avulsos</div>
+                                            <span class="text-sm font-medium text-gray-900">XMLs Avulsos</span>
+                                            <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">100 arq</span>
                                         </div>
-                                        <div class="mt-3 text-[10px] text-gray-500">
-                                            <div class="flex items-center gap-1.5">
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">100 arq</span>
-                                                <span>• 200 MB total</span>
-                                            </div>
-                                        </div>
+                                        <p class="text-xs text-gray-500 mt-0.5 truncate">Selecione ate 100 arquivos XML (200 MB total)</p>
                                     </div>
                                 </label>
                             </div>
@@ -279,55 +295,253 @@
                             </div>
                         </div>
 
-                        {{-- Secao Planos Disponíveis --}}
-                        <div class="pt-4 border-t border-gray-200">
-                            <h4 class="text-sm font-semibold text-gray-900 mb-3">Planos Disponíveis</h4>
-                            <div class="space-y-2">
-                                <div class="p-3 rounded-lg border border-gray-200 bg-gray-50">
-                                    <div class="flex items-center justify-between mb-1">
-                                        <span class="text-xs font-semibold text-gray-900">Básico</span>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">Grátis</span>
-                                    </div>
-                                    <p class="text-xs text-gray-600">Situação Cadastral + Dados Cadastrais + Simples/MEI</p>
-                                </div>
-                                <div class="p-3 rounded-lg border border-gray-200 bg-white">
-                                    <div class="flex items-center justify-between mb-1">
-                                        <span class="text-xs font-semibold text-gray-900">Cadastral+</span>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">3 créditos</span>
-                                    </div>
-                                    <p class="text-xs text-gray-600">Básico + SINTEGRA + TCU Consolidada</p>
-                                </div>
-                                <div class="p-3 rounded-lg border border-gray-200 bg-white">
-                                    <div class="flex items-center justify-between mb-1">
-                                        <span class="text-xs font-semibold text-gray-900">Fiscal Federal</span>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">6 créditos</span>
-                                    </div>
-                                    <p class="text-xs text-gray-600">Cadastral+ + CND Federal + CRF FGTS</p>
-                                </div>
-                                <div class="p-3 rounded-lg border border-gray-200 bg-white">
-                                    <div class="flex items-center justify-between mb-1">
-                                        <span class="text-xs font-semibold text-gray-900">Fiscal Completo</span>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">12 créditos</span>
-                                    </div>
-                                    <p class="text-xs text-gray-600">Fiscal Federal + CND Estadual + CNDT</p>
-                                </div>
-                                <div class="p-3 rounded-lg border border-gray-200 bg-white">
-                                    <div class="flex items-center justify-between mb-1">
-                                        <span class="text-xs font-semibold text-gray-900">Due Diligence</span>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-100 text-purple-700">16 créditos</span>
-                                    </div>
-                                    <p class="text-xs text-gray-600">Fiscal Completo + Lista Devedores PGFN</p>
-                                </div>
-                                <div class="p-3 rounded-lg border border-gray-200 bg-white">
-                                    <div class="flex items-center justify-between mb-1">
-                                        <span class="text-xs font-semibold text-gray-900">Completo</span>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700">22 créditos</span>
-                                    </div>
-                                    <p class="text-xs text-gray-600">Todas as consultas disponíveis</p>
-                                </div>
+                        {{-- Planos disponíveis - Badges dinâmicos --}}
+                        @php
+                            $planoMeta = [
+                                'gratuito' => [
+                                    'cor' => 'green',
+                                    'icone' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+                                    'consultas_display' => ['Situação Cadastral (Ativa, Inapta, Baixada)', 'Dados Cadastrais Completos', 'CNAEs Principal e Secundários', 'Quadro Societário (QSA)', 'Simples Nacional e MEI'],
+                                    'casos_uso' => ['Checar se CNPJ está ativo', 'Conferir regime para emitir NF', 'Consultar sócios e QSA'],
+                                ],
+                                'validacao' => [
+                                    'cor' => 'blue',
+                                    'icone' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+                                    'consultas_display' => ['Situação Cadastral (Ativa, Inapta, Baixada)', 'Dados Completos, CNAEs e QSA', 'Simples Nacional e MEI', 'SINTEGRA — IE ativa em todos os estados', 'TCU Consolidada (CEIS, CNEP, Inidôneos)'],
+                                    'casos_uso' => ['Conferir IE interestadual', 'Checar listas restritivas do TCU', 'Qualificar novos fornecedores'],
+                                ],
+                                'licitacao' => [
+                                    'cor' => 'blue',
+                                    'icone' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+                                    'consultas_display' => ['Tudo do Validação', 'CND Federal (PGFN/RFB)', 'CRF FGTS (Regularidade)', 'CND Estadual (ICMS)', 'CNDT Trabalhista (TST)'],
+                                    'casos_uso' => ['Documentação para editais', 'Homologar com CNDs exigidas', 'Renovar contratos públicos'],
+                                    'promo' => true,
+                                ],
+                                'compliance' => [
+                                    'cor' => 'purple',
+                                    'icone' => 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
+                                    'consultas_display' => ['Situação Cadastral e Dados Completos', 'SINTEGRA e TCU Consolidada', 'CND Federal, Estadual, CRF e CNDT', 'Protestos em Cartório (IEPTB Nacional)', 'Devedores da Dívida Ativa (PGFN)', 'Análise completa de risco financeiro'],
+                                    'casos_uso' => ['Gestão de risco de terceiros', 'Atender Lei Anticorrupção', 'Monitorar protestos e dívidas'],
+                                ],
+                                'due_diligence' => [
+                                    'cor' => 'amber',
+                                    'icone' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7',
+                                    'consultas_display' => ['Todas as CNDs (Federal, Estadual, FGTS, Trabalhista)', 'Protestos e Devedores PGFN', 'SINTEGRA e TCU Consolidada', 'Trabalho Escravo (Lista Suja — MTE)', 'IBAMA — Autuações Ambientais', 'Compliance trabalhista e ambiental (ESG)'],
+                                    'casos_uso' => ['Análise pré-aquisição (M&A)', 'Atender requisitos ESG', 'Riscos trabalhistas e ambientais'],
+                                ],
+                                'enterprise' => [
+                                    'cor' => 'slate',
+                                    'icone' => 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
+                                    'consultas_display' => ['Todas as CNDs e Certidões', 'Protestos, Dívida Ativa e TCU', 'Trabalho Escravo e IBAMA (ESG)', 'Processos Judiciais (CNJ/SEEU)', 'SINTEGRA — Inscrição Estadual', 'Raio-X completo — 18 consultas por CNPJ'],
+                                    'casos_uso' => ['Due diligence jurídico completo', 'Mapear litígios antes de contratar', 'Relatório para comitês internos'],
+                                ],
+                            ];
+
+                            $planosDetalhados = [];
+                            foreach ($planos as $p) {
+                                $meta = $planoMeta[$p->codigo] ?? ['cor' => 'gray', 'icone' => 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'consultas_display' => [], 'casos_uso' => []];
+                                $planosDetalhados[] = [
+                                    'codigo' => $p->codigo,
+                                    'nome' => $p->nome,
+                                    'creditos' => $p->custo_creditos,
+                                    'creditos_original' => null,
+                                    'promo' => $meta['promo'] ?? false,
+                                    'gratuito' => $p->is_gratuito,
+                                    'descricao' => $p->descricao,
+                                    'cor' => $meta['cor'],
+                                    'icone' => $meta['icone'],
+                                    'consultas' => $meta['consultas_display'],
+                                    'casos_uso' => $meta['casos_uso'],
+                                ];
+                            }
+
+                            $corClasses = [
+                                'green' => ['bg' => 'bg-green-100', 'text' => 'text-green-700', 'icon' => 'text-green-600', 'badge' => 'bg-green-100 text-green-700', 'border' => 'border-green-200', 'btn' => 'bg-green-600 hover:bg-green-700'],
+                                'blue' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-700', 'icon' => 'text-blue-600', 'badge' => 'bg-blue-100 text-blue-700', 'border' => 'border-blue-200', 'btn' => 'bg-blue-600 hover:bg-blue-700'],
+                                'purple' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-700', 'icon' => 'text-purple-600', 'badge' => 'bg-purple-100 text-purple-700', 'border' => 'border-purple-200', 'btn' => 'bg-purple-600 hover:bg-purple-700'],
+                                'amber' => ['bg' => 'bg-amber-100', 'text' => 'text-amber-700', 'icon' => 'text-amber-600', 'badge' => 'bg-amber-100 text-amber-700', 'border' => 'border-amber-200', 'btn' => 'bg-amber-600 hover:bg-amber-700'],
+                                'slate' => ['bg' => 'bg-slate-100', 'text' => 'text-slate-700', 'icon' => 'text-slate-600', 'badge' => 'bg-slate-100 text-slate-700', 'border' => 'border-slate-200', 'btn' => 'bg-slate-700 hover:bg-slate-800'],
+                            ];
+                        @endphp
+
+                        <div class="border-t border-gray-200 pt-4 mt-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-sm font-semibold text-gray-900">Planos disponíveis</h4>
+                                <button type="button" id="btn-ver-detalhes-planos" class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors inline-flex items-center gap-1">
+                                    Ver detalhes
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </button>
                             </div>
+                            <div class="flex flex-col gap-2 w-full">
+                                @foreach($planosDetalhados as $idx => $pd)
+                                    @php
+                                        $badgeCor = match($pd['cor']) {
+                                            'green' => 'bg-green-100 text-green-700',
+                                            'blue' => 'bg-blue-100 text-blue-700',
+                                            'purple' => 'bg-purple-100 text-purple-700',
+                                            'amber' => 'bg-amber-100 text-amber-700',
+                                            'slate' => 'bg-slate-100 text-slate-700',
+                                            default => 'bg-gray-100 text-gray-600',
+                                        };
+                                    @endphp
+                                    @if($pd['promo'] ?? false)
+                                        <button
+                                            type="button"
+                                            class="badge-plano group w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg
+                                                   border border-amber-200 bg-amber-50 hover:bg-amber-100 hover:border-amber-300
+                                                   transition-colors cursor-pointer text-left"
+                                            data-slide-index="{{ $idx }}"
+                                        >
+                                            <div class="flex-1 min-w-0">
+                                                <span class="text-xs font-semibold text-gray-800 group-hover:text-gray-900 transition-colors">{{ $pd['nome'] }}</span>
+                                                <p class="text-xs text-gray-400 group-hover:text-gray-500 transition-colors truncate">{{ $pd['descricao'] }}</p>
+                                            </div>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-100 text-orange-700 whitespace-nowrap flex-shrink-0">
+                                                {{ $pd['creditos'] }} cred.
+                                            </span>
+                                        </button>
+                                    @else
+                                        <button
+                                            type="button"
+                                            class="badge-plano group w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer text-left"
+                                            data-slide-index="{{ $idx }}"
+                                        >
+                                            <div class="flex-1 min-w-0">
+                                                <span class="text-xs font-semibold text-gray-800 group-hover:text-gray-900 transition-colors">{{ $pd['nome'] }}</span>
+                                                <p class="text-xs text-gray-400 group-hover:text-gray-500 transition-colors truncate">{{ $pd['descricao'] }}</p>
+                                            </div>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $badgeCor }} transition-colors whitespace-nowrap flex-shrink-0">
+                                                {{ $pd['gratuito'] ? 'Grátis' : $pd['creditos'] . ' cred.' }}
+                                            </span>
+                                        </button>
+                                    @endif
+                                @endforeach
+                            </div>
+                            <p class="text-xs text-gray-400 mt-2">Clique para ver detalhes.</p>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Modal: Carousel de Planos --}}
+        <div id="modal-planos-carousel" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] flex flex-col relative overflow-visible">
+                {{-- Modal Header --}}
+                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        <h3 class="text-base font-semibold text-gray-900">Detalhes dos Planos</h3>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span id="carousel-counter" class="text-xs text-gray-400">1 / {{ count($planosDetalhados) }}</span>
+                        <button type="button" id="btn-fechar-carousel" class="p-1 text-gray-400 hover:text-gray-600 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Navigation arrows (overlay) --}}
+                <button type="button" id="swiper-planos-prev" class="absolute -left-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:bg-white hover:text-gray-700 hover:shadow-lg transition-all cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <button type="button" id="swiper-planos-next" class="absolute -right-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:bg-white hover:text-gray-700 hover:shadow-lg transition-all cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+
+                {{-- Swiper Carousel --}}
+                <div class="flex-1 overflow-hidden relative">
+                    <div class="swiper h-full" id="swiper-planos">
+                        <div class="swiper-wrapper">
+                            @foreach($planosDetalhados as $idx => $pd)
+                                @php $cores = $corClasses[$pd['cor']]; @endphp
+                                <div class="swiper-slide">
+                                    <div class="p-5 overflow-y-auto" style="max-height: calc(90vh - 200px);">
+                                        {{-- Plan header --}}
+                                        <div class="flex items-center gap-3 mb-3">
+                                            <div class="flex-shrink-0 w-9 h-9 rounded-lg {{ $cores['bg'] }} flex items-center justify-center">
+                                                <svg class="w-[18px] h-[18px] {{ $cores['icon'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $pd['icone'] }}"></path>
+                                                </svg>
+                                            </div>
+                                            <div class="flex-1">
+                                                <h4 class="text-base font-bold text-gray-900">{{ $pd['nome'] }}</h4>
+                                                @if($pd['promo'] ?? false)
+                                                    <span class="text-sm text-amber-700 font-semibold">{{ $pd['creditos'] }} cred./CNPJ</span>
+                                                @else
+                                                    <span class="text-sm {{ $pd['gratuito'] ? 'text-green-600 font-medium' : 'text-gray-500' }}">
+                                                        {{ $pd['gratuito'] ? 'Gratuito' : $pd['creditos'] . ' créditos/CNPJ' }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            @if($pd['promo'] ?? false)
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">{{ $pd['creditos'] }} cred.</span>
+                                            @elseif($pd['gratuito'])
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Grátis</span>
+                                            @else
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $cores['badge'] }}">{{ $pd['creditos'] }} cred.</span>
+                                            @endif
+                                        </div>
+
+                                        {{-- Description --}}
+                                        <p class="text-sm text-gray-600 mb-3">{{ $pd['descricao'] }}</p>
+
+                                        @if($pd['promo'] ?? false)
+                                            <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-lg mb-3">
+                                                <p class="text-xs font-semibold text-amber-800">&#x1f3f7;&#xfe0e; Oferta por tempo limitado</p>
+                                                <p class="text-xs text-amber-700 mt-0.5">Todas as CNDs por {{ $pd['creditos'] }} créd./CNPJ — aproveite antes do reajuste.</p>
+                                            </div>
+                                        @endif
+
+                                        {{-- Consultas incluidas --}}
+                                        <div class="mb-3">
+                                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Consultas incluídas</p>
+                                            <ul class="space-y-1">
+                                                @foreach($pd['consultas'] as $consulta)
+                                                    <li class="flex items-start gap-2 text-sm text-gray-700">
+                                                        <svg class="w-4 h-4 {{ $cores['icon'] }} mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                        </svg>
+                                                        <span>{{ $consulta }}</span>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+
+                                        {{-- Quando usar --}}
+                                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-100 mb-4">
+                                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Quando usar</p>
+                                            <ul class="space-y-1">
+                                                @foreach($pd['casos_uso'] as $caso)
+                                                    <li class="flex items-start gap-2 text-xs text-gray-600">
+                                                        <svg class="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                                        </svg>
+                                                        <span>{{ $caso }}</span>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Pagination dots --}}
+                <div class="px-6 py-3 border-t border-gray-100 flex-shrink-0">
+                    <div id="swiper-planos-pagination" class="flex justify-center"></div>
                 </div>
             </div>
         </div>
@@ -770,6 +984,23 @@
     </div>
 </div>
 
+<style>
+    #swiper-planos-pagination .swiper-pagination-bullet {
+        width: 8px;
+        height: 8px;
+        background: #d1d5db;
+        opacity: 1;
+        margin: 0 4px;
+        border-radius: 50%;
+        transition: all 0.2s;
+    }
+    #swiper-planos-pagination .swiper-pagination-bullet-active {
+        background: #3b82f6;
+        width: 20px;
+        border-radius: 4px;
+    }
+</style>
+
 <script>
 (function() {
     'use strict';
@@ -878,11 +1109,11 @@
             document.querySelectorAll('.tipo-doc-label').forEach(function(label) {
                 const radio = label.querySelector('input[type="radio"]');
                 if (radio && radio.value === selectedValue) {
-                    label.classList.remove('border-gray-300', 'hover:border-blue-400');
-                    label.classList.add('border-blue-600', 'bg-blue-50');
+                    label.classList.remove('border-gray-200', 'hover:border-gray-300', 'hover:bg-gray-500/8');
+                    label.classList.add('border-blue-500', 'bg-blue-50/60', 'ring-2', 'ring-blue-100');
                 } else {
-                    label.classList.remove('border-blue-600', 'bg-blue-50');
-                    label.classList.add('border-gray-300', 'hover:border-blue-400');
+                    label.classList.remove('border-blue-500', 'bg-blue-50/60', 'ring-2', 'ring-blue-100');
+                    label.classList.add('border-gray-200', 'hover:border-gray-300', 'hover:bg-gray-500/8');
                 }
             });
         }
@@ -892,13 +1123,12 @@
             const selectedValue = getSelectedModoEnvio();
             document.querySelectorAll('.modo-envio-label').forEach(function(label) {
                 const radio = label.querySelector('input[type="radio"]');
-                const isZip = label.dataset.modo === 'zip';
                 if (radio && radio.value === selectedValue) {
-                    label.classList.remove('border-gray-300', isZip ? 'hover:border-purple-400' : 'hover:border-blue-400');
-                    label.classList.add(isZip ? 'border-purple-600' : 'border-blue-600', isZip ? 'bg-purple-50' : 'bg-blue-50');
+                    label.classList.remove('border-gray-200', 'hover:border-gray-300', 'hover:bg-gray-500/8');
+                    label.classList.add('border-blue-500', 'bg-blue-50/60', 'ring-2', 'ring-blue-100');
                 } else {
-                    label.classList.remove('border-purple-600', 'border-blue-600', 'bg-purple-50', 'bg-blue-50');
-                    label.classList.add('border-gray-300', isZip ? 'hover:border-purple-400' : 'hover:border-blue-400');
+                    label.classList.remove('border-blue-500', 'bg-blue-50/60', 'ring-2', 'ring-blue-100');
+                    label.classList.add('border-gray-200', 'hover:border-gray-300', 'hover:bg-gray-500/8');
                 }
             });
         }
@@ -2441,6 +2671,98 @@
                 eventSource.close();
                 eventSource = null;
             }
+        });
+
+        // ==========================================
+        // Modal Carousel de Planos (informativo)
+        // ==========================================
+        var totalPlanos = {{ count($planosDetalhados) }};
+        var swiperPlanos = null;
+        var modalPlanos = document.getElementById('modal-planos-carousel');
+
+        function showPlanosModal(startIndex) {
+            if (!modalPlanos) return;
+            modalPlanos.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            setTimeout(function() {
+                if (swiperPlanos && !swiperPlanos.destroyed) {
+                    swiperPlanos.slideToLoop(startIndex || 0, 0);
+                    swiperPlanos.update();
+                    updateCarouselCounter(startIndex || 0);
+                    return;
+                }
+
+                swiperPlanos = new Swiper('#swiper-planos', {
+                    slidesPerView: 1,
+                    spaceBetween: 0,
+                    loop: true,
+                    initialSlide: startIndex || 0,
+                    navigation: {
+                        prevEl: '#swiper-planos-prev',
+                        nextEl: '#swiper-planos-next',
+                    },
+                    pagination: {
+                        el: '#swiper-planos-pagination',
+                        clickable: true,
+                    },
+                    on: {
+                        slideChange: function() {
+                            updateCarouselCounter(this.realIndex);
+                        },
+                    },
+                });
+
+                updateCarouselCounter(startIndex || 0);
+            }, 50);
+        }
+
+        function hidePlanosModal() {
+            if (!modalPlanos) return;
+            modalPlanos.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function updateCarouselCounter(index) {
+            var counter = document.getElementById('carousel-counter');
+            if (counter) {
+                counter.textContent = (index + 1) + ' / ' + totalPlanos;
+            }
+        }
+
+        // Close modal: overlay click
+        if (modalPlanos) {
+            modalPlanos.addEventListener('click', function(e) {
+                if (e.target === modalPlanos) {
+                    hidePlanosModal();
+                }
+            });
+        }
+
+        // Close modal: ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modalPlanos && !modalPlanos.classList.contains('hidden')) {
+                hidePlanosModal();
+            }
+        });
+
+        // Close modal: X button
+        document.getElementById('btn-fechar-carousel')?.addEventListener('click', hidePlanosModal);
+
+        // "Ver detalhes" button -> open modal at slide 0
+        var btnVerDetalhes = document.getElementById('btn-ver-detalhes-planos');
+        if (btnVerDetalhes) {
+            btnVerDetalhes.addEventListener('click', function() {
+                showPlanosModal(0);
+            });
+        }
+
+        // Badge clicks -> open modal at specific slide
+        document.querySelectorAll('.badge-plano').forEach(function(badge) {
+            badge.addEventListener('click', function() {
+                var idx = parseInt(this.dataset.slideIndex) || 0;
+                showPlanosModal(idx);
+            });
         });
 
         console.log('[Monitoramento XML] Inicializado com tab_id:', tabId);

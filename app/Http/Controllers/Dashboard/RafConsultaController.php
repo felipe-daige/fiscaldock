@@ -661,6 +661,152 @@ class RafConsultaController extends Controller
     }
 
     /**
+     * Adiciona um CNPJ como participante (cadastro rápido).
+     * Opcionalmente cria ou vincula a um Cliente.
+     */
+    public function adicionarCnpj(Request $request): JsonResponse
+    {
+        if (! Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Usuário não autenticado.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = Auth::user();
+
+        $cnpjRaw = $request->input('cnpj', '');
+        $cnpj = preg_replace('/[^0-9]/', '', trim($cnpjRaw));
+
+        if (strlen($cnpj) !== 14) {
+            return response()->json([
+                'success' => false,
+                'error' => 'CNPJ inválido. Informe 14 dígitos.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $criarCliente = (bool) $request->input('criar_cliente', false);
+        $clienteIdInput = $request->input('cliente_id');
+        $clienteId = null;
+
+        if ($criarCliente) {
+            if ($clienteIdInput === 'novo' || $clienteIdInput === null) {
+                // Criar novo Cliente ou usar existente do mesmo usuario
+                $clienteId = $this->resolveOrCreateCliente($user, $cnpj);
+
+                if ($clienteId instanceof JsonResponse) {
+                    return $clienteId; // Retorna erro
+                }
+            } else {
+                // Vincular a cliente existente
+                $clienteId = (int) $clienteIdInput;
+                $clienteExists = Cliente::where('id', $clienteId)
+                    ->where('user_id', $user->id)
+                    ->exists();
+
+                if (! $clienteExists) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Cliente não encontrado.',
+                    ], Response::HTTP_BAD_REQUEST);
+                }
+            }
+        }
+
+        $participante = Participante::firstOrCreate(
+            ['user_id' => $user->id, 'cnpj' => $cnpj],
+            [
+                'origem_tipo' => 'MANUAL',
+                'tipo_documento' => 'PJ',
+                'cliente_id' => $clienteId,
+            ]
+        );
+
+        $isNew = $participante->wasRecentlyCreated;
+
+        // Se já existia e cliente_id foi informado, atualizar vínculo
+        if (! $isNew && $clienteId && ! $participante->cliente_id) {
+            $participante->update(['cliente_id' => $clienteId]);
+        }
+
+        $message = $isNew
+            ? 'Participante adicionado com sucesso.'
+            : 'CNPJ já cadastrado. Selecionado para consulta.';
+
+        if ($criarCliente && $isNew) {
+            $message = 'Participante e cliente criados com sucesso.';
+        } elseif ($criarCliente && ! $isNew) {
+            $message = 'CNPJ já cadastrado. Vinculado ao cliente.';
+        }
+
+        return response()->json([
+            'success' => true,
+            'is_new' => $isNew,
+            'participante' => [
+                'id' => $participante->id,
+                'cnpj' => $participante->cnpj,
+                'razao_social' => $participante->razao_social,
+                'uf' => $participante->uf,
+            ],
+            'message' => $message,
+        ]);
+    }
+
+    /**
+     * Resolve ou cria um Cliente para o CNPJ informado.
+     *
+     * @return int|JsonResponse ID do cliente ou resposta de erro
+     */
+    private function resolveOrCreateCliente($user, string $cnpj)
+    {
+        // Verificar se já existe cliente com este documento para o mesmo usuario
+        $existing = Cliente::where('documento', $cnpj)
+            ->first();
+
+        if ($existing) {
+            if ($existing->user_id === $user->id) {
+                return $existing->id;
+            }
+
+            // Documento pertence a outro usuario (unique global)
+            return response()->json([
+                'success' => false,
+                'error' => 'Este CNPJ já está cadastrado como cliente por outro usuário.',
+            ], Response::HTTP_CONFLICT);
+        }
+
+        // Criar novo cliente
+        $cnpjFormatado = preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $cnpj);
+
+        try {
+            $cliente = Cliente::create([
+                'user_id' => $user->id,
+                'tipo_pessoa' => 'PJ',
+                'documento' => $cnpj,
+                'razao_social' => "CNPJ {$cnpjFormatado}",
+                'ativo' => true,
+            ]);
+
+            return $cliente->id;
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Unique violation (race condition)
+            if (str_contains($e->getMessage(), '23505') || str_contains($e->getMessage(), 'unique')) {
+                $existing = Cliente::where('documento', $cnpj)->first();
+                if ($existing && $existing->user_id === $user->id) {
+                    return $existing->id;
+                }
+
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Este CNPJ já está cadastrado como cliente.',
+                ], Response::HTTP_CONFLICT);
+            }
+
+            throw $e;
+        }
+    }
+
+    /**
      * Histórico de lotes do usuário.
      */
     public function historico(Request $request)

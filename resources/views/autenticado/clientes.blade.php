@@ -278,7 +278,7 @@
 <div id="dropdown-acoes" class="hidden fixed z-[9999] bg-white rounded-xl shadow-lg ring-1 ring-gray-200 w-56 py-1">
     <div class="px-3 py-2 border-b border-gray-100">
         <p class="text-sm font-semibold text-gray-900 truncate" id="dropdown-acoes-nome"></p>
-        <p class="text-xs text-gray-500 font-mono" id="dropdown-acoes-documento"></p>
+        <p class="text-xs text-gray-500 font-mono whitespace-nowrap tabular-nums" id="dropdown-acoes-documento"></p>
     </div>
     <button type="button" id="dropdown-acoes-ver"
        class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
@@ -705,7 +705,7 @@
             dropdownBtnAtual = btnElement;
             if (dropdownAcoesNome) dropdownAcoesNome.textContent = nome || 'Sem nome';
             if (dropdownAcoesDocumento) dropdownAcoesDocumento.textContent = documento || '';
-            if (dropdownAcoesEditar) dropdownAcoesEditar.href = '/app/novo_cliente?id=' + id;
+            if (dropdownAcoesEditar) dropdownAcoesEditar.href = '/app/cliente/' + id + '/editar';
             posicionarDropdown(btnElement);
             dropdownAcoes.classList.remove('hidden');
         }

@@ -21,6 +21,7 @@ class Participante extends Model
         'importacao_sped_id',
         'importacao_xml_id',
         'cnpj',
+        'tipo_documento',
         'razao_social',
         'nome_fantasia',
         'situacao_cadastral',
@@ -30,6 +31,11 @@ class Participante extends Model
         'municipio',
         'telefone',
         'crt',
+        'inscricao_estadual',
+        'endereco',
+        'numero',
+        'complemento',
+        'bairro',
         // Receita Federal fields
         'capital_social',
         'natureza_juridica',
@@ -156,9 +162,12 @@ class Participante extends Model
      */
     public function getCnpjFormatadoAttribute(): string
     {
-        $cnpj = preg_replace('/[^0-9]/', '', $this->cnpj);
-        if (strlen($cnpj) === 14) {
-            return preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $cnpj);
+        $doc = preg_replace('/[^0-9]/', '', $this->cnpj);
+        if (strlen($doc) === 14) {
+            return preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $doc);
+        }
+        if (strlen($doc) === 11) {
+            return preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $doc);
         }
 
         return $this->cnpj;

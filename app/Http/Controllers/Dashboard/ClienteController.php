@@ -143,6 +143,7 @@ class ClienteController extends Controller
                     return response()->json([
                         'success' => true,
                         'message' => 'Cliente cadastrado com sucesso!',
+                        'redirect' => '/app/clientes',
                         'cliente' => [
                             'id' => $cliente->id,
                             'nome' => $cliente->nome,
@@ -185,6 +186,206 @@ class ClienteController extends Controller
             return redirect()
                 ->back()
                 ->with('error', 'Erro ao cadastrar cliente. Tente novamente.')
+                ->withInput();
+        }
+    }
+
+    /**
+     * Show the edit form for an existing cliente.
+     */
+    public function edit(Request $request, $id)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Não autenticado', 'redirect' => '/login']);
+            }
+            return redirect('/login');
+        }
+
+        $cliente = Cliente::where('user_id', $user->id)
+            ->with(['endereco', 'funcionarios'])
+            ->findOrFail($id);
+
+        $viewName = 'autenticado.novo_cliente';
+        $data = ['cliente' => $cliente];
+
+        if ($request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            $renderedView = view($viewName, $data)->render();
+            return response($renderedView)->header('Content-Type', 'text/html');
+        }
+
+        return view('autenticado.layouts.app', array_merge([
+            'initialView' => $viewName
+        ], $data));
+    }
+
+    /**
+     * Update an existing cliente.
+     */
+    public function update(Request $request, $id)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuário não autenticado'
+                ], 401);
+            }
+
+            $cliente = Cliente::where('user_id', $user->id)->findOrFail($id);
+
+            $tipoPessoa = $cliente->tipo_pessoa;
+
+            // Regras base (documento unique ignora o registro atual)
+            $rules = [
+                'documento' => 'required|string|max:18|unique:clientes,documento,' . $cliente->id,
+                'telefone' => 'nullable|string|max:20',
+                'email' => 'nullable|email|max:255',
+                'faturamento_anual' => 'nullable|string|max:50',
+                'preparacao_reforma' => 'nullable|string|max:255',
+
+                // Endereço
+                'endereco.cep' => 'required|string|max:9',
+                'endereco.logradouro' => 'required|string|max:255',
+                'endereco.numero' => 'required|string|max:20',
+                'endereco.complemento' => 'nullable|string|max:255',
+                'endereco.bairro' => 'required|string|max:255',
+                'endereco.cidade' => 'required|string|max:255',
+                'endereco.estado' => 'required|string|size:2',
+                'endereco.pais' => 'nullable|string|max:100',
+
+                // Funcionário (senha opcional na edição)
+                'funcionario.nome' => 'required|string|max:255',
+                'funcionario.sobrenome' => 'required|string|max:255',
+                'funcionario.email' => 'required|email|max:255',
+                'funcionario.senha' => 'nullable|string|min:8',
+                'funcionario.cargo' => 'required|string|max:255',
+                'funcionario.departamento' => 'nullable|string|max:255',
+                'funcionario.nivel_acesso' => 'required|in:funcionario,admin',
+            ];
+
+            // Regras condicionais baseadas no tipo de pessoa
+            if ($tipoPessoa === 'PJ') {
+                $rules['razao_social'] = 'required|string|max:255';
+                $rules['nome'] = 'nullable|string|max:255';
+            } else {
+                $rules['nome'] = 'required|string|max:255';
+                $rules['razao_social'] = 'nullable|string|max:255';
+            }
+
+            // Funcionário email unique: ignore current funcionário
+            $primaryFunc = $cliente->funcionarios()->first();
+            if ($primaryFunc) {
+                $rules['funcionario.email'] = 'required|email|max:255|unique:clientes_funcionarios,email,' . $primaryFunc->id;
+            }
+
+            $validated = $request->validate($rules);
+
+            DB::beginTransaction();
+
+            try {
+                // Atualizar cliente
+                $cliente->update([
+                    'documento' => preg_replace('/\D/', '', $validated['documento']),
+                    'nome' => $validated['nome'] ?? null,
+                    'razao_social' => $validated['razao_social'] ?? null,
+                    'telefone' => $validated['telefone'] ?? null,
+                    'email' => $validated['email'] ?? null,
+                    'faturamento_anual' => $validated['faturamento_anual'] ?? null,
+                    'preparacao_reforma' => $validated['preparacao_reforma'] ?? null,
+                ]);
+
+                // Atualizar ou criar endereço
+                $enderecoData = [
+                    'tipo' => 'principal',
+                    'cep' => preg_replace('/\D/', '', $validated['endereco']['cep']),
+                    'logradouro' => $validated['endereco']['logradouro'],
+                    'numero' => $validated['endereco']['numero'],
+                    'complemento' => $validated['endereco']['complemento'] ?? null,
+                    'bairro' => $validated['endereco']['bairro'],
+                    'cidade' => $validated['endereco']['cidade'],
+                    'estado' => strtoupper($validated['endereco']['estado']),
+                    'pais' => $validated['endereco']['pais'] ?? 'Brasil',
+                ];
+
+                $endereco = $cliente->endereco;
+                if ($endereco) {
+                    $endereco->update($enderecoData);
+                } else {
+                    $enderecoData['cliente_id'] = $cliente->id;
+                    ClienteEndereco::create($enderecoData);
+                }
+
+                // Atualizar funcionário principal
+                $funcData = [
+                    'nome' => $validated['funcionario']['nome'],
+                    'sobrenome' => $validated['funcionario']['sobrenome'],
+                    'email' => $validated['funcionario']['email'],
+                    'cargo' => $validated['funcionario']['cargo'],
+                    'departamento' => $validated['funcionario']['departamento'] ?? null,
+                    'nivel_acesso' => $validated['funcionario']['nivel_acesso'],
+                ];
+
+                // Só atualizar senha se fornecida
+                if (!empty($validated['funcionario']['senha'])) {
+                    $funcData['senha'] = Hash::make($validated['funcionario']['senha']);
+                }
+
+                if ($primaryFunc) {
+                    $primaryFunc->update($funcData);
+                } else {
+                    $funcData['cliente_id'] = $cliente->id;
+                    $funcData['senha'] = Hash::make($validated['funcionario']['senha'] ?? 'temp12345');
+                    $funcData['criado_por'] = $user->id;
+                    ClienteFuncionario::create($funcData);
+                }
+
+                DB::commit();
+
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Cliente atualizado com sucesso!',
+                        'redirect' => '/app/clientes',
+                    ]);
+                }
+
+                return redirect()
+                    ->route('app.clientes')
+                    ->with('success', 'Cliente atualizado com sucesso!');
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro de validação',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+
+            return redirect()
+                ->back()
+                ->withErrors($e->errors())
+                ->withInput();
+
+        } catch (\Exception $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao atualizar cliente: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()
+                ->back()
+                ->with('error', 'Erro ao atualizar cliente. Tente novamente.')
                 ->withInput();
         }
     }

@@ -16,7 +16,7 @@ class MonitoramentoPlanoSeeder extends Seeder
             [
                 'codigo' => 'gratuito',
                 'nome' => 'Gratuito',
-                'descricao' => 'Validação básica de dados cadastrais e regime tributário',
+                'descricao' => 'Consulta instantânea de situação cadastral, regime tributário e quadro societário',
                 'consultas_incluidas' => [
                     'situacao_cadastral', 'dados_cadastrais', 'endereco',
                     'cnaes', 'qsa', 'simples_nacional', 'mei',
@@ -28,7 +28,7 @@ class MonitoramentoPlanoSeeder extends Seeder
             [
                 'codigo' => 'validacao',
                 'nome' => 'Validação',
-                'descricao' => 'Inscrição Estadual e verificação em listas restritivas',
+                'descricao' => 'Valida Inscrição Estadual e verifica impedimentos em listas do TCU',
                 'consultas_incluidas' => [
                     'situacao_cadastral', 'dados_cadastrais', 'endereco',
                     'cnaes', 'qsa', 'simples_nacional', 'mei',
@@ -41,7 +41,7 @@ class MonitoramentoPlanoSeeder extends Seeder
             [
                 'codigo' => 'licitacao',
                 'nome' => 'Licitação',
-                'descricao' => 'CNDs obrigatórias para editais e contratos públicos',
+                'descricao' => 'Todas as CNDs exigidas em editais, licitações e contratos públicos',
                 'consultas_incluidas' => [
                     'situacao_cadastral', 'dados_cadastrais', 'endereco',
                     'cnaes', 'qsa', 'simples_nacional', 'mei',
@@ -55,7 +55,7 @@ class MonitoramentoPlanoSeeder extends Seeder
             [
                 'codigo' => 'compliance',
                 'nome' => 'Compliance',
-                'descricao' => 'Monitoramento completo com protestos e dívida ativa',
+                'descricao' => 'Análise completa de risco financeiro com protestos e dívida ativa na PGFN',
                 'consultas_incluidas' => [
                     'situacao_cadastral', 'dados_cadastrais', 'endereco',
                     'cnaes', 'qsa', 'simples_nacional', 'mei',
@@ -70,7 +70,7 @@ class MonitoramentoPlanoSeeder extends Seeder
             [
                 'codigo' => 'due_diligence',
                 'nome' => 'Due Diligence',
-                'descricao' => 'Análise profunda com compliance ESG',
+                'descricao' => 'Investigação aprofundada com compliance trabalhista e ambiental (ESG)',
                 'consultas_incluidas' => [
                     'situacao_cadastral', 'dados_cadastrais', 'endereco',
                     'cnaes', 'qsa', 'simples_nacional', 'mei',
@@ -86,7 +86,7 @@ class MonitoramentoPlanoSeeder extends Seeder
             [
                 'codigo' => 'enterprise',
                 'nome' => 'Enterprise',
-                'descricao' => 'Todas as consultas disponíveis incluindo processos judiciais',
+                'descricao' => 'Raio-X completo do CNPJ, incluindo processos judiciais no CNJ',
                 'consultas_incluidas' => [
                     'situacao_cadastral', 'dados_cadastrais', 'endereco',
                     'cnaes', 'qsa', 'simples_nacional', 'mei',

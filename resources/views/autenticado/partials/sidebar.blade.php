@@ -63,33 +63,33 @@
             </a>
         </div>
 
-        <!-- IMPORTACAO -->
+        <!-- IMPORTAÇÃO -->
         <div class="mt-4">
-            <div class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sidebar-label leading-4">IMPORTACAO</div>
+            <div class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sidebar-label leading-4">IMPORTAÇÃO</div>
 
-            <!-- Importar XMLs -->
-            <a href="/app/monitoramento/xml" data-link class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors w-full leading-5">
-                <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                <span class="sidebar-label font-medium">XMLs (NF-e/CT-e)</span>
-            </a>
+            <!-- SPED (collapsible) -->
+            <div class="sidebar-collapsible group collapsed">
+                <div class="sidebar-summary flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-gray-700 leading-5 cursor-pointer hover:bg-gray-500/8 transition-colors">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                        </svg>
+                        <span class="sidebar-label font-medium truncate">SPED</span>
+                    </div>
+                    <svg class="sidebar-arrow sidebar-label w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </div>
 
-            <!-- Importar SPED -->
-            <a href="/app/monitoramento/sped" data-link class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors w-full leading-5">
-                <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
-                </svg>
-                <span class="sidebar-label font-medium">SPED</span>
-            </a>
-
-            <!-- CNPJ Avulso -->
-            <a href="/app/monitoramento/avulso" data-link class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors w-full leading-5">
-                <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                <span class="sidebar-label font-medium">CNPJ Avulso</span>
-            </a>
+                <div class="sidebar-submenu-wrapper mt-1 ml-3 pl-3 border-l border-gray-200 space-y-1">
+                    <a href="/app/monitoramento/xml" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors leading-5">
+                        <span class="sidebar-label font-medium">XMLs (NF-e/CT-e)</span>
+                    </a>
+                    <a href="/app/monitoramento/sped" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors leading-5">
+                        <span class="sidebar-label font-medium">EFDs</span>
+                    </a>
+                </div>
+            </div>
         </div>
 
         <!-- CADASTROS -->
@@ -136,10 +136,10 @@
 
                 <div class="sidebar-submenu-wrapper mt-1 ml-3 pl-3 border-l border-gray-200 space-y-1">
                     <a href="/app/monitoramento/participantes" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors leading-5">
-                        <span class="sidebar-label font-medium">Todos os Participantes</span>
+                        <span class="sidebar-label font-medium">Todos</span>
                     </a>
-                    <a href="/app/monitoramento/avulso" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors leading-5">
-                        <span class="sidebar-label font-medium">Novo Participante Avulso</span>
+                    <a href="/app/monitoramento/novo-participante" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors leading-5">
+                        <span class="sidebar-label font-medium">Novo Participante</span>
                     </a>
                 </div>
             </div>
@@ -173,13 +173,6 @@
                 <span class="sidebar-label font-medium">Historico</span>
             </a>
 
-            <!-- Relatorios -->
-            <a href="/app/consultas/relatorios" data-link class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors w-full leading-5">
-                <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                <span class="sidebar-label font-medium">Relatorios</span>
-            </a>
         </div>
 
         <!-- COMPLIANCE -->

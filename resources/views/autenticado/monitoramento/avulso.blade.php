@@ -6,10 +6,10 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900">Consulta Avulsa</h1>
-                    <p class="mt-1 text-sm text-gray-600">Consulte a situacao cadastral e fiscal de CNPJs.</p>
+                    <p class="mt-1 text-sm text-gray-600">Consulte a situação cadastral e fiscal de CNPJs.</p>
                 </div>
                 <a
-                    href="/app/monitoramento"
+                    href="/app/consultas/nova"
                     class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
                     data-link
                 >
@@ -30,7 +30,7 @@
                 <div>
                     <h3 class="text-sm font-semibold text-blue-900">Como funciona?</h3>
                     <p class="text-sm text-blue-800 mt-1">
-                        Consulte a situacao cadastral e fiscal de CNPJs individualmente. Escolha o tipo de consulta e receba informacoes detalhadas sobre fornecedores e clientes.
+                        Consulte a situação cadastral e fiscal de CNPJs individualmente. Escolha o tipo de consulta e receba informações detalhadas sobre fornecedores e clientes.
                     </p>
                 </div>
             </div>
@@ -45,43 +45,103 @@
                 </div>
                 <div class="p-6 flex-1 flex flex-col">
                     <form id="form-consulta-avulsa" class="flex-1 flex flex-col">
-                        {{-- Input CNPJ unico --}}
+                        @php
+                            [$empresasProprias, $clientesAtivos] = collect($clientes ?? [])->partition(fn($c) => $c->is_empresa_propria);
+                        @endphp
+
+                        {{-- Step 1: De onde vem o CNPJ? --}}
                         <div class="mb-4">
-                            <label for="cnpj-input" class="block text-sm font-medium text-gray-700 mb-2">
-                                CNPJ:
-                            </label>
-                            <input
-                                type="text"
-                                id="cnpj-input"
-                                name="cnpj"
-                                class="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
-                                placeholder="00.000.000/0000-00"
-                                maxlength="18"
-                                autocomplete="off"
-                            >
-                            <p class="mt-1 text-xs text-gray-500">
-                                Digite o CNPJ do fornecedor ou cliente que deseja consultar.
-                            </p>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">De onde vem o CNPJ?</label>
+                            <div class="flex flex-wrap gap-2" id="origem-chips">
+                                @if($empresasProprias->isNotEmpty())
+                                <button type="button" class="chip-origem px-3 py-1.5 rounded-full border border-gray-300 text-sm font-medium text-gray-600 bg-white hover:border-gray-400 transition-colors" data-origem="propria">
+                                    Minha Empresa
+                                </button>
+                                @endif
+                                @if($clientesAtivos->isNotEmpty())
+                                <button type="button" class="chip-origem px-3 py-1.5 rounded-full border border-gray-300 text-sm font-medium text-gray-600 bg-white hover:border-gray-400 transition-colors" data-origem="cliente">
+                                    Cliente
+                                </button>
+                                @endif
+                                @if(($participantes ?? collect())->isNotEmpty())
+                                <button type="button" class="chip-origem px-3 py-1.5 rounded-full border border-gray-300 text-sm font-medium text-gray-600 bg-white hover:border-gray-400 transition-colors" data-origem="participante">
+                                    Participante
+                                </button>
+                                @endif
+                                <button type="button" class="chip-origem px-3 py-1.5 rounded-full border border-gray-300 text-sm font-medium text-gray-600 bg-white hover:border-gray-400 transition-colors" data-origem="novo">
+                                    Novo CNPJ
+                                </button>
+                            </div>
                         </div>
 
-                        {{-- Selecao de Cliente (Opcional) --}}
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Associar a um Cliente: <span class="text-gray-400 font-normal">(opcional)</span>
-                            </label>
-                            <select id="cliente-select" name="cliente_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
-                                <option value="">Nao associar a um cliente</option>
-                                @foreach($clientes ?? [] as $cliente)
-                                    <option value="{{ $cliente->id }}">
-                                        {{ $cliente->razao_social ?? $cliente->nome }}
-                                        ({{ preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $cliente->documento) }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            <p class="mt-1 text-xs text-gray-500">
-                                Vincule o participante a um cliente para melhor organizacao.
-                            </p>
+                        {{-- Step 2: Selecione o CNPJ (paineis show/hide) --}}
+                        <div id="step2-wrapper" class="mb-4">
+                            {{-- Painel Propria Empresa --}}
+                            <div id="painel-propria" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Selecione a empresa:</label>
+                                <select id="select-propria" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                    <option value="">Selecione...</option>
+                                    @foreach($empresasProprias as $ep)
+                                        <option value="{{ preg_replace('/\D/', '', $ep->documento) }}" data-razao="{{ $ep->razao_social ?? $ep->nome }}" data-cliente-id="{{ $ep->id }}">
+                                            {{ $ep->razao_social ?? $ep->nome }}
+                                            ({{ preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', preg_replace('/\D/', '', $ep->documento)) }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- Painel Cliente --}}
+                            <div id="painel-cliente" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Buscar cliente:</label>
+                                <div class="relative">
+                                    <input type="text" id="busca-cliente" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="Digite o nome ou CNPJ..." autocomplete="off">
+                                    <div id="dropdown-cliente" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto"></div>
+                                </div>
+                            </div>
+
+                            {{-- Painel Participante --}}
+                            <div id="painel-participante" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Buscar participante:</label>
+                                <div class="relative">
+                                    <input type="text" id="busca-participante-select" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="Digite o nome ou CNPJ..." autocomplete="off">
+                                    <div id="dropdown-participante" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto"></div>
+                                </div>
+                            </div>
+
+                            {{-- Painel Novo CNPJ --}}
+                            <div id="painel-novo" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Salvar como:</label>
+                                <div class="flex gap-2 mb-3" id="novo-subtipo-chips">
+                                    <button type="button" class="chip-novo-subtipo px-3 py-1.5 rounded-full border border-gray-300 text-xs font-medium text-gray-600 bg-white hover:border-gray-400 transition-colors" data-subtipo="participante">Participante</button>
+                                    <button type="button" class="chip-novo-subtipo px-3 py-1.5 rounded-full border border-gray-300 text-xs font-medium text-gray-600 bg-white hover:border-gray-400 transition-colors" data-subtipo="cliente">Cliente</button>
+                                </div>
+                                <input
+                                    type="text"
+                                    id="cnpj-input"
+                                    class="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
+                                    placeholder="00.000.000/0000-00"
+                                    maxlength="18"
+                                    autocomplete="off"
+                                >
+                                <p class="mt-1 text-xs text-gray-500">Digite o CNPJ que deseja consultar.</p>
+                            </div>
+
+                            {{-- CNPJ Confirmacao chip --}}
+                            <div id="cnpj-confirmacao" class="hidden mt-3">
+                                <div class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 max-w-full">
+                                    <div class="min-w-0">
+                                        <p id="confirmacao-razao" class="text-sm font-medium text-blue-900 truncate"></p>
+                                        <p id="confirmacao-cnpj" class="text-xs text-blue-600 font-mono"></p>
+                                    </div>
+                                    <button type="button" id="btn-limpar-selecao" class="flex-shrink-0 p-0.5 text-blue-400 hover:text-blue-600 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
+
+                        {{-- Step 3 + Step 4 wrapper (disabled until CNPJ resolved) --}}
+                        <div id="steps-34-wrapper" class="opacity-40 pointer-events-none transition-opacity duration-200">
 
                         {{-- Selecao do Plano - Radios hidden + Card visual --}}
                         @php
@@ -90,39 +150,39 @@
                                 'gratuito' => [
                                     'cor' => 'green',
                                     'icone' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-                                    'consultas_display' => ['Situacao Cadastral (Ativa, Inapta, Baixada)', 'Dados Cadastrais Completos', 'CNAEs Principal e Secundarios', 'Quadro Societario (QSA)', 'Simples Nacional e MEI'],
-                                    'casos_uso' => ['Validar se CNPJ existe e esta ativo', 'Conferir regime tributario para emissao de NF', 'Identificar socios antes de negociar'],
+                                    'consultas_display' => ['Situação Cadastral (Ativa, Inapta, Baixada)', 'Dados Cadastrais Completos', 'CNAEs Principal e Secundários', 'Quadro Societário (QSA)', 'Simples Nacional e MEI'],
+                                    'casos_uso' => ['Checar se CNPJ está ativo', 'Conferir regime para emitir NF', 'Consultar sócios e QSA'],
                                 ],
                                 'validacao' => [
                                     'cor' => 'blue',
                                     'icone' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
-                                    'consultas_display' => ['Tudo do Gratuito', 'SINTEGRA (Inscricao Estadual)', 'TCU Consolidada (CEIS, CNEP, CNJ)'],
-                                    'casos_uso' => ['Validar IE para operacoes interestaduais', 'Verificar se empresa esta em lista de impedidos', 'Qualificar fornecedores antes de cadastrar'],
+                                    'consultas_display' => ['Situação Cadastral (Ativa, Inapta, Baixada)', 'Dados Completos, CNAEs e QSA', 'Simples Nacional e MEI', 'SINTEGRA — IE ativa em todos os estados', 'TCU Consolidada (CEIS, CNEP, Inidôneos)'],
+                                    'casos_uso' => ['Conferir IE interestadual', 'Checar listas restritivas do TCU', 'Qualificar novos fornecedores'],
                                 ],
                                 'licitacao' => [
                                     'cor' => 'blue',
                                     'icone' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-                                    'consultas_display' => ['Tudo do Validacao', 'CND Federal (PGFN/RFB)', 'CRF FGTS (Regularidade)', 'CND Estadual (ICMS)', 'CNDT Trabalhista (TST)'],
-                                    'casos_uso' => ['Editais e licitacoes publicas', 'Verificar regularidade fiscal federal', 'Homologar fornecedores em licitacoes'],
+                                    'consultas_display' => ['Tudo do Validação', 'CND Federal (PGFN/RFB)', 'CRF FGTS (Regularidade)', 'CND Estadual (ICMS)', 'CNDT Trabalhista (TST)'],
+                                    'casos_uso' => ['Documentação para editais', 'Homologar com CNDs exigidas', 'Renovar contratos públicos'],
                                     'promo' => true,
                                 ],
                                 'compliance' => [
                                     'cor' => 'purple',
                                     'icone' => 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
-                                    'consultas_display' => ['Tudo do Licitacao', 'Protestos', 'Lista Devedores PGFN'],
-                                    'casos_uso' => ['Gestao de terceiros', 'Compliance com Lei Anticorrupcao', 'Monitoramento de fornecedores criticos'],
+                                    'consultas_display' => ['Situação Cadastral e Dados Completos', 'SINTEGRA e TCU Consolidada', 'CND Federal, Estadual, CRF e CNDT', 'Protestos em Cartório (IEPTB Nacional)', 'Devedores da Dívida Ativa (PGFN)', 'Análise completa de risco financeiro'],
+                                    'casos_uso' => ['Gestão de risco de terceiros', 'Atender Lei Anticorrupção', 'Monitorar protestos e dívidas'],
                                 ],
                                 'due_diligence' => [
                                     'cor' => 'amber',
                                     'icone' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7',
-                                    'consultas_display' => ['Tudo do Compliance', 'Trabalho Escravo (MTE)', 'IBAMA Autuacoes'],
-                                    'casos_uso' => ['Analise pre-aquisicao (M&A)', 'Due diligence ESG', 'Compliance socioambiental'],
+                                    'consultas_display' => ['Todas as CNDs (Federal, Estadual, FGTS, Trabalhista)', 'Protestos e Devedores PGFN', 'SINTEGRA e TCU Consolidada', 'Trabalho Escravo (Lista Suja — MTE)', 'IBAMA — Autuações Ambientais', 'Compliance trabalhista e ambiental (ESG)'],
+                                    'casos_uso' => ['Análise pré-aquisição (M&A)', 'Atender requisitos ESG', 'Riscos trabalhistas e ambientais'],
                                 ],
                                 'enterprise' => [
                                     'cor' => 'slate',
                                     'icone' => 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
-                                    'consultas_display' => ['Tudo do Due Diligence', 'Processos Judiciais (CNJ)'],
-                                    'casos_uso' => ['Due diligence juridico completo', 'Analise de litigios antes de contratar', 'Monitoramento corporativo de alto nivel'],
+                                    'consultas_display' => ['Todas as CNDs e Certidões', 'Protestos, Dívida Ativa e TCU', 'Trabalho Escravo e IBAMA (ESG)', 'Processos Judiciais (CNJ/SEEU)', 'SINTEGRA — Inscrição Estadual', 'Raio-X completo — 18 consultas por CNPJ'],
+                                    'casos_uso' => ['Due diligence jurídico completo', 'Mapear litígios antes de contratar', 'Relatório para comitês internos'],
                                 ],
                             ];
 
@@ -192,13 +252,13 @@
                                             </div>
                                         </div>
                                         <span id="plano-display-badge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 whitespace-nowrap flex-shrink-0 ml-2">
-                                            Gratis
+                                            Grátis
                                         </span>
                                     </div>
 
                                     {{-- Consultas incluidas --}}
                                     <div class="mb-3">
-                                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Consultas incluidas</p>
+                                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Consultas incluídas</p>
                                         <ul id="plano-display-consultas" class="space-y-0.5">
                                             <li class="flex items-center gap-1.5 text-[11px] text-gray-600">
                                                 <svg class="w-3 h-3 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -236,7 +296,7 @@
                                     </button>
                                 </div>
                             </div>
-                            <p class="mt-1.5 text-xs text-gray-400">Clique em "Alterar plano" para ver todos os planos disponiveis.</p>
+                            <p class="mt-1.5 text-xs text-gray-400">Clique em "Alterar plano" para ver todos os planos disponíveis.</p>
                         </div>
 
                         {{-- Resumo e Submit --}}
@@ -245,9 +305,9 @@
                                 <div>
                                     <p class="text-sm text-gray-600">Custo:</p>
                                     <p class="text-lg font-bold text-gray-900">
-                                        <span id="custo-total">0</span> creditos
+                                        <span id="custo-total">0</span> créditos
                                     </p>
-                                    <p class="text-xs text-gray-500">Saldo: <strong>{{ $credits ?? 0 }}</strong> creditos</p>
+                                    <p class="text-xs text-gray-500">Saldo: <strong>{{ $credits ?? 0 }}</strong> créditos</p>
                                 </div>
                                 <button
                                     type="submit"
@@ -266,6 +326,7 @@
                                 </button>
                             </div>
                         </div>
+                        </div>{{-- /steps-34-wrapper --}}
                     </form>
                 </div>
             </div>
@@ -289,28 +350,28 @@
                                 <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">1</div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">Digite o CNPJ</p>
-                                    <p class="text-xs text-gray-500">Informe o CNPJ do fornecedor ou cliente que deseja consultar. Opcionalmente, associe a um cliente para melhor organizacao.</p>
+                                    <p class="text-xs text-gray-500">Informe o CNPJ do fornecedor ou cliente que deseja consultar. Opcionalmente, associe a um cliente para melhor organização.</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-3">
                                 <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">2</div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">Escolha o tipo de consulta</p>
-                                    <p class="text-xs text-gray-500">Quanto mais completa, mais informacoes voce recebe</p>
+                                    <p class="text-xs text-gray-500">Quanto mais completa, mais informações você recebe</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-3">
                                 <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">3</div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">Notificações</p>
-                                    <p class="text-xs text-gray-500">Configure frequencia automatica de consultas (semanal, mensal ou trimestral) e receba notificacoes sobre alteracoes</p>
+                                    <p class="text-xs text-gray-500">Configure frequência automática de consultas (semanal, mensal ou trimestral) e receba notificações sobre alterações</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-3">
                                 <div class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold">4</div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">Resultado salvo automaticamente</p>
-                                    <p class="text-xs text-gray-500">O participante sera adicionado a sua lista para futuras consultas</p>
+                                    <p class="text-xs text-gray-500">O participante será adicionado à sua lista para futuras consultas</p>
                                 </div>
                             </div>
                             </div>
@@ -319,7 +380,7 @@
                         {{-- Planos disponiveis - Badges compactos --}}
                         <div class="border-t border-gray-200 pt-4 mt-4 flex-1 flex flex-col">
                             <div class="flex items-center justify-between mb-3">
-                                <h4 class="text-sm font-semibold text-gray-900">Planos disponiveis</h4>
+                                <h4 class="text-sm font-semibold text-gray-900">Planos disponíveis</h4>
                                 <button type="button" id="btn-ver-detalhes-planos" class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors inline-flex items-center gap-1">
                                     Ver detalhes
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -342,14 +403,16 @@
                                     @if($pd['promo'] ?? false)
                                         <button
                                             type="button"
-                                            class="badge-plano group w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-amber-200 bg-amber-50 hover:bg-amber-100 hover:border-amber-300 transition-colors cursor-pointer text-left"
+                                            class="badge-plano group w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg
+                                                   border border-amber-200 bg-amber-50 hover:bg-amber-100 hover:border-amber-300
+                                                   transition-colors cursor-pointer text-left"
                                             data-slide-index="{{ $idx }}"
                                         >
                                             <div class="flex-1 min-w-0">
                                                 <span class="text-xs font-semibold text-gray-800 group-hover:text-gray-900 transition-colors">{{ $pd['nome'] }}</span>
                                                 <p class="text-xs text-gray-400 group-hover:text-gray-500 transition-colors truncate">{{ $pd['descricao'] }}</p>
                                             </div>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 whitespace-nowrap flex-shrink-0">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-100 text-orange-700 whitespace-nowrap flex-shrink-0">
                                                 {{ $pd['creditos'] }} cred.
                                             </span>
                                         </button>
@@ -364,7 +427,7 @@
                                                 <p class="text-xs text-gray-400 group-hover:text-gray-500 transition-colors truncate">{{ $pd['descricao'] }}</p>
                                             </div>
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $badgeCor }} transition-colors whitespace-nowrap flex-shrink-0">
-                                                {{ $pd['gratuito'] ? 'Gratis' : $pd['creditos'] . ' cred.' }}
+                                                {{ $pd['gratuito'] ? 'Grátis' : $pd['creditos'] . ' cred.' }}
                                             </span>
                                         </button>
                                     @endif
@@ -403,7 +466,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
                     </div>
-                    <h3 class="text-sm font-semibold text-gray-900 mb-1">Consulta concluida</h3>
+                    <h3 class="text-sm font-semibold text-gray-900 mb-1">Consulta concluída</h3>
                     <p id="sucesso-mensagem" class="text-xs text-gray-500 mb-4">Resultado pronto para download.</p>
                     <div class="flex gap-2">
                         <a id="link-download-manual" href="#" class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition text-sm font-medium">
@@ -478,44 +541,47 @@
                             @foreach($planosDetalhados as $idx => $pd)
                                 @php $cores = $corClasses[$pd['cor']]; @endphp
                                 <div class="swiper-slide">
-                                    <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 200px);">
+                                    <div class="p-5 overflow-y-auto" style="max-height: calc(90vh - 200px);">
                                         {{-- Plan header --}}
-                                        <div class="flex items-center gap-3 mb-4">
-                                            <div class="flex-shrink-0 w-10 h-10 rounded-lg {{ $cores['bg'] }} flex items-center justify-center">
-                                                <svg class="w-5 h-5 {{ $cores['icon'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div class="flex items-center gap-3 mb-3">
+                                            <div class="flex-shrink-0 w-9 h-9 rounded-lg {{ $cores['bg'] }} flex items-center justify-center">
+                                                <svg class="w-[18px] h-[18px] {{ $cores['icon'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $pd['icone'] }}"></path>
                                                 </svg>
                                             </div>
                                             <div class="flex-1">
-                                                <h4 class="text-lg font-bold text-gray-900">{{ $pd['nome'] }}</h4>
+                                                <h4 class="text-base font-bold text-gray-900">{{ $pd['nome'] }}</h4>
                                                 @if($pd['promo'] ?? false)
                                                     <span class="text-sm text-amber-700 font-semibold">{{ $pd['creditos'] }} cred./CNPJ</span>
                                                 @else
                                                     <span class="text-sm {{ $pd['gratuito'] ? 'text-green-600 font-medium' : 'text-gray-500' }}">
-                                                        {{ $pd['gratuito'] ? 'Gratuito' : $pd['creditos'] . ' creditos/CNPJ' }}
+                                                        {{ $pd['gratuito'] ? 'Gratuito' : $pd['creditos'] . ' créditos/CNPJ' }}
                                                     </span>
                                                 @endif
                                             </div>
                                             @if($pd['promo'] ?? false)
                                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">{{ $pd['creditos'] }} cred.</span>
                                             @elseif($pd['gratuito'])
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Gratis</span>
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Grátis</span>
                                             @else
                                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $cores['badge'] }}">{{ $pd['creditos'] }} cred.</span>
                                             @endif
                                         </div>
 
                                         {{-- Description --}}
-                                        <p class="text-sm text-gray-600 mb-4">{{ $pd['descricao'] }}</p>
+                                        <p class="text-sm text-gray-600 mb-3">{{ $pd['descricao'] }}</p>
 
                                         @if($pd['promo'] ?? false)
-                                            <p class="text-xs text-amber-600/80 mb-4">&#x1f3f7;&#xfe0e; {{ $pd['creditos'] }} cred./CNPJ — promo por tempo limitado</p>
+                                            <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-lg mb-3">
+                                                <p class="text-xs font-semibold text-amber-800">&#x1f3f7;&#xfe0e; Oferta por tempo limitado</p>
+                                                <p class="text-xs text-amber-700 mt-0.5">Todas as CNDs por {{ $pd['creditos'] }} créd./CNPJ — aproveite antes do reajuste.</p>
+                                            </div>
                                         @endif
 
                                         {{-- Consultas incluidas --}}
-                                        <div class="mb-4">
-                                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Consultas incluidas</p>
-                                            <ul class="space-y-1.5">
+                                        <div class="mb-3">
+                                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Consultas incluídas</p>
+                                            <ul class="space-y-1">
                                                 @foreach($pd['consultas'] as $consulta)
                                                     <li class="flex items-start gap-2 text-sm text-gray-700">
                                                         <svg class="w-4 h-4 {{ $cores['icon'] }} mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -582,7 +648,7 @@
                             type="text"
                             id="busca-participante"
                             class="px-3 py-2 border border-gray-300 rounded-lg text-sm w-full sm:w-64"
-                            placeholder="Buscar CNPJ ou razao social..."
+                            placeholder="Buscar CNPJ ou razão social..."
                         >
                     </div>
                 </div>
@@ -592,17 +658,17 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CNPJ</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Razao Social</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Situacao</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Razão Social</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Situação</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Regime</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ultima Consulta</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acoes</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Última Consulta</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 bg-white" id="participantes-tbody">
                         @forelse($participantes ?? [] as $participante)
                             <tr class="hover:bg-gray-50 participante-row" data-cnpj="{{ $participante->cnpj }}" data-razao="{{ $participante->razao_social ?? '' }}">
-                                <td class="px-4 py-3 text-sm font-mono text-gray-900">
+                                <td class="px-4 py-3 text-sm font-mono text-gray-900 whitespace-nowrap tabular-nums">
                                     {{ preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $participante->cnpj) }}
                                 </td>
                                 <td class="px-4 py-3 text-sm text-gray-900">{{ $participante->razao_social ?? '-' }}</td>
@@ -626,6 +692,7 @@
                                         type="button"
                                         class="btn-reconsultar inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium"
                                         data-cnpj="{{ $participante->cnpj }}"
+                                        data-razao="{{ $participante->razao_social ?? '' }}"
                                         data-id="{{ $participante->id }}"
                                     >
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -641,7 +708,7 @@
                                     <svg class="mx-auto h-8 w-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                                     </svg>
-                                    Nenhum participante cadastrado ainda. Faca uma consulta para adicionar.
+                                    Nenhum participante cadastrado ainda. Faça uma consulta para adicionar.
                                 </td>
                             </tr>
                         @endforelse
@@ -685,16 +752,48 @@
         const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         const form = document.getElementById('form-consulta-avulsa');
         const cnpjInput = document.getElementById('cnpj-input');
-        const clienteSelect = document.getElementById('cliente-select');
         const custoTotal = document.getElementById('custo-total');
         const btnConsultar = document.getElementById('btn-consultar');
         const buscaParticipante = document.getElementById('busca-participante');
+        const steps34 = document.getElementById('steps-34-wrapper');
 
-        // Mascara de CNPJ
+        // ==========================================
+        // State
+        // ==========================================
+        var state = {
+            origemTipo: null,
+            novoSubtipo: null,
+            cnpjDigitos: '',
+            clienteId: null,
+            razaoSocial: '',
+        };
+
+        // ==========================================
+        // Inline data for autocomplete (from Blade)
+        // ==========================================
+        var clientesData = {!! json_encode(
+            $clientesAtivos->map(fn($c) => [
+                'id' => $c->id,
+                'cnpj' => preg_replace('/\D/', '', $c->documento),
+                'razao' => $c->razao_social ?? $c->nome ?? '',
+            ])->values()
+        ) !!};
+
+        var participantesData = {!! json_encode(
+            ($participantes ?? collect())->map(fn($p) => [
+                'id' => $p->id,
+                'cnpj' => $p->cnpj,
+                'razao' => $p->razao_social ?? '',
+                'clienteId' => $p->cliente_id,
+            ])->values()
+        ) !!};
+
+        // ==========================================
+        // Helpers
+        // ==========================================
         function formatarCnpj(valor) {
             valor = valor.replace(/\D/g, '');
             if (valor.length > 14) valor = valor.slice(0, 14);
-
             if (valor.length > 12) {
                 valor = valor.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, '$1.$2.$3/$4-$5');
             } else if (valor.length > 8) {
@@ -707,26 +806,299 @@
             return valor;
         }
 
-        function extrairCnpj(texto) {
-            if (!texto) return '';
-            return texto.replace(/\D/g, '');
-        }
-
         function getCreditosPlano() {
             const planoSelecionado = document.querySelector('input[name="plano"]:checked');
             return planoSelecionado ? parseInt(planoSelecionado.dataset.creditos || 0) : 0;
         }
 
         function atualizarCalculos() {
-            const cnpj = extrairCnpj(cnpjInput.value);
             const creditosPlano = getCreditosPlano();
-            const total = cnpj.length === 14 ? creditosPlano : 0;
-
+            const resolved = state.cnpjDigitos.length === 14;
+            const total = resolved ? creditosPlano : 0;
             custoTotal.textContent = total.toLocaleString('pt-BR');
-            btnConsultar.disabled = cnpj.length !== 14;
+            btnConsultar.disabled = !resolved;
         }
 
-        // Dados dos planos para atualizar card visual (gerado do DB)
+        function setSteps34Enabled(enabled) {
+            if (!steps34) return;
+            if (enabled) {
+                steps34.classList.remove('opacity-40', 'pointer-events-none');
+            } else {
+                steps34.classList.add('opacity-40', 'pointer-events-none');
+            }
+        }
+
+        // ==========================================
+        // Confirmation chip
+        // ==========================================
+        var confirmacao = document.getElementById('cnpj-confirmacao');
+        var confirmacaoRazao = document.getElementById('confirmacao-razao');
+        var confirmacaoCnpj = document.getElementById('confirmacao-cnpj');
+
+        function showConfirmacao(cnpj14, razao) {
+            state.cnpjDigitos = cnpj14;
+            state.razaoSocial = razao;
+            if (confirmacaoRazao) confirmacaoRazao.textContent = razao || 'CNPJ ' + formatarCnpj(cnpj14);
+            if (confirmacaoCnpj) confirmacaoCnpj.textContent = formatarCnpj(cnpj14);
+            if (confirmacao) confirmacao.classList.remove('hidden');
+            // Hide the active panel input area (but keep the panel visible for context)
+            hideActivePanelInput();
+            setSteps34Enabled(true);
+            atualizarCalculos();
+        }
+
+        function clearConfirmacao() {
+            state.cnpjDigitos = '';
+            state.clienteId = null;
+            state.razaoSocial = '';
+            if (confirmacao) confirmacao.classList.add('hidden');
+            // Re-show the active panel input area
+            showActivePanelInput();
+            setSteps34Enabled(false);
+            atualizarCalculos();
+        }
+
+        function hideActivePanelInput() {
+            // For select-based panels, just leave them; for search panels, we can keep them
+        }
+
+        function showActivePanelInput() {
+            // Nothing to do - panels stay visible
+        }
+
+        document.getElementById('btn-limpar-selecao')?.addEventListener('click', function() {
+            clearConfirmacao();
+            // Clear inputs in active panel
+            var selectPropria = document.getElementById('select-propria');
+            var buscaCliente = document.getElementById('busca-cliente');
+            var buscaParticipanteSelect = document.getElementById('busca-participante-select');
+            if (selectPropria) selectPropria.value = '';
+            if (buscaCliente) buscaCliente.value = '';
+            if (buscaParticipanteSelect) buscaParticipanteSelect.value = '';
+            if (cnpjInput) cnpjInput.value = '';
+        });
+
+        // ==========================================
+        // Step 1: Origem chips
+        // ==========================================
+        var painelIds = ['painel-propria', 'painel-cliente', 'painel-participante', 'painel-novo'];
+
+        function hideAllPaineis() {
+            painelIds.forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+        }
+
+        function setActiveChip(chip) {
+            document.querySelectorAll('.chip-origem').forEach(function(c) {
+                c.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                c.classList.add('border-gray-300', 'text-gray-600', 'bg-white');
+            });
+            chip.classList.remove('border-gray-300', 'text-gray-600', 'bg-white');
+            chip.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+        }
+
+        document.querySelectorAll('.chip-origem').forEach(function(chip) {
+            chip.addEventListener('click', function() {
+                var origem = this.dataset.origem;
+                state.origemTipo = origem;
+                state.novoSubtipo = null;
+
+                setActiveChip(this);
+                clearConfirmacao();
+                hideAllPaineis();
+
+                // Reset sub-chips for novo
+                document.querySelectorAll('.chip-novo-subtipo').forEach(function(c) {
+                    c.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                    c.classList.add('border-gray-300', 'text-gray-600', 'bg-white');
+                });
+
+                // Show corresponding panel
+                var painelMap = {
+                    'propria': 'painel-propria',
+                    'cliente': 'painel-cliente',
+                    'participante': 'painel-participante',
+                    'novo': 'painel-novo',
+                };
+                var painelId = painelMap[origem];
+                if (painelId) {
+                    var painel = document.getElementById(painelId);
+                    if (painel) painel.classList.remove('hidden');
+                }
+
+                // If "novo", show CNPJ input and enable sub-chip default
+                if (origem === 'novo') {
+                    // Default to participante subtipo
+                    state.novoSubtipo = 'participante';
+                    var defaultSubChip = document.querySelector('.chip-novo-subtipo[data-subtipo="participante"]');
+                    if (defaultSubChip) {
+                        defaultSubChip.classList.remove('border-gray-300', 'text-gray-600', 'bg-white');
+                        defaultSubChip.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+                    }
+                    if (cnpjInput) cnpjInput.focus();
+                }
+            });
+        });
+
+        // ==========================================
+        // Step 2: Painel Propria - Select
+        // ==========================================
+        var selectPropria = document.getElementById('select-propria');
+        if (selectPropria) {
+            selectPropria.addEventListener('change', function() {
+                var option = this.selectedOptions[0];
+                if (!option || !option.value) {
+                    clearConfirmacao();
+                    return;
+                }
+                var cnpj = option.value;
+                var razao = option.dataset.razao || '';
+                state.clienteId = option.dataset.clienteId || null;
+                showConfirmacao(cnpj, razao);
+            });
+        }
+
+        // ==========================================
+        // Step 2: Painel Cliente - Autocomplete
+        // ==========================================
+        var buscaClienteInput = document.getElementById('busca-cliente');
+        var dropdownCliente = document.getElementById('dropdown-cliente');
+
+        function renderDropdown(dropdown, items, onSelect) {
+            if (!items.length) {
+                dropdown.classList.add('hidden');
+                return;
+            }
+            var html = '';
+            items.forEach(function(item, idx) {
+                html += '<button type="button" class="dropdown-item w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors' +
+                    (idx < items.length - 1 ? ' border-b border-gray-100' : '') + '" data-idx="' + idx + '">' +
+                    '<span class="font-medium text-gray-900">' + escapeHtml(item.razao || 'Sem nome') + '</span>' +
+                    '<span class="text-xs text-gray-500 ml-1">' + formatarCnpj(item.cnpj) + '</span>' +
+                    '</button>';
+            });
+            dropdown.innerHTML = html;
+            dropdown.classList.remove('hidden');
+
+            dropdown.querySelectorAll('.dropdown-item').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    var i = parseInt(this.dataset.idx);
+                    onSelect(items[i]);
+                    dropdown.classList.add('hidden');
+                });
+            });
+        }
+
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        if (buscaClienteInput && dropdownCliente) {
+            buscaClienteInput.addEventListener('input', function() {
+                var termo = this.value.toLowerCase().trim();
+                if (termo.length < 2) {
+                    dropdownCliente.classList.add('hidden');
+                    return;
+                }
+                var termoDigitos = termo.replace(/\D/g, '');
+                var filtered = clientesData.filter(function(c) {
+                    return (c.razao && c.razao.toLowerCase().includes(termo)) ||
+                           (termoDigitos && c.cnpj.includes(termoDigitos));
+                }).slice(0, 10);
+                renderDropdown(dropdownCliente, filtered, function(item) {
+                    state.clienteId = item.id;
+                    buscaClienteInput.value = item.razao;
+                    showConfirmacao(item.cnpj, item.razao);
+                });
+            });
+
+            buscaClienteInput.addEventListener('blur', function() {
+                setTimeout(function() { dropdownCliente.classList.add('hidden'); }, 200);
+            });
+
+            buscaClienteInput.addEventListener('focus', function() {
+                if (this.value.length >= 2) {
+                    this.dispatchEvent(new Event('input'));
+                }
+            });
+        }
+
+        // ==========================================
+        // Step 2: Painel Participante - Autocomplete
+        // ==========================================
+        var buscaParticipanteSelect = document.getElementById('busca-participante-select');
+        var dropdownParticipante = document.getElementById('dropdown-participante');
+
+        if (buscaParticipanteSelect && dropdownParticipante) {
+            buscaParticipanteSelect.addEventListener('input', function() {
+                var termo = this.value.toLowerCase().trim();
+                if (termo.length < 2) {
+                    dropdownParticipante.classList.add('hidden');
+                    return;
+                }
+                var termoDigitos = termo.replace(/\D/g, '');
+                var filtered = participantesData.filter(function(p) {
+                    return (p.razao && p.razao.toLowerCase().includes(termo)) ||
+                           (termoDigitos && p.cnpj.includes(termoDigitos));
+                }).slice(0, 10);
+                renderDropdown(dropdownParticipante, filtered, function(item) {
+                    state.clienteId = item.clienteId || null;
+                    buscaParticipanteSelect.value = item.razao;
+                    showConfirmacao(item.cnpj, item.razao);
+                });
+            });
+
+            buscaParticipanteSelect.addEventListener('blur', function() {
+                setTimeout(function() { dropdownParticipante.classList.add('hidden'); }, 200);
+            });
+
+            buscaParticipanteSelect.addEventListener('focus', function() {
+                if (this.value.length >= 2) {
+                    this.dispatchEvent(new Event('input'));
+                }
+            });
+        }
+
+        // ==========================================
+        // Step 2: Painel Novo - Sub-chips + CNPJ input
+        // ==========================================
+        document.querySelectorAll('.chip-novo-subtipo').forEach(function(chip) {
+            chip.addEventListener('click', function() {
+                state.novoSubtipo = this.dataset.subtipo;
+                document.querySelectorAll('.chip-novo-subtipo').forEach(function(c) {
+                    c.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                    c.classList.add('border-gray-300', 'text-gray-600', 'bg-white');
+                });
+                this.classList.remove('border-gray-300', 'text-gray-600', 'bg-white');
+                this.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+            });
+        });
+
+        if (cnpjInput) {
+            cnpjInput.addEventListener('input', function(e) {
+                e.target.value = formatarCnpj(e.target.value);
+                var digitos = e.target.value.replace(/\D/g, '');
+                if (digitos.length === 14) {
+                    state.cnpjDigitos = digitos;
+                    state.clienteId = null;
+                    setSteps34Enabled(true);
+                    atualizarCalculos();
+                } else {
+                    state.cnpjDigitos = '';
+                    state.clienteId = null;
+                    setSteps34Enabled(false);
+                    atualizarCalculos();
+                }
+            });
+        }
+
+        // ==========================================
+        // Plano display (preserved logic)
+        // ==========================================
         var totalPlanos = {{ count($planosDetalhados) }};
         var planosData = {!! json_encode(
             collect($planosDetalhados)->mapWithKeys(function ($p, $idx) {
@@ -777,25 +1149,20 @@
 
             if (!card) return;
 
-            // Update border-l color
             allBorderLClasses.forEach(function(c) { card.classList.remove(c); });
             card.classList.add(cores.borderL);
 
-            // Update icon wrapper bg
             allBgClasses.forEach(function(c) { iconWrapper.classList.remove(c); });
             iconWrapper.classList.add(cores.bg);
 
-            // Update icon color and path
             allIconClasses.forEach(function(c) { icon.classList.remove(c); });
             icon.classList.add(cores.icon);
             var pathEl = icon.querySelector('path');
             if (pathEl) pathEl.setAttribute('d', plano.icone);
 
-            // Update name and description
             nome.textContent = plano.nome;
             descricao.textContent = plano.descricao;
 
-            // Update badge
             allBadgeClasses.forEach(function(c) { badge.classList.remove(c); });
 
             if (plano.promo) {
@@ -803,10 +1170,9 @@
                 badge.textContent = plano.creditos + ' cred.';
             } else {
                 cores.badge.split(' ').forEach(function(c) { badge.classList.add(c); });
-                badge.textContent = plano.creditos === 0 ? 'Gratis' : plano.creditos + ' cred.';
+                badge.textContent = plano.creditos === 0 ? 'Grátis' : plano.creditos + ' cred.';
             }
 
-            // Update consultas list
             var checkColor = cores.check;
             var html = '';
             plano.consultas.forEach(function(consulta) {
@@ -818,14 +1184,6 @@
             consultasList.innerHTML = html;
         }
 
-        // Event listeners
-        if (cnpjInput) {
-            cnpjInput.addEventListener('input', function(e) {
-                e.target.value = formatarCnpj(e.target.value);
-                atualizarCalculos();
-            });
-        }
-
         // Mudanca de plano
         document.querySelectorAll('input[name="plano"]').forEach(function(radio) {
             radio.addEventListener('change', function() {
@@ -834,7 +1192,9 @@
             });
         });
 
-        // Busca de participantes
+        // ==========================================
+        // Tabela: Busca de participantes
+        // ==========================================
         if (buscaParticipante) {
             buscaParticipante.addEventListener('input', function() {
                 const termo = this.value.toLowerCase().replace(/\D/g, '');
@@ -854,27 +1214,42 @@
             });
         }
 
-        // Reconsultar participante
+        // ==========================================
+        // Tabela: Reconsultar participante
+        // ==========================================
         document.querySelectorAll('.btn-reconsultar').forEach(function(btn) {
             btn.addEventListener('click', function() {
-                const cnpj = this.dataset.cnpj;
-                if (cnpjInput && cnpj) {
-                    cnpjInput.value = formatarCnpj(cnpj);
-                    atualizarCalculos();
+                var cnpj = this.dataset.cnpj;
+                var razao = this.dataset.razao || '';
+                if (!cnpj) return;
 
-                    // Scroll para o formulario
-                    document.querySelector('#form-consulta-avulsa').scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-                    // Highlight visual
-                    cnpjInput.classList.add('ring-2', 'ring-blue-500');
-                    setTimeout(function() {
-                        cnpjInput.classList.remove('ring-2', 'ring-blue-500');
-                    }, 2000);
+                // Activate "Participante" chip
+                var participanteChip = document.querySelector('.chip-origem[data-origem="participante"]');
+                if (participanteChip) {
+                    participanteChip.click();
+                    // Show confirmation directly
+                    if (buscaParticipanteSelect) buscaParticipanteSelect.value = razao;
+                    showConfirmacao(cnpj, razao);
+                } else {
+                    // Fallback: activate "Novo" chip and fill CNPJ
+                    var novoChip = document.querySelector('.chip-origem[data-origem="novo"]');
+                    if (novoChip) {
+                        novoChip.click();
+                        if (cnpjInput) {
+                            cnpjInput.value = formatarCnpj(cnpj);
+                            cnpjInput.dispatchEvent(new Event('input'));
+                        }
+                    }
                 }
+
+                // Scroll to form
+                document.querySelector('#form-consulta-avulsa')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
         });
 
-        // Modal helpers
+        // ==========================================
+        // Modal helpers + SSE (preserved)
+        // ==========================================
         let eventSource = null;
         let consultaLoteId = null;
 
@@ -932,7 +1307,6 @@
                         fecharSSE();
                         hideModal('progresso');
 
-                        // Configurar link de download
                         const linkDownload = document.getElementById('link-download-manual');
                         if (linkDownload && consultaLoteId) {
                             linkDownload.href = '/app/consultas/lote/' + consultaLoteId + '/baixar';
@@ -968,17 +1342,19 @@
             hideModal('erro');
         });
 
-        // Submit do formulario
+        // ==========================================
+        // Submit (uses state instead of raw input)
+        // ==========================================
         if (form) {
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
 
-                const cnpj = extrairCnpj(cnpjInput.value);
+                var cnpj = state.cnpjDigitos;
                 if (cnpj.length !== 14) {
                     if (window.showToast) {
-                        window.showToast('Por favor, insira um CNPJ valido com 14 digitos.', 'warning');
+                        window.showToast('Por favor, selecione ou insira um CNPJ válido.', 'warning');
                     } else {
-                        alert('Por favor, insira um CNPJ valido com 14 digitos.');
+                        alert('Por favor, selecione ou insira um CNPJ válido.');
                     }
                     return;
                 }
@@ -1011,9 +1387,12 @@
                         tab_id: tabId,
                     };
 
-                    // Adicionar cliente_id se selecionado
-                    if (clienteSelect && clienteSelect.value) {
-                        payload.cliente_id = clienteSelect.value;
+                    if (state.clienteId) {
+                        payload.cliente_id = state.clienteId;
+                    }
+
+                    if (state.origemTipo === 'novo' && state.novoSubtipo) {
+                        payload.novo_subtipo = state.novoSubtipo;
                     }
 
                     const response = await fetch('/app/monitoramento/consulta-avulsa', {
@@ -1032,7 +1411,6 @@
                     if (response.ok && data.success) {
                         consultaLoteId = data.consulta_lote_id;
 
-                        // Mostrar modal de progresso e iniciar SSE
                         updateProgresso(0, 'Iniciando consulta...');
                         showModal('progresso');
                         iniciarSSE(tabId);
@@ -1055,7 +1433,7 @@
         }
 
         // ==========================================
-        // Modal Carousel de Planos
+        // Modal Carousel de Planos (preserved)
         // ==========================================
         var swiperPlanos = null;
         var modalPlanos = document.getElementById('modal-planos-carousel');
@@ -1126,7 +1504,6 @@
             corStr.split(' ').forEach(function(c) { btn.classList.add(c); });
         }
 
-        // Close modal: overlay click
         if (modalPlanos) {
             modalPlanos.addEventListener('click', function(e) {
                 if (e.target === modalPlanos) {
@@ -1135,17 +1512,14 @@
             });
         }
 
-        // Close modal: ESC key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && modalPlanos && !modalPlanos.classList.contains('hidden')) {
                 hidePlanosModal();
             }
         });
 
-        // Close modal: X button
         document.getElementById('btn-fechar-carousel')?.addEventListener('click', hidePlanosModal);
 
-        // "Ver detalhes" button -> open modal at slide 0
         var btnVerDetalhes = document.getElementById('btn-ver-detalhes-planos');
         if (btnVerDetalhes) {
             btnVerDetalhes.addEventListener('click', function() {
@@ -1153,7 +1527,6 @@
             });
         }
 
-        // Badge clicks -> open modal at specific slide
         document.querySelectorAll('.badge-plano').forEach(function(badge) {
             badge.addEventListener('click', function() {
                 var idx = parseInt(this.dataset.slideIndex) || 0;
@@ -1161,7 +1534,6 @@
             });
         });
 
-        // "Alterar plano" button -> open carousel at current plan's slide
         var btnAlterarPlano = document.getElementById('btn-alterar-plano');
         if (btnAlterarPlano) {
             btnAlterarPlano.addEventListener('click', function() {
@@ -1174,7 +1546,6 @@
             });
         }
 
-        // "Selecionar este plano" buttons
         document.querySelectorAll('.btn-selecionar-plano').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 var codigo = this.dataset.planoCodigo;
@@ -1191,9 +1562,33 @@
             });
         });
 
-        // Inicializar calculos e display do plano
+        // ==========================================
+        // Init
+        // ==========================================
         atualizarCalculos();
         atualizarPlanoDisplay();
+
+        // Pre-fill via ?cnpj= query param
+        var urlParams = new URLSearchParams(window.location.search);
+        var cnpjParam = urlParams.get('cnpj');
+        if (cnpjParam) {
+            var cnpjLimpo = cnpjParam.replace(/\D/g, '');
+            if (cnpjLimpo.length === 14) {
+                // Activate "Novo" chip
+                var novoChip = document.querySelector('.chip-origem[data-origem="novo"]');
+                if (novoChip) {
+                    novoChip.click();
+                    if (cnpjInput) {
+                        cnpjInput.value = formatarCnpj(cnpjLimpo);
+                        cnpjInput.dispatchEvent(new Event('input'));
+                        cnpjInput.classList.add('ring-2', 'ring-blue-500');
+                        setTimeout(function() {
+                            cnpjInput.classList.remove('ring-2', 'ring-blue-500');
+                        }, 2000);
+                    }
+                }
+            }
+        }
 
         console.log('[Monitoramento Avulso] Inicializacao concluida');
     }

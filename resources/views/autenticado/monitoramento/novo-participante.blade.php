@@ -1,27 +1,25 @@
-{{-- Novo/Editar Cliente --}}
+{{-- Novo/Editar Participante - Cadastro Manual (PJ/PF) --}}
 @php
-    $isEditing = isset($cliente) && $cliente;
-    $tipoPessoa = $isEditing ? $cliente->tipo_pessoa : 'PJ';
-    $endereco = $isEditing ? $cliente->endereco : null;
-    $funcionario = $isEditing ? $cliente->funcionarios->first() : null;
+    $isEditing = isset($participante) && $participante;
+    $tipoDoc = $isEditing ? ($participante->tipo_documento ?? 'PJ') : 'PJ';
 @endphp
-<div class="min-h-screen bg-gray-50" id="novo-cliente-container">
+<div class="min-h-screen bg-gray-50" id="novo-participante-container">
     {{-- Main Content --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {{-- Header inline --}}
         <div class="mb-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">{{ $isEditing ? 'Editar Cliente' : 'Novo Cliente' }}</h1>
+                    <h1 class="text-2xl font-bold text-gray-900">{{ $isEditing ? 'Editar Participante' : 'Novo Participante' }}</h1>
                     <p class="mt-1 text-sm text-gray-600">
                         @if($isEditing)
-                            Atualize os dados do cliente. Tipo de pessoa e documento nao podem ser alterados.
+                            Atualize os dados do participante <strong>{{ $participante->cnpj_formatado }}</strong>.
                         @else
-                            Cadastre pessoa juridica (CNPJ) ou fisica (CPF) com endereco e responsavel.
+                            Cadastre pessoa juridica (CNPJ) ou fisica (CPF).
                         @endif
                     </p>
                 </div>
-                <a href="/app/clientes" data-link
+                <a href="{{ $isEditing ? '/app/monitoramento/participante/' . $participante->id : '/app/monitoramento/participantes' }}" data-link
                    class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 bg-white text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -41,14 +39,14 @@
                 </div>
                 <div>
                     @if($isEditing)
-                        <h4 class="text-sm font-semibold text-blue-900">Editando Cliente</h4>
+                        <h4 class="text-sm font-semibold text-blue-900">Edicao de Participante</h4>
                         <p class="text-sm text-blue-700 mt-0.5">
-                            O tipo de pessoa (PJ/PF) e o documento (CNPJ/CPF) nao podem ser alterados. Atualize os demais dados conforme necessario.
+                            O tipo de documento e o {{ $tipoDoc === 'PF' ? 'CPF' : 'CNPJ' }} nao podem ser alterados. Atualize os demais campos conforme necessario.
                         </p>
                     @else
-                        <h4 class="text-sm font-semibold text-blue-900">Cadastro de Clientes</h4>
+                        <h4 class="text-sm font-semibold text-blue-900">Cadastro de Participantes</h4>
                         <p class="text-sm text-blue-700 mt-0.5">
-                            Cadastre clientes com dados de endereco e responsavel para gestao completa no sistema.
+                            Cadastre empresas (CNPJ) ou pessoas fisicas (CPF) para monitoramento fiscal, consultas e analise de risco.
                         </p>
                     @endif
                 </div>
@@ -58,26 +56,25 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {{-- Form Area (2/3) --}}
             <div class="lg:col-span-2 space-y-6">
-                <form id="nc_form" method="POST" action="{{ $isEditing ? route('app.cliente.update', $cliente->id) : route('app.cliente.store') }}" class="space-y-6"
-                    @if($isEditing) data-cliente-id="{{ $cliente->id }}" @endif>
+                <form id="form-novo-participante" method="POST" class="space-y-6"
+                    @if($isEditing) data-participante-id="{{ $participante->id }}" @endif>
                     @csrf
-                    @if($isEditing) @method('PUT') @endif
-                    <input type="hidden" name="tipo_pessoa" id="nc_tipo_pessoa" value="{{ $tipoPessoa }}">
+                    <input type="hidden" name="tipo_documento" id="np_tipo_documento" value="{{ $tipoDoc }}">
 
-                    {{-- Card 1: Dados do Cliente --}}
+                    {{-- Card: Tipo de Pessoa + Dados --}}
                     <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
                         <div class="px-6 py-4 border-b border-gray-200">
-                            <h2 class="text-base font-semibold text-gray-800">Dados do Cliente</h2>
+                            <h2 class="text-base font-semibold text-gray-800">Dados do Participante</h2>
                         </div>
                         <div class="px-6 py-5 space-y-5">
 
-                            {{-- Toggle PJ/PF --}}
+                            {{-- Toggle PF/PJ --}}
                             <div class="grid grid-cols-2 gap-3 {{ $isEditing ? 'pointer-events-none opacity-60' : '' }}">
-                                <button type="button" id="nc_btn_pj"
-                                    class="nc-tipo-btn flex items-center gap-3 p-3 rounded-lg border-2 {{ $tipoPessoa === 'PJ' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 bg-white' }} cursor-pointer transition-all"
-                                    onclick="window._ncToggleTipo('PJ')">
-                                    <div class="w-10 h-10 {{ $tipoPessoa === 'PJ' ? 'bg-blue-100' : 'bg-gray-100' }} rounded-lg flex items-center justify-center shrink-0">
-                                        <svg class="w-5 h-5 {{ $tipoPessoa === 'PJ' ? 'text-blue-600' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <button type="button" id="np_btn_pj"
+                                    class="np-tipo-btn flex items-center gap-3 p-3 rounded-lg border-2 {{ $tipoDoc === 'PJ' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 bg-white' }} cursor-pointer transition-all"
+                                    onclick="window._npToggleTipo('PJ')">
+                                    <div class="w-10 h-10 {{ $tipoDoc === 'PJ' ? 'bg-blue-100' : 'bg-gray-100' }} rounded-lg flex items-center justify-center shrink-0">
+                                        <svg class="w-5 h-5 {{ $tipoDoc === 'PJ' ? 'text-blue-600' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                                         </svg>
                                     </div>
@@ -86,11 +83,11 @@
                                         <span class="block text-xs text-gray-500">CNPJ</span>
                                     </div>
                                 </button>
-                                <button type="button" id="nc_btn_pf"
-                                    class="nc-tipo-btn flex items-center gap-3 p-3 rounded-lg border-2 {{ $tipoPessoa === 'PF' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 bg-white' }} cursor-pointer transition-all"
-                                    onclick="window._ncToggleTipo('PF')">
-                                    <div class="w-10 h-10 {{ $tipoPessoa === 'PF' ? 'bg-blue-100' : 'bg-gray-100' }} rounded-lg flex items-center justify-center shrink-0">
-                                        <svg class="w-5 h-5 {{ $tipoPessoa === 'PF' ? 'text-blue-600' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <button type="button" id="np_btn_pf"
+                                    class="np-tipo-btn flex items-center gap-3 p-3 rounded-lg border-2 {{ $tipoDoc === 'PF' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 bg-white' }} cursor-pointer transition-all"
+                                    onclick="window._npToggleTipo('PF')">
+                                    <div class="w-10 h-10 {{ $tipoDoc === 'PF' ? 'bg-blue-100' : 'bg-gray-100' }} rounded-lg flex items-center justify-center shrink-0">
+                                        <svg class="w-5 h-5 {{ $tipoDoc === 'PF' ? 'text-blue-600' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                         </svg>
                                     </div>
@@ -103,148 +100,166 @@
 
                             {{-- Documento (CNPJ/CPF) --}}
                             <div>
-                                <label for="nc_documento" id="nc_label_documento" class="block text-sm font-medium text-gray-700 mb-1">
-                                    {{ $tipoPessoa === 'PF' ? 'CPF' : 'CNPJ' }} <span class="text-red-500">*</span>
+                                <label for="np_cnpj" id="np_label_doc" class="block text-sm font-medium text-gray-700 mb-1">
+                                    {{ $tipoDoc === 'PF' ? 'CPF' : 'CNPJ' }} <span class="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="text"
-                                    id="nc_documento"
-                                    name="documento"
+                                    id="np_cnpj"
+                                    name="cnpj"
                                     required
-                                    value="{{ old('documento', $isEditing ? $cliente->documento_formatado : '') }}"
-                                    placeholder="{{ $tipoPessoa === 'PF' ? '000.000.000-00' : '00.000.000/0000-00' }}"
-                                    maxlength="{{ $tipoPessoa === 'PF' ? 14 : 18 }}"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 {{ $isEditing ? 'bg-gray-100 cursor-not-allowed' : '' }}"
+                                    placeholder="{{ $tipoDoc === 'PF' ? '000.000.000-00' : '00.000.000/0000-00' }}"
+                                    maxlength="{{ $tipoDoc === 'PF' ? '14' : '18' }}"
+                                    value="{{ $isEditing ? $participante->cnpj_formatado : '' }}"
                                     {{ $isEditing ? 'readonly' : '' }}
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 {{ $isEditing ? 'bg-gray-100 cursor-not-allowed' : '' }}"
                                 >
-                                <p id="nc_documento_error" class="mt-1 text-sm text-red-600 hidden"></p>
+                                <p id="np_cnpj_error" class="mt-1 text-sm text-red-600 hidden"></p>
                             </div>
 
-                            {{-- Razao Social (PJ only) --}}
-                            <div id="nc_campo_razao_social" @if($tipoPessoa === 'PF') style="display:none" @endif>
-                                <label for="nc_razao_social" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Razao Social <span class="text-red-500">*</span>
+                            {{-- Razão Social (PJ only) --}}
+                            <div id="np_campo_razao_social">
+                                <label for="np_razao_social" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Razão Social <span class="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="text"
-                                    id="nc_razao_social"
+                                    id="np_razao_social"
                                     name="razao_social"
-                                    value="{{ old('razao_social', $isEditing ? $cliente->razao_social : '') }}"
+                                    value="{{ old('razao_social', $isEditing ? $participante->razao_social : '') }}"
                                     placeholder="Razao social completa"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 >
-                                <p id="nc_razao_social_error" class="mt-1 text-sm text-red-600 hidden"></p>
+                                <p id="np_razao_social_error" class="mt-1 text-sm text-red-600 hidden"></p>
                             </div>
 
                             {{-- Nome Fantasia / Nome Completo --}}
                             <div>
-                                <label for="nc_nome" id="nc_label_nome" class="block text-sm font-medium text-gray-700 mb-1">
-                                    {{ $tipoPessoa === 'PF' ? 'Nome Completo' : 'Nome Fantasia' }}
-                                    @if($tipoPessoa === 'PF') <span class="text-red-500">*</span> @endif
+                                <label for="np_nome_fantasia" id="np_label_nome_fantasia" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Nome Fantasia
                                 </label>
                                 <input
                                     type="text"
-                                    id="nc_nome"
-                                    name="nome"
-                                    value="{{ old('nome', $isEditing ? $cliente->nome : '') }}"
-                                    placeholder="{{ $tipoPessoa === 'PF' ? 'Nome completo da pessoa' : 'Nome fantasia ou nome completo' }}"
+                                    id="np_nome_fantasia"
+                                    name="nome_fantasia"
+                                    value="{{ old('nome_fantasia', $isEditing ? $participante->nome_fantasia : '') }}"
+                                    placeholder="Nome fantasia (opcional)"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 >
-                                <p id="nc_nome_error" class="mt-1 text-sm text-red-600 hidden"></p>
+                                <p id="np_nome_fantasia_error" class="mt-1 text-sm text-red-600 hidden"></p>
                             </div>
 
-                            {{-- Telefone + Email (2 colunas) --}}
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label for="nc_telefone" class="block text-sm font-medium text-gray-700 mb-1">
+                            {{-- Inscricao Estadual (PJ only) --}}
+                            <div id="np_campo_ie">
+                                <label for="np_inscricao_estadual" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Inscricao Estadual
+                                </label>
+                                <input
+                                    type="text"
+                                    id="np_inscricao_estadual"
+                                    name="inscricao_estadual"
+                                    value="{{ old('inscricao_estadual', $isEditing ? $participante->inscricao_estadual : '') }}"
+                                    placeholder="Inscricao estadual (opcional)"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                >
+                            </div>
+
+                            {{-- CRT + Telefone --}}
+                            <div id="np_grid_crt_tel" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div id="np_campo_crt">
+                                    <label for="np_crt" class="block text-sm font-medium text-gray-700 mb-1">
+                                        CRT (Regime Tributário)
+                                    </label>
+                                    <select
+                                        id="np_crt"
+                                        name="crt"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        @php $crtVal = old('crt', $isEditing ? $participante->crt : ''); @endphp
+                                        <option value="">Nao informado</option>
+                                        <option value="1" {{ $crtVal == '1' ? 'selected' : '' }}>1 - Simples Nacional</option>
+                                        <option value="2" {{ $crtVal == '2' ? 'selected' : '' }}>2 - Simples (Excesso)</option>
+                                        <option value="3" {{ $crtVal == '3' ? 'selected' : '' }}>3 - Regime Normal</option>
+                                    </select>
+                                </div>
+                                <div id="np_campo_telefone">
+                                    <label for="np_telefone" class="block text-sm font-medium text-gray-700 mb-1">
                                         Telefone
                                     </label>
                                     <input
                                         type="text"
-                                        id="nc_telefone"
+                                        id="np_telefone"
                                         name="telefone"
-                                        value="{{ old('telefone', $isEditing ? $cliente->telefone : '') }}"
+                                        value="{{ old('telefone', $isEditing ? $participante->telefone : '') }}"
                                         placeholder="(00) 00000-0000"
                                         maxlength="15"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     >
                                 </div>
-                                <div>
-                                    <label for="nc_email" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Email
-                                    </label>
-                                    <input
-                                        type="email"
-                                        id="nc_email"
-                                        name="email"
-                                        value="{{ old('email', $isEditing ? $cliente->email : '') }}"
-                                        placeholder="email@exemplo.com"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    >
-                                </div>
                             </div>
 
-                            {{-- Faturamento Anual (PJ only) --}}
-                            <div id="nc_campo_faturamento" @if($tipoPessoa === 'PF') style="display:none" @endif>
-                                <label for="nc_faturamento_anual" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Faturamento Anual
+                            {{-- Cliente associado --}}
+                            <div>
+                                <label for="np_cliente_id" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Cliente Associado
                                 </label>
-                                <input
-                                    type="text"
-                                    id="nc_faturamento_anual"
-                                    name="faturamento_anual"
-                                    value="{{ old('faturamento_anual', $isEditing ? $cliente->faturamento_anual : '') }}"
-                                    placeholder="R$ 0,00"
+                                <select
+                                    id="np_cliente_id"
+                                    name="cliente_id"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 >
+                                    @php $clienteIdVal = old('cliente_id', $isEditing ? $participante->cliente_id : ''); @endphp
+                                    <option value="">Nao associar</option>
+                                    @foreach($clientes as $cliente)
+                                        <option value="{{ $cliente->id }}" {{ $clienteIdVal == $cliente->id ? 'selected' : '' }}>{{ $cliente->razao_social ?? $cliente->nome }} ({{ $cliente->documento }})</option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Card 2: Endereco Principal --}}
+                    {{-- Card: Endereço --}}
                     <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
                         <div class="px-6 py-4 border-b border-gray-200">
-                            <h2 class="text-base font-semibold text-gray-800">Endereco Principal</h2>
+                            <h2 class="text-base font-semibold text-gray-800">Endereço</h2>
                         </div>
-                        <div class="px-6 py-5 space-y-5">
+                        <div class="px-6 py-5 space-y-4">
                             {{-- CEP --}}
                             <div>
-                                <label for="nc_cep" class="block text-sm font-medium text-gray-700 mb-1">
-                                    CEP <span class="text-red-500">*</span>
+                                <label for="np_cep" class="block text-sm font-medium text-gray-700 mb-1">
+                                    CEP
                                 </label>
                                 <div class="flex gap-2">
                                     <input
                                         type="text"
-                                        id="nc_cep"
-                                        name="endereco[cep]"
-                                        required
-                                        value="{{ old('endereco.cep', $endereco ? $endereco->cep : '') }}"
+                                        id="np_cep"
+                                        name="cep"
+                                        value="{{ old('cep', $isEditing ? $participante->cep : '') }}"
                                         placeholder="00000-000"
                                         maxlength="9"
                                         class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     >
                                     <button
                                         type="button"
-                                        id="nc_btn_buscar_cep"
+                                        id="np_btn_buscar_cep"
                                         class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 border border-gray-300 transition-colors"
                                     >
                                         Buscar
                                     </button>
                                 </div>
-                                <p id="nc_cep_status" class="mt-1 text-sm hidden"></p>
+                                <p id="np_cep_status" class="mt-1 text-sm hidden"></p>
                             </div>
 
                             {{-- Logradouro --}}
                             <div>
-                                <label for="nc_logradouro" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Logradouro <span class="text-red-500">*</span>
+                                <label for="np_endereco" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Logradouro
                                 </label>
                                 <input
                                     type="text"
-                                    id="nc_logradouro"
-                                    name="endereco[logradouro]"
-                                    required
-                                    value="{{ old('endereco.logradouro', $endereco ? $endereco->logradouro : '') }}"
+                                    id="np_endereco"
+                                    name="endereco"
+                                    value="{{ old('endereco', $isEditing ? $participante->endereco : '') }}"
                                     placeholder="Rua, Avenida, etc."
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 >
@@ -253,28 +268,27 @@
                             {{-- Numero + Complemento (2 colunas) --}}
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label for="nc_numero" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Numero <span class="text-red-500">*</span>
+                                    <label for="np_numero" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Numero
                                     </label>
                                     <input
                                         type="text"
-                                        id="nc_numero"
-                                        name="endereco[numero]"
-                                        required
-                                        value="{{ old('endereco.numero', $endereco ? $endereco->numero : '') }}"
+                                        id="np_numero"
+                                        name="numero"
+                                        value="{{ old('numero', $isEditing ? $participante->numero : '') }}"
                                         placeholder="123"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     >
                                 </div>
                                 <div>
-                                    <label for="nc_complemento" class="block text-sm font-medium text-gray-700 mb-1">
+                                    <label for="np_complemento" class="block text-sm font-medium text-gray-700 mb-1">
                                         Complemento
                                     </label>
                                     <input
                                         type="text"
-                                        id="nc_complemento"
-                                        name="endereco[complemento]"
-                                        value="{{ old('endereco.complemento', $endereco ? $endereco->complemento : '') }}"
+                                        id="np_complemento"
+                                        name="complemento"
+                                        value="{{ old('complemento', $isEditing ? $participante->complemento : '') }}"
                                         placeholder="Apto, Sala, etc."
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     >
@@ -283,50 +297,47 @@
 
                             {{-- Bairro --}}
                             <div>
-                                <label for="nc_bairro" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Bairro <span class="text-red-500">*</span>
+                                <label for="np_bairro" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Bairro
                                 </label>
                                 <input
                                     type="text"
-                                    id="nc_bairro"
-                                    name="endereco[bairro]"
-                                    required
-                                    value="{{ old('endereco.bairro', $endereco ? $endereco->bairro : '') }}"
+                                    id="np_bairro"
+                                    name="bairro"
+                                    value="{{ old('bairro', $isEditing ? $participante->bairro : '') }}"
                                     placeholder="Nome do bairro"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 >
                             </div>
 
-                            {{-- Cidade + UF (2 colunas) --}}
+                            {{-- Municipio + UF (2 colunas) --}}
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label for="nc_cidade" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Cidade <span class="text-red-500">*</span>
+                                    <label for="np_municipio" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Municipio
                                     </label>
                                     <input
                                         type="text"
-                                        id="nc_cidade"
-                                        name="endereco[cidade]"
-                                        required
-                                        value="{{ old('endereco.cidade', $endereco ? $endereco->cidade : '') }}"
-                                        placeholder="Nome da cidade"
+                                        id="np_municipio"
+                                        name="municipio"
+                                        value="{{ old('municipio', $isEditing ? $participante->municipio : '') }}"
+                                        placeholder="Nome do municipio"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     >
                                 </div>
                                 <div>
-                                    <label for="nc_estado" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Estado (UF) <span class="text-red-500">*</span>
+                                    <label for="np_uf" class="block text-sm font-medium text-gray-700 mb-1">
+                                        UF
                                     </label>
-                                    @php $estadoVal = old('endereco.estado', $endereco ? $endereco->estado : ''); @endphp
+                                    @php $ufVal = old('uf', $isEditing ? $participante->uf : ''); @endphp
                                     <select
-                                        id="nc_estado"
-                                        name="endereco[estado]"
-                                        required
+                                        id="np_uf"
+                                        name="uf"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     >
                                         <option value="">Selecione</option>
                                         @foreach(['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'] as $uf)
-                                            <option value="{{ $uf }}" {{ $estadoVal === $uf ? 'selected' : '' }}>{{ $uf }}</option>
+                                            <option value="{{ $uf }}" {{ $ufVal === $uf ? 'selected' : '' }}>{{ $uf }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -334,143 +345,18 @@
                         </div>
                     </div>
 
-                    {{-- Card 3: Funcionario/Responsavel --}}
-                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div class="px-6 py-4 border-b border-gray-200">
-                            <h2 class="text-base font-semibold text-gray-800">Funcionario / Responsavel</h2>
-                        </div>
-                        <div class="px-6 py-5 space-y-5">
-                            {{-- Nome + Sobrenome --}}
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label for="nc_func_nome" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Nome <span class="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="nc_func_nome"
-                                        name="funcionario[nome]"
-                                        required
-                                        value="{{ old('funcionario.nome', $funcionario ? $funcionario->nome : '') }}"
-                                        placeholder="Nome"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    >
-                                    <p id="nc_func_nome_error" class="mt-1 text-sm text-red-600 hidden"></p>
-                                </div>
-                                <div>
-                                    <label for="nc_func_sobrenome" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Sobrenome <span class="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="nc_func_sobrenome"
-                                        name="funcionario[sobrenome]"
-                                        required
-                                        value="{{ old('funcionario.sobrenome', $funcionario ? $funcionario->sobrenome : '') }}"
-                                        placeholder="Sobrenome"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    >
-                                    <p id="nc_func_sobrenome_error" class="mt-1 text-sm text-red-600 hidden"></p>
-                                </div>
-                            </div>
-
-                            {{-- Email + Senha --}}
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label for="nc_func_email" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Email <span class="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="email"
-                                        id="nc_func_email"
-                                        name="funcionario[email]"
-                                        required
-                                        value="{{ old('funcionario.email', $funcionario ? $funcionario->email : '') }}"
-                                        placeholder="email@exemplo.com"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    >
-                                    <p id="nc_func_email_error" class="mt-1 text-sm text-red-600 hidden"></p>
-                                </div>
-                                <div>
-                                    <label for="nc_func_senha" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Senha @if(!$isEditing)<span class="text-red-500">*</span>@endif
-                                    </label>
-                                    <input
-                                        type="password"
-                                        id="nc_func_senha"
-                                        name="funcionario[senha]"
-                                        {{ $isEditing ? '' : 'required' }}
-                                        placeholder="{{ $isEditing ? 'Deixe em branco para manter a atual' : 'Minimo 8 caracteres' }}"
-                                        minlength="8"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    >
-                                    <p id="nc_func_senha_error" class="mt-1 text-sm text-red-600 hidden"></p>
-                                </div>
-                            </div>
-
-                            {{-- Cargo + Departamento --}}
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label for="nc_func_cargo" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Cargo <span class="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="nc_func_cargo"
-                                        name="funcionario[cargo]"
-                                        required
-                                        value="{{ old('funcionario.cargo', $funcionario ? $funcionario->cargo : '') }}"
-                                        placeholder="Ex: Gerente, Diretor, etc."
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    >
-                                    <p id="nc_func_cargo_error" class="mt-1 text-sm text-red-600 hidden"></p>
-                                </div>
-                                <div>
-                                    <label for="nc_func_departamento" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Departamento
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="nc_func_departamento"
-                                        name="funcionario[departamento]"
-                                        value="{{ old('funcionario.departamento', $funcionario ? $funcionario->departamento : '') }}"
-                                        placeholder="Ex: Financeiro, TI, etc."
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    >
-                                </div>
-                            </div>
-
-                            {{-- Nivel de Acesso --}}
-                            @php $nivelVal = old('funcionario.nivel_acesso', $funcionario ? $funcionario->nivel_acesso : 'funcionario'); @endphp
-                            <div>
-                                <label for="nc_func_nivel_acesso" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Nivel de Acesso <span class="text-red-500">*</span>
-                                </label>
-                                <select
-                                    id="nc_func_nivel_acesso"
-                                    name="funcionario[nivel_acesso]"
-                                    required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                    <option value="funcionario" {{ $nivelVal === 'funcionario' ? 'selected' : '' }}>Funcionario</option>
-                                    <option value="admin" {{ $nivelVal === 'admin' ? 'selected' : '' }}>Administrador</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Action Buttons --}}
+                    {{-- Botoes de Acao --}}
                     <div class="flex gap-4 justify-end">
-                        <a href="/app/clientes" data-link
+                        <a href="{{ $isEditing ? '/app/monitoramento/participante/' . $participante->id : '/app/monitoramento/participantes' }}" data-link
                            class="px-6 py-2.5 bg-white text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 border border-gray-300 transition-colors">
                             Cancelar
                         </a>
                         <button
                             type="submit"
-                            id="nc_btn_salvar"
+                            id="np_btn_salvar"
                             class="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {{ $isEditing ? 'Atualizar Cliente' : 'Cadastrar Cliente' }}
+                            {{ $isEditing ? 'Atualizar Participante' : 'Salvar Participante' }}
                         </button>
                     </div>
                 </form>
@@ -538,14 +424,14 @@
                                 <span class="text-xs text-blue-200 ml-1">(Disponível para PJ)</span>
                             </div>
 
-                            <a href="/app/consultas/avulso" data-link id="nc_link_consultar_cnpj"
+                            <a href="/app/consultas/avulso" data-link id="np_link_consultar_cnpj"
                                class="block w-full text-center px-4 py-2.5 bg-white text-blue-700 rounded-lg text-sm font-bold hover:bg-blue-50 transition-colors">
                                 Consultar na Receita Federal
                             </a>
                         </div>
                     </div>
 
-                    {{-- Card: CPF em breve --}}
+                    {{-- Card: CPF monitoring em breve --}}
                     <div class="bg-amber-50 border border-amber-200 rounded-xl shadow-sm p-5">
                         <div class="flex items-start gap-3">
                             <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
@@ -591,10 +477,10 @@
 </div>
 
 {{-- Toast notification container --}}
-<div id="nc_toast" class="fixed top-4 right-4 z-50 hidden">
-    <div id="nc_toast_content" class="flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-sm font-medium max-w-sm">
-        <span id="nc_toast_icon"></span>
-        <span id="nc_toast_message"></span>
+<div id="np_toast" class="fixed top-4 right-4 z-50 hidden">
+    <div id="np_toast_content" class="flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-sm font-medium max-w-sm">
+        <span id="np_toast_icon"></span>
+        <span id="np_toast_message"></span>
     </div>
 </div>
 
@@ -637,14 +523,6 @@
             .replace(/(\d{2})(\d)/, '($1) $2')
             .replace(/(\d{4,5})(\d{4})$/, '$1-$2')
             .substring(0, 15);
-    }
-
-    function maskMoeda(value) {
-        var digits = value.replace(/\D/g, '');
-        if (!digits) return '';
-        var num = parseInt(digits, 10);
-        var formatted = (num / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        return 'R$ ' + formatted;
     }
 
     // === Validations ===
@@ -705,32 +583,32 @@
         return true;
     }
 
-    // === Toggle PJ/PF ===
-    function toggleTipo(tipo) {
+    // === Toggle PF/PJ ===
+    function toggleTipoDocumento(tipo) {
         currentTipo = tipo;
         var isPF = tipo === 'PF';
 
         // Hidden input
-        document.getElementById('nc_tipo_pessoa').value = tipo;
+        document.getElementById('np_tipo_documento').value = tipo;
 
         // Toggle buttons visual
-        var btnPJ = document.getElementById('nc_btn_pj');
-        var btnPF = document.getElementById('nc_btn_pf');
+        var btnPJ = document.getElementById('np_btn_pj');
+        var btnPF = document.getElementById('np_btn_pf');
         var iconPJ = btnPJ.querySelector('.w-10');
         var iconPF = btnPF.querySelector('.w-10');
         var svgPJ = btnPJ.querySelector('svg');
         var svgPF = btnPF.querySelector('svg');
 
         if (isPF) {
-            btnPJ.className = 'nc-tipo-btn flex items-center gap-3 p-3 rounded-lg border-2 border-gray-300 bg-white cursor-pointer transition-all';
-            btnPF.className = 'nc-tipo-btn flex items-center gap-3 p-3 rounded-lg border-2 border-blue-600 bg-blue-50 cursor-pointer transition-all';
+            btnPJ.className = 'np-tipo-btn flex items-center gap-3 p-3 rounded-lg border-2 border-gray-300 bg-white cursor-pointer transition-all';
+            btnPF.className = 'np-tipo-btn flex items-center gap-3 p-3 rounded-lg border-2 border-blue-600 bg-blue-50 cursor-pointer transition-all';
             iconPJ.className = 'w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0';
             iconPF.className = 'w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center shrink-0';
             svgPJ.className.baseVal = 'w-5 h-5 text-gray-500';
             svgPF.className.baseVal = 'w-5 h-5 text-blue-600';
         } else {
-            btnPJ.className = 'nc-tipo-btn flex items-center gap-3 p-3 rounded-lg border-2 border-blue-600 bg-blue-50 cursor-pointer transition-all';
-            btnPF.className = 'nc-tipo-btn flex items-center gap-3 p-3 rounded-lg border-2 border-gray-300 bg-white cursor-pointer transition-all';
+            btnPJ.className = 'np-tipo-btn flex items-center gap-3 p-3 rounded-lg border-2 border-blue-600 bg-blue-50 cursor-pointer transition-all';
+            btnPF.className = 'np-tipo-btn flex items-center gap-3 p-3 rounded-lg border-2 border-gray-300 bg-white cursor-pointer transition-all';
             iconPJ.className = 'w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center shrink-0';
             iconPF.className = 'w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0';
             svgPJ.className.baseVal = 'w-5 h-5 text-blue-600';
@@ -738,8 +616,8 @@
         }
 
         // Document field: label, placeholder, maxlength
-        var labelDoc = document.getElementById('nc_label_documento');
-        var inputDoc = document.getElementById('nc_documento');
+        var labelDoc = document.getElementById('np_label_doc');
+        var inputDoc = document.getElementById('np_cnpj');
         if (isPF) {
             labelDoc.innerHTML = 'CPF <span class="text-red-500">*</span>';
             inputDoc.placeholder = '000.000.000-00';
@@ -757,36 +635,45 @@
         }
 
         // Show/hide PJ-only fields
-        document.getElementById('nc_campo_razao_social').style.display = isPF ? 'none' : '';
-        document.getElementById('nc_campo_faturamento').style.display = isPF ? 'none' : '';
+        document.getElementById('np_campo_razao_social').style.display = isPF ? 'none' : '';
+        document.getElementById('np_campo_ie').style.display = isPF ? 'none' : '';
+        document.getElementById('np_campo_crt').style.display = isPF ? 'none' : '';
 
-        // Nome label change
-        var labelNome = document.getElementById('nc_label_nome');
-        var inputNome = document.getElementById('nc_nome');
+        // Adjust telefone grid: if PF, telefone goes full width
+        var gridCrtTel = document.getElementById('np_grid_crt_tel');
+        if (isPF) {
+            gridCrtTel.className = '';
+        } else {
+            gridCrtTel.className = 'grid grid-cols-1 md:grid-cols-2 gap-4';
+        }
+
+        // Nome Fantasia label and required indicator
+        var labelNome = document.getElementById('np_label_nome_fantasia');
+        var inputNome = document.getElementById('np_nome_fantasia');
         if (isPF) {
             labelNome.innerHTML = 'Nome Completo <span class="text-red-500">*</span>';
             inputNome.placeholder = 'Nome completo da pessoa';
         } else {
             labelNome.innerHTML = 'Nome Fantasia';
-            inputNome.placeholder = 'Nome fantasia ou nome completo';
+            inputNome.placeholder = 'Nome fantasia (opcional)';
         }
 
         // Clear errors when toggling
         clearAllErrors();
 
         // Update CTA link
-        atualizarLinkConsulta(inputDoc.value);
+        atualizarLinkConsultaCnpj(inputDoc.value);
     }
 
     // Expose for inline onclick
-    window._ncToggleTipo = toggleTipo;
+    window._npToggleTipo = toggleTipoDocumento;
 
     // === ViaCEP ===
     async function buscarCEP(cep) {
         var cepLimpo = cep.replace(/\D/g, '');
         if (cepLimpo.length !== 8) return;
 
-        var statusEl = document.getElementById('nc_cep_status');
+        var statusEl = document.getElementById('np_cep_status');
         statusEl.textContent = 'Buscando CEP...';
         statusEl.className = 'mt-1 text-sm text-blue-600';
         statusEl.classList.remove('hidden');
@@ -796,10 +683,10 @@
             var data = await response.json();
 
             if (!data.erro) {
-                document.getElementById('nc_logradouro').value = data.logradouro || '';
-                document.getElementById('nc_bairro').value = data.bairro || '';
-                document.getElementById('nc_cidade').value = data.localidade || '';
-                document.getElementById('nc_estado').value = data.uf || '';
+                document.getElementById('np_endereco').value = data.logradouro || '';
+                document.getElementById('np_bairro').value = data.bairro || '';
+                document.getElementById('np_municipio').value = data.localidade || '';
+                document.getElementById('np_uf').value = data.uf || '';
                 statusEl.textContent = 'CEP encontrado!';
                 statusEl.className = 'mt-1 text-sm text-green-600';
                 setTimeout(function() { statusEl.classList.add('hidden'); }, 2000);
@@ -815,10 +702,10 @@
 
     // === Toast ===
     function showToast(message, type) {
-        var toast = document.getElementById('nc_toast');
-        var content = document.getElementById('nc_toast_content');
-        var icon = document.getElementById('nc_toast_icon');
-        var msg = document.getElementById('nc_toast_message');
+        var toast = document.getElementById('np_toast');
+        var content = document.getElementById('np_toast_content');
+        var icon = document.getElementById('np_toast_icon');
+        var msg = document.getElementById('np_toast_message');
 
         msg.textContent = message;
 
@@ -862,14 +749,14 @@
     }
 
     function clearAllErrors() {
-        ['nc_documento', 'nc_razao_social', 'nc_nome', 'nc_func_nome', 'nc_func_sobrenome', 'nc_func_email', 'nc_func_senha', 'nc_func_cargo'].forEach(clearFieldError);
+        ['np_cnpj', 'np_razao_social', 'np_nome_fantasia'].forEach(clearFieldError);
     }
 
     // === Update CTA link with CNPJ ===
-    function atualizarLinkConsulta(docValue) {
-        var link = document.getElementById('nc_link_consultar_cnpj');
+    function atualizarLinkConsultaCnpj(cnpjValue) {
+        var link = document.getElementById('np_link_consultar_cnpj');
         if (!link) return;
-        var cnpjLimpo = docValue.replace(/\D/g, '');
+        var cnpjLimpo = cnpjValue.replace(/\D/g, '');
         if (currentTipo === 'PJ' && cnpjLimpo.length === 14) {
             link.href = '/app/consultas/avulso?cnpj=' + cnpjLimpo;
         } else {
@@ -877,133 +764,54 @@
         }
     }
 
-    // === Client-side validation ===
-    function validarFormulario(isEditing) {
-        clearAllErrors();
-        var isPF = currentTipo === 'PF';
-        var valido = true;
-
-        // Documento (skip in edit mode - readonly)
-        if (!isEditing) {
-            var docLabel = isPF ? 'CPF' : 'CNPJ';
-            var expectedLen = isPF ? 11 : 14;
-            var docInput = document.getElementById('nc_documento');
-            var docVal = docInput.value.replace(/\D/g, '');
-            if (docVal.length !== expectedLen) {
-                showFieldError('nc_documento', 'Informe um ' + docLabel + ' valido com ' + expectedLen + ' digitos.');
-                if (valido) docInput.focus();
-                valido = false;
-            } else if (isPF && !validarCPF(docVal)) {
-                showFieldError('nc_documento', 'CPF invalido. Verifique os digitos.');
-                if (valido) docInput.focus();
-                valido = false;
-            } else if (!isPF && !validarCNPJ(docVal)) {
-                showFieldError('nc_documento', 'CNPJ invalido. Verifique os digitos.');
-                if (valido) docInput.focus();
-                valido = false;
-            }
-        }
-
-        // Razao Social (PJ) or Nome (PF)
-        if (!isPF) {
-            var razaoInput = document.getElementById('nc_razao_social');
-            if (!razaoInput.value.trim()) {
-                showFieldError('nc_razao_social', 'Razao social e obrigatoria.');
-                if (valido) razaoInput.focus();
-                valido = false;
-            }
-        } else {
-            var nomeInput = document.getElementById('nc_nome');
-            if (!nomeInput.value.trim()) {
-                showFieldError('nc_nome', 'Nome completo e obrigatorio.');
-                if (valido) nomeInput.focus();
-                valido = false;
-            }
-        }
-
-        // Funcionario required fields
-        var funcFields = [
-            { id: 'nc_func_nome', msg: 'Nome do responsavel e obrigatorio.' },
-            { id: 'nc_func_sobrenome', msg: 'Sobrenome e obrigatorio.' },
-            { id: 'nc_func_email', msg: 'Email do responsavel e obrigatorio.' },
-            { id: 'nc_func_cargo', msg: 'Cargo e obrigatorio.' }
-        ];
-        funcFields.forEach(function(f) {
-            var el = document.getElementById(f.id);
-            if (el && !el.value.trim()) {
-                showFieldError(f.id, f.msg);
-                if (valido) el.focus();
-                valido = false;
-            }
-        });
-
-        // Senha min length (required only for create, optional for edit)
-        var senhaInput = document.getElementById('nc_func_senha');
-        if (senhaInput) {
-            var senhaVal = senhaInput.value;
-            if (!isEditing && senhaVal.length < 8) {
-                showFieldError('nc_func_senha', 'Senha deve ter no minimo 8 caracteres.');
-                if (valido) senhaInput.focus();
-                valido = false;
-            } else if (isEditing && senhaVal.length > 0 && senhaVal.length < 8) {
-                showFieldError('nc_func_senha', 'Senha deve ter no minimo 8 caracteres.');
-                if (valido) senhaInput.focus();
-                valido = false;
-            }
-        }
-
-        return valido;
-    }
-
     // === Init ===
     function init() {
-        var form = document.getElementById('nc_form');
+        var form = document.getElementById('form-novo-participante');
         if (!form) return;
 
-        var editId = form.dataset.clienteId || null;
+        var editId = form.dataset.participanteId || null;
         var isEditing = !!editId;
 
         // Read initial tipo from hidden input (set by Blade)
-        currentTipo = document.getElementById('nc_tipo_pessoa').value || 'PJ';
+        currentTipo = document.getElementById('np_tipo_documento').value || 'PJ';
 
-        var docInput = document.getElementById('nc_documento');
-        var cepInput = document.getElementById('nc_cep');
-        var telefoneInput = document.getElementById('nc_telefone');
-        var faturamentoInput = document.getElementById('nc_faturamento_anual');
-        var btnBuscarCep = document.getElementById('nc_btn_buscar_cep');
+        var cnpjInput = document.getElementById('np_cnpj');
+        var cepInput = document.getElementById('np_cep');
+        var telefoneInput = document.getElementById('np_telefone');
+        var btnBuscarCep = document.getElementById('np_btn_buscar_cep');
 
         // In edit mode, apply toggle visual for the stored tipo
         if (isEditing && currentTipo === 'PF') {
-            toggleTipo('PF');
+            toggleTipoDocumento('PF');
         }
 
         // Document input mask (dynamic)
-        if (docInput) {
-            docInput.addEventListener('input', function() {
+        if (cnpjInput) {
+            cnpjInput.addEventListener('input', function() {
                 if (currentTipo === 'PF') {
                     this.value = maskCPF(this.value);
                 } else {
                     this.value = maskCNPJ(this.value);
                 }
-                atualizarLinkConsulta(this.value);
+                atualizarLinkConsultaCnpj(this.value);
             });
-            docInput.addEventListener('blur', function() {
+            cnpjInput.addEventListener('blur', function() {
                 var val = this.value.replace(/\D/g, '');
                 if (currentTipo === 'PF') {
                     if (val.length === 11 && !validarCPF(val)) {
-                        showFieldError('nc_documento', 'CPF invalido. Verifique os digitos.');
+                        showFieldError('np_cnpj', 'CPF invalido. Verifique os digitos.');
                     } else if (val.length > 0 && val.length < 11) {
-                        showFieldError('nc_documento', 'CPF incompleto.');
+                        showFieldError('np_cnpj', 'CPF incompleto.');
                     } else {
-                        clearFieldError('nc_documento');
+                        clearFieldError('np_cnpj');
                     }
                 } else {
                     if (val.length === 14 && !validarCNPJ(val)) {
-                        showFieldError('nc_documento', 'CNPJ invalido. Verifique os digitos.');
+                        showFieldError('np_cnpj', 'CNPJ invalido. Verifique os digitos.');
                     } else if (val.length > 0 && val.length < 14) {
-                        showFieldError('nc_documento', 'CNPJ incompleto.');
+                        showFieldError('np_cnpj', 'CNPJ incompleto.');
                     } else {
-                        clearFieldError('nc_documento');
+                        clearFieldError('np_cnpj');
                     }
                 }
             });
@@ -1023,22 +831,15 @@
             });
         }
 
-        // Faturamento mask
-        if (faturamentoInput) {
-            faturamentoInput.addEventListener('input', function() {
-                this.value = maskMoeda(this.value);
-            });
-        }
-
         // Buscar CEP
         if (btnBuscarCep) {
             btnBuscarCep.addEventListener('click', function(e) {
                 e.preventDefault();
-                var cep = document.getElementById('nc_cep').value;
+                var cep = document.getElementById('np_cep').value;
                 if (cep.replace(/\D/g, '').length === 8) {
                     buscarCEP(cep);
                 } else {
-                    var statusEl = document.getElementById('nc_cep_status');
+                    var statusEl = document.getElementById('np_cep_status');
                     statusEl.textContent = 'Informe um CEP valido com 8 digitos.';
                     statusEl.className = 'mt-1 text-sm text-red-600';
                     statusEl.classList.remove('hidden');
@@ -1049,30 +850,87 @@
         // Form submit (AJAX)
         form.addEventListener('submit', function(e) {
             e.preventDefault();
+            clearAllErrors();
 
-            if (!validarFormulario(isEditing)) return;
+            var isPF = currentTipo === 'PF';
+            var docLabel = isPF ? 'CPF' : 'CNPJ';
+            var expectedLen = isPF ? 11 : 14;
+
+            // Client-side validation: document (skip in edit mode - readonly)
+            if (!isEditing) {
+                var docVal = cnpjInput.value.replace(/\D/g, '');
+                if (docVal.length !== expectedLen) {
+                    showFieldError('np_cnpj', 'Informe um ' + docLabel + ' valido com ' + expectedLen + ' digitos.');
+                    cnpjInput.focus();
+                    return;
+                }
+                if (isPF && !validarCPF(docVal)) {
+                    showFieldError('np_cnpj', 'CPF invalido. Verifique os digitos.');
+                    cnpjInput.focus();
+                    return;
+                }
+                if (!isPF && !validarCNPJ(docVal)) {
+                    showFieldError('np_cnpj', 'CNPJ invalido. Verifique os digitos.');
+                    cnpjInput.focus();
+                    return;
+                }
+            }
+
+            // Client-side validation: required fields per type
+            if (!isPF) {
+                var razaoSocial = document.getElementById('np_razao_social').value.trim();
+                if (!razaoSocial) {
+                    showFieldError('np_razao_social', 'Razao social e obrigatoria.');
+                    document.getElementById('np_razao_social').focus();
+                    return;
+                }
+            } else {
+                var nomeCompleto = document.getElementById('np_nome_fantasia').value.trim();
+                if (!nomeCompleto) {
+                    showFieldError('np_nome_fantasia', 'Nome completo e obrigatorio.');
+                    document.getElementById('np_nome_fantasia').focus();
+                    return;
+                }
+            }
 
             // Disable button
-            var btnSalvar = document.getElementById('nc_btn_salvar');
-            var btnLabel = isEditing ? 'Atualizar Cliente' : 'Cadastrar Cliente';
+            var btnSalvar = document.getElementById('np_btn_salvar');
             btnSalvar.disabled = true;
             btnSalvar.textContent = 'Salvando...';
 
-            // Use FormData to preserve nested field names
+            // Collect form data
             var formData = new FormData(form);
+            var body = {};
+            formData.forEach(function(value, key) {
+                if (key !== '_token' && value !== '') {
+                    body[key] = value;
+                }
+            });
 
             // Get CSRF token
-            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
-            var token = csrfMeta ? csrfMeta.getAttribute('content') : formData.get('_token');
+            var csrfToken = document.querySelector('meta[name="csrf-token"]');
+            var token = csrfToken ? csrfToken.getAttribute('content') : formData.get('_token');
 
-            fetch(form.action, {
+            // Determine URL and method based on mode
+            var fetchUrl = isEditing
+                ? '/app/monitoramento/participante/' + editId
+                : '/app/monitoramento/novo-participante';
+
+            if (isEditing) {
+                body._method = 'PUT';
+            }
+
+            var btnLabel = isEditing ? 'Atualizar Participante' : 'Salvar Participante';
+
+            fetch(fetchUrl, {
                 method: 'POST',
                 headers: {
+                    'Content-Type': 'application/json',
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': token
                 },
-                body: formData
+                body: JSON.stringify(body)
             })
             .then(function(response) {
                 return response.json().then(function(data) {
@@ -1084,10 +942,10 @@
                 btnSalvar.textContent = btnLabel;
 
                 if (result.data.success) {
-                    showToast(result.data.message || (isEditing ? 'Cliente atualizado com sucesso!' : 'Cliente cadastrado com sucesso!'), 'success');
+                    showToast(result.data.message || (isEditing ? 'Participante atualizado!' : 'Participante cadastrado!'), 'success');
                     // Redirect after short delay
                     setTimeout(function() {
-                        var redirectUrl = result.data.redirect || '/app/clientes';
+                        var redirectUrl = result.data.redirect || '/app/monitoramento/participantes';
                         var spaLink = document.querySelector('a[data-link][href="' + redirectUrl + '"]');
                         if (spaLink) {
                             spaLink.click();
@@ -1096,25 +954,14 @@
                         }
                     }, 800);
                 } else if (result.status === 422 && result.data.errors) {
-                    // Map server validation errors to fields
+                    // Validation errors
                     var errors = result.data.errors;
-                    if (errors.documento) showFieldError('nc_documento', errors.documento[0]);
-                    if (errors.razao_social) showFieldError('nc_razao_social', errors.razao_social[0]);
-                    if (errors.nome) showFieldError('nc_nome', errors.nome[0]);
-                    if (errors['funcionario.nome']) showFieldError('nc_func_nome', errors['funcionario.nome'][0]);
-                    if (errors['funcionario.sobrenome']) showFieldError('nc_func_sobrenome', errors['funcionario.sobrenome'][0]);
-                    if (errors['funcionario.email']) showFieldError('nc_func_email', errors['funcionario.email'][0]);
-                    if (errors['funcionario.senha']) showFieldError('nc_func_senha', errors['funcionario.senha'][0]);
-                    if (errors['funcionario.cargo']) showFieldError('nc_func_cargo', errors['funcionario.cargo'][0]);
-                    // Toast for errors without specific field mapping
-                    var unmappedKeys = Object.keys(errors).filter(function(k) {
-                        return !['documento','razao_social','nome','funcionario.nome','funcionario.sobrenome','funcionario.email','funcionario.senha','funcionario.cargo'].includes(k);
-                    });
-                    if (unmappedKeys.length > 0) {
-                        showToast(errors[unmappedKeys[0]][0], 'error');
-                    }
+                    if (errors.cnpj) showFieldError('np_cnpj', errors.cnpj[0]);
+                    if (errors.razao_social) showFieldError('np_razao_social', errors.razao_social[0]);
+                    if (errors.nome_fantasia) showFieldError('np_nome_fantasia', errors.nome_fantasia[0]);
+                    if (errors.cliente_id) showToast(errors.cliente_id[0], 'error');
                 } else {
-                    showToast(result.data.message || (isEditing ? 'Erro ao atualizar cliente.' : 'Erro ao cadastrar cliente.'), 'error');
+                    showToast(result.data.error || (isEditing ? 'Erro ao atualizar participante.' : 'Erro ao cadastrar participante.'), 'error');
                 }
             })
             .catch(function(error) {
@@ -1133,6 +980,6 @@
     }
 
     // Re-init for SPA navigation
-    window.initNovoCliente = init;
+    window.initNovoParticipante = init;
 })();
 </script>

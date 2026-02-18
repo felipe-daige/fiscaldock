@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\Participante;
 use App\Models\XmlImportacao;
+use App\Models\MonitoramentoPlano;
 use App\Models\XmlNota;
 use App\Services\CreditService;
 use Illuminate\Http\Request;
@@ -60,6 +61,7 @@ class XmlImportacaoController extends Controller
             'clientes' => $clientes,
             'importacoes' => $importacoes,
             'credits' => $this->creditService->getBalance($user),
+            'planos' => MonitoramentoPlano::ativos(),
         ];
 
         if ($this->isAjaxRequest($request)) {

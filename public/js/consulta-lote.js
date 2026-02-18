@@ -5,6 +5,10 @@
 (function() {
     'use strict';
 
+    // Guard: previne re-execução da IIFE que sobrescreveria closures
+    if (window._consultaLoteModuleLoaded) return;
+    window._consultaLoteModuleLoaded = true;
+
     // Nomes amigaveis das consultas
     const CONSULTA_NOMES = {
         situacao_cadastral: 'Situacao Cadastral',
@@ -131,7 +135,24 @@
 
             modalErro: document.getElementById('modal-erro'),
             erroMensagem: document.getElementById('erro-mensagem'),
-            btnFecharErro: document.getElementById('btn-fechar-erro')
+            btnFecharErro: document.getElementById('btn-fechar-erro'),
+
+            // Adicionar CNPJ
+            inputAdicionarCnpj: document.getElementById('input-adicionar-cnpj'),
+            selectClienteCnpj: document.getElementById('select-cliente-cnpj'),
+            btnAdicionarCnpj: document.getElementById('btn-adicionar-cnpj'),
+            feedbackAdicionarCnpj: document.getElementById('feedback-adicionar-cnpj'),
+            radioTipoParticipante: document.getElementById('radio-tipo-participante'),
+            radioTipoCliente: document.getElementById('radio-tipo-cliente'),
+            containerSelectCliente: document.getElementById('container-select-cliente'),
+
+            // Modal Excluir
+            modalExcluir: document.getElementById('modal-excluir-participante'),
+            modalExcluirOverlay: document.getElementById('modal-excluir-overlay'),
+            modalExcluirCnpj: document.getElementById('modal-excluir-cnpj'),
+            modalExcluirNome: document.getElementById('modal-excluir-nome'),
+            btnCancelarExclusao: document.getElementById('btn-cancelar-exclusao'),
+            btnConfirmarExclusao: document.getElementById('btn-confirmar-exclusao')
         };
     }
 
@@ -183,6 +204,35 @@
         // Paginacao
         if (elements.btnPagAnterior) elements.btnPagAnterior.addEventListener('click', () => changePage(-1));
         if (elements.btnPagProximo) elements.btnPagProximo.addEventListener('click', () => changePage(1));
+
+        // Adicionar CNPJ
+        if (elements.inputAdicionarCnpj) {
+            elements.inputAdicionarCnpj.addEventListener('input', function() {
+                this.value = applyCnpjMask(this.value);
+            });
+            elements.inputAdicionarCnpj.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    adicionarCnpj();
+                }
+            });
+        }
+        if (elements.btnAdicionarCnpj) {
+            elements.btnAdicionarCnpj.addEventListener('click', adicionarCnpj);
+        }
+
+        // Radio tipo cadastro (Participante/Cliente)
+        if (elements.radioTipoParticipante) {
+            elements.radioTipoParticipante.addEventListener('change', toggleSelectCliente);
+        }
+        if (elements.radioTipoCliente) {
+            elements.radioTipoCliente.addEventListener('change', toggleSelectCliente);
+        }
+
+        // Modal Excluir
+        if (elements.btnCancelarExclusao) elements.btnCancelarExclusao.addEventListener('click', hideDeleteModal);
+        if (elements.btnConfirmarExclusao) elements.btnConfirmarExclusao.addEventListener('click', confirmarExclusao);
+        if (elements.modalExcluirOverlay) elements.modalExcluirOverlay.addEventListener('click', hideDeleteModal);
 
         // Modais
         if (elements.btnFecharSucesso) elements.btnFecharSucesso.addEventListener('click', () => hideModal('sucesso'));
@@ -242,7 +292,7 @@
         if (!participantes || participantes.length === 0) {
             elements.tabelaBody.innerHTML = `
                 <tr>
-                    <td colspan="4" class="px-4 py-8 text-center text-sm text-gray-500">
+                    <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">
                         Nenhum participante encontrado.
                     </td>
                 </tr>
@@ -258,22 +308,36 @@
 
             // Formatar CNPJ
             const cnpjFormatado = formatCnpj(p.cnpj);
+            const escNome = (p.razao_social || '').replace(/"/g, '&quot;');
 
             tr.innerHTML = `
                 <td class="w-10 px-4 py-3">
                     <input type="checkbox" class="checkbox-participante w-4 h-4 text-gray-600 rounded border-gray-300" data-id="${p.id}" ${isSelected ? 'checked' : ''}>
                 </td>
-                <td class="w-40 px-4 py-3 text-sm font-mono text-gray-600">${cnpjFormatado}</td>
+                <td class="w-40 px-4 py-3 text-sm font-mono text-gray-600 whitespace-nowrap tabular-nums">${cnpjFormatado}</td>
                 <td class="px-4 py-3">
                     <div class="text-sm font-medium text-gray-900">${p.razao_social || '-'}</div>
                     ${p.nome_fantasia ? `<div class="text-xs text-gray-500">${p.nome_fantasia}</div>` : ''}
                 </td>
                 <td class="w-16 px-4 py-3 text-sm text-gray-600 text-center">${p.uf || '-'}</td>
+                <td class="w-12 px-2 py-3 text-center">
+                    <button type="button" class="btn-excluir-participante p-1 text-gray-400 hover:text-red-500 transition rounded" data-id="${p.id}" data-cnpj="${cnpjFormatado}" data-nome="${escNome}" title="Excluir">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                </td>
             `;
 
             // Evento de checkbox
             const checkbox = tr.querySelector('.checkbox-participante');
             checkbox.addEventListener('change', () => toggleParticipante(p.id, checkbox.checked));
+
+            // Evento de excluir
+            const btnExcluir = tr.querySelector('.btn-excluir-participante');
+            btnExcluir.addEventListener('click', function() {
+                showDeleteModal(parseInt(this.dataset.id), this.dataset.cnpj, this.dataset.nome);
+            });
 
             elements.tabelaBody.appendChild(tr);
         });
@@ -742,7 +806,7 @@
         if (elements.tabelaBody) {
             elements.tabelaBody.innerHTML = `
                 <tr>
-                    <td colspan="4" class="px-4 py-8 text-center text-sm text-red-500">
+                    <td colspan="5" class="px-4 py-8 text-center text-sm text-red-500">
                         ${message}
                     </td>
                 </tr>
@@ -786,13 +850,438 @@
         };
     }
 
-    // Inicializar quando pronto
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
+    // ==========================================
+    // Adicionar CNPJ
+    // ==========================================
+
+    /**
+     * Aplica mascara de CNPJ: XX.XXX.XXX/XXXX-XX
+     */
+    function applyCnpjMask(value) {
+        var digits = value.replace(/\D/g, '').substring(0, 14);
+        if (digits.length <= 2) return digits;
+        if (digits.length <= 5) return digits.replace(/(\d{2})(\d+)/, '$1.$2');
+        if (digits.length <= 8) return digits.replace(/(\d{2})(\d{3})(\d+)/, '$1.$2.$3');
+        if (digits.length <= 12) return digits.replace(/(\d{2})(\d{3})(\d{3})(\d+)/, '$1.$2.$3/$4');
+        return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d+)/, '$1.$2.$3/$4-$5');
+    }
+
+    /**
+     * Adiciona um CNPJ como participante via AJAX.
+     */
+    async function adicionarCnpj() {
+        if (!elements.inputAdicionarCnpj) return;
+
+        var rawValue = elements.inputAdicionarCnpj.value;
+        var cnpj = rawValue.replace(/\D/g, '');
+
+        if (cnpj.length !== 14) {
+            showFeedbackCnpj('error', 'Informe um CNPJ válido com 14 dígitos.');
+            return;
+        }
+
+        // Determinar tipo de cadastro (participante ou cliente)
+        var isCliente = elements.radioTipoCliente?.checked || false;
+        var clienteId = null;
+        var criarCliente = false;
+
+        if (isCliente) {
+            criarCliente = true;
+            var selectVal = elements.selectClienteCnpj?.value || 'novo';
+            clienteId = selectVal; // 'novo' ou ID numerico
+        }
+
+        hideFeedbackCnpj();
+        setBtnAdicionarLoading(true);
+
+        try {
+            var bodyPayload = { cnpj: cnpj };
+            if (criarCliente) {
+                bodyPayload.criar_cliente = true;
+                bodyPayload.cliente_id = clienteId === 'novo' ? 'novo' : parseInt(clienteId);
+            }
+
+            var response = await fetch(window.consultaData.routes.adicionarCnpj, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': window.consultaData.csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(bodyPayload)
+            });
+
+            var data;
+            try {
+                data = await response.json();
+            } catch (e) {
+                showFeedbackCnpj('error', 'Resposta inválida do servidor.');
+                return;
+            }
+
+            if (!response.ok || !data.success) {
+                showFeedbackCnpj('error', data.error || 'Erro ao adicionar CNPJ.');
+                return;
+            }
+
+            // Sucesso
+            var participanteId = data.participante.id;
+            state.selectedIds.add(participanteId);
+
+            // Limpar input
+            elements.inputAdicionarCnpj.value = '';
+
+            if (data.is_new) {
+                showFeedbackCnpj('success', data.message);
+                // Reload tabela na pagina 1 para mostrar o novo participante
+                state.currentPage = 1;
+                await loadParticipantes();
+            } else {
+                showFeedbackCnpj('info', data.message);
+                // Tentar selecionar na tabela visivel
+                var checkbox = elements.tabelaBody?.querySelector('.checkbox-participante[data-id="' + participanteId + '"]');
+                if (checkbox) {
+                    checkbox.checked = true;
+                    updateRowHighlight(participanteId, true);
+                } else {
+                    // Se nao esta na pagina visivel, reload
+                    state.currentPage = 1;
+                    await loadParticipantes();
+                }
+            }
+
+            updateContadorSelecionados();
+            updateResumo();
+            updateCheckboxTodos();
+
+        } catch (error) {
+            console.error('Erro ao adicionar CNPJ:', error);
+            showFeedbackCnpj('error', 'Erro de conexão. Tente novamente.');
+        } finally {
+            setBtnAdicionarLoading(false);
+        }
+    }
+
+    /**
+     * Mostra feedback do card de adicionar CNPJ.
+     */
+    function showFeedbackCnpj(type, message) {
+        var el = elements.feedbackAdicionarCnpj;
+        if (!el) return;
+
+        el.classList.remove('hidden', 'bg-green-50', 'text-green-700', 'border-green-200',
+            'bg-blue-50', 'text-blue-700', 'border-blue-200',
+            'bg-red-50', 'text-red-700', 'border-red-200');
+
+        if (type === 'success') {
+            el.classList.add('bg-green-50', 'text-green-700', 'border', 'border-green-200');
+        } else if (type === 'info') {
+            el.classList.add('bg-blue-50', 'text-blue-700', 'border', 'border-blue-200');
+        } else {
+            el.classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-200');
+        }
+
+        el.textContent = message;
+        el.classList.remove('hidden');
+
+        // Auto-hide after 5s
+        clearTimeout(el._hideTimeout);
+        el._hideTimeout = setTimeout(function() { hideFeedbackCnpj(); }, 5000);
+    }
+
+    /**
+     * Esconde feedback do card de adicionar CNPJ.
+     */
+    function hideFeedbackCnpj() {
+        var el = elements.feedbackAdicionarCnpj;
+        if (el) {
+            el.classList.add('hidden');
+            clearTimeout(el._hideTimeout);
+        }
+    }
+
+    /**
+     * Toggle loading state no botao de adicionar.
+     */
+    function setBtnAdicionarLoading(loading) {
+        var btn = elements.btnAdicionarCnpj;
+        if (!btn) return;
+
+        if (loading) {
+            btn.disabled = true;
+            btn.dataset.originalHtml = btn.innerHTML;
+            btn.innerHTML = '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Adicionando...';
+            btn.classList.add('opacity-75');
+        } else {
+            btn.disabled = false;
+            if (btn.dataset.originalHtml) {
+                btn.innerHTML = btn.dataset.originalHtml;
+            }
+            btn.classList.remove('opacity-75');
+        }
+    }
+
+    // ==========================================
+    // Toggle Select Cliente (Radio)
+    // ==========================================
+
+    function toggleSelectCliente() {
+        if (!elements.containerSelectCliente) return;
+        var isCliente = elements.radioTipoCliente?.checked || false;
+        elements.containerSelectCliente.classList.toggle('hidden', !isCliente);
+    }
+
+    // ==========================================
+    // Excluir Participante (Modal + Delete)
+    // ==========================================
+
+    var deleteParticipanteId = null;
+
+    function showDeleteModal(id, cnpj, nome) {
+        deleteParticipanteId = id;
+        if (elements.modalExcluirCnpj) elements.modalExcluirCnpj.textContent = cnpj;
+        if (elements.modalExcluirNome) elements.modalExcluirNome.textContent = nome || '';
+        if (elements.modalExcluir) elements.modalExcluir.classList.remove('hidden');
+    }
+
+    function hideDeleteModal() {
+        deleteParticipanteId = null;
+        if (elements.modalExcluir) elements.modalExcluir.classList.add('hidden');
+    }
+
+    async function confirmarExclusao() {
+        if (!deleteParticipanteId) return;
+
+        var id = deleteParticipanteId;
+        var btn = elements.btnConfirmarExclusao;
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Excluindo...';
+        }
+
+        try {
+            var response = await fetch('/app/monitoramento/participante/' + id, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': window.consultaData.csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            var data;
+            try {
+                data = await response.json();
+            } catch (e) {
+                data = {};
+            }
+
+            if (response.ok && (data.success !== false)) {
+                // Remove da selecao
+                state.selectedIds.delete(id);
+                updateContadorSelecionados();
+                updateResumo();
+
+                // Reload tabela
+                await loadParticipantes();
+                updateCheckboxTodos();
+            } else {
+                alert(data.error || data.message || 'Erro ao excluir participante.');
+            }
+        } catch (error) {
+            console.error('Erro ao excluir participante:', error);
+            alert('Erro de conexao. Tente novamente.');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Excluir';
+            }
+            hideDeleteModal();
+        }
+    }
+
+    // ==========================================
+    // Modal Carousel de Planos (Lote)
+    // ==========================================
+    var swiperPlanosLote = null;
+    var modalPlanosLote = null;
+
+    function initCarouselPlanos() {
+        modalPlanosLote = document.getElementById('modal-planos-carousel-lote');
+        if (!modalPlanosLote) return;
+
+        var planosData = window.consultaData?.planosDetalhados || [];
+        var totalPlanos = planosData.length;
+        if (totalPlanos === 0) return;
+
+        // Precompute footer button color classes from corClasses
+        var corClassesData = window.consultaData?.corClasses || {};
+        var footerBtnColors = planosData.map(function(pd) {
+            var cc = corClassesData[pd.cor];
+            return cc ? cc.btn : 'bg-blue-600 hover:bg-blue-700';
+        });
+        var allFooterBtnClasses = ['bg-green-600', 'hover:bg-green-700', 'bg-blue-600', 'hover:bg-blue-700', 'bg-purple-600', 'hover:bg-purple-700', 'bg-amber-600', 'hover:bg-amber-700', 'bg-slate-700', 'hover:bg-slate-800'];
+
+        function showPlanosModalLote(startIndex) {
+            if (!modalPlanosLote) return;
+            modalPlanosLote.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            setTimeout(function() {
+                if (swiperPlanosLote && !swiperPlanosLote.destroyed) {
+                    swiperPlanosLote.slideToLoop(startIndex || 0, 0);
+                    swiperPlanosLote.update();
+                    updateCounterLote(startIndex || 0);
+                    updateFooterButtonLote(startIndex || 0);
+                    return;
+                }
+
+                swiperPlanosLote = new Swiper('#swiper-planos-lote', {
+                    slidesPerView: 1,
+                    spaceBetween: 0,
+                    loop: true,
+                    initialSlide: startIndex || 0,
+                    navigation: {
+                        prevEl: '#swiper-planos-prev-lote',
+                        nextEl: '#swiper-planos-next-lote',
+                    },
+                    pagination: {
+                        el: '#swiper-planos-pagination-lote',
+                        clickable: true,
+                    },
+                    on: {
+                        slideChange: function() {
+                            updateCounterLote(this.realIndex);
+                            updateFooterButtonLote(this.realIndex);
+                        },
+                    },
+                });
+
+                updateCounterLote(startIndex || 0);
+                updateFooterButtonLote(startIndex || 0);
+            }, 50);
+        }
+
+        function hidePlanosModalLote() {
+            if (!modalPlanosLote) return;
+            modalPlanosLote.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function updateCounterLote(index) {
+            var counter = document.getElementById('carousel-counter-lote');
+            if (counter) {
+                counter.textContent = (index + 1) + ' / ' + totalPlanos;
+            }
+        }
+
+        function updateFooterButtonLote(index) {
+            var btn = document.getElementById('btn-selecionar-plano-footer-lote');
+            if (!btn) return;
+            btn.dataset.planoIndex = index;
+            allFooterBtnClasses.forEach(function(c) { btn.classList.remove(c); });
+            var corStr = footerBtnColors[index] || 'bg-blue-600 hover:bg-blue-700';
+            corStr.split(' ').forEach(function(c) { btn.classList.add(c); });
+        }
+
+        // Info button clicks -> open modal at specific slide
+        document.querySelectorAll('.btn-info-plano-lote').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var idx = parseInt(this.dataset.slideIndex) || 0;
+                showPlanosModalLote(idx);
+            });
+        });
+
+        // "Ver detalhes" header button
+        var btnVerDetalhes = document.getElementById('btn-ver-detalhes-planos-lote');
+        if (btnVerDetalhes) {
+            btnVerDetalhes.addEventListener('click', function() {
+                showPlanosModalLote(0);
+            });
+        }
+
+        // Close modal: overlay click
+        modalPlanosLote.addEventListener('click', function(e) {
+            if (e.target === modalPlanosLote) {
+                hidePlanosModalLote();
+            }
+        });
+
+        // Close modal: ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modalPlanosLote && !modalPlanosLote.classList.contains('hidden')) {
+                hidePlanosModalLote();
+            }
+        });
+
+        // Close modal: X button
+        var btnFechar = document.getElementById('btn-fechar-carousel-lote');
+        if (btnFechar) {
+            btnFechar.addEventListener('click', hidePlanosModalLote);
+        }
+
+        // "Selecionar este plano" footer button
+        var btnSelecionarFooter = document.getElementById('btn-selecionar-plano-footer-lote');
+        if (btnSelecionarFooter) {
+            btnSelecionarFooter.addEventListener('click', function() {
+                var idx = parseInt(this.dataset.planoIndex) || 0;
+                var pd = planosData[idx];
+                if (!pd) return;
+
+                // Find the matching plano_id from window.consultaData.planos
+                var planoId = null;
+                var planosMap = window.consultaData?.planos || {};
+                for (var id in planosMap) {
+                    if (planosMap[id].codigo === pd.codigo) {
+                        planoId = id;
+                        break;
+                    }
+                }
+
+                if (planoId) {
+                    var radio = document.querySelector('input[name="plano_id"][value="' + planoId + '"]');
+                    if (radio) {
+                        radio.checked = true;
+                        updatePlanoStyles();
+                        updateConsultasIncluidas();
+                        updateResumo();
+                    }
+                }
+
+                hidePlanosModalLote();
+            });
+        }
     }
 
     // Expor funcao de inicializacao para SPA
-    window.initConsultaLote = init;
+    window.initConsultaLote = function() {
+        // Debounce: prevent double-init from SPA + inline auto-init
+        var now = Date.now();
+        if (window._consultaLoteLastInit && (now - window._consultaLoteLastInit) < 100) return;
+        window._consultaLoteLastInit = now;
+
+        // Reset state for SPA re-navigation
+        state.selectedIds = new Set();
+        state.currentPage = 1;
+        state.totalPages = 1;
+        state.totalItems = 0;
+        state.allIdsCurrentFilter = [];
+        state.filters = { grupo_id: '', cliente_id: '', origem_tipo: '', busca: '' };
+        state.consultaLoteId = null;
+        state.credits = window.consultaData?.credits || 0;
+
+        // Close any existing SSE connection
+        if (state.eventSource) {
+            state.eventSource.close();
+            state.eventSource = null;
+        }
+
+        init();
+        initCarouselPlanos();
+    };
+
+    window.reloadParticipantes = function() {
+        loadParticipantes();
+    };
 })();

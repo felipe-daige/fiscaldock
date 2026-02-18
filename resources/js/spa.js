@@ -41,9 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
         monitoramento: null, // Código inline na view
         monitoramentoSped: null, // Código inline na view
         monitoramentoAvulso: null, // Código inline na view
+        consultasAvulso: null, // Código inline na view (mesma view do monitoramentoAvulso)
         monitoramentoHistorico: null, // Código inline na view
         monitoramentoParticipante: null, // Código inline na view
-        consultas: null, // Código inline ou arquivo externo já carregado
+        consultas: '/js/consulta-lote.js',
+        consultaLote: '/js/consulta-lote.js',
     };
 
     // Converte slug (com hífen/underscore) para camelCase
@@ -105,8 +107,12 @@ document.addEventListener('DOMContentLoaded', () => {
         '/app/monitoramento': 'initMonitoramento',
         '/app/monitoramento/sped': 'initMonitoramentoSped',
         '/app/monitoramento/avulso': 'initMonitoramentoAvulso',
+        '/app/consultas/avulso': 'initMonitoramentoAvulso',
+        '/app/monitoramento/novo-participante': 'initNovoParticipante',
+        '/app/novo_cliente': 'initNovoCliente',
         '/app/monitoramento/historico': 'initMonitoramentoHistorico',
         // Nota: /app/monitoramento/participante/{id} é tratada dinamicamente em obterInfoPagina()
+        '/app/consultas/nova': 'initConsultaLote',
         '/app/perfil': 'initPerfil',
         '/dashboard': 'initDashboard',
         '/sobre': 'initSobre',
@@ -152,7 +158,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof window._solucoesCarouselInitialized !== 'undefined') {
             window._solucoesCarouselInitialized = false;
         }
-        
+        if (typeof window._consultaLoteLastInit !== 'undefined') {
+            window._consultaLoteLastInit = 0;
+        }
+        if (typeof window._consultaLoteModuleLoaded !== 'undefined') {
+            window._consultaLoteModuleLoaded = false;
+        }
+
         // Limpar todos os intervalos
         window._spaResources.intervals.forEach(intervalId => {
             clearInterval(intervalId);
@@ -445,9 +457,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const scripts = app.querySelectorAll('script');
         scripts.forEach((script, index) => {
             try {
+                // Script externo com src - carregar dinamicamente
+                if (script.src) {
+                    const scriptSrc = script.getAttribute('src');
+                    const existente = document.querySelector('script[src="' + scriptSrc + '"]');
+                    if (!existente) {
+                        const novoScript = document.createElement('script');
+                        novoScript.src = scriptSrc;
+                        document.head.appendChild(novoScript);
+                    }
+                    script.parentNode.removeChild(script);
+                    return;
+                }
+
                 const novoScript = document.createElement('script');
                 novoScript.textContent = script.textContent;
-                
+
                 // Validar se o script tem conteúdo válido antes de executar
                 if (script.textContent && script.textContent.trim() !== '') {
                     // Adicionar handler de erro para capturar erros de sintaxe
@@ -619,9 +644,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const scripts = app.querySelectorAll('script');
         scripts.forEach((script, index) => {
             try {
+                // Script externo com src - carregar dinamicamente
+                if (script.src) {
+                    const scriptSrc = script.getAttribute('src');
+                    const existente = document.querySelector('script[src="' + scriptSrc + '"]');
+                    if (!existente) {
+                        const novoScript = document.createElement('script');
+                        novoScript.src = scriptSrc;
+                        document.head.appendChild(novoScript);
+                    }
+                    script.parentNode.removeChild(script);
+                    return;
+                }
+
                 const novoScript = document.createElement('script');
                 novoScript.textContent = script.textContent;
-                
+
                 // Validar se o script tem conteúdo válido antes de executar
                 if (script.textContent && script.textContent.trim() !== '') {
                     // Adicionar handler de erro para capturar erros de sintaxe

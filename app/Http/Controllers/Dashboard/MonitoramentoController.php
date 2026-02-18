@@ -52,6 +52,7 @@ class MonitoramentoController extends Controller
 
         $data = [
             'credits' => $this->creditService->getBalance($user),
+            'planos' => MonitoramentoPlano::ativos(),
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -190,6 +191,311 @@ class MonitoramentoController extends Controller
     }
 
     /**
+     * Formulário de cadastro manual de participante.
+     */
+    public function novoParticipante(Request $request)
+    {
+        $viewName = self::AUTH_VIEW_PREFIX . 'novo-participante';
+
+        if (!Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        $user = Auth::user();
+        $userId = (int) $user->id;
+
+        $clientes = Cliente::where('user_id', $userId)
+            ->where('ativo', true)
+            ->orderBy('razao_social')
+            ->get();
+
+        $data = [
+            'clientes' => $clientes,
+            'credits' => $this->creditService->getBalance($user),
+        ];
+
+        if ($this->isAjaxRequest($request)) {
+            $renderedView = view($viewName, $data)->render();
+            return response($renderedView)->header('Content-Type', 'text/html');
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, array_merge([
+            'initialView' => $viewName
+        ], $data));
+    }
+
+    /**
+     * Salva um novo participante cadastrado manualmente.
+     */
+    public function storeParticipante(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Usuário não autenticado.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = Auth::user();
+
+        $tipDoc = $request->input('tipo_documento', 'PJ');
+        $isPF = $tipDoc === 'PF';
+        $docLabel = $isPF ? 'CPF' : 'CNPJ';
+
+        $validated = $request->validate([
+            'tipo_documento' => 'required|in:PF,PJ',
+            'cnpj' => 'required|string|max:18',
+            'razao_social' => $isPF ? 'nullable|string|max:255' : 'required|string|max:255',
+            'nome_fantasia' => $isPF ? 'required|string|max:255' : 'nullable|string|max:255',
+            'inscricao_estadual' => 'nullable|string|max:20',
+            'crt' => 'nullable|in:1,2,3',
+            'telefone' => 'nullable|string|max:20',
+            'cliente_id' => 'nullable|integer',
+            'cep' => 'nullable|string|max:9',
+            'endereco' => 'nullable|string|max:255',
+            'numero' => 'nullable|string|max:20',
+            'complemento' => 'nullable|string|max:100',
+            'bairro' => 'nullable|string|max:100',
+            'municipio' => 'nullable|string|max:100',
+            'uf' => 'nullable|string|size:2',
+        ], [
+            'razao_social.required' => 'Razão social é obrigatória para Pessoa Jurídica.',
+            'nome_fantasia.required' => 'Nome completo é obrigatório para Pessoa Física.',
+        ]);
+
+        // Limpar documento (CNPJ ou CPF)
+        $doc = preg_replace('/[^0-9]/', '', $validated['cnpj']);
+        $expectedLen = $isPF ? 11 : 14;
+
+        if (strlen($doc) !== $expectedLen) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['cnpj' => ["{$docLabel} deve conter {$expectedLen} dígitos."]],
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        // Verificar unicidade (user_id, cnpj)
+        $existente = Participante::where('user_id', $user->id)
+            ->where('cnpj', $doc)
+            ->first();
+
+        if ($existente) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['cnpj' => ["Este {$docLabel} já está cadastrado na sua base."]],
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        // Validar que cliente_id pertence ao usuário
+        $clienteId = $validated['cliente_id'] ?? null;
+        if ($clienteId) {
+            $cliente = Cliente::where('id', $clienteId)
+                ->where('user_id', $user->id)
+                ->first();
+            if (!$cliente) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['cliente_id' => ['Cliente não encontrado.']],
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        }
+
+        // Limpar CEP
+        $cep = isset($validated['cep']) ? preg_replace('/[^0-9]/', '', $validated['cep']) : null;
+
+        // Para PF: copiar nome_fantasia para razao_social se vazio (garante listagens)
+        $razaoSocial = $validated['razao_social'] ?? null;
+        if ($isPF && empty($razaoSocial)) {
+            $razaoSocial = $validated['nome_fantasia'];
+        }
+
+        try {
+            $participante = Participante::create([
+                'user_id' => $user->id,
+                'cnpj' => $doc,
+                'tipo_documento' => $tipDoc,
+                'razao_social' => $razaoSocial,
+                'nome_fantasia' => $validated['nome_fantasia'] ?? null,
+                'inscricao_estadual' => $isPF ? null : ($validated['inscricao_estadual'] ?? null),
+                'crt' => $isPF ? null : ($validated['crt'] ?? null),
+                'telefone' => $validated['telefone'] ?? null,
+                'cliente_id' => $clienteId,
+                'cep' => $cep,
+                'endereco' => $validated['endereco'] ?? null,
+                'numero' => $validated['numero'] ?? null,
+                'complemento' => $validated['complemento'] ?? null,
+                'bairro' => $validated['bairro'] ?? null,
+                'municipio' => $validated['municipio'] ?? null,
+                'uf' => $validated['uf'] ?? null,
+                'origem_tipo' => 'MANUAL',
+            ]);
+
+            Log::info('Participante criado manualmente', [
+                'user_id' => $user->id,
+                'participante_id' => $participante->id,
+                'tipo_documento' => $tipDoc,
+                'documento' => $doc,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Participante cadastrado com sucesso!',
+                'participante_id' => $participante->id,
+                'redirect' => '/app/monitoramento/participantes',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao criar participante manualmente', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Erro ao cadastrar participante. Tente novamente.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Formulário de edição de participante (reutiliza view novo-participante).
+     */
+    public function editParticipante(Request $request, $id)
+    {
+        $viewName = self::AUTH_VIEW_PREFIX . 'novo-participante';
+
+        if (!Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        $user = Auth::user();
+        $userId = (int) $user->id;
+
+        $participante = Participante::where('user_id', $userId)->findOrFail($id);
+
+        $clientes = Cliente::where('user_id', $userId)
+            ->where('ativo', true)
+            ->orderBy('razao_social')
+            ->get();
+
+        $data = [
+            'participante' => $participante,
+            'clientes' => $clientes,
+            'credits' => $this->creditService->getBalance($user),
+        ];
+
+        if ($this->isAjaxRequest($request)) {
+            $renderedView = view($viewName, $data)->render();
+            return response($renderedView)->header('Content-Type', 'text/html');
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, array_merge([
+            'initialView' => $viewName
+        ], $data));
+    }
+
+    /**
+     * Atualiza um participante existente.
+     */
+    public function updateParticipante(Request $request, $id)
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Usuário não autenticado.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = Auth::user();
+
+        $participante = Participante::where('user_id', $user->id)->findOrFail($id);
+
+        $isPF = $participante->tipo_documento === 'PF';
+
+        $validated = $request->validate([
+            'razao_social' => $isPF ? 'nullable|string|max:255' : 'required|string|max:255',
+            'nome_fantasia' => $isPF ? 'required|string|max:255' : 'nullable|string|max:255',
+            'inscricao_estadual' => 'nullable|string|max:20',
+            'crt' => 'nullable|in:1,2,3',
+            'telefone' => 'nullable|string|max:20',
+            'cliente_id' => 'nullable|integer',
+            'cep' => 'nullable|string|max:9',
+            'endereco' => 'nullable|string|max:255',
+            'numero' => 'nullable|string|max:20',
+            'complemento' => 'nullable|string|max:100',
+            'bairro' => 'nullable|string|max:100',
+            'municipio' => 'nullable|string|max:100',
+            'uf' => 'nullable|string|size:2',
+        ], [
+            'razao_social.required' => 'Razão social é obrigatória para Pessoa Jurídica.',
+            'nome_fantasia.required' => 'Nome completo é obrigatório para Pessoa Física.',
+        ]);
+
+        // Validar que cliente_id pertence ao usuário
+        $clienteId = $validated['cliente_id'] ?? null;
+        if ($clienteId) {
+            $cliente = Cliente::where('id', $clienteId)
+                ->where('user_id', $user->id)
+                ->first();
+            if (!$cliente) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['cliente_id' => ['Cliente não encontrado.']],
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        }
+
+        // Limpar CEP
+        $cep = isset($validated['cep']) ? preg_replace('/[^0-9]/', '', $validated['cep']) : null;
+
+        // Para PF: copiar nome_fantasia para razao_social se vazio
+        $razaoSocial = $validated['razao_social'] ?? null;
+        if ($isPF && empty($razaoSocial)) {
+            $razaoSocial = $validated['nome_fantasia'];
+        }
+
+        try {
+            $participante->update([
+                'razao_social' => $razaoSocial,
+                'nome_fantasia' => $validated['nome_fantasia'] ?? null,
+                'inscricao_estadual' => $isPF ? null : ($validated['inscricao_estadual'] ?? null),
+                'crt' => $isPF ? null : ($validated['crt'] ?? null),
+                'telefone' => $validated['telefone'] ?? null,
+                'cliente_id' => $clienteId,
+                'cep' => $cep,
+                'endereco' => $validated['endereco'] ?? null,
+                'numero' => $validated['numero'] ?? null,
+                'complemento' => $validated['complemento'] ?? null,
+                'bairro' => $validated['bairro'] ?? null,
+                'municipio' => $validated['municipio'] ?? null,
+                'uf' => $validated['uf'] ?? null,
+            ]);
+
+            Log::info('Participante atualizado', [
+                'user_id' => $user->id,
+                'participante_id' => $participante->id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Participante atualizado com sucesso!',
+                'participante_id' => $participante->id,
+                'redirect' => '/app/monitoramento/participante/' . $participante->id,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao atualizar participante', [
+                'user_id' => $user->id,
+                'participante_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Erro ao atualizar participante. Tente novamente.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
      * Lista relatórios RAF para importação de participantes.
      */
     public function importarSped(Request $request)
@@ -223,6 +529,7 @@ class MonitoramentoController extends Controller
             'credits' => $this->creditService->getBalance($user),
             'clientes' => $clientes,
             'importacoes' => $importacoes,
+            'planos' => MonitoramentoPlano::ativos(),
         ];
 
         if ($this->isAjaxRequest($request)) {
