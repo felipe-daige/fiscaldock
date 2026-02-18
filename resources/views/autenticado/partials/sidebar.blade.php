@@ -112,10 +112,10 @@
 
                 <div class="sidebar-submenu-wrapper mt-1 ml-3 pl-3 border-l border-gray-200 space-y-1">
                     <a href="/app/clientes" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors leading-5">
-                        <span class="sidebar-label font-medium">Todos os Clientes</span>
+                        <span class="sidebar-label font-medium">Todos</span>
                     </a>
                     <a href="/app/novo_cliente" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors leading-5">
-                        <span class="sidebar-label font-medium">Novo Cliente</span>
+                        <span class="sidebar-label font-medium">Novo</span>
                     </a>
                 </div>
             </div>
@@ -139,7 +139,7 @@
                         <span class="sidebar-label font-medium">Todos</span>
                     </a>
                     <a href="/app/monitoramento/novo-participante" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors leading-5">
-                        <span class="sidebar-label font-medium">Novo Participante</span>
+                        <span class="sidebar-label font-medium">Novo</span>
                     </a>
                 </div>
             </div>

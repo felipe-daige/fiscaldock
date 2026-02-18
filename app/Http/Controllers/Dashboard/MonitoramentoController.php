@@ -1970,6 +1970,57 @@ class MonitoramentoController extends Controller
     }
 
     /**
+     * Bulk delete participantes.
+     * DB cascades handle: assinaturas, consultas, scores, pivot grupos, consulta_lote_resultados.
+     * xml_notas/sped_notas: SET NULL on participante_id.
+     */
+    public function bulkExcluirParticipantes(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Usuario nao autenticado.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = Auth::user();
+        $userId = (int) $user->id;
+
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1|max:500',
+            'ids.*' => 'integer',
+        ]);
+
+        try {
+            $count = Participante::where('user_id', $userId)
+                ->whereIn('id', $validated['ids'])
+                ->delete();
+
+            Log::info('Participantes excluidos em lote', [
+                'user_id' => $userId,
+                'count' => $count,
+                'ids' => $validated['ids'],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => $count . ' participante(s) excluido(s) com sucesso.',
+                'count' => $count,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao excluir participantes em lote', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Erro ao excluir participantes. Tente novamente.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
      * Recebe arquivo .txt e envia para n8n processar.
      * Laravel não valida/extrai CNPJs - apenas repassa o arquivo em base64.
      */

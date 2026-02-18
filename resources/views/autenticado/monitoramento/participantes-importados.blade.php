@@ -121,14 +121,26 @@
                     <span class="text-sm font-medium text-blue-900">participante(s) selecionado(s)</span>
                 </div>
                 <div class="flex gap-2">
+                    <button type="button" id="btn-exportar" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-blue-300 bg-white text-blue-700 text-sm font-semibold shadow-sm transition hover:bg-blue-50">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Exportar
+                    </button>
                     <button type="button" id="btn-monitorar-selecionados" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
-                        Consultar Selecionados
+                        Consultar
+                    </button>
+                    <button type="button" id="btn-bulk-delete" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm transition hover:bg-red-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                        Deletar
                     </button>
                     <button type="button" id="btn-limpar-selecao" class="px-4 py-2 rounded-lg border border-blue-300 bg-white text-blue-700 text-sm font-semibold shadow-sm transition hover:bg-blue-50">
-                        Limpar seleção
+                        Limpar
                     </button>
                 </div>
             </div>
@@ -321,6 +333,39 @@
     </div>
 </div>
 
+{{-- Modal de confirmacao de exclusao em lote --}}
+<div id="modal-bulk-delete" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-black/50 transition-opacity" id="modal-bulk-delete-overlay"></div>
+        <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6 z-10">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900">Excluir <span id="modal-bulk-delete-count">0</span> participante(s)?</h3>
+            </div>
+            <div class="mb-4">
+                <p class="text-sm text-gray-500 mb-2">
+                    Todo o historico associado sera removido (assinaturas, consultas, scores). As notas fiscais onde estes participantes aparecem serao mantidas.
+                </p>
+                <p class="text-sm text-red-600 font-medium">
+                    Esta acao nao pode ser desfeita.
+                </p>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button type="button" id="btn-cancelar-bulk-delete" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-confirmar-bulk-delete" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm transition hover:bg-red-700">
+                    Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 (function() {
     'use strict';
@@ -340,6 +385,13 @@
         const countSelecionados = document.getElementById('count-selecionados');
         const btnLimparSelecao = document.getElementById('btn-limpar-selecao');
         const btnMonitorar = document.getElementById('btn-monitorar-selecionados');
+        const btnExportar = document.getElementById('btn-exportar');
+        const btnBulkDelete = document.getElementById('btn-bulk-delete');
+
+        // Funcao para obter IDs selecionados
+        function getIdsSelecionados() {
+            return Array.from(document.querySelectorAll('.checkbox-participante:checked')).map(cb => cb.value);
+        }
 
         // Funcao para atualizar contagem e visibilidade das acoes em lote
         function atualizarAcoesLote() {
@@ -391,16 +443,99 @@
             });
         }
 
+        // Botao exportar (placeholder)
+        if (btnExportar) {
+            btnExportar.addEventListener('click', function() {
+                if (window.showToast) {
+                    window.showToast('Funcionalidade de exportacao em desenvolvimento', 'info');
+                }
+            });
+        }
+
         // Botao consultar selecionados
         if (btnMonitorar) {
             btnMonitorar.addEventListener('click', function() {
-                const selecionados = Array.from(document.querySelectorAll('.checkbox-participante:checked')).map(cb => cb.value);
+                const selecionados = getIdsSelecionados();
                 if (selecionados.length === 0) {
                     alert('Selecione pelo menos um participante.');
                     return;
                 }
                 // Redirecionar para nova consulta com IDs pre-selecionados
                 window.location.href = '/app/consultas/nova?participantes=' + selecionados.join(',');
+            });
+        }
+
+        // === Bulk delete ===
+        const modalBulkDelete = document.getElementById('modal-bulk-delete');
+        const modalBulkDeleteOverlay = document.getElementById('modal-bulk-delete-overlay');
+        const modalBulkDeleteCount = document.getElementById('modal-bulk-delete-count');
+        const btnCancelarBulkDelete = document.getElementById('btn-cancelar-bulk-delete');
+        const btnConfirmarBulkDelete = document.getElementById('btn-confirmar-bulk-delete');
+
+        function abrirModalBulkDelete() {
+            const ids = getIdsSelecionados();
+            if (ids.length === 0) return;
+            if (modalBulkDeleteCount) modalBulkDeleteCount.textContent = ids.length;
+            if (modalBulkDelete) modalBulkDelete.classList.remove('hidden');
+        }
+
+        function fecharModalBulkDelete() {
+            if (modalBulkDelete) modalBulkDelete.classList.add('hidden');
+        }
+
+        if (btnBulkDelete) btnBulkDelete.addEventListener('click', abrirModalBulkDelete);
+        if (btnCancelarBulkDelete) btnCancelarBulkDelete.addEventListener('click', fecharModalBulkDelete);
+        if (modalBulkDeleteOverlay) modalBulkDeleteOverlay.addEventListener('click', fecharModalBulkDelete);
+
+        if (btnConfirmarBulkDelete) {
+            btnConfirmarBulkDelete.addEventListener('click', async function() {
+                const ids = getIdsSelecionados();
+                if (ids.length === 0) return;
+
+                btnConfirmarBulkDelete.disabled = true;
+                btnConfirmarBulkDelete.innerHTML = '<svg class="animate-spin w-4 h-4 inline mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Excluindo...';
+
+                try {
+                    const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+                    const res = await fetch('/app/monitoramento/participantes/bulk-delete', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': tokenMeta ? tokenMeta.content : '',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({ ids: ids.map(Number) }),
+                    });
+
+                    const data = await res.json();
+
+                    if (!res.ok || !data.success) {
+                        throw new Error(data.error || data.message || 'Erro ao excluir participantes');
+                    }
+
+                    window.showToast && window.showToast(data.message || 'Participantes excluidos com sucesso!', 'success');
+
+                    // Remover linhas da tabela
+                    ids.forEach(function(id) {
+                        const row = document.querySelector('tr[data-participante-id="' + id + '"]');
+                        if (row) row.remove();
+                    });
+
+                    // Limpar selecao
+                    checkboxes.forEach(function(cb) { cb.checked = false; });
+                    if (selectAll) selectAll.checked = false;
+                    atualizarAcoesLote();
+                    fecharModalBulkDelete();
+
+                } catch (err) {
+                    console.error('[Monitoramento Participantes] Erro ao excluir em lote:', err);
+                    window.showToast && window.showToast(err.message || 'Erro ao excluir participantes', 'error');
+                    fecharModalBulkDelete();
+                } finally {
+                    btnConfirmarBulkDelete.disabled = false;
+                    btnConfirmarBulkDelete.textContent = 'Excluir';
+                }
             });
         }
 

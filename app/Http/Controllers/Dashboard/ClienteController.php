@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class ClienteController extends Controller
@@ -387,6 +388,97 @@ class ClienteController extends Controller
                 ->back()
                 ->with('error', 'Erro ao atualizar cliente. Tente novamente.')
                 ->withInput();
+        }
+    }
+
+    /**
+     * Delete an individual cliente.
+     * Cascades: enderecos, funcionarios, solicitacoes are deleted.
+     * participantes.cliente_id is SET NULL by DB constraint.
+     */
+    public function destroy(Request $request, $id)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Nao autenticado'], 401);
+        }
+
+        $cliente = Cliente::where('user_id', $user->id)->find($id);
+        if (!$cliente) {
+            return response()->json(['success' => false, 'message' => 'Cliente nao encontrado'], 404);
+        }
+
+        try {
+            $nome = $cliente->razao_social ?? $cliente->nome ?? '';
+            $documento = $cliente->documento;
+
+            $cliente->delete();
+
+            Log::info('Cliente excluido', [
+                'user_id' => $user->id,
+                'cliente_id' => $id,
+                'documento' => $documento,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cliente excluido com sucesso.',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao excluir cliente', [
+                'user_id' => $user->id,
+                'cliente_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao excluir cliente. Tente novamente.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk delete clientes.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Nao autenticado'], 401);
+        }
+
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1|max:500',
+            'ids.*' => 'integer',
+        ]);
+
+        try {
+            $count = Cliente::where('user_id', $user->id)
+                ->whereIn('id', $validated['ids'])
+                ->delete();
+
+            Log::info('Clientes excluidos em lote', [
+                'user_id' => $user->id,
+                'count' => $count,
+                'ids' => $validated['ids'],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => $count . ' cliente(s) excluido(s) com sucesso.',
+                'count' => $count,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao excluir clientes em lote', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao excluir clientes. Tente novamente.',
+            ], 500);
         }
     }
 }

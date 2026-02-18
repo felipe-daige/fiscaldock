@@ -123,8 +123,10 @@ Route::middleware('auth')->group(function () {
     
     // Rota de Clientes
     Route::get('/app/clientes', [DashboardController::class, 'clientes'])->name('app.clientes');
+    Route::delete('/app/clientes/bulk-delete', [ClienteController::class, 'bulkDestroy'])->name('app.clientes.bulk-delete');
     Route::get('/app/cliente/{id}/editar', [ClienteController::class, 'edit'])->name('app.cliente.edit');
     Route::put('/app/cliente/{id}', [ClienteController::class, 'update'])->name('app.cliente.update');
+    Route::delete('/app/cliente/{id}', [ClienteController::class, 'destroy'])->name('app.cliente.destroy');
     Route::get('/app/cliente/{id}', [DashboardController::class, 'clienteDetalhes'])->name('app.cliente.detalhes');
     
     // Rota de Consultar Inscrição Estadual
@@ -185,6 +187,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/grupos/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'editarGrupo'])->name('grupos.editar');
         Route::delete('/grupos/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'excluirGrupo'])->name('grupos.excluir');
         Route::post('/participantes/associar-grupo', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'associarGrupo'])->name('participantes.associar-grupo');
+        Route::delete('/participantes/bulk-delete', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'bulkExcluirParticipantes'])->name('participantes.bulk-delete');
         Route::delete('/participante/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'excluirParticipante'])->name('participante.excluir');
 
         // Editar Participante
