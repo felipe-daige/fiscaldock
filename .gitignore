@@ -25,3 +25,8 @@ docker-stack-resolved.yml
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Arquivos sensiveis / internos
+/.claude/
+CLAUDE.md
+/docs/
