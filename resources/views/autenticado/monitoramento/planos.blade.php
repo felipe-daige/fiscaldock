@@ -159,20 +159,8 @@
         @endphp
 
         <style>
-            @keyframes shimmer-border {
-                0% { background-position: 200% center; }
-                100% { background-position: -200% center; }
-            }
-            @keyframes promo-pulse {
-                0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.15); }
-                50% { box-shadow: 0 0 20px 4px rgba(245,158,11,0.10); }
-            }
             .promo-card {
-                background: linear-gradient(to bottom, #fffbeb, white 50%) padding-box,
-                            linear-gradient(90deg, #f59e0b, #ea580c, #f97316, #f59e0b) border-box;
-                background-size: 100% 100%, 300% 100%;
-                border-color: transparent;
-                animation: shimmer-border 4s linear infinite, promo-pulse 3s ease-in-out infinite;
+                background: linear-gradient(to bottom, #fffbeb, white 40%);
             }
             @keyframes card-slide-in {
                 from {
@@ -199,14 +187,14 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             @foreach($planosDetalhados as $plano)
                 @php $cores = $corClasses[$plano['cor']]; @endphp
-                <div class="bg-white rounded-xl border {{ $plano['codigo'] === 'enterprise' ? 'border-2 border-slate-400 ring-2 ring-slate-100' : ($plano['popular'] && !$plano['promo'] ? 'border-2 border-blue-500 ring-2 ring-blue-100' : ($plano['promo'] ? 'border-2' : 'border-gray-200')) }} {{ $plano['promo'] ? 'promo-card shadow-lg' : 'shadow-sm' }} flex flex-col relative hover:shadow-md transition-shadow plan-card-animate" style="animation-delay: {{ $loop->index * 0.12 }}s">
+                <div class="bg-white rounded-xl border {{ $plano['codigo'] === 'enterprise' ? 'border-2 border-slate-400 ring-2 ring-slate-100' : ($plano['popular'] && !$plano['promo'] ? 'border-2 border-blue-500 ring-2 ring-blue-100' : ($plano['promo'] ? 'border-2 border-amber-300' : 'border-gray-200')) }} {{ $plano['promo'] ? 'promo-card shadow-md' : 'shadow-sm' }} flex flex-col relative hover:shadow-md transition-shadow plan-card-animate" style="animation-delay: {{ $loop->index * 0.12 }}s">
                     {{-- Badge Popular / Promo --}}
                     @if($plano['promo'])
                         <div class="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white shadow-sm">
                                 Mais Popular
                             </span>
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm" style="background: linear-gradient(to right, #f59e0b, #ea580c)">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm bg-amber-500">
                                 20% OFF
                             </span>
                         </div>
@@ -263,7 +251,7 @@
                         <p class="text-sm text-gray-600 mb-5">{{ $plano['descricao'] }}</p>
 
                         @if($plano['promo'])
-                            <div class="flex items-center gap-2.5 border border-amber-200 rounded-lg px-3 py-2.5 mb-5" style="background: linear-gradient(to right, #fffbeb, #fff7ed)">
+                            <div class="flex items-center gap-2.5 border border-amber-200 rounded-lg px-3 py-2.5 mb-5 bg-amber-50">
                                 <span class="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
                                     <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"></path>
@@ -312,8 +300,7 @@
                         <a
                             href="/app/monitoramento/avulso"
                             data-link
-                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg {{ $plano['promo'] ? 'text-white' : ($plano['codigo'] === 'enterprise' ? 'bg-slate-700 text-white hover:bg-slate-800' : ($plano['popular'] ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')) }} text-sm font-semibold transition-colors"
-                            {!! $plano['promo'] ? 'style="background: linear-gradient(to right, #f59e0b, #ea580c)"' : '' !!}
+                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg {{ $plano['promo'] ? 'bg-amber-500 text-white hover:bg-amber-600' : ($plano['codigo'] === 'enterprise' ? 'bg-slate-700 text-white hover:bg-slate-800' : ($plano['popular'] ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')) }} text-sm font-semibold transition-colors"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
