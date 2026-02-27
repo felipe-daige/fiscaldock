@@ -4,7 +4,7 @@
         {{-- Breadcrumb --}}
         <nav class="mb-6">
             <ol class="flex items-center space-x-2 text-sm text-gray-500">
-                <li><a href="/app/risk" data-link class="hover:text-blue-600">Score de Risco</a></li>
+                <li><a href="/app/score-fiscal" data-link class="hover:text-blue-600">Score Fiscal</a></li>
                 <li><span>/</span></li>
                 <li class="text-gray-900 font-medium">{{ $participante->razao_social ?? 'Participante' }}</li>
             </ol>

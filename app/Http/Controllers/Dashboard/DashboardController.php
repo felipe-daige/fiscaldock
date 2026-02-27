@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\RelatorioCompletoController;
 use App\Models\Cliente;
 use App\Models\ConsultaLote;
+use App\Models\CreditTransaction;
 use App\Models\Participante;
 use App\Models\XmlNota;
 use App\Services\Dashboard\DashboardDataService;
@@ -138,9 +139,8 @@ class DashboardController extends Controller
             return redirect('/login');
         }
 
-        // Buscar clientes do usuário logado
+        // Buscar clientes do usuario logado
         $clientes = Cliente::where('user_id', Auth::id())
-            ->with('endereco')
             ->orderBy('nome')
             ->get();
 
@@ -175,7 +175,6 @@ class DashboardController extends Controller
 
         $cliente = Cliente::where('id', $id)
             ->where('user_id', Auth::id())
-            ->with(['endereco', 'funcionarios'])
             ->first();
 
         if (!$cliente) {
@@ -202,24 +201,11 @@ class DashboardController extends Controller
                 'telefone' => $cliente->telefone,
                 'ativo' => $cliente->ativo,
                 'is_empresa_propria' => $cliente->is_empresa_propria,
-                'faturamento_anual' => $cliente->faturamento_anual,
+                'uf' => $cliente->uf,
+                'cep' => $cliente->cep,
+                'municipio' => $cliente->municipio,
                 'created_at' => $cliente->created_at?->format('d/m/Y H:i'),
             ],
-            'endereco' => $cliente->endereco ? [
-                'logradouro' => $cliente->endereco->logradouro,
-                'numero' => $cliente->endereco->numero,
-                'complemento' => $cliente->endereco->complemento,
-                'bairro' => $cliente->endereco->bairro,
-                'cidade' => $cliente->endereco->cidade,
-                'estado' => $cliente->endereco->estado,
-                'cep' => $cliente->endereco->cep,
-            ] : null,
-            'funcionarios' => $cliente->funcionarios->map(fn ($f) => [
-                'nome_completo' => $f->nome_completo,
-                'email' => $f->email,
-                'cargo' => $f->cargo,
-                'nivel_acesso' => $f->nivel_acesso,
-            ])->toArray(),
             'stats' => [
                 'total_participantes' => $totalParticipantes,
                 'total_notas' => $totalNotas,
@@ -435,15 +421,222 @@ class DashboardController extends Controller
 
     public function meuPlano(Request $request)
     {
+        if (!Auth::check()) {
+            if ($this->isAjaxRequest($request)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Voce nao esta logado',
+                    'redirect' => '/login'
+                ]);
+            }
+            return redirect('/login');
+        }
+
+        $user = Auth::user();
+        $now = now();
+        $mesInicio = $now->copy()->startOfMonth();
+        $mesFim = $now->copy()->endOfMonth();
+
+        // KPI 1: Saldo atual
+        $saldoAtual = (int) $user->credits;
+
+        // KPI 2: Creditos usados no mes
+        $creditosUsadosMes = ConsultaLote::where('user_id', $user->id)
+            ->where('status', 'concluido')
+            ->whereBetween('created_at', [$mesInicio, $mesFim])
+            ->sum('creditos_cobrados');
+
+        // KPI 3: Consultas no mes
+        $consultasMes = ConsultaLote::where('user_id', $user->id)
+            ->whereBetween('created_at', [$mesInicio, $mesFim])
+            ->count();
+
+        // KPI 4: Media creditos/consulta
+        $totalConsultas = ConsultaLote::where('user_id', $user->id)
+            ->where('status', 'concluido')
+            ->count();
+        $totalCreditosHistorico = ConsultaLote::where('user_id', $user->id)
+            ->where('status', 'concluido')
+            ->sum('creditos_cobrados');
+        $mediaCreditos = $totalConsultas > 0 ? round($totalCreditosHistorico / $totalConsultas, 1) : 0;
+
+        // Ultimas 20 transacoes (consulta_lotes como fallback)
+        $ultimasTransacoes = ConsultaLote::where('user_id', $user->id)
+            ->with('plano:id,nome,codigo')
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get();
+
+        // Consumo mensal ultimos 6 meses
+        $consumoMensal = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $mes = $now->copy()->subMonths($i);
+            $consumo = ConsultaLote::where('user_id', $user->id)
+                ->where('status', 'concluido')
+                ->whereYear('created_at', $mes->year)
+                ->whereMonth('created_at', $mes->month)
+                ->sum('creditos_cobrados');
+            $consumoMensal[] = [
+                'label' => $mes->translatedFormat('M/y'),
+                'valor' => (int) $consumo,
+            ];
+        }
+
+        $maxConsumo = max(array_column($consumoMensal, 'valor') ?: [1]);
+
+        $planoView = self::AUTH_VIEW_PREFIX . 'plano.index';
+
+        $data = [
+            'saldoAtual' => $saldoAtual,
+            'creditosUsadosMes' => (int) $creditosUsadosMes,
+            'consultasMes' => $consultasMes,
+            'mediaCreditos' => $mediaCreditos,
+            'ultimasTransacoes' => $ultimasTransacoes,
+            'consumoMensal' => $consumoMensal,
+            'maxConsumo' => $maxConsumo,
+        ];
+
+        if ($this->isAjaxRequest($request)) {
+            return view($planoView, $data);
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, array_merge([
+            'initialView' => $planoView
+        ], $data));
+    }
+
+    public function creditos(Request $request)
+    {
+        if (!Auth::check()) {
+            if ($this->isAjaxRequest($request)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Voce nao esta logado',
+                    'redirect' => '/login'
+                ]);
+            }
+            return redirect('/login');
+        }
+
+        $user = Auth::user();
+
+        $saldoAtual = (int) $user->credits;
+
+        $totalComprado = (int) CreditTransaction::where('user_id', $user->id)
+            ->where('amount', '>', 0)
+            ->sum('amount');
+
+        $totalConsumido = (int) abs(CreditTransaction::where('user_id', $user->id)
+            ->where('amount', '<', 0)
+            ->sum('amount'));
+
+        $ultimaCompra = CreditTransaction::where('user_id', $user->id)
+            ->where('amount', '>', 0)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        $historicoCompras = CreditTransaction::where('user_id', $user->id)
+            ->where('amount', '>', 0)
+            ->orderBy('created_at', 'desc')
+            ->limit(30)
+            ->get();
+
+        $pacotes = [
+            ['slug' => 'starter', 'nome' => 'Starter', 'creditos' => 100, 'preco' => 26.00, 'desconto' => null],
+            ['slug' => 'growth', 'nome' => 'Growth', 'creditos' => 500, 'preco' => 117.00, 'desconto' => 10],
+            ['slug' => 'business', 'nome' => 'Business', 'creditos' => 1000, 'preco' => 208.00, 'desconto' => 20],
+            ['slug' => 'enterprise', 'nome' => 'Enterprise', 'creditos' => 5000, 'preco' => 910.00, 'desconto' => 30],
+        ];
+
+        $creditosView = self::AUTH_VIEW_PREFIX . 'creditos.index';
+
+        $data = [
+            'saldoAtual' => $saldoAtual,
+            'totalComprado' => $totalComprado,
+            'totalConsumido' => $totalConsumido,
+            'ultimaCompra' => $ultimaCompra,
+            'historicoCompras' => $historicoCompras,
+            'pacotes' => $pacotes,
+        ];
+
+        if ($this->isAjaxRequest($request)) {
+            return view($creditosView, $data);
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, array_merge([
+            'initialView' => $creditosView
+        ], $data));
+    }
+
+    public function checkout(Request $request, string $pacote)
+    {
+        $pacotes = [
+            'starter' => ['nome' => 'Starter', 'creditos' => 100, 'preco' => 26.00, 'desconto' => null],
+            'growth' => ['nome' => 'Growth', 'creditos' => 500, 'preco' => 117.00, 'desconto' => 10],
+            'business' => ['nome' => 'Business', 'creditos' => 1000, 'preco' => 208.00, 'desconto' => 20],
+            'enterprise' => ['nome' => 'Enterprise', 'creditos' => 5000, 'preco' => 910.00, 'desconto' => 30],
+        ];
+
+        if (!isset($pacotes[$pacote])) {
+            return redirect()->route('app.plano');
+        }
+
+        $dados = $pacotes[$pacote];
+        $dados['slug'] = $pacote;
+
+        $checkoutView = self::AUTH_VIEW_PREFIX . 'plano.checkout';
+
+        if ($this->isAjaxRequest($request)) {
+            return view($checkoutView, ['pacote' => $dados]);
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, [
+            'initialView' => $checkoutView,
+            'pacote' => $dados,
+        ]);
+    }
+
+    public function scoreFiscalPlaceholder(Request $request)
+    {
         return $this->renderPlaceholder($request,
-            'Meu Plano',
-            'Gerencie seu plano e créditos.',
-            'credit-card',
+            'Score Fiscal',
+            'Avaliação de risco fiscal e compliance de participantes.',
+            'document-check',
             [
-                'Ver saldo de créditos',
-                'Histórico de consumo',
-                'Upgrade de plano',
-                'Comprar créditos adicionais'
+                'Score de risco ponderado por categoria',
+                'Classificação automática (baixo a crítico)',
+                'Consulta em lote de participantes',
+                'Monitoramento contínuo de CNDs'
+            ]
+        );
+    }
+
+    public function validacaoPlaceholder(Request $request)
+    {
+        return $this->renderPlaceholder($request,
+            'Validação Contábil',
+            'Análise e validação inteligente de notas fiscais.',
+            'calculator',
+            [
+                'Validação automática de notas fiscais',
+                'Alertas por nível (bloqueante, atenção, info)',
+                'Análise de CFOP, CST e NCM',
+                'Score de conformidade por nota'
+            ]
+        );
+    }
+
+    public function analyticsPlaceholder(Request $request)
+    {
+        return $this->renderPlaceholder($request,
+            'BI Fiscal',
+            'Dashboard gerencial para análise de faturamento, compras e tributos.',
+            'chart',
+            [
+                'Faturamento por período e cliente',
+                'Análise de compras e fornecedores',
+                'Carga tributária efetiva',
+                'Top 10 clientes e fornecedores'
             ]
         );
     }

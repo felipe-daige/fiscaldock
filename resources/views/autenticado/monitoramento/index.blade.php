@@ -10,7 +10,7 @@
                 </div>
                 <div class="flex items-center gap-3">
                     <a
-                        href="/app/monitoramento/sped"
+                        href="/app/importacao/sped"
                         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
                         data-link
                     >
@@ -20,7 +20,7 @@
                         Importar do SPED
                     </a>
                     <a
-                        href="/app/monitoramento/xml"
+                        href="/app/importacao/xml"
                         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
                         data-link
                     >
@@ -433,7 +433,7 @@
 
                                         {{-- Ver detalhes --}}
                                         <a
-                                            href="/app/monitoramento/participante/{{ $participante->id }}"
+                                            href="/app/participante/{{ $participante->id }}"
                                             class="text-xs font-medium hover:underline transition-colors"
                                             style="color: #2563eb;"
                                             data-link
@@ -454,7 +454,7 @@
                                         <p class="text-sm text-gray-600 mb-4">Importe participantes de um SPED ou adicione CNPJs manualmente.</p>
                                         <div class="flex items-center gap-3">
                                             <a
-                                                href="/app/monitoramento/sped"
+                                                href="/app/importacao/sped"
                                                 class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
                                                 data-link
                                             >
@@ -1237,7 +1237,7 @@
                     btn.disabled = true;
                     btn.style.opacity = '0.5';
 
-                    const response = await fetch('/app/monitoramento/participantes/associar-grupo', {
+                    const response = await fetch('/app/participantes/associar-grupo', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1374,7 +1374,7 @@
                     btnConfirmarMonitorar.disabled = true;
                     btnConfirmarMonitorar.textContent = 'Ativando...';
 
-                    const response = await fetch('/app/monitoramento/participante/' + participanteId + '/ativar', {
+                    const response = await fetch('/app/participante/' + participanteId + '/ativar', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1411,7 +1411,7 @@
         // Funcao para executar consulta
         async function executarConsulta(participanteId) {
             try {
-                const response = await fetch('/app/monitoramento/participante/' + participanteId + '/consultar', {
+                const response = await fetch('/app/participante/' + participanteId + '/consultar', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

@@ -18,10 +18,33 @@ class Cliente extends Model
         'documento',
         'nome',
         'razao_social',
+        'nome_fantasia',
+        'inscricao_estadual',
+        'crt',
         'telefone',
         'email',
-        'faturamento_anual',
-        'preparacao_reforma',
+        'uf',
+        'cep',
+        'municipio',
+        'endereco',
+        'numero',
+        'complemento',
+        'bairro',
+        'situacao_cadastral',
+        'regime_tributario',
+        'cnpj_matriz',
+        'suframa',
+        'codigo_municipal',
+        'capital_social',
+        'natureza_juridica',
+        'porte',
+        'data_inicio_atividade',
+        'cnae_principal',
+        'cnae_principal_descricao',
+        'cnaes_secundarios',
+        'qsa',
+        'origem_tipo',
+        'origem_ref',
         'ativo',
         'is_empresa_propria',
     ];
@@ -29,6 +52,12 @@ class Cliente extends Model
     protected $casts = [
         'ativo' => 'boolean',
         'is_empresa_propria' => 'boolean',
+        'crt' => 'integer',
+        'capital_social' => 'decimal:2',
+        'data_inicio_atividade' => 'date',
+        'cnaes_secundarios' => 'array',
+        'qsa' => 'array',
+        'origem_ref' => 'array',
     ];
 
     protected function documento(): Attribute
@@ -44,24 +73,9 @@ class Cliente extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function endereco()
+    public function participantes()
     {
-        return $this->hasOne(ClienteEndereco::class);
-    }
-
-    public function enderecos()
-    {
-        return $this->hasMany(ClienteEndereco::class);
-    }
-
-    public function funcionarios()
-    {
-        return $this->hasMany(ClienteFuncionario::class);
-    }
-
-    public function solicitacoes()
-    {
-        return $this->hasMany(ClienteSolicitacao::class);
+        return $this->hasMany(Participante::class);
     }
 
     // Helpers
@@ -86,14 +100,13 @@ class Cliente extends Model
     public function getDocumentoFormatadoAttribute(): string
     {
         $documento = preg_replace('/\D/', '', $this->documento);
-        
+
         if ($this->tipo_pessoa === 'PF') {
             // Formato CPF: 000.000.000-00
             return preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $documento);
         }
-        
+
         // Formato CNPJ: 00.000.000/0000-00
         return preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $documento);
     }
 }
-

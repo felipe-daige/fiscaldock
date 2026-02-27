@@ -1,28 +1,44 @@
 {{-- Validacao Contabil Inteligente - Dashboard --}}
 <div class="min-h-screen bg-gray-50" id="validacao-container">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {{-- Page Header --}}
-        <div class="mb-8">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    {{-- Header Section --}}
+    <div class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Validacao Contabil Inteligente</h1>
-                    <p class="mt-1 text-sm text-gray-600">Analise e valide suas notas fiscais com base em regras contabeis brasileiras.</p>
+                    <h1 class="text-xl font-bold text-gray-800">Validacao Contabil</h1>
+                    <p class="text-xs text-gray-500 mt-1">Analise e valide suas notas fiscais com base em regras contabeis brasileiras.</p>
                 </div>
-                <div class="flex items-center gap-3">
-                    <a href="/app/validacao/alertas" data-link class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium shadow-sm hover:bg-gray-50 transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                        </svg>
-                        Ver Alertas
-                    </a>
-                </div>
+                <a href="/app/validacao/alertas" data-link class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    Ver Alertas
+                </a>
             </div>
         </div>
+    </div>
+
+    {{-- Main Content --}}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="space-y-6">
+            <style>
+                @keyframes card-slide-in {
+                    from { opacity: 0; transform: translateY(60px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .vc-animate {
+                    opacity: 0;
+                    animation: card-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    .vc-animate { opacity: 1; animation: none; }
+                }
+            </style>
 
         {{-- KPIs --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 vc-animate" style="animation-delay: 0.05s">
             {{-- Total Notas --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
                 <div class="flex items-center gap-3">
                     <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
                         <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -37,7 +53,7 @@
             </div>
 
             {{-- Validadas --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
                 <div class="flex items-center gap-3">
                     <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
                         <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,7 +68,7 @@
             </div>
 
             {{-- Conforme --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
                 <div class="flex items-center gap-3">
                     <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
                         <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -67,7 +83,7 @@
             </div>
 
             {{-- Atencao --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
                 <div class="flex items-center gap-3">
                     <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center">
                         <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,7 +98,7 @@
             </div>
 
             {{-- Irregular --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
                 <div class="flex items-center gap-3">
                     <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
                         <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,7 +113,7 @@
             </div>
 
             {{-- Critico --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
                 <div class="flex items-center gap-3">
                     <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
                         <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,7 +130,7 @@
 
         @if(($notasCriticas ?? collect())->count() > 0)
         {{-- Alertas Criticos --}}
-        <div class="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
+        <div class="bg-red-50 border border-red-200 rounded-xl p-4 vc-animate" style="animation-delay: 0.1s">
             <div class="flex items-start gap-3">
                 <svg class="w-5 h-5 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
@@ -141,7 +157,7 @@
         </div>
         @endif
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 vc-animate" style="animation-delay: 0.15s">
             {{-- Importacoes para Validar --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
@@ -190,7 +206,7 @@
                     </svg>
                     <h3 class="mt-4 text-lg font-medium text-gray-900">Nenhuma importacao encontrada</h3>
                     <p class="mt-2 text-sm text-gray-500">Importe XMLs para comecar a validar.</p>
-                    <a href="/app/monitoramento/xml" data-link class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
+                    <a href="/app/importacao/xml" data-link class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
                         </svg>
@@ -226,7 +242,7 @@
         </div>
 
         {{-- Informacoes de Precificacao --}}
-        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 vc-animate" style="animation-delay: 0.2s">
             <h4 class="font-semibold text-blue-900 mb-3">Sobre a Validacao</h4>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
@@ -245,6 +261,7 @@
                     <p class="text-xs font-semibold text-blue-900 mt-2">3 creditos/participante</p>
                 </div>
             </div>
+        </div>
         </div>
     </div>
 </div>

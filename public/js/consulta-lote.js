@@ -31,15 +31,10 @@
         processos_cnj: 'Processos CNJ'
     };
 
-    // Consultas gratuitas (Minha Receita)
-    const CONSULTAS_GRATUITAS = [
-        'situacao_cadastral', 'dados_cadastrais', 'endereco',
-        'cnaes', 'qsa', 'simples_nacional', 'mei'
-    ];
-
     // Estado global
     const state = {
         selectedIds: new Set(),
+        selectedClienteIds: new Set(),
         currentPage: 1,
         perPage: 50,
         totalPages: 1,
@@ -51,6 +46,9 @@
             origem_tipo: '',
             busca: ''
         },
+        activeTab: 'participantes',
+        filterContext: null, // { type: 'cliente'|'grupo', id: int, label: string }
+        expandedClienteId: null, // ID do cliente expandido inline (null = nenhum)
         tabId: generateUUID(),
         consultaLoteId: null,
         eventSource: null,
@@ -97,10 +95,22 @@
             totalSelecionados: document.getElementById('total-selecionados'),
 
             // Filtros
-            filtroGrupo: document.getElementById('filtro-grupo'),
             filtroOrigem: document.getElementById('filtro-origem'),
-            filtroCliente: document.getElementById('filtro-cliente'),
             filtroBusca: document.getElementById('filtro-busca'),
+
+            // Abas
+            searchTabs: document.querySelectorAll('.search-tab'),
+            viewParticipantes: document.getElementById('view-participantes'),
+            viewClientes: document.getElementById('view-clientes'),
+            viewGrupos: document.getElementById('view-grupos'),
+            listaClientes: document.getElementById('lista-clientes'),
+            checkboxTodosClientes: document.getElementById('checkbox-todos-clientes'),
+            listaGrupos: document.getElementById('lista-grupos'),
+            buscaClientes: document.getElementById('busca-clientes'),
+            participantesContext: document.getElementById('participantes-context'),
+            filterContextLabel: document.getElementById('filter-context-label'),
+            btnClearFilterContext: document.getElementById('btn-clear-filter-context'),
+            btnRemoveFilterChip: document.getElementById('btn-remove-filter-chip'),
 
             // Botoes
             btnSelecionarTodos: document.getElementById('btn-selecionar-todos'),
@@ -139,12 +149,9 @@
 
             // Adicionar CNPJ
             inputAdicionarCnpj: document.getElementById('input-adicionar-cnpj'),
-            selectClienteCnpj: document.getElementById('select-cliente-cnpj'),
+            selectClienteAssociar: document.getElementById('select-cliente-associar'),
             btnAdicionarCnpj: document.getElementById('btn-adicionar-cnpj'),
             feedbackAdicionarCnpj: document.getElementById('feedback-adicionar-cnpj'),
-            radioTipoParticipante: document.getElementById('radio-tipo-participante'),
-            radioTipoCliente: document.getElementById('radio-tipo-cliente'),
-            containerSelectCliente: document.getElementById('container-select-cliente'),
 
         };
     }
@@ -153,14 +160,40 @@
      * Vincula eventos aos elementos.
      */
     function bindEvents() {
-        // Filtros
-        if (elements.filtroGrupo) {
-            elements.filtroGrupo.addEventListener('change', onFilterChange);
-        }
+        // Filtros (apenas origem e busca; grupo/cliente agora via abas)
         if (elements.filtroOrigem) elements.filtroOrigem.addEventListener('change', onFilterChange);
-        if (elements.filtroCliente) elements.filtroCliente.addEventListener('change', onFilterChange);
         if (elements.filtroBusca) {
             elements.filtroBusca.addEventListener('input', debounce(onFilterChange, 300));
+        }
+
+        // Abas (event delegation - robusto para SPA re-navigation)
+        var searchTabsContainer = document.getElementById('search-tabs');
+        if (searchTabsContainer && !searchTabsContainer._tabDelegated) {
+            searchTabsContainer._tabDelegated = true;
+            searchTabsContainer.addEventListener('click', function(e) {
+                var tab = e.target.closest('.search-tab');
+                if (tab && tab.dataset.tab) {
+                    switchTab(tab.dataset.tab);
+                }
+            });
+        }
+
+        // Selecao de todos clientes (checkbox header)
+        if (elements.checkboxTodosClientes) {
+            elements.checkboxTodosClientes.addEventListener('change', toggleTodosClientes);
+        }
+
+        // Busca clientes (dentro da aba Clientes)
+        if (elements.buscaClientes) {
+            elements.buscaClientes.addEventListener('input', debounce(loadClientes, 300));
+        }
+
+        // Limpar filtro de contexto
+        if (elements.btnClearFilterContext) {
+            elements.btnClearFilterContext.addEventListener('click', clearFilterContext);
+        }
+        if (elements.btnRemoveFilterChip) {
+            elements.btnRemoveFilterChip.addEventListener('click', clearFilterContext);
         }
 
         // Selecao
@@ -212,14 +245,6 @@
         }
         if (elements.btnAdicionarCnpj) {
             elements.btnAdicionarCnpj.addEventListener('click', adicionarCnpj);
-        }
-
-        // Radio tipo cadastro (Participante/Cliente)
-        if (elements.radioTipoParticipante) {
-            elements.radioTipoParticipante.addEventListener('change', toggleSelectCliente);
-        }
-        if (elements.radioTipoCliente) {
-            elements.radioTipoCliente.addEventListener('change', toggleSelectCliente);
         }
 
         // Modais
@@ -291,35 +316,99 @@
         participantes.forEach(p => {
             const isSelected = state.selectedIds.has(p.id);
             const tr = document.createElement('tr');
-            tr.className = `hover:bg-gray-50 transition ${isSelected ? 'bg-gray-50' : ''}`;
+            tr.className = 'hover:bg-gray-50 transition flex flex-col gap-1 px-4 py-3 md:table-row md:px-0 md:py-0 md:gap-0' + (isSelected ? ' bg-gray-50' : '');
             tr.dataset.id = p.id;
 
             // Formatar CNPJ
             const cnpjFormatado = formatCnpj(p.cnpj);
             const escNome = (p.razao_social || '').replace(/"/g, '&quot;');
 
-            const clienteNome = p.cliente?.razao_social || '';
+            const clienteNome = (p.cliente && p.cliente.razao_social) ? p.cliente.razao_social : '';
+            const isEmpresaPropria = p.cliente && p.cliente.is_empresa_propria;
+            const dotIndicator = isEmpresaPropria
+                ? '<span class="shrink-0 w-1.5 h-1.5 rounded-full bg-green-500"></span>'
+                : '';
+            const clienteTitle = clienteNome + (isEmpresaPropria ? ' (Empresa propria)' : '');
             const clienteHtml = clienteNome
-                ? `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 max-w-full truncate">${clienteNome}</span>`
+                ? `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-50 max-w-full" title="${clienteTitle}">${dotIndicator}<span class="truncate min-w-0 text-xs font-medium text-blue-700">${clienteNome}</span></span>`
                 : '<span class="text-gray-300">&mdash;</span>';
 
+            // Badge de situacao cadastral (RF = Receita Federal)
+            const situacaoMap = {
+                'ATIVA': {
+                    bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200',
+                    label: 'Ativa',
+                    tooltip: 'Empresa regular perante a Receita Federal',
+                    icon: '<svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+                },
+                'BAIXADA': {
+                    bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200',
+                    label: 'Baixada',
+                    tooltip: 'Empresa encerrada/fechada na Receita Federal',
+                    icon: '<svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+                },
+                'INAPTA': {
+                    bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200',
+                    label: 'Inapta',
+                    tooltip: 'Empresa irregular perante a Receita Federal \u2014 omissa em obrigacoes acessorias',
+                    icon: '<svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+                },
+                'SUSPENSA': {
+                    bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200',
+                    label: 'Suspensa',
+                    tooltip: 'Empresa temporariamente suspensa na Receita Federal',
+                    icon: '<svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>'
+                },
+                'NULA': {
+                    bg: 'bg-gray-100', text: 'text-gray-600', border: 'border-gray-300',
+                    label: 'Nula',
+                    tooltip: 'Inscricao anulada na Receita Federal',
+                    icon: '<svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>'
+                },
+            };
+            const situacao = p.situacao_cadastral;
+            const info = situacaoMap[situacao] || null;
+            const situacaoBadge = (situacao && info)
+                ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-medium ${info.bg} ${info.text} ${info.border}" title="${info.tooltip}"><span class="text-[9px] opacity-60">RF:</span>${info.icon}<span>${info.label}</span></span>`
+                : '';
+
+            // Build optional subline: nome_fantasia + cliente badge (mobile) on one flex row
+            const sublineParts = [];
+            if (p.nome_fantasia) sublineParts.push(`<span class="text-xs text-gray-500 truncate">${p.nome_fantasia}</span>`);
+            if (clienteNome) sublineParts.push(`<span class="md:hidden flex-shrink-0">${clienteHtml}</span>`);
+            const sublineHtml = sublineParts.length > 0
+                ? `<div class="flex items-center gap-2 mt-0.5 min-w-0">${sublineParts.join('')}</div>`
+                : '';
+
             tr.innerHTML = `
-                <td class="w-10 px-4 py-3">
+                <td class="hidden md:table-cell md:w-10 md:px-4 md:py-3">
                     <input type="checkbox" class="checkbox-participante w-4 h-4 text-gray-600 rounded border-gray-300" data-id="${p.id}" ${isSelected ? 'checked' : ''}>
                 </td>
-                <td class="w-40 px-4 py-3 text-sm font-mono text-gray-600 whitespace-nowrap tabular-nums">${cnpjFormatado}</td>
-                <td class="px-4 py-3">
-                    <div class="text-sm font-medium text-gray-900">${p.razao_social || '-'}</div>
-                    ${p.nome_fantasia ? `<div class="text-xs text-gray-500">${p.nome_fantasia}</div>` : ''}
+                <td class="block md:table-cell md:w-40 md:px-4 md:py-3 overflow-hidden">
+                    <div class="flex items-center gap-1.5 md:block min-w-0">
+                        <input type="checkbox" class="checkbox-participante w-4 h-4 text-gray-600 rounded border-gray-300 md:hidden flex-shrink-0" data-id="${p.id}" ${isSelected ? 'checked' : ''}>
+                        <span class="text-xs md:text-sm font-mono text-gray-500 md:text-gray-600 whitespace-nowrap tabular-nums">${cnpjFormatado}</span>
+                        ${situacaoBadge ? `<span class="md:hidden flex-shrink-0">${situacaoBadge}</span>` : ''}
+                    </div>
                 </td>
-                <td class="w-32 px-4 py-3 text-sm text-gray-500 truncate" title="${clienteNome}">
-                    ${clienteHtml}
+                <td class="block md:table-cell md:px-4 md:py-3 md:max-w-0 overflow-hidden">
+                    <div class="text-sm font-medium text-gray-900 truncate min-w-0">${p.razao_social || '-'}</div>
+                    ${sublineHtml}
+                    ${situacaoBadge ? `<div class="hidden md:block mt-0.5">${situacaoBadge}</div>` : ''}
+                </td>
+                <td class="hidden md:table-cell md:px-4 md:py-3 text-sm text-gray-500">
+                    <div class="overflow-hidden">${clienteHtml}</div>
                 </td>
             `;
 
-            // Evento de checkbox
-            const checkbox = tr.querySelector('.checkbox-participante');
-            checkbox.addEventListener('change', () => toggleParticipante(p.id, checkbox.checked));
+            // Evento de checkbox (desktop + mobile duplicados, manter sincronizados)
+            const checkboxes = tr.querySelectorAll('.checkbox-participante');
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', () => {
+                    checkboxes.forEach(other => { other.checked = cb.checked; });
+                    toggleParticipante(p.id, cb.checked);
+                });
+            });
 
             elements.tabelaBody.appendChild(tr);
         });
@@ -364,8 +453,7 @@
      * Handler de mudanca de filtros.
      */
     function onFilterChange() {
-        state.filters.grupo_id = elements.filtroGrupo?.value || '';
-        state.filters.cliente_id = elements.filtroCliente?.value || '';
+        // grupo_id e cliente_id sao gerenciados pelas abas (filterContext)
         state.filters.origem_tipo = elements.filtroOrigem?.value || '';
         state.filters.busca = elements.filtroBusca?.value || '';
         state.currentPage = 1;
@@ -410,41 +498,52 @@
      * Seleciona todos os participantes do filtro atual (todas as paginas).
      */
     async function selecionarTodosFilter() {
-        // Buscar todos os IDs do filtro atual
-        const params = new URLSearchParams({
-            page: 1,
-            per_page: 10000 // Limite alto para pegar todos
-        });
-
-        if (state.filters.grupo_id) params.append('grupo_id', state.filters.grupo_id);
-        if (state.filters.cliente_id) params.append('cliente_id', state.filters.cliente_id);
-        if (state.filters.origem_tipo) params.append('origem_tipo', state.filters.origem_tipo);
-        if (state.filters.busca) params.append('busca', state.filters.busca);
-
         try {
-            const response = await fetch(`${window.consultaData.routes.getParticipantes}?${params}`, {
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
+            let page = 1;
+            let lastPage = 1;
 
-            const data = await response.json();
-
-            if (data.success && data.data) {
-                data.data.forEach(p => state.selectedIds.add(p.id));
-
-                // Atualizar checkboxes visiveis
-                document.querySelectorAll('.checkbox-participante').forEach(cb => {
-                    cb.checked = true;
-                    const id = parseInt(cb.dataset.id);
-                    updateRowHighlight(id, true);
+            while (page <= lastPage) {
+                const params = new URLSearchParams({
+                    page: page,
+                    per_page: 100
                 });
 
-                updateContadorSelecionados();
-                updateResumo();
-                updateCheckboxTodos();
+                if (state.filters.grupo_id) params.append('grupo_id', state.filters.grupo_id);
+                if (state.filters.cliente_id) params.append('cliente_id', state.filters.cliente_id);
+                if (state.filters.origem_tipo) params.append('origem_tipo', state.filters.origem_tipo);
+                if (state.filters.busca) params.append('busca', state.filters.busca);
+
+                const response = await fetch(`${window.consultaData.routes.getParticipantes}?${params}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Erro ao buscar participantes');
+
+                const data = await response.json();
+
+                if (data.success && data.data) {
+                    data.data.forEach(p => state.selectedIds.add(p.id));
+                    lastPage = data.pagination?.last_page || 1;
+                } else {
+                    break;
+                }
+
+                page++;
             }
+
+            // Atualizar checkboxes visiveis na pagina atual
+            document.querySelectorAll('.checkbox-participante').forEach(cb => {
+                cb.checked = true;
+                const id = parseInt(cb.dataset.id);
+                updateRowHighlight(id, true);
+            });
+
+            updateContadorSelecionados();
+            updateResumo();
+            updateCheckboxTodos();
         } catch (error) {
             console.error('Erro ao selecionar todos:', error);
         }
@@ -455,12 +554,19 @@
      */
     function limparSelecao() {
         state.selectedIds.clear();
+        state.selectedClienteIds.clear();
         document.querySelectorAll('.checkbox-participante').forEach(cb => {
             cb.checked = false;
             const id = parseInt(cb.dataset.id);
             updateRowHighlight(id, false);
         });
         if (elements.checkboxTodos) elements.checkboxTodos.checked = false;
+        if (elements.checkboxTodosClientes) {
+            elements.checkboxTodosClientes.checked = false;
+            elements.checkboxTodosClientes.indeterminate = false;
+        }
+        // Uncheck visible client checkboxes
+        document.querySelectorAll('.checkbox-cliente').forEach(function(cb) { cb.checked = false; });
         updateContadorSelecionados();
         updateResumo();
     }
@@ -552,15 +658,10 @@
 
         container.innerHTML = planoData.consultas.map(consulta => {
             const nome = CONSULTA_NOMES[consulta] || consulta;
-            const isGratuita = CONSULTAS_GRATUITAS.includes(consulta);
-            const badge = isGratuita
-                ? '<span class="px-1.5 py-0.5 bg-green-50 text-green-600 text-[10px] font-medium rounded">Gratis</span>'
-                : '<span class="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-medium rounded">1 cr</span>';
 
             return `<div class="flex items-center gap-2 py-1">
                 ${checkSvg}
                 <span class="text-xs text-gray-700 flex-1">${nome}</span>
-                ${badge}
             </div>`;
         }).join('');
     }
@@ -572,22 +673,28 @@
         const totalParticipantes = state.selectedIds.size;
         const planoSelecionado = document.querySelector('input[name="plano_id"]:checked');
         const custoUnitario = planoSelecionado ? parseInt(planoSelecionado.dataset.custo) : 0;
-        const isGratuito = planoSelecionado?.dataset.gratuito === '1';
+        const isGratuito = planoSelecionado && planoSelecionado.dataset.gratuito === '1';
         const custoTotal = isGratuito ? 0 : totalParticipantes * custoUnitario;
-        const creditosSuficientes = state.credits >= custoTotal;
+        const creditosSuficientes = isGratuito || state.credits >= custoTotal;
 
         if (elements.resumoParticipantes) elements.resumoParticipantes.textContent = totalParticipantes;
-        if (elements.resumoCustoUnitario) elements.resumoCustoUnitario.textContent = isGratuito ? 'Grátis' : `${custoUnitario} ${custoUnitario === 1 ? 'crédito' : 'créditos'}`;
-        if (elements.resumoCustoTotal) elements.resumoCustoTotal.textContent = isGratuito ? 'Grátis' : `${custoTotal} ${custoTotal === 1 ? 'crédito' : 'créditos'}`;
+
+        if (isGratuito) {
+            if (elements.resumoCustoUnitario) elements.resumoCustoUnitario.textContent = 'Gratis';
+            if (elements.resumoCustoTotal) elements.resumoCustoTotal.textContent = 'Gratis';
+        } else {
+            if (elements.resumoCustoUnitario) elements.resumoCustoUnitario.textContent = `${custoUnitario} ${custoUnitario === 1 ? 'crédito' : 'créditos'}`;
+            if (elements.resumoCustoTotal) elements.resumoCustoTotal.textContent = `${custoTotal} ${custoTotal === 1 ? 'crédito' : 'créditos'}`;
+        }
 
         // Alerta de creditos insuficientes
         if (elements.alertaCreditosInsuficientes) {
-            elements.alertaCreditosInsuficientes.classList.toggle('hidden', creditosSuficientes || isGratuito);
+            elements.alertaCreditosInsuficientes.classList.toggle('hidden', creditosSuficientes);
         }
 
         // Habilitar/desabilitar botao
         if (elements.btnGerarRelatorio) {
-            const shouldDisable = totalParticipantes === 0 || (!creditosSuficientes && !isGratuito);
+            const shouldDisable = totalParticipantes === 0 || !creditosSuficientes;
             elements.btnGerarRelatorio.disabled = shouldDisable;
 
             // Atualizar estilos inline do botao
@@ -609,7 +716,7 @@
     async function executarConsulta() {
         const participanteIds = Array.from(state.selectedIds);
         const planoId = document.querySelector('input[name="plano_id"]:checked')?.value;
-        const clienteId = elements.filtroCliente?.value || null;
+        const clienteId = state.filters.cliente_id || null;
 
         if (participanteIds.length === 0) {
             alert('Selecione pelo menos um participante.');
@@ -862,25 +969,16 @@
             return;
         }
 
-        // Determinar tipo de cadastro (participante ou cliente)
-        var isCliente = elements.radioTipoCliente?.checked || false;
-        var clienteId = null;
-        var criarCliente = false;
-
-        if (isCliente) {
-            criarCliente = true;
-            var selectVal = elements.selectClienteCnpj?.value || 'novo';
-            clienteId = selectVal; // 'novo' ou ID numerico
-        }
+        // Associacao opcional a cliente existente
+        var clienteId = elements.selectClienteAssociar?.value || null;
 
         hideFeedbackCnpj();
         setBtnAdicionarLoading(true);
 
         try {
             var bodyPayload = { cnpj: cnpj };
-            if (criarCliente) {
-                bodyPayload.criar_cliente = true;
-                bodyPayload.cliente_id = clienteId === 'novo' ? 'novo' : parseInt(clienteId);
+            if (clienteId) {
+                bodyPayload.cliente_id = parseInt(clienteId);
             }
 
             var response = await fetch(window.consultaData.routes.adicionarCnpj, {
@@ -1005,13 +1103,607 @@
     }
 
     // ==========================================
-    // Toggle Select Cliente (Radio)
+    // Inline Expansion de Participantes no tab Clientes
     // ==========================================
 
-    function toggleSelectCliente() {
-        if (!elements.containerSelectCliente) return;
-        var isCliente = elements.radioTipoCliente?.checked || false;
-        elements.containerSelectCliente.classList.toggle('hidden', !isCliente);
+    /**
+     * Escapa HTML para prevenir XSS ao inserir texto no DOM.
+     */
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(text));
+        return div.innerHTML;
+    }
+
+    /**
+     * Alterna expansao inline de participantes de um cliente.
+     */
+    async function toggleClienteExpansion(clienteId, clienteLabel) {
+        if (state.expandedClienteId === clienteId) {
+            collapseClienteExpansion();
+            return;
+        }
+
+        // Colapsar anterior se houver
+        collapseClienteExpansion();
+
+        state.expandedClienteId = clienteId;
+
+        // Highlight a row e rotacionar chevron
+        var clienteRow = elements.listaClientes?.querySelector('tr[data-cliente-id="' + clienteId + '"]');
+        if (clienteRow) {
+            clienteRow.classList.add('bg-blue-50');
+            var chevron = clienteRow.querySelector('.chevron-icon');
+            if (chevron) chevron.classList.add('rotate-90');
+        }
+
+        // Criar row de expansao com loading
+        var expansionRow = document.createElement('tr');
+        expansionRow.id = 'cliente-expansion-row';
+        expansionRow.innerHTML = '<td colspan="4" class="bg-gray-50 border-y border-gray-200 px-5 py-4">'
+            + '<div class="flex items-center justify-center gap-2 py-4 text-sm text-gray-500">'
+            + '<svg class="animate-spin w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>'
+            + 'Carregando participantes...'
+            + '</div>'
+            + '</td>';
+
+        if (clienteRow && clienteRow.parentNode) {
+            clienteRow.parentNode.insertBefore(expansionRow, clienteRow.nextSibling);
+        }
+
+        // Fetch participantes do cliente
+        try {
+            var params = new URLSearchParams({
+                cliente_id: clienteId,
+                per_page: 50
+            });
+
+            var response = await fetch(window.consultaData.routes.getParticipantes + '?' + params, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) throw new Error('Erro ao carregar participantes');
+
+            var data = await response.json();
+
+            // Verificar se ainda esta expandido (usuario pode ter clicado em outro)
+            if (state.expandedClienteId !== clienteId) return;
+
+            if (data.success) {
+                renderClienteExpansionContent(clienteId, clienteLabel, data.data, data.pagination);
+            } else {
+                renderClienteExpansionError('Erro ao carregar participantes.');
+            }
+        } catch (error) {
+            console.error('Erro ao carregar participantes do cliente:', error);
+            if (state.expandedClienteId === clienteId) {
+                renderClienteExpansionError('Erro ao carregar participantes. Tente novamente.');
+            }
+        }
+    }
+
+    /**
+     * Colapsa a expansao inline de participantes.
+     */
+    function collapseClienteExpansion() {
+        var expansionRow = document.getElementById('cliente-expansion-row');
+        if (expansionRow) {
+            expansionRow.remove();
+        }
+
+        // Resetar visual da row anterior
+        if (state.expandedClienteId && elements.listaClientes) {
+            var prevRow = elements.listaClientes.querySelector('tr[data-cliente-id="' + state.expandedClienteId + '"]');
+            if (prevRow) {
+                prevRow.classList.remove('bg-blue-50');
+                var chevron = prevRow.querySelector('.chevron-icon');
+                if (chevron) chevron.classList.remove('rotate-90');
+            }
+        }
+
+        state.expandedClienteId = null;
+    }
+
+    /**
+     * Renderiza conteudo do painel de expansao com participantes.
+     */
+    function renderClienteExpansionContent(clienteId, clienteLabel, participantes, pagination) {
+        var expansionRow = document.getElementById('cliente-expansion-row');
+        if (!expansionRow) return;
+
+        var totalCount = pagination ? pagination.total : participantes.length;
+
+        if (!participantes || participantes.length === 0) {
+            expansionRow.innerHTML = '<td colspan="4" class="bg-gray-50 border-y border-gray-200 px-5 py-4">'
+                + '<div class="flex items-center justify-between">'
+                + '<span class="text-sm text-gray-500">Nenhum participante vinculado a este cliente.</span>'
+                + '<button type="button" class="expansion-close text-gray-400 hover:text-gray-600 p-1"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>'
+                + '</div>'
+                + '</td>';
+
+            expansionRow.querySelector('.expansion-close')?.addEventListener('click', collapseClienteExpansion);
+            return;
+        }
+
+        // Verificar quantos estao selecionados deste cliente
+        var selectedCount = participantes.filter(function(p) { return state.selectedIds.has(p.id); }).length;
+        var allSelected = selectedCount === participantes.length;
+
+        var html = '<td colspan="4" class="bg-gray-50 border-y border-gray-200 px-5 py-4">'
+            // Header
+            + '<div class="flex items-center justify-between mb-3">'
+            + '<div class="flex items-center gap-3">'
+            + '<span class="text-sm font-medium text-gray-700">Participantes de ' + escapeHtml(clienteLabel) + '</span>'
+            + '<span class="text-xs text-gray-400">' + totalCount + ' encontrado' + (totalCount !== 1 ? 's' : '') + '</span>'
+            + '</div>'
+            + '<div class="flex items-center gap-3">'
+            + '<button type="button" class="expansion-select-all text-xs font-medium text-blue-600 hover:text-blue-800 transition">'
+            + (allSelected ? 'Desmarcar todos' : 'Selecionar todos')
+            + '</button>'
+            + '<button type="button" class="expansion-close text-gray-400 hover:text-gray-600 p-1"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>'
+            + '</div>'
+            + '</div>'
+            // Lista de participantes
+            + '<div class="max-h-80 overflow-y-auto space-y-0.5">';
+
+        participantes.forEach(function(p) {
+            var isSelected = state.selectedIds.has(p.id);
+            var cnpjFormatado = formatCnpj(p.cnpj);
+
+            html += '<label class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-white cursor-pointer transition'
+                + (isSelected ? ' bg-white ring-1 ring-blue-200' : '') + '">'
+                + '<input type="checkbox" class="expansion-checkbox w-4 h-4 text-blue-600 rounded border-gray-300" data-participante-id="' + p.id + '"'
+                + (isSelected ? ' checked' : '') + '>'
+                + '<span class="text-sm font-mono text-gray-600 tabular-nums whitespace-nowrap">' + cnpjFormatado + '</span>'
+                + '<span class="text-sm text-gray-900 truncate">' + escapeHtml(p.razao_social || '-') + '</span>'
+                + '</label>';
+        });
+
+        html += '</div>';
+
+        // Footer com contagem
+        if (totalCount > participantes.length) {
+            html += '<div class="mt-2 text-xs text-gray-400 text-center">Mostrando ' + participantes.length + ' de ' + totalCount + '</div>';
+        }
+
+        html += '</td>';
+
+        expansionRow.innerHTML = html;
+
+        // Bind eventos nos checkboxes
+        expansionRow.querySelectorAll('.expansion-checkbox').forEach(function(cb) {
+            cb.addEventListener('change', function() {
+                var pid = parseInt(cb.dataset.participanteId);
+                toggleParticipante(pid, cb.checked);
+
+                // Atualizar visual do label
+                var label = cb.closest('label');
+                if (label) {
+                    if (cb.checked) {
+                        label.classList.add('bg-white', 'ring-1', 'ring-blue-200');
+                    } else {
+                        label.classList.remove('bg-white', 'ring-1', 'ring-blue-200');
+                    }
+                }
+
+                // Atualizar texto do "Selecionar todos"
+                updateExpansionSelectAllText(expansionRow, participantes);
+            });
+        });
+
+        // Bind "Selecionar todos"
+        var selectAllBtn = expansionRow.querySelector('.expansion-select-all');
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', function() {
+                var currentlyAllSelected = participantes.every(function(p) { return state.selectedIds.has(p.id); });
+
+                participantes.forEach(function(p) {
+                    if (currentlyAllSelected) {
+                        state.selectedIds.delete(p.id);
+                    } else {
+                        state.selectedIds.add(p.id);
+                    }
+                });
+
+                updateContadorSelecionados();
+                updateResumo();
+                updateCheckboxTodos();
+
+                // Re-render o conteudo para refletir o novo estado
+                renderClienteExpansionContent(clienteId, clienteLabel, participantes, pagination);
+            });
+        }
+
+        // Bind fechar
+        expansionRow.querySelector('.expansion-close')?.addEventListener('click', collapseClienteExpansion);
+    }
+
+    /**
+     * Atualiza o texto do botao "Selecionar todos" / "Desmarcar todos".
+     */
+    function updateExpansionSelectAllText(expansionRow, participantes) {
+        var btn = expansionRow.querySelector('.expansion-select-all');
+        if (!btn) return;
+        var allSelected = participantes.every(function(p) { return state.selectedIds.has(p.id); });
+        btn.textContent = allSelected ? 'Desmarcar todos' : 'Selecionar todos';
+    }
+
+    /**
+     * Renderiza mensagem de erro no painel de expansao.
+     */
+    function renderClienteExpansionError(message) {
+        var expansionRow = document.getElementById('cliente-expansion-row');
+        if (!expansionRow) return;
+
+        expansionRow.innerHTML = '<td colspan="4" class="bg-gray-50 border-y border-gray-200 px-5 py-4">'
+            + '<div class="flex items-center justify-between">'
+            + '<span class="text-sm text-red-500">' + escapeHtml(message) + '</span>'
+            + '<button type="button" class="expansion-close text-gray-400 hover:text-gray-600 p-1"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>'
+            + '</div>'
+            + '</td>';
+
+        expansionRow.querySelector('.expansion-close')?.addEventListener('click', collapseClienteExpansion);
+    }
+
+    // ==========================================
+    // Client Selection (checkbox-based bulk selection)
+    // ==========================================
+
+    /**
+     * Alterna selecao de um cliente (adiciona/remove todos seus participantes).
+     */
+    async function toggleClienteSelection(clienteId, checked) {
+        try {
+            var response = await fetch(window.consultaData.routes.participantesPorClientes, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': window.consultaData.csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ cliente_ids: [clienteId] })
+            });
+
+            var data = await response.json();
+            if (!data.success) return;
+
+            var ids = data.ids || [];
+
+            if (checked) {
+                state.selectedClienteIds.add(clienteId);
+                ids.forEach(function(id) { state.selectedIds.add(id); });
+            } else {
+                state.selectedClienteIds.delete(clienteId);
+                ids.forEach(function(id) { state.selectedIds.delete(id); });
+            }
+
+            // Atualizar checkboxes visiveis na aba participantes
+            document.querySelectorAll('.checkbox-participante').forEach(function(cb) {
+                var pid = parseInt(cb.dataset.id);
+                cb.checked = state.selectedIds.has(pid);
+                updateRowHighlight(pid, cb.checked);
+            });
+
+            updateContadorSelecionados();
+            updateResumo();
+            updateCheckboxTodos();
+            updateCheckboxTodosClientes();
+        } catch (error) {
+            console.error('Erro ao selecionar cliente:', error);
+        }
+    }
+
+    /**
+     * Alterna selecao de todos os clientes visiveis.
+     */
+    async function toggleTodosClientes() {
+        var isChecked = elements.checkboxTodosClientes ? elements.checkboxTodosClientes.checked : false;
+
+        // Coletar IDs de clientes visiveis no DOM (dedup: cada cliente tem 2 checkboxes mobile/desktop)
+        var clienteIdSet = new Set();
+        document.querySelectorAll('.checkbox-cliente').forEach(function(cb) {
+            clienteIdSet.add(parseInt(cb.dataset.clienteId));
+        });
+        var clienteIds = Array.from(clienteIdSet);
+
+        if (clienteIds.length === 0) return;
+
+        try {
+            var response = await fetch(window.consultaData.routes.participantesPorClientes, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': window.consultaData.csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ cliente_ids: clienteIds })
+            });
+
+            var data = await response.json();
+            if (!data.success) return;
+
+            var ids = data.ids || [];
+
+            if (isChecked) {
+                clienteIds.forEach(function(cid) { state.selectedClienteIds.add(cid); });
+                ids.forEach(function(id) { state.selectedIds.add(id); });
+            } else {
+                clienteIds.forEach(function(cid) { state.selectedClienteIds.delete(cid); });
+                ids.forEach(function(id) { state.selectedIds.delete(id); });
+            }
+
+            // Atualizar checkboxes de clientes
+            document.querySelectorAll('.checkbox-cliente').forEach(function(cb) {
+                cb.checked = isChecked;
+            });
+
+            // Atualizar checkboxes de participantes visiveis
+            document.querySelectorAll('.checkbox-participante').forEach(function(cb) {
+                var pid = parseInt(cb.dataset.id);
+                cb.checked = state.selectedIds.has(pid);
+                updateRowHighlight(pid, cb.checked);
+            });
+
+            updateContadorSelecionados();
+            updateResumo();
+            updateCheckboxTodos();
+        } catch (error) {
+            console.error('Erro ao selecionar todos clientes:', error);
+        }
+    }
+
+    /**
+     * Atualiza estado do checkbox "todos clientes" (header).
+     */
+    function updateCheckboxTodosClientes() {
+        if (!elements.checkboxTodosClientes) return;
+
+        var checkboxes = document.querySelectorAll('.checkbox-cliente');
+        if (checkboxes.length === 0) {
+            elements.checkboxTodosClientes.checked = false;
+            elements.checkboxTodosClientes.indeterminate = false;
+            return;
+        }
+
+        var checkedCount = Array.from(checkboxes).filter(function(cb) { return cb.checked; }).length;
+
+        if (checkedCount === 0) {
+            elements.checkboxTodosClientes.checked = false;
+            elements.checkboxTodosClientes.indeterminate = false;
+        } else if (checkedCount === checkboxes.length) {
+            elements.checkboxTodosClientes.checked = true;
+            elements.checkboxTodosClientes.indeterminate = false;
+        } else {
+            elements.checkboxTodosClientes.checked = false;
+            elements.checkboxTodosClientes.indeterminate = true;
+        }
+    }
+
+    // ==========================================
+    // Tab Switching (Participantes / Clientes / Grupos)
+    // ==========================================
+
+    function switchTab(tabName) {
+        // Colapsar expansion ao sair do tab Clientes
+        if (state.activeTab === 'clientes' && tabName !== 'clientes') {
+            collapseClienteExpansion();
+        }
+
+        state.activeTab = tabName;
+
+        // Atualizar visuais das abas
+        elements.searchTabs?.forEach(function(t) {
+            if (t.dataset.tab === tabName) {
+                t.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+                t.classList.remove('text-gray-500', 'hover:text-gray-700');
+            } else {
+                t.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+                t.classList.add('text-gray-500', 'hover:text-gray-700');
+            }
+        });
+
+        // Mostrar/esconder views
+        document.querySelectorAll('.search-view').forEach(function(v) { v.classList.add('hidden'); });
+
+        if (tabName === 'participantes') {
+            if (elements.viewParticipantes) elements.viewParticipantes.classList.remove('hidden');
+        } else if (tabName === 'clientes') {
+            if (elements.viewClientes) elements.viewClientes.classList.remove('hidden');
+            loadClientes();
+        } else if (tabName === 'grupos') {
+            if (elements.viewGrupos) elements.viewGrupos.classList.remove('hidden');
+            loadGrupos();
+        }
+    }
+
+    async function loadClientes() {
+        var busca = elements.buscaClientes?.value || '';
+        var params = new URLSearchParams();
+        if (busca) params.append('busca', busca);
+
+        try {
+            var response = await fetch(window.consultaData.routes.getClientes + '?' + params, {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            var data = await response.json();
+            if (data.success) {
+                renderClientes(data.data);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar clientes:', error);
+            if (elements.listaClientes) {
+                elements.listaClientes.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-sm text-red-500">Erro ao carregar clientes.</td></tr>';
+            }
+        }
+    }
+
+    function renderClientes(clientes) {
+        if (!elements.listaClientes) return;
+
+        // Rebuild do tbody colapsa a expansion naturalmente
+        state.expandedClienteId = null;
+
+        if (!clientes || clientes.length === 0) {
+            elements.listaClientes.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-sm text-gray-500">Nenhum cliente encontrado.</td></tr>';
+            updateCheckboxTodosClientes();
+            return;
+        }
+
+        elements.listaClientes.innerHTML = '';
+
+        clientes.forEach(function(c) {
+            var isClienteSelected = state.selectedClienteIds.has(c.id);
+            var tr = document.createElement('tr');
+            tr.className = 'hover:bg-gray-50 cursor-pointer transition flex flex-col gap-1 px-4 py-3 md:table-row md:px-0 md:py-0 md:gap-0' + (isClienteSelected ? ' bg-gray-50' : '');
+            tr.dataset.clienteId = c.id;
+            tr.dataset.clienteLabel = (c.razao_social || '').replace(/"/g, '&quot;');
+
+            var cnpjFormatado = formatCnpj(c.documento);
+            var tipoBadge = c.tipo_pessoa === 'PJ'
+                ? '<span class="shrink-0 inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-700">PJ</span>'
+                : '<span class="shrink-0 inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-purple-100 text-purple-700">PF</span>';
+            var propriaDot = c.is_empresa_propria
+                ? '<span class="shrink-0 w-2 h-2 rounded-full bg-green-500" title="Empresa propria"></span>'
+                : '';
+            var nomeTitle = (c.razao_social || '-') + (c.is_empresa_propria ? ' (Empresa propria)' : '');
+
+            var chevronSvg = '<svg class="chevron-icon w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>';
+
+            tr.innerHTML =
+                '<td class="hidden md:table-cell md:w-10 md:px-4 md:py-3">'
+                + '<input type="checkbox" class="checkbox-cliente w-4 h-4 text-gray-600 rounded border-gray-300" data-cliente-id="' + c.id + '"' + (isClienteSelected ? ' checked' : '') + '>'
+                + '</td>'
+                + '<td class="block md:table-cell md:w-40 md:px-4 md:py-3">'
+                + '<div class="flex items-center gap-2 md:block">'
+                + '<input type="checkbox" class="checkbox-cliente w-4 h-4 text-gray-600 rounded border-gray-300 md:hidden flex-shrink-0" data-cliente-id="' + c.id + '"' + (isClienteSelected ? ' checked' : '') + '>'
+                + chevronSvg
+                + '<span class="text-sm font-mono text-gray-600 whitespace-nowrap tabular-nums">' + cnpjFormatado + '</span>'
+                + '</div>'
+                + '</td>'
+                + '<td class="block md:table-cell md:px-4 md:py-3">'
+                + '<div class="flex items-center gap-2 min-w-0" title="' + nomeTitle.replace(/"/g, '&quot;') + '">'
+                + propriaDot
+                + '<div class="text-sm font-medium text-gray-900 truncate min-w-0">' + (c.razao_social || '-') + '</div>'
+                + tipoBadge
+                + '</div>'
+                + (c.nome ? '<div class="text-xs text-gray-500 truncate">' + c.nome + '</div>' : '')
+                + '</td>'
+                + '<td class="block md:table-cell md:w-36 md:px-4 md:py-3 text-sm text-gray-500 md:whitespace-nowrap">' + c.participantes_count + ' participante' + (c.participantes_count !== 1 ? 's' : '') + '</td>';
+
+            // Checkbox click: select/deselect all participantes of this client (desktop + mobile)
+            var clienteCheckboxes = tr.querySelectorAll('.checkbox-cliente');
+            clienteCheckboxes.forEach(function(cb) {
+                cb.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Prevent row click (expansion)
+                });
+                cb.addEventListener('change', function() {
+                    clienteCheckboxes.forEach(function(other) { other.checked = cb.checked; });
+                    toggleClienteSelection(c.id, cb.checked);
+                });
+            });
+
+            // Row click (outside checkbox): expand/collapse inline
+            tr.addEventListener('click', function(e) {
+                // Don't expand if clicking the checkbox cell
+                if (e.target.closest('.checkbox-cliente')) return;
+                toggleClienteExpansion(c.id, c.razao_social || '');
+            });
+
+            elements.listaClientes.appendChild(tr);
+        });
+
+        updateCheckboxTodosClientes();
+    }
+
+    async function loadGrupos() {
+        try {
+            var response = await fetch(window.consultaData.routes.getGrupos, {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            var data = await response.json();
+            if (data.success) {
+                renderGrupos(data.data);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar grupos:', error);
+            if (elements.listaGrupos) {
+                elements.listaGrupos.innerHTML = '<div class="px-5 py-8 text-center text-sm text-red-500">Erro ao carregar grupos.</div>';
+            }
+        }
+    }
+
+    function renderGrupos(grupos) {
+        if (!elements.listaGrupos) return;
+
+        if (!grupos || grupos.length === 0) {
+            elements.listaGrupos.innerHTML = '<div class="px-5 py-8 text-center text-sm text-gray-500">Nenhum grupo criado.</div>';
+            return;
+        }
+
+        elements.listaGrupos.innerHTML = grupos.map(function(g) {
+            var cor = g.cor || '#3B82F6';
+            return '<button type="button" class="w-full px-5 py-3 flex items-center justify-between gap-3 hover:bg-gray-50 transition text-left grupo-item" data-grupo-id="' + g.id + '" data-grupo-label="' + (g.nome || '').replace(/"/g, '&quot;') + '">'
+                + '<div class="flex items-center gap-2.5 min-w-0">'
+                + '<span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ' + cor + '"></span>'
+                + '<span class="text-sm font-medium text-gray-900 truncate">' + (g.nome || '-') + '</span>'
+                + '</div>'
+                + '<span class="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap">' + g.participantes_count + ' participante' + (g.participantes_count !== 1 ? 's' : '') + '</span>'
+                + '</button>';
+        }).join('');
+
+        // Bind click events
+        elements.listaGrupos.querySelectorAll('.grupo-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                var grupoId = parseInt(item.dataset.grupoId);
+                var label = item.dataset.grupoLabel;
+                setFilterContext('grupo', grupoId, label);
+            });
+        });
+    }
+
+    function setFilterContext(type, id, label) {
+        // Clientes agora usam inline expansion; apenas grupos passam por aqui
+        if (type !== 'grupo') return;
+
+        state.filterContext = { type: type, id: id, label: label };
+
+        state.filters.grupo_id = id;
+        state.filters.cliente_id = '';
+
+        state.currentPage = 1;
+
+        // Voltar para aba participantes com barra de contexto
+        switchTab('participantes');
+        showFilterContext(label, type);
+        loadParticipantes();
+    }
+
+    function showFilterContext(label, type) {
+        if (elements.participantesContext) {
+            elements.participantesContext.classList.remove('hidden');
+        }
+        if (elements.filterContextLabel) {
+            var prefix = type === 'cliente' ? 'Cliente:' : 'Grupo:';
+            elements.filterContextLabel.textContent = prefix + ' ' + label;
+        }
+    }
+
+    function clearFilterContext() {
+        state.filterContext = null;
+        state.filters.cliente_id = '';
+        state.filters.grupo_id = '';
+        state.currentPage = 1;
+
+        if (elements.participantesContext) {
+            elements.participantesContext.classList.add('hidden');
+        }
+
+        loadParticipantes();
     }
 
     // ==========================================
@@ -1176,11 +1868,15 @@
 
         // Reset state for SPA re-navigation
         state.selectedIds = new Set();
+        state.selectedClienteIds = new Set();
         state.currentPage = 1;
         state.totalPages = 1;
         state.totalItems = 0;
         state.allIdsCurrentFilter = [];
         state.filters = { grupo_id: '', cliente_id: '', origem_tipo: '', busca: '' };
+        state.activeTab = 'participantes';
+        state.filterContext = null;
+        state.expandedClienteId = null;
         state.consultaLoteId = null;
         state.credits = window.consultaData?.credits || 0;
 

@@ -70,7 +70,7 @@
 
         try {
             // First, get nota IDs for this import
-            const notasResponse = await fetchWithCsrf(`/app/monitoramento/xml/importacao/${currentImportacaoId}/participantes`);
+            const notasResponse = await fetchWithCsrf(`/app/importacao/xml/importacao/${currentImportacaoId}/participantes`);
 
             // For now, we'll use a simplified approach - validate all notes in the import
             // Calculate cost endpoint

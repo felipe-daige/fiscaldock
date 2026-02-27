@@ -12,7 +12,7 @@
                         Gerencie seus clientes e monitore alertas e analises
                     </p>
                 </div>
-                <a href="/app/novo_cliente" data-link class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2">
+                <a href="/app/novo-cliente" data-link class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
@@ -25,8 +25,22 @@
     {{-- Main Content --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div class="space-y-6">
+            <style>
+                @keyframes card-slide-in {
+                    from { opacity: 0; transform: translateY(60px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .cli-animate {
+                    opacity: 0;
+                    animation: card-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    .cli-animate { opacity: 1; animation: none; }
+                }
+            </style>
+
             {{-- Cards de Resumo --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 cli-animate">
                 {{-- Card: Clientes Ativos --}}
                 <div id="card-total-clientes" class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 cursor-pointer hover:border-blue-300 transition-colors">
                     <div class="flex items-center justify-between">
@@ -89,7 +103,7 @@
             </div>
 
             {{-- Barra de Busca e Filtros --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 cli-animate" style="animation-delay: 0.1s">
                 <div class="mb-4">
                     <div class="relative">
                         <input
@@ -115,6 +129,21 @@
                         <option value="pf">Pessoa Fisica (CPF)</option>
                     </select>
                 </div>
+            </div>
+
+            {{-- Barra de selecao global --}}
+            <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                <div class="flex items-center gap-4 text-sm">
+                    <button type="button" id="btn-selecionar-todos-clientes" class="text-blue-600 hover:text-blue-800 font-medium">
+                        Selecionar todos
+                    </button>
+                    <button type="button" id="btn-limpar-selecao-clientes" class="text-gray-500 hover:text-gray-700 hidden">
+                        Limpar selecao
+                    </button>
+                </div>
+                <span id="total-selecionados-clientes-info" class="text-xs text-gray-500 hidden">
+                    <span id="total-selecionados-clientes">0</span> selecionados
+                </span>
             </div>
 
             {{-- Acoes em lote (aparece quando ha selecao) --}}
@@ -151,7 +180,7 @@
             </div>
 
             {{-- Tabela de Clientes --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm cli-animate" style="animation-delay: 0.2s">
                 @if(isset($clientes) && $clientes->count() > 0)
                 <div class="overflow-x-auto">
                     <table class="w-full" id="tabela-clientes">
@@ -203,6 +232,9 @@
                                             <div class="text-sm font-medium text-gray-900">{{ $cliente->nome ?? '-' }}</div>
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-purple-100 text-purple-700">PF</span>
                                         @endif
+                                        @if($cliente->is_empresa_propria)
+                                            <span class="px-1.5 py-0.5 bg-green-50 text-green-600 text-[10px] font-medium rounded">Empresa propria</span>
+                                        @endif
                                     </div>
                                     @if($cliente->tipo_pessoa === 'PJ' && $cliente->nome)
                                         <div class="text-xs text-gray-500">{{ $cliente->nome }}</div>
@@ -218,8 +250,8 @@
                                     {{ $cliente->telefone ?? '-' }}
                                 </td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
-                                    @if($cliente->endereco)
-                                        {{ $cliente->endereco->cidade }}/{{ $cliente->endereco->estado }}
+                                    @if($cliente->municipio || $cliente->uf)
+                                        {{ implode('/', array_filter([$cliente->municipio, $cliente->uf])) }}
                                     @else
                                         -
                                     @endif
@@ -268,7 +300,7 @@
                         </svg>
                         <h3 class="text-lg font-semibold text-gray-900 mb-2">Nenhum cliente cadastrado</h3>
                         <p class="text-sm text-gray-600 mb-4">Comece cadastrando seu primeiro cliente para gerencia-lo aqui.</p>
-                        <a href="/app/novo_cliente" data-link class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors gap-2">
+                        <a href="/app/novo-cliente" data-link class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                             </svg>
@@ -373,9 +405,9 @@
                                 <p class="text-xs text-gray-500">Telefone</p>
                                 <p class="text-sm text-gray-900" id="det-telefone">-</p>
                             </div>
-                            <div id="det-faturamento-wrapper">
-                                <p class="text-xs text-gray-500">Faturamento Anual</p>
-                                <p class="text-sm text-gray-900" id="det-faturamento">-</p>
+                            <div>
+                                <p class="text-xs text-gray-500">Localizacao</p>
+                                <p class="text-sm text-gray-900" id="det-localizacao">-</p>
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500">Empresa Propria</p>
@@ -386,29 +418,6 @@
                                 <p class="text-sm text-gray-900" id="det-created-at">-</p>
                             </div>
                         </div>
-                    </div>
-
-                    {{-- Endereco --}}
-                    <div id="det-endereco-section">
-                        <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                            Endereco
-                        </h4>
-                        <p class="text-sm text-gray-900" id="det-endereco-texto">-</p>
-                    </div>
-
-                    {{-- Funcionarios --}}
-                    <div id="det-funcionarios-section" class="hidden">
-                        <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                            </svg>
-                            Funcionarios
-                        </h4>
-                        <div id="det-funcionarios-lista" class="space-y-2"></div>
                     </div>
 
                     {{-- Estatisticas --}}
@@ -461,7 +470,7 @@
                     <span class="font-medium" id="modal-excluir-documento"></span> - <span id="modal-excluir-nome"></span>
                 </p>
                 <p class="text-sm text-gray-500">
-                    Todo o histórico associado será removido permanentemente, incluindo endereços, funcionários e solicitações. Os participantes vinculados serão mantidos.
+                    O cliente sera removido permanentemente. Os participantes vinculados serao mantidos.
                 </p>
                 <p class="text-sm text-red-600 font-medium mt-2">
                     Esta ação não pode ser desfeita.
@@ -494,7 +503,7 @@
             </div>
             <div class="mb-4">
                 <p class="text-sm text-gray-500 mb-2">
-                    Todo o histórico associado será removido permanentemente, incluindo endereços, funcionários e solicitações. Os participantes vinculados serão mantidos.
+                    O cliente sera removido permanentemente. Os participantes vinculados serao mantidos.
                 </p>
                 <p class="text-sm text-red-600 font-medium">
                     Esta ação não pode ser desfeita.
@@ -612,6 +621,18 @@
                 selectAll.checked = visibleChecked === visibleTotal && visibleTotal > 0;
                 selectAll.indeterminate = visibleChecked > 0 && visibleChecked < visibleTotal;
             }
+
+            // Atualizar info de selecao global
+            var infoEl = document.getElementById('total-selecionados-clientes');
+            if (infoEl) infoEl.textContent = count;
+            var infoContainer = document.getElementById('total-selecionados-clientes-info');
+            if (infoContainer) {
+                if (count > 0) { infoContainer.classList.remove('hidden'); } else { infoContainer.classList.add('hidden'); }
+            }
+            var btnLimparGlobal = document.getElementById('btn-limpar-selecao-clientes');
+            if (btnLimparGlobal) {
+                if (count > 0) { btnLimparGlobal.classList.remove('hidden'); } else { btnLimparGlobal.classList.add('hidden'); }
+            }
         }
 
         if (selectAll) {
@@ -645,7 +666,7 @@
             }
         });
 
-        // Botao limpar selecao
+        // Botao limpar selecao (barra de acoes)
         var btnLimpar = document.getElementById('btn-limpar-selecao');
         if (btnLimpar) {
             btnLimpar.addEventListener('click', function() {
@@ -653,6 +674,57 @@
                 container.querySelectorAll('.cliente-checkbox').forEach(function(cb) { cb.checked = false; });
                 if (selectAll) selectAll.checked = false;
                 atualizarBarraAcoes();
+                atualizarInfoSelecaoClientes();
+            });
+        }
+
+        // === Botoes "Selecionar todos" / "Limpar" globais ===
+        var btnSelecionarTodosClientes = document.getElementById('btn-selecionar-todos-clientes');
+        var btnLimparSelecaoClientes = document.getElementById('btn-limpar-selecao-clientes');
+        var totalSelecionadosClientesInfo = document.getElementById('total-selecionados-clientes-info');
+        var totalSelecionadosClientes = document.getElementById('total-selecionados-clientes');
+
+        function atualizarInfoSelecaoClientes() {
+            var count = clientesSelecionados.size;
+            if (totalSelecionadosClientes) totalSelecionadosClientes.textContent = count;
+            if (totalSelecionadosClientesInfo) {
+                if (count > 0) {
+                    totalSelecionadosClientesInfo.classList.remove('hidden');
+                } else {
+                    totalSelecionadosClientesInfo.classList.add('hidden');
+                }
+            }
+            if (btnLimparSelecaoClientes) {
+                if (count > 0) {
+                    btnLimparSelecaoClientes.classList.remove('hidden');
+                } else {
+                    btnLimparSelecaoClientes.classList.add('hidden');
+                }
+            }
+        }
+
+        if (btnSelecionarTodosClientes) {
+            btnSelecionarTodosClientes.addEventListener('click', function() {
+                container.querySelectorAll('.cliente-checkbox').forEach(function(cb) {
+                    var row = cb.closest('.cliente-row');
+                    if (row && row.style.display !== 'none') {
+                        cb.checked = true;
+                        clientesSelecionados.add(parseInt(cb.dataset.id));
+                    }
+                });
+                if (selectAll) selectAll.checked = true;
+                atualizarBarraAcoes();
+                atualizarInfoSelecaoClientes();
+            });
+        }
+
+        if (btnLimparSelecaoClientes) {
+            btnLimparSelecaoClientes.addEventListener('click', function() {
+                clientesSelecionados.clear();
+                container.querySelectorAll('.cliente-checkbox').forEach(function(cb) { cb.checked = false; });
+                if (selectAll) selectAll.checked = false;
+                atualizarBarraAcoes();
+                atualizarInfoSelecaoClientes();
             });
         }
 
@@ -935,8 +1007,6 @@
                 }
 
                 var c = data.cliente;
-                var end = data.endereco;
-                var funcs = data.funcionarios || [];
                 var stats = data.stats || {};
 
                 // Header
@@ -978,15 +1048,10 @@
                 var elTel = document.getElementById('det-telefone');
                 if (elTel) elTel.textContent = c.telefone || '-';
 
-                var elFat = document.getElementById('det-faturamento');
-                var elFatWrap = document.getElementById('det-faturamento-wrapper');
-                if (elFat && elFatWrap) {
-                    if (c.tipo_pessoa === 'PJ' && c.faturamento_anual) {
-                        elFatWrap.style.display = '';
-                        elFat.textContent = c.faturamento_anual;
-                    } else {
-                        elFatWrap.style.display = 'none';
-                    }
+                var elLocal = document.getElementById('det-localizacao');
+                if (elLocal) {
+                    var parts = [c.municipio, c.uf].filter(Boolean);
+                    elLocal.textContent = parts.length ? parts.join(' - ') : '-';
                 }
 
                 var elEmpresa = document.getElementById('det-empresa-propria');
@@ -1000,54 +1065,6 @@
 
                 var elCreated = document.getElementById('det-created-at');
                 if (elCreated) elCreated.textContent = c.created_at || '-';
-
-                // Endereco
-                var endSection = document.getElementById('det-endereco-section');
-                var endTexto = document.getElementById('det-endereco-texto');
-                if (endSection && endTexto) {
-                    if (end) {
-                        var parts = [];
-                        if (end.logradouro) parts.push(end.logradouro);
-                        if (end.numero) parts.push(end.numero);
-                        if (end.complemento) parts.push(end.complemento);
-
-                        var line2 = [];
-                        if (end.bairro) line2.push(end.bairro);
-                        if (end.cidade) line2.push(end.cidade);
-                        if (end.estado) line2.push(end.estado);
-                        if (end.cep) line2.push('CEP: ' + end.cep);
-
-                        var texto = parts.join(', ');
-                        if (line2.length > 0) texto += (texto ? ' - ' : '') + line2.join(', ');
-                        endTexto.textContent = texto || '-';
-                        endSection.style.display = '';
-                    } else {
-                        endSection.style.display = 'none';
-                    }
-                }
-
-                // Funcionarios
-                var funcSection = document.getElementById('det-funcionarios-section');
-                var funcLista = document.getElementById('det-funcionarios-lista');
-                if (funcSection && funcLista) {
-                    if (funcs.length > 0) {
-                        funcSection.classList.remove('hidden');
-                        funcLista.innerHTML = funcs.map(function(f) {
-                            return '<div class="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">' +
-                                '<div>' +
-                                    '<p class="text-sm font-medium text-gray-900">' + escHtml(f.nome_completo || '-') + '</p>' +
-                                    '<p class="text-xs text-gray-500">' + escHtml(f.email || '') + '</p>' +
-                                '</div>' +
-                                '<div class="text-right">' +
-                                    '<p class="text-xs text-gray-700">' + escHtml(f.cargo || '-') + '</p>' +
-                                    '<p class="text-xs text-gray-500">' + escHtml(f.nivel_acesso || '') + '</p>' +
-                                '</div>' +
-                            '</div>';
-                        }).join('');
-                    } else {
-                        funcSection.classList.add('hidden');
-                    }
-                }
 
                 // Estatisticas
                 var elParticipantes = document.getElementById('det-total-participantes');

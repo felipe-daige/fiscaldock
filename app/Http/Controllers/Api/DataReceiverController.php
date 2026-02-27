@@ -22,14 +22,85 @@ class DataReceiverController extends Controller
     ) {}
 
     /**
-     * Verifica se o token API é válido.
+     * Health check endpoint - verifica estado do token sem autenticação.
+     *
+     * GET /api/health
      */
-    private function isTokenValid(Request $request): bool
+    public function health()
+    {
+        $token = config('services.api.token');
+        $sanitized = $token ? trim(trim($token), '"\'') : '';
+
+        return response()->json([
+            'status' => 'ok',
+            'api_token_configured' => ! empty($sanitized),
+            'token_prefix' => $sanitized ? substr($sanitized, 0, 8) . '...' : '(vazio)',
+            'token_length' => strlen($sanitized),
+            'raw_length' => strlen($token ?? ''),
+            'had_quotes_or_whitespace' => strlen($token ?? '') !== strlen($sanitized),
+            'php_version' => PHP_VERSION,
+            'laravel_env' => config('app.env'),
+            'timestamp' => now()->toIso8601String(),
+        ]);
+    }
+
+    /**
+     * Verifica se o token API é válido.
+     * Retorna array com 'valid' e 'debug' para diagnostico.
+     */
+    private function validateToken(Request $request): array
     {
         $apiToken = $request->header('X-API-Token') ?? $request->input('api_token');
         $expectedToken = config('services.api.token');
 
-        return ! empty($apiToken) && ! empty($expectedToken) && $apiToken === $expectedToken;
+        // Sanitizar: remover whitespace e aspas literais
+        $apiToken = $apiToken ? trim(trim($apiToken), '"\'') : '';
+        $expectedToken = $expectedToken ? trim(trim($expectedToken), '"\'') : '';
+
+        $isValid = ! empty($apiToken) && ! empty($expectedToken) && hash_equals($expectedToken, $apiToken);
+
+        $debug = [
+            'received_prefix' => $apiToken ? substr($apiToken, 0, 8) . '...' : '(vazio)',
+            'expected_prefix' => $expectedToken ? substr($expectedToken, 0, 8) . '...' : '(vazio)',
+            'received_length' => strlen($apiToken),
+            'expected_length' => strlen($expectedToken),
+        ];
+
+        if (! $isValid) {
+            if (empty($expectedToken)) {
+                $debug['hint'] = "config('services.api.token') esta vazio — verifique API_TOKEN no .env e re-execute config:cache";
+            } elseif (empty($apiToken)) {
+                $debug['hint'] = 'Header X-API-Token nao enviado ou vazio';
+            } else {
+                $debug['hint'] = 'Token recebido difere do esperado — compare os prefixos acima';
+            }
+
+            Log::warning('Token validation failed', $debug);
+        }
+
+        return ['valid' => $isValid, 'debug' => $debug];
+    }
+
+    /**
+     * Verifica se o token API é válido (wrapper booleano para compatibilidade).
+     */
+    private function isTokenValid(Request $request): bool
+    {
+        return $this->validateToken($request)['valid'];
+    }
+
+    /**
+     * Retorna resposta 401 com diagnostico de token.
+     */
+    private function unauthorizedResponse(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $validation = $this->validateToken($request);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Token de API inválido.',
+            'debug' => $validation['debug'],
+        ], Response::HTTP_UNAUTHORIZED);
     }
 
     /**
@@ -37,7 +108,7 @@ class DataReceiverController extends Controller
      * Armazena em cache para o SSE ler e enviar ao frontend.
      * NÃO edita banco de dados - apenas cache.
      *
-     * POST /api/monitoramento/sped/importacao-txt/progress
+     * POST /api/importacao/sped/importacao-txt/progress
      *
      * Payload esperado (novo formato - n8n controla 100% do progresso):
      * {
@@ -76,10 +147,7 @@ class DataReceiverController extends Controller
             if (! $this->isTokenValid($request)) {
                 Log::warning('Token inválido em receiveImportacaoTxtProgress');
 
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Token de API inválido.',
-                ], Response::HTTP_UNAUTHORIZED);
+                return $this->unauthorizedResponse($request);
             }
 
             // Detectar formato do payload (novo vs legado)
@@ -285,10 +353,7 @@ class DataReceiverController extends Controller
             if (! $this->isTokenValid($request)) {
                 Log::warning('Token inválido em receiveMonitoramentoConsulta');
 
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Token de API inválido.',
-                ], Response::HTTP_UNAUTHORIZED);
+                return $this->unauthorizedResponse($request);
             }
 
             // Validar payload
@@ -424,9 +489,9 @@ class DataReceiverController extends Controller
     }
 
     /**
-     * Recebe progresso de importação de XMLs do Monitoramento (enviado pelo n8n).
+     * Recebe progresso de importação de XMLs (enviado pelo n8n).
      *
-     * POST /api/monitoramento/xml/importacao/progress
+     * POST /api/importacao/xml/progress
      */
     public function receiveXmlImportacaoProgress(Request $request)
     {
@@ -446,10 +511,7 @@ class DataReceiverController extends Controller
             if (! $this->isTokenValid($request)) {
                 Log::warning('Token inválido em receiveXmlImportacaoProgress');
 
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Token de API inválido.',
-                ], Response::HTTP_UNAUTHORIZED);
+                return $this->unauthorizedResponse($request);
             }
 
             // Validar payload
@@ -668,10 +730,7 @@ class DataReceiverController extends Controller
             if (! $this->isTokenValid($request)) {
                 Log::warning('Token inválido em receiveConsultaLoteProgress');
 
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Token de API inválido.',
-                ], Response::HTTP_UNAUTHORIZED);
+                return $this->unauthorizedResponse($request);
             }
 
             // Validar payload
@@ -878,10 +937,7 @@ class DataReceiverController extends Controller
             if (! $this->isTokenValid($request)) {
                 Log::warning('Token inválido em receiveConsultaLoteResultado');
 
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Token de API inválido.',
-                ], Response::HTTP_UNAUTHORIZED);
+                return $this->unauthorizedResponse($request);
             }
 
             // Validar payload
@@ -1005,10 +1061,7 @@ class DataReceiverController extends Controller
             if (! $this->isTokenValid($request)) {
                 Log::warning('Token inválido em receiveConsultaAlertas');
 
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Token de API inválido.',
-                ], Response::HTTP_UNAUTHORIZED);
+                return $this->unauthorizedResponse($request);
             }
 
             // Validar payload

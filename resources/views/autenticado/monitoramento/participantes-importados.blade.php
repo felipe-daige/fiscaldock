@@ -1,6 +1,20 @@
 {{-- Monitoramento - Lista de Participantes Importados --}}
 <div class="min-h-screen bg-gray-50" id="monitoramento-participantes-importados-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <style>
+            @keyframes card-slide-in {
+                from { opacity: 0; transform: translateY(60px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .part-animate {
+                opacity: 0;
+                animation: card-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            @media (prefers-reduced-motion: reduce) {
+                .part-animate { opacity: 1; animation: none; }
+            }
+        </style>
+
         {{-- Page Header --}}
         <div class="mb-6">
             <div class="flex items-center justify-between">
@@ -22,7 +36,7 @@
         </div>
 
         {{-- Filtros --}}
-        <form id="form-filtros" method="GET" action="/app/monitoramento/participantes" class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-6">
+        <form id="form-filtros" method="GET" action="/app/participantes" class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-6 part-animate">
             <div class="flex flex-col lg:flex-row lg:items-end gap-4">
                 {{-- Filtro por importacao --}}
                 <div class="flex-1 min-w-[200px]">
@@ -86,7 +100,7 @@
                     <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
                         Filtrar
                     </button>
-                    <a href="/app/monitoramento/participantes" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50" data-link>
+                    <a href="/app/participantes" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50" data-link>
                         Limpar
                     </a>
                 </div>
@@ -94,7 +108,7 @@
         </form>
 
         {{-- Estatísticas --}}
-        <div class="mb-6 grid grid-cols-4 gap-4">
+        <div class="mb-6 grid grid-cols-4 gap-4 part-animate" style="animation-delay: 0.1s">
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
                 <p class="text-sm text-gray-500">Total de participantes</p>
                 <p class="text-2xl font-bold text-gray-900">{{ $participantes->total() ?? 0 }}</p>
@@ -111,6 +125,21 @@
                 <p class="text-sm text-gray-500">Seus créditos</p>
                 <p class="text-2xl font-bold text-green-600">{{ $credits ?? 0 }}</p>
             </div>
+        </div>
+
+        {{-- Barra de selecao global --}}
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-4 text-sm">
+                <button type="button" id="btn-selecionar-todos-filtro" class="text-blue-600 hover:text-blue-800 font-medium">
+                    Selecionar todos (<span id="total-filtrado">{{ $participantes->total() }}</span>)
+                </button>
+                <button type="button" id="btn-limpar-selecao-geral" class="text-gray-500 hover:text-gray-700 hidden">
+                    Limpar selecao
+                </button>
+            </div>
+            <span id="selecao-persistente-info" class="text-xs text-gray-500 hidden">
+                <span id="total-selecionados-persistente">0</span> selecionados (todas as paginas)
+            </span>
         </div>
 
         {{-- Acoes em lote (aparece quando ha selecao) --}}
@@ -147,7 +176,7 @@
         </div>
 
         {{-- Lista de Participantes --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm part-animate" style="animation-delay: 0.2s">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50">
@@ -166,7 +195,7 @@
                     </thead>
                     <tbody class="divide-y divide-gray-200" id="participantes-tbody">
                         @forelse($participantes ?? [] as $part)
-                            <tr class="hover:bg-gray-50 transition-colors cursor-pointer" data-participante-id="{{ $part->id }}" data-href="/app/monitoramento/participante/{{ $part->id }}">
+                            <tr class="hover:bg-gray-50 transition-colors cursor-pointer" data-participante-id="{{ $part->id }}" data-href="/app/participante/{{ $part->id }}">
                                 <td class="px-4 py-4">
                                     <input type="checkbox" class="checkbox-participante w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" value="{{ $part->id }}">
                                 </td>
@@ -190,7 +219,14 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
-                                    {{ $part->cliente->razao_social ?? '-' }}
+                                    @if($part->cliente)
+                                        {{ $part->cliente->razao_social ?? '-' }}
+                                        @if($part->cliente->is_empresa_propria)
+                                            <span class="px-1.5 py-0.5 bg-green-50 text-green-600 text-[10px] font-medium rounded">Empresa propria</span>
+                                        @endif
+                                    @else
+                                        -
+                                    @endif
                                 </td>
                                 <td class="px-4 py-4 whitespace-nowrap">
                                     @php
@@ -237,7 +273,7 @@
                                             @endif
                                         </p>
                                         <a
-                                            href="/app/monitoramento/sped"
+                                            href="/app/importacao/sped"
                                             class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700"
                                             data-link
                                         >
@@ -373,8 +409,10 @@
 (function() {
     'use strict';
 
+    var STORAGE_KEY = 'participantes_selecionados';
+
     function initMonitoramentoParticipantesImportados() {
-        const container = document.getElementById('monitoramento-participantes-importados-container');
+        var container = document.getElementById('monitoramento-participantes-importados-container');
         if (!container) return;
 
         if (container.dataset.initialized === '1') return;
@@ -382,29 +420,51 @@
 
         console.log('[Monitoramento Participantes Importados] Inicializando...');
 
-        const selectAll = document.getElementById('select-all');
-        const checkboxes = document.querySelectorAll('.checkbox-participante');
-        const acoesLote = document.getElementById('acoes-lote');
-        const countSelecionados = document.getElementById('count-selecionados');
-        const btnLimparSelecao = document.getElementById('btn-limpar-selecao');
-        const btnMonitorar = document.getElementById('btn-monitorar-selecionados');
-        const btnExportar = document.getElementById('btn-exportar');
-        const btnBulkDelete = document.getElementById('btn-bulk-delete');
+        var selectAll = document.getElementById('select-all');
+        var checkboxes = document.querySelectorAll('.checkbox-participante');
+        var acoesLote = document.getElementById('acoes-lote');
+        var countSelecionados = document.getElementById('count-selecionados');
+        var btnLimparSelecao = document.getElementById('btn-limpar-selecao');
+        var btnMonitorar = document.getElementById('btn-monitorar-selecionados');
+        var btnExportar = document.getElementById('btn-exportar');
+        var btnBulkDelete = document.getElementById('btn-bulk-delete');
+        var btnSelecionarTodosFiltro = document.getElementById('btn-selecionar-todos-filtro');
+        var btnLimparSelecaoGeral = document.getElementById('btn-limpar-selecao-geral');
+        var infoSelecaoPersistente = document.getElementById('selecao-persistente-info');
+        var totalSelecionadosPersistente = document.getElementById('total-selecionados-persistente');
 
-        // Funcao para obter IDs selecionados
+        // === Persistencia via sessionStorage ===
+        function carregarSelecao() {
+            try {
+                var raw = sessionStorage.getItem(STORAGE_KEY);
+                if (raw) return new Set(JSON.parse(raw).map(Number));
+            } catch (e) {}
+            return new Set();
+        }
+
+        function salvarSelecao(setIds) {
+            try {
+                sessionStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(setIds)));
+            } catch (e) {}
+        }
+
+        function limparSelecaoStorage() {
+            try { sessionStorage.removeItem(STORAGE_KEY); } catch (e) {}
+        }
+
+        var selectedIds = carregarSelecao();
+
+        // Funcao para obter IDs selecionados (do Set persistente)
         function getIdsSelecionados() {
-            return Array.from(document.querySelectorAll('.checkbox-participante:checked')).map(cb => cb.value);
+            return Array.from(selectedIds);
         }
 
         // Funcao para atualizar contagem e visibilidade das acoes em lote
         function atualizarAcoesLote() {
-            const selecionados = document.querySelectorAll('.checkbox-participante:checked');
-            const count = selecionados.length;
+            var count = selectedIds.size;
 
-            if (countSelecionados) {
-                countSelecionados.textContent = count;
-            }
-            const labelSelecionados = document.getElementById('participantes-selecionados-label');
+            if (countSelecionados) countSelecionados.textContent = count;
+            var labelSelecionados = document.getElementById('participantes-selecionados-label');
             if (labelSelecionados) labelSelecionados.textContent = count === 1 ? 'participante selecionado' : 'participantes selecionados';
 
             if (acoesLote) {
@@ -415,18 +475,62 @@
                 }
             }
 
-            // Atualizar estado do checkbox "selecionar todos"
-            if (selectAll) {
-                selectAll.checked = count === checkboxes.length && count > 0;
-                selectAll.indeterminate = count > 0 && count < checkboxes.length;
+            // Atualizar info de selecao persistente
+            if (infoSelecaoPersistente && totalSelecionadosPersistente) {
+                if (count > 0) {
+                    totalSelecionadosPersistente.textContent = count;
+                    infoSelecaoPersistente.classList.remove('hidden');
+                } else {
+                    infoSelecaoPersistente.classList.add('hidden');
+                }
             }
+
+            // Botao limpar geral
+            if (btnLimparSelecaoGeral) {
+                if (count > 0) {
+                    btnLimparSelecaoGeral.classList.remove('hidden');
+                } else {
+                    btnLimparSelecaoGeral.classList.add('hidden');
+                }
+            }
+
+            // Atualizar estado do checkbox "selecionar todos" da pagina
+            var checkboxesAtual = document.querySelectorAll('.checkbox-participante');
+            var checkedCount = 0;
+            checkboxesAtual.forEach(function(cb) {
+                if (cb.checked) checkedCount++;
+            });
+            if (selectAll) {
+                selectAll.checked = checkedCount === checkboxesAtual.length && checkedCount > 0;
+                selectAll.indeterminate = checkedCount > 0 && checkedCount < checkboxesAtual.length;
+            }
+
+            salvarSelecao(selectedIds);
         }
 
-        // Event listener para checkbox "selecionar todos"
+        // Sincronizar checkboxes da pagina atual com o Set persistente
+        function sincronizarCheckboxes() {
+            checkboxes.forEach(function(cb) {
+                var id = Number(cb.value);
+                cb.checked = selectedIds.has(id);
+            });
+        }
+
+        // Ao carregar: restaurar selecao dos checkboxes visiveis
+        sincronizarCheckboxes();
+        atualizarAcoesLote();
+
+        // Event listener para checkbox "selecionar todos" (pagina atual)
         if (selectAll) {
             selectAll.addEventListener('change', function() {
                 checkboxes.forEach(function(cb) {
+                    var id = Number(cb.value);
                     cb.checked = selectAll.checked;
+                    if (selectAll.checked) {
+                        selectedIds.add(id);
+                    } else {
+                        selectedIds.delete(id);
+                    }
                 });
                 atualizarAcoesLote();
             });
@@ -434,15 +538,82 @@
 
         // Event listeners para checkboxes individuais
         checkboxes.forEach(function(cb) {
-            cb.addEventListener('change', atualizarAcoesLote);
+            cb.addEventListener('change', function() {
+                var id = Number(cb.value);
+                if (cb.checked) {
+                    selectedIds.add(id);
+                } else {
+                    selectedIds.delete(id);
+                }
+                atualizarAcoesLote();
+            });
         });
 
-        // Botao limpar selecao
+        // === Botao "Selecionar todos (N)" - busca AJAX ===
+        if (btnSelecionarTodosFiltro) {
+            btnSelecionarTodosFiltro.addEventListener('click', async function() {
+                btnSelecionarTodosFiltro.disabled = true;
+                btnSelecionarTodosFiltro.textContent = 'Carregando...';
+
+                try {
+                    // Construir query string com filtros atuais
+                    var params = new URLSearchParams();
+                    var filtroImportacao = document.getElementById('filtro-importacao');
+                    var filtroCliente = document.getElementById('filtro-cliente');
+                    var filtroOrigem = document.getElementById('filtro-origem');
+                    var buscaInput = document.getElementById('busca-participantes');
+
+                    if (filtroImportacao && filtroImportacao.value) params.set('importacao', filtroImportacao.value);
+                    if (filtroCliente && filtroCliente.value) params.set('cliente', filtroCliente.value);
+                    if (filtroOrigem && filtroOrigem.value) params.set('origem', filtroOrigem.value);
+                    if (buscaInput && buscaInput.value) params.set('busca', buscaInput.value);
+
+                    var url = '/app/participantes/todos-ids' + (params.toString() ? '?' + params.toString() : '');
+                    var res = await fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                    });
+
+                    var data = await res.json();
+                    if (!data.success) throw new Error('Erro ao buscar IDs');
+
+                    // Adicionar todos ao Set
+                    data.ids.forEach(function(id) { selectedIds.add(Number(id)); });
+                    sincronizarCheckboxes();
+                    atualizarAcoesLote();
+
+                    window.showToast && window.showToast(data.total + ' participantes selecionados', 'success');
+                } catch (err) {
+                    console.error('[Participantes] Erro ao selecionar todos:', err);
+                    window.showToast && window.showToast('Erro ao selecionar todos os participantes', 'error');
+                } finally {
+                    var totalEl = document.getElementById('total-filtrado');
+                    var total = totalEl ? totalEl.textContent : '?';
+                    btnSelecionarTodosFiltro.disabled = false;
+                    btnSelecionarTodosFiltro.innerHTML = 'Selecionar todos (<span id="total-filtrado">' + total + '</span>)';
+                }
+            });
+        }
+
+        // === Botao limpar selecao geral ===
+        if (btnLimparSelecaoGeral) {
+            btnLimparSelecaoGeral.addEventListener('click', function() {
+                selectedIds.clear();
+                limparSelecaoStorage();
+                sincronizarCheckboxes();
+                if (selectAll) selectAll.checked = false;
+                atualizarAcoesLote();
+            });
+        }
+
+        // Botao limpar selecao (na barra de acoes)
         if (btnLimparSelecao) {
             btnLimparSelecao.addEventListener('click', function() {
-                checkboxes.forEach(function(cb) {
-                    cb.checked = false;
-                });
+                selectedIds.clear();
+                limparSelecaoStorage();
+                sincronizarCheckboxes();
                 if (selectAll) selectAll.checked = false;
                 atualizarAcoesLote();
             });
@@ -460,26 +631,28 @@
         // Botao consultar selecionados
         if (btnMonitorar) {
             btnMonitorar.addEventListener('click', function() {
-                const selecionados = getIdsSelecionados();
+                var selecionados = getIdsSelecionados();
                 if (selecionados.length === 0) {
                     alert('Selecione pelo menos um participante.');
                     return;
                 }
+                // Limpar selecao ao navegar
+                limparSelecaoStorage();
                 // Redirecionar para nova consulta com IDs pre-selecionados
                 window.location.href = '/app/consultas/nova?participantes=' + selecionados.join(',');
             });
         }
 
         // === Bulk delete ===
-        const modalBulkDelete = document.getElementById('modal-bulk-delete');
-        const modalBulkDeleteOverlay = document.getElementById('modal-bulk-delete-overlay');
-        const modalBulkDeleteCount = document.getElementById('modal-bulk-delete-count');
-        const modalBulkDeleteLabel = document.getElementById('modal-bulk-delete-label');
-        const btnCancelarBulkDelete = document.getElementById('btn-cancelar-bulk-delete');
-        const btnConfirmarBulkDelete = document.getElementById('btn-confirmar-bulk-delete');
+        var modalBulkDelete = document.getElementById('modal-bulk-delete');
+        var modalBulkDeleteOverlay = document.getElementById('modal-bulk-delete-overlay');
+        var modalBulkDeleteCount = document.getElementById('modal-bulk-delete-count');
+        var modalBulkDeleteLabel = document.getElementById('modal-bulk-delete-label');
+        var btnCancelarBulkDelete = document.getElementById('btn-cancelar-bulk-delete');
+        var btnConfirmarBulkDelete = document.getElementById('btn-confirmar-bulk-delete');
 
         function abrirModalBulkDelete() {
-            const ids = getIdsSelecionados();
+            var ids = getIdsSelecionados();
             if (ids.length === 0) return;
             if (modalBulkDeleteCount) modalBulkDeleteCount.textContent = ids.length;
             if (modalBulkDeleteLabel) modalBulkDeleteLabel.textContent = ids.length === 1 ? 'participante' : 'participantes';
@@ -496,15 +669,15 @@
 
         if (btnConfirmarBulkDelete) {
             btnConfirmarBulkDelete.addEventListener('click', async function() {
-                const ids = getIdsSelecionados();
+                var ids = getIdsSelecionados();
                 if (ids.length === 0) return;
 
                 btnConfirmarBulkDelete.disabled = true;
                 btnConfirmarBulkDelete.innerHTML = '<svg class="animate-spin w-4 h-4 inline mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Excluindo...';
 
                 try {
-                    const tokenMeta = document.querySelector('meta[name="csrf-token"]');
-                    const res = await fetch('/app/monitoramento/participantes/bulk-delete', {
+                    var tokenMeta = document.querySelector('meta[name="csrf-token"]');
+                    var res = await fetch('/app/participantes/bulk-delete', {
                         method: 'DELETE',
                         headers: {
                             'Content-Type': 'application/json',
@@ -515,22 +688,24 @@
                         body: JSON.stringify({ ids: ids.map(Number) }),
                     });
 
-                    const data = await res.json();
+                    var data = await res.json();
 
                     if (!res.ok || !data.success) {
                         throw new Error(data.error || data.message || 'Erro ao excluir participantes');
                     }
 
-                    window.showToast && window.showToast(data.message || 'Participantes excluídos com sucesso!', 'success');
+                    window.showToast && window.showToast(data.message || 'Participantes excluidos com sucesso!', 'success');
 
-                    // Remover linhas da tabela
+                    // Remover linhas da tabela que estao na pagina
                     ids.forEach(function(id) {
-                        const row = document.querySelector('tr[data-participante-id="' + id + '"]');
+                        var row = document.querySelector('tr[data-participante-id="' + id + '"]');
                         if (row) row.remove();
                     });
 
                     // Limpar selecao
-                    checkboxes.forEach(function(cb) { cb.checked = false; });
+                    selectedIds.clear();
+                    limparSelecaoStorage();
+                    sincronizarCheckboxes();
                     if (selectAll) selectAll.checked = false;
                     atualizarAcoesLote();
                     fecharModalBulkDelete();
@@ -547,26 +722,25 @@
         }
 
         // Submit do formulario via SPA (se usar data-link)
-        const formFiltros = document.getElementById('form-filtros');
+        var formFiltros = document.getElementById('form-filtros');
         if (formFiltros) {
             formFiltros.addEventListener('submit', function(e) {
                 // Deixar o form submeter normalmente se SPA router nao estiver ativo
-                // Ou podemos forcar reload da pagina
             });
         }
 
         // === Clique na linha abre perfil do participante ===
-        const tbody = document.getElementById('participantes-tbody');
+        var tbody = document.getElementById('participantes-tbody');
         if (tbody) {
             tbody.addEventListener('click', function(e) {
                 // Ignorar cliques em checkbox, botoes e links
                 if (e.target.closest('input[type="checkbox"], button, a')) return;
 
-                const row = e.target.closest('tr[data-href]');
+                var row = e.target.closest('tr[data-href]');
                 if (!row) return;
 
                 // Navegar via SPA
-                const href = row.dataset.href;
+                var href = row.dataset.href;
                 if (href && window.navigateTo) {
                     window.navigateTo(href);
                 } else if (href) {
@@ -576,18 +750,18 @@
         }
 
         // === Exclusao de participante com modal ===
-        const modal = document.getElementById('modal-excluir-participante');
-        const modalOverlay = document.getElementById('modal-excluir-overlay');
-        const modalCnpj = document.getElementById('modal-excluir-cnpj');
-        const modalNome = document.getElementById('modal-excluir-nome');
-        const btnCancelar = document.getElementById('btn-cancelar-exclusao');
-        const btnConfirmar = document.getElementById('btn-confirmar-exclusao');
-        let participanteIdParaExcluir = null;
+        var modal = document.getElementById('modal-excluir-participante');
+        var modalOverlay = document.getElementById('modal-excluir-overlay');
+        var modalCnpj = document.getElementById('modal-excluir-cnpj');
+        var modalNome = document.getElementById('modal-excluir-nome');
+        var btnCancelar = document.getElementById('btn-cancelar-exclusao');
+        var btnConfirmar = document.getElementById('btn-confirmar-exclusao');
+        var participanteIdParaExcluir = null;
 
         function abrirModalExclusao(id, cnpj, nome) {
             participanteIdParaExcluir = id;
             if (modalCnpj) modalCnpj.textContent = cnpj;
-            if (modalNome) modalNome.textContent = nome || 'Sem razão social';
+            if (modalNome) modalNome.textContent = nome || 'Sem razao social';
             if (modal) modal.classList.remove('hidden');
         }
 
@@ -597,35 +771,32 @@
         }
 
         // === Dropdown de acoes (kebab menu) ===
-        const dropdownAcoes = document.getElementById('dropdown-acoes');
-        const dropdownAcoesNome = document.getElementById('dropdown-acoes-nome');
-        const dropdownAcoesCnpj = document.getElementById('dropdown-acoes-cnpj');
-        const dropdownAcoesVer = document.getElementById('dropdown-acoes-ver');
-        const dropdownAcoesEditar = document.getElementById('dropdown-acoes-editar');
-        const dropdownAcoesExcluir = document.getElementById('dropdown-acoes-excluir');
-        let acaoParticipanteId = null;
-        let dropdownBtnAtual = null;
+        var dropdownAcoes = document.getElementById('dropdown-acoes');
+        var dropdownAcoesNome = document.getElementById('dropdown-acoes-nome');
+        var dropdownAcoesCnpj = document.getElementById('dropdown-acoes-cnpj');
+        var dropdownAcoesVer = document.getElementById('dropdown-acoes-ver');
+        var dropdownAcoesEditar = document.getElementById('dropdown-acoes-editar');
+        var dropdownAcoesExcluir = document.getElementById('dropdown-acoes-excluir');
+        var acaoParticipanteId = null;
+        var dropdownBtnAtual = null;
 
         function posicionarDropdown(btnElement) {
             if (!dropdownAcoes || !btnElement) return;
-            // Temporarily show to measure height
             dropdownAcoes.style.visibility = 'hidden';
             dropdownAcoes.classList.remove('hidden');
-            const dropdownHeight = dropdownAcoes.offsetHeight;
-            const dropdownWidth = dropdownAcoes.offsetWidth;
+            var dropdownHeight = dropdownAcoes.offsetHeight;
+            var dropdownWidth = dropdownAcoes.offsetWidth;
             dropdownAcoes.classList.add('hidden');
             dropdownAcoes.style.visibility = '';
 
-            const rect = btnElement.getBoundingClientRect();
-            const spaceBelow = window.innerHeight - rect.bottom;
-            const spaceAbove = rect.top;
+            var rect = btnElement.getBoundingClientRect();
+            var spaceBelow = window.innerHeight - rect.bottom;
+            var spaceAbove = rect.top;
 
-            // Horizontal: align right edge of dropdown with right edge of button
-            let left = rect.right - dropdownWidth;
+            var left = rect.right - dropdownWidth;
             if (left < 8) left = 8;
 
-            // Vertical: prefer below, fall back to above
-            let top;
+            var top;
             if (spaceBelow >= dropdownHeight + 4) {
                 top = rect.bottom + 4;
             } else if (spaceAbove >= dropdownHeight + 4) {
@@ -639,17 +810,16 @@
         }
 
         function abrirDropdownAcoes(btnElement, id, nome, cnpj) {
-            // Toggle: if clicking the same button, close
             if (!dropdownAcoes.classList.contains('hidden') && dropdownBtnAtual === btnElement) {
                 fecharDropdownAcoes();
                 return;
             }
             acaoParticipanteId = id;
             dropdownBtnAtual = btnElement;
-            if (dropdownAcoesNome) dropdownAcoesNome.textContent = nome || 'Sem razão social';
+            if (dropdownAcoesNome) dropdownAcoesNome.textContent = nome || 'Sem razao social';
             if (dropdownAcoesCnpj) dropdownAcoesCnpj.textContent = cnpj || '';
-            if (dropdownAcoesVer) dropdownAcoesVer.href = '/app/monitoramento/participante/' + id;
-            if (dropdownAcoesEditar) dropdownAcoesEditar.href = '/app/monitoramento/participante/' + id + '/editar';
+            if (dropdownAcoesVer) dropdownAcoesVer.href = '/app/participante/' + id;
+            if (dropdownAcoesEditar) dropdownAcoesEditar.href = '/app/participante/' + id + '/editar';
             posicionarDropdown(btnElement);
             dropdownAcoes.classList.remove('hidden');
         }
@@ -659,47 +829,41 @@
             dropdownBtnAtual = null;
         }
 
-        // Abrir dropdown ao clicar no kebab
         container.addEventListener('click', function(e) {
-            const acaoBtn = e.target.closest('.acoes-btn');
+            var acaoBtn = e.target.closest('.acoes-btn');
             if (acaoBtn) {
                 e.stopPropagation();
                 abrirDropdownAcoes(acaoBtn, acaoBtn.dataset.id, acaoBtn.dataset.nome, acaoBtn.dataset.cnpj);
             }
         });
 
-        // Close on click outside
         document.addEventListener('click', function(e) {
             if (dropdownAcoes && !dropdownAcoes.classList.contains('hidden') && !dropdownAcoes.contains(e.target)) {
                 fecharDropdownAcoes();
             }
         });
 
-        // Close on Escape
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && dropdownAcoes && !dropdownAcoes.classList.contains('hidden')) {
                 fecharDropdownAcoes();
             }
         });
 
-        // Close on scroll (capture mode to catch scrolling in any container)
         window.addEventListener('scroll', function() {
             if (dropdownAcoes && !dropdownAcoes.classList.contains('hidden')) {
                 fecharDropdownAcoes();
             }
         }, true);
 
-        // "Ver detalhes" — fechar dropdown (SPA navega via data-link)
         if (dropdownAcoesVer) {
             dropdownAcoesVer.addEventListener('click', fecharDropdownAcoes);
         }
 
-        // "Excluir" — fechar dropdown, abrir modal de exclusao
         if (dropdownAcoesExcluir) {
             dropdownAcoesExcluir.addEventListener('click', function() {
-                const id = acaoParticipanteId;
-                const cnpj = dropdownAcoesCnpj ? dropdownAcoesCnpj.textContent : '';
-                const nome = dropdownAcoesNome ? dropdownAcoesNome.textContent : '';
+                var id = acaoParticipanteId;
+                var cnpj = dropdownAcoesCnpj ? dropdownAcoesCnpj.textContent : '';
+                var nome = dropdownAcoesNome ? dropdownAcoesNome.textContent : '';
                 fecharDropdownAcoes();
                 abrirModalExclusao(id, cnpj, nome);
             });
@@ -716,8 +880,8 @@
                 btnConfirmar.textContent = 'Excluindo...';
 
                 try {
-                    const tokenMeta = document.querySelector('meta[name="csrf-token"]');
-                    const res = await fetch('/app/monitoramento/participante/' + participanteIdParaExcluir, {
+                    var tokenMeta = document.querySelector('meta[name="csrf-token"]');
+                    var res = await fetch('/app/participante/' + participanteIdParaExcluir, {
                         method: 'DELETE',
                         headers: {
                             'X-CSRF-TOKEN': tokenMeta ? tokenMeta.content : '',
@@ -726,16 +890,19 @@
                         },
                     });
 
-                    const data = await res.json();
+                    var data = await res.json();
 
                     if (!res.ok || !data.success) {
                         throw new Error(data.error || 'Erro ao excluir participante');
                     }
 
-                    window.showToast && window.showToast(data.message || 'Participante excluído com sucesso!', 'success');
+                    window.showToast && window.showToast(data.message || 'Participante excluido com sucesso!', 'success');
 
-                    // Remover linha da tabela
-                    const row = document.querySelector('tr[data-participante-id="' + participanteIdParaExcluir + '"]');
+                    // Remover do Set persistente
+                    selectedIds.delete(Number(participanteIdParaExcluir));
+                    salvarSelecao(selectedIds);
+
+                    var row = document.querySelector('tr[data-participante-id="' + participanteIdParaExcluir + '"]');
                     if (row) row.remove();
 
                     fecharModalExclusao();

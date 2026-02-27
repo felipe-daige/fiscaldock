@@ -4,11 +4,21 @@ use App\Http\Controllers\Api\DataReceiverController;
 use Illuminate\Support\Facades\Route;
 
 // ============================================
+// Health Check (sem autenticação)
+// ============================================
+Route::get('/health', [DataReceiverController::class, 'health'])
+    ->name('api.health');
+
+// ============================================
 // Monitoramento - SPED e XML
 // ============================================
 
-// Rota para receber progresso de importação de arquivo .txt do Monitoramento
+// Rota para receber progresso de importação de arquivo SPED
 // n8n envia progresso para Laravel armazenar em cache (SSE lê do cache)
+Route::post('/importacao/sped/importacao-txt/progress', [DataReceiverController::class, 'receiveImportacaoTxtProgress'])
+    ->name('api.importacao.sped.importacao-txt.progress');
+
+// Rota legada - n8n pode ainda usar este caminho
 Route::post('/monitoramento/sped/importacao-txt/progress', [DataReceiverController::class, 'receiveImportacaoTxtProgress'])
     ->name('api.monitoramento.sped.importacao-txt.progress');
 
@@ -17,8 +27,12 @@ Route::post('/monitoramento/sped/importacao-txt/progress', [DataReceiverControll
 Route::post('/monitoramento/consulta/resultado', [DataReceiverController::class, 'receiveMonitoramentoConsulta'])
     ->name('api.monitoramento.consulta.resultado');
 
-// Rota para receber progresso de importação de XMLs do Monitoramento
+// Rota para receber progresso de importação de XMLs
 // n8n envia progresso para Laravel armazenar em cache (SSE lê do cache)
+Route::post('/importacao/xml/progress', [DataReceiverController::class, 'receiveXmlImportacaoProgress'])
+    ->name('api.importacao.xml.progress');
+
+// Rota legada - n8n pode ainda usar este caminho
 Route::post('/monitoramento/xml/importacao/progress', [DataReceiverController::class, 'receiveXmlImportacaoProgress'])
     ->name('api.monitoramento.xml.importacao.progress');
 

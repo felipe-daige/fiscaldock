@@ -45,7 +45,7 @@
         if (classificacao !== 'todos') params.append('classificacao', classificacao);
         if (busca) params.append('busca', busca);
 
-        const url = '/app/risk' + (params.toString() ? '?' + params.toString() : '');
+        const url = '/app/score-fiscal' + (params.toString() ? '?' + params.toString() : '');
 
         // Usa o SPA router se disponivel
         if (window.spaNavigate) {
@@ -85,7 +85,7 @@
         buttonElement.textContent = 'Consultando...';
 
         try {
-            const response = await fetch(`/app/risk/participante/${participanteId}/consultar`, {
+            const response = await fetch(`/app/score-fiscal/participante/${participanteId}/consultar`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

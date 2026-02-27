@@ -1,40 +1,62 @@
-{{-- Risk Score - Dashboard --}}
+{{-- Score Fiscal - Dashboard --}}
 <div class="min-h-screen bg-gray-50" id="risk-container">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {{-- Page Header --}}
-        <div class="mb-8">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    {{-- Header Section --}}
+    <div class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Score de Risco</h1>
-                    <p class="mt-1 text-sm text-gray-600">Avalie o risco fiscal e de compliance dos seus participantes.</p>
-                </div>
-                <div class="flex items-center gap-3">
-                    {{-- Filtro de Classificacao --}}
-                    <select id="filtro-classificacao" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="todos" {{ ($filtroClassificacao ?? 'todos') === 'todos' ? 'selected' : '' }}>Todas as Classificacoes</option>
-                        <option value="baixo" {{ ($filtroClassificacao ?? '') === 'baixo' ? 'selected' : '' }}>Baixo Risco</option>
-                        <option value="medio" {{ ($filtroClassificacao ?? '') === 'medio' ? 'selected' : '' }}>Medio Risco</option>
-                        <option value="alto" {{ ($filtroClassificacao ?? '') === 'alto' ? 'selected' : '' }}>Alto Risco</option>
-                        <option value="critico" {{ ($filtroClassificacao ?? '') === 'critico' ? 'selected' : '' }}>Critico</option>
-                    </select>
-                    {{-- Busca --}}
-                    <div class="relative">
-                        <input type="text" id="busca-participante" placeholder="Buscar CNPJ ou razao social..." value="{{ $filtroBusca ?? '' }}" class="w-64 px-4 py-2 pl-10 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </div>
+                    <h1 class="text-xl font-bold text-gray-800">Score Fiscal</h1>
+                    <p class="text-xs text-gray-500 mt-1">Avalie o risco fiscal e de compliance dos seus participantes.</p>
                 </div>
             </div>
         </div>
+    </div>
+
+    {{-- Filter Bar --}}
+    <div class="bg-white border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="flex items-center gap-3">
+                <select id="filtro-classificacao" class="px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                    <option value="todos" {{ ($filtroClassificacao ?? 'todos') === 'todos' ? 'selected' : '' }}>Todas as Classificacoes</option>
+                    <option value="baixo" {{ ($filtroClassificacao ?? '') === 'baixo' ? 'selected' : '' }}>Baixo Risco</option>
+                    <option value="medio" {{ ($filtroClassificacao ?? '') === 'medio' ? 'selected' : '' }}>Medio Risco</option>
+                    <option value="alto" {{ ($filtroClassificacao ?? '') === 'alto' ? 'selected' : '' }}>Alto Risco</option>
+                    <option value="critico" {{ ($filtroClassificacao ?? '') === 'critico' ? 'selected' : '' }}>Critico</option>
+                </select>
+                <div class="relative flex-1 max-w-xs">
+                    <input type="text" id="busca-participante" placeholder="Buscar CNPJ ou razao social..." value="{{ $filtroBusca ?? '' }}" class="w-full px-3 py-2 pl-9 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                    <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Main Content --}}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="space-y-6">
+            <style>
+                @keyframes card-slide-in {
+                    from { opacity: 0; transform: translateY(60px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .sf-animate {
+                    opacity: 0;
+                    animation: card-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    .sf-animate { opacity: 1; animation: none; }
+                }
+            </style>
 
         {{-- KPIs --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sf-animate" style="animation-delay: 0.05s">
             {{-- Total Avaliados --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <div class="flex items-center gap-4">
-                    <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                <div class="flex items-center gap-3">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                         </svg>
                     </div>
@@ -46,10 +68,10 @@
             </div>
 
             {{-- Baixo Risco --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <div class="flex items-center gap-4">
-                    <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                <div class="flex items-center gap-3">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
@@ -61,10 +83,10 @@
             </div>
 
             {{-- Medio Risco --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <div class="flex items-center gap-4">
-                    <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-yellow-100 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                <div class="flex items-center gap-3">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                         </svg>
                     </div>
@@ -76,10 +98,10 @@
             </div>
 
             {{-- Alto Risco --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <div class="flex items-center gap-4">
-                    <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                <div class="flex items-center gap-3">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
@@ -91,10 +113,10 @@
             </div>
 
             {{-- Critico --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <div class="flex items-center gap-4">
-                    <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                <div class="flex items-center gap-3">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                         </svg>
                     </div>
@@ -108,7 +130,7 @@
 
         @if(($emRiscoCritico ?? collect())->count() > 0)
         {{-- Alertas de Risco Critico --}}
-        <div class="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
+        <div class="bg-red-50 border border-red-200 rounded-xl p-4 sf-animate" style="animation-delay: 0.1s">
             <div class="flex items-start gap-3">
                 <svg class="w-5 h-5 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
@@ -118,7 +140,7 @@
                     <ul class="mt-2 space-y-1">
                         @foreach($emRiscoCritico as $score)
                             <li class="text-sm text-red-700">
-                                <a href="/app/risk/participante/{{ $score->participante_id }}" data-link class="hover:underline">
+                                <a href="/app/score-fiscal/participante/{{ $score->participante_id }}" data-link class="hover:underline">
                                     {{ $score->participante->razao_social ?? 'N/A' }} ({{ $score->participante->cnpj_formatado ?? '' }}) - Score: {{ $score->score_total }}
                                 </a>
                             </li>
@@ -130,7 +152,7 @@
         @endif
 
         {{-- Lista de Participantes --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden sf-animate" style="animation-delay: 0.15s">
             <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-gray-900">Participantes</h3>
                 <span class="text-sm text-gray-500">{{ $participantes->total() ?? 0 }} participante(s)</span>
@@ -193,7 +215,7 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                <a href="/app/risk/participante/{{ $participante->id }}" data-link class="text-blue-600 hover:text-blue-900 mr-3">Ver Detalhes</a>
+                                <a href="/app/score-fiscal/participante/{{ $participante->id }}" data-link class="text-blue-600 hover:text-blue-900 mr-3">Ver Detalhes</a>
                                 <button type="button" class="btn-consultar text-green-600 hover:text-green-900" data-id="{{ $participante->id }}">Consultar</button>
                             </td>
                         </tr>
@@ -216,7 +238,7 @@
                 </svg>
                 <h3 class="mt-4 text-lg font-medium text-gray-900">Nenhum participante encontrado</h3>
                 <p class="mt-2 text-sm text-gray-500">Importe participantes via SPED ou XMLs.</p>
-                <a href="/app/monitoramento/xml" data-link class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
+                <a href="/app/importacao/xml" data-link class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
                     </svg>
@@ -224,6 +246,7 @@
                 </a>
             </div>
             @endif
+        </div>
         </div>
     </div>
 </div>

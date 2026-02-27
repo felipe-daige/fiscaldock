@@ -2,6 +2,20 @@
 <div class="min-h-screen bg-gray-50" id="minha-empresa-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
+        <style>
+            @keyframes card-slide-in {
+                from { opacity: 0; transform: translateY(60px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .me-animate {
+                opacity: 0;
+                animation: card-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            @media (prefers-reduced-motion: reduce) {
+                .me-animate { opacity: 1; animation: none; }
+            }
+        </style>
+
         {{-- Header compacto — sem card wrapper --}}
         <div class="mb-8">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -10,7 +24,7 @@
                     <span class="text-sm text-gray-400 font-mono">{{ $empresa->documento_formatado }}</span>
 
                     @php
-                        $situacao = strtoupper($certidoes['situacao_cadastral'] ?? 'NAO CONSULTADO');
+                        $situacao = mb_strtoupper($certidoes['situacao_cadastral'] ?? 'NÃO CONSULTADO');
                         $situacaoCor = match($situacao) {
                             'ATIVA' => 'green',
                             'SUSPENSA' => 'yellow',
@@ -46,8 +60,8 @@
         </div>
 
         {{-- Card Dados da Empresa --}}
-        @if($empresa->endereco || $empresa->telefone || $empresa->email)
-        <div class="bg-white rounded-lg border border-gray-100 p-6 mb-8">
+        @if($empresa->municipio || $empresa->uf || $empresa->telefone || $empresa->email)
+        <div class="me-animate bg-white rounded-lg border border-gray-100 p-6 mb-8">
             <h2 class="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-4">Dados da Empresa</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                 {{-- CNPJ --}}
@@ -61,46 +75,33 @@
                     </div>
                 </div>
 
-                {{-- Endereço --}}
-                @if($empresa->endereco)
+                {{-- Localizacao --}}
+                @if($empresa->municipio || $empresa->uf)
                 <div class="flex items-start gap-3">
                     <svg class="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
                     <div>
-                        <span class="text-xs uppercase tracking-wide text-gray-400">Endereço</span>
+                        <span class="text-xs uppercase tracking-wide text-gray-400">Localizacao</span>
                         <p class="text-sm text-gray-900">
-                            {{ $empresa->endereco->logradouro }}{{ $empresa->endereco->numero ? ', ' . $empresa->endereco->numero : '' }}{{ $empresa->endereco->complemento ? ' - ' . $empresa->endereco->complemento : '' }}
+                            {{ implode(' - ', array_filter([$empresa->municipio, $empresa->uf])) }}
                         </p>
                     </div>
                 </div>
-
-                {{-- Bairro / Cidade / UF --}}
-                <div class="flex items-start gap-3">
-                    <svg class="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <div>
-                        <span class="text-xs uppercase tracking-wide text-gray-400">Cidade</span>
-                        <p class="text-sm text-gray-900">
-                            {{ implode(', ', array_filter([$empresa->endereco->bairro, $empresa->endereco->cidade, $empresa->endereco->estado])) }}
-                        </p>
-                    </div>
-                </div>
+                @endif
 
                 {{-- CEP --}}
-                @if($empresa->endereco->cep)
+                @if($empresa->cep)
                 <div class="flex items-start gap-3">
                     <svg class="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                     </svg>
                     <div>
                         <span class="text-xs uppercase tracking-wide text-gray-400">CEP</span>
-                        <p class="text-sm text-gray-900 font-mono">{{ preg_replace('/(\d{5})(\d{3})/', '$1-$2', preg_replace('/\D/', '', $empresa->endereco->cep)) }}</p>
+                        <p class="text-sm text-gray-900 font-mono">{{ preg_replace('/(\d{5})(\d{3})/', '$1-$2', preg_replace('/\D/', '', $empresa->cep)) }}</p>
                     </div>
                 </div>
-                @endif
                 @endif
 
                 {{-- Telefone --}}
@@ -148,7 +149,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {{-- Card 1: Score de Risco --}}
-            <div class="bg-white rounded-lg border border-gray-100 border-t-2 border-t-{{ $scoreCor }}-500 p-6">
+            <div class="me-animate bg-white rounded-lg border border-gray-100 border-t-2 border-t-{{ $scoreCor }}-500 p-6" style="animation-delay: 0.1s">
                 <span class="text-xs uppercase tracking-wide text-gray-400 font-semibold">Score de Risco</span>
                 <div class="flex items-end gap-2 mt-2">
                     @if($score)
@@ -166,11 +167,11 @@
                 @endif
             </div>
 
-            {{-- Card 2: Situacao Cadastral --}}
-            <div class="bg-white rounded-lg border border-gray-100 border-t-2 border-t-{{ $situacaoCor }}-500 p-6">
+            {{-- Card 2: Situação Cadastral --}}
+            <div class="me-animate bg-white rounded-lg border border-gray-100 border-t-2 border-t-{{ $situacaoCor }}-500 p-6" style="animation-delay: 0.2s">
                 <span class="text-xs uppercase tracking-wide text-gray-400 font-semibold">Situação Cadastral</span>
                 <div class="mt-2">
-                    @if($situacao === 'NAO CONSULTADO')
+                    @if($situacao === 'NÃO CONSULTADO')
                         <span class="text-sm font-medium text-gray-400">Não consultado</span>
                     @else
                         <span class="text-2xl font-bold text-{{ $situacaoCor }}-600">{{ $situacao }}</span>
@@ -188,9 +189,9 @@
                 @endif
             </div>
 
-            {{-- Card 3: Creditos --}}
+            {{-- Card 3: Créditos --}}
             @php $userCredits = Auth::user()->credits ?? 0; @endphp
-            <div class="bg-white rounded-lg border border-gray-100 border-t-2 border-t-emerald-500 p-6">
+            <div class="me-animate bg-white rounded-lg border border-gray-100 border-t-2 border-t-emerald-500 p-6" style="animation-delay: 0.3s">
                 <span class="text-xs uppercase tracking-wide text-gray-400 font-semibold">Créditos Disponíveis</span>
                 <div class="mt-2">
                     <span class="text-3xl font-bold {{ $userCredits > 0 ? 'text-emerald-600' : 'text-gray-400' }}">{{ number_format($userCredits, 0, ',', '.') }}</span>
@@ -199,7 +200,7 @@
             </div>
 
             {{-- Card 4: Participantes & Notas --}}
-            <div class="bg-white rounded-lg border border-gray-100 border-t-2 border-t-gray-300 p-6">
+            <div class="me-animate bg-white rounded-lg border border-gray-100 border-t-2 border-t-gray-300 p-6" style="animation-delay: 0.4s">
                 <span class="text-xs uppercase tracking-wide text-gray-400 font-semibold">Participantes & Notas</span>
                 <div class="mt-2 space-y-1">
                     <div class="flex items-end gap-2">
@@ -260,7 +261,7 @@
                 ];
             }
         @endphp
-        <div class="bg-white rounded-lg border border-gray-100 p-6 mb-8">
+        <div class="me-animate bg-white rounded-lg border border-gray-100 p-6 mb-8" style="animation-delay: 0.5s">
             <h3 class="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-4">Certidões & Última Consulta</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
                 @foreach($certidaoLinhas as $linha)
@@ -305,7 +306,7 @@
         </div>
 
         {{-- Alertas — full-width --}}
-        <div class="bg-white rounded-lg border border-gray-100 p-6 mb-8">
+        <div class="me-animate bg-white rounded-lg border border-gray-100 p-6 mb-8" style="animation-delay: 0.6s">
             <h3 class="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-4">Alertas</h3>
             @if(count($alertas) > 0)
                 <div class="space-y-3">
@@ -335,7 +336,7 @@
         </div>
 
         {{-- Ações Rápidas — botões inline --}}
-        <div class="flex flex-wrap items-center gap-3">
+        <div class="me-animate flex flex-wrap items-center gap-3" style="animation-delay: 0.7s">
             <a href="/app/consultas/nova{{ $participante ? '?participante=' . $participante->id : '' }}" data-link
                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -353,12 +354,12 @@
             </a>
 
             @if($participante)
-            <a href="/app/risk/participante/{{ $participante->id }}" data-link
+            <a href="/app/score-fiscal/participante/{{ $participante->id }}" data-link
                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                 </svg>
-                Score de Risco
+                Score Fiscal
             </a>
             @endif
 

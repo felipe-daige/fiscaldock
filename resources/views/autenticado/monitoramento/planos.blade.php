@@ -9,7 +9,7 @@
                     <p class="mt-1 text-sm text-gray-600">Escolha o nível de informação ideal para consultar fornecedores e parceiros.</p>
                 </div>
                 <a
-                    href="/app/monitoramento"
+                    href="/app/consultas/nova"
                     class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
                     data-link
                 >
@@ -43,109 +43,82 @@
                 'gratuito' => [
                     'cor' => 'green',
                     'icone' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-                    'consultas_display' => [
-                        'Situação Cadastral (Ativa, Inapta, Baixada)',
-                        'Dados Cadastrais Completos',
-                        'CNAEs Principal e Secundários',
-                        'Quadro Societário (QSA)',
-                        'Simples Nacional e MEI',
-                    ],
-                    'casos_uso' => [
-                        'Verificar se o CNPJ está ativo na Receita Federal',
-                        'Confirmar regime tributário antes de emitir NF',
-                        'Consultar sócios e quadro societário (QSA)',
-                    ],
+                    'consultas_display' => ['Situação Cadastral (Ativa, Inapta, Baixada)', 'Dados Cadastrais Completos', 'CNAEs Principal e Secundários', 'Quadro Societário (QSA)'],
+                    'casos_uso' => ['Checar se CNPJ está ativo', 'Conferir dados cadastrais', 'Consultar sócios e QSA'],
                 ],
                 'validacao' => [
                     'cor' => 'blue',
                     'icone' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
-                    'consultas_display' => [
-                        'Tudo do Gratuito',
-                        'SINTEGRA (Inscrição Estadual)',
-                        'TCU Consolidada (CEIS, CNEP, CNJ)',
-                    ],
-                    'casos_uso' => [
-                        'Conferir Inscrição Estadual em operações interestaduais',
-                        'Verificar impedimentos no CEIS, CNEP e TCU',
-                        'Qualificar fornecedores antes do cadastro',
-                    ],
+                    'consultas_display' => ['Situação Cadastral (Ativa, Inapta, Baixada)', 'Dados Cadastrais Completos', 'CNAEs Principal e Secundários', 'Quadro Societário (QSA)', 'Simples Nacional e MEI'],
+                    'casos_uso' => ['Conferir regime tributário', 'Verificar se é MEI ou Simples', 'Qualificar novos fornecedores'],
                 ],
                 'licitacao' => [
                     'cor' => 'blue',
                     'icone' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-                    'consultas_display' => [
-                        'Tudo do Validação',
-                        'CND Federal (PGFN/RFB)',
-                        'CRF FGTS (Regularidade)',
-                        'CND Estadual (ICMS)',
-                        'CNDT Trabalhista (TST)',
-                    ],
-                    'casos_uso' => [
-                        'Preparar documentação completa para editais públicos',
-                        'Homologar fornecedores com todas as CNDs exigidas',
-                        'Renovar contratos com órgãos públicos',
-                    ],
+                    'consultas_display' => ['Tudo do Validação', 'CND Federal (PGFN/RFB)'],
+                    'casos_uso' => ['Documentação para editais', 'Verificar regularidade federal', 'Homologar fornecedores'],
                     'promo' => true,
+                    'preco_original' => 4,
                 ],
                 'compliance' => [
                     'cor' => 'purple',
                     'icone' => 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
-                    'consultas_display' => [
-                        'Tudo do Licitação',
-                        'Protestos (IEPTB)',
-                        'Lista de Devedores PGFN',
-                    ],
-                    'casos_uso' => [
-                        'Gestão contínua de risco de terceiros e fornecedores',
-                        'Atender à Lei Anticorrupção (Lei 12.846/2013)',
-                        'Monitorar protestos e dívidas de parceiros críticos',
-                    ],
+                    'consultas_display' => [],
+                    'casos_uso' => [],
+                    'coming_soon' => true,
                 ],
                 'due_diligence' => [
                     'cor' => 'amber',
                     'icone' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7',
-                    'consultas_display' => [
-                        'Tudo do Compliance',
-                        'Lista de Trabalho Escravo (MTE)',
-                        'IBAMA - Autuações Ambientais',
-                    ],
-                    'casos_uso' => [
-                        'Análise pré-aquisição em operações de M&A',
-                        'Atender requisitos ESG exigidos por investidores',
-                        'Avaliar riscos trabalhistas e ambientais do alvo',
-                    ],
+                    'consultas_display' => [],
+                    'casos_uso' => [],
+                    'coming_soon' => true,
                 ],
                 'enterprise' => [
                     'cor' => 'slate',
                     'icone' => 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
-                    'consultas_display' => [
-                        'Tudo do Due Diligence',
-                        'Processos Judiciais (CNJ)',
-                    ],
-                    'casos_uso' => [
-                        'Due diligence jurídico e operacional completo',
-                        'Mapear litígios ativos antes de fechar contrato',
-                        'Relatório corporativo de risco para comitês internos',
-                    ],
+                    'consultas_display' => [],
+                    'casos_uso' => [],
+                    'coming_soon' => true,
                 ],
             ];
 
-            // Merge DB data + visual metadata
+            // Merge DB data + visual metadata (active plans + coming soon)
             $planosDetalhados = [];
-            foreach ($planos as $p) {
+            foreach ($planos->where('is_active', true) as $p) {
                 $meta = $planoMeta[$p->codigo] ?? ['cor' => 'gray', 'icone' => 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'consultas_display' => [], 'casos_uso' => []];
+                if ($meta['coming_soon'] ?? false) continue;
                 $planosDetalhados[] = [
                     'codigo' => $p->codigo,
                     'nome' => $p->nome,
                     'creditos' => $p->custo_creditos,
-                    'gratuito' => $p->is_gratuito,
                     'descricao' => $p->descricao,
                     'cor' => $meta['cor'],
                     'icone' => $meta['icone'],
                     'consultas' => $meta['consultas_display'],
                     'casos_uso' => $meta['casos_uso'],
                     'popular' => $p->codigo === 'licitacao',
+                    'coming_soon' => $meta['coming_soon'] ?? false,
+                    'gratuito' => $p->is_gratuito,
                     'promo' => $meta['promo'] ?? false,
+                    'preco_original' => $meta['preco_original'] ?? null,
+                ];
+            }
+            // Add coming soon plans from metadata (not in DB active)
+            foreach (['compliance', 'due_diligence', 'enterprise'] as $comingSoonCodigo) {
+                $meta = $planoMeta[$comingSoonCodigo];
+                $dbPlano = $planos->firstWhere('codigo', $comingSoonCodigo);
+                $planosDetalhados[] = [
+                    'codigo' => $comingSoonCodigo,
+                    'nome' => $dbPlano->nome ?? ucfirst(str_replace('_', ' ', $comingSoonCodigo)),
+                    'creditos' => 0,
+                    'descricao' => $dbPlano->descricao ?? '',
+                    'cor' => $meta['cor'],
+                    'icone' => $meta['icone'],
+                    'consultas' => [],
+                    'casos_uso' => [],
+                    'popular' => false,
+                    'coming_soon' => true,
                 ];
             }
 
@@ -155,13 +128,11 @@
                 'purple' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-700', 'icon' => 'text-purple-600', 'badge' => 'bg-purple-100 text-purple-700', 'border' => 'border-purple-200'],
                 'amber' => ['bg' => 'bg-amber-100', 'text' => 'text-amber-700', 'icon' => 'text-amber-600', 'badge' => 'bg-amber-100 text-amber-700', 'border' => 'border-amber-200'],
                 'slate' => ['bg' => 'bg-slate-100', 'text' => 'text-slate-700', 'icon' => 'text-slate-600', 'badge' => 'bg-slate-100 text-slate-700', 'border' => 'border-slate-200'],
+                'gray' => ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'icon' => 'text-gray-600', 'badge' => 'bg-gray-100 text-gray-700', 'border' => 'border-gray-200'],
             ];
         @endphp
 
         <style>
-            .promo-card {
-                background: linear-gradient(to bottom, #fffbeb, white 40%);
-            }
             @keyframes card-slide-in {
                 from {
                     opacity: 0;
@@ -182,133 +153,158 @@
                     animation: none;
                 }
             }
+            .promo-card {
+                background: linear-gradient(to bottom, #fffbeb, white 40%);
+            }
         </style>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             @foreach($planosDetalhados as $plano)
                 @php $cores = $corClasses[$plano['cor']]; @endphp
-                <div class="bg-white rounded-xl border {{ $plano['codigo'] === 'enterprise' ? 'border-2 border-slate-400 ring-2 ring-slate-100' : ($plano['popular'] && !$plano['promo'] ? 'border-2 border-blue-500 ring-2 ring-blue-100' : ($plano['promo'] ? 'border-2 border-amber-300' : 'border-gray-200')) }} {{ $plano['promo'] ? 'promo-card shadow-md' : 'shadow-sm' }} flex flex-col relative hover:shadow-md transition-shadow plan-card-animate" style="animation-delay: {{ $loop->index * 0.12 }}s">
-                    {{-- Badge Popular / Promo --}}
-                    @if($plano['promo'])
-                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white shadow-sm">
-                                Mais Popular
-                            </span>
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm bg-amber-500">
-                                20% OFF
-                            </span>
-                        </div>
-                    @elseif($plano['popular'])
-                        <div class="absolute -top-3 left-1/2 -translate-x-1/2">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white shadow-sm">
-                                Mais Popular
-                            </span>
-                        </div>
-                    @elseif($plano['codigo'] === 'enterprise')
-                        <div class="absolute -top-3 left-1/2 -translate-x-1/2">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-700 text-white shadow-sm">
-                                Mais Completo
-                            </span>
-                        </div>
-                    @endif
 
-                    {{-- Card Header --}}
-                    <div class="p-6 {{ $plano['popular'] || $plano['codigo'] === 'enterprise' ? 'pt-7' : '' }}">
-                        <div class="flex items-start justify-between mb-3">
-                            <div class="flex items-center gap-3">
-                                <div class="flex-shrink-0 w-10 h-10 rounded-lg {{ $cores['bg'] }} flex items-center justify-center">
-                                    <svg class="w-5 h-5 {{ $cores['icon'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $plano['icone'] }}"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-bold text-gray-900">{{ $plano['nome'] }}</h3>
-                                    @if($plano['promo'])
-                                        <span class="text-sm text-gray-400 line-through">10 cred./CNPJ</span>
-                                        <span class="text-sm font-bold text-amber-600">{{ $plano['creditos'] }} creditos/CNPJ</span>
-                                    @elseif($plano['gratuito'])
-                                        <span class="text-sm font-medium text-green-600">Gratuito</span>
-                                    @else
-                                        <span class="text-sm text-gray-500">{{ $plano['creditos'] }} créditos/CNPJ</span>
-                                    @endif
+                @if($plano['coming_soon'])
+                    {{-- Coming Soon Card --}}
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col relative opacity-50 pointer-events-none plan-card-animate" style="animation-delay: {{ $loop->index * 0.12 }}s">
+                        <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-600 shadow-sm">
+                                Em breve
+                            </span>
+                        </div>
+                        <div class="p-6 pt-7">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-shrink-0 w-10 h-10 rounded-lg {{ $cores['bg'] }} flex items-center justify-center">
+                                        <svg class="w-5 h-5 {{ $cores['icon'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $plano['icone'] }}"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-900">{{ $plano['nome'] }}</h3>
+                                    </div>
                                 </div>
                             </div>
-                            @if($plano['promo'])
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
-                                    {{ $plano['creditos'] }} cred.
-                                </span>
-                            @elseif($plano['gratuito'])
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-                                    Gratis
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $cores['badge'] }}">
-                                    {{ $plano['creditos'] }} cred.
-                                </span>
-                            @endif
+                            <p class="text-sm text-gray-600 mb-5">{{ $plano['descricao'] }}</p>
                         </div>
-
-                        <p class="text-sm text-gray-600 mb-5">{{ $plano['descricao'] }}</p>
-
+                        <div class="mt-auto p-6 pt-0">
+                            <button disabled class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gray-100 text-gray-400 text-sm font-semibold cursor-not-allowed">
+                                Em breve
+                            </button>
+                        </div>
+                    </div>
+                @else
+                    {{-- Active Plan Card --}}
+                    <div class="{{ $plano['promo'] ? 'promo-card' : 'bg-white' }} rounded-xl border {{ $plano['promo'] ? 'border-2 border-amber-400 ring-2 ring-amber-100' : ($plano['popular'] ? 'border-2 border-blue-500 ring-2 ring-blue-100' : 'border-gray-200') }} shadow-sm flex flex-col relative hover:shadow-md transition-shadow plan-card-animate" style="animation-delay: {{ $loop->index * 0.12 }}s">
                         @if($plano['promo'])
-                            <div class="flex items-center gap-2.5 border border-amber-200 rounded-lg px-3 py-2.5 mb-5 bg-amber-50">
-                                <span class="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                                    <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"></path>
-                                    </svg>
+                            <div class="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white shadow-sm">
+                                    Mais Popular
                                 </span>
-                                <div>
-                                    <p class="text-xs font-bold text-amber-800">Promocao por tempo limitado</p>
-                                    <p class="text-xs text-amber-700">De <span class="line-through">10</span> por <strong>8 creditos</strong>/CNPJ — economia de 20%</p>
-                                </div>
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500 text-white shadow-sm">
+                                    25% OFF
+                                </span>
+                            </div>
+                        @elseif($plano['popular'])
+                            <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white shadow-sm">
+                                    Mais Popular
+                                </span>
                             </div>
                         @endif
 
-                        {{-- Consultas Incluidas --}}
-                        <div class="mb-5">
-                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Consultas incluídas</p>
-                            <ul class="space-y-1.5">
-                                @foreach($plano['consultas'] as $consulta)
-                                    <li class="flex items-start gap-2 text-sm text-gray-700">
-                                        <svg class="w-4 h-4 {{ $cores['icon'] }} mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        <div class="p-6 {{ ($plano['popular'] || $plano['promo']) ? 'pt-7' : '' }}">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-shrink-0 w-10 h-10 rounded-lg {{ $cores['bg'] }} flex items-center justify-center">
+                                        <svg class="w-5 h-5 {{ $cores['icon'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $plano['icone'] }}"></path>
                                         </svg>
-                                        <span>{{ $consulta }}</span>
-                                    </li>
-                                @endforeach
-                            </ul>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-900">{{ $plano['nome'] }}</h3>
+                                        @if($plano['gratuito'])
+                                            <span class="text-sm font-semibold text-green-600">Gratuito</span>
+                                        @elseif($plano['promo'])
+                                            <span class="text-sm text-gray-400 line-through">{{ $plano['preco_original'] }} créditos/CNPJ</span>
+                                            <span class="text-sm font-semibold text-amber-600 ml-1">{{ $plano['creditos'] }} créditos/CNPJ</span>
+                                        @else
+                                            <span class="text-sm text-gray-500">{{ $plano['creditos'] }} créditos/CNPJ</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                @if($plano['gratuito'])
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                                        Gratis
+                                    </span>
+                                @elseif($plano['promo'])
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
+                                        {{ $plano['creditos'] }} cred.
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $cores['badge'] }}">
+                                        {{ $plano['creditos'] }} cred.
+                                    </span>
+                                @endif
+                            </div>
+
+                            <p class="text-sm text-gray-600 mb-5">{{ $plano['descricao'] }}</p>
+
+                            @if($plano['promo'])
+                                <div class="mb-5 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                    <div class="flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <span class="text-xs font-semibold text-amber-800">Promocao: de {{ $plano['preco_original'] }} por {{ $plano['creditos'] }} creditos/CNPJ</span>
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Consultas Incluidas --}}
+                            <div class="mb-5">
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Consultas incluidas</p>
+                                <ul class="space-y-1.5">
+                                    @foreach($plano['consultas'] as $consulta)
+                                        <li class="flex items-start gap-2 text-sm text-gray-700">
+                                            <svg class="w-4 h-4 {{ $cores['icon'] }} mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                            <span>{{ $consulta }}</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+
+                            {{-- Casos de Uso --}}
+                            <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Quando usar</p>
+                                <ul class="space-y-1">
+                                    @foreach($plano['casos_uso'] as $caso)
+                                        <li class="flex items-start gap-2 text-xs text-gray-600">
+                                            <svg class="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                            </svg>
+                                            <span>{{ $caso }}</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
                         </div>
 
-                        {{-- Casos de Uso --}}
-                        <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Quando usar</p>
-                            <ul class="space-y-1">
-                                @foreach($plano['casos_uso'] as $caso)
-                                    <li class="flex items-start gap-2 text-xs text-gray-600">
-                                        <svg class="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                        </svg>
-                                        <span>{{ $caso }}</span>
-                                    </li>
-                                @endforeach
-                            </ul>
+                        {{-- Card Footer --}}
+                        <div class="mt-auto p-6 pt-0">
+                            <a
+                                href="/app/consultas/nova"
+                                data-link
+                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg {{ $plano['promo'] ? 'bg-amber-500 text-white hover:bg-amber-600' : ($plano['popular'] ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') }} text-sm font-semibold transition-colors"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                                Usar este plano
+                            </a>
                         </div>
                     </div>
-
-                    {{-- Card Footer --}}
-                    <div class="mt-auto p-6 pt-0">
-                        <a
-                            href="/app/monitoramento/avulso"
-                            data-link
-                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg {{ $plano['promo'] ? 'bg-amber-500 text-white hover:bg-amber-600' : ($plano['codigo'] === 'enterprise' ? 'bg-slate-700 text-white hover:bg-slate-800' : ($plano['popular'] ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')) }} text-sm font-semibold transition-colors"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
-                            Usar este plano
-                        </a>
-                    </div>
-                </div>
+                @endif
             @endforeach
         </div>
 
@@ -371,9 +367,11 @@
                             class="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
                             @foreach($planosDetalhados as $plano)
-                                <option value="{{ $plano['creditos'] }}" {{ $plano['codigo'] === 'licitacao' ? 'selected' : '' }}>
-                                    {{ $plano['nome'] }} ({{ $plano['creditos'] }} cred.)
-                                </option>
+                                @if(!$plano['coming_soon'])
+                                    <option value="{{ $plano['creditos'] }}" {{ $plano['codigo'] === 'licitacao' ? 'selected' : '' }}>
+                                        {{ $plano['nome'] }} ({{ $plano['creditos'] }} cred.)
+                                    </option>
+                                @endif
                             @endforeach
                         </select>
                     </div>
@@ -393,7 +391,7 @@
                     <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <span>O plano Gratuito nao consome creditos. <a href="/app/creditos" data-link class="text-blue-600 hover:underline">Adquirir creditos</a></span>
+                    <span>O custo depende do plano escolhido e da quantidade de CNPJs. <a href="/app/creditos" data-link class="text-blue-600 hover:underline">Adquirir creditos</a></span>
                 </div>
             </div>
         </div>

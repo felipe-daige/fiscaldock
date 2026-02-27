@@ -14,13 +14,13 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="FiscalDock | Soluções Inteligentes">
     <meta property="og:description" content="Prepare sua empresa para a Reforma Tributária de 2026 com soluções inteligentes.">
-    <meta property="og:image" content="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}">
+    <meta property="og:image" content="{{ asset('binary_files/logo/Logo FiscalDock.png') }}">
 
     <!-- Twitter Card (X) -->
-    <meta name="twitter:card" content="summary">
+    <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="FiscalDock | Soluções Inteligentes">
     <meta name="twitter:description" content="Prepare sua empresa para a Reforma Tributária de 2026 com soluções inteligentes.">
-    <meta name="twitter:image" content="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}">
+    <meta name="twitter:image" content="{{ asset('binary_files/logo/Logo FiscalDock.png') }}">
 
     @vite(['resources/css/app.css', 'resources/js/spa.js'])
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">

@@ -1,19 +1,19 @@
-{{-- Monitoramento de Clientes - Placeholder --}}
+{{-- Importação de XMLs - Placeholder (Em Desenvolvimento) --}}
 <div class="min-h-screen bg-gray-50">
     {{-- Header Section --}}
     <div class="bg-white border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                     </svg>
                 </div>
                 <div>
                     <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">
-                        Monitoramento de Clientes
+                        Importar XMLs de Notas Fiscais
                     </h1>
-                    <p class="text-sm text-gray-500 mt-1">Acompanhe o status fiscal dos seus clientes</p>
+                    <p class="text-sm text-gray-500 mt-1">Importe e processe XMLs de NF-e, NFS-e e CT-e</p>
                 </div>
             </div>
         </div>
@@ -34,7 +34,7 @@
             </h2>
 
             <p class="text-gray-600 max-w-md mx-auto mb-8">
-                Esta funcionalidade esta sendo desenvolvida para permitir o monitoramento centralizado dos seus clientes.
+                Esta funcionalidade esta sendo desenvolvida para importar XMLs de NF-e, NFS-e e CT-e automaticamente.
             </p>
 
             {{-- Features Preview --}}
@@ -47,25 +47,25 @@
                         <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        Visualizar status fiscal de todos os clientes
+                        Importar XMLs de NF-e, NFS-e e CT-e
                     </li>
                     <li class="flex items-center gap-2">
                         <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        Acompanhar CNDs e certidoes por cliente
+                        Extrair participantes automaticamente
                     </li>
                     <li class="flex items-center gap-2">
                         <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        Receber alertas de vencimento e irregularidades
+                        Validar notas fiscais
                     </li>
                     <li class="flex items-center gap-2">
                         <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        Gerar relatorios consolidados por cliente
+                        Acompanhar progresso em tempo real
                     </li>
                 </ul>
             </div>

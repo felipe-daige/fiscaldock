@@ -228,7 +228,7 @@
                     </div>
                     @if($nota->emitente)
                     <div class="pt-2">
-                        <a href="/app/risk/participante/{{ $nota->emit_participante_id }}" data-link class="text-sm text-blue-600 hover:text-blue-800">
+                        <a href="/app/score-fiscal/participante/{{ $nota->emit_participante_id }}" data-link class="text-sm text-blue-600 hover:text-blue-800">
                             Ver score de risco do emitente
                         </a>
                     </div>
@@ -254,7 +254,7 @@
                     </div>
                     @if($nota->destinatario)
                     <div class="pt-2">
-                        <a href="/app/risk/participante/{{ $nota->dest_participante_id }}" data-link class="text-sm text-blue-600 hover:text-blue-800">
+                        <a href="/app/score-fiscal/participante/{{ $nota->dest_participante_id }}" data-link class="text-sm text-blue-600 hover:text-blue-800">
                             Ver score de risco do destinatario
                         </a>
                     </div>

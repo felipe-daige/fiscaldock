@@ -118,6 +118,10 @@ COPY deployment/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY deployment/php-fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom-pool.conf
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
+# Limpar caches de dev e regenerar package discovery para --no-dev
+RUN rm -f bootstrap/cache/packages.php bootstrap/cache/services.php bootstrap/cache/config.php bootstrap/cache/routes-v7.php \
+    && php artisan package:discover --ansi
+
 # Ajustar permissões
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
     && chown -R www-data:www-data /var/www/html \

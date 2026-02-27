@@ -38,8 +38,6 @@ class MinhaEmpresaController extends Controller
             ]);
         }
 
-        $empresa->load('endereco');
-
         // Buscar ou criar participante correspondente ao CNPJ da empresa
         $cnpjLimpo = preg_replace('/\D/', '', $empresa->documento);
         $participante = Participante::firstOrCreate(

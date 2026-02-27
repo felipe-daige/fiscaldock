@@ -25,7 +25,9 @@ class SpedUploadController extends Controller
         $tipoEfd = $request->input('tipo_efd', 'contribuicoes');
         $tabId = $request->input('tab_id');
         $clienteId = $request->input('cliente_id');
-        $extrairNotas = filter_var($request->input('extrair_notas', false), FILTER_VALIDATE_BOOLEAN);
+        $extrairNotas = config('features.extrair_notas')
+            ? filter_var($request->input('extrair_notas', false), FILTER_VALIDATE_BOOLEAN)
+            : false;
 
         // Normalizar tipo_efd para formato do banco
         $tipoEfdNormalizado = str_contains(strtolower($tipoEfd), 'fiscal')
@@ -34,6 +36,7 @@ class SpedUploadController extends Controller
 
         // Selecionar webhook baseado no tipo de EFD
         $isFiscal = $tipoEfdNormalizado === 'EFD_FISCAL';
+        $tipoEfdLabel = $isFiscal ? 'EFD Fiscal' : 'EFD Contribuições';
         $webhookUrl = $isFiscal
             ? config('services.webhook.monitoramento_importacao_fiscal_url')
             : config('services.webhook.monitoramento_importacao_contribuicoes_url');
@@ -77,11 +80,11 @@ class SpedUploadController extends Controller
                 'user_id' => $user->id,
                 'importacao_id' => $importacao->id,
                 'tab_id' => $tabId,
-                'tipo_efd' => $tipoEfdNormalizado,
+                'tipo_efd' => $tipoEfdLabel,
                 'cliente_id' => $clienteId,
                 'extrair_notas' => $extrairNotas,
                 'filename' => $file->getClientOriginalName(),
-                'progress_url' => url('/api/monitoramento/sped/importacao-txt/progress'),
+                'progress_url' => url('/api/importacao/sped/importacao-txt/progress'),
             ];
 
             Log::debug('SpedUpload: enviando para webhook', [

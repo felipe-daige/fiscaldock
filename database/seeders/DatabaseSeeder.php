@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Cliente;
-use App\Models\ClienteEndereco;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -17,7 +16,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Criar usuário principal
+        // Criar usuario principal
         $user = User::factory()->create([
             'name' => 'Felipe',
             'sobrenome' => 'FiscalDock',
@@ -30,7 +29,7 @@ class DatabaseSeeder extends Seeder
             'credits' => 100,
         ]);
 
-        // Criar cliente (empresa própria)
+        // Criar cliente (empresa propria)
         $cliente = Cliente::create([
             'user_id' => $user->id,
             'tipo_pessoa' => 'PJ',
@@ -40,19 +39,9 @@ class DatabaseSeeder extends Seeder
             'telefone' => '67 999844366',
             'email' => 'admin@fiscaldock.test',
             'is_empresa_propria' => true,
-        ]);
-
-        // Endereço da empresa
-        ClienteEndereco::create([
-            'cliente_id' => $cliente->id,
-            'tipo' => 'principal',
+            'uf' => 'MS',
             'cep' => '01310100',
-            'logradouro' => 'Avenida Paulista',
-            'numero' => '6385',
-            'complemento' => 'Sala 7',
-            'bairro' => 'Bela Vista',
-            'cidade' => 'Sao Paulo',
-            'estado' => 'MS',
+            'municipio' => 'Sao Paulo',
         ]);
 
         // Popular planos de monitoramento
@@ -62,4 +51,3 @@ class DatabaseSeeder extends Seeder
         $this->call(MonitoramentoMockDataSeeder::class);
     }
 }
-

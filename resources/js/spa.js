@@ -36,7 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Configuração de mapeamento para páginas com nomes de arquivo diferentes
     const _spaScriptOverrides = {
         monitoramento: null, // Código inline na view
-        monitoramentoSped: null, // Código inline na view
+        importacaoSped: null, // Código inline na view
+        importacao: null, // Código inline na view (importação XML)
         monitoramentoAvulso: null, // Código inline na view
         consultasAvulso: null, // Código inline na view (mesma view do monitoramentoAvulso)
         monitoramentoHistorico: null, // Código inline na view
@@ -65,8 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (segmentos.length > 0) {
             if (segmentos[0] === 'app') {
                 // Rotas autenticadas
-                if (segmentos[1] === 'monitoramento' && segmentos[2] === 'participante') {
-                    // Rota de participante específico: /app/monitoramento/participante/{id}
+                if (segmentos[1] === 'participante') {
+                    // Rota de participante específico: /app/participante/{id}
                     baseSlug = 'monitoramentoParticipante';
                 } else {
                     baseSlug = segmentos[1] || 'dashboard';
@@ -92,13 +93,14 @@ document.addEventListener('DOMContentLoaded', () => {
         '/agendar': 'initAgendar',
         '/solucoes': 'initSolucoes',
         '/app/monitoramento': 'initMonitoramento',
-        '/app/monitoramento/sped': 'initMonitoramentoSped',
+        '/app/importacao/sped': 'initImportacaoSped',
         '/app/monitoramento/avulso': 'initMonitoramentoAvulso',
         '/app/consultas/avulso': 'initMonitoramentoAvulso',
-        '/app/monitoramento/novo-participante': 'initNovoParticipante',
-        '/app/novo_cliente': 'initNovoCliente',
+        '/app/novo-participante': 'initNovoParticipante',
+        '/app/novo-cliente': 'initNovoCliente',
         '/app/monitoramento/historico': 'initMonitoramentoHistorico',
-        // Nota: /app/monitoramento/participante/{id} é tratada dinamicamente em obterInfoPagina()
+        // Nota: /app/participante/{id} é tratada dinamicamente em obterInfoPagina()
+        '/app/importacao/xml': 'initMonitoramentoXml',
         '/app/consultas/nova': 'initConsultaLote',
         '/app/perfil': 'initPerfil',
         '/dashboard': 'initDashboard',

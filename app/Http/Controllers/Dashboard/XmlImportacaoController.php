@@ -22,7 +22,7 @@ use ZipArchive;
 
 class XmlImportacaoController extends Controller
 {
-    private const AUTH_VIEW_PREFIX = 'autenticado.monitoramento.';
+    private const AUTH_VIEW_PREFIX = 'autenticado.importacao.';
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
 
     public function __construct(
@@ -30,9 +30,30 @@ class XmlImportacaoController extends Controller
     ) {}
 
     /**
-     * Página de importação de XMLs.
+     * Página de importação de XMLs (placeholder - em desenvolvimento).
      */
     public function index(Request $request)
+    {
+        $placeholderView = self::AUTH_VIEW_PREFIX . 'xml-placeholder';
+
+        if (!Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        if ($this->isAjaxRequest($request)) {
+            $renderedView = view($placeholderView)->render();
+            return response($renderedView)->header('Content-Type', 'text/html');
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, [
+            'initialView' => $placeholderView,
+        ]);
+    }
+
+    /**
+     * Página de importação de XMLs (versão funcional - dev only).
+     */
+    public function indexDev(Request $request)
     {
         $xmlView = self::AUTH_VIEW_PREFIX . 'xml';
 
@@ -120,7 +141,7 @@ class XmlImportacaoController extends Controller
         }
 
         // Verificar webhook configurado
-        $webhookUrl = config('services.webhook.monitoramento_importacao_xml_url');
+        $webhookUrl = config('services.webhook.importacao_xml_url');
 
         if (empty($webhookUrl)) {
             Log::error('XmlImportacao: webhook não configurado');
@@ -195,7 +216,7 @@ class XmlImportacaoController extends Controller
                         'cliente_cnpj' => $this->getClienteCnpj($validated['cliente_id'] ?? null),
                         'salvar_movimentacoes' => $validated['salvar_movimentacoes'] ?? false,
                         'total_xmls' => $totalXmls,
-                        'progress_url' => url('/api/monitoramento/xml/importacao/progress'),
+                        'progress_url' => url('/api/importacao/xml/progress'),
                     ]);
 
                 if ($response->successful()) {

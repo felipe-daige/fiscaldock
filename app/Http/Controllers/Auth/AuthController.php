@@ -196,9 +196,7 @@ class AuthController extends Controller
                 'razao_social' => $tipoPessoa === 'PJ' ? $request->empresa : null,
                 'telefone' => $request->telefone,
                 'email' => $request->email,
-                'faturamento_anual' => $request->faturamento,
-                'preparacao_reforma' => $request->desafio_principal,
-                'is_empresa_propria' => $tipoPessoa === 'PJ', // Marca como empresa propria se for PJ
+                'is_empresa_propria' => $tipoPessoa === 'PJ',
             ]);
 
             Auth::attempt($request->only('email', 'senha'));

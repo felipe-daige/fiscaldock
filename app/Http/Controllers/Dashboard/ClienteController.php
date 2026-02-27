@@ -4,12 +4,8 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
-use App\Models\ClienteEndereco;
-use App\Models\ClienteFuncionario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -21,152 +17,133 @@ class ClienteController extends Controller
     public function store(Request $request)
     {
         try {
-            // Validação baseada no tipo de pessoa
             $tipoPessoa = $request->input('tipo_pessoa');
-            
-            // Regras base
+            $isPJ = $tipoPessoa === 'PJ';
+
             $rules = [
                 'tipo_pessoa' => 'required|in:PF,PJ',
                 'documento' => 'required|string|max:18|unique:clientes,documento',
                 'telefone' => 'nullable|string|max:20',
                 'email' => 'nullable|email|max:255',
-                'faturamento_anual' => 'nullable|string|max:50',
-                'preparacao_reforma' => 'nullable|string|max:255',
-                
-                // Endereço
-                'endereco.cep' => 'required|string|max:9',
-                'endereco.logradouro' => 'required|string|max:255',
-                'endereco.numero' => 'required|string|max:20',
-                'endereco.complemento' => 'nullable|string|max:255',
-                'endereco.bairro' => 'required|string|max:255',
-                'endereco.cidade' => 'required|string|max:255',
-                'endereco.estado' => 'required|string|size:2',
-                'endereco.pais' => 'nullable|string|max:100',
-                
-                // Funcionário
-                'funcionario.nome' => 'required|string|max:255',
-                'funcionario.sobrenome' => 'required|string|max:255',
-                'funcionario.email' => 'required|email|max:255|unique:clientes_funcionarios,email',
-                'funcionario.senha' => 'required|string|min:8',
-                'funcionario.cargo' => 'required|string|max:255',
-                'funcionario.departamento' => 'nullable|string|max:255',
-                'funcionario.nivel_acesso' => 'required|in:funcionario,admin',
+                'uf' => 'nullable|string|size:2',
+                'cep' => 'nullable|string|max:9',
+                'municipio' => 'nullable|string|max:255',
+                'is_empresa_propria' => 'nullable|boolean',
+                // Campos compartilhados PJ/PF
+                'nome_fantasia' => 'nullable|string|max:255',
+                'endereco' => 'nullable|string|max:255',
+                'numero' => 'nullable|string|max:20',
+                'complemento' => 'nullable|string|max:100',
+                'bairro' => 'nullable|string|max:100',
+                'situacao_cadastral' => 'nullable|string|max:50',
+                'codigo_municipal' => 'nullable|string|max:10',
+                // Campos PJ-only
+                'inscricao_estadual' => 'nullable|string|max:20',
+                'crt' => 'nullable|in:1,2,3',
+                'regime_tributario' => 'nullable|string|max:50',
+                'cnpj_matriz' => 'nullable|string|max:14',
+                'suframa' => 'nullable|string|max:20',
+                'capital_social' => 'nullable|numeric|min:0',
+                'natureza_juridica' => 'nullable|string|max:100',
+                'porte' => 'nullable|string|max:50',
+                'data_inicio_atividade' => 'nullable|date',
+                'cnae_principal' => 'nullable|string|max:10',
+                'cnae_principal_descricao' => 'nullable|string|max:255',
+                'cnaes_secundarios' => 'nullable|array',
+                'qsa' => 'nullable|array',
             ];
-            
-            // Regras condicionais baseadas no tipo de pessoa
-            if ($tipoPessoa === 'PJ') {
-                // Para PJ: razao_social obrigatório, nome opcional
+
+            if ($isPJ) {
                 $rules['razao_social'] = 'required|string|max:255';
                 $rules['nome'] = 'nullable|string|max:255';
             } else {
-                // Para PF: nome obrigatório, razao_social não aplicável
                 $rules['nome'] = 'required|string|max:255';
                 $rules['razao_social'] = 'nullable|string|max:255';
             }
-            
+
             $validated = $request->validate($rules);
 
             $user = Auth::user();
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Usuário não autenticado'
+                    'message' => 'Usuario nao autenticado'
                 ], 401);
             }
 
-            // Limpar documento (remover formatação)
             $documentoLimpo = preg_replace('/\D/', '', $validated['documento']);
 
-            // Validar formato do documento
-            if ($validated['tipo_pessoa'] === 'PJ') {
+            if ($isPJ) {
                 if (strlen($documentoLimpo) !== 14) {
                     throw ValidationException::withMessages([
-                        'documento' => 'CNPJ deve ter 14 dígitos'
+                        'documento' => 'CNPJ deve ter 14 digitos'
                     ]);
                 }
             } else {
                 if (strlen($documentoLimpo) !== 11) {
                     throw ValidationException::withMessages([
-                        'documento' => 'CPF deve ter 11 dígitos'
+                        'documento' => 'CPF deve ter 11 digitos'
                     ]);
                 }
             }
 
-            // Usar transação para garantir consistência
-            DB::beginTransaction();
+            $cliente = Cliente::create([
+                'user_id' => $user->id,
+                'tipo_pessoa' => $validated['tipo_pessoa'],
+                'documento' => $documentoLimpo,
+                'nome' => $validated['nome'] ?? null,
+                'razao_social' => $validated['razao_social'] ?? null,
+                'nome_fantasia' => $validated['nome_fantasia'] ?? null,
+                'inscricao_estadual' => $isPJ ? ($validated['inscricao_estadual'] ?? null) : null,
+                'crt' => $isPJ ? ($validated['crt'] ?? null) : null,
+                'telefone' => $validated['telefone'] ?? null,
+                'email' => $validated['email'] ?? null,
+                'uf' => isset($validated['uf']) ? strtoupper($validated['uf']) : null,
+                'cep' => isset($validated['cep']) ? preg_replace('/\D/', '', $validated['cep']) : null,
+                'municipio' => $validated['municipio'] ?? null,
+                'endereco' => $validated['endereco'] ?? null,
+                'numero' => $validated['numero'] ?? null,
+                'complemento' => $validated['complemento'] ?? null,
+                'bairro' => $validated['bairro'] ?? null,
+                'situacao_cadastral' => $validated['situacao_cadastral'] ?? null,
+                'regime_tributario' => $isPJ ? ($validated['regime_tributario'] ?? null) : null,
+                'cnpj_matriz' => $isPJ ? ($validated['cnpj_matriz'] ?? null) : null,
+                'suframa' => $isPJ ? ($validated['suframa'] ?? null) : null,
+                'codigo_municipal' => $validated['codigo_municipal'] ?? null,
+                'capital_social' => $isPJ ? ($validated['capital_social'] ?? null) : null,
+                'natureza_juridica' => $isPJ ? ($validated['natureza_juridica'] ?? null) : null,
+                'porte' => $isPJ ? ($validated['porte'] ?? null) : null,
+                'data_inicio_atividade' => $isPJ ? ($validated['data_inicio_atividade'] ?? null) : null,
+                'cnae_principal' => $isPJ ? ($validated['cnae_principal'] ?? null) : null,
+                'cnae_principal_descricao' => $isPJ ? ($validated['cnae_principal_descricao'] ?? null) : null,
+                'cnaes_secundarios' => $isPJ ? ($validated['cnaes_secundarios'] ?? null) : null,
+                'qsa' => $isPJ ? ($validated['qsa'] ?? null) : null,
+                'is_empresa_propria' => $validated['is_empresa_propria'] ?? false,
+                'ativo' => true,
+            ]);
 
-            try {
-                // Criar cliente
-                $cliente = Cliente::create([
-                    'user_id' => $user->id,
-                    'tipo_pessoa' => $validated['tipo_pessoa'],
-                    'documento' => $documentoLimpo,
-                    'nome' => $validated['nome'] ?? null,
-                    'razao_social' => $validated['razao_social'] ?? null,
-                    'telefone' => $validated['telefone'] ?? null,
-                    'email' => $validated['email'] ?? null,
-                    'faturamento_anual' => $validated['faturamento_anual'] ?? null,
-                    'preparacao_reforma' => $validated['preparacao_reforma'] ?? null,
-                    'ativo' => true,
-                ]);
-
-                // Criar endereço
-                $endereco = ClienteEndereco::create([
-                    'cliente_id' => $cliente->id,
-                    'tipo' => 'principal',
-                    'cep' => preg_replace('/\D/', '', $validated['endereco']['cep']),
-                    'logradouro' => $validated['endereco']['logradouro'],
-                    'numero' => $validated['endereco']['numero'],
-                    'complemento' => $validated['endereco']['complemento'] ?? null,
-                    'bairro' => $validated['endereco']['bairro'],
-                    'cidade' => $validated['endereco']['cidade'],
-                    'estado' => strtoupper($validated['endereco']['estado']),
-                    'pais' => $validated['endereco']['pais'] ?? 'Brasil',
-                ]);
-
-                // Criar funcionário
-                $funcionario = ClienteFuncionario::create([
-                    'cliente_id' => $cliente->id,
-                    'nome' => $validated['funcionario']['nome'],
-                    'sobrenome' => $validated['funcionario']['sobrenome'],
-                    'email' => $validated['funcionario']['email'],
-                    'senha' => Hash::make($validated['funcionario']['senha']),
-                    'cargo' => $validated['funcionario']['cargo'],
-                    'departamento' => $validated['funcionario']['departamento'] ?? null,
-                    'nivel_acesso' => $validated['funcionario']['nivel_acesso'],
-                    'criado_por' => $user->id,
-                ]);
-
-                DB::commit();
-
-                // Retornar resposta de sucesso
-                if ($request->expectsJson() || $request->ajax()) {
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Cliente cadastrado com sucesso!',
-                        'redirect' => '/app/clientes',
-                        'cliente' => [
-                            'id' => $cliente->id,
-                            'nome' => $cliente->nome,
-                            'documento' => $cliente->documento_formatado,
-                        ]
-                    ], 201);
-                }
-
-                return redirect()
-                    ->route('app.clientes')
-                    ->with('success', 'Cliente cadastrado com sucesso!');
-
-            } catch (\Exception $e) {
-                DB::rollBack();
-                throw $e;
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Cliente cadastrado com sucesso!',
+                    'redirect' => '/app/clientes',
+                    'cliente' => [
+                        'id' => $cliente->id,
+                        'nome' => $cliente->nome,
+                        'documento' => $cliente->documento_formatado,
+                    ]
+                ], 201);
             }
+
+            return redirect()
+                ->route('app.clientes')
+                ->with('success', 'Cliente cadastrado com sucesso!');
 
         } catch (ValidationException $e) {
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Erro de validação',
+                    'message' => 'Erro de validacao',
                     'errors' => $e->errors()
                 ], 422);
             }
@@ -199,14 +176,12 @@ class ClienteController extends Controller
         $user = Auth::user();
         if (!$user) {
             if ($request->ajax() || $request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => 'Não autenticado', 'redirect' => '/login']);
+                return response()->json(['success' => false, 'message' => 'Nao autenticado', 'redirect' => '/login']);
             }
             return redirect('/login');
         }
 
-        $cliente = Cliente::where('user_id', $user->id)
-            ->with(['endereco', 'funcionarios'])
-            ->findOrFail($id);
+        $cliente = Cliente::where('user_id', $user->id)->findOrFail($id);
 
         $viewName = 'autenticado.clientes.novo';
         $data = ['cliente' => $cliente];
@@ -231,44 +206,48 @@ class ClienteController extends Controller
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Usuário não autenticado'
+                    'message' => 'Usuario nao autenticado'
                 ], 401);
             }
 
             $cliente = Cliente::where('user_id', $user->id)->findOrFail($id);
 
             $tipoPessoa = $cliente->tipo_pessoa;
+            $isPJ = $tipoPessoa === 'PJ';
 
-            // Regras base (documento unique ignora o registro atual)
             $rules = [
                 'documento' => 'required|string|max:18|unique:clientes,documento,' . $cliente->id,
                 'telefone' => 'nullable|string|max:20',
                 'email' => 'nullable|email|max:255',
-                'faturamento_anual' => 'nullable|string|max:50',
-                'preparacao_reforma' => 'nullable|string|max:255',
-
-                // Endereço
-                'endereco.cep' => 'required|string|max:9',
-                'endereco.logradouro' => 'required|string|max:255',
-                'endereco.numero' => 'required|string|max:20',
-                'endereco.complemento' => 'nullable|string|max:255',
-                'endereco.bairro' => 'required|string|max:255',
-                'endereco.cidade' => 'required|string|max:255',
-                'endereco.estado' => 'required|string|size:2',
-                'endereco.pais' => 'nullable|string|max:100',
-
-                // Funcionário (senha opcional na edição)
-                'funcionario.nome' => 'required|string|max:255',
-                'funcionario.sobrenome' => 'required|string|max:255',
-                'funcionario.email' => 'required|email|max:255',
-                'funcionario.senha' => 'nullable|string|min:8',
-                'funcionario.cargo' => 'required|string|max:255',
-                'funcionario.departamento' => 'nullable|string|max:255',
-                'funcionario.nivel_acesso' => 'required|in:funcionario,admin',
+                'uf' => 'nullable|string|size:2',
+                'cep' => 'nullable|string|max:9',
+                'municipio' => 'nullable|string|max:255',
+                'is_empresa_propria' => 'nullable|boolean',
+                // Campos compartilhados PJ/PF
+                'nome_fantasia' => 'nullable|string|max:255',
+                'endereco' => 'nullable|string|max:255',
+                'numero' => 'nullable|string|max:20',
+                'complemento' => 'nullable|string|max:100',
+                'bairro' => 'nullable|string|max:100',
+                'situacao_cadastral' => 'nullable|string|max:50',
+                'codigo_municipal' => 'nullable|string|max:10',
+                // Campos PJ-only
+                'inscricao_estadual' => 'nullable|string|max:20',
+                'crt' => 'nullable|in:1,2,3',
+                'regime_tributario' => 'nullable|string|max:50',
+                'cnpj_matriz' => 'nullable|string|max:14',
+                'suframa' => 'nullable|string|max:20',
+                'capital_social' => 'nullable|numeric|min:0',
+                'natureza_juridica' => 'nullable|string|max:100',
+                'porte' => 'nullable|string|max:50',
+                'data_inicio_atividade' => 'nullable|date',
+                'cnae_principal' => 'nullable|string|max:10',
+                'cnae_principal_descricao' => 'nullable|string|max:255',
+                'cnaes_secundarios' => 'nullable|array',
+                'qsa' => 'nullable|array',
             ];
 
-            // Regras condicionais baseadas no tipo de pessoa
-            if ($tipoPessoa === 'PJ') {
+            if ($isPJ) {
                 $rules['razao_social'] = 'required|string|max:255';
                 $rules['nome'] = 'nullable|string|max:255';
             } else {
@@ -276,97 +255,57 @@ class ClienteController extends Controller
                 $rules['razao_social'] = 'nullable|string|max:255';
             }
 
-            // Funcionário email unique: ignore current funcionário
-            $primaryFunc = $cliente->funcionarios()->first();
-            if ($primaryFunc) {
-                $rules['funcionario.email'] = 'required|email|max:255|unique:clientes_funcionarios,email,' . $primaryFunc->id;
-            }
-
             $validated = $request->validate($rules);
 
-            DB::beginTransaction();
+            $cliente->update([
+                'documento' => preg_replace('/\D/', '', $validated['documento']),
+                'nome' => $validated['nome'] ?? null,
+                'razao_social' => $validated['razao_social'] ?? null,
+                'nome_fantasia' => $validated['nome_fantasia'] ?? null,
+                'inscricao_estadual' => $isPJ ? ($validated['inscricao_estadual'] ?? null) : null,
+                'crt' => $isPJ ? ($validated['crt'] ?? null) : null,
+                'telefone' => $validated['telefone'] ?? null,
+                'email' => $validated['email'] ?? null,
+                'uf' => isset($validated['uf']) ? strtoupper($validated['uf']) : null,
+                'cep' => isset($validated['cep']) ? preg_replace('/\D/', '', $validated['cep']) : null,
+                'municipio' => $validated['municipio'] ?? null,
+                'endereco' => $validated['endereco'] ?? null,
+                'numero' => $validated['numero'] ?? null,
+                'complemento' => $validated['complemento'] ?? null,
+                'bairro' => $validated['bairro'] ?? null,
+                'situacao_cadastral' => $validated['situacao_cadastral'] ?? null,
+                'regime_tributario' => $isPJ ? ($validated['regime_tributario'] ?? null) : null,
+                'cnpj_matriz' => $isPJ ? ($validated['cnpj_matriz'] ?? null) : null,
+                'suframa' => $isPJ ? ($validated['suframa'] ?? null) : null,
+                'codigo_municipal' => $validated['codigo_municipal'] ?? null,
+                'capital_social' => $isPJ ? ($validated['capital_social'] ?? null) : null,
+                'natureza_juridica' => $isPJ ? ($validated['natureza_juridica'] ?? null) : null,
+                'porte' => $isPJ ? ($validated['porte'] ?? null) : null,
+                'data_inicio_atividade' => $isPJ ? ($validated['data_inicio_atividade'] ?? null) : null,
+                'cnae_principal' => $isPJ ? ($validated['cnae_principal'] ?? null) : null,
+                'cnae_principal_descricao' => $isPJ ? ($validated['cnae_principal_descricao'] ?? null) : null,
+                'cnaes_secundarios' => $isPJ ? ($validated['cnaes_secundarios'] ?? null) : null,
+                'qsa' => $isPJ ? ($validated['qsa'] ?? null) : null,
+                'is_empresa_propria' => $validated['is_empresa_propria'] ?? $cliente->is_empresa_propria,
+            ]);
 
-            try {
-                // Atualizar cliente
-                $cliente->update([
-                    'documento' => preg_replace('/\D/', '', $validated['documento']),
-                    'nome' => $validated['nome'] ?? null,
-                    'razao_social' => $validated['razao_social'] ?? null,
-                    'telefone' => $validated['telefone'] ?? null,
-                    'email' => $validated['email'] ?? null,
-                    'faturamento_anual' => $validated['faturamento_anual'] ?? null,
-                    'preparacao_reforma' => $validated['preparacao_reforma'] ?? null,
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Cliente atualizado com sucesso!',
+                    'redirect' => '/app/clientes',
                 ]);
-
-                // Atualizar ou criar endereço
-                $enderecoData = [
-                    'tipo' => 'principal',
-                    'cep' => preg_replace('/\D/', '', $validated['endereco']['cep']),
-                    'logradouro' => $validated['endereco']['logradouro'],
-                    'numero' => $validated['endereco']['numero'],
-                    'complemento' => $validated['endereco']['complemento'] ?? null,
-                    'bairro' => $validated['endereco']['bairro'],
-                    'cidade' => $validated['endereco']['cidade'],
-                    'estado' => strtoupper($validated['endereco']['estado']),
-                    'pais' => $validated['endereco']['pais'] ?? 'Brasil',
-                ];
-
-                $endereco = $cliente->endereco;
-                if ($endereco) {
-                    $endereco->update($enderecoData);
-                } else {
-                    $enderecoData['cliente_id'] = $cliente->id;
-                    ClienteEndereco::create($enderecoData);
-                }
-
-                // Atualizar funcionário principal
-                $funcData = [
-                    'nome' => $validated['funcionario']['nome'],
-                    'sobrenome' => $validated['funcionario']['sobrenome'],
-                    'email' => $validated['funcionario']['email'],
-                    'cargo' => $validated['funcionario']['cargo'],
-                    'departamento' => $validated['funcionario']['departamento'] ?? null,
-                    'nivel_acesso' => $validated['funcionario']['nivel_acesso'],
-                ];
-
-                // Só atualizar senha se fornecida
-                if (!empty($validated['funcionario']['senha'])) {
-                    $funcData['senha'] = Hash::make($validated['funcionario']['senha']);
-                }
-
-                if ($primaryFunc) {
-                    $primaryFunc->update($funcData);
-                } else {
-                    $funcData['cliente_id'] = $cliente->id;
-                    $funcData['senha'] = Hash::make($validated['funcionario']['senha'] ?? 'temp12345');
-                    $funcData['criado_por'] = $user->id;
-                    ClienteFuncionario::create($funcData);
-                }
-
-                DB::commit();
-
-                if ($request->expectsJson() || $request->ajax()) {
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Cliente atualizado com sucesso!',
-                        'redirect' => '/app/clientes',
-                    ]);
-                }
-
-                return redirect()
-                    ->route('app.clientes')
-                    ->with('success', 'Cliente atualizado com sucesso!');
-
-            } catch (\Exception $e) {
-                DB::rollBack();
-                throw $e;
             }
+
+            return redirect()
+                ->route('app.clientes')
+                ->with('success', 'Cliente atualizado com sucesso!');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Erro de validação',
+                    'message' => 'Erro de validacao',
                     'errors' => $e->errors()
                 ], 422);
             }
@@ -393,8 +332,6 @@ class ClienteController extends Controller
 
     /**
      * Delete an individual cliente.
-     * Cascades: enderecos, funcionarios, solicitacoes are deleted.
-     * participantes.cliente_id is SET NULL by DB constraint.
      */
     public function destroy(Request $request, $id)
     {

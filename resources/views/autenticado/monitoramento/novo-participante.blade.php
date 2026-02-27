@@ -6,6 +6,20 @@
 <div class="min-h-screen bg-gray-50" id="novo-participante-container">
     {{-- Main Content --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <style>
+            @keyframes card-slide-in {
+                from { opacity: 0; transform: translateY(60px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .np-animate {
+                opacity: 0;
+                animation: card-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            @media (prefers-reduced-motion: reduce) {
+                .np-animate { opacity: 1; animation: none; }
+            }
+        </style>
+
         {{-- Header inline --}}
         <div class="mb-6">
             <div class="flex items-center justify-between">
@@ -19,7 +33,7 @@
                         @endif
                     </p>
                 </div>
-                <a href="{{ $isEditing ? '/app/monitoramento/participante/' . $participante->id : '/app/monitoramento/participantes' }}" data-link
+                <a href="{{ $isEditing ? '/app/participante/' . $participante->id : '/app/participantes' }}" data-link
                    class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 bg-white text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -30,7 +44,7 @@
         </div>
 
         {{-- Info box --}}
-        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 np-animate">
             <div class="flex items-start gap-3">
                 <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
                     <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,7 +76,7 @@
                     <input type="hidden" name="tipo_documento" id="np_tipo_documento" value="{{ $tipoDoc }}">
 
                     {{-- Card: Tipo de Pessoa + Dados --}}
-                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm np-animate" style="animation-delay: 0.1s">
                         <div class="px-6 py-4 border-b border-gray-200">
                             <h2 class="text-base font-semibold text-gray-800">Dados do Participante</h2>
                         </div>
@@ -219,7 +233,7 @@
                     </div>
 
                     {{-- Card: Endereço --}}
-                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm np-animate" style="animation-delay: 0.2s">
                         <div class="px-6 py-4 border-b border-gray-200">
                             <h2 class="text-base font-semibold text-gray-800">Endereço</h2>
                         </div>
@@ -346,8 +360,8 @@
                     </div>
 
                     {{-- Botoes de Acao --}}
-                    <div class="flex gap-4 justify-end">
-                        <a href="{{ $isEditing ? '/app/monitoramento/participante/' . $participante->id : '/app/monitoramento/participantes' }}" data-link
+                    <div class="flex gap-4 justify-end np-animate" style="animation-delay: 0.3s">
+                        <a href="{{ $isEditing ? '/app/participante/' . $participante->id : '/app/participantes' }}" data-link
                            class="px-6 py-2.5 bg-white text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 border border-gray-300 transition-colors">
                             Cancelar
                         </a>
@@ -366,7 +380,7 @@
             <div class="lg:col-span-1">
                 <div class="sticky top-6 space-y-4">
                     {{-- Card: Consultar CNPJ --}}
-                    <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl shadow-sm text-white overflow-hidden">
+                    <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl shadow-sm text-white overflow-hidden np-animate" style="animation-delay: 0.4s">
                         <div class="px-5 py-5">
                             <div class="flex items-center gap-3 mb-3">
                                 <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -432,7 +446,7 @@
                     </div>
 
                     {{-- Card: CPF monitoring em breve --}}
-                    <div class="bg-amber-50 border border-amber-200 rounded-xl shadow-sm p-5">
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl shadow-sm p-5 np-animate" style="animation-delay: 0.5s">
                         <div class="flex items-start gap-3">
                             <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
                                 <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -452,7 +466,7 @@
                     </div>
 
                     {{-- Card: Info complementar --}}
-                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 np-animate" style="animation-delay: 0.6s">
                         <div class="flex items-start gap-3">
                             <div class="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center shrink-0">
                                 <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -913,8 +927,8 @@
 
             // Determine URL and method based on mode
             var fetchUrl = isEditing
-                ? '/app/monitoramento/participante/' + editId
-                : '/app/monitoramento/novo-participante';
+                ? '/app/participante/' + editId
+                : '/app/novo-participante';
 
             if (isEditing) {
                 body._method = 'PUT';
@@ -945,7 +959,7 @@
                     showToast(result.data.message || (isEditing ? 'Participante atualizado!' : 'Participante cadastrado!'), 'success');
                     // Redirect after short delay
                     setTimeout(function() {
-                        var redirectUrl = result.data.redirect || '/app/monitoramento/participantes';
+                        var redirectUrl = result.data.redirect || '/app/participantes';
                         var spaLink = document.querySelector('a[data-link][href="' + redirectUrl + '"]');
                         if (spaLink) {
                             spaLink.click();

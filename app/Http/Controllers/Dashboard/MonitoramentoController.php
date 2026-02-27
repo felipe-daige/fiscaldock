@@ -15,6 +15,7 @@ use App\Models\SpedImportacao;
 use App\Models\XmlNota;
 use App\Services\CreditService;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -341,7 +342,7 @@ class MonitoramentoController extends Controller
                 'success' => true,
                 'message' => 'Participante cadastrado com sucesso!',
                 'participante_id' => $participante->id,
-                'redirect' => '/app/monitoramento/participantes',
+                'redirect' => '/app/participantes',
             ]);
         } catch (\Exception $e) {
             Log::error('Erro ao criar participante manualmente', [
@@ -479,7 +480,7 @@ class MonitoramentoController extends Controller
                 'success' => true,
                 'message' => 'Participante atualizado com sucesso!',
                 'participante_id' => $participante->id,
-                'redirect' => '/app/monitoramento/participante/' . $participante->id,
+                'redirect' => '/app/participante/' . $participante->id,
             ]);
         } catch (\Exception $e) {
             Log::error('Erro ao atualizar participante', [
@@ -706,6 +707,27 @@ class MonitoramentoController extends Controller
         return view(self::AUTH_LAYOUT_VIEW, array_merge([
             'initialView' => $participantesView
         ], $data));
+    }
+
+    /**
+     * Retorna todos os IDs de participantes matching os filtros atuais (para "Selecionar todos").
+     */
+    public function todosIdsParticipantes(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        $userId = (int) $user->id;
+
+        $ids = Participante::where('user_id', $userId)
+            ->when($request->importacao, fn($q, $v) => $q->where('importacao_sped_id', $v))
+            ->when($request->cliente, fn($q, $v) => $q->where('cliente_id', $v))
+            ->when($request->origem, fn($q, $v) => $q->where('origem_tipo', $v))
+            ->when($request->busca, fn($q, $v) => $q->where(function ($sub) use ($v) {
+                $sub->where('cnpj', 'like', "%{$v}%")
+                    ->orWhere('razao_social', 'ilike', "%{$v}%");
+            }))
+            ->pluck('id');
+
+        return response()->json(['success' => true, 'ids' => $ids, 'total' => $ids->count()]);
     }
 
     /**
@@ -2082,7 +2104,7 @@ class MonitoramentoController extends Controller
                 'tipo_efd' => $request->tipo_efd,
                 'filename' => $arquivo->getClientOriginalName(),
                 'file_base64' => base64_encode(file_get_contents($arquivo->path())),
-                'progress_url' => url('/api/monitoramento/sped/importacao-txt/progress'),
+                'progress_url' => url('/api/importacao/sped/importacao-txt/progress'),
                 'cliente_id' => $clienteId,
                 'tab_id' => $request->input('tab_id'),
             ]);
@@ -2318,11 +2340,11 @@ class MonitoramentoController extends Controller
      * SSE para acompanhar progresso de processamento SPED em tempo real.
      * Lê dados do cache (enviados pelo n8n via API) isolados por user_id + tab_id.
      *
-     * GET /app/monitoramento/progresso/stream?tab_id=xxx
+     * GET /app/importacao/sped/progresso/stream?tab_id=xxx
      *
      * Este endpoint é usado pelo frontend para acompanhar o progresso da
      * identificação de participantes em arquivos SPED. O n8n envia atualizações
-     * de progresso para /api/monitoramento/sped/importacao-txt/progress com
+     * de progresso para /api/importacao/sped/importacao-txt/progress com
      * user_id, tab_id, progresso (0-100), mensagem e status.
      */
     public function streamProgresso(Request $request)

@@ -9,13 +9,13 @@
                 </svg>
             </div>
             <h1 class="text-2xl font-bold text-gray-900">Configurar Minha Empresa</h1>
-            <p class="mt-2 text-gray-600">Selecione qual empresa voce deseja monitorar como sua empresa principal.</p>
+            <p class="mt-2 text-gray-600">Selecione qual empresa você deseja monitorar como sua empresa principal.</p>
         </div>
 
-        {{-- Card de selecao --}}
+        {{-- Card de seleção --}}
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
             <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">Suas Empresas (Pessoa Juridica)</h3>
+                <h3 class="text-lg font-semibold text-gray-900">Suas Empresas (Pessoa Jurídica)</h3>
             </div>
 
             @if(($clientes ?? collect())->count() > 0)
@@ -59,8 +59,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                     </svg>
                     <h3 class="mt-4 text-lg font-medium text-gray-900">Nenhuma empresa cadastrada</h3>
-                    <p class="mt-2 text-sm text-gray-500">Voce ainda nao possui empresas (PJ) cadastradas no sistema.</p>
-                    <a href="/app/novo_cliente" data-link class="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
+                    <p class="mt-2 text-sm text-gray-500">Você ainda não possui empresas (PJ) cadastradas no sistema.</p>
+                    <a href="/app/novo-cliente" data-link class="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                         </svg>
@@ -70,7 +70,7 @@
             @endif
         </div>
 
-        {{-- Informacoes adicionais --}}
+        {{-- Informações adicionais --}}
         <div class="mt-6 bg-blue-50 rounded-xl border border-blue-200 p-6">
             <div class="flex items-start gap-3">
                 <svg class="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,10 +79,10 @@
                 <div>
                     <h4 class="font-semibold text-blue-800">O que acontece ao selecionar?</h4>
                     <ul class="mt-2 space-y-1 text-sm text-blue-700">
-                        <li>- A empresa selecionada aparecera no dashboard "Minha Empresa"</li>
-                        <li>- Voce podera monitorar CNDs, situacao cadastral e score de risco</li>
-                        <li>- Alertas e lembretes serao personalizados para esta empresa</li>
-                        <li>- Voce pode alterar a empresa principal a qualquer momento</li>
+                        <li>- A empresa selecionada aparecerá no dashboard "Minha Empresa"</li>
+                        <li>- Você poderá monitorar CNDs, situação cadastral e score de risco</li>
+                        <li>- Alertas e lembretes serão personalizados para esta empresa</li>
+                        <li>- Você pode alterar a empresa principal a qualquer momento</li>
                     </ul>
                 </div>
             </div>

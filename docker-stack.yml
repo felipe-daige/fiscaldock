@@ -1,11 +1,10 @@
-# Docker Compose para Producao (sem Swarm)
-# Deploy: ./deploy.sh ou docker compose -f docker-compose.prod.yml up -d
-# Le .env automaticamente (nao precisa exportar variaveis)
+# Docker Stack para Producao (Docker Swarm)
+# Deploy: ./deploy.sh [tag]
+# Requer: .env no mesmo diretorio com todas as variaveis configuradas
 
 services:
   app:
-    image: felipedaige/fiscaldock:0.0.3
-    restart: unless-stopped
+    image: felipedaige/fiscaldock:${IMAGE_TAG:-0.0.3}
     networks:
       - network_public
     volumes:
@@ -47,6 +46,7 @@ services:
       # Logging
       LOG_CHANNEL: ${LOG_CHANNEL:-stack}
       LOG_LEVEL: ${LOG_LEVEL:-info}
+
       # API & Webhooks
       API_TOKEN: ${API_TOKEN}
       WEBHOOK_SPED_CONTRIBUICOES_URL: ${WEBHOOK_SPED_CONTRIBUICOES_URL}
@@ -58,53 +58,61 @@ services:
       WEBHOOK_MONITORAMENTO_CONSULTA_URL: ${WEBHOOK_MONITORAMENTO_CONSULTA_URL}
       WEBHOOK_IMPORTACAO_XML_URL: ${WEBHOOK_IMPORTACAO_XML_URL}
       WEBHOOK_CONSULTAS_LOTES_URL: ${WEBHOOK_CONSULTAS_LOTES_URL}
-    labels:
-      # Habilitar Traefik
-      - "traefik.enable=true"
-      - "traefik.docker.network=network_public"
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      labels:
+        # Habilitar Traefik
+        - "traefik.enable=true"
+        - "traefik.docker.network=network_public"
 
-      # Router HTTP principal (redireciona para HTTPS)
-      - "traefik.http.routers.fiscaldock-main-http.rule=Host(`fiscaldock.com.br`)"
-      - "traefik.http.routers.fiscaldock-main-http.entrypoints=web"
-      - "traefik.http.routers.fiscaldock-main-http.middlewares=redirect-to-https"
-      - "traefik.http.routers.fiscaldock-main-http.service=fiscaldock-service"
+        # Router HTTP principal (redireciona para HTTPS)
+        - "traefik.http.routers.fiscaldock-main-http.rule=Host(`fiscaldock.com.br`)"
+        - "traefik.http.routers.fiscaldock-main-http.entrypoints=web"
+        - "traefik.http.routers.fiscaldock-main-http.middlewares=redirect-to-https"
+        - "traefik.http.routers.fiscaldock-main-http.service=fiscaldock-service"
 
-      # Router HTTP www (redireciona para HTTPS)
-      - "traefik.http.routers.fiscaldock-www-http.rule=Host(`www.fiscaldock.com.br`)"
-      - "traefik.http.routers.fiscaldock-www-http.entrypoints=web"
-      - "traefik.http.routers.fiscaldock-www-http.middlewares=redirect-to-https"
-      - "traefik.http.routers.fiscaldock-www-http.service=fiscaldock-service"
+        # Router HTTP www (redireciona para HTTPS)
+        - "traefik.http.routers.fiscaldock-www-http.rule=Host(`www.fiscaldock.com.br`)"
+        - "traefik.http.routers.fiscaldock-www-http.entrypoints=web"
+        - "traefik.http.routers.fiscaldock-www-http.middlewares=redirect-to-https"
+        - "traefik.http.routers.fiscaldock-www-http.service=fiscaldock-service"
 
-      # Router HTTPS principal (fiscaldock.com.br)
-      - "traefik.http.routers.fiscaldock-main.rule=Host(`fiscaldock.com.br`)"
-      - "traefik.http.routers.fiscaldock-main.entrypoints=websecure"
-      - "traefik.http.routers.fiscaldock-main.tls=true"
-      - "traefik.http.routers.fiscaldock-main.tls.certresolver=letsencryptresolver"
-      - "traefik.http.routers.fiscaldock-main.service=fiscaldock-service"
+        # Router HTTPS principal (fiscaldock.com.br)
+        - "traefik.http.routers.fiscaldock-main.rule=Host(`fiscaldock.com.br`)"
+        - "traefik.http.routers.fiscaldock-main.entrypoints=websecure"
+        - "traefik.http.routers.fiscaldock-main.tls=true"
+        - "traefik.http.routers.fiscaldock-main.tls.certresolver=letsencryptresolver"
+        - "traefik.http.routers.fiscaldock-main.service=fiscaldock-service"
 
-      # Router HTTPS www (www.fiscaldock.com.br) - redireciona para non-www
-      - "traefik.http.routers.fiscaldock-www.rule=Host(`www.fiscaldock.com.br`)"
-      - "traefik.http.routers.fiscaldock-www.entrypoints=websecure"
-      - "traefik.http.routers.fiscaldock-www.tls=true"
-      - "traefik.http.routers.fiscaldock-www.tls.certresolver=letsencryptresolver"
-      - "traefik.http.routers.fiscaldock-www.middlewares=www-to-nonwww"
-      - "traefik.http.routers.fiscaldock-www.service=fiscaldock-service"
+        # Router HTTPS www (www.fiscaldock.com.br) - redireciona para non-www
+        - "traefik.http.routers.fiscaldock-www.rule=Host(`www.fiscaldock.com.br`)"
+        - "traefik.http.routers.fiscaldock-www.entrypoints=websecure"
+        - "traefik.http.routers.fiscaldock-www.tls=true"
+        - "traefik.http.routers.fiscaldock-www.tls.certresolver=letsencryptresolver"
+        - "traefik.http.routers.fiscaldock-www.middlewares=www-to-nonwww"
+        - "traefik.http.routers.fiscaldock-www.service=fiscaldock-service"
 
-      # Middleware de redirecionamento HTTP -> HTTPS
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+        # Middleware de redirecionamento HTTP -> HTTPS
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
 
-      # Middleware de redirecionamento www -> non-www
-      - "traefik.http.middlewares.www-to-nonwww.redirectregex.regex=^https://www\\.fiscaldock\\.com\\.br(.*)"
-      - "traefik.http.middlewares.www-to-nonwww.redirectregex.replacement=https://fiscaldock.com.br$$1"
-      - "traefik.http.middlewares.www-to-nonwww.redirectregex.permanent=true"
+        # Middleware de redirecionamento www -> non-www
+        - "traefik.http.middlewares.www-to-nonwww.redirectregex.regex=^https://www\\.fiscaldock\\.com\\.br(.*)"
+        - "traefik.http.middlewares.www-to-nonwww.redirectregex.replacement=https://fiscaldock.com.br$$1"
+        - "traefik.http.middlewares.www-to-nonwww.redirectregex.permanent=true"
 
-      # Service
-      - "traefik.http.services.fiscaldock-service.loadbalancer.server.port=80"
+        # Service
+        - "traefik.http.services.fiscaldock-service.loadbalancer.server.port=80"
 
   scheduler:
-    image: felipedaige/fiscaldock:0.0.3
-    restart: unless-stopped
+    image: felipedaige/fiscaldock:${IMAGE_TAG:-0.0.3}
     networks:
       - network_public
     volumes:
@@ -133,7 +141,6 @@ services:
       TRUSTED_HOSTS: ${TRUSTED_HOSTS:-fiscaldock.com.br,www.fiscaldock.com.br}
       LOG_CHANNEL: ${LOG_CHANNEL:-stack}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-      # API & Webhooks
       API_TOKEN: ${API_TOKEN}
       WEBHOOK_SPED_CONTRIBUICOES_URL: ${WEBHOOK_SPED_CONTRIBUICOES_URL}
       WEBHOOK_SPED_FISCAL_URL: ${WEBHOOK_SPED_FISCAL_URL}
@@ -144,12 +151,18 @@ services:
       WEBHOOK_MONITORAMENTO_CONSULTA_URL: ${WEBHOOK_MONITORAMENTO_CONSULTA_URL}
       WEBHOOK_IMPORTACAO_XML_URL: ${WEBHOOK_IMPORTACAO_XML_URL}
       WEBHOOK_CONSULTAS_LOTES_URL: ${WEBHOOK_CONSULTAS_LOTES_URL}
-    depends_on:
-      - app
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
 
   worker:
-    image: felipedaige/fiscaldock:0.0.3
-    restart: unless-stopped
+    image: felipedaige/fiscaldock:${IMAGE_TAG:-0.0.3}
     networks:
       - network_public
     volumes:
@@ -178,7 +191,6 @@ services:
       TRUSTED_HOSTS: ${TRUSTED_HOSTS:-fiscaldock.com.br,www.fiscaldock.com.br}
       LOG_CHANNEL: ${LOG_CHANNEL:-stack}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-      # API & Webhooks
       API_TOKEN: ${API_TOKEN}
       WEBHOOK_SPED_CONTRIBUICOES_URL: ${WEBHOOK_SPED_CONTRIBUICOES_URL}
       WEBHOOK_SPED_FISCAL_URL: ${WEBHOOK_SPED_FISCAL_URL}
@@ -189,17 +201,21 @@ services:
       WEBHOOK_MONITORAMENTO_CONSULTA_URL: ${WEBHOOK_MONITORAMENTO_CONSULTA_URL}
       WEBHOOK_IMPORTACAO_XML_URL: ${WEBHOOK_IMPORTACAO_XML_URL}
       WEBHOOK_CONSULTAS_LOTES_URL: ${WEBHOOK_CONSULTAS_LOTES_URL}
-    depends_on:
-      - app
-    profiles:
-      - worker  # So sobe se usar: docker compose --profile worker up
+    deploy:
+      replicas: 0
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
 
 networks:
   network_public:
     external: true
-    name: network_public
 
 volumes:
   app_storage:
     external: true
-    name: app_storage

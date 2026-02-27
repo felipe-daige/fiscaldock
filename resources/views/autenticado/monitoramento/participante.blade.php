@@ -82,7 +82,7 @@
                 </div>
                 <div class="flex items-center gap-3">
                     <a
-                        href="/app/monitoramento/participante/{{ $participante->id }}/editar"
+                        href="/app/participante/{{ $participante->id }}/editar"
                         data-link
                         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
                     >
@@ -863,7 +863,7 @@
                                                 </button>
                                                 @if($nota->contraparte_participante_id)
                                                     <a
-                                                        href="/app/monitoramento/participante/{{ $nota->contraparte_participante_id }}"
+                                                        href="/app/participante/{{ $nota->contraparte_participante_id }}"
                                                         class="inline-flex items-center p-2 rounded-lg text-gray-500 hover:text-green-600 hover:bg-green-50 transition-colors"
                                                         data-link
                                                         title="Ver contraparte"
@@ -1567,7 +1567,7 @@
                 document.body.style.overflow = 'hidden';
 
                 try {
-                    const response = await fetch('/app/monitoramento/participante/nota-fiscal/' + notaId, {
+                    const response = await fetch('/app/participante/nota-fiscal/' + notaId, {
                         method: 'GET',
                         headers: {
                             'X-CSRF-TOKEN': csrf,

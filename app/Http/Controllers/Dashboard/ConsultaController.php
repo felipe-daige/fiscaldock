@@ -119,7 +119,7 @@ class ConsultaController extends Controller
         $perPage = $validated['per_page'] ?? 50;
 
         $query = Participante::where('user_id', $user->id)
-            ->with(['grupos:id,nome,cor', 'cliente:id,razao_social']);
+            ->with(['grupos:id,nome,cor', 'cliente:id,razao_social,is_empresa_propria']);
 
         // Filtro por grupo
         if (! empty($validated['grupo_id'])) {
@@ -648,7 +648,7 @@ class ConsultaController extends Controller
 
     /**
      * Adiciona um CNPJ como participante (cadastro rápido).
-     * Opcionalmente cria ou vincula a um Cliente.
+     * Opcionalmente associa a um Cliente existente.
      */
     public function adicionarCnpj(Request $request): JsonResponse
     {
@@ -671,31 +671,21 @@ class ConsultaController extends Controller
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        $criarCliente = (bool) $request->input('criar_cliente', false);
-        $clienteIdInput = $request->input('cliente_id');
+        // Associação opcional a cliente existente
         $clienteId = null;
+        $clienteIdInput = $request->input('cliente_id');
 
-        if ($criarCliente) {
-            if ($clienteIdInput === 'novo' || $clienteIdInput === null) {
-                // Criar novo Cliente ou usar existente do mesmo usuario
-                $clienteId = $this->resolveOrCreateCliente($user, $cnpj);
+        if ($clienteIdInput) {
+            $clienteId = (int) $clienteIdInput;
+            $clienteExists = Cliente::where('id', $clienteId)
+                ->where('user_id', $user->id)
+                ->exists();
 
-                if ($clienteId instanceof JsonResponse) {
-                    return $clienteId; // Retorna erro
-                }
-            } else {
-                // Vincular a cliente existente
-                $clienteId = (int) $clienteIdInput;
-                $clienteExists = Cliente::where('id', $clienteId)
-                    ->where('user_id', $user->id)
-                    ->exists();
-
-                if (! $clienteExists) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => 'Cliente não encontrado.',
-                    ], Response::HTTP_BAD_REQUEST);
-                }
+            if (! $clienteExists) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Cliente não encontrado.',
+                ], Response::HTTP_BAD_REQUEST);
             }
         }
 
@@ -719,9 +709,7 @@ class ConsultaController extends Controller
             ? 'Participante adicionado com sucesso.'
             : 'CNPJ já cadastrado. Selecionado para consulta.';
 
-        if ($criarCliente && $isNew) {
-            $message = 'Participante e cliente criados com sucesso.';
-        } elseif ($criarCliente && ! $isNew) {
+        if ($clienteId && ! $isNew && ! $participante->getOriginal('cliente_id')) {
             $message = 'CNPJ já cadastrado. Vinculado ao cliente.';
         }
 
@@ -746,57 +734,107 @@ class ConsultaController extends Controller
     }
 
     /**
-     * Resolve ou cria um Cliente para o CNPJ informado.
-     *
-     * @return int|JsonResponse ID do cliente ou resposta de erro
+     * Retorna IDs de participantes vinculados a clientes específicos.
      */
-    private function resolveOrCreateCliente($user, string $cnpj)
+    public function getParticipanteIdsByClientes(Request $request): JsonResponse
     {
-        // Verificar se já existe cliente com este documento para o mesmo usuario
-        $existing = Cliente::where('documento', $cnpj)
-            ->first();
-
-        if ($existing) {
-            if ($existing->user_id === $user->id) {
-                return $existing->id;
-            }
-
-            // Documento pertence a outro usuario (unique global)
+        if (! Auth::check()) {
             return response()->json([
                 'success' => false,
-                'error' => 'Este CNPJ já está cadastrado como cliente por outro usuário.',
-            ], Response::HTTP_CONFLICT);
+                'error' => 'Usuário não autenticado.',
+            ], Response::HTTP_UNAUTHORIZED);
         }
 
-        // Criar novo cliente
-        $cnpjFormatado = preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $cnpj);
+        $validated = $request->validate([
+            'cliente_ids' => 'required|array|min:1',
+            'cliente_ids.*' => 'integer',
+        ]);
 
-        try {
-            $cliente = Cliente::create([
-                'user_id' => $user->id,
-                'tipo_pessoa' => 'PJ',
-                'documento' => $cnpj,
-                'razao_social' => "CNPJ {$cnpjFormatado}",
-                'ativo' => true,
-            ]);
+        $ids = Participante::where('user_id', auth()->id())
+            ->whereIn('cliente_id', $validated['cliente_ids'])
+            ->pluck('id');
 
-            return $cliente->id;
-        } catch (\Illuminate\Database\QueryException $e) {
-            // Unique violation (race condition)
-            if (str_contains($e->getMessage(), '23505') || str_contains($e->getMessage(), 'unique')) {
-                $existing = Cliente::where('documento', $cnpj)->first();
-                if ($existing && $existing->user_id === $user->id) {
-                    return $existing->id;
+        return response()->json([
+            'success' => true,
+            'ids' => $ids,
+        ]);
+    }
+
+    /**
+     * Retorna lista de clientes do usuário (AJAX).
+     */
+    public function getClientes(Request $request): JsonResponse
+    {
+        if (! Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Usuário não autenticado.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = Auth::user();
+
+        $query = Cliente::where('user_id', $user->id)
+            ->where('ativo', true)
+            ->withCount('participantes');
+
+        $busca = $request->input('busca');
+        if ($busca) {
+            $buscaLimpa = preg_replace('/[^0-9]/', '', $busca);
+            $query->where(function ($q) use ($busca, $buscaLimpa) {
+                $q->where('razao_social', 'ILIKE', "%{$busca}%")
+                    ->orWhere('nome', 'ILIKE', "%{$busca}%");
+                if (strlen($buscaLimpa) >= 3) {
+                    $q->orWhere('documento', 'LIKE', "%{$buscaLimpa}%");
                 }
-
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Este CNPJ já está cadastrado como cliente.',
-                ], Response::HTTP_CONFLICT);
-            }
-
-            throw $e;
+            });
         }
+
+        $clientes = $query->orderBy('razao_social')
+            ->get(['id', 'razao_social', 'nome', 'documento', 'tipo_pessoa', 'is_empresa_propria']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $clientes->map(fn ($c) => [
+                'id' => $c->id,
+                'razao_social' => $c->razao_social ?? $c->nome,
+                'nome' => $c->nome,
+                'documento' => $c->documento,
+                'tipo_pessoa' => $c->tipo_pessoa,
+                'is_empresa_propria' => $c->is_empresa_propria,
+                'participantes_count' => $c->participantes_count,
+            ]),
+        ]);
+    }
+
+    /**
+     * Retorna lista de grupos do usuário (AJAX).
+     */
+    public function getGrupos(Request $request): JsonResponse
+    {
+        if (! Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Usuário não autenticado.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = Auth::user();
+
+        $grupos = ParticipanteGrupo::doUsuario($user->id)
+            ->withCount('participantes')
+            ->orderBy('nome')
+            ->get(['id', 'nome', 'cor']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $grupos->map(fn ($g) => [
+                'id' => $g->id,
+                'nome' => $g->nome,
+                'cor' => $g->cor,
+                'participantes_count' => $g->participantes_count,
+            ]),
+        ]);
     }
 
     /**

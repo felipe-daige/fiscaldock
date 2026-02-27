@@ -47,8 +47,8 @@ return [
         'monitoramento_importacao_fiscal_url' => env('WEBHOOK_MONITORAMENTO_IMPORTACAO_FISCAL_URL'),
         // Webhook Monitoramento - consultas avulsas e de assinatura
         'monitoramento_consulta_url' => env('WEBHOOK_MONITORAMENTO_CONSULTA_URL'),
-        // Webhook Monitoramento - importação de XMLs (NF-e, NFS-e, CT-e)
-        'monitoramento_importacao_xml_url' => env('WEBHOOK_MONITORAMENTO_IMPORTACAO_XML_URL'),
+        // Webhook Importação de XMLs (NF-e, NFS-e, CT-e)
+        'importacao_xml_url' => env('WEBHOOK_IMPORTACAO_XML_URL'),
         // Webhook Consultas - consulta de lotes de participantes (substitui RAF)
         'consultas_lotes_url' => env('WEBHOOK_CONSULTAS_LOTES_URL'),
         // Credenciais

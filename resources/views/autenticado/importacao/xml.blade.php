@@ -1,6 +1,20 @@
 {{-- Monitoramento - Importar XMLs --}}
-<div class="min-h-screen bg-gray-50" id="monitoramento-xml-container">
+<div class="min-h-screen bg-gray-50" id="importacao-xml-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <style>
+            @keyframes card-slide-in {
+                from { opacity: 0; transform: translateY(60px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .xml-animate {
+                opacity: 0;
+                animation: card-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            @media (prefers-reduced-motion: reduce) {
+                .xml-animate { opacity: 1; animation: none; }
+            }
+        </style>
+
         {{-- Page Header --}}
         <div class="mb-6">
             <div class="flex items-center justify-between">
@@ -22,7 +36,7 @@
         </div>
 
         {{-- Info Box --}}
-        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 xml-animate">
             <div class="flex items-start gap-3">
                 <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -30,7 +44,7 @@
                 <div>
                     <h3 class="text-sm font-semibold text-blue-900">Como funciona?</h3>
                     <p class="text-sm text-blue-800 mt-1">
-                        Importe XMLs de notas fiscais para extrair automaticamente os CNPJs de fornecedores e clientes. Os participantes serao adicionados a sua lista de monitoramento.
+                        Importe XMLs de notas fiscais para extrair automaticamente os CNPJs de fornecedores e clientes. Os participantes serão adicionados à sua lista de monitoramento.
                     </p>
                 </div>
             </div>
@@ -40,12 +54,12 @@
         <div id="upload-section" class="mb-6">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {{-- Card Upload (Esquerdo) --}}
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm xml-animate" style="animation-delay: 0.1s">
                     <div class="px-6 py-4 border-b border-gray-200">
                         <h3 class="text-base font-semibold text-gray-900">Enviar Arquivos XML</h3>
                     </div>
                     <div class="p-6">
-                        {{-- Selecao Tipo Documento --}}
+                        {{-- Seleção Tipo Documento --}}
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Documento:</label>
                             <div class="space-y-2">
@@ -59,9 +73,8 @@
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center gap-2">
                                             <span class="text-sm font-medium text-gray-900">NF-e</span>
-                                            <span class="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">Gratis</span>
                                         </div>
-                                        <p class="text-xs text-gray-500 mt-0.5 truncate">Nota Fiscal Eletronica</p>
+                                        <p class="text-xs text-gray-500 mt-0.5 truncate">Nota Fiscal Eletrônica</p>
                                     </div>
                                 </label>
                                 <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition tipo-doc-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-tipo="NFSE">
@@ -74,9 +87,8 @@
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center gap-2">
                                             <span class="text-sm font-medium text-gray-900">NFS-e</span>
-                                            <span class="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">Gratis</span>
                                         </div>
-                                        <p class="text-xs text-gray-500 mt-0.5 truncate">Nota Fiscal de Servicos</p>
+                                        <p class="text-xs text-gray-500 mt-0.5 truncate">Nota Fiscal de Serviços</p>
                                     </div>
                                 </label>
                                 <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition tipo-doc-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-tipo="CTE">
@@ -89,7 +101,6 @@
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center gap-2">
                                             <span class="text-sm font-medium text-gray-900">CT-e</span>
-                                            <span class="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">Gratis</span>
                                         </div>
                                         <p class="text-xs text-gray-500 mt-0.5 truncate">Conhecimento de Transporte</p>
                                     </div>
@@ -97,7 +108,7 @@
                             </div>
                         </div>
 
-                        {{-- Selecao Modo de Envio --}}
+                        {{-- Seleção Modo de Envio --}}
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Modo de Envio:</label>
                             <div class="space-y-2">
@@ -113,7 +124,7 @@
                                             <span class="text-sm font-medium text-gray-900">Arquivo ZIP</span>
                                             <span class="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">50 MB</span>
                                         </div>
-                                        <p class="text-xs text-gray-500 mt-0.5 truncate">Envie um ZIP com ate 5.000 XMLs</p>
+                                        <p class="text-xs text-gray-500 mt-0.5 truncate">Envie um ZIP com até 5.000 XMLs</p>
                                     </div>
                                 </label>
                                 <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition modo-envio-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-modo="xml">
@@ -128,13 +139,13 @@
                                             <span class="text-sm font-medium text-gray-900">XMLs Avulsos</span>
                                             <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">100 arq</span>
                                         </div>
-                                        <p class="text-xs text-gray-500 mt-0.5 truncate">Selecione ate 100 arquivos XML (200 MB total)</p>
+                                        <p class="text-xs text-gray-500 mt-0.5 truncate">Selecione até 100 arquivos XML (200 MB total)</p>
                                     </div>
                                 </label>
                             </div>
                         </div>
 
-                        {{-- Selecao de Cliente (Opcional) --}}
+                        {{-- Seleção de Cliente (Opcional) --}}
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 Cliente (sua empresa): <span class="text-gray-400 font-normal">(opcional)</span>
@@ -157,20 +168,30 @@
                             </p>
                         </div>
 
-                        {{-- Salvar Movimentacoes (Opcional) --}}
+                        {{-- Importar Movimentações Financeiras --}}
                         <div class="mb-4">
-                            <label class="flex items-start gap-3 p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 transition" id="salvar-movimentacoes-label">
+                            <label class="flex items-start p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition" id="salvar-movimentacoes-label">
                                 <input
                                     type="checkbox"
                                     id="salvar-movimentacoes"
                                     name="salvar_movimentacoes"
-                                    class="mt-0.5 w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                    class="mt-1 mr-3 w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                                 >
-                                <div>
-                                    <div class="font-medium text-gray-800 text-sm">Salvar movimentacoes fiscais</div>
-                                    <div class="text-xs text-gray-500 mt-0.5">
-                                        Alem dos participantes, guarda os dados completos de cada nota fiscal (valores, tributos, itens).
-                                        Permite consultas e relatorios futuros.
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-semibold text-gray-800 text-sm">Importar Movimentações Financeiras</span>
+                                    </div>
+                                    <div class="text-xs text-gray-600 mt-0.5">
+                                        Além dos participantes, guarda os dados completos de cada nota fiscal (valores, tributos, itens).
+                                        Permite consultas e relatórios futuros.
+                                    </div>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="inline-flex items-center gap-1 text-xs text-green-600">
+                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                            </svg>
+                                            Gratuito
+                                        </span>
                                     </div>
                                 </div>
                             </label>
@@ -242,18 +263,18 @@
                     </div>
                 </div>
 
-                {{-- Card Informacoes (Direito) --}}
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                {{-- Card Informações (Direito) --}}
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm xml-animate" style="animation-delay: 0.2s">
                     <div class="px-6 py-4 border-b border-gray-200">
                         <div class="flex items-center gap-2">
                             <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            <h3 class="text-base font-semibold text-gray-900">Informacoes</h3>
+                            <h3 class="text-base font-semibold text-gray-900">Informações</h3>
                         </div>
                     </div>
                     <div class="p-6 space-y-6">
-                        {{-- Secao Como Funciona --}}
+                        {{-- Seção Como Funciona --}}
                         <div>
                             <h4 class="text-sm font-semibold text-gray-900 mb-3">Como Funciona</h4>
                             <div class="space-y-4">
@@ -1006,7 +1027,7 @@
     'use strict';
 
     function initMonitoramentoXml() {
-        const container = document.getElementById('monitoramento-xml-container');
+        const container = document.getElementById('importacao-xml-container');
         if (!container) return;
 
         if (container.dataset.initialized === '1') return;
@@ -1287,7 +1308,7 @@
             try {
                 const base64 = await fileToBase64(fileObj.file);
 
-                const response = await fetch('/app/monitoramento/xml/validar', {
+                const response = await fetch('/app/importacao/xml/validar', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': getCsrfToken(),
@@ -2075,7 +2096,7 @@
                     if (btnSalvarText) btnSalvarText.textContent = 'Salvando...';
 
                     try {
-                        let response = await fetch('/app/monitoramento/xml/importacao/' + currentImportacaoId + '/salvar-cnpjs', {
+                        let response = await fetch('/app/importacao/xml/importacao/' + currentImportacaoId + '/salvar-cnpjs', {
                             method: 'POST',
                             headers: {
                                 'X-CSRF-TOKEN': getCsrfToken(),
@@ -2089,7 +2110,7 @@
                         // Handle CSRF token mismatch
                         if (response.status === 419) {
                             await refreshCsrfToken();
-                            response = await fetch('/app/monitoramento/xml/importacao/' + currentImportacaoId + '/salvar-cnpjs', {
+                            response = await fetch('/app/importacao/xml/importacao/' + currentImportacaoId + '/salvar-cnpjs', {
                                 method: 'POST',
                                 headers: {
                                     'X-CSRF-TOKEN': getCsrfToken(),
@@ -2161,7 +2182,7 @@
             if (participantesBody) participantesBody.innerHTML = '';
 
             try {
-                const response = await fetch('/app/monitoramento/xml/importacao/' + importacaoId + '/participantes', {
+                const response = await fetch('/app/importacao/xml/importacao/' + importacaoId + '/participantes', {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',
@@ -2444,7 +2465,7 @@
         function conectarSSE() {
             if (eventSource) eventSource.close();
 
-            const sseUrl = '/app/monitoramento/xml/progresso/stream?tab_id=' + encodeURIComponent(tabId);
+            const sseUrl = '/app/importacao/xml/progresso/stream?tab_id=' + encodeURIComponent(tabId);
             console.log('[Monitoramento XML] Conectando ao SSE:', sseUrl);
             eventSource = new EventSource(sseUrl);
 
@@ -2557,7 +2578,7 @@
                         arquivos: arquivos
                     };
 
-                    let response = await fetch('/app/monitoramento/xml/importar', {
+                    let response = await fetch('/app/importacao/xml/importar', {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': getCsrfToken(),
@@ -2572,7 +2593,7 @@
                     if (response.status === 419) {
                         console.log('[Monitoramento XML] CSRF token expirado no import, atualizando...');
                         await refreshCsrfToken();
-                        response = await fetch('/app/monitoramento/xml/importar', {
+                        response = await fetch('/app/importacao/xml/importar', {
                             method: 'POST',
                             headers: {
                                 'X-CSRF-TOKEN': getCsrfToken(),
@@ -2673,9 +2694,13 @@
             }
         });
 
-        // ==========================================
-        // Modal Carousel de Planos (informativo)
-        // ==========================================
+        console.log('[Monitoramento XML] Inicializado com tab_id:', tabId);
+    }
+
+    // ==========================================
+    // Modal Carousel de Planos (funcao separada)
+    // ==========================================
+    function initCarouselPlanos() {
         var totalPlanos = {{ count($planosDetalhados) }};
         var swiperPlanos = null;
         var modalPlanos = document.getElementById('modal-planos-carousel');
@@ -2765,17 +2790,25 @@
             });
         });
 
-        console.log('[Monitoramento XML] Inicializado com tab_id:', tabId);
+        console.log('[Monitoramento XML] Carousel de planos inicializado');
     }
 
-    // Inicializar
+    // Auto-inicializar (funcoes independentes com try-catch)
+    function _initAll() {
+        try { initMonitoramentoXml(); } catch(e) { console.error('[XML] Erro init:', e); }
+        try { initCarouselPlanos(); } catch(e) { console.error('[XML] Erro carousel:', e); }
+    }
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initMonitoramentoXml);
+        document.addEventListener('DOMContentLoaded', _initAll);
     } else {
-        initMonitoramentoXml();
+        _initAll();
     }
 
-    // Expor para SPA
-    window.initMonitoramentoXml = initMonitoramentoXml;
+    // Expor para SPA (chama ambas as funcoes)
+    window.initMonitoramentoXml = function() {
+        try { initMonitoramentoXml(); } catch(e) { console.error('[XML] Erro init:', e); }
+        try { initCarouselPlanos(); } catch(e) { console.error('[XML] Erro carousel:', e); }
+    };
 })();
 </script>

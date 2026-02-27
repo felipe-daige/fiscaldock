@@ -45,11 +45,35 @@ php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true
 
+# Verificar webhooks configurados
+echo "=== Verificando webhooks ==="
+if [ -f /var/www/html/.env ]; then
+    echo "Arquivo .env encontrado"
+    WEBHOOK_COUNT=$(grep -c "^WEBHOOK_" /var/www/html/.env 2>/dev/null || echo "0")
+    echo "Webhooks no .env: ${WEBHOOK_COUNT}"
+else
+    echo "AVISO: Arquivo .env NAO encontrado - dependendo apenas de env vars do container"
+fi
+if [ -n "$WEBHOOK_IMPORTACAO_XML_URL" ]; then
+    echo "Webhook XML: configurado"
+else
+    echo "AVISO: WEBHOOK_IMPORTACAO_XML_URL vazio"
+fi
+if [ -n "$WEBHOOK_CONSULTAS_LOTES_URL" ]; then
+    echo "Webhook Consultas: configurado"
+else
+    echo "AVISO: WEBHOOK_CONSULTAS_LOTES_URL vazio"
+fi
+
 # Gerar caches de produção
 echo "Gerando caches de produção..."
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
+
+# Verificar se API_TOKEN foi cacheado corretamente
+API_TOKEN_STATUS=$(php -r "\$c = require '/var/www/html/bootstrap/cache/config.php'; \$t = \$c['services']['api']['token'] ?? ''; echo \$t ? 'OK (' . substr(\$t, 0, 8) . '..., len=' . strlen(\$t) . ')' : 'VAZIO';")
+echo "API_TOKEN no config cache: ${API_TOKEN_STATUS}"
 
 # IMPORTANTE: Corrigir permissões DEPOIS de gerar caches
 # Os comandos acima rodam como root, mas PHP-FPM roda como www-data

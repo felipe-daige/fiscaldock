@@ -14,13 +14,13 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="FiscalDock | Transforme SPED em Ações e Relatórios">
     <meta property="og:description" content="Centralize arquivos fiscais, identifique pendências e automatize cobranças.">
-    <meta property="og:image" content="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}">
+    <meta property="og:image" content="{{ asset('binary_files/logo/Logo FiscalDock.png') }}">
 
     <!-- Twitter Card (X) -->
-    <meta name="twitter:card" content="summary">
+    <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="FiscalDock | Transforme SPED em Ações e Relatórios">
     <meta name="twitter:description" content="Centralize arquivos fiscais, identifique pendências e automatize cobranças.">
-    <meta name="twitter:image" content="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}">
+    <meta name="twitter:image" content="{{ asset('binary_files/logo/Logo FiscalDock.png') }}">
 
     <!-- Fallback crítico do CTA (caso o CSS do Vite não carregue) -->
     <style>
@@ -37,10 +37,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
     
     <!-- JavaScript Files -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" defer></script>
     <script src="{{ asset('js/layout.js') }}"></script>
     <script src="{{ asset('js/faq.js') }}"></script>
     <script src="{{ asset('js/impactos.js') }}"></script>

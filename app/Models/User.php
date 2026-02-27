@@ -52,16 +52,6 @@ class User extends Authenticatable
         return $this->hasMany(Cliente::class);
     }
 
-    public function funcionariosCriados()
-    {
-        return $this->hasMany(ClienteFuncionario::class, 'criado_por');
-    }
-
-    public function solicitacoes()
-    {
-        return $this->hasMany(ClienteSolicitacao::class);
-    }
-
     public function privateDocuments()
     {
         return $this->hasMany(PrivateDocument::class);
