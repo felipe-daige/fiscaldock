@@ -184,8 +184,8 @@
                             <th class="px-4 py-3 text-left">
                                 <input type="checkbox" id="select-all" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">CNPJ</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Razão Social</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">CNPJ</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Situação</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Cliente</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Origem</th>
@@ -199,11 +199,11 @@
                                 <td class="px-4 py-4">
                                     <input type="checkbox" class="checkbox-participante w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" value="{{ $part->id }}">
                                 </td>
-                                <td class="px-4 py-4 text-sm font-mono text-gray-900 whitespace-nowrap">
-                                    {{ $part->cnpj_formatado }}
-                                </td>
                                 <td class="px-4 py-4 text-sm text-gray-900 max-w-xs truncate" title="{{ $part->razao_social }}">
                                     {{ $part->razao_social ?? '-' }}
+                                </td>
+                                <td class="px-4 py-4 text-sm font-mono text-gray-900 whitespace-nowrap">
+                                    {{ $part->cnpj_formatado }}
                                 </td>
                                 <td class="px-4 py-4 whitespace-nowrap">
                                     @if($part->situacao_cadastral === 'ATIVA')
@@ -273,7 +273,7 @@
                                             @endif
                                         </p>
                                         <a
-                                            href="/app/importacao/sped"
+                                            href="/app/importacao/efd"
                                             class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700"
                                             data-link
                                         >

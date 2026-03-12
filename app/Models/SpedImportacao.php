@@ -12,6 +12,7 @@ class SpedImportacao extends Model
 
     protected $fillable = [
         'user_id',
+        'cliente_id',
         'tipo_efd',
         'filename',
         'arquivo_base64',
@@ -53,6 +54,11 @@ class SpedImportacao extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function cliente(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Cliente::class);
     }
 
     public function participantes(): HasMany

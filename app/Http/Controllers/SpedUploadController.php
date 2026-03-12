@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendSpedToN8n;
 use App\Models\SpedImportacao;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class SpedUploadController extends Controller
 {
@@ -15,7 +17,6 @@ class SpedUploadController extends Controller
         $request->validate([
             'file' => ['required', 'file', 'max:10240', 'mimes:txt,text/plain'],
             'tipo_efd' => ['nullable', 'string'],
-            'cliente_id' => ['nullable', 'integer'],
             'tab_id' => ['nullable', 'string', 'max:36'],
             'extrair_notas' => ['nullable'],
         ]);
@@ -24,7 +25,6 @@ class SpedUploadController extends Controller
         $file = $request->file('file');
         $tipoEfd = $request->input('tipo_efd', 'contribuicoes');
         $tabId = $request->input('tab_id');
-        $clienteId = $request->input('cliente_id');
         $extrairNotas = config('features.extrair_notas')
             ? filter_var($request->input('extrair_notas', false), FILTER_VALIDATE_BOOLEAN)
             : false;
@@ -75,78 +75,38 @@ class SpedUploadController extends Controller
             'user_id' => $user->id,
         ]);
 
-        try {
-            $payload = [
-                'user_id' => $user->id,
-                'importacao_id' => $importacao->id,
-                'tab_id' => $tabId,
-                'tipo_efd' => $tipoEfdLabel,
-                'cliente_id' => $clienteId,
-                'extrair_notas' => $extrairNotas,
-                'filename' => $file->getClientOriginalName(),
-                'progress_url' => url('/api/importacao/sped/importacao-txt/progress'),
-            ];
+        $fileName = $file->getClientOriginalName();
+        $filePath = 'temp/sped/' . Str::uuid() . '.txt';
+        Storage::put($filePath, file_get_contents($file->getRealPath()));
 
-            Log::debug('SpedUpload: enviando para webhook', [
-                'webhook_url' => $webhookUrl,
-                'payload_keys' => array_keys($payload),
-                'importacao_id' => $importacao->id,
-            ]);
+        $payload = [
+            'user_id' => $user->id,
+            'importacao_id' => $importacao->id,
+            'tab_id' => $tabId,
+            'tipo_efd' => $tipoEfdLabel,
+            'extrair_notas' => $extrairNotas,
+            'filename' => $fileName,
+            'progress_url' => url('/api/importacao/efd/importacao-txt/progress'),
+        ];
 
-            $response = Http::timeout(30)->attach(
-                'file',
-                file_get_contents($file->getRealPath()),
-                $file->getClientOriginalName()
-            )->post($webhookUrl, $payload);
+        SendSpedToN8n::dispatch(
+            $importacao->id,
+            $webhookUrl,
+            $filePath,
+            $fileName,
+            $payload,
+        );
 
-            if ($response->successful()) {
-                // Atualizar para processando após resposta bem-sucedida
-                $importacao->update(['status' => 'processando']);
+        Log::info('SpedUpload: job enfileirado', [
+            'importacao_id' => $importacao->id,
+            'user_id' => $user->id,
+            'tab_id' => $tabId,
+        ]);
 
-                Log::info('SpedUpload: arquivo enviado com sucesso', [
-                    'user_id' => $user->id,
-                    'tab_id' => $tabId,
-                    'importacao_id' => $importacao->id,
-                    'filename' => $file->getClientOriginalName(),
-                    'response_status' => $response->status(),
-                ]);
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Arquivo enviado para processamento.',
-                    'importacao_id' => $importacao->id,
-                ]);
-            }
-
-            // Marcar erro se webhook falhou
-            $importacao->update(['status' => 'erro']);
-
-            Log::error('SpedUpload: erro na resposta do n8n', [
-                'user_id' => $user->id,
-                'tab_id' => $tabId,
-                'importacao_id' => $importacao->id,
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'error' => 'Erro ao processar arquivo.',
-            ], $response->status());
-
-        } catch (\Exception $e) {
-            // Marcar erro em caso de exceção
-            $importacao->update(['status' => 'erro']);
-
-            Log::error('SpedUpload: exceção ao enviar', [
-                'user_id' => $user->id,
-                'tab_id' => $tabId,
-                'importacao_id' => $importacao->id,
-                'error' => $e->getMessage(),
-                'exception_class' => get_class($e),
-            ]);
-
-            return response()->json(['error' => 'Erro ao enviar arquivo'], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Arquivo enviado para processamento.',
+            'importacao_id' => $importacao->id,
+        ]);
     }
 }

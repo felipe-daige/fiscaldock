@@ -51,6 +51,47 @@ class XmlImportacaoController extends Controller
     }
 
     /**
+     * Detalhes de uma importação XML específica.
+     */
+    public function show(Request $request, $id)
+    {
+        $view = self::AUTH_VIEW_PREFIX . 'xml-detalhes';
+
+        if (!Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        $user = Auth::user();
+        $userId = (int) $user->id;
+
+        $importacao = XmlImportacao::where('id', $id)
+            ->where('user_id', $userId)
+            ->with('cliente')
+            ->firstOrFail();
+
+        // Dual-path: participante_ids (n8n v2) ou importacao_xml_id (legado)
+        if (!empty($importacao->participante_ids)) {
+            $participantes = Participante::whereIn('id', $importacao->participante_ids)
+                ->where('user_id', $userId)
+                ->orderBy('razao_social')
+                ->get();
+        } else {
+            $participantes = Participante::where('importacao_xml_id', $id)
+                ->where('user_id', $userId)
+                ->orderBy('razao_social')
+                ->get();
+        }
+
+        $data = compact('importacao', 'participantes');
+
+        if ($this->isAjaxRequest($request)) {
+            return response(view($view, $data)->render())->header('Content-Type', 'text/html');
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, array_merge(['initialView' => $view], $data));
+    }
+
+    /**
      * Página de importação de XMLs (versão funcional - dev only).
      */
     public function indexDev(Request $request)
@@ -970,9 +1011,8 @@ class XmlImportacaoController extends Controller
                     'cnpj_formatado' => $p->cnpj_formatado,
                     'razao_social' => $p->razao_social,
                     'nome_fantasia' => $p->nome_fantasia,
-                    'uf' => $p->uf,
-                    'municipio' => $p->municipio,
-                    'crt' => $p->crt,
+                    'endereco' => $p->endereco,
+                    'inscricao_estadual' => $p->inscricao_estadual,
                     'is_novo' => $isNovo,
                 ];
             }

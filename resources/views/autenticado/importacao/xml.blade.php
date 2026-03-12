@@ -941,7 +941,7 @@
                                     Novos <span id="part-count-novos">0</span>
                                 </button>
                                 <button type="button" class="part-filtro-btn px-2.5 py-1 text-xs rounded-md text-gray-600 hover:text-gray-900" data-filtro="atualizados">
-                                    Atual. <span id="part-count-atualizados">0</span>
+                                    Já Reg. <span id="part-count-atualizados">0</span>
                                 </button>
                             </div>
                         </div>
@@ -949,10 +949,10 @@
                             <table class="min-w-full text-xs">
                                 <thead class="sticky top-0 bg-gray-50">
                                     <tr>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">CNPJ</th>
                                         <th class="px-3 py-2 text-left font-medium text-gray-600">Razao Social</th>
-                                        <th class="px-3 py-2 text-center font-medium text-gray-600">UF</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Municipio</th>
+                                        <th class="px-3 py-2 text-left font-medium text-gray-600">CNPJ</th>
+                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Endereco</th>
+                                        <th class="px-3 py-2 text-left font-medium text-gray-600">IE</th>
                                         <th class="px-3 py-2 text-center font-medium text-gray-600">Status</th>
                                     </tr>
                                 </thead>
@@ -1107,6 +1107,10 @@
         let eventSource = null;
         let importacaoEmAndamento = false;
         let currentImportacaoId = null;
+        let reconnectTimer = null;
+        let reconnectAttempts = 0;
+        const MAX_RECONEXOES = 3;
+        const DELAY_RECONEXAO_BASE = 3000;
         let dadosParticipantes = [];
         let dadosNotasFiscais = [];
         let dadosCnpjsNovos = [];
@@ -2403,13 +2407,13 @@
 
             tbody.innerHTML = partsFiltrados.map(p => {
                 const statusClass = p.is_novo ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
-                const statusText = p.is_novo ? 'Novo' : 'Atualizado';
+                const statusText = p.is_novo ? 'Novo' : 'Já Registrado';
 
                 return '<tr class="hover:bg-gray-50" data-novo="' + (p.is_novo ? '1' : '0') + '">' +
-                    '<td class="px-3 py-2 text-gray-900 whitespace-nowrap font-mono text-xs">' + (p.cnpj_formatado || p.cnpj || '-') + '</td>' +
                     '<td class="px-3 py-2 text-gray-900 max-w-[200px] truncate" title="' + (p.razao_social || '') + '">' + (p.razao_social || '-') + '</td>' +
-                    '<td class="px-3 py-2 text-center text-gray-600">' + (p.uf || '-') + '</td>' +
-                    '<td class="px-3 py-2 text-gray-600 max-w-[150px] truncate" title="' + (p.municipio || '') + '">' + (p.municipio || '-') + '</td>' +
+                    '<td class="px-3 py-2 text-gray-900 whitespace-nowrap font-mono text-xs">' + (p.cnpj_formatado || p.cnpj || '-') + '</td>' +
+                    '<td class="px-3 py-2 text-gray-600 max-w-[180px] truncate" title="' + (p.endereco || '') + '">' + (p.endereco || '-') + '</td>' +
+                    '<td class="px-3 py-2 text-gray-600 whitespace-nowrap">' + (p.inscricao_estadual || '-') + '</td>' +
                     '<td class="px-3 py-2 text-center">' +
                         '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ' + statusClass + '">' +
                         statusText +
@@ -2470,47 +2474,70 @@
             eventSource = new EventSource(sseUrl);
 
             eventSource.onopen = function() {
+                reconnectAttempts = 0;
                 console.log('[Monitoramento XML] SSE conectado');
             };
 
+            let rafPendente = null;
+
             eventSource.onmessage = function(event) {
-                try {
-                    const dados = JSON.parse(event.data);
-                    console.log('[Monitoramento XML] Dados SSE:', dados);
-                    atualizarProgresso(dados);
+                const rawData = event.data;
 
-                    if (dados.status === 'concluido') {
-                        eventSource.close();
-                        eventSource = null;
-                        importacaoEmAndamento = false;
+                if (rafPendente !== null) return;
 
-                        if (window.showToast) {
-                            window.showToast(dados.mensagem || 'Importacao concluida!', 'success');
+                rafPendente = requestAnimationFrame(() => {
+                    rafPendente = null;
+                    try {
+                        const dados = JSON.parse(rawData);
+                        console.log('[Monitoramento XML] Dados SSE:', dados);
+                        atualizarProgresso(dados);
+
+                        if (dados.status === 'concluido') {
+                            eventSource.close();
+                            eventSource = null;
+                            importacaoEmAndamento = false;
+
+                            if (window.showToast) {
+                                window.showToast(dados.mensagem || 'Importacao concluida!', 'success');
+                            }
+
+                            mostrarResultados(dados.dados || {});
+                        } else if (dados.status === 'erro' || dados.status === 'timeout') {
+                            eventSource.close();
+                            eventSource = null;
+                            importacaoEmAndamento = false;
                         }
-
-                        mostrarResultados(dados.dados || {});
-                    } else if (dados.status === 'erro' || dados.status === 'timeout') {
-                        eventSource.close();
-                        eventSource = null;
-                        importacaoEmAndamento = false;
+                    } catch (e) {
+                        console.error('[Monitoramento XML] Erro ao parsear SSE:', e);
                     }
-                } catch (e) {
-                    console.error('[Monitoramento XML] Erro ao parsear SSE:', e);
-                }
+                });
             };
 
-            eventSource.onerror = function(err) {
-                console.error('[Monitoramento XML] Erro SSE:', err);
+            eventSource.onerror = function() {
+                const tentativas = reconnectAttempts;
+
                 eventSource.close();
                 eventSource = null;
 
-                if (importacaoEmAndamento) {
+                if (!importacaoEmAndamento) return;
+
+                if (tentativas < MAX_RECONEXOES) {
+                    reconnectAttempts++;
+                    const delay = DELAY_RECONEXAO_BASE * Math.pow(2, tentativas);
+                    console.warn('[XML] SSE desconectado, tentativa ' + reconnectAttempts + '/' + MAX_RECONEXOES + ' em ' + delay + 'ms');
+
+                    reconnectTimer = setTimeout(() => {
+                        reconnectTimer = null;
+                        if (importacaoEmAndamento) conectarSSE();
+                    }, delay);
+                } else {
+                    reconnectAttempts = 0;
                     importacaoEmAndamento = false;
                     atualizarProgresso({
                         status: 'erro',
                         progresso: 0,
-                        mensagem: 'Erro na conexao',
-                        error_message: 'Erro na conexao com o servidor.'
+                        mensagem: 'Erro na conexão',
+                        error_message: 'Não foi possível manter conexão com o servidor após ' + MAX_RECONEXOES + ' tentativas. Verifique sua internet.'
                     });
                 }
             };
@@ -2654,6 +2681,11 @@
             btnTentarNovamente.addEventListener('click', function() {
                 importacaoEmAndamento = false;
                 currentImportacaoId = null;
+                if (reconnectTimer !== null) {
+                    clearTimeout(reconnectTimer);
+                    reconnectTimer = null;
+                }
+                reconnectAttempts = 0;
                 if (eventSource) {
                     eventSource.close();
                     eventSource = null;
@@ -2673,6 +2705,11 @@
                 importacaoEmAndamento = false;
                 currentImportacaoId = null;
                 salvarMovimentacoesAtivo = false;
+                if (reconnectTimer !== null) {
+                    clearTimeout(reconnectTimer);
+                    reconnectTimer = null;
+                }
+                reconnectAttempts = 0;
                 if (eventSource) {
                     eventSource.close();
                     eventSource = null;
@@ -2684,15 +2721,17 @@
         }
 
         // Cleanup
-        if (typeof window._cleanupFunctions === 'undefined') {
-            window._cleanupFunctions = [];
-        }
-        window._cleanupFunctions.push(function() {
+        window._cleanupFunctions = window._cleanupFunctions || {};
+        window._cleanupFunctions.initImportacaoXml = function() {
+            if (reconnectTimer !== null) {
+                clearTimeout(reconnectTimer);
+                reconnectTimer = null;
+            }
             if (eventSource) {
                 eventSource.close();
                 eventSource = null;
             }
-        });
+        };
 
         console.log('[Monitoramento XML] Inicializado com tab_id:', tabId);
     }

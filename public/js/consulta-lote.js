@@ -52,7 +52,8 @@
         tabId: generateUUID(),
         consultaLoteId: null,
         eventSource: null,
-        credits: window.consultaData?.credits || 0
+        credits: window.consultaData?.credits || 0,
+        isExecuting: false
     };
 
     // Elementos DOM
@@ -132,20 +133,22 @@
             resumoSaldo: document.getElementById('resumo-saldo'),
             alertaCreditosInsuficientes: document.getElementById('alerta-creditos-insuficientes'),
 
-            // Modais
-            modalProgresso: document.getElementById('modal-progresso'),
+            // Progresso inline
+            consultaFormSection: document.getElementById('consulta-form-section'),
+            consultaProgressoSection: document.getElementById('consulta-progresso-section'),
             progressoTitulo: document.getElementById('progresso-titulo'),
             progressoMensagem: document.getElementById('progresso-mensagem'),
             progressoBarra: document.getElementById('progresso-barra'),
             progressoPercentual: document.getElementById('progresso-percentual'),
-
-            modalSucesso: document.getElementById('modal-sucesso'),
-            linkDownloadManual: document.getElementById('link-download-manual'),
-            btnFecharSucesso: document.getElementById('btn-fechar-sucesso'),
-
-            modalErro: document.getElementById('modal-erro'),
-            erroMensagem: document.getElementById('erro-mensagem'),
-            btnFecharErro: document.getElementById('btn-fechar-erro'),
+            consultaProgressoIcon: document.getElementById('consulta-progresso-icon'),
+            consultaProgressoCard: document.getElementById('consulta-progresso-card'),
+            consultaProgressoErro: document.getElementById('consulta-progresso-erro'),
+            consultaProgressoErroMsg: document.getElementById('consulta-progresso-erro-msg'),
+            btnTentarNovamente: document.getElementById('btn-tentar-novamente'),
+            resultadoConsulta: document.getElementById('resultado-consulta'),
+            resultadoConsultaInfo: document.getElementById('resultado-consulta-info'),
+            linkDownloadRelatorio: document.getElementById('link-download-relatorio'),
+            btnNovaConsulta: document.getElementById('btn-nova-consulta'),
 
             // Adicionar CNPJ
             inputAdicionarCnpj: document.getElementById('input-adicionar-cnpj'),
@@ -247,9 +250,9 @@
             elements.btnAdicionarCnpj.addEventListener('click', adicionarCnpj);
         }
 
-        // Modais
-        if (elements.btnFecharSucesso) elements.btnFecharSucesso.addEventListener('click', () => hideModal('sucesso'));
-        if (elements.btnFecharErro) elements.btnFecharErro.addEventListener('click', () => hideModal('erro'));
+        // Progresso inline
+        if (elements.btnTentarNovamente) elements.btnTentarNovamente.addEventListener('click', voltarParaFormulario);
+        if (elements.btnNovaConsulta) elements.btnNovaConsulta.addEventListener('click', voltarParaFormulario);
     }
 
     /**
@@ -714,6 +717,8 @@
      * Executa a consulta.
      */
     async function executarConsulta() {
+        if (state.isExecuting) return;
+
         const participanteIds = Array.from(state.selectedIds);
         const planoId = document.querySelector('input[name="plano_id"]:checked')?.value;
         const clienteId = state.filters.cliente_id || null;
@@ -728,9 +733,16 @@
             return;
         }
 
-        // Mostrar modal de progresso
-        showModal('progresso');
-        updateProgresso(0, 'Iniciando consulta...');
+        state.isExecuting = true;
+        if (elements.btnGerarRelatorio) {
+            elements.btnGerarRelatorio.disabled = true;
+            elements.btnGerarRelatorio.style.backgroundColor = '#d1d5db';
+            elements.btnGerarRelatorio.style.color = '#6b7280';
+            elements.btnGerarRelatorio.style.cursor = 'not-allowed';
+        }
+
+        // Mostrar progresso inline
+        mostrarProgressoInline();
 
         try {
             const response = await fetch(window.consultaData.routes.executar, {
@@ -755,19 +767,17 @@
                 data = await response.json();
             } catch (e) {
                 console.error('Consulta Lote: resposta invalida do servidor', e);
-                hideModal('progresso');
-                showModal('erro');
-                if (elements.erroMensagem) elements.erroMensagem.textContent = 'Resposta invalida do servidor.';
+                onConsultaErro('Resposta invalida do servidor.');
                 return;
             }
 
             // Verificar sucesso (HTTP status + JSON success field)
             if (!response.ok || !data.success) {
-                hideModal('progresso');
-                showModal('erro');
                 const errorMsg = data?.error || `Erro ${response.status}: ${response.statusText}`;
-                if (elements.erroMensagem) elements.erroMensagem.textContent = errorMsg;
                 console.error('Consulta Lote erro:', errorMsg, data);
+                state.isExecuting = false;
+                if (elements.btnGerarRelatorio) elements.btnGerarRelatorio.disabled = false;
+                onConsultaErro(errorMsg);
                 return;
             }
 
@@ -781,11 +791,9 @@
 
         } catch (error) {
             console.error('Consulta Lote excecao:', error);
-            hideModal('progresso');
-            showModal('erro');
-            if (elements.erroMensagem) {
-                elements.erroMensagem.textContent = error.message || 'Erro de conexao. Tente novamente.';
-            }
+            state.isExecuting = false;
+            if (elements.btnGerarRelatorio) elements.btnGerarRelatorio.disabled = false;
+            onConsultaErro(error.message || 'Erro de conexao. Tente novamente.');
         }
     }
 
@@ -795,34 +803,125 @@
     function iniciarSSE() {
         if (state.eventSource) {
             state.eventSource.close();
+            state.eventSource = null;
         }
 
-        const url = `${window.consultaData.routes.progressoStream}?tab_id=${state.tabId}`;
-        state.eventSource = new EventSource(url);
+        var reconnectAttempts = 0;
+        var maxReconnectAttempts = 3;
+        var reconnectDelays = [3000, 6000, 12000];
+        var lastDataHash = null;
+        var lastUpdate = 0;
+        var throttleMs = 500;
+        var pollingInterval = null;
 
-        state.eventSource.onmessage = function(event) {
-            try {
-                const data = JSON.parse(event.data);
+        function pararPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+        }
+
+        function connect() {
+            var url = window.consultaData.routes.progressoStream + '?tab_id=' + state.tabId;
+            state.eventSource = new EventSource(url);
+
+            state.eventSource.onmessage = function(event) {
+                // Heartbeat: ignorar ping/vazio
+                var raw = event.data;
+                if (!raw || raw === ':ping') return;
+
+                // Hash deduplication
+                var hash = simpleHash(raw);
+                if (hash === lastDataHash) return;
+                lastDataHash = hash;
+
+                // Reset contador de reconexao em mensagem bem-sucedida
+                reconnectAttempts = 0;
+
+                var data;
+                try {
+                    data = JSON.parse(raw);
+                } catch (e) {
+                    console.error('Erro ao processar SSE:', e);
+                    return;
+                }
+
+                // Sempre processar estados terminais (sem throttle)
+                if (data.status === 'concluido') {
+                    updateProgresso(data.progresso, data.mensagem);
+                    state.eventSource.close();
+                    state.eventSource = null;
+                    pararPolling();
+                    onConsultaConcluida();
+                    return;
+                }
+                if (data.status === 'erro') {
+                    state.eventSource.close();
+                    state.eventSource = null;
+                    pararPolling();
+                    onConsultaErro(data.error_message || 'Erro desconhecido');
+                    return;
+                }
+                if (data.status === 'timeout') {
+                    state.eventSource.close();
+                    state.eventSource = null;
+                    pararPolling();
+                    onConsultaErro(data.mensagem || 'Tempo limite atingido. Verifique o histórico.');
+                    return;
+                }
+
+                // Throttle de 0.5s para atualizacoes intermediarias
+                var now = Date.now();
+                if (now - lastUpdate < throttleMs) return;
+                lastUpdate = now;
 
                 updateProgresso(data.progresso, data.mensagem);
+            };
 
-                if (data.status === 'concluido') {
-                    state.eventSource.close();
-                    onConsultaConcluida();
-                } else if (data.status === 'erro') {
-                    state.eventSource.close();
-                    onConsultaErro(data.error_message || 'Erro desconhecido');
+            state.eventSource.onerror = function() {
+                console.error('Erro na conexao SSE (tentativa ' + (reconnectAttempts + 1) + ')');
+                state.eventSource.close();
+                state.eventSource = null;
+
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    var delay = reconnectDelays[reconnectAttempts];
+                    reconnectAttempts++;
+                    setTimeout(connect, delay);
+                } else {
+                    onConsultaErro('Conexao perdida. Verifique sua internet e tente novamente.');
                 }
-            } catch (e) {
-                console.error('Erro ao processar SSE:', e);
-            }
-        };
+            };
+        }
 
-        state.eventSource.onerror = function() {
-            console.error('Erro na conexao SSE');
-            state.eventSource.close();
-            // Nao mostrar erro imediatamente - pode ser apenas reconexao
-        };
+        connect();
+
+        // Polling fallback: checa status no DB a cada 5s
+        if (state.consultaLoteId && window.consultaData.routes.loteStatus) {
+            pollingInterval = setInterval(function() {
+                var statusUrl = window.consultaData.routes.loteStatus.replace('{id}', state.consultaLoteId);
+                fetch(statusUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (!data.success) return;
+                        if (data.status === 'concluido') {
+                            pararPolling();
+                            if (state.eventSource) { state.eventSource.close(); state.eventSource = null; }
+                            onConsultaConcluida();
+                        } else if (data.status === 'erro') {
+                            pararPolling();
+                            if (state.eventSource) { state.eventSource.close(); state.eventSource = null; }
+                            onConsultaErro('Erro no processamento.');
+                        } else {
+                            updateProgresso(data.progresso, null);
+                        }
+                    })
+                    .catch(function() {}); // silenciar erros de rede
+            }, 5000);
+
+            // Guardar referência para parar no voltarParaFormulario
+            state._pollingInterval = pollingInterval;
+            state._pararPolling = pararPolling;
+        }
     }
 
     /**
@@ -835,19 +934,63 @@
     }
 
     /**
+     * Atualiza ícone e estado visual do card de progresso da consulta.
+     */
+    function atualizarIconeConsulta(status, errorMessage) {
+        const icon = elements.consultaProgressoIcon;
+        const card = elements.consultaProgressoCard;
+        const barra = elements.progressoBarra;
+        const erroDiv = elements.consultaProgressoErro;
+        const erroMsg = elements.consultaProgressoErroMsg;
+
+        if (!icon || !card) return;
+
+        card.className = 'bg-white border rounded-lg p-4 shadow-sm';
+
+        if (status === 'concluido') {
+            icon.className = 'w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0';
+            icon.innerHTML = '<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+            card.classList.add('border-green-200');
+            if (barra) barra.className = 'bg-green-600 h-full rounded-full transition-all duration-500 ease-out';
+            if (erroDiv) erroDiv.classList.add('hidden');
+        } else if (status === 'erro') {
+            icon.className = 'w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0';
+            icon.innerHTML = '<svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+            card.classList.add('border-red-200');
+            if (barra) barra.className = 'bg-red-600 h-full rounded-full transition-all duration-500 ease-out';
+            if (erroDiv) erroDiv.classList.remove('hidden');
+            if (erroMsg && errorMessage) erroMsg.textContent = errorMessage;
+        } else {
+            icon.className = 'w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0';
+            icon.innerHTML = '<svg class="w-5 h-5 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>';
+            card.classList.add('border-gray-200');
+            if (barra) barra.className = 'bg-blue-600 h-full rounded-full transition-all duration-500 ease-out';
+            if (erroDiv) erroDiv.classList.add('hidden');
+        }
+    }
+
+    /**
      * Handler de consulta concluida.
      */
     function onConsultaConcluida() {
-        hideModal('progresso');
-        showModal('sucesso');
+        updateProgresso(100, 'Concluído');
+        atualizarIconeConsulta('concluido');
 
-        // Link de download
-        if (elements.linkDownloadManual && state.consultaLoteId) {
+        // Mostrar seção de resultado inline
+        if (elements.resultadoConsulta) {
+            elements.resultadoConsulta.classList.remove('hidden');
+        }
+
+        // Link de download e auto-download
+        if (state.consultaLoteId) {
             const downloadUrl = window.consultaData.routes.baixarLote.replace('{id}', state.consultaLoteId);
-            elements.linkDownloadManual.href = downloadUrl;
-
-            // Iniciar download automatico
-            window.location.href = downloadUrl;
+            if (elements.linkDownloadRelatorio) {
+                elements.linkDownloadRelatorio.href = downloadUrl;
+            }
+            if (elements.resultadoConsultaInfo) {
+                const total = state.selectedIds.size;
+                elements.resultadoConsultaInfo.textContent = total + ' participante' + (total !== 1 ? 's' : '');
+            }
         }
 
         // Limpar selecao
@@ -858,25 +1001,70 @@
      * Handler de erro na consulta.
      */
     function onConsultaErro(mensagem) {
-        hideModal('progresso');
-        showModal('erro');
-        if (elements.erroMensagem) elements.erroMensagem.textContent = mensagem;
+        atualizarIconeConsulta('erro', mensagem);
     }
 
     /**
-     * Mostra modal.
+     * Mostra a seção de progresso inline e oculta o formulário.
      */
-    function showModal(tipo) {
-        const modal = document.getElementById(`modal-${tipo}`);
-        if (modal) modal.classList.remove('hidden');
+    function mostrarProgressoInline() {
+        // Reset estado visual
+        atualizarIconeConsulta('processando');
+        updateProgresso(0, 'Iniciando consulta...');
+        if (elements.consultaProgressoErro) elements.consultaProgressoErro.classList.add('hidden');
+        if (elements.resultadoConsulta) elements.resultadoConsulta.classList.add('hidden');
+
+        // Trocar seções (usar fallback direto ao DOM)
+        var formSec = elements.consultaFormSection || document.getElementById('consulta-form-section');
+        var progressSec = elements.consultaProgressoSection || document.getElementById('consulta-progresso-section');
+        if (formSec) formSec.style.display = 'none';
+        if (progressSec) { progressSec.classList.remove('hidden'); progressSec.style.display = 'block'; }
+        window.scrollTo({ top: 0, behavior: 'instant' });
     }
 
     /**
-     * Esconde modal.
+     * Volta para o formulário e reseta o estado de progresso.
      */
-    function hideModal(tipo) {
-        const modal = document.getElementById(`modal-${tipo}`);
-        if (modal) modal.classList.add('hidden');
+    function voltarParaFormulario() {
+        state.isExecuting = false;
+        state.tabId = generateUUID();
+        if (elements.btnGerarRelatorio) elements.btnGerarRelatorio.disabled = false;
+
+        // Parar polling fallback
+        if (state._pararPolling) { state._pararPolling(); state._pararPolling = null; }
+        if (state._pollingInterval) { clearInterval(state._pollingInterval); state._pollingInterval = null; }
+
+        // Fechar SSE se aberta
+        if (state.eventSource) {
+            state.eventSource.close();
+            state.eventSource = null;
+        }
+
+        // Reset visual
+        atualizarIconeConsulta('processando');
+        updateProgresso(0, 'Iniciando...');
+        if (elements.consultaProgressoErro) elements.consultaProgressoErro.classList.add('hidden');
+        if (elements.resultadoConsulta) elements.resultadoConsulta.classList.add('hidden');
+        state.consultaLoteId = null;
+
+        // Trocar seções (usar fallback direto ao DOM)
+        var formSec = elements.consultaFormSection || document.getElementById('consulta-form-section');
+        var progressSec = elements.consultaProgressoSection || document.getElementById('consulta-progresso-section');
+        if (progressSec) { progressSec.classList.add('hidden'); progressSec.style.display = ''; }
+        if (formSec) formSec.style.display = '';
+        updateResumo();
+    }
+
+    /**
+     * Hash simples para deduplicação de mensagens SSE.
+     */
+    function simpleHash(str) {
+        var hash = 0;
+        for (var i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return hash;
     }
 
     /**
@@ -1578,18 +1766,18 @@
                 '<td class="hidden md:table-cell md:w-10 md:px-4 md:py-3">'
                 + '<input type="checkbox" class="checkbox-cliente w-4 h-4 text-gray-600 rounded border-gray-300" data-cliente-id="' + c.id + '"' + (isClienteSelected ? ' checked' : '') + '>'
                 + '</td>'
-                + '<td class="block md:table-cell md:w-40 md:px-4 md:py-3">'
-                + '<div class="flex items-center gap-2 md:block">'
+                + '<td class="block overflow-hidden md:table-cell md:w-40 md:px-4 md:py-3">'
+                + '<div class="flex items-center gap-2">'
                 + '<input type="checkbox" class="checkbox-cliente w-4 h-4 text-gray-600 rounded border-gray-300 md:hidden flex-shrink-0" data-cliente-id="' + c.id + '"' + (isClienteSelected ? ' checked' : '') + '>'
-                + chevronSvg
                 + '<span class="text-sm font-mono text-gray-600 whitespace-nowrap tabular-nums">' + cnpjFormatado + '</span>'
                 + '</div>'
                 + '</td>'
-                + '<td class="block md:table-cell md:px-4 md:py-3">'
+                + '<td class="block overflow-hidden md:table-cell md:px-4 md:py-3 md:max-w-0">'
                 + '<div class="flex items-center gap-2 min-w-0" title="' + nomeTitle.replace(/"/g, '&quot;') + '">'
                 + propriaDot
                 + '<div class="text-sm font-medium text-gray-900 truncate min-w-0">' + (c.razao_social || '-') + '</div>'
                 + tipoBadge
+                + chevronSvg
                 + '</div>'
                 + (c.nome ? '<div class="text-xs text-gray-500 truncate">' + c.nome + '</div>' : '')
                 + '</td>'
@@ -1877,14 +2065,8 @@
         state.activeTab = 'participantes';
         state.filterContext = null;
         state.expandedClienteId = null;
-        state.consultaLoteId = null;
+        voltarParaFormulario();
         state.credits = window.consultaData?.credits || 0;
-
-        // Close any existing SSE connection
-        if (state.eventSource) {
-            state.eventSource.close();
-            state.eventSource = null;
-        }
 
         init();
         initCarouselPlanos();

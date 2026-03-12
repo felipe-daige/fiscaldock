@@ -6,9 +6,6 @@ use App\Http\Controllers\Landing\LandingPageController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\ConsultaController;
 use App\Http\Controllers\Dashboard\ClienteController;
-use App\Http\Controllers\Dashboard\AnalyticsController;
-use App\Http\Controllers\Dashboard\RiskScoreController;
-use App\Http\Controllers\Dashboard\ValidacaoController;
 use App\Http\Controllers\Dashboard\MinhaEmpresaController;
 use App\Http\Controllers\SpedUploadController;
 use Illuminate\Support\Facades\Route;
@@ -98,12 +95,6 @@ Route::middleware('auth')->group(function () {
     // Rotas de Monitoramento
     Route::prefix('app/monitoramento')->name('app.monitoramento.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'index'])->name('index');
-        Route::get('/planos', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'planos'])->name('planos');
-        // Redirect legado: /app/monitoramento/sped -> /app/importacao/sped
-        Route::get('/sped', fn () => redirect('/app/importacao/sped', 301))->name('sped.redirect');
-        Route::get('/avulso', function () {
-            return redirect('/app/consultas/avulso', 301);
-        })->name('avulso');
         Route::get('/historico', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'historico'])->name('historico');
         Route::get('/clientes', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'clientes'])->name('clientes');
         Route::get('/consulta/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'consultaDetalhes'])->name('consulta');
@@ -129,20 +120,22 @@ Route::middleware('auth')->group(function () {
         Route::put('/grupos/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'editarGrupo'])->name('grupos.editar');
         Route::delete('/grupos/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'excluirGrupo'])->name('grupos.excluir');
 
-        // Redirect legado: /app/monitoramento/xml -> /app/importacao/xml
-        Route::get('/xml', fn () => redirect('/app/importacao/xml', 301))->name('xml.redirect');
     });
 
-    // Importação (XMLs e SPED)
+    // Importação (EFD e XML)
     Route::prefix('app/importacao')->name('app.importacao.')->group(function () {
-        // SPED (EFD Fiscal/Contribuições)
-        Route::get('/sped', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'importarSped'])->name('sped');
-        Route::post('/sped/importar-txt', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'importarTxt'])->name('sped.importar-txt');
-        Route::get('/sped/progresso/stream', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'streamProgresso'])->name('sped.progresso.stream');
+        // EFD (SPED Fiscal/Contribuições)
+        Route::get('/efd', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'importarSped'])->name('efd');
+        Route::get('/efd/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'efdDetalhes'])->name('efd.detalhes');
+        Route::post('/efd/importar-txt', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'importarTxt'])->name('efd.importar-txt');
+        Route::get('/efd/progresso/stream', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'streamProgresso'])->name('efd.progresso.stream');
 
-        // XMLs (NF-e, NFS-e, CT-e)
+        // Histórico unificado
+        Route::get('/historico', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'historicoImportacoes'])->name('historico');
+
+        // XML (NF-e, NFS-e, CT-e)
         Route::get('/xml', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'index'])->name('xml');
-        Route::get('/xml-dev', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'indexDev'])->name('xml.dev');
+        Route::get('/xml/{id}', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'show'])->name('xml.detalhes');
         Route::post('/xml/validar', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'validar'])->name('xml.validar');
         Route::post('/xml/importar', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'importar'])->name('xml.importar');
         Route::get('/xml/progresso/stream', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'streamProgresso'])->name('xml.progresso.stream');
@@ -153,43 +146,14 @@ Route::middleware('auth')->group(function () {
     // BI Fiscal (placeholder público)
     Route::get('app/analytics', [DashboardController::class, 'analyticsPlaceholder'])->name('app.analytics.index.placeholder');
 
-    // BI Fiscal (funcional - dev only)
-    Route::prefix('app/analytics-dev')->name('app.analytics.')->group(function () {
-        Route::get('/', [AnalyticsController::class, 'index'])->name('index');
-        Route::get('/faturamento', [AnalyticsController::class, 'faturamento'])->name('faturamento');
-        Route::get('/compras', [AnalyticsController::class, 'compras'])->name('compras');
-        Route::get('/tributos', [AnalyticsController::class, 'tributos'])->name('tributos');
-        Route::get('/resumo', [AnalyticsController::class, 'resumo'])->name('resumo');
-    });
-
     // Score Fiscal (placeholder público)
     Route::get('app/score-fiscal', [DashboardController::class, 'scoreFiscalPlaceholder'])->name('app.risk.index.placeholder');
-
-    // Score Fiscal (funcional - dev only)
-    Route::prefix('app/score-fiscal-dev')->name('app.risk.')->group(function () {
-        Route::get('/', [RiskScoreController::class, 'index'])->name('index');
-        Route::get('/dashboard', [RiskScoreController::class, 'dashboard'])->name('dashboard');
-        Route::get('/participante/{id}', [RiskScoreController::class, 'show'])->name('show');
-        Route::post('/participante/{id}/consultar', [RiskScoreController::class, 'consultar'])->name('consultar');
-        Route::post('/atualizar-lote', [RiskScoreController::class, 'atualizarEmLote'])->name('atualizar-lote');
-    });
 
     // Redirect legado: /app/risk/* -> /app/score-fiscal/*
     Route::get('app/risk/{any?}', fn ($any = '') => redirect("/app/score-fiscal/{$any}"))->where('any', '.*');
 
     // Validação Contábil (placeholder público)
     Route::get('app/validacao', [DashboardController::class, 'validacaoPlaceholder'])->name('app.validacao.index.placeholder');
-
-    // Validação Contábil (funcional - dev only)
-    Route::prefix('app/validacao-dev')->name('app.validacao.')->group(function () {
-        Route::get('/', [ValidacaoController::class, 'index'])->name('index');
-        Route::get('/dashboard', [ValidacaoController::class, 'dashboard'])->name('dashboard');
-        Route::get('/alertas', [ValidacaoController::class, 'alertas'])->name('alertas');
-        Route::get('/nota/{id}', [ValidacaoController::class, 'notaDetalhes'])->name('nota');
-        Route::post('/calcular-custo', [ValidacaoController::class, 'calcularCusto'])->name('calcular-custo');
-        Route::post('/validar-notas', [ValidacaoController::class, 'validarNotas'])->name('validar-notas');
-        Route::post('/validar-importacao/{id}', [ValidacaoController::class, 'validarImportacao'])->name('validar-importacao');
-    });
 
     // Minha Empresa
     Route::prefix('app/minha-empresa')->name('app.minha-empresa.')->group(function () {
@@ -225,7 +189,8 @@ Route::middleware('auth')->group(function () {
         // Download de lote
         Route::get('/lote/{id}/baixar', [ConsultaController::class, 'baixarLote'])->name('lote.baixar');
 
-        // Relatorios (mesmo que historico, mostra downloads disponiveis)
-        Route::get('/relatorios', [ConsultaController::class, 'historico'])->name('relatorios');
+        // Status do lote (polling fallback para SSE)
+        Route::get('/lote/{id}/status', [ConsultaController::class, 'statusLote'])->name('lote.status');
+
     });
 });

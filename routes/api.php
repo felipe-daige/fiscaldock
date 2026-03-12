@@ -10,47 +10,43 @@ Route::get('/health', [DataReceiverController::class, 'health'])
     ->name('api.health');
 
 // ============================================
-// Monitoramento - SPED e XML
+// Importação EFD
 // ============================================
 
-// Rota para receber progresso de importação de arquivo SPED
+// Recebe progresso de importação de arquivo EFD (SPED)
 // n8n envia progresso para Laravel armazenar em cache (SSE lê do cache)
-Route::post('/importacao/sped/importacao-txt/progress', [DataReceiverController::class, 'receiveImportacaoTxtProgress'])
-    ->name('api.importacao.sped.importacao-txt.progress');
+Route::post('/importacao/efd/importacao-txt/progress', [DataReceiverController::class, 'receiveImportacaoTxtProgress'])
+    ->name('api.importacao.efd.importacao-txt.progress');
 
-// Rota legada - n8n pode ainda usar este caminho
-Route::post('/monitoramento/sped/importacao-txt/progress', [DataReceiverController::class, 'receiveImportacaoTxtProgress'])
-    ->name('api.monitoramento.sped.importacao-txt.progress');
+// ============================================
+// Importação XML
+// ============================================
 
-// Rota para receber resultado de consulta do Monitoramento
-// n8n envia resultado da consulta (ou pode escrever diretamente no PostgreSQL)
-Route::post('/monitoramento/consulta/resultado', [DataReceiverController::class, 'receiveMonitoramentoConsulta'])
-    ->name('api.monitoramento.consulta.resultado');
-
-// Rota para receber progresso de importação de XMLs
+// Recebe progresso de importação de XMLs (NF-e, NFS-e, CT-e)
 // n8n envia progresso para Laravel armazenar em cache (SSE lê do cache)
 Route::post('/importacao/xml/progress', [DataReceiverController::class, 'receiveXmlImportacaoProgress'])
     ->name('api.importacao.xml.progress');
 
-// Rota legada - n8n pode ainda usar este caminho
-Route::post('/monitoramento/xml/importacao/progress', [DataReceiverController::class, 'receiveXmlImportacaoProgress'])
-    ->name('api.monitoramento.xml.importacao.progress');
+// ============================================
+// Monitoramento
+// ============================================
+
+// Recebe resultado de consulta do Monitoramento
+// n8n envia resultado da consulta (ou pode escrever diretamente no PostgreSQL)
+Route::post('/monitoramento/consulta/resultado', [DataReceiverController::class, 'receiveMonitoramentoConsulta'])
+    ->name('api.monitoramento.consulta.resultado');
 
 // ============================================
 // Consultas de lotes
 // ============================================
 
-// Rota para receber progresso de consulta de lotes
+// Recebe progresso de consulta em lote
 // n8n envia progresso para Laravel armazenar em cache (SSE lê do cache)
-Route::post('/consultas/lote/progress', [DataReceiverController::class, 'receiveConsultaLoteProgress'])
-    ->name('api.consultas.lote.progress');
+Route::post('/consulta/progress', [DataReceiverController::class, 'receiveConsultaProgress'])
+    ->name('api.consulta.progress');
 
-// Rota para receber resultado individual de consulta (por participante)
+// Recebe resultado individual de consulta (por participante)
 // n8n envia resultado de cada participante para armazenar em consulta_resultados
 Route::post('/consultas/lote/resultado', [DataReceiverController::class, 'receiveConsultaLoteResultado'])
     ->name('api.consultas.lote.resultado');
 
-// Rota para receber alertas de consultas automáticas
-// n8n envia alertas críticos para notificação do usuário
-Route::post('/consultas/alertas', [DataReceiverController::class, 'receiveConsultaAlertas'])
-    ->name('api.consultas.alertas');

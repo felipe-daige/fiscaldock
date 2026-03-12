@@ -385,12 +385,12 @@ class ConsultaController extends Controller
                         'crt' => $p->crt,
                     ];
                 })->toArray(),
-                'progress_url' => url('/api/consultas/lote/progress'),
+                'progress_url' => url('/api/consulta/progress'),
                 'resultado_url' => url('/api/consultas/lote/resultado'),
             ];
 
             // Enviar para n8n
-            $response = Http::timeout(60)
+            $response = Http::timeout(15)
                 ->withHeaders([
                     'X-API-Token' => config('services.api.token'),
                     'Content-Type' => 'application/json',
@@ -493,11 +493,20 @@ class ConsultaController extends Controller
         ]);
 
         return response()->stream(function () use ($cacheKey, $userId, $tabId) {
+            // Garantir que PHP não bufferize a saída SSE
+            if (function_exists('ini_set')) {
+                ini_set('output_buffering', 'Off');
+                ini_set('zlib.output_compression', 'Off');
+            }
+            // Padding inicial para forçar flush em proxies que ainda bufferizam
+            echo str_repeat(' ', 2048) . "\n";
+
             $tentativas = 0;
-            $maxTentativas = 600; // 10 minutos
+            $maxTentativas = 600; // 5 minutos com 0.5s de intervalo
             $lastDataHash = null;
 
-            echo ": SSE connection established for consulta progress stream (user:{$userId}, tab:{$tabId})\n\n";
+            echo ": SSE connection established for consulta progress stream (user:{$userId}, tab:{$tabId})\n";
+            echo "retry: 3000\n\n";
             if (ob_get_level() > 0) {
                 ob_flush();
             }
@@ -508,7 +517,8 @@ class ConsultaController extends Controller
                     $data = Cache::get($cacheKey);
 
                     if ($data) {
-                        $currentHash = md5(json_encode($data));
+                        $hashData = array_diff_key($data, ['updated_at' => true]);
+                        $currentHash = md5(json_encode($hashData));
 
                         if ($currentHash !== $lastDataHash) {
                             $lastDataHash = $currentHash;
@@ -540,8 +550,16 @@ class ConsultaController extends Controller
                         break;
                     }
 
-                    sleep(1);
+                    usleep(500000);
                     $tentativas++;
+
+                    if ($tentativas % 15 === 0) {
+                        echo ": ping\n\n";
+                        if (ob_get_level() > 0) {
+                            ob_flush();
+                        }
+                        flush();
+                    }
 
                 } catch (\Exception $e) {
                     Log::error('SSE Consulta streamProgresso: erro no loop', [
@@ -549,7 +567,7 @@ class ConsultaController extends Controller
                         'tab_id' => $tabId,
                         'error' => $e->getMessage(),
                     ]);
-                    sleep(1);
+                    usleep(500000);
                     $tentativas++;
                     if (connection_aborted()) {
                         break;
@@ -875,6 +893,31 @@ class ConsultaController extends Controller
         return view(self::AUTH_LAYOUT_VIEW, array_merge([
             'initialView' => $historicoView,
         ], $data));
+    }
+
+    /**
+     * Retorna status atual do lote (polling fallback para SSE).
+     */
+    public function statusLote(Request $request, int $id): JsonResponse
+    {
+        $lote = ConsultaLote::where('id', $id)->where('user_id', Auth::id())->first();
+
+        if (! $lote) {
+            return response()->json(['success' => false], 404);
+        }
+
+        $totalResultados = $lote->resultados()->count();
+        $progresso = $lote->total_participantes > 0
+            ? (int) round($totalResultados / $lote->total_participantes * 100)
+            : 0;
+
+        return response()->json([
+            'success' => true,
+            'status' => $lote->status,
+            'progresso' => $progresso,
+            'total_participantes' => $lote->total_participantes,
+            'total_resultados' => $totalResultados,
+        ]);
     }
 
     /**

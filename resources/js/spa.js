@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
         '/agendar': 'initAgendar',
         '/solucoes': 'initSolucoes',
         '/app/monitoramento': 'initMonitoramento',
-        '/app/importacao/sped': 'initImportacaoSped',
+        '/app/importacao/efd': 'initImportacaoSped',
         '/app/monitoramento/avulso': 'initMonitoramentoAvulso',
         '/app/consultas/avulso': 'initMonitoramentoAvulso',
         '/app/novo-participante': 'initNovoParticipante',

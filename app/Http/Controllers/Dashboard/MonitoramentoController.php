@@ -501,7 +501,7 @@ class MonitoramentoController extends Controller
      */
     public function importarSped(Request $request)
     {
-        $spedView = self::AUTH_VIEW_PREFIX . 'sped';
+        $spedView = self::AUTH_VIEW_PREFIX . 'efd';
 
         if (!view()->exists($spedView)) {
             abort(404);
@@ -514,21 +514,15 @@ class MonitoramentoController extends Controller
         $user = Auth::user();
         $userId = (int) $user->id;
 
-        // Buscar clientes ativos do usuário para o select de associação
-        $clientes = Cliente::where('user_id', $userId)
-            ->where('ativo', true)
-            ->orderBy('razao_social')
-            ->get();
-
         // Buscar últimas importações SPED do usuário
         $importacoes = SpedImportacao::where('user_id', $userId)
+            ->with('cliente')
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
 
         $data = [
             'credits' => $this->creditService->getBalance($user),
-            'clientes' => $clientes,
             'importacoes' => $importacoes,
             'planos' => MonitoramentoPlano::ativos(),
         ];
@@ -541,6 +535,86 @@ class MonitoramentoController extends Controller
         return view(self::AUTH_LAYOUT_VIEW, array_merge([
             'initialView' => $spedView
         ], $data));
+    }
+
+    /**
+     * Detalhes de uma importação EFD específica.
+     */
+    public function efdDetalhes(Request $request, $id)
+    {
+        $view = 'autenticado.importacao.efd-detalhes';
+
+        if (!Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        $user = Auth::user();
+        $userId = (int) $user->id;
+
+        $importacao = SpedImportacao::where('id', $id)
+            ->where('user_id', $userId)
+            ->with('cliente')
+            ->firstOrFail();
+
+        // Dual-path: participante_ids (n8n v2) ou importacao_sped_id (legado)
+        if (!empty($importacao->participante_ids)) {
+            $participantes = Participante::whereIn('id', $importacao->participante_ids)
+                ->where('user_id', $userId)
+                ->orderBy('razao_social')
+                ->get();
+        } else {
+            $participantes = Participante::where('importacao_sped_id', $id)
+                ->where('user_id', $userId)
+                ->orderBy('razao_social')
+                ->get();
+        }
+
+        $data = compact('importacao', 'participantes');
+
+        if ($this->isAjaxRequest($request)) {
+            return response(view($view, $data)->render())->header('Content-Type', 'text/html');
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, array_merge(['initialView' => $view], $data));
+    }
+
+    /**
+     * Histórico unificado de importações (EFD + XML).
+     */
+    public function historicoImportacoes(Request $request)
+    {
+        $view = 'autenticado.importacao.historico';
+
+        if (!Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        $user = Auth::user();
+        $userId = (int) $user->id;
+
+        $spedImportacoes = SpedImportacao::where('user_id', $userId)
+            ->with('cliente')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn ($i) => array_merge($i->toArray(), ['_tipo' => 'efd']));
+
+        $xmlImportacoes = \App\Models\XmlImportacao::where('user_id', $userId)
+            ->with('cliente')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn ($i) => array_merge($i->toArray(), ['_tipo' => 'xml']));
+
+        $importacoes = $spedImportacoes->concat($xmlImportacoes)
+            ->sortByDesc('created_at')
+            ->values();
+
+        $data = ['importacoes' => $importacoes];
+
+        if ($this->isAjaxRequest($request)) {
+            return response(view($view, $data)->render())->header('Content-Type', 'text/html');
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, array_merge(['initialView' => $view], $data));
     }
 
     /**
@@ -2104,7 +2178,7 @@ class MonitoramentoController extends Controller
                 'tipo_efd' => $request->tipo_efd,
                 'filename' => $arquivo->getClientOriginalName(),
                 'file_base64' => base64_encode(file_get_contents($arquivo->path())),
-                'progress_url' => url('/api/importacao/sped/importacao-txt/progress'),
+                'progress_url' => url('/api/importacao/efd/importacao-txt/progress'),
                 'cliente_id' => $clienteId,
                 'tab_id' => $request->input('tab_id'),
             ]);
@@ -2340,11 +2414,11 @@ class MonitoramentoController extends Controller
      * SSE para acompanhar progresso de processamento SPED em tempo real.
      * Lê dados do cache (enviados pelo n8n via API) isolados por user_id + tab_id.
      *
-     * GET /app/importacao/sped/progresso/stream?tab_id=xxx
+     * GET /app/importacao/efd/progresso/stream?tab_id=xxx
      *
      * Este endpoint é usado pelo frontend para acompanhar o progresso da
      * identificação de participantes em arquivos SPED. O n8n envia atualizações
-     * de progresso para /api/importacao/sped/importacao-txt/progress com
+     * de progresso para /api/importacao/efd/importacao-txt/progress com
      * user_id, tab_id, progresso (0-100), mensagem e status.
      */
     public function streamProgresso(Request $request)
@@ -2377,11 +2451,12 @@ class MonitoramentoController extends Controller
 
         return response()->stream(function () use ($cacheKey, $userId, $tabId) {
             $tentativas = 0;
-            $maxTentativas = 300; // 5 minutos (300 segundos)
+            $maxTentativas = 3600; // 30 minutos (3600 × 0.5s)
             $lastDataHash = null; // Para evitar enviar dados repetidos
 
-            // Enviar comentário inicial
-            echo ": SSE connection established for progress stream (user:{$userId}, tab:{$tabId})\n\n";
+            // Enviar comentário inicial + retry hint para o browser
+            echo ": SSE connection established for progress stream (user:{$userId}, tab:{$tabId})\n";
+            echo "retry: 3000\n\n";
             if (ob_get_level() > 0) {
                 ob_flush();
             }
@@ -2393,8 +2468,10 @@ class MonitoramentoController extends Controller
                     $data = Cache::get($cacheKey);
 
                     if ($data) {
-                        // Calcular hash para detectar mudanças
-                        $currentHash = md5(json_encode($data));
+                        // Calcular hash para detectar mudanças (exclui updated_at para não
+                        // reenviar dados idênticos quando n8n escreve o mesmo progresso várias vezes)
+                        $hashData = array_diff_key($data, ['updated_at' => true]);
+                        $currentHash = md5(json_encode($hashData));
 
                         // Só enviar se os dados mudaram
                         if ($currentHash !== $lastDataHash) {
@@ -2431,8 +2508,17 @@ class MonitoramentoController extends Controller
                         break;
                     }
 
-                    sleep(1);
+                    usleep(500000); // 0.5s por ciclo
                     $tentativas++;
+
+                    // Heartbeat a cada 15 ciclos (~7.5s) para manter proxy/LB vivos
+                    if ($tentativas % 15 === 0) {
+                        echo ": ping\n\n";
+                        if (ob_get_level() > 0) {
+                            ob_flush();
+                        }
+                        flush();
+                    }
 
                 } catch (\Exception $e) {
                     Log::error('SSE streamProgresso: erro no loop', [
@@ -2440,7 +2526,7 @@ class MonitoramentoController extends Controller
                         'tab_id' => $tabId,
                         'error' => $e->getMessage(),
                     ]);
-                    sleep(1);
+                    usleep(500000);
                     $tentativas++;
                     if (connection_aborted()) {
                         break;
@@ -2554,10 +2640,17 @@ class MonitoramentoController extends Controller
 
         // Buscar participantes dessa importação
         $perPage = $request->input('per_page', 10);
-        $participantes = Participante::where('user_id', $user->id)
-            ->where('importacao_sped_id', $importacaoId)
-            ->orderBy('created_at', 'desc')
-            ->paginate($perPage);
+        $query = Participante::where('user_id', $user->id);
+
+        // Prioriza participante_ids salvo na SpedImportacao (caminho atual do n8n)
+        // Fallback para importacao_sped_id (campo legado)
+        if (!empty($importacao->participante_ids)) {
+            $query->whereIn('id', $importacao->participante_ids);
+        } else {
+            $query->where('importacao_sped_id', $importacaoId);
+        }
+
+        $participantes = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         return response()->json([
             'success' => true,

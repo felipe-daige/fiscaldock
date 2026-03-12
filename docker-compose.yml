@@ -4,12 +4,18 @@
 
 services:
   app:
-    image: felipedaige/fiscaldock:0.0.3
+    image: felipedaige/fiscaldock:0.0.5-arm64
     restart: unless-stopped
     networks:
       - network_public
+      - traefik-public
     volumes:
-      - ./.env:/var/www/html/.env:ro
+      - ./:/var/www/html
+      - vendor_cache:/var/www/html/vendor
+      - ./docker/php/opcache-dev.ini:/usr/local/etc/php/conf.d/99-opcache.ini:ro
+      - ./docker/php/fpm-www.conf:/usr/local/etc/php-fpm.d/zz-override.conf:ro
+      - ./docker/nginx/default.conf:/etc/nginx/sites-enabled/default:ro
+      - /etc/fiscaldock/.env:/var/www/html/.env:ro
       - app_storage:/var/www/html/storage
       - ./storage/logs:/var/www/html/storage/logs
     environment:
@@ -29,11 +35,11 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
 
       # Cache & Session
-      CACHE_STORE: ${CACHE_STORE:-database}
+      CACHE_STORE: ${CACHE_STORE:-redis}
       SESSION_DRIVER: ${SESSION_DRIVER:-database}
       SESSION_LIFETIME: ${SESSION_LIFETIME:-120}
       SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-true}
-      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-sync}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
 
       # Redis (opcional)
       REDIS_HOST: ${REDIS_HOST:-redis}
@@ -61,7 +67,7 @@ services:
     labels:
       # Habilitar Traefik
       - "traefik.enable=true"
-      - "traefik.docker.network=network_public"
+      - "traefik.docker.network=traefik-public"
 
       # Router HTTP principal (redireciona para HTTPS)
       - "traefik.http.routers.fiscaldock-main-http.rule=Host(`fiscaldock.com.br`)"
@@ -103,12 +109,14 @@ services:
       - "traefik.http.services.fiscaldock-service.loadbalancer.server.port=80"
 
   scheduler:
-    image: felipedaige/fiscaldock:0.0.3
+    image: felipedaige/fiscaldock:0.0.5-arm64
     restart: unless-stopped
     networks:
       - network_public
     volumes:
-      - ./.env:/var/www/html/.env:ro
+      - ./:/var/www/html
+      - vendor_cache:/var/www/html/vendor
+      - /etc/fiscaldock/.env:/var/www/html/.env:ro
       - app_storage:/var/www/html/storage
       - ./storage/logs:/var/www/html/storage/logs
     command: php artisan schedule:work
@@ -123,9 +131,9 @@ services:
       DB_DATABASE: ${DB_DATABASE:-fiscaldock}
       DB_USERNAME: ${DB_USERNAME:-postgres}
       DB_PASSWORD: ${DB_PASSWORD}
-      CACHE_STORE: ${CACHE_STORE:-database}
+      CACHE_STORE: ${CACHE_STORE:-redis}
       SESSION_DRIVER: ${SESSION_DRIVER:-database}
-      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-sync}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
@@ -148,12 +156,14 @@ services:
       - app
 
   worker:
-    image: felipedaige/fiscaldock:0.0.3
+    image: felipedaige/fiscaldock:0.0.5-arm64
     restart: unless-stopped
     networks:
       - network_public
     volumes:
-      - ./.env:/var/www/html/.env:ro
+      - ./:/var/www/html
+      - vendor_cache:/var/www/html/vendor
+      - /etc/fiscaldock/.env:/var/www/html/.env:ro
       - app_storage:/var/www/html/storage
       - ./storage/logs:/var/www/html/storage/logs
     command: php artisan queue:work --verbose --tries=3 --timeout=90
@@ -168,9 +178,9 @@ services:
       DB_DATABASE: ${DB_DATABASE:-fiscaldock}
       DB_USERNAME: ${DB_USERNAME:-postgres}
       DB_PASSWORD: ${DB_PASSWORD}
-      CACHE_STORE: ${CACHE_STORE:-database}
+      CACHE_STORE: ${CACHE_STORE:-redis}
       SESSION_DRIVER: ${SESSION_DRIVER:-database}
-      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
+      QUEUE_CONNECTION: database
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
@@ -191,15 +201,25 @@ services:
       WEBHOOK_CONSULTAS_LOTES_URL: ${WEBHOOK_CONSULTAS_LOTES_URL}
     depends_on:
       - app
-    profiles:
-      - worker  # So sobe se usar: docker compose --profile worker up
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks:
+      - network_public
 
 networks:
   network_public:
     external: true
     name: network_public
+  traefik-public:
+    external: true
+    name: traefik-public
 
 volumes:
   app_storage:
     external: true
     name: app_storage
+  vendor_cache:
+    external: true
+    name: hub_contabil_vendor_cache

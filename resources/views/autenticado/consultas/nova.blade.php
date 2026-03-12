@@ -114,6 +114,8 @@
                 ];
             @endphp
 
+            <div id="consulta-form-section">
+
             {{-- Card: Adicionar CNPJ --}}
             <div class="bg-white rounded-lg border border-gray-200 mb-6 cn-animate" style="animation-delay: 0.05s">
                 <div class="px-5 py-4">
@@ -160,7 +162,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 cn-animate" style="animation-delay: 0.1s">
                 {{-- Coluna Esquerda: Filtros e Lista de Participantes (2/3) --}}
                 <div class="lg:col-span-2">
-                    <div class="bg-white rounded-lg border border-gray-200">
+                    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
                         {{-- Tab Bar --}}
                         <div class="px-5 py-3 border-b border-gray-100">
                             <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1" id="search-tabs">
@@ -318,7 +320,8 @@
                                 <input type="text" id="busca-clientes" placeholder="Buscar cliente por nome ou CNPJ..."
                                     class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 text-sm text-gray-700">
                             </div>
-                            <table class="w-full">
+                            <div class="overflow-x-auto">
+                            <table class="w-full table-fixed">
                                 <thead class="bg-gray-50 border-b border-gray-200 hidden md:table-header-group">
                                     <tr>
                                         <th class="w-10 px-4 py-3 text-left">
@@ -335,6 +338,7 @@
                                     </tr>
                                 </tbody>
                             </table>
+                            </div>
                         </div>
 
                         {{-- View: Grupos --}}
@@ -435,67 +439,102 @@
                 </div>
             </div>
 
-            {{-- Modal de Progresso --}}
-            <div id="modal-progresso" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-                <div class="bg-white rounded-lg shadow-lg max-w-xs w-full mx-4 p-5">
-                    <div class="text-center">
-                        <svg class="animate-spin h-6 w-6 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <h3 id="progresso-titulo" class="text-sm font-semibold text-gray-900 mb-1">Processando consulta...</h3>
-                        <p id="progresso-mensagem" class="text-xs text-gray-500 mb-3">Aguarde enquanto processamos.</p>
-                        <div class="w-full bg-gray-100 rounded-full h-1 mb-1">
-                            <div id="progresso-barra" class="bg-gray-900 h-1 rounded-full transition-all duration-300" style="width: 0%"></div>
-                        </div>
-                        <p id="progresso-percentual" class="text-xs text-gray-400">0%</p>
-                    </div>
-                </div>
-            </div>
+            </div>{{-- /consulta-form-section --}}
 
-            {{-- Modal de Sucesso --}}
-            <div id="modal-sucesso" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-                <div class="bg-white rounded-lg shadow-lg max-w-xs w-full mx-4 p-5">
-                    <div class="text-center">
-                        <div class="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            {{-- Seção de Progresso Inline (inicialmente oculta) --}}
+            <div id="consulta-progresso-section" class="hidden">
+
+                {{-- Card de Progresso --}}
+                <div id="consulta-progresso-card" class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                    {{-- Header: ícone + título --}}
+                    <div class="flex items-start gap-3 mb-4">
+                        <div id="consulta-progresso-icon" class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                             </svg>
                         </div>
-                        <h3 class="text-sm font-semibold text-gray-900 mb-1">Consulta concluida</h3>
-                        <p class="text-xs text-gray-500 mb-4">Download iniciado automaticamente.</p>
-                        <div class="flex gap-2">
-                            <a id="link-download-manual" href="#" class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition text-sm font-medium">
+                        <div class="flex-1 min-w-0">
+                            <h3 id="progresso-titulo" class="font-semibold text-gray-900 truncate">Processando consulta...</h3>
+                            <p id="consulta-progresso-subtitulo" class="text-sm text-gray-500 hidden"></p>
+                        </div>
+                    </div>
+                    {{-- Barra de progresso --}}
+                    <div class="mb-3">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span id="progresso-mensagem" class="text-gray-600">Iniciando...</span>
+                            <span id="progresso-percentual" class="font-medium text-gray-900">0%</span>
+                        </div>
+                        <div class="bg-gray-100 rounded-full h-2 overflow-hidden">
+                            <div id="progresso-barra" class="bg-blue-600 h-full rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    {{-- Seção de erro (oculta por padrão) --}}
+                    <div id="consulta-progresso-erro" class="hidden pt-3 border-t border-red-100">
+                        <p id="consulta-progresso-erro-msg" class="text-sm text-gray-700 mb-3">Ocorreu um erro durante o processamento.</p>
+                        <p class="text-sm text-gray-600 mb-4">
+                            Por favor, tente novamente mais tarde.<br>
+                            Se o erro persistir, entre em contato com o suporte:
+                        </p>
+                        <a href="https://wa.me/5567999844366"
+                           target="_blank"
+                           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition mb-3">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                            </svg>
+                            WhatsApp: (67) 99984-4366
+                        </a>
+                        <div>
+                            <button type="button"
+                                    id="btn-tentar-novamente"
+                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                 </svg>
-                                Baixar
-                            </a>
-                            <button type="button" id="btn-fechar-sucesso" class="flex-1 py-2 border border-gray-200 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm font-medium">
-                                Fechar
+                                Tentar Novamente
                             </button>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {{-- Modal de Erro --}}
-            <div id="modal-erro" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-                <div class="bg-white rounded-lg shadow-lg mx-4 p-4" style="max-width: 280px;">
-                    <div class="text-center">
-                        <div class="w-8 h-8 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-2">
-                            <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
+                {{-- Seção de Resultados (aparece ao concluir) --}}
+                <div id="resultado-consulta" class="hidden mt-4">
+                    <div class="bg-white border border-green-200 rounded-lg shadow-sm">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-green-50">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-gray-900">Consulta Concluída</h3>
+                                        <p class="text-sm text-gray-600" id="resultado-consulta-info">-</p>
+                                    </div>
+                                </div>
+                                <button type="button" id="btn-nova-consulta"
+                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                    Nova Consulta
+                                </button>
+                            </div>
                         </div>
-                        <h3 class="text-sm font-semibold text-gray-900 mb-1">Erro</h3>
-                        <p id="erro-mensagem" class="text-xs text-gray-500 mb-3 break-words">Ocorreu um erro inesperado.</p>
-                        <button type="button" id="btn-fechar-erro" class="w-full py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition text-sm font-medium">
-                            Fechar
-                        </button>
+                        <div class="px-6 py-4">
+                            <a id="link-download-relatorio" href="#"
+                               class="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition text-sm font-medium">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                                Baixar Relatório
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
+
+            </div>{{-- /consulta-progresso-section --}}
             {{-- Modal: Carousel de Planos --}}
             <div id="modal-planos-carousel-lote" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
                 <div class="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] flex flex-col relative overflow-visible">
@@ -671,6 +710,7 @@
             adicionarCnpj: '/app/consultas/nova/adicionar-cnpj',
             progressoStream: '/app/consultas/nova/progresso/stream',
             baixarLote: '/app/consultas/lote/{id}/baixar',
+            loteStatus: '/app/consultas/lote/{id}/status',
             participantesPorClientes: '/app/consultas/nova/participantes-por-clientes'
         },
         planos: {

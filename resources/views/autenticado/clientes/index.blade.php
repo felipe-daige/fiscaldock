@@ -588,6 +588,14 @@
         if (filtroStatus) filtroStatus.addEventListener('change', aplicarFiltros);
         if (filtroTipo) filtroTipo.addEventListener('change', aplicarFiltros);
 
+        // Aplicar filtro de busca via query param (?search=...)
+        var urlParams = new URLSearchParams(window.location.search);
+        var searchParam = urlParams.get('search');
+        if (searchParam && buscarInput) {
+            buscarInput.value = searchParam;
+            aplicarFiltros();
+        }
+
         // === Selecao ===
         var selectAll = document.getElementById('select-all');
 

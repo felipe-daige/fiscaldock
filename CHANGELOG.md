@@ -41,9 +41,3 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 Versões anteriores não documentadas neste changelog.
 
----
-
-## Links
-
-- [Repositório](https://github.com/felipe-daige/hub_contabil)
-- [Docker Hub](https://hub.docker.com/r/fiscaldock/fiscaldock)

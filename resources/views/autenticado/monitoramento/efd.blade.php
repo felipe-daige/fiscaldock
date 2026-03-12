@@ -97,29 +97,6 @@
                             </div>
                         </div>
 
-                        {{-- Seleção de Cliente (Opcional) --}}
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Associar a um Cliente: <span class="text-gray-400 font-normal">(opcional)</span>
-                            </label>
-                            <select
-                                id="cliente-select"
-                                name="cliente_id"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                            >
-                                <option value="">Não associar a um cliente</option>
-                                @foreach($clientes ?? [] as $cliente)
-                                    <option value="{{ $cliente->id }}">
-                                        {{ $cliente->razao_social ?? $cliente->nome }}
-                                        ({{ preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $cliente->documento) }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            <p class="text-xs text-gray-500 mt-1">
-                                Associe os participantes importados a um cliente para melhor organização.
-                            </p>
-                        </div>
-
                         {{-- Opção Extrair Notas Fiscais --}}
                         <div class="relative mb-4 group {{ config('features.extrair_notas') ? '' : 'opacity-50' }}">
                             <label class="flex items-start p-3 border-2 border-gray-200 rounded-lg {{ config('features.extrair_notas') ? 'cursor-pointer hover:border-blue-400 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50' : 'cursor-not-allowed' }} transition">
@@ -678,6 +655,30 @@
                         </div>
                     </div>
 
+                    {{-- Cliente Associado (visível apenas quando cliente_id é informado via API) --}}
+                    <div id="resultado-cliente" class="hidden px-6 py-4 border-b border-gray-200">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Cliente Associado</p>
+                        <div class="flex items-center gap-6 flex-wrap">
+                            <div>
+                                <p class="text-xs text-gray-500 mb-0.5">Razão Social</p>
+                                <p class="text-sm font-semibold text-gray-900" id="resultado-cliente-nome">—</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 mb-0.5" id="resultado-cliente-doc-label">Documento</p>
+                                <p class="text-sm font-mono text-gray-900" id="resultado-cliente-doc">—</p>
+                            </div>
+                            <div class="ml-auto">
+                                <a id="resultado-cliente-link" href="#" data-link
+                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 transition">
+                                    Ver no cadastro
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- Lista de Participantes Importados --}}
                     <div class="px-6 py-4">
                         <div class="flex items-center justify-between mb-4">
@@ -771,7 +772,7 @@
 
         {{-- Historico de Importacoes SPED --}}
         @if(isset($importacoes) && $importacoes->count() > 0)
-        <div class="sped-animate bg-white rounded-xl border border-gray-200 shadow-sm mt-6" style="animation-delay: 0.3s">
+        <div id="historico-importacoes" class="sped-animate bg-white rounded-xl border border-gray-200 shadow-sm mt-6" style="animation-delay: 0.3s">
             <div class="px-6 py-4 border-b border-gray-200">
                 <h2 class="text-lg font-semibold text-gray-900">Ultimas Importacoes</h2>
             </div>
@@ -799,6 +800,16 @@
                         <span>&middot;</span>
                         <span>{{ $imp->created_at->format('d/m/Y H:i') }}</span>
                     </div>
+                    <a
+                        href="/app/importacao/efd/{{ $imp->id }}"
+                        data-link
+                        class="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 transition mt-1"
+                    >
+                        Ver detalhes
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
                 </div>
                 @endforeach
             </div>
@@ -808,16 +819,28 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Arquivo</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Participantes</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach($importacoes as $imp)
                         <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if($imp->cliente)
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700">Cliente</span>
+                                        <span class="text-sm text-gray-900">{{ $imp->cliente->razao_social }}</span>
+                                    </div>
+                                @else
+                                    <span class="text-sm text-gray-400">—</span>
+                                @endif
+                            </td>
                             <td class="px-6 py-4 text-sm text-gray-900 max-w-[280px] truncate">{{ $imp->filename }}</td>
                             <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $imp->tipo_efd }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -836,6 +859,19 @@
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                                 {{ $imp->created_at->format('d/m/Y H:i') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <a
+                                    href="/app/importacao/efd/{{ $imp->id }}"
+                                    data-link
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 transition"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                    Ver
+                                </a>
                             </td>
                         </tr>
                         @endforeach
@@ -1216,6 +1252,10 @@
         // Variáveis para controle de importação
         let eventSourceTxt = null;
         let importacaoEmAndamento = false;
+        let reconnectTimer = null;
+        let reconnectAttempts = 0;
+        const MAX_RECONEXOES = 3;
+        const DELAY_RECONEXAO_BASE = 3000;
 
         // Elementos de progresso (nova UI minimalista)
         const progressoContainer = document.getElementById('importacao-progresso');
@@ -1381,10 +1421,11 @@
         // Função para mostrar seção de resultados após importação concluída
         function mostrarResultadoImportacao(dados) {
             console.log('[Monitoramento SPED] mostrarResultadoImportacao - dados recebidos:', dados);
-            console.log('[Monitoramento SPED] resultadoContainer existe?', !!resultadoContainer);
+            const resultadoEl = resultadoContainer || document.getElementById('resultado-importacao');
+            console.log('[Monitoramento SPED] resultadoContainer existe?', !!resultadoEl);
 
-            if (!resultadoContainer) {
-                console.error('[Monitoramento SPED] resultadoContainer NAO ENCONTRADO!');
+            if (!resultadoEl) {
+                console.error('[Monitoramento SPED] resultadoContainer NAO ENCONTRADO no DOM!');
                 return;
             }
 
@@ -1395,7 +1436,7 @@
             console.log('[Monitoramento SPED] participante_ids:', dados.participante_ids);
 
             if (resultadoEmpresa) {
-                resultadoEmpresa.textContent = 'Importação concluída';
+                resultadoEmpresa.textContent = dados.cliente_nome || 'Importação concluída';
             }
             if (resultadoTotalParticipantes) {
                 const valor = dados.total_participantes || dados.total_processados || 0;
@@ -1471,6 +1512,25 @@
                 }
             }
 
+            // Cliente Associado
+            const resultadoCliente         = document.getElementById('resultado-cliente');
+            const resultadoClienteNome     = document.getElementById('resultado-cliente-nome');
+            const resultadoClienteDocLabel = document.getElementById('resultado-cliente-doc-label');
+            const resultadoClienteDoc      = document.getElementById('resultado-cliente-doc');
+            const resultadoClienteLink     = document.getElementById('resultado-cliente-link');
+
+            if (dados.cliente_id && resultadoCliente) {
+                if (resultadoClienteNome)     resultadoClienteNome.textContent     = dados.cliente_nome || '—';
+                if (resultadoClienteDocLabel) resultadoClienteDocLabel.textContent = dados.cliente_tipo_pessoa === 'PJ' ? 'CNPJ' : 'CPF';
+                if (resultadoClienteDoc)      resultadoClienteDoc.textContent      = dados.cliente_documento || '—';
+                if (resultadoClienteLink && dados.cliente_documento) {
+                    resultadoClienteLink.href = '/app/clientes?search=' + encodeURIComponent(dados.cliente_documento);
+                }
+                resultadoCliente.classList.remove('hidden');
+            } else if (resultadoCliente) {
+                resultadoCliente.classList.add('hidden');
+            }
+
             // Atualizar link de filtro se temos o ID da importação (do SSE ou do upload inicial)
             if (importacaoAtualId && linkFiltrarImportacao) {
                 linkFiltrarImportacao.href = '/app/participantes?importacao=' + importacaoAtualId;
@@ -1483,15 +1543,28 @@
             participantesPage = 1;
 
             // Mostrar seção de resultados
-            resultadoContainer.classList.remove('hidden');
+            resultadoEl.classList.remove('hidden');
 
             // Scroll para a seção de resultados
-            resultadoContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            resultadoEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-            // Carregar participantes automaticamente se temos IDs
-            if (participanteIdsFromSSE && participanteIdsFromSSE.length > 0) {
-                carregarParticipantes();
-            }
+            // Atualizar histórico de importações após conclusão
+            fetch('/monitoramento/sped', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.text())
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const novaSecao = doc.getElementById('historico-importacoes');
+                const secaoAtual = document.getElementById('historico-importacoes');
+                if (novaSecao && secaoAtual) {
+                    secaoAtual.replaceWith(novaSecao);
+                }
+            })
+            .catch(() => {});
+
+            // Carregar participantes automaticamente (carregarParticipantes tem guard próprio)
+            carregarParticipantes();
         }
 
         // Função para carregar lista de participantes
@@ -1545,6 +1618,13 @@
                 preencherTabelaParticipantes(data.participantes || []);
                 participantesTotal = data.total || 0;
 
+                // Retry após 800ms se não encontrou nada na primeira chamada (absorver race condition)
+                if (participantesTotal === 0 && participantesPage === 1 && !participanteIdsFromSSE) {
+                    setTimeout(() => {
+                        if (participantesTotal === 0) carregarParticipantes();
+                    }, 800);
+                }
+
                 // Atualizar paginação
                 atualizarPaginacao(data);
 
@@ -1590,7 +1670,7 @@
                     return '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 ml-2">Novo</span>';
                 }
                 if (duplicadosIdsFromSSE && duplicadosIdsFromSSE.includes(participanteId)) {
-                    return '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700 ml-2">Atualizado</span>';
+                    return '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700 ml-2">Já Registrado</span>';
                 }
                 return '';
             }
@@ -1714,65 +1794,97 @@
                 eventSourceTxt.close();
             }
 
-            const sseUrl = '/app/importacao/sped/progresso/stream?tab_id=' + encodeURIComponent(tabId);
+            const sseUrl = '/app/importacao/efd/progresso/stream?tab_id=' + encodeURIComponent(tabId);
             console.log('[Monitoramento SPED] Conectando ao SSE:', sseUrl);
             eventSourceTxt = new EventSource(sseUrl);
 
             eventSourceTxt.onopen = function() {
+                reconnectAttempts = 0;
                 console.log('[Monitoramento SPED] SSE conectado');
             };
 
+            let rafPendente = null;
+
             eventSourceTxt.onmessage = function(event) {
-                try {
-                    const dados = JSON.parse(event.data);
-                    console.log('[Monitoramento SPED] Dados SSE:', dados);
-                    atualizarProgresso(dados);
+                const rawData = event.data;
 
-                    if (dados.status === 'concluido') {
-                        eventSourceTxt.close();
-                        eventSourceTxt = null;
-                        importacaoEmAndamento = false;
+                if (rafPendente !== null) return;
 
-                        // Usa mensagem do n8n ou monta mensagem com dados
-                        const dadosN8n = dados.dados || {};
-                        console.log('[Monitoramento SPED] Status concluido - dadosN8n:', dadosN8n);
-                        const totalImportados = dadosN8n.novos_salvos || dadosN8n.total_a_analisar || 0;
-                        const mensagemSucesso = dados.mensagem || ('Importação concluída! ' + totalImportados + ' novos participantes adicionados.');
+                rafPendente = requestAnimationFrame(() => {
+                    rafPendente = null;
+                    let statusConcluido = false;
+                    try {
+                        const dados = JSON.parse(rawData);
+                        console.log('[Monitoramento SPED] Dados SSE:', dados);
+                        atualizarProgresso(dados);
 
-                        if (window.showToast) {
-                            window.showToast(mensagemSucesso, 'success');
+                        if (dados.status === 'concluido') {
+                            statusConcluido = true;
+                            if (eventSourceTxt) {
+                                eventSourceTxt.close();
+                                eventSourceTxt = null;
+                            }
+                            importacaoEmAndamento = false;
+
+                            // Usa mensagem do n8n ou monta mensagem com dados
+                            const dadosN8n = dados.dados || {};
+                            console.log('[Monitoramento SPED] Status concluido - dadosN8n:', dadosN8n);
+                            const totalImportados = dadosN8n.novos_salvos || dadosN8n.total_a_analisar || 0;
+                            const mensagemSucesso = dados.mensagem || ('Importação concluída! ' + totalImportados + ' novos participantes adicionados.');
+
+                            if (window.showToast) {
+                                window.showToast(mensagemSucesso, 'success');
+                            }
+
+                            // Mostrar seção de resultados em vez de redirecionar
+                            console.log('[Monitoramento SPED] Chamando mostrarResultadoImportacao com:', dadosN8n);
+                            mostrarResultadoImportacao(dadosN8n);
+                        } else if (dados.status === 'erro' || dados.status === 'timeout') {
+                            if (eventSourceTxt) {
+                                eventSourceTxt.close();
+                                eventSourceTxt = null;
+                            }
+                            importacaoEmAndamento = false;
+
+                            // Erro/timeout é tratado pelo atualizarProgresso que mostra a seção de erro
+                            // Não redireciona automaticamente - usuário decide via botão "Tentar Novamente"
                         }
-
-                        // Mostrar seção de resultados em vez de redirecionar
-                        console.log('[Monitoramento SPED] Chamando mostrarResultadoImportacao com:', dadosN8n);
-                        mostrarResultadoImportacao(dadosN8n);
-                    } else if (dados.status === 'erro' || dados.status === 'timeout') {
-                        eventSourceTxt.close();
-                        eventSourceTxt = null;
-                        importacaoEmAndamento = false;
-
-                        // Erro/timeout é tratado pelo atualizarProgresso que mostra a seção de erro
-                        // Não redireciona automaticamente - usuário decide via botão "Tentar Novamente"
+                    } catch (e) {
+                        console.error('[Monitoramento SPED] Erro ao parsear SSE:', e);
                     }
-                } catch (e) {
-                    console.error('[Monitoramento SPED] Erro ao parsear SSE:', e);
-                }
+                    // Safety net FORA do try/catch — garante exibição mesmo se mostrarResultadoImportacao lançar exceção
+                    if (statusConcluido) {
+                        const safeResult = document.getElementById('resultado-importacao');
+                        if (safeResult) safeResult.classList.remove('hidden');
+                    }
+                });
             };
 
-            eventSourceTxt.onerror = function(err) {
-                console.error('[Monitoramento SPED] Erro SSE:', err);
+            eventSourceTxt.onerror = function() {
+                const tentativas = reconnectAttempts;
+
                 eventSourceTxt.close();
                 eventSourceTxt = null;
 
-                // Se ainda estava em andamento, mostrar seção de erro
-                if (importacaoEmAndamento) {
+                if (!importacaoEmAndamento) return;
+
+                if (tentativas < MAX_RECONEXOES) {
+                    reconnectAttempts++;
+                    const delay = DELAY_RECONEXAO_BASE * Math.pow(2, tentativas);
+                    console.warn('[SPED] SSE desconectado, tentativa ' + reconnectAttempts + '/' + MAX_RECONEXOES + ' em ' + delay + 'ms');
+
+                    reconnectTimer = setTimeout(() => {
+                        reconnectTimer = null;
+                        if (importacaoEmAndamento) conectarSSE();
+                    }, delay);
+                } else {
+                    reconnectAttempts = 0;
                     importacaoEmAndamento = false;
-                    // Atualiza UI para mostrar erro de conexão
                     atualizarProgresso({
                         status: 'erro',
                         progresso: 0,
                         mensagem: 'Erro na conexão',
-                        error_message: 'Erro na conexão com o servidor. Verifique sua internet e tente novamente.'
+                        error_message: 'Não foi possível manter conexão com o servidor após ' + MAX_RECONEXOES + ' tentativas. Verifique sua internet.'
                     });
                 }
             };
@@ -1816,11 +1928,6 @@
                     formData.append('file', txtFileInput.files[0]);
                     formData.append('tipo_efd', tipoSped === 'efd-fiscal' ? 'EFD Fiscal' : 'EFD Contribuições');
                     formData.append('tab_id', tabId);
-
-                    const clienteSelect = document.getElementById('cliente-select');
-                    if (clienteSelect && clienteSelect.value) {
-                        formData.append('cliente_id', clienteSelect.value);
-                    }
 
                     // Opção de extração de notas fiscais
                     const extrairNotasCheckbox = document.getElementById('extrair-notas');
@@ -1879,14 +1986,17 @@
         }
 
         // Cleanup ao sair da página (para SPA)
-        if (window._cleanupFunctions) {
-            window._cleanupFunctions.push(function() {
-                if (eventSourceTxt) {
-                    eventSourceTxt.close();
-                    eventSourceTxt = null;
-                }
-            });
-        }
+        window._cleanupFunctions = window._cleanupFunctions || {};
+        window._cleanupFunctions.initImportacaoSped = function() {
+            if (reconnectTimer !== null) {
+                clearTimeout(reconnectTimer);
+                reconnectTimer = null;
+            }
+            if (eventSourceTxt) {
+                eventSourceTxt.close();
+                eventSourceTxt = null;
+            }
+        };
 
         // Botão "Tentar Novamente" na seção de erro
         const btnTentarNovamente = document.getElementById('btn-tentar-novamente');
@@ -1894,6 +2004,12 @@
             btnTentarNovamente.addEventListener('click', function() {
                 // Resetar flag de importação em andamento (CRÍTICO)
                 importacaoEmAndamento = false;
+                // Cancelar timer de reconexão pendente
+                if (reconnectTimer !== null) {
+                    clearTimeout(reconnectTimer);
+                    reconnectTimer = null;
+                }
+                reconnectAttempts = 0;
                 // Fechar SSE se ainda estiver aberto
                 if (eventSourceTxt) {
                     eventSourceTxt.close();

@@ -30,3 +30,22 @@ Thumbs.db
 /.claude/
 CLAUDE.md
 /docs/
+
+# Segredos e configs sensiveis
+*.pem
+*.p12
+*.key
+*.crt
+*.pfx
+
+# Arquivos de runtime/deploy
+docker-stack.yml
+docker-stack-resolved.yml
+
+# Cache de configuracao
+/bootstrap/cache/*.php
+
+# Logs adicionais
+/storage/logs/*.log
+npm-debug.log*
+yarn-error.log

@@ -83,8 +83,11 @@
                     <a href="/app/importacao/xml" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors leading-5">
                         <span class="sidebar-label font-medium">XMLs (NF-e/CT-e)</span>
                     </a>
-                    <a href="/app/importacao/sped" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors leading-5">
+                    <a href="/app/importacao/efd" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors leading-5">
                         <span class="sidebar-label font-medium">EFDs</span>
+                    </a>
+                    <a href="/app/importacao/historico" data-link class="sidebar-sublink block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors leading-5">
+                        <span class="sidebar-label font-medium">Histórico</span>
                     </a>
                 </div>
             </div>
@@ -191,7 +194,7 @@
                 <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                 </svg>
-                <span class="sidebar-label font-medium">Validacao Contabil</span>
+                <span class="sidebar-label font-medium">Clearance Fiscal</span>
                 <span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" aria-label="Em desenvolvimento"></span>
             </a>
         </div>
