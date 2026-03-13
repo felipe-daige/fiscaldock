@@ -49,6 +49,8 @@ class Participante extends Model
         'origem_tipo',
         'origem_ref',
         'ultima_consulta_em',
+        'latitude',
+        'longitude',
     ];
 
     protected $casts = [
