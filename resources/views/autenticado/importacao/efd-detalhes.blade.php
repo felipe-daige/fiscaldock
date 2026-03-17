@@ -6,7 +6,7 @@
         'erro'        => ['bg-red-100 text-red-700', 'Erro'],
         default       => ['bg-gray-100 text-gray-700', 'Pendente'],
     };
-    $tipoClass = $importacao->tipo_efd === 'efd-contrib'
+    $tipoClass = $importacao->tipo_efd === 'EFD PIS/COFINS'
         ? 'bg-purple-100 text-purple-700'
         : 'bg-blue-100 text-blue-700';
 @endphp
@@ -73,7 +73,7 @@
                 <div>
                     <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Tipo EFD</p>
                     <span class="px-2.5 py-1 text-xs font-semibold rounded-full {{ $tipoClass }}">
-                        {{ $importacao->tipo_efd === 'efd-contrib' ? 'EFD Contribuições' : 'EFD Fiscal' }}
+                        {{ $importacao->tipo_efd === 'efd-contrib' ? 'EFD PIS/COFINS' : 'EFD ICMS/IPI' }}
                     </span>
                 </div>
                 <div>
@@ -273,6 +273,141 @@
             @endif
         </div>
 
+        {{-- Resumo Final de Notas EFD --}}
+        @if(!empty($resumoFinal))
+        <div class="efd-animate bg-white rounded-xl border border-gray-200 shadow-sm mt-6" style="animation-delay: 0.25s" id="resumo-final-section">
+
+            {{-- Mini-painel de totais --}}
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-base font-semibold text-gray-900 mb-3">Resumo de Notas Importadas</h2>
+                <div class="font-mono text-sm bg-gray-50 rounded-lg p-3 border border-gray-200 space-y-1" id="resumo-final-detalhes-content">
+                    @php
+                        $rf = $resumoFinal;
+                        $nomesBloco = ['A' => 'Bloco A (PIS/COFINS)', 'C' => 'Bloco C (ICMS/IPI — NF-e)', 'D' => 'Bloco D (CT-e)'];
+                    @endphp
+
+                    {{-- Participantes --}}
+                    @if(!empty($rf['participantes']))
+                    <div class="flex items-center gap-2 py-1">
+                        <span class="text-green-600 font-bold w-4">✓</span>
+                        <span class="w-52 text-gray-700">Participantes</span>
+                        <span class="text-gray-900 font-medium">{{ $rf['participantes']['total'] ?? 0 }} registros</span>
+                        <span class="text-gray-400 text-xs ml-2">{{ $rf['participantes']['novos'] ?? 0 }} novos · {{ $rf['participantes']['duplicados'] ?? 0 }} já existentes</span>
+                    </div>
+                    @endif
+
+                    {{-- Blocos --}}
+                    @foreach(['A', 'C', 'D'] as $bloco)
+                        @if(isset($rf['blocos'][$bloco]))
+                            @php
+                                $bd = $rf['blocos'][$bloco];
+                                $isSkip = ($bd['total_notas'] ?? 0) == 0 && ($bd['valor_total'] ?? 0) == 0;
+                            @endphp
+                            <div class="flex items-center gap-2 py-1">
+                                @if($isSkip)
+                                    <span class="text-gray-400 w-4">—</span>
+                                @else
+                                    <span class="text-green-600 font-bold w-4">✓</span>
+                                @endif
+                                <span class="w-52 text-gray-700">{{ $nomesBloco[$bloco] ?? 'Bloco '.$bloco }}</span>
+                                @if($isSkip)
+                                    <span class="text-gray-400 text-xs">Vazio</span>
+                                @else
+                                    <span class="text-gray-900 font-medium">{{ $bd['total_notas'] ?? 0 }} notas</span>
+                                    <span class="text-gray-500 text-xs ml-2">R$ {{ number_format($bd['valor_total'] ?? 0, 2, ',', '.') }}</span>
+                                @endif
+                            </div>
+                        @endif
+                    @endforeach
+
+                    {{-- Total --}}
+                    @if(!empty($rf['totais']))
+                    <div class="border-t border-gray-300 pt-1 mt-1 flex items-center gap-2 py-1">
+                        <span class="w-4"></span>
+                        <span class="w-52 text-gray-700 font-semibold">Total</span>
+                        <span class="text-gray-900 font-bold">{{ $rf['totais']['notas'] ?? 0 }} notas</span>
+                        <span class="text-gray-500 text-xs ml-2">R$ {{ number_format($rf['totais']['valor'] ?? 0, 2, ',', '.') }}</span>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Tabela de participantes enriquecida --}}
+            @if(!empty($rf['participantes_resumo']) && $participantes->count() > 0)
+            @php
+                $resumoIndexado = collect($rf['participantes_resumo'])->keyBy('participante_id');
+            @endphp
+            <div class="px-6 py-4">
+                <h3 class="text-sm font-semibold text-gray-900 mb-3">Participantes — Detalhes de Notas</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm" id="tabela-notas-participantes-detalhes">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">CNPJ/CPF</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Razão Social</th>
+                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Notas</th>
+                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Entradas</th>
+                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Saídas</th>
+                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="tbody-notas-participantes-detalhes">
+                            @foreach($participantes as $part)
+                            @php
+                                $pr = $resumoIndexado->get($part->id);
+                                $temNotas = $pr && !empty($pr['nota_ids']);
+                            @endphp
+                            <tr class="hover:bg-gray-50 transition-colors" data-participante-id="{{ $part->id }}">
+                                <td class="px-4 py-3 text-xs font-mono text-gray-900 whitespace-nowrap">{{ $part->cnpj ?? $part->cpf ?? '—' }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-900 max-w-[240px] truncate" title="{{ $part->razao_social ?? '' }}">{{ $part->razao_social ?? '—' }}</td>
+                                <td class="px-4 py-3 text-right text-xs">
+                                    @if($pr)
+                                        <span class="font-medium text-gray-900">{{ $pr['total_notas'] ?? 0 }}</span>
+                                    @else
+                                        <span class="text-gray-400">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 text-right text-xs">
+                                    @if($pr && isset($pr['entradas']))
+                                        <span class="text-green-700">{{ $pr['entradas']['count'] ?? 0 }}</span>
+                                        <span class="text-gray-400 ml-1">R$ {{ number_format($pr['entradas']['valor'] ?? 0, 2, ',', '.') }}</span>
+                                    @else
+                                        <span class="text-gray-400">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 text-right text-xs">
+                                    @if($pr && isset($pr['saidas']))
+                                        <span class="text-amber-700">{{ $pr['saidas']['count'] ?? 0 }}</span>
+                                        <span class="text-gray-400 ml-1">R$ {{ number_format($pr['saidas']['valor'] ?? 0, 2, ',', '.') }}</span>
+                                    @else
+                                        <span class="text-gray-400">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        @if($temNotas)
+                                        <button
+                                            type="button"
+                                            class="btn-expand-notas-detalhes text-blue-600 hover:text-blue-800 text-xs font-medium px-1.5 py-0.5 rounded border border-blue-200 hover:bg-blue-50 transition"
+                                            data-participante-id="{{ $part->id }}"
+                                            data-nota-ids="{{ json_encode($pr['nota_ids'] ?? []) }}"
+                                            data-bi="{{ json_encode($pr['bi'] ?? []) }}"
+                                            title="Ver notas"
+                                        >▶</button>
+                                        @endif
+                                        <a href="/app/participante/{{ $part->id }}" class="text-xs font-medium text-blue-600 hover:underline" data-link>Ver</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @endif
+        </div>
+        @endif
+
     </div>
 </div>
 
@@ -317,6 +452,88 @@
         cards.forEach(filterEl);
 
         if (zeroBusca) zeroBusca.classList.toggle('hidden', visible > 0 || !q);
+    });
+
+    // Expansão inline de notas na tabela de detalhes
+    var notasCacheDetalhes = {};
+
+    function formatBRLDetalhes(valor) {
+        return 'R$ ' + Number(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    document.querySelectorAll('.btn-expand-notas-detalhes').forEach(function(btn) {
+        btn.addEventListener('click', async function() {
+            var pid = parseInt(this.dataset.participanteId);
+            var notaIds = JSON.parse(this.dataset.notaIds || '[]');
+            var bi = JSON.parse(this.dataset.bi || '{}');
+            var parentTr = this.closest('tr');
+
+            var existingRow = parentTr.nextElementSibling;
+            if (existingRow && existingRow.classList.contains('expand-notas-row-detalhes')) {
+                existingRow.remove();
+                this.textContent = '▶';
+                return;
+            }
+            this.textContent = '▼';
+
+            var expandTr = document.createElement('tr');
+            expandTr.className = 'expand-notas-row-detalhes bg-blue-50';
+            expandTr.innerHTML = '<td colspan="6" class="px-4 py-3"><div class="expand-content text-sm"><div class="text-gray-500 text-xs">Carregando notas...</div></div></td>';
+            parentTr.after(expandTr);
+
+            var contentDiv = expandTr.querySelector('.expand-content');
+
+            var biHtml = '';
+            if (bi && Object.keys(bi).length > 0) {
+                biHtml = '<div class="flex flex-wrap gap-4 mb-2">' +
+                    Object.entries(bi).map(function(e) {
+                        return '<span class="text-xs text-gray-600"><span class="font-medium text-gray-700">' + e[0].replace(/_/g,' ') + ':</span> ' + e[1] + '</span>';
+                    }).join('') + '</div>';
+            }
+
+            if (!notasCacheDetalhes[pid] && notaIds.length > 0) {
+                try {
+                    var params = notaIds.map(function(id) { return 'ids[]=' + id; }).join('&');
+                    var resp = await fetch('/app/importacao/efd/notas?' + params, {
+                        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    notasCacheDetalhes[pid] = resp.ok ? await resp.json() : [];
+                } catch(e) {
+                    notasCacheDetalhes[pid] = [];
+                }
+            }
+
+            var notas = notasCacheDetalhes[pid] || [];
+            var notasHtml = '';
+            if (notas.length > 0) {
+                notasHtml = '<div class="overflow-x-auto mt-2"><table class="w-full text-xs border border-gray-200 rounded">' +
+                    '<thead class="bg-gray-100"><tr>' +
+                    '<th class="px-2 py-1 text-left text-gray-500">Nº Doc</th>' +
+                    '<th class="px-2 py-1 text-left text-gray-500">Série</th>' +
+                    '<th class="px-2 py-1 text-left text-gray-500">Modelo</th>' +
+                    '<th class="px-2 py-1 text-left text-gray-500">Emissão</th>' +
+                    '<th class="px-2 py-1 text-center text-gray-500">Tipo</th>' +
+                    '<th class="px-2 py-1 text-right text-gray-500">Valor</th>' +
+                    '</tr></thead><tbody class="divide-y divide-gray-200">' +
+                    notas.slice(0, 50).map(function(n) {
+                        return '<tr class="hover:bg-gray-50">' +
+                            '<td class="px-2 py-1 font-mono">' + (n.numero || '—') + '</td>' +
+                            '<td class="px-2 py-1">' + (n.serie || '—') + '</td>' +
+                            '<td class="px-2 py-1">' + (n.modelo || '—') + '</td>' +
+                            '<td class="px-2 py-1">' + (n.data_emissao || '—') + '</td>' +
+                            '<td class="px-2 py-1 text-center">' + (n.tipo_operacao === '1' ? '<span class="text-green-700">E</span>' : '<span class="text-amber-700">S</span>') + '</td>' +
+                            '<td class="px-2 py-1 text-right">' + formatBRLDetalhes(n.valor_total) + '</td>' +
+                            '</tr>';
+                    }).join('') +
+                    '</tbody></table>' +
+                    (notas.length > 50 ? '<p class="text-xs text-gray-400 mt-1">Mostrando 50 de ' + notas.length + ' notas.</p>' : '') +
+                    '</div>';
+            } else {
+                notasHtml = '<p class="text-xs text-gray-400 mt-2">Nenhuma nota disponível.</p>';
+            }
+
+            contentDiv.innerHTML = biHtml + notasHtml;
+        });
     });
 })();
 </script>

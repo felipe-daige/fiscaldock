@@ -98,12 +98,12 @@
                         </div>
 
                         {{-- Opção Extrair Notas Fiscais --}}
-                        <div class="relative mb-4 group {{ config('features.extrair_notas') ? '' : 'opacity-50' }}">
-                            <label class="flex items-start p-3 border-2 border-gray-200 rounded-lg {{ config('features.extrair_notas') ? 'cursor-pointer hover:border-blue-400 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50' : 'cursor-not-allowed' }} transition">
+                        <div class="relative mb-4 group {{ $extrairNotasEnabled ? '' : 'opacity-50' }}">
+                            <label class="flex items-start p-3 border-2 border-gray-200 rounded-lg {{ $extrairNotasEnabled ? 'cursor-pointer hover:border-blue-400 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50' : 'cursor-not-allowed' }} transition">
                                 <input type="checkbox"
                                        id="extrair-notas"
                                        name="extrair_notas"
-                                       {{ config('features.extrair_notas') ? '' : 'disabled' }}
+                                       {{ $extrairNotasEnabled ? '' : 'disabled' }}
                                        class="mt-1 mr-3 w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-2">
@@ -126,11 +126,11 @@
                                             Gratuito
                                         </span>
                                         <span class="text-xs text-gray-400">•</span>
-                                        <span class="text-xs text-gray-500">{{ config('features.extrair_notas') ? 'Em fase de testes' : 'Em breve' }}</span>
+                                        <span class="text-xs text-gray-500">{{ $extrairNotasEnabled ? 'Em fase de testes' : 'Em breve' }}</span>
                                     </div>
                                 </div>
                             </label>
-                            @unless(config('features.extrair_notas'))
+                            @unless($extrairNotasEnabled)
                                 <div class="invisible group-hover:visible absolute left-0 right-0 top-full mt-1 z-50 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg leading-relaxed">
                                     Esta funcionalidade está em fase final de desenvolvimento e será liberada em breve. Estamos ajustando os últimos detalhes para garantir a melhor experiência na extração de notas fiscais do SPED.
                                 </div>
@@ -588,6 +588,29 @@
                 </div>
             </div>
 
+            {{-- Strip horizontal de etapas EFD --}}
+            <div id="etapas-notas-card" class="hidden mt-3 flex items-center gap-1.5 flex-wrap">
+                <div class="etapa-item inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="participantes">
+                    <span class="etapa-icon flex items-center justify-center w-3.5 h-3.5"></span>
+                    <span>Participantes</span>
+                </div>
+                <svg class="etapa-sep w-3 h-3 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                <div class="etapa-item inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="A">
+                    <span class="etapa-icon flex items-center justify-center w-3.5 h-3.5"></span>
+                    <span>Bloco A</span>
+                </div>
+                <svg class="etapa-sep w-3 h-3 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                <div class="etapa-item inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="C">
+                    <span class="etapa-icon flex items-center justify-center w-3.5 h-3.5"></span>
+                    <span>Bloco C</span>
+                </div>
+                <svg class="etapa-sep w-3 h-3 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                <div class="etapa-item inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="D">
+                    <span class="etapa-icon flex items-center justify-center w-3.5 h-3.5"></span>
+                    <span>Bloco D</span>
+                </div>
+            </div>
+
             {{-- Seção de Resultados da Importação (aparece após importação concluída) --}}
             <div id="resultado-importacao" class="hidden mt-4">
                 <div class="bg-white border border-green-200 rounded-lg shadow-sm">
@@ -652,6 +675,14 @@
                                     Ver no BI Fiscal →
                                 </a>
                             </div>
+                        </div>
+                    </div>
+
+                    {{-- Mini-painel Resumo Final de Notas EFD (aparece quando n8n envia resumo_final) --}}
+                    <div id="resumo-final-notas" class="hidden px-6 py-4 border-b border-gray-200">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Resumo de Notas Importadas</p>
+                        <div id="resumo-final-notas-content" class="space-y-1 text-sm font-mono bg-gray-50 rounded-lg p-3 border border-gray-200">
+                            {{-- Preenchido via JS --}}
                         </div>
                     </div>
 
@@ -720,8 +751,9 @@
                                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">CNPJ</th>
                                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Razão Social</th>
                                             <th class="px-2 py-2 text-center text-xs font-semibold text-gray-500 uppercase w-12">UF</th>
-                                            <th class="px-2 py-2 text-center text-xs font-semibold text-gray-500 uppercase">Regime</th>
-                                            <th class="px-2 py-2 text-center text-xs font-semibold text-gray-500 uppercase">Situação</th>
+                                            <th class="px-2 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Notas</th>
+                                            <th class="px-2 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Entradas</th>
+                                            <th class="px-2 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Saídas</th>
                                             <th class="px-2 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Ações</th>
                                         </tr>
                                     </thead>
@@ -974,6 +1006,12 @@
         background: #3b82f6;
         width: 20px;
         border-radius: 4px;
+    }
+    .etapa-item {
+        transition: opacity 300ms ease;
+    }
+    .etapa-icon {
+        transition: background-color 300ms ease, color 300ms ease;
     }
 </style>
 
@@ -1252,10 +1290,29 @@
         // Variáveis para controle de importação
         let eventSourceTxt = null;
         let importacaoEmAndamento = false;
+        let importandoComNotas = false;
         let reconnectTimer = null;
         let reconnectAttempts = 0;
         const MAX_RECONEXOES = 3;
         const DELAY_RECONEXAO_BASE = 3000;
+
+        // Animação suave da barra de progresso
+        let currentProgress = 0;   // valor atualmente exibido na barra
+        let targetProgress  = 0;   // valor alvo recebido do SSE
+        let animFrameId     = null; // handle do requestAnimationFrame ativo
+        let blocoAtualProgresso = null; // rastreia mudança de bloco para reset do contador
+
+        function animarProgresso() {
+            if (currentProgress < targetProgress) {
+                currentProgress = Math.min(currentProgress + 0.4, targetProgress);
+                const pct = Math.round(currentProgress);
+                if (barraProgresso)       barraProgresso.style.width = pct + '%';
+                if (progressoPorcentagem) progressoPorcentagem.textContent = pct + '%';
+                animFrameId = requestAnimationFrame(animarProgresso);
+            } else {
+                animFrameId = null;
+            }
+        }
 
         // Elementos de progresso (nova UI minimalista)
         const progressoContainer = document.getElementById('importacao-progresso');
@@ -1324,9 +1381,22 @@
             const mensagem = payload.mensagem || 'Processando...';
             const errorMessage = payload.error_message || payload.mensagem || null;
 
-            // Barra de progresso
-            if (barraProgresso) barraProgresso.style.width = progresso + '%';
-            if (progressoPorcentagem) progressoPorcentagem.textContent = progresso + '%';
+            // Reset do contador ao mudar de bloco
+            const blocoPayload = payload.bloco || null;
+            if (blocoPayload !== blocoAtualProgresso) {
+                blocoAtualProgresso = blocoPayload;
+                // Reset imediato (sem animação de retrocesso)
+                if (animFrameId !== null) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+                currentProgress = 0;
+                if (barraProgresso)       barraProgresso.style.width = '0%';
+                if (progressoPorcentagem) progressoPorcentagem.textContent = '0%';
+            }
+
+            // Barra de progresso (animação suave)
+            targetProgress = progresso;
+            if (animFrameId === null) {
+                animFrameId = requestAnimationFrame(animarProgresso);
+            }
             if (progressoMensagem) progressoMensagem.textContent = mensagem;
 
             // Empresa
@@ -1350,6 +1420,61 @@
             // Status visual (passa mensagem de erro se for erro/timeout)
             const isError = status === 'erro' || status === 'timeout';
             atualizarIconeStatus(status, isError ? errorMessage : null);
+
+            // Etapas de notas
+            atualizarEtapasNotas(payload);
+        }
+
+        function atualizarEtapasNotas(payload) {
+            const card = document.getElementById('etapas-notas-card');
+            if (!card) return;
+
+            card.classList.remove('hidden'); // sempre visível durante importação
+
+            const blocos = Object.assign({}, payload.notas_blocos || {});
+
+            // Inferência de skip: bloco posterior iniciou mas anterior não tem dados
+            if ((blocos.C || blocos.D) && !blocos.A) blocos.A = { status: 'skip' };
+            if (blocos.D && !blocos.C)               blocos.C = { status: 'skip' };
+
+            // Participantes: processando enquanto notas_blocos ainda não chegou;
+            // concluido assim que qualquer bloco de notas aparecer
+            const temQualquerBloco = Object.keys(blocos).length > 0;
+            renderEtapa('participantes', temQualquerBloco ? 'concluido' : 'processando', null);
+
+            const ordemBlocos = ['A', 'C', 'D'];
+            ordemBlocos.forEach(function(b, i) {
+                if (blocos[b]) {
+                    const proximoBlocoIniciou = ordemBlocos.slice(i + 1).some(function(next) { return !!blocos[next]; });
+                    const statusEfetivo = (blocos[b].status !== 'skip' && (blocos[b].progresso === 100 || proximoBlocoIniciou))
+                        ? 'concluido'
+                        : blocos[b].status;
+                    renderEtapa(b, statusEfetivo, null);
+                }
+            });
+        }
+
+        function renderEtapa(etapa, status, mensagem) {
+            const item = document.querySelector('.etapa-item[data-etapa="' + etapa + '"]');
+            if (!item) return;
+
+            const iconEl = item.querySelector('.etapa-icon');
+
+            const svgSpinner = '<svg class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>';
+            const svgCheck   = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+            const svgDash    = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>';
+
+            const estados = {
+                pendente:    { pill: 'bg-gray-100 text-gray-400',   icon: svgDash },
+                processando: { pill: 'bg-blue-100 text-blue-600',   icon: svgSpinner },
+                inicio:      { pill: 'bg-blue-100 text-blue-600',   icon: svgSpinner },
+                concluido:   { pill: 'bg-green-100 text-green-700', icon: svgCheck },
+                skip:        { pill: 'bg-gray-100 text-gray-400',   icon: svgDash },
+            };
+
+            const estado = estados[status] || estados.pendente;
+            item.className = 'etapa-item inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ' + estado.pill;
+            iconEl.innerHTML = estado.icon;
         }
 
         // Função para mostrar UI de progresso
@@ -1358,6 +1483,7 @@
             // Ocultar cards de upload
             const uploadSection = document.querySelector('.grid.grid-cols-1.lg\\:grid-cols-2.gap-6');
             if (uploadSection) uploadSection.classList.add('hidden');
+            document.getElementById('historico-importacoes')?.classList.add('hidden');
         }
 
         // Função para ocultar UI de progresso
@@ -1366,10 +1492,15 @@
             // Mostrar cards de upload
             const uploadSection = document.querySelector('.grid.grid-cols-1.lg\\:grid-cols-2.gap-6');
             if (uploadSection) uploadSection.classList.remove('hidden');
+            document.getElementById('historico-importacoes')?.classList.remove('hidden');
         }
 
         // Função para resetar UI de progresso
         function resetarProgresso() {
+            // Cancelar animação em andamento e resetar estado
+            if (animFrameId !== null) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+            currentProgress = 0;
+            targetProgress  = 0;
             // Resetar barra de progresso
             if (barraProgresso) {
                 barraProgresso.style.width = '0%';
@@ -1394,6 +1525,17 @@
             // Ocultar seção de resultados
             const resultadoImportacao = document.getElementById('resultado-importacao');
             if (resultadoImportacao) resultadoImportacao.classList.add('hidden');
+
+            // Resetar card de etapas de notas
+            const etapasCard = document.getElementById('etapas-notas-card');
+            if (etapasCard) etapasCard.classList.add('hidden');
+            document.querySelectorAll('.etapa-item').forEach(function(item) {
+                item.className = 'etapa-item inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400';
+                const iconEl = item.querySelector('.etapa-icon');
+                if (iconEl) iconEl.innerHTML = '';
+            });
+            importandoComNotas = false;
+            blocoAtualProgresso = null;
         }
 
         // Elementos da seção de resultados
@@ -1417,6 +1559,10 @@
         let duplicadosIdsFromSSE = null; // Array de IDs dos participantes DUPLICADOS/ATUALIZADOS
         let participantesPage = 1;
         let participantesTotal = 0;
+        // Mapa participante_id → dados de resumo (nota_ids, total_notas, entradas, saidas, bi)
+        let participantesResumoMap = {};
+        // Cache de notas carregadas por participante (participante_id → array de notas)
+        let notasCache = {};
 
         // Função para mostrar seção de resultados após importação concluída
         function mostrarResultadoImportacao(dados) {
@@ -1536,6 +1682,25 @@
                 linkFiltrarImportacao.href = '/app/participantes?importacao=' + importacaoAtualId;
             }
 
+            // Mini-painel Resumo Final de Notas
+            const resumoFinalEl = document.getElementById('resumo-final-notas');
+            const resumoFinalContent = document.getElementById('resumo-final-notas-content');
+            if (dados.resumo_final && resumoFinalEl && resumoFinalContent) {
+                const rf = dados.resumo_final;
+                resumoFinalContent.innerHTML = renderResumoFinal(rf);
+                resumoFinalEl.classList.remove('hidden');
+
+                // Indexar participantes_resumo por participante_id
+                if (Array.isArray(rf.participantes_resumo)) {
+                    participantesResumoMap = {};
+                    rf.participantes_resumo.forEach(pr => {
+                        participantesResumoMap[pr.participante_id] = pr;
+                    });
+                }
+            } else if (resumoFinalEl) {
+                resumoFinalEl.classList.add('hidden');
+            }
+
             // Resetar lista de participantes
             if (listaParticipantesContainer) listaParticipantesContainer.classList.remove('hidden');
             if (listaParticipantesLoading) listaParticipantesLoading.classList.add('hidden');
@@ -1642,6 +1807,56 @@
             }
         }
 
+        // Helper: formata valor em BRL
+        function formatBRL(valor) {
+            return 'R$ ' + Number(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // Helper: renderiza o mini-painel resumo_final
+        function renderResumoFinal(rf) {
+            if (!rf) return '';
+            const blocos = rf.blocos || {};
+            const ordemBlocos = ['A', 'C', 'D'];
+            const nomeBloco = { A: 'Bloco A (PIS/COFINS)', C: 'Bloco C (ICMS/IPI — NF-e)', D: 'Bloco D (CT-e)' };
+
+            let html = '<div class="space-y-1">';
+
+            // Participantes
+            const part = rf.participantes || {};
+            html += `<div class="flex items-center gap-2 py-1">
+                <span class="text-green-600 font-bold w-4">✓</span>
+                <span class="w-44 text-gray-700">Participantes</span>
+                <span class="text-gray-900 font-medium">${part.total || 0} registros</span>
+                <span class="text-gray-400 text-xs ml-2">${part.novos || 0} novos · ${part.duplicados || 0} já existentes</span>
+            </div>`;
+
+            // Blocos
+            ordemBlocos.forEach(b => {
+                const bd = blocos[b];
+                if (!bd) return;
+                const isSkip = bd.total_notas === 0 && bd.valor_total === 0;
+                const icon = isSkip ? '<span class="text-gray-400 w-4">—</span>' : '<span class="text-green-600 font-bold w-4">✓</span>';
+                const valor = isSkip ? '<span class="text-gray-400 text-xs">Vazio</span>' : `<span class="text-gray-900 font-medium">${(bd.total_notas || 0)} notas</span><span class="text-gray-500 text-xs ml-2">${formatBRL(bd.valor_total)}</span>`;
+                html += `<div class="flex items-center gap-2 py-1">
+                    ${icon}
+                    <span class="w-44 text-gray-700">${nomeBloco[b] || 'Bloco ' + b}</span>
+                    ${valor}
+                </div>`;
+            });
+
+            // Separador + Totais
+            const tot = rf.totais || {};
+            html += `<div class="border-t border-gray-300 pt-1 mt-1 flex items-center gap-2 py-1">
+                <span class="w-4"></span>
+                <span class="w-44 text-gray-700 font-semibold">Total</span>
+                <span class="text-gray-900 font-bold">${(tot.notas || 0)} notas</span>
+                <span class="text-gray-500 text-xs ml-2">${formatBRL(tot.valor)}</span>
+            </div>`;
+
+            html += '</div>';
+            return html;
+        }
+
         // Função para preencher tabela de participantes
         function preencherTabelaParticipantes(participantes) {
             if (!participantesTbody) return;
@@ -1649,19 +1864,8 @@
             participantesTbody.innerHTML = '';
 
             if (participantes.length === 0) {
-                participantesTbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500 text-sm">Nenhum participante encontrado.</td></tr>';
+                participantesTbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500 text-sm">Nenhum participante encontrado.</td></tr>';
                 return;
-            }
-
-            // Helper para badge de regime tributário
-            function getRegimeBadge(regime) {
-                const regimes = {
-                    'simples_nacional': { label: 'SN', class: 'bg-blue-100 text-blue-700' },
-                    'lucro_presumido': { label: 'LP', class: 'bg-purple-100 text-purple-700' },
-                    'lucro_real': { label: 'LR', class: 'bg-amber-100 text-amber-700' }
-                };
-                const r = regimes[regime?.toLowerCase()] || { label: '-', class: 'bg-gray-100 text-gray-500' };
-                return `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${r.class}">${r.label}</span>`;
             }
 
             // Helper para badge de status da importação (Novo/Atualizado)
@@ -1677,24 +1881,34 @@
 
             participantes.forEach(p => {
                 const cnpjFormatado = p.cnpj ? p.cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5') : '-';
-                const situacaoClass = p.situacao_cadastral === 'ATIVA'
-                    ? 'bg-green-100 text-green-700'
-                    : (p.situacao_cadastral ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700');
+                const resumo = participantesResumoMap[p.id] || null;
+                const temNotas = resumo && resumo.nota_ids && resumo.nota_ids.length > 0;
+
+                const totalNotas = resumo ? (resumo.total_notas || 0) : null;
+                const entradas = resumo ? (resumo.entradas || {}) : null;
+                const saidas = resumo ? (resumo.saidas || {}) : null;
+
+                const tdNotas    = totalNotas !== null ? `<span class="font-medium text-gray-900">${totalNotas}</span>` : '<span class="text-gray-400">—</span>';
+                const tdEntradas = entradas   !== null ? `<span class="text-green-700">${entradas.count || 0}</span><span class="text-xs text-gray-400 ml-1">${formatBRL(entradas.valor)}</span>` : '<span class="text-gray-400">—</span>';
+                const tdSaidas   = saidas     !== null ? `<span class="text-amber-700">${saidas.count || 0}</span><span class="text-xs text-gray-400 ml-1">${formatBRL(saidas.valor)}</span>` : '<span class="text-gray-400">—</span>';
+
+                const btnExpand = temNotas
+                    ? `<button type="button" class="btn-expand-notas text-blue-600 hover:text-blue-800 text-xs font-medium px-1.5 py-0.5 rounded border border-blue-200 hover:bg-blue-50 transition" data-participante-id="${p.id}" data-expanded="0" title="Ver notas">▶</button>`
+                    : '';
 
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-gray-50';
+                tr.dataset.participanteId = p.id;
                 tr.innerHTML = `
                     <td class="px-3 py-2 text-xs font-mono text-gray-900 whitespace-nowrap">${cnpjFormatado}${getStatusImportacaoBadge(p.id)}</td>
                     <td class="px-3 py-2 text-sm text-gray-900 max-w-[200px] truncate" title="${p.razao_social || ''}">${p.razao_social || '-'}</td>
                     <td class="px-2 py-2 text-center text-xs text-gray-600 w-12">${p.uf || '-'}</td>
-                    <td class="px-2 py-2 text-center">${getRegimeBadge(p.regime_tributario)}</td>
-                    <td class="px-2 py-2 text-center">
-                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${situacaoClass}">
-                            ${p.situacao_cadastral || '-'}
-                        </span>
-                    </td>
+                    <td class="px-2 py-2 text-right text-xs">${tdNotas}</td>
+                    <td class="px-2 py-2 text-right text-xs">${tdEntradas}</td>
+                    <td class="px-2 py-2 text-right text-xs">${tdSaidas}</td>
                     <td class="px-2 py-2 text-right">
                         <div class="flex items-center justify-end gap-2">
+                            ${btnExpand}
                             <button
                                 type="button"
                                 class="btn-monitorar-participante inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
@@ -1713,6 +1927,94 @@
                     </td>
                 `;
                 participantesTbody.appendChild(tr);
+            });
+
+            // Handler de expansão inline
+            participantesTbody.querySelectorAll('.btn-expand-notas').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const pid = parseInt(this.dataset.participanteId);
+                    const expanded = this.dataset.expanded === '1';
+                    const parentTr = this.closest('tr');
+
+                    // Fechar se já aberto
+                    const existingExpandRow = parentTr.nextElementSibling;
+                    if (existingExpandRow && existingExpandRow.classList.contains('expand-notas-row')) {
+                        existingExpandRow.remove();
+                        this.textContent = '▶';
+                        this.dataset.expanded = '0';
+                        return;
+                    }
+
+                    this.textContent = '▼';
+                    this.dataset.expanded = '1';
+
+                    const resumo = participantesResumoMap[pid];
+                    if (!resumo) return;
+
+                    const expandTr = document.createElement('tr');
+                    expandTr.className = 'expand-notas-row bg-blue-50';
+                    expandTr.innerHTML = `<td colspan="7" class="px-4 py-3">
+                        <div class="expand-notas-content text-sm">
+                            <div class="text-gray-500 text-xs">Carregando notas...</div>
+                        </div>
+                    </td>`;
+                    parentTr.after(expandTr);
+
+                    const contentDiv = expandTr.querySelector('.expand-notas-content');
+
+                    // Dados BI
+                    let biHtml = '';
+                    if (resumo.bi && Object.keys(resumo.bi).length > 0) {
+                        biHtml = '<div class="flex flex-wrap gap-4 mb-2">' +
+                            Object.entries(resumo.bi).map(([k, v]) =>
+                                `<span class="text-xs text-gray-600"><span class="font-medium text-gray-700">${k.replace(/_/g,' ')}:</span> ${v}</span>`
+                            ).join('') + '</div>';
+                    }
+
+                    // Carregar notas (com cache)
+                    if (!notasCache[pid] && resumo.nota_ids && resumo.nota_ids.length > 0) {
+                        try {
+                            const params = resumo.nota_ids.map(id => 'ids[]=' + id).join('&');
+                            const resp = await fetch('/app/importacao/efd/notas?' + params, {
+                                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                            });
+                            notasCache[pid] = resp.ok ? await resp.json() : [];
+                        } catch (e) {
+                            notasCache[pid] = [];
+                        }
+                    }
+
+                    const notas = notasCache[pid] || [];
+                    let notasHtml = '';
+                    if (notas.length > 0) {
+                        notasHtml = `<div class="overflow-x-auto mt-2">
+                            <table class="w-full text-xs border border-gray-200 rounded">
+                                <thead class="bg-gray-100"><tr>
+                                    <th class="px-2 py-1 text-left text-gray-500">Nº Doc</th>
+                                    <th class="px-2 py-1 text-left text-gray-500">Série</th>
+                                    <th class="px-2 py-1 text-left text-gray-500">Modelo</th>
+                                    <th class="px-2 py-1 text-left text-gray-500">Emissão</th>
+                                    <th class="px-2 py-1 text-center text-gray-500">Tipo</th>
+                                    <th class="px-2 py-1 text-right text-gray-500">Valor</th>
+                                </tr></thead>
+                                <tbody class="divide-y divide-gray-200">` +
+                                notas.slice(0, 50).map(n => `<tr class="hover:bg-gray-50">
+                                    <td class="px-2 py-1 font-mono">${n.numero || '—'}</td>
+                                    <td class="px-2 py-1">${n.serie || '—'}</td>
+                                    <td class="px-2 py-1">${n.modelo || '—'}</td>
+                                    <td class="px-2 py-1">${n.data_emissao || '—'}</td>
+                                    <td class="px-2 py-1 text-center">${n.tipo_operacao === '1' ? '<span class="text-green-700">E</span>' : '<span class="text-amber-700">S</span>'}</td>
+                                    <td class="px-2 py-1 text-right">${formatBRL(n.valor_total)}</td>
+                                </tr>`).join('') +
+                                `</tbody></table>` +
+                                (notas.length > 50 ? `<p class="text-xs text-gray-400 mt-1">Mostrando 50 de ${notas.length} notas.</p>` : '') +
+                            `</div>`;
+                    } else {
+                        notasHtml = '<p class="text-xs text-gray-400 mt-2">Nenhuma nota disponível.</p>';
+                    }
+
+                    contentDiv.innerHTML = biHtml + notasHtml;
+                });
             });
         }
 
@@ -1926,12 +2228,13 @@
                 try {
                     const formData = new FormData();
                     formData.append('file', txtFileInput.files[0]);
-                    formData.append('tipo_efd', tipoSped === 'efd-fiscal' ? 'EFD Fiscal' : 'EFD Contribuições');
+                    formData.append('tipo_efd', tipoSped === 'efd-fiscal' ? 'EFD ICMS/IPI' : 'EFD PIS/COFINS');
                     formData.append('tab_id', tabId);
 
                     // Opção de extração de notas fiscais
                     const extrairNotasCheckbox = document.getElementById('extrair-notas');
-                    if (extrairNotasCheckbox && extrairNotasCheckbox.checked) {
+                    importandoComNotas = extrairNotasCheckbox?.checked === true;
+                    if (importandoComNotas) {
                         formData.append('extrair_notas', '1');
                     }
 

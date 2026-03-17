@@ -10,12 +10,14 @@ return new class extends Migration
     {
         Schema::table('sped_importacoes', function (Blueprint $table) {
             $table->foreignId('cliente_id')->nullable()->constrained('clientes')->nullOnDelete()->after('user_id');
+            $table->jsonb('resumo_final')->nullable()->after('cliente_id');
         });
     }
 
     public function down(): void
     {
         Schema::table('sped_importacoes', function (Blueprint $table) {
+            $table->dropColumn('resumo_final');
             $table->dropForeignIdFor(\App\Models\Cliente::class);
             $table->dropColumn('cliente_id');
         });

@@ -29,6 +29,7 @@ class SpedImportacao extends Model
         'participante_ids',
         'iniciado_em',
         'concluido_em',
+        'resumo_final',
     ];
 
     protected function casts(): array
@@ -46,6 +47,7 @@ class SpedImportacao extends Model
             'participante_ids' => 'array',
             'iniciado_em' => 'datetime',
             'concluido_em' => 'datetime',
+            'resumo_final' => 'array',
         ];
     }
 

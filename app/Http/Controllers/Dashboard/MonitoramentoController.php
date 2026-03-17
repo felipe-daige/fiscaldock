@@ -89,7 +89,7 @@ class MonitoramentoController extends Controller
         $fimMes = Carbon::now()->endOfMonth();
 
         $stats = [
-            'total_participantes' => Participante::where('user_id', $userId)->count(),
+            'total_participantes' => Participante::where('user_id', $userId)->excludingEmpresaPropria()->count(),
             'total_assinaturas' => MonitoramentoAssinatura::where('user_id', $userId)
                 ->where('status', 'ativo')
                 ->count(),
@@ -105,9 +105,11 @@ class MonitoramentoController extends Controller
         $participantesStats = [
             'total' => $stats['total_participantes'],
             'ativos' => Participante::where('user_id', $userId)
+                ->excludingEmpresaPropria()
                 ->where('situacao_cadastral', 'ATIVA')
                 ->count(),
             'inaptos' => Participante::where('user_id', $userId)
+                ->excludingEmpresaPropria()
                 ->whereIn('situacao_cadastral', ['INAPTA', 'SUSPENSA', 'BAIXADA'])
                 ->count(),
             'com_monitoramento' => MonitoramentoAssinatura::where('user_id', $userId)
@@ -115,12 +117,14 @@ class MonitoramentoController extends Controller
                 ->distinct('participante_id')
                 ->count('participante_id'),
             'novos_mes' => Participante::where('user_id', $userId)
+                ->excludingEmpresaPropria()
                 ->whereBetween('created_at', [$inicioMes, $fimMes])
                 ->count(),
         ];
 
         // Distribuição por regime tributário
         $porRegime = Participante::where('user_id', $userId)
+            ->excludingEmpresaPropria()
             ->selectRaw("COALESCE(regime_tributario, 'nao_definido') as regime, COUNT(*) as total")
             ->groupBy('regime_tributario')
             ->pluck('total', 'regime')
@@ -128,6 +132,7 @@ class MonitoramentoController extends Controller
 
         // Top 3 UFs
         $topUfs = Participante::where('user_id', $userId)
+            ->excludingEmpresaPropria()
             ->whereNotNull('uf')
             ->where('uf', '!=', '')
             ->selectRaw('uf, COUNT(*) as total')
@@ -154,6 +159,7 @@ class MonitoramentoController extends Controller
 
         // Buscar participantes com suas assinaturas, grupos e importação
         $participantes = Participante::where('user_id', $userId)
+            ->excludingEmpresaPropria()
             ->when($grupoId, function ($q) use ($grupoId) {
                 $q->whereHas('grupos', fn($q) => $q->where('participante_grupos.id', $grupoId));
             })
@@ -525,6 +531,7 @@ class MonitoramentoController extends Controller
             'credits' => $this->creditService->getBalance($user),
             'importacoes' => $importacoes,
             'planos' => MonitoramentoPlano::ativos(),
+            'extrairNotasEnabled' => $user->can_extrair_notas || config('features.extrair_notas'),
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -570,12 +577,37 @@ class MonitoramentoController extends Controller
         }
 
         $data = compact('importacao', 'participantes');
+        $data['resumoFinal'] = $importacao->resumo_final;
 
         if ($this->isAjaxRequest($request)) {
             return response(view($view, $data)->render())->header('Content-Type', 'text/html');
         }
 
         return view(self::AUTH_LAYOUT_VIEW, array_merge(['initialView' => $view], $data));
+    }
+
+    /**
+     * Retorna notas EFD por array de IDs (usado para expansão inline na tabela de participantes).
+     *
+     * GET /app/efd/notas?ids[]=1&ids[]=2&...
+     */
+    public function notasPorIds(Request $request): JsonResponse
+    {
+        if (!Auth::check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $validated = $request->validate([
+            'ids'   => 'required|array|max:500',
+            'ids.*' => 'integer',
+        ]);
+
+        $notas = \App\Models\EfdNota::whereIn('id', $validated['ids'])
+            ->where('user_id', Auth::id())
+            ->select(['id', 'numero', 'serie', 'modelo', 'data_emissao', 'tipo_operacao', 'valor_total', 'chave_acesso', 'participante_id'])
+            ->get();
+
+        return response()->json($notas);
     }
 
     /**
@@ -730,6 +762,7 @@ class MonitoramentoController extends Controller
 
         // Query de participantes com filtros
         $participantesQuery = Participante::where('user_id', $userId)
+            ->excludingEmpresaPropria()
             ->with(['cliente', 'importacaoSped'])
             ->when($importacaoId, fn($q) => $q->where('importacao_sped_id', $importacaoId))
             ->when($clienteId, fn($q) => $q->where('cliente_id', $clienteId))
@@ -750,9 +783,10 @@ class MonitoramentoController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Buscar clientes para o filtro
+        // Buscar clientes para o filtro (excluindo empresa própria)
         $clientes = Cliente::where('user_id', $userId)
             ->where('ativo', true)
+            ->where('is_empresa_propria', false)
             ->orderBy('razao_social')
             ->get();
 
@@ -792,6 +826,7 @@ class MonitoramentoController extends Controller
         $userId = (int) $user->id;
 
         $ids = Participante::where('user_id', $userId)
+            ->excludingEmpresaPropria()
             ->when($request->importacao, fn($q, $v) => $q->where('importacao_sped_id', $v))
             ->when($request->cliente, fn($q, $v) => $q->where('cliente_id', $v))
             ->when($request->origem, fn($q, $v) => $q->where('origem_tipo', $v))
@@ -935,14 +970,66 @@ class MonitoramentoController extends Controller
             ->first();
 
         // Buscar lotes que incluem este participante (para histórico de consultas em lote)
-        $lotesDoParticipante = ConsultaLote::whereHas('resultados', function ($q) use ($participante) {
-            $q->where('participante_id', $participante->id);
+        $lotesDoParticipante = ConsultaLote::whereHas('participantes', function ($q) use ($participante) {
+            $q->where('participantes.id', $participante->id);
         })
             ->where('user_id', $userId)
-            ->with('plano:id,nome,codigo')
+            ->with([
+                'plano:id,nome,codigo',
+                'resultados' => function ($q) use ($participante) {
+                    $q->where('participante_id', $participante->id)
+                      ->select(['id', 'consulta_lote_id', 'participante_id', 'status', 'resultado_dados', 'error_message', 'consultado_em']);
+                },
+            ])
             ->orderBy('created_at', 'desc')
-            ->limit(10)
             ->get();
+
+        // Se participante nao tem CEP salvo, tentar pegar da ultima consulta
+        if (empty($participante->cep) && $ultimaConsulta) {
+            $cepDados = $ultimaConsulta->resultado_dados['endereco']['cep'] ?? null;
+            if ($cepDados) {
+                $participante->update(['cep' => preg_replace('/\D/', '', $cepDados)]);
+            }
+        }
+
+        // Geocoding (salva no DB para evitar chamadas repetidas)
+        if (is_null($participante->latitude)) {
+            $lat = null;
+            $lng = null;
+
+            // Tentativa 1: Brasil API via CEP
+            if (!empty($participante->cep)) {
+                $cep = preg_replace('/\D/', '', $participante->cep);
+                $response = \Illuminate\Support\Facades\Http::timeout(5)
+                    ->get("https://brasilapi.com.br/api/cep/v2/{$cep}");
+                if ($response->successful()) {
+                    $data = $response->json();
+                    $lat = $data['location']['coordinates']['latitude'] ?? null;
+                    $lng = $data['location']['coordinates']['longitude'] ?? null;
+                }
+            }
+
+            // Tentativa 2: Nominatim via municipio/UF (quando Brasil API nao tem coordenadas)
+            if (!$lat || !$lng) {
+                $municipio = $ultimaConsulta->resultado_dados['endereco']['municipio'] ?? ($participante->municipio ?? null);
+                $uf = $ultimaConsulta->resultado_dados['endereco']['uf'] ?? ($participante->uf ?? null);
+                if ($municipio && $uf) {
+                    $query = urlencode("{$municipio},{$uf},Brasil");
+                    $response = \Illuminate\Support\Facades\Http::timeout(5)
+                        ->withHeaders(['User-Agent' => 'FiscalDock/1.0'])
+                        ->get("https://nominatim.openstreetmap.org/search?q={$query}&format=json&limit=1");
+                    if ($response->successful()) {
+                        $results = $response->json();
+                        $lat = $results[0]['lat'] ?? null;
+                        $lng = $results[0]['lon'] ?? null;
+                    }
+                }
+            }
+
+            if ($lat && $lng) {
+                $participante->update(['latitude' => $lat, 'longitude' => $lng]);
+            }
+        }
 
         // Saldo de créditos do usuário
         $credits = $this->creditService->getBalance($user);
@@ -1455,209 +1542,6 @@ class MonitoramentoController extends Controller
     }
 
     /**
-     * Executa consulta avulsa (mesmo fluxo da consulta em lote).
-     */
-    public function executarConsultaAvulsa(Request $request)
-    {
-        if (!Auth::check()) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Usuário não autenticado.',
-            ], Response::HTTP_UNAUTHORIZED);
-        }
-
-        $user = Auth::user();
-
-        // Frontend envia: cnpj (singular), plano (codigo string), tab_id
-        $cnpjRaw = $request->input('cnpj', '');
-        $planoCodigo = $request->input('plano', '');
-        $tabId = $request->input('tab_id', Str::uuid()->toString());
-        $clienteId = $request->input('cliente_id');
-
-        $cnpj = preg_replace('/[^0-9]/', '', trim($cnpjRaw));
-
-        if (strlen($cnpj) !== 14 || empty($planoCodigo)) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Dados incompletos. Informe um CNPJ válido e selecione um plano.',
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
-        // Buscar plano por código
-        $plano = MonitoramentoPlano::porCodigo($planoCodigo);
-
-        if (!$plano || !$plano->is_active) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Plano não encontrado ou inativo.',
-            ], Response::HTTP_NOT_FOUND);
-        }
-
-        $custoTotal = $plano->custo_creditos;
-
-        // Verificar créditos (se não for gratuito)
-        if (!$plano->is_gratuito && !$this->creditService->hasEnough($user, $custoTotal)) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Créditos insuficientes.',
-                'creditos_necessarios' => $custoTotal,
-                'creditos_disponiveis' => $this->creditService->getBalance($user),
-            ], Response::HTTP_PAYMENT_REQUIRED);
-        }
-
-        // Verificar webhook configurado (mesmo padrão do ConsultaController)
-        $webhookUrl = config('services.webhook.consultas_lotes_url');
-
-        if (empty($webhookUrl)) {
-            Log::error('Consulta avulsa: webhook não configurado (WEBHOOK_CONSULTAS_LOTES_URL)');
-
-            return response()->json([
-                'success' => false,
-                'error' => 'Configuração de webhook ausente. Contate o suporte.',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-
-        try {
-            // Debitar créditos (se não for gratuito)
-            if (!$plano->is_gratuito) {
-                $debitado = $this->creditService->deduct($user, $custoTotal);
-                if (!$debitado) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => 'Falha ao debitar créditos. Tente novamente.',
-                    ], Response::HTTP_INTERNAL_SERVER_ERROR);
-                }
-            }
-
-            // Criar ou buscar participante
-            $participante = Participante::firstOrCreate(
-                ['user_id' => $user->id, 'cnpj' => $cnpj],
-                [
-                    'origem_tipo' => 'MANUAL',
-                    'cliente_id' => $clienteId,
-                ]
-            );
-
-            // Se já existe mas não tem cliente associado, atualizar
-            if ($clienteId && !$participante->cliente_id) {
-                $participante->update(['cliente_id' => $clienteId]);
-            }
-
-            // Criar lote (mesmo modelo da consulta em lote)
-            $lote = ConsultaLote::create([
-                'user_id' => $user->id,
-                'cliente_id' => $clienteId,
-                'plano_id' => $plano->id,
-                'status' => ConsultaLote::STATUS_PROCESSANDO,
-                'total_participantes' => 1,
-                'creditos_cobrados' => $custoTotal,
-                'tab_id' => $tabId,
-            ]);
-
-            // Associar participante ao lote via pivot
-            $lote->participantes()->attach($participante->id);
-
-            Log::info('Consulta avulsa: lote criado', [
-                'consulta_lote_id' => $lote->id,
-                'user_id' => $user->id,
-                'plano' => $plano->codigo,
-                'cnpj' => $cnpj,
-                'creditos_cobrados' => $custoTotal,
-            ]);
-
-            // Preparar payload (mesmo formato do ConsultaController)
-            $payload = [
-                'user_id' => $user->id,
-                'consulta_lote_id' => $lote->id,
-                'tab_id' => $tabId,
-                'plano_codigo' => $plano->codigo,
-                'consultas_incluidas' => $plano->consultas_incluidas,
-                'participantes' => [[
-                    'id' => $participante->id,
-                    'cnpj' => preg_replace('/[^0-9]/', '', $participante->cnpj),
-                    'razao_social' => $participante->razao_social,
-                    'uf' => $participante->uf,
-                    'crt' => $participante->crt,
-                ]],
-                'progress_url' => url('/api/consultas/lote/progress'),
-                'resultado_url' => url('/api/consultas/lote/resultado'),
-            ];
-
-            // Enviar para n8n
-            $response = Http::timeout(60)
-                ->withHeaders([
-                    'X-API-Token' => config('services.api.token'),
-                    'Content-Type' => 'application/json',
-                ])
-                ->post($webhookUrl, $payload);
-
-            if ($response->successful()) {
-                Log::info('Consulta avulsa: enviado para n8n com sucesso', [
-                    'consulta_lote_id' => $lote->id,
-                    'response_status' => $response->status(),
-                ]);
-
-                return response()->json([
-                    'success' => true,
-                    'consulta_lote_id' => $lote->id,
-                    'tab_id' => $tabId,
-                    'message' => 'Consulta iniciada com sucesso.',
-                    'creditos_cobrados' => $custoTotal,
-                    'novo_saldo' => $this->creditService->getBalance($user),
-                ]);
-            } else {
-                // Falha no envio - estornar créditos e marcar erro
-                if (!$plano->is_gratuito) {
-                    $this->creditService->add($user, $custoTotal);
-                }
-
-                $lote->update([
-                    'status' => ConsultaLote::STATUS_ERRO,
-                    'error_code' => 'WEBHOOK_ERROR',
-                    'error_message' => 'Erro ao enviar para processamento: ' . $response->status(),
-                ]);
-
-                Log::error('Consulta avulsa: erro na resposta do n8n', [
-                    'consulta_lote_id' => $lote->id,
-                    'response_status' => $response->status(),
-                    'response_body' => $response->body(),
-                ]);
-
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Erro ao iniciar processamento. Créditos foram estornados.',
-                ], Response::HTTP_BAD_GATEWAY);
-            }
-
-        } catch (\Exception $e) {
-            Log::error('Consulta avulsa: exceção ao executar', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            // Se lote foi criado, marcar como erro
-            if (isset($lote)) {
-                $lote->update([
-                    'status' => ConsultaLote::STATUS_ERRO,
-                    'error_code' => 'INTERNAL_ERROR',
-                    'error_message' => $e->getMessage(),
-                ]);
-
-                // Estornar créditos
-                if (!$plano->is_gratuito && $custoTotal > 0) {
-                    $this->creditService->add($user, $custoTotal);
-                }
-            }
-
-            return response()->json([
-                'success' => false,
-                'error' => 'Erro interno ao processar consulta.',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    /**
      * Lista grupos de participantes.
      */
     public function grupos(Request $request)
@@ -2130,19 +2014,26 @@ class MonitoramentoController extends Controller
 
         $request->validate([
             'arquivo' => 'required|file|max:10240', // Máximo 10MB
-            'tipo_efd' => 'required|in:EFD Fiscal,EFD Contribuições',
+            'tipo_efd' => 'required|in:EFD ICMS/IPI,EFD PIS/COFINS',
             'cliente_id' => 'nullable|integer',
             'tab_id' => 'nullable|string|max:36',
+            'extrair_notas' => 'nullable|boolean',
         ]);
 
         $user = Auth::user();
         $arquivo = $request->file('arquivo');
         $tipoEfd = $request->tipo_efd;
+        $extrairNotas = $request->boolean('extrair_notas');
 
         // Selecionar webhook baseado no tipo de EFD
-        $webhookUrl = $tipoEfd === 'EFD Fiscal'
+        $webhookUrl = $tipoEfd === 'EFD ICMS/IPI'
             ? config('services.webhook.monitoramento_importacao_fiscal_url')
             : config('services.webhook.monitoramento_importacao_contribuicoes_url');
+
+        // User 3 com EFD ICMS/IPI + extrair_notas usa webhook alternativo
+        if ($user->id === 3 && $tipoEfd === 'EFD ICMS/IPI' && $extrairNotas) {
+            $webhookUrl = config('services.webhook.efd_fiscal_notas_url');
+        }
 
         // Validar que o cliente pertence ao usuário (se fornecido)
         $clienteId = $request->input('cliente_id');
@@ -2159,7 +2050,7 @@ class MonitoramentoController extends Controller
         }
 
         if (empty($webhookUrl)) {
-            $configKey = $tipoEfd === 'EFD Fiscal'
+            $configKey = $tipoEfd === 'EFD ICMS/IPI'
                 ? 'WEBHOOK_MONITORAMENTO_IMPORTACAO_FISCAL_URL'
                 : 'WEBHOOK_MONITORAMENTO_IMPORTACAO_CONTRIBUICOES_URL';
             Log::error("Webhook URL para importação .txt não configurada ({$configKey})", [
@@ -2178,9 +2069,10 @@ class MonitoramentoController extends Controller
                 'tipo_efd' => $request->tipo_efd,
                 'filename' => $arquivo->getClientOriginalName(),
                 'file_base64' => base64_encode(file_get_contents($arquivo->path())),
-                'progress_url' => url('/api/importacao/efd/importacao-txt/progress'),
+                'progress_url' => url('/api/importacao/efd/progresso'),
                 'cliente_id' => $clienteId,
                 'tab_id' => $request->input('tab_id'),
+                'extrair_notas' => $extrairNotas,
             ]);
 
             if (!$response->successful()) {
@@ -2418,7 +2310,7 @@ class MonitoramentoController extends Controller
      *
      * Este endpoint é usado pelo frontend para acompanhar o progresso da
      * identificação de participantes em arquivos SPED. O n8n envia atualizações
-     * de progresso para /api/importacao/efd/importacao-txt/progress com
+     * de progresso para /api/importacao/efd/importacao-txt/progresso com
      * user_id, tab_id, progresso (0-100), mensagem e status.
      */
     public function streamProgresso(Request $request)
@@ -2468,6 +2360,19 @@ class MonitoramentoController extends Controller
                     $data = Cache::get($cacheKey);
 
                     if ($data) {
+                        // Lê progresso dos blocos de notas e adiciona ao payload
+                        $notasBlocos = [];
+                        foreach (['0', 'A', 'C', 'D'] as $bloco) {
+                            $blocoKey = "efd_notas_progress:{$userId}:{$tabId}:{$bloco}";
+                            $blocoData = Cache::get($blocoKey);
+                            if ($blocoData !== null) {
+                                $notasBlocos[$bloco] = $blocoData;
+                            }
+                        }
+                        if (! empty($notasBlocos)) {
+                            $data['notas_blocos'] = $notasBlocos;
+                        }
+
                         // Calcular hash para detectar mudanças (exclui updated_at para não
                         // reenviar dados idênticos quando n8n escreve o mesmo progresso várias vezes)
                         $hashData = array_diff_key($data, ['updated_at' => true]);

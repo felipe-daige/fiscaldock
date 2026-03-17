@@ -101,7 +101,6 @@ Route::middleware('auth')->group(function () {
 
         // Acoes
         Route::post('/adicionar-cnpj', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'adicionarCnpj'])->name('adicionar-cnpj');
-        Route::post('/consulta-avulsa', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'executarConsultaAvulsa'])->name('consulta-avulsa');
 
         Route::get('/importacao/stream/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'streamImportacao'])->name('importacao.stream');
 
@@ -129,6 +128,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/efd/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'efdDetalhes'])->name('efd.detalhes');
         Route::post('/efd/importar-txt', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'importarTxt'])->name('efd.importar-txt');
         Route::get('/efd/progresso/stream', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'streamProgresso'])->name('efd.progresso.stream');
+        Route::get('/efd/notas', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'notasPorIds'])->name('efd.notas.por-ids');
 
         // Histórico unificado
         Route::get('/historico', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'historicoImportacoes'])->name('historico');
@@ -191,6 +191,9 @@ Route::middleware('auth')->group(function () {
 
         // Status do lote (polling fallback para SSE)
         Route::get('/lote/{id}/status', [ConsultaController::class, 'statusLote'])->name('lote.status');
+
+        // Resultados de um lote (para exibição inline)
+        Route::get('/lote/{id}/resultados', [ConsultaController::class, 'resultadosLote'])->name('lote.resultados');
 
     });
 });

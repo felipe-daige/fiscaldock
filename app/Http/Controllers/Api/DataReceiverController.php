@@ -12,6 +12,7 @@ use App\Models\MonitoramentoConsulta;
 use App\Models\Participante;
 use App\Models\User;
 use App\Services\CreditService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -110,7 +111,7 @@ class DataReceiverController extends Controller
      * Armazena em cache para o SSE ler e enviar ao frontend.
      * NÃO edita banco de dados - apenas cache.
      *
-     * POST /api/importacao/sped/importacao-txt/progress
+     * POST /api/importacao/efd/importacao-txt/progresso
      *
      * Payload esperado (novo formato - n8n controla 100% do progresso):
      * {
@@ -188,6 +189,70 @@ class DataReceiverController extends Controller
                 'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /**
+     * Recebe progresso de extração de notas EFD por bloco (A, C, D).
+     * n8n envia fase/status e contadores por bloco; Laravel armazena em cache para SSE.
+     *
+     * POST /api/importacao/efd/notas/progresso
+     * Headers: X-API-Token
+     * Body: { user_id, tab_id, status, bloco, progresso, mensagem? }
+     */
+    public function receiveNotasEfdProgress(Request $request): JsonResponse
+    {
+        if (! $this->isTokenValid($request)) {
+            return response()->json(['error' => 'Unauthorized', 'message' => 'Token inválido'], 401);
+        }
+
+        $data = $request->validate([
+            'user_id'      => 'required|integer',
+            'tab_id'       => 'required|string|max:36',
+            'status'       => 'required|in:inicio,processando,concluido,skip',
+            'bloco'        => 'nullable|in:0,A,C,D',
+            'progresso'    => 'required|integer|min:0|max:100',
+            'mensagem'     => 'nullable|string|max:255',
+            'importacao_id' => 'nullable|integer',
+            'resumo_final' => 'nullable|array',
+        ]);
+
+        // Persiste resumo_final no banco se presente
+        if (!empty($data['resumo_final']) && !empty($data['importacao_id'])) {
+            SpedImportacao::where('id', $data['importacao_id'])
+                ->where('user_id', $data['user_id'])
+                ->update(['resumo_final' => $data['resumo_final']]);
+        }
+
+        // Atualiza cache principal (lido pelo SSE) com o progresso atual
+        $mainKey = "progresso:{$data['user_id']}:{$data['tab_id']}";
+        $existing = Cache::get($mainKey, []);
+        $cachePayload = array_merge($existing, [
+            'user_id'    => $data['user_id'],
+            'tab_id'     => $data['tab_id'],
+            'status'     => $data['status'],
+            'progresso'  => $data['progresso'],
+            'mensagem'   => $data['mensagem'] ?? null,
+            'bloco'      => $data['bloco'] ?? null,
+            'updated_at' => now()->toIso8601String(),
+        ]);
+        if (!empty($data['resumo_final'])) {
+            $cachePayload['resumo_final'] = $data['resumo_final'];
+        }
+        Cache::put($mainKey, $cachePayload, 600);
+
+        // Cache por bloco (lido pelo SSE para montar notas_blocos)
+        if (! empty($data['bloco'])) {
+            $blocoKey = "efd_notas_progress:{$data['user_id']}:{$data['tab_id']}:{$data['bloco']}";
+            Cache::put($blocoKey, [
+                'bloco'      => $data['bloco'],
+                'status'     => $data['status'],
+                'progresso'  => $data['progresso'],
+                'mensagem'   => $data['mensagem'] ?? null,
+                'updated_at' => now()->toIso8601String(),
+            ], 600);
+        }
+
+        return response()->json(['success' => true]);
     }
 
     /**
@@ -397,10 +462,6 @@ class DataReceiverController extends Controller
                 'proxima_validade' => 'sometimes|nullable|date',
                 'error_code' => 'sometimes|string|max:50',
                 'error_message' => 'sometimes|string|max:500',
-                'participante' => 'sometimes|array',
-                'participante.razao_social' => 'sometimes|string|max:255',
-                'participante.situacao_cadastral' => 'sometimes|string|max:100',
-                'participante.regime_tributario' => 'sometimes|string|max:100',
             ]);
 
             $consultaId = $validated['consulta_id'];
@@ -453,29 +514,6 @@ class DataReceiverController extends Controller
                 'consulta_id' => $consultaId,
                 'status' => $validated['status'],
             ]);
-
-            // Atualizar participante se dados foram fornecidos
-            if (isset($validated['participante']) && ! empty($validated['participante'])) {
-                $participante = Participante::find($consulta->participante_id);
-
-                if ($participante) {
-                    $participanteUpdate = array_filter([
-                        'razao_social' => $validated['participante']['razao_social'] ?? null,
-                        'situacao_cadastral' => $validated['participante']['situacao_cadastral'] ?? null,
-                        'regime_tributario' => $validated['participante']['regime_tributario'] ?? null,
-                        'ultima_consulta_em' => now(),
-                    ]);
-
-                    if (! empty($participanteUpdate)) {
-                        $participante->update($participanteUpdate);
-
-                        Log::info('Participante atualizado com dados da consulta', [
-                            'participante_id' => $participante->id,
-                            'consulta_id' => $consultaId,
-                        ]);
-                    }
-                }
-            }
 
             // Armazenar em cache para SSE (notificação em tempo real)
             $cacheKey = "monitoramento_consulta_resultado_{$consultaId}";
@@ -831,27 +869,27 @@ class DataReceiverController extends Controller
             }
 
             $validated = $request->validate([
-                'user_id' => 'required|integer|exists:users,id',
-                'tab_id' => 'required|string|max:36',
-                'consulta_lote_id' => 'required|integer|exists:consulta_lotes,id',
-                'progresso' => 'required|integer|min:0|max:100',
-                'mensagem' => 'nullable|string|max:255',
-                'status' => 'required|in:iniciando,processando,concluido,erro',
-                'error_code' => 'nullable|string|max:50',
-                'error_message' => 'nullable|string|max:500',
-                'dados' => 'nullable',
+                'user_id'          => 'required|integer|exists:users,id',
+                'tab_id'           => 'required|string|max:36',
+                'consulta_lote_id' => 'nullable|integer|exists:consulta_lotes,id',
+                'progresso'        => 'required|integer|min:0|max:100',
+                'mensagem'         => 'nullable|string|max:255',
+                'status'           => 'required|in:iniciando,processando,concluido,erro',
+                'error_code'       => 'nullable|string|max:50',
+                'error_message'    => 'nullable|string|max:500',
+                'dados'            => 'nullable',
             ]);
 
             $cacheKey = "progresso:{$validated['user_id']}:{$validated['tab_id']}";
 
             $cacheData = [
-                'user_id' => $validated['user_id'],
-                'tab_id' => $validated['tab_id'],
-                'consulta_lote_id' => $validated['consulta_lote_id'],
-                'progresso' => $validated['progresso'],
-                'mensagem' => $validated['mensagem'] ?? null,
-                'status' => $validated['status'],
-                'updated_at' => now()->toIso8601String(),
+                'user_id'          => $validated['user_id'],
+                'tab_id'           => $validated['tab_id'],
+                'consulta_lote_id' => $validated['consulta_lote_id'] ?? null,
+                'progresso'        => $validated['progresso'],
+                'mensagem'         => $validated['mensagem'] ?? null,
+                'status'           => $validated['status'],
+                'updated_at'       => now()->toIso8601String(),
             ];
 
             if (! empty($validated['error_code'])) {
@@ -866,17 +904,13 @@ class DataReceiverController extends Controller
             Cache::put($cacheKey, $cacheData, 600);
 
             Log::info('Progresso consulta armazenado em cache (receiveConsultaProgress)', [
-                'cache_key' => $cacheKey,
-                'user_id' => $validated['user_id'],
-                'tab_id' => $validated['tab_id'],
-                'consulta_lote_id' => $validated['consulta_lote_id'],
-                'progresso' => $validated['progresso'],
-                'status' => $validated['status'],
+                'cache_key'        => $cacheKey,
+                'user_id'          => $validated['user_id'],
+                'tab_id'           => $validated['tab_id'],
+                'consulta_lote_id' => $validated['consulta_lote_id'] ?? null,
+                'progresso'        => $validated['progresso'],
+                'status'           => $validated['status'],
             ]);
-
-            if (in_array($validated['status'], ['concluido', 'erro'])) {
-                $this->updateConsultaLoteFromProgress($validated);
-            }
 
             return response()->json([
                 'success' => true,
@@ -911,68 +945,6 @@ class DataReceiverController extends Controller
     }
 
     /**
-     * Atualiza o registro ConsultaLote quando o n8n envia status final.
-     */
-    private function updateConsultaLoteFromProgress(array $validated): void
-    {
-        try {
-            $lote = ConsultaLote::where('id', $validated['consulta_lote_id'])
-                ->where('user_id', $validated['user_id'])
-                ->first();
-
-            if (! $lote) {
-                Log::warning('updateConsultaLoteFromProgress: lote não encontrado', [
-                    'consulta_lote_id' => $validated['consulta_lote_id'],
-                    'user_id' => $validated['user_id'],
-                ]);
-
-                return;
-            }
-
-            $updateData = [
-                'status' => $validated['status'],
-                'processado_em' => now(),
-            ];
-
-            // Se concluído, salvar resultado
-            if ($validated['status'] === 'concluido') {
-                if (! empty($validated['resultado_resumo'])) {
-                    $updateData['resultado_resumo'] = $validated['resultado_resumo'];
-                }
-                if (! empty($validated['report_csv_base64'])) {
-                    $updateData['report_csv_base64'] = $validated['report_csv_base64'];
-                }
-                if (! empty($validated['filename'])) {
-                    $updateData['filename'] = $validated['filename'];
-                }
-            }
-
-            // Se erro, salvar detalhes do erro
-            if ($validated['status'] === 'erro') {
-                $updateData['error_code'] = $validated['error_code'] ?? 'UNKNOWN_ERROR';
-                $updateData['error_message'] = $validated['error_message'] ?? 'Erro desconhecido';
-
-                // Estornar créditos em caso de erro
-                $this->refundConsultaLoteCredits($lote);
-            }
-
-            $lote->update($updateData);
-
-            Log::info('ConsultaLote atualizado com dados do progresso', [
-                'consulta_lote_id' => $lote->id,
-                'status' => $validated['status'],
-                'has_csv' => ! empty($validated['report_csv_base64']),
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Erro ao atualizar ConsultaLote do progresso', [
-                'consulta_lote_id' => $validated['consulta_lote_id'],
-                'error' => $e->getMessage(),
-            ]);
-        }
-    }
-
-    /**
      * Estorna créditos de um lote de consulta em caso de erro.
      */
     private function refundConsultaLoteCredits(ConsultaLote $lote): void
@@ -1000,14 +972,14 @@ class DataReceiverController extends Controller
     }
 
     /**
-     * Recebe resultado individual de consulta por participante.
+     * Recebe o resultado final de uma consulta em lote (status + dados de resultado).
      *
-     * POST /api/consultas/lote/resultado
+     * POST /api/consulta/resultado
      */
-    public function receiveConsultaLoteResultado(Request $request)
+    public function receiveConsultaResultado(Request $request)
     {
         try {
-            Log::info('Requisição recebida em receiveConsultaLoteResultado', [
+            Log::info('Requisição recebida em receiveConsultaResultado', [
                 'url' => $request->fullUrl(),
                 'method' => $request->method(),
                 'ip' => $request->ip(),
@@ -1015,34 +987,31 @@ class DataReceiverController extends Controller
                     'x-api-token' => $request->hasHeader('X-API-Token') ? 'presente' : 'ausente',
                     'content-type' => $request->header('Content-Type'),
                 ],
-                'body' => array_diff_key($request->all(), ['resultado_dados' => '']),
+                'body' => $request->all(),
             ]);
 
-            // Verifica autenticação via token
             if (! $this->isTokenValid($request)) {
-                Log::warning('Token inválido em receiveConsultaLoteResultado');
+                Log::warning('Token inválido em receiveConsultaResultado');
 
                 return $this->unauthorizedResponse($request);
             }
 
-            // Validar payload
             $validated = $request->validate([
                 'consulta_lote_id' => 'required|integer|exists:consulta_lotes,id',
-                'user_id' => 'required|integer|exists:users,id',
-                'tab_id' => 'required|string|max:36',
-                'participante_id' => 'required|integer|exists:participantes,id',
-                'status' => 'required|in:sucesso,erro,timeout',
-                'resultado_dados' => 'nullable|array',
-                'error_message' => 'nullable|string|max:500',
+                'user_id'          => 'required|integer|exists:users,id',
+                'tab_id'           => 'required|string|max:36',
+                'status'           => 'required|in:concluido,erro',
+                'resultado_resumo' => 'nullable|array',
+                'error_code'       => 'nullable|string|max:50',
+                'error_message'    => 'nullable|string|max:500',
             ]);
 
-            // Verificar que o lote pertence ao usuário
             $lote = ConsultaLote::where('id', $validated['consulta_lote_id'])
                 ->where('user_id', $validated['user_id'])
                 ->first();
 
             if (! $lote) {
-                Log::warning('receiveConsultaLoteResultado: lote não pertence ao usuário', [
+                Log::warning('receiveConsultaResultado: lote não encontrado para este usuário', [
                     'consulta_lote_id' => $validated['consulta_lote_id'],
                     'user_id' => $validated['user_id'],
                 ]);
@@ -1053,83 +1022,53 @@ class DataReceiverController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
 
-            // Verificar que o participante está no lote
-            $participanteNoLote = $lote->participantes()
-                ->where('participantes.id', $validated['participante_id'])
-                ->exists();
+            $updateData = [
+                'status'       => $validated['status'],
+                'processado_em' => now(),
+            ];
 
-            if (! $participanteNoLote) {
-                Log::warning('receiveConsultaLoteResultado: participante não pertence ao lote', [
-                    'consulta_lote_id' => $validated['consulta_lote_id'],
-                    'participante_id' => $validated['participante_id'],
-                ]);
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Participante não pertence a este lote.',
-                ], Response::HTTP_BAD_REQUEST);
-            }
-
-            // Criar ou atualizar resultado
-            $resultado = ConsultaResultado::updateOrCreate(
-                [
-                    'consulta_lote_id' => $validated['consulta_lote_id'],
-                    'participante_id' => $validated['participante_id'],
-                ],
-                [
-                    'resultado_dados' => $validated['resultado_dados'] ?? null,
-                    'status' => $validated['status'],
-                    'error_message' => $validated['error_message'] ?? null,
-                    'consultado_em' => now(),
-                ]
-            );
-
-            Log::info('Resultado consulta armazenado', [
-                'consulta_lote_id' => $validated['consulta_lote_id'],
-                'participante_id' => $validated['participante_id'],
-                'status' => $validated['status'],
-                'resultado_id' => $resultado->id,
-            ]);
-
-            // Auto-completar lote quando todos os resultados chegarem
-            $totalResultados = ConsultaResultado::where('consulta_lote_id', $lote->id)->count();
-            if ($totalResultados >= $lote->total_participantes && $lote->status !== ConsultaLote::STATUS_CONCLUIDO) {
-                $lote->update([
-                    'status' => ConsultaLote::STATUS_CONCLUIDO,
-                    'concluido_em' => now(),
-                ]);
-
-                Log::info('Auto-completando lote consulta', [
-                    'consulta_lote_id' => $lote->id,
-                    'total_resultados' => $totalResultados,
-                    'total_participantes' => $lote->total_participantes,
-                ]);
-
-                // Escrever no cache para acionar o SSE
-                if ($lote->tab_id) {
-                    $cacheKey = "progresso:{$lote->user_id}:{$lote->tab_id}";
-                    Cache::put($cacheKey, [
-                        'user_id' => $lote->user_id,
-                        'tab_id' => $lote->tab_id,
-                        'consulta_lote_id' => $lote->id,
-                        'progresso' => 100,
-                        'mensagem' => 'Consulta concluída.',
-                        'status' => 'concluido',
-                        'updated_at' => now()->toIso8601String(),
-                    ], 600);
+            if ($validated['status'] === 'concluido') {
+                if (! empty($validated['resultado_resumo'])) {
+                    $updateData['resultado_resumo'] = $validated['resultado_resumo'];
                 }
             }
 
+            if ($validated['status'] === 'erro') {
+                $updateData['error_code']    = $validated['error_code'] ?? 'UNKNOWN_ERROR';
+                $updateData['error_message'] = $validated['error_message'] ?? 'Erro desconhecido';
+
+                $this->refundConsultaLoteCredits($lote);
+            }
+
+            $lote->update($updateData);
+
+            if ($validated['status'] === 'concluido') {
+                $cacheKey = "progresso:{$validated['user_id']}:{$validated['tab_id']}";
+                Cache::put($cacheKey, [
+                    'user_id'          => $validated['user_id'],
+                    'tab_id'           => $validated['tab_id'],
+                    'consulta_lote_id' => $lote->id,
+                    'progresso'        => 100,
+                    'mensagem'         => 'Consulta concluída.',
+                    'status'           => 'concluido',
+                    'updated_at'       => now()->toIso8601String(),
+                ], 600);
+            }
+
+            Log::info('ConsultaLote atualizado via receiveConsultaResultado', [
+                'consulta_lote_id' => $lote->id,
+                'status' => $validated['status'],
+            ]);
+
             return response()->json([
                 'success' => true,
-                'message' => 'Resultado armazenado.',
-                'resultado_id' => $resultado->id,
+                'message' => 'Resultado final armazenado.',
             ], Response::HTTP_OK);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::warning('Erro de validação em receiveConsultaLoteResultado', [
+            Log::warning('Erro de validação em receiveConsultaResultado', [
                 'errors' => $e->errors(),
-                'request_data' => array_diff_key($request->all(), ['resultado_dados' => '']),
+                'request_data' => $request->all(),
             ]);
 
             return response()->json([
@@ -1139,10 +1078,10 @@ class DataReceiverController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
 
         } catch (\Exception $e) {
-            Log::error('Erro inesperado em receiveConsultaLoteResultado', [
+            Log::error('Erro inesperado em receiveConsultaResultado', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'request_data' => array_diff_key($request->all(), ['resultado_dados' => '']),
+                'request_data' => $request->all(),
             ]);
 
             return response()->json([
@@ -1151,5 +1090,6 @@ class DataReceiverController extends Controller
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
 }
 
