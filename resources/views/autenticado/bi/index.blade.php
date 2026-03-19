@@ -17,11 +17,22 @@
             'filtros'      => $filtros ?? [],
         ])
 
-        {{-- Área de módulos BI --}}
-        <div id="bi-content">
-            <p class="text-gray-400 text-sm">Selecione um período para visualizar os dados.</p>
-        </div>
+        {{-- KPIs --}}
+        @include('autenticado.bi.partials.kpis', ['kpis' => $kpis])
+
+        {{-- Gráficos --}}
+        @include('autenticado.bi.partials.graficos-fluxo')
 
     </div>
 
 </div>
+
+{{-- Chart.js via CDN (carregado apenas nesta view) --}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+{{-- Dados para os gráficos --}}
+<script>
+    window.biFluxoMensal  = @json($fluxoMensal ?? []);
+    window.biVolumeBlocos = @json($volumeBlocos ?? []);
+</script>
+<script src="{{ asset('js/bi/graficos-home.js') }}"></script>
