@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\BI\Queries\FluxoMensalQuery;
+use App\BI\Queries\KpisGeraisQuery;
+use App\BI\Queries\VolumePorBlocoQuery;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class BiController extends Controller
 {
@@ -22,15 +26,23 @@ class BiController extends Controller
         [$dataInicio, $dataFim] = $this->resolverPeriodo($periodo, $request);
 
         $filtros = [
+            'user_id' => Auth::id(),
             'data_inicio' => $dataInicio->format('d/m/Y'),
             'data_fim' => $dataFim->format('d/m/Y'),
             'data_inicio_iso' => $dataInicio->format('Y-m-d'),
             'data_fim_iso' => $dataFim->format('Y-m-d'),
         ];
 
+        $kpis = (new KpisGeraisQuery($filtros))->execute();
+        $fluxoMensal = (new FluxoMensalQuery($filtros))->execute();
+        $volumeBlocos = (new VolumePorBlocoQuery($filtros))->execute();
+
         $data = [
             'periodoAtivo' => $periodo,
             'filtros' => $filtros,
+            'kpis' => $kpis,
+            'fluxoMensal' => $fluxoMensal,
+            'volumeBlocos' => $volumeBlocos,
         ];
 
         if ($this->isAjaxRequest($request)) {
