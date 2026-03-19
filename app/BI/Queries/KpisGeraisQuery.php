@@ -10,7 +10,7 @@ class KpisGeraisQuery extends BiQuery
     public function execute(): array
     {
         $inicio = $this->filtros['data_inicio_iso'] ?? Carbon::now()->startOfMonth()->format('Y-m-d');
-        $fim    = $this->filtros['data_fim_iso']    ?? Carbon::now()->endOfMonth()->format('Y-m-d');
+        $fim = $this->filtros['data_fim_iso'] ?? Carbon::now()->endOfMonth()->format('Y-m-d');
         $userId = $this->filtros['user_id'];
 
         // Entradas e saídas agregadas
@@ -38,23 +38,24 @@ class KpisGeraisQuery extends BiQuery
         $notasEmRisco = DB::table('efd_notas AS n')
             ->join('participantes AS p', 'p.id', '=', 'n.participante_id')
             ->where('n.user_id', $userId)
+            ->where('p.user_id', $userId)
             ->whereBetween('n.data_emissao', [$inicio, $fim])
             ->whereRaw("UPPER(p.situacao_cadastral) NOT IN ('02', 'ATIVA')")
             ->whereNotNull('n.participante_id')
             ->count();
 
         $entradas = (float) ($totais->total_entradas_valor ?? 0);
-        $saidas   = (float) ($totais->total_saidas_valor ?? 0);
+        $saidas = (float) ($totais->total_saidas_valor ?? 0);
 
         return [
             'total_entradas_valor' => $entradas,
             'total_entradas_notas' => (int) ($totais->total_entradas_notas ?? 0),
-            'total_saidas_valor'   => $saidas,
-            'total_saidas_notas'   => (int) ($totais->total_saidas_notas ?? 0),
-            'saldo_liquido'        => $entradas - $saidas,
-            'carga_tributaria'     => (float) ($cargaTributaria ?? 0),
+            'total_saidas_valor' => $saidas,
+            'total_saidas_notas' => (int) ($totais->total_saidas_notas ?? 0),
+            'saldo_liquido' => $entradas - $saidas,
+            'carga_tributaria' => (float) ($cargaTributaria ?? 0),
             'participantes_ativos' => (int) ($totais->participantes_ativos ?? 0),
-            'notas_em_risco'       => (int) $notasEmRisco,
+            'notas_em_risco' => (int) $notasEmRisco,
         ];
     }
 }

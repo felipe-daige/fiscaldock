@@ -13,9 +13,9 @@ afterEach(function () {
 
 it('retorna estrutura correta com zeros quando não há notas', function () {
     $filtros = [
-        'user_id'        => $this->user->id,
+        'user_id' => $this->user->id,
         'data_inicio_iso' => now()->startOfMonth()->format('Y-m-d'),
-        'data_fim_iso'   => now()->endOfMonth()->format('Y-m-d'),
+        'data_fim_iso' => now()->endOfMonth()->format('Y-m-d'),
     ];
 
     $resultado = (new KpisGeraisQuery($filtros))->execute();
