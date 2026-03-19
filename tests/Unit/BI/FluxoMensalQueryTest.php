@@ -45,8 +45,8 @@ it('meses sem dados retornam zeros', function () {
     $resultado = (new FluxoMensalQuery($filtros))->execute();
 
     foreach ($resultado as $mes) {
-        expect((float) $mes['entradas'])->toBeGreaterThanOrEqual(0.0);
-        expect((float) $mes['saidas'])->toBeGreaterThanOrEqual(0.0);
+        expect((float) $mes['entradas'])->toBe(0.0);
+        expect((float) $mes['saidas'])->toBe(0.0);
     }
 });
 
