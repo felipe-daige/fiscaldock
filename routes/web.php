@@ -8,6 +8,8 @@ use App\Http\Controllers\Dashboard\ConsultaController;
 use App\Http\Controllers\Dashboard\ClienteController;
 use App\Http\Controllers\Dashboard\MinhaEmpresaController;
 use App\Http\Controllers\SpedUploadController;
+use App\Http\Controllers\Dashboard\BiController;
+use App\Http\Controllers\Dashboard\MonitoramentoController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -73,65 +75,65 @@ Route::middleware('auth')->group(function () {
     // Participantes (rotas independentes)
     Route::prefix('app')->name('app.')->group(function () {
         // Lista e ações em massa
-        Route::get('/participantes', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'listaParticipantes'])->name('participantes');
-        Route::get('/participantes/todos-ids', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'todosIdsParticipantes'])->name('participantes.todos-ids');
-        Route::delete('/participantes/bulk-delete', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'bulkExcluirParticipantes'])->name('participantes.bulk-delete');
-        Route::post('/participantes/associar-grupo', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'associarGrupo'])->name('participantes.associar-grupo');
-        Route::get('/participantes/por-importacao/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'participantesPorImportacao'])->name('participantes.por-importacao');
-        Route::post('/participantes/por-ids', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'participantesPorIds'])->name('participantes.por-ids');
+        Route::get('/participantes', [MonitoramentoController::class, 'listaParticipantes'])->name('participantes');
+        Route::get('/participantes/todos-ids', [MonitoramentoController::class, 'todosIdsParticipantes'])->name('participantes.todos-ids');
+        Route::delete('/participantes/bulk-delete', [MonitoramentoController::class, 'bulkExcluirParticipantes'])->name('participantes.bulk-delete');
+        Route::post('/participantes/associar-grupo', [MonitoramentoController::class, 'associarGrupo'])->name('participantes.associar-grupo');
+        Route::get('/participantes/por-importacao/{id}', [MonitoramentoController::class, 'participantesPorImportacao'])->name('participantes.por-importacao');
+        Route::post('/participantes/por-ids', [MonitoramentoController::class, 'participantesPorIds'])->name('participantes.por-ids');
 
         // Participante individual
-        Route::get('/participante/nota-fiscal/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'notaFiscalDetalhes'])->name('participante.nota-fiscal');
-        Route::get('/participante/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'participante'])->name('participante');
-        Route::get('/participante/{id}/editar', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'editParticipante'])->name('participante.editar');
-        Route::put('/participante/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'updateParticipante'])->name('participante.update');
-        Route::delete('/participante/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'excluirParticipante'])->name('participante.excluir');
+        Route::get('/participante/nota-fiscal/{id}', [MonitoramentoController::class, 'notaFiscalDetalhes'])->name('participante.nota-fiscal');
+        Route::get('/participante/{id}', [MonitoramentoController::class, 'participante'])->name('participante');
+        Route::get('/participante/{id}/editar', [MonitoramentoController::class, 'editParticipante'])->name('participante.editar');
+        Route::put('/participante/{id}', [MonitoramentoController::class, 'updateParticipante'])->name('participante.update');
+        Route::delete('/participante/{id}', [MonitoramentoController::class, 'excluirParticipante'])->name('participante.excluir');
 
         // Novo participante
-        Route::get('/novo-participante', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'novoParticipante'])->name('novo-participante');
-        Route::post('/novo-participante', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'storeParticipante'])->name('novo-participante.store');
+        Route::get('/novo-participante', [MonitoramentoController::class, 'novoParticipante'])->name('novo-participante');
+        Route::post('/novo-participante', [MonitoramentoController::class, 'storeParticipante'])->name('novo-participante.store');
     });
 
     // Rotas de Monitoramento
     Route::prefix('app/monitoramento')->name('app.monitoramento.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'index'])->name('index');
-        Route::get('/historico', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'historico'])->name('historico');
-        Route::get('/clientes', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'clientes'])->name('clientes');
-        Route::get('/consulta/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'consultaDetalhes'])->name('consulta');
+        Route::get('/', [MonitoramentoController::class, 'index'])->name('index');
+        Route::get('/historico', [MonitoramentoController::class, 'historico'])->name('historico');
+        Route::get('/clientes', [MonitoramentoController::class, 'clientes'])->name('clientes');
+        // SSE para acompanhar resultado de consultas em tempo real
+        Route::get('/consulta/stream', [MonitoramentoController::class, 'streamConsultas'])->name('consulta.stream');
+        Route::get('/consulta/{id}', [MonitoramentoController::class, 'consultaDetalhes'])->name('consulta');
 
         // Acoes
-        Route::post('/adicionar-cnpj', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'adicionarCnpj'])->name('adicionar-cnpj');
+        Route::post('/adicionar-cnpj', [MonitoramentoController::class, 'adicionarCnpj'])->name('adicionar-cnpj');
 
-        Route::get('/importacao/stream/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'streamImportacao'])->name('importacao.stream');
-
-        // SSE para acompanhar resultado de consultas em tempo real
-        Route::get('/consulta/stream', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'streamConsultas'])->name('consulta.stream');
+        Route::get('/importacao/stream/{id}', [MonitoramentoController::class, 'streamImportacao'])->name('importacao.stream');
 
         // Assinaturas
-        Route::post('/assinatura', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'criarAssinatura'])->name('assinatura.criar');
-        Route::post('/assinatura/{id}/pausar', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'pausarAssinatura'])->name('assinatura.pausar');
-        Route::post('/assinatura/{id}/reativar', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'reativarAssinatura'])->name('assinatura.reativar');
-        Route::delete('/assinatura/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'cancelarAssinatura'])->name('assinatura.cancelar');
+        Route::post('/assinatura', [MonitoramentoController::class, 'criarAssinatura'])->name('assinatura.criar');
+        Route::post('/assinatura/{id}/pausar', [MonitoramentoController::class, 'pausarAssinatura'])->name('assinatura.pausar');
+        Route::post('/assinatura/{id}/reativar', [MonitoramentoController::class, 'reativarAssinatura'])->name('assinatura.reativar');
+        Route::delete('/assinatura/{id}', [MonitoramentoController::class, 'cancelarAssinatura'])->name('assinatura.cancelar');
 
         // Grupos de participantes
-        Route::get('/grupos', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'grupos'])->name('grupos');
-        Route::post('/grupos', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'criarGrupo'])->name('grupos.criar');
-        Route::put('/grupos/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'editarGrupo'])->name('grupos.editar');
-        Route::delete('/grupos/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'excluirGrupo'])->name('grupos.excluir');
+        Route::get('/grupos', [MonitoramentoController::class, 'grupos'])->name('grupos');
+        Route::post('/grupos', [MonitoramentoController::class, 'criarGrupo'])->name('grupos.criar');
+        Route::put('/grupos/{id}', [MonitoramentoController::class, 'editarGrupo'])->name('grupos.editar');
+        Route::delete('/grupos/{id}', [MonitoramentoController::class, 'excluirGrupo'])->name('grupos.excluir');
 
     });
 
     // Importação (EFD e XML)
     Route::prefix('app/importacao')->name('app.importacao.')->group(function () {
         // EFD (SPED Fiscal/Contribuições)
-        Route::get('/efd', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'importarSped'])->name('efd');
-        Route::get('/efd/{id}', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'efdDetalhes'])->name('efd.detalhes');
-        Route::post('/efd/importar-txt', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'importarTxt'])->name('efd.importar-txt');
-        Route::get('/efd/progresso/stream', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'streamProgresso'])->name('efd.progresso.stream');
-        Route::get('/efd/notas', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'notasPorIds'])->name('efd.notas.por-ids');
+        Route::get('/efd', [MonitoramentoController::class, 'importarSped'])->name('efd');
+        Route::post('/efd/importar-txt', [MonitoramentoController::class, 'importarTxt'])->name('efd.importar-txt');
+        Route::get('/efd/progresso/stream', [MonitoramentoController::class, 'streamProgresso'])->name('efd.progresso.stream');
+        Route::get('/efd/notas', [MonitoramentoController::class, 'notasPorIds'])->name('efd.notas.por-ids');
+        Route::get('/efd/notas-participante', [MonitoramentoController::class, 'notasPorParticipante'])->name('efd.notas.por-participante');
+        Route::get('/efd/{id}', [MonitoramentoController::class, 'efdDetalhes'])->name('efd.detalhes');
 
         // Histórico unificado
-        Route::get('/historico', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'historicoImportacoes'])->name('historico');
+        Route::get('/historico', [MonitoramentoController::class, 'historicoImportacoes'])->name('historico');
 
         // XML (NF-e, NFS-e, CT-e)
         Route::get('/xml', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'index'])->name('xml');
@@ -141,6 +143,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/xml/progresso/stream', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'streamProgresso'])->name('xml.progresso.stream');
         Route::get('/xml/importacao/{id}/participantes', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'getParticipantes'])->name('xml.importacao.participantes');
         Route::post('/xml/importacao/{id}/salvar-cnpjs', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'salvarCnpjsNovos'])->name('xml.importacao.salvar-cnpjs');
+    });
+
+    // Business Intelligence
+    Route::prefix('app/bi')->name('app.bi.')->group(function () {
+        Route::get('/', [BiController::class, 'index'])->name('index');
+        // Próximos módulos serão adicionados aqui
     });
 
     // BI Fiscal (placeholder público)
@@ -181,7 +189,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/avulso', fn () => redirect('/app/consultas/nova', 301))->name('avulso');
 
         // Planos Disponiveis
-        Route::get('/planos', [\App\Http\Controllers\Dashboard\MonitoramentoController::class, 'planos'])->name('planos');
+        Route::get('/planos', [MonitoramentoController::class, 'planos'])->name('planos');
 
         // Historico
         Route::get('/historico', [ConsultaController::class, 'historico'])->name('historico');
