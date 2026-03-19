@@ -16,14 +16,14 @@ abstract class BiQuery
     protected function resolverIntervalo(): array
     {
         $dataInicio = $this->filtros['data_inicio'] ?? null;
-        $dataFim    = $this->filtros['data_fim']    ?? null;
-        $ano        = $this->filtros['ano']         ?? null;
-        $mes        = $this->filtros['mes']         ?? null;
+        $dataFim = $this->filtros['data_fim'] ?? null;
+        $ano = $this->filtros['ano'] ?? null;
+        $mes = $this->filtros['mes'] ?? null;
 
         if ($dataInicio && $dataFim) {
             return [
                 'inicio' => Carbon::parse($dataInicio)->startOfDay(),
-                'fim'    => Carbon::parse($dataFim)->endOfDay(),
+                'fim' => Carbon::parse($dataFim)->endOfDay(),
             ];
         }
 
@@ -32,20 +32,20 @@ abstract class BiQuery
 
             return [
                 'inicio' => $inicio,
-                'fim'    => $inicio->copy()->endOfMonth(),
+                'fim' => $inicio->copy()->endOfMonth(),
             ];
         }
 
         if ($ano) {
             return [
                 'inicio' => Carbon::createFromDate($ano, 1, 1)->startOfYear(),
-                'fim'    => Carbon::createFromDate($ano, 12, 31)->endOfYear(),
+                'fim' => Carbon::createFromDate($ano, 12, 31)->endOfYear(),
             ];
         }
 
         return [
             'inicio' => now()->startOfMonth(),
-            'fim'    => now()->endOfMonth(),
+            'fim' => now()->endOfMonth(),
         ];
     }
 

@@ -9,7 +9,8 @@ use Illuminate\Http\Request;
 class BiController extends Controller
 {
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
-    private const BI_INDEX_VIEW    = 'autenticado.bi.index';
+
+    private const BI_INDEX_VIEW = 'autenticado.bi.index';
 
     public function __construct(
         protected Request $request
@@ -21,15 +22,15 @@ class BiController extends Controller
         [$dataInicio, $dataFim] = $this->resolverPeriodo($periodo, $request);
 
         $filtros = [
-            'data_inicio'     => $dataInicio->format('d/m/Y'),
-            'data_fim'        => $dataFim->format('d/m/Y'),
+            'data_inicio' => $dataInicio->format('d/m/Y'),
+            'data_fim' => $dataFim->format('d/m/Y'),
             'data_inicio_iso' => $dataInicio->format('Y-m-d'),
-            'data_fim_iso'    => $dataFim->format('Y-m-d'),
+            'data_fim_iso' => $dataFim->format('Y-m-d'),
         ];
 
         $data = [
             'periodoAtivo' => $periodo,
-            'filtros'      => $filtros,
+            'filtros' => $filtros,
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -46,7 +47,7 @@ class BiController extends Controller
     private function resolverPeriodo(string $periodo, Request $request): array
     {
         return match ($periodo) {
-            'mes_anterior'    => [
+            'mes_anterior' => [
                 now()->subMonth()->startOfMonth(),
                 now()->subMonth()->endOfMonth(),
             ],
@@ -54,16 +55,16 @@ class BiController extends Controller
                 now()->firstOfQuarter()->startOfDay(),
                 now()->lastOfQuarter()->endOfDay(),
             ],
-            'semestre_atual'  => $this->resolverSemestre(),
-            'ano_atual'       => [
+            'semestre_atual' => $this->resolverSemestre(),
+            'ano_atual' => [
                 now()->startOfYear(),
                 now()->endOfYear(),
             ],
-            'personalizado'   => [
+            'personalizado' => [
                 Carbon::parse($request->input('data_inicio', now()->startOfMonth()->format('Y-m-d')))->startOfDay(),
                 Carbon::parse($request->input('data_fim', now()->endOfMonth()->format('Y-m-d')))->endOfDay(),
             ],
-            default           => [
+            default => [
                 now()->startOfMonth(),
                 now()->endOfMonth(),
             ],
