@@ -2,17 +2,15 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CreditController;
-use App\Http\Controllers\Landing\LandingPageController;
-use App\Http\Controllers\Dashboard\DashboardController;
-use App\Http\Controllers\Dashboard\ConsultaController;
+use App\Http\Controllers\Dashboard\AnalyticsController;
 use App\Http\Controllers\Dashboard\ClienteController;
+use App\Http\Controllers\Dashboard\ConsultaController;
+use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\MinhaEmpresaController;
-use App\Http\Controllers\SpedUploadController;
-use App\Http\Controllers\Dashboard\BiController;
 use App\Http\Controllers\Dashboard\MonitoramentoController;
+use App\Http\Controllers\Landing\LandingPageController;
+use App\Http\Controllers\SpedUploadController;
 use Illuminate\Support\Facades\Route;
-
-
 
 Route::get('/', [LandingPageController::class, 'inicio'])->name('home');
 
@@ -63,7 +61,7 @@ Route::middleware('auth')->group(function () {
     // Rota de Novo Cliente (formulário de cadastro)
     Route::get('/app/novo-cliente', [DashboardController::class, 'novoCliente'])->name('app.novo.cliente');
     Route::post('/app/novo-cliente', [ClienteController::class, 'store'])->name('app.cliente.store');
-    
+
     // Rota de Clientes
     Route::get('/app/clientes', [DashboardController::class, 'clientes'])->name('app.clientes');
     Route::delete('/app/clientes/bulk-delete', [ClienteController::class, 'bulkDestroy'])->name('app.clientes.bulk-delete');
@@ -71,7 +69,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/app/cliente/{id}', [ClienteController::class, 'update'])->name('app.cliente.update');
     Route::delete('/app/cliente/{id}', [ClienteController::class, 'destroy'])->name('app.cliente.destroy');
     Route::get('/app/cliente/{id}', [DashboardController::class, 'clienteDetalhes'])->name('app.cliente.detalhes');
-    
+
     // Participantes (rotas independentes)
     Route::prefix('app')->name('app.')->group(function () {
         // Lista e ações em massa
@@ -145,14 +143,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/xml/importacao/{id}/salvar-cnpjs', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'salvarCnpjsNovos'])->name('xml.importacao.salvar-cnpjs');
     });
 
-    // Business Intelligence
-    Route::prefix('app/bi')->name('app.bi.')->group(function () {
-        Route::get('/', [BiController::class, 'index'])->name('index');
-        // Próximos módulos serão adicionados aqui
+    // Analytics / BI Fiscal
+    Route::get('app/analytics', [AnalyticsController::class, 'index'])->name('app.analytics.index');
+    Route::prefix('app/analytics')->name('app.analytics.')->group(function () {
+        Route::get('/faturamento', [AnalyticsController::class, 'faturamento'])->name('faturamento');
+        Route::get('/compras', [AnalyticsController::class, 'compras'])->name('compras');
+        Route::get('/tributos', [AnalyticsController::class, 'tributos'])->name('tributos');
+        Route::get('/resumo', [AnalyticsController::class, 'resumo'])->name('resumo');
     });
-
-    // BI Fiscal (placeholder público)
-    Route::get('app/analytics', [DashboardController::class, 'analyticsPlaceholder'])->name('app.analytics.index.placeholder');
 
     // Score Fiscal (placeholder público)
     Route::get('app/score-fiscal', [DashboardController::class, 'scoreFiscalPlaceholder'])->name('app.risk.index.placeholder');
