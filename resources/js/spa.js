@@ -208,6 +208,15 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             // Ignorar erro se disconnectSSE não estiver definida (página de consulta não foi carregada)
         }
+
+        // Destruir instâncias ApexCharts e resetar estado do módulo analytics
+        try {
+            if (typeof window.cleanupAnalytics === 'function') {
+                window.cleanupAnalytics();
+            }
+        } catch (error) {
+            // Ignorar erro se cleanupAnalytics não estiver definida (analytics não foi carregado)
+        }
     }
     
     // 1. INTERCEPTAR CLIQUES EM LINKS

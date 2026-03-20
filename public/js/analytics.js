@@ -1130,7 +1130,27 @@
         if (emptyState) emptyState.classList.add('hidden');
     }
 
+    // Limpa todas as instancias de graficos e reseta estado do modulo
+    function cleanup() {
+        Object.keys(charts).forEach(id => {
+            try {
+                if (charts[id] && typeof charts[id].destroy === 'function') {
+                    charts[id].destroy();
+                }
+            } catch (e) {
+                // Ignorar erros ao destruir grafico com elemento removido
+            }
+        });
+        charts = {};
+        currentTab = 'faturamento';
+        tipoAtivo = 'fornecedores';
+        participantesData = null;
+        participanteAberto = null;
+        _initRetries = 0;
+    }
+
     // Expoe funcao de inicializacao para SPA (chamada pelo spa.js via tentarExecutarFuncao)
     window.initAnalytics = init;
+    window.cleanupAnalytics = cleanup;
     window.__analytics = { abrirFicha };
 })();
