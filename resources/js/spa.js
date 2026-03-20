@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
         monitoramentoParticipante: null, // Código inline na view
         consultas: '/js/consulta-lote.js',
         consultaLote: '/js/consulta-lote.js',
+        analytics: null, // Script carregado como tag externa na view — nao tentar recarregar no SPA
     };
 
     // Converte slug (com hífen/underscore) para camelCase
