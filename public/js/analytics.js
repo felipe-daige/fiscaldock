@@ -13,9 +13,21 @@
     let participantesData = null;
     let tipoAtivo = 'fornecedores';
     let participanteAberto = null;
+    let _initRetries = 0;
 
     // Inicializacao
     function init() {
+        // Guard: aguardar ApexCharts CDN carregar (maximo 10 tentativas x 300ms = 3s)
+        if (typeof ApexCharts === 'undefined') {
+            if (_initRetries < 10) {
+                _initRetries++;
+                setTimeout(init, 300);
+            } else {
+                console.error('[Analytics] ApexCharts nao carregou apos 3s. Verifique a CDN.');
+            }
+            return;
+        }
+        _initRetries = 0;
         currentTab = 'faturamento';
         setupTabs();
         setupFilters();
