@@ -10,12 +10,16 @@
     let charts = {};
     let currentTab = 'faturamento';
     let csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    let participantesData = null;
+    let tipoAtivo = 'fornecedores';
+    let participanteAberto = null;
 
     // Inicializacao
     function init() {
+        currentTab = 'faturamento';
         setupTabs();
         setupFilters();
-        loadData(currentTab);
+        switchTab('faturamento');
     }
 
     // Configura as tabs
@@ -71,16 +75,18 @@
     // Obtem parametros de filtro
     function getFilterParams() {
         const clienteId = document.getElementById('filtro-cliente')?.value;
-        const meses = parseInt(document.getElementById('filtro-periodo')?.value || 12);
-
-        const dataFim = new Date();
-        const dataInicio = new Date();
-        dataInicio.setMonth(dataInicio.getMonth() - meses);
+        const meses = parseInt(document.getElementById('filtro-periodo')?.value || 0);
 
         const params = new URLSearchParams();
         if (clienteId) params.append('cliente_id', clienteId);
-        params.append('data_inicio', dataInicio.toISOString().split('T')[0]);
-        params.append('data_fim', dataFim.toISOString().split('T')[0]);
+
+        if (meses > 0) {
+            const dataFim = new Date();
+            const dataInicio = new Date();
+            dataInicio.setMonth(dataInicio.getMonth() - meses);
+            params.append('data_inicio', dataInicio.toISOString().split('T')[0]);
+            params.append('data_fim', dataFim.toISOString().split('T')[0]);
+        }
 
         return params.toString();
     }
@@ -99,6 +105,18 @@
                 break;
             case 'tributos':
                 endpoint = '/app/analytics/tributos';
+                break;
+            case 'efd':
+                endpoint = '/app/analytics/efd';
+                break;
+            case 'participantes':
+                endpoint = '/app/analytics/participantes';
+                break;
+            case 'riscos':
+                endpoint = '/app/analytics/riscos';
+                break;
+            case 'tributario-efd':
+                endpoint = '/app/analytics/tributario-efd';
                 break;
         }
 
@@ -132,6 +150,18 @@
                 break;
             case 'tributos':
                 renderTributosCharts(data);
+                break;
+            case 'efd':
+                renderEfdCharts(data);
+                break;
+            case 'participantes':
+                renderParticipantesCharts(data);
+                break;
+            case 'riscos':
+                renderRiscosCharts(data);
+                break;
+            case 'tributario-efd':
+                renderTributarioEfdCharts(data);
                 break;
         }
     }
@@ -344,10 +374,713 @@
         }
     }
 
+    // Graficos EFD
+    function renderEfdCharts(data) {
+        const kpis = data.kpis || {};
+
+        // Atualiza KPIs
+        setKpi('kpi-efd-entradas', formatCurrency(kpis.total_entradas_valor || 0));
+        setKpi('kpi-efd-entradas-sub', (kpis.total_entradas_notas || 0) + ' notas de entrada');
+        setKpi('kpi-efd-saidas', formatCurrency(kpis.total_saidas_valor || 0));
+        setKpi('kpi-efd-saidas-sub', (kpis.total_saidas_notas || 0) + ' notas de saida');
+        setKpi('kpi-efd-tributos', formatCurrency(kpis.carga_tributaria || 0));
+        setKpi('kpi-efd-participantes', kpis.participantes_ativos || 0);
+
+        const saldo = kpis.saldo_liquido || 0;
+        const saldoEl = document.getElementById('kpi-efd-saldo');
+        if (saldoEl) {
+            saldoEl.textContent = formatCurrency(saldo);
+            saldoEl.className = saldoEl.className.replace(/text-(green|red)-\d+/, '');
+            saldoEl.classList.add(saldo >= 0 ? 'text-green-600' : 'text-red-600');
+        }
+
+        const riscoVal = kpis.notas_em_risco || 0;
+        const riscoEl = document.getElementById('kpi-efd-risco');
+        if (riscoEl) {
+            riscoEl.textContent = riscoVal;
+            riscoEl.className = riscoEl.className.replace(/text-(rose|gray)-\d+/, '');
+            riscoEl.classList.add(riscoVal > 0 ? 'text-rose-600' : 'text-gray-900');
+        }
+
+        // Fluxo Mensal
+        if (data.fluxo_mensal && data.fluxo_mensal.length > 0) {
+            renderChart('chart-efd-fluxo', {
+                chart: { type: 'bar', height: 320, stacked: false, toolbar: { show: false } },
+                series: [
+                    { name: 'Entradas', data: data.fluxo_mensal.map(d => d.entradas) },
+                    { name: 'Saidas', data: data.fluxo_mensal.map(d => d.saidas) }
+                ],
+                xaxis: {
+                    categories: data.fluxo_mensal.map(d => d.label)
+                },
+                yaxis: {
+                    labels: { formatter: (val) => formatCurrency(val) }
+                },
+                plotOptions: { bar: { horizontal: false, columnWidth: '50%' } },
+                dataLabels: { enabled: false },
+                colors: ['#22c55e', '#ef4444'],
+                tooltip: {
+                    y: { formatter: (val) => formatCurrency(val) }
+                }
+            });
+        }
+
+        // Volume por Bloco
+        const blocos = data.volume_blocos || {};
+        const totalBlocos = (blocos.A ? blocos.A.notas : 0) + (blocos.C ? blocos.C.notas : 0) + (blocos.D ? blocos.D.notas : 0);
+        const blcoEl = document.getElementById('chart-efd-blocos');
+        if (blcoEl) {
+            if (totalBlocos === 0) {
+                blcoEl.innerHTML = '<div class="flex items-center justify-center h-full text-gray-400 text-sm">Sem dados</div>';
+            } else {
+                renderChart('chart-efd-blocos', {
+                    chart: { type: 'donut', height: 320 },
+                    series: [blocos.A.valor, blocos.C.valor, blocos.D.valor],
+                    labels: ['Bloco A', 'Bloco C', 'Bloco D'],
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        y: { formatter: (val) => formatCurrency(val) }
+                    }
+                });
+            }
+        }
+
+        // Tributos por Tipo EFD
+        if (data.tributos_por_tipo) {
+            const tributosEfd = data.tributos_por_tipo.filter(d => d.valor > 0);
+            if (tributosEfd.length > 0) {
+                renderChart('chart-efd-tributos', {
+                    chart: { type: 'pie', height: 320 },
+                    series: tributosEfd.map(d => d.valor),
+                    labels: tributosEfd.map(d => d.tipo),
+                    legend: { position: 'bottom' },
+                    colors: ['#3b82f6', '#f59e0b', '#ef4444'],
+                    tooltip: {
+                        y: { formatter: (val) => formatCurrency(val) }
+                    }
+                });
+            } else {
+                const tributosEl = document.getElementById('chart-efd-tributos');
+                if (tributosEl) {
+                    tributosEl.innerHTML = '<div class="flex items-center justify-center h-full text-gray-400 text-sm">Sem dados tributarios</div>';
+                }
+            }
+        }
+
+        // Top Fornecedores EFD
+        if (data.top_fornecedores && data.top_fornecedores.length > 0) {
+            renderChart('chart-efd-fornecedores', {
+                chart: { type: 'bar', height: 320, toolbar: { show: false } },
+                series: [{
+                    name: 'Valor',
+                    data: data.top_fornecedores.map(d => d.total_valor)
+                }],
+                xaxis: {
+                    categories: data.top_fornecedores.map(d => truncate(d.razao_social || d.cnpj_cpf, 20)),
+                    labels: { rotate: -45, style: { fontSize: '10px' } }
+                },
+                yaxis: {
+                    labels: { formatter: (val) => formatCurrency(val) }
+                },
+                plotOptions: { bar: { horizontal: false, columnWidth: '60%' } },
+                dataLabels: { enabled: false },
+                colors: ['#f97316'],
+                tooltip: {
+                    custom: function({ series, seriesIndex, dataPointIndex }) {
+                        const d = data.top_fornecedores[dataPointIndex];
+                        const irregularBadge = d.irregular ? ' <span style="color:#ef4444">[IRREGULAR]</span>' : '';
+                        return '<div class="p-2 text-xs">'
+                            + '<b>' + (d.razao_social || d.cnpj_cpf) + '</b>' + irregularBadge
+                            + '<br>' + formatCurrency(d.total_valor) + ' (' + d.total_notas + ' notas)'
+                            + '</div>';
+                    }
+                }
+            });
+        }
+
+        // Top Clientes EFD
+        if (data.top_clientes && data.top_clientes.length > 0) {
+            renderChart('chart-efd-clientes', {
+                chart: { type: 'bar', height: 320, toolbar: { show: false } },
+                series: [{
+                    name: 'Valor',
+                    data: data.top_clientes.map(d => d.total_valor)
+                }],
+                xaxis: {
+                    categories: data.top_clientes.map(d => truncate(d.razao_social || d.cnpj_cpf, 20)),
+                    labels: { rotate: -45, style: { fontSize: '10px' } }
+                },
+                yaxis: {
+                    labels: { formatter: (val) => formatCurrency(val) }
+                },
+                plotOptions: { bar: { horizontal: false, columnWidth: '60%' } },
+                dataLabels: { enabled: false },
+                colors: ['#22c55e'],
+                tooltip: {
+                    custom: function({ series, seriesIndex, dataPointIndex }) {
+                        const d = data.top_clientes[dataPointIndex];
+                        const irregularBadge = d.irregular ? ' <span style="color:#ef4444">[IRREGULAR]</span>' : '';
+                        return '<div class="p-2 text-xs">'
+                            + '<b>' + (d.razao_social || d.cnpj_cpf) + '</b>' + irregularBadge
+                            + '<br>' + formatCurrency(d.total_valor) + ' (' + d.total_notas + ' notas)'
+                            + '</div>';
+                    }
+                }
+            });
+        }
+    }
+
+    // Graficos e logica da tab Participantes
+    function renderParticipantesCharts(data) {
+        participantesData = data;
+        tipoAtivo = 'fornecedores';
+        participanteAberto = null;
+
+        renderConcentracaoAlertas(data.concentracao || {});
+        renderTabelaParticipantes(data.fornecedores || []);
+
+        const btnF = document.getElementById('btn-fornecedores');
+        const btnC = document.getElementById('btn-clientes');
+        if (btnF) {
+            btnF.onclick = () => setTipoParticipante('fornecedores');
+        }
+        if (btnC) {
+            btnC.onclick = () => setTipoParticipante('clientes');
+        }
+
+        const fechar = document.getElementById('fechar-ficha');
+        if (fechar) {
+            fechar.onclick = fecharFicha;
+        }
+    }
+
+    function setTipoParticipante(tipo) {
+        tipoAtivo = tipo;
+        const btnF = document.getElementById('btn-fornecedores');
+        const btnC = document.getElementById('btn-clientes');
+        if (btnF && btnC) {
+            if (tipo === 'fornecedores') {
+                btnF.className = 'px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white shadow-sm';
+                btnC.className = 'px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50';
+            } else {
+                btnC.className = 'px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white shadow-sm';
+                btnF.className = 'px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50';
+            }
+        }
+        fecharFicha();
+        const lista = participantesData ? (participantesData[tipo] || []) : [];
+        renderTabelaParticipantes(lista);
+    }
+
+    function renderConcentracaoAlertas(concentracao) {
+        const container = document.getElementById('concentracao-alertas');
+        if (!container) return;
+
+        const tipos = [
+            { key: 'fornecedores', label: 'Fornecedores' },
+            { key: 'clientes', label: 'Clientes' },
+        ];
+
+        container.innerHTML = tipos.map(({ key, label }) => {
+            const c = concentracao[key] || { top5_percentual: 0, top5_valor: 0, total_valor: 0 };
+            const pct = c.top5_percentual || 0;
+            let corClasse = 'bg-green-50 border-green-200 text-green-800';
+            let corBarra = 'bg-green-500';
+            if (pct >= 80) {
+                corClasse = 'bg-red-50 border-red-200 text-red-800';
+                corBarra = 'bg-red-500';
+            } else if (pct >= 50) {
+                corClasse = 'bg-amber-50 border-amber-200 text-amber-800';
+                corBarra = 'bg-amber-500';
+            }
+
+            return `<div class="rounded-xl border p-4 ${corClasse}">
+                <p class="text-xs font-semibold uppercase tracking-wide mb-1">Concentracao ${label}</p>
+                <p class="text-2xl font-bold mb-1">${pct}%</p>
+                <p class="text-xs mb-2">Top 5 respondem por ${pct}% do total (${formatCurrency(c.top5_valor)} de ${formatCurrency(c.total_valor)})</p>
+                <div class="h-2 rounded-full bg-gray-200">
+                    <div class="h-2 rounded-full ${corBarra}" style="width:${Math.min(pct, 100)}%"></div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderTabelaParticipantes(lista) {
+        const tbody = document.getElementById('tabela-participantes');
+        const empty = document.getElementById('participantes-empty');
+        if (!tbody) return;
+
+        if (!lista || lista.length === 0) {
+            tbody.innerHTML = '';
+            if (empty) empty.classList.remove('hidden');
+            return;
+        }
+        if (empty) empty.classList.add('hidden');
+
+        const maxValor = lista.length > 0 ? lista[0].total_valor : 1;
+
+        tbody.innerHTML = lista.map((p, i) => {
+            const pctBarra = maxValor > 0 ? Math.round((p.total_valor / maxValor) * 100) : 0;
+            const irregularBadge = p.irregular
+                ? '<span class="ml-1 px-1.5 py-0.5 rounded text-xs bg-red-100 text-red-700">Irregular</span>'
+                : '';
+            const regimeBadge = p.regime
+                ? `<span class="ml-1 px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-600">${p.regime}</span>`
+                : '';
+
+            return `<tr class="hover:bg-gray-50 transition-colors participante-row" data-id="${p.participante_id}">
+                <td class="px-4 py-3 text-gray-400 font-mono text-xs">${i + 1}</td>
+                <td class="px-4 py-3">
+                    <div class="font-medium text-gray-900">${p.razao_social || p.cnpj_cpf || '—'}${irregularBadge}${regimeBadge}</div>
+                    <div class="text-xs text-gray-400 mt-0.5">${p.cnpj_cpf || ''}</div>
+                    <div class="mt-1 h-1.5 rounded-full bg-gray-100 w-full max-w-xs">
+                        <div class="h-1.5 rounded-full bg-blue-400" style="width:${pctBarra}%"></div>
+                    </div>
+                </td>
+                <td class="px-4 py-3 text-right font-semibold text-gray-900">${formatCurrency(p.total_valor)}</td>
+                <td class="px-4 py-3 text-right text-gray-600">${p.total_notas}</td>
+                <td class="px-4 py-3 text-right text-gray-600">${formatCurrency(p.ticket_medio)}</td>
+                <td class="px-4 py-3 text-right text-gray-600">${p.percentual}%</td>
+                <td class="px-4 py-3 text-center">
+                    <button onclick="(function(){ const mod = window.__analytics; if(mod) mod.abrirFicha(${p.participante_id}); })()"
+                        class="btn-ficha px-2 py-1 rounded text-xs bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100">
+                        Ver ficha &#9658;
+                    </button>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    async function abrirFicha(participanteId) {
+        const painel = document.getElementById('ficha-participante');
+        const loading = document.getElementById('ficha-loading');
+        const content = document.getElementById('ficha-content');
+        if (!painel) return;
+
+        // Toggle: clicar 2x no mesmo fecha
+        if (participanteAberto === participanteId) {
+            fecharFicha();
+            return;
+        }
+        participanteAberto = participanteId;
+
+        // Destaca linha
+        document.querySelectorAll('.participante-row').forEach(r => r.classList.remove('bg-blue-50'));
+        const linha = document.querySelector(`.participante-row[data-id="${participanteId}"]`);
+        if (linha) linha.classList.add('bg-blue-50');
+
+        painel.classList.remove('hidden');
+        if (loading) loading.classList.remove('hidden');
+        if (content) content.classList.add('hidden');
+
+        const params = getFilterParams();
+        try {
+            const resp = await fetch(`/app/analytics/participantes/${participanteId}/ficha?${params}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            });
+            if (!resp.ok) throw new Error('Erro ao carregar ficha');
+            const data = await resp.json();
+            if (loading) loading.classList.add('hidden');
+            renderFichaParticipante(data);
+            if (content) content.classList.remove('hidden');
+        } catch (e) {
+            if (loading) loading.classList.add('hidden');
+            if (painel) painel.innerHTML += '<p class="text-red-500 text-sm mt-2">Erro ao carregar ficha.</p>';
+        }
+    }
+
+    function fecharFicha() {
+        participanteAberto = null;
+        const painel = document.getElementById('ficha-participante');
+        if (painel) painel.classList.add('hidden');
+        document.querySelectorAll('.participante-row').forEach(r => r.classList.remove('bg-blue-50'));
+    }
+
+    function renderFichaParticipante(data) {
+        const p = data.participante || {};
+        const r = data.resumo || {};
+
+        setKpi('ficha-nome', p.razao_social || p.cnpj_cpf || '—');
+        setKpi('ficha-cnpj', p.cnpj_cpf || '—');
+        setKpi('ficha-total-notas', r.total_notas || 0);
+        setKpi('ficha-entradas', formatCurrency(r.total_entradas || 0));
+        setKpi('ficha-saidas', formatCurrency(r.total_saidas || 0));
+        setKpi('ficha-tributos', formatCurrency(r.carga_tributaria || 0));
+        setKpi('ficha-ticket', formatCurrency(r.ticket_medio || 0));
+        setKpi('ficha-ultima-consulta', p.ultima_consulta || 'Nunca');
+
+        // Grafico de evolucao
+        const evolucao = data.evolucao_mensal || [];
+        if (evolucao.length > 0) {
+            renderChart('chart-ficha-evolucao', {
+                chart: { type: 'bar', height: 256, stacked: false, toolbar: { show: false } },
+                series: [
+                    { name: 'Entradas', data: evolucao.map(d => d.entradas) },
+                    { name: 'Saidas',   data: evolucao.map(d => d.saidas) },
+                ],
+                xaxis: { categories: evolucao.map(d => d.label) },
+                yaxis: { labels: { formatter: (val) => formatCurrency(val) } },
+                plotOptions: { bar: { horizontal: false, columnWidth: '50%' } },
+                dataLabels: { enabled: false },
+                colors: ['#22c55e', '#ef4444'],
+                tooltip: { y: { formatter: (val) => formatCurrency(val) } },
+            });
+        }
+
+        // Tabela ultimas notas
+        const tbody = document.getElementById('ficha-ultimas-notas');
+        if (tbody) {
+            const notas = data.ultimas_notas || [];
+            if (notas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="px-3 py-4 text-center text-gray-400">Nenhuma nota</td></tr>';
+            } else {
+                tbody.innerHTML = notas.map(n => {
+                    const corTipo = n.tipo_nota === 'E' ? 'text-green-700 bg-green-50' : 'text-red-700 bg-red-50';
+                    return `<tr class="hover:bg-gray-50">
+                        <td class="px-3 py-2 text-gray-600">${n.data_emissao}</td>
+                        <td class="px-3 py-2"><span class="px-1.5 py-0.5 rounded text-xs font-medium ${corTipo}">${n.tipo_nota}</span></td>
+                        <td class="px-3 py-2 text-gray-500">${n.bloco}</td>
+                        <td class="px-3 py-2 text-right font-medium text-gray-800">${formatCurrency(n.vl_doc)}</td>
+                    </tr>`;
+                }).join('');
+            }
+        }
+    }
+
+    // =========================================================================
+    // Modulo Riscos
+    // =========================================================================
+
+    function renderRiscosCharts(data) {
+        renderScoreCarteira(data.score_carteira || {});
+        renderGapImportacoes(data.gap_importacoes || []);
+        renderTabelaIrregulares(data.fornecedores_irregulares || []);
+        renderTabelaMudancas(data.mudancas_regime || []);
+        renderTabelaNotasRisco(data.notas_em_risco || []);
+    }
+
+    function renderScoreCarteira(score) {
+        const pctRegular = score.percentual_regular || 0;
+        const irregulares = score.irregulares || 0;
+
+        const corPctEl = document.getElementById('score-percentual-regular');
+        if (corPctEl) {
+            corPctEl.textContent = pctRegular + '%';
+            corPctEl.className = corPctEl.className.replace(/text-(green|amber|red)-\d+/, '');
+            corPctEl.classList.add(pctRegular >= 90 ? 'text-green-600' : pctRegular >= 70 ? 'text-amber-600' : 'text-red-600');
+        }
+
+        const irregEl = document.getElementById('score-irregulares');
+        if (irregEl) {
+            irregEl.textContent = irregulares;
+            irregEl.className = irregEl.className.replace(/text-(gray|red)-\d+/, '');
+            irregEl.classList.add(irregulares === 0 ? 'text-gray-900' : 'text-red-600');
+        }
+
+        setKpi('score-total-participantes', score.participantes_ativos || 0);
+        setKpi('score-valor-risco', formatCurrency(score.valor_total_em_risco || 0));
+    }
+
+    function renderGapImportacoes(gaps) {
+        const el = document.getElementById('gap-importacoes');
+        if (!el || !gaps.length) return;
+
+        const linhas = gaps.map(g => {
+            const fiscal = g.tem_fiscal
+                ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">&#10003; Fiscal</span>'
+                : '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-400">&mdash;</span>';
+            const contrib = g.tem_contrib
+                ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">&#10003; Contrib.</span>'
+                : '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-400">&mdash;</span>';
+            const gapBadge = g.gap
+                ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-red-100 text-red-700">GAP</span>'
+                : '';
+            return `<td class="px-3 py-2 text-center align-top">
+                <p class="text-xs font-medium text-gray-600 mb-1">${g.label}</p>
+                <div class="flex flex-col gap-1 items-center">${fiscal}${contrib}${gapBadge}</div>
+            </td>`;
+        });
+
+        el.innerHTML = `<table class="w-full text-xs"><tbody><tr>${linhas.join('')}</tr></tbody></table>`;
+    }
+
+    function renderTabelaIrregulares(lista) {
+        const el = document.getElementById('tabela-irregulares-container');
+        if (!el) return;
+
+        if (!lista.length) {
+            el.innerHTML = '<p class="text-sm text-green-600 py-4">Nenhum participante irregular encontrado no periodo.</p>';
+            return;
+        }
+
+        const linhas = lista.map(p => `<tr class="hover:bg-gray-50">
+            <td class="px-4 py-3">
+                <div class="font-medium text-gray-900">${p.razao_social || p.cnpj_cpf || '—'}</div>
+                <div class="text-xs text-gray-400">${p.cnpj_cpf || ''}</div>
+            </td>
+            <td class="px-4 py-3 text-center">
+                <span class="px-2 py-0.5 rounded text-xs bg-red-100 text-red-700">${p.situacao || '—'}</span>
+            </td>
+            <td class="px-4 py-3 text-xs text-gray-500">${p.regime || '—'}</td>
+            <td class="px-4 py-3 text-right font-semibold text-red-700">${formatCurrency(p.valor_em_risco)}</td>
+            <td class="px-4 py-3 text-right text-gray-600">${p.total_notas}</td>
+            <td class="px-4 py-3 text-right text-gray-400 text-xs">${p.ultima_nota || '—'}</td>
+        </tr>`).join('');
+
+        el.innerHTML = `<div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-600">Participante</th>
+                        <th class="px-4 py-3 text-center font-semibold text-gray-600">Situacao</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-600">Regime</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600">Valor em Risco</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600">Notas</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600">Ultima Nota</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">${linhas}</tbody>
+            </table>
+        </div>`;
+    }
+
+    function renderTabelaMudancas(lista) {
+        const el = document.getElementById('tabela-mudancas-container');
+        if (!el) return;
+
+        if (!lista.length) {
+            el.innerHTML = '<p class="text-sm text-gray-400 py-4">Nenhuma atualizacao de cadastro nos ultimos 90 dias.</p>';
+            return;
+        }
+
+        const linhas = lista.map(p => {
+            const situacaoUpper = (p.situacao_atual || '').toUpperCase();
+            const irregular = p.situacao_atual && !['02', 'ATIVA'].includes(situacaoUpper);
+            const badge = irregular
+                ? `<span class="ml-1 px-1.5 py-0.5 rounded text-xs bg-red-100 text-red-700">Irregular</span>`
+                : '';
+            return `<tr class="hover:bg-gray-50">
+                <td class="px-4 py-3">
+                    <div class="font-medium text-gray-900">${p.razao_social || p.cnpj_cpf || '—'}${badge}</div>
+                    <div class="text-xs text-gray-400">${p.cnpj_cpf || ''}</div>
+                </td>
+                <td class="px-4 py-3 text-xs text-gray-600">${p.regime_atual || '—'}</td>
+                <td class="px-4 py-3 text-xs text-gray-600">${p.situacao_atual || '—'}</td>
+                <td class="px-4 py-3 text-right text-gray-400 text-xs">${p.ultima_atualizacao || '—'}</td>
+                <td class="px-4 py-3 text-right text-gray-600">${p.total_notas}</td>
+            </tr>`;
+        }).join('');
+
+        el.innerHTML = `<div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-600">Participante</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-600">Regime</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-600">Situacao</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600">Atualizado em</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600">Notas</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">${linhas}</tbody>
+            </table>
+        </div>`;
+    }
+
+    function renderTabelaNotasRisco(lista) {
+        const el = document.getElementById('tabela-notas-risco-container');
+        if (!el) return;
+
+        if (!lista.length) {
+            el.innerHTML = '<p class="text-sm text-green-600 py-4">Nenhuma nota com participante irregular no periodo.</p>';
+            return;
+        }
+
+        const linhas = lista.map(n => {
+            const corTipo = n.tipo_nota === 'E'
+                ? 'bg-green-100 text-green-700'
+                : 'bg-red-100 text-red-700';
+            return `<tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 text-gray-400 text-xs">${n.data_emissao || '—'}</td>
+                <td class="px-4 py-3"><span class="px-1.5 py-0.5 rounded text-xs font-medium ${corTipo}">${n.tipo_nota}</span></td>
+                <td class="px-4 py-3">
+                    <div class="font-medium text-gray-900 text-sm">${n.razao_social || n.cnpj_cpf || '—'}</div>
+                    <div class="text-xs text-gray-400">${n.cnpj_cpf || ''}</div>
+                </td>
+                <td class="px-4 py-3 text-center">
+                    <span class="px-2 py-0.5 rounded text-xs bg-red-100 text-red-700">${n.situacao || '—'}</span>
+                </td>
+                <td class="px-4 py-3 text-xs text-gray-500">${n.bloco}</td>
+                <td class="px-4 py-3 text-right font-semibold text-gray-900">${formatCurrency(n.vl_doc)}</td>
+            </tr>`;
+        }).join('');
+
+        el.innerHTML = `<div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-600">Data</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-600">Tipo</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-600">Participante</th>
+                        <th class="px-4 py-3 text-center font-semibold text-gray-600">Situacao</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-600">Bloco</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600">Valor</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">${linhas}</tbody>
+            </table>
+        </div>`;
+    }
+
+    // =========================================================================
+    // Modulo Tributario EFD
+    // =========================================================================
+
+    function renderTributarioEfdCharts(data) {
+        renderTabelaTributarioConsolidado(data.consolidado || {});
+        renderGraficoTributarioMensal(data.mensal || []);
+        renderGraficoAliquotaEfd(data.aliquota || []);
+        renderTabelaTribRegime(data.por_regime || []);
+    }
+
+    function renderTabelaTributarioConsolidado(consolidado) {
+        const el = document.getElementById('tabela-tributario-consolidado');
+        if (!el) return;
+
+        const tributos = [
+            { label: 'ICMS',   dados: consolidado.icms   || { credito: 0, debito: 0, saldo: 0 } },
+            { label: 'PIS',    dados: consolidado.pis    || { credito: 0, debito: 0, saldo: 0 } },
+            { label: 'COFINS', dados: consolidado.cofins || { credito: 0, debito: 0, saldo: 0 } },
+            { label: 'Total',  dados: consolidado.totais || { credito: 0, debito: 0, saldo: 0 }, bold: true },
+        ];
+
+        const linhas = tributos.map(t => {
+            const saldo = t.dados.saldo || 0;
+            const corSaldo = saldo >= 0 ? 'text-green-700' : 'text-red-700';
+            const trClass = t.bold ? 'bg-gray-50 font-semibold' : 'hover:bg-gray-50';
+            return `<tr class="${trClass}">
+                <td class="px-4 py-3 font-medium text-gray-900">${t.label}</td>
+                <td class="px-4 py-3 text-right text-green-700">${formatCurrency(t.dados.credito)}</td>
+                <td class="px-4 py-3 text-right text-red-700">${formatCurrency(t.dados.debito)}</td>
+                <td class="px-4 py-3 text-right ${corSaldo}">${formatCurrency(saldo)}</td>
+            </tr>`;
+        }).join('');
+
+        el.innerHTML = `<div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-600">Tributo</th>
+                        <th class="px-4 py-3 text-right font-semibold text-green-600">Credito (Entradas)</th>
+                        <th class="px-4 py-3 text-right font-semibold text-red-600">Debito (Saidas)</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600">Saldo</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">${linhas}</tbody>
+            </table>
+        </div>`;
+    }
+
+    function renderGraficoTributarioMensal(mensal) {
+        const el = document.getElementById('chart-trib-mensal');
+        if (!el) return;
+
+        if (!mensal.length) {
+            el.innerHTML = '<div class="flex items-center justify-center h-full text-gray-400 text-sm">Sem dados</div>';
+            return;
+        }
+
+        renderChart('chart-trib-mensal', {
+            chart: { type: 'bar', height: 288, stacked: true, toolbar: { show: false } },
+            series: [
+                { name: 'ICMS',   data: mensal.map(d => d.icms) },
+                { name: 'PIS',    data: mensal.map(d => d.pis) },
+                { name: 'COFINS', data: mensal.map(d => d.cofins) },
+            ],
+            xaxis: { categories: mensal.map(d => d.label) },
+            yaxis: { labels: { formatter: (val) => formatCurrency(val) } },
+            plotOptions: { bar: { horizontal: false, columnWidth: '60%' } },
+            dataLabels: { enabled: false },
+            colors: ['#3b82f6', '#f59e0b', '#ef4444'],
+            tooltip: { y: { formatter: (val) => formatCurrency(val) } },
+        });
+    }
+
+    function renderGraficoAliquotaEfd(aliquota) {
+        const el = document.getElementById('chart-trib-aliquota');
+        if (!el) return;
+
+        if (!aliquota.length) {
+            el.innerHTML = '<div class="flex items-center justify-center h-full text-gray-400 text-sm">Sem dados</div>';
+            return;
+        }
+
+        renderChart('chart-trib-aliquota', {
+            chart: { type: 'area', height: 288, toolbar: { show: false } },
+            series: [{ name: 'Aliquota Efetiva', data: aliquota.map(d => d.aliquota_efetiva) }],
+            xaxis: { categories: aliquota.map(d => d.label) },
+            yaxis: { labels: { formatter: (val) => val.toFixed(2) + '%' }, min: 0 },
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth', width: 2 },
+            fill: { type: 'gradient', gradient: { opacityFrom: 0.4, opacityTo: 0.1 } },
+            colors: ['#8b5cf6'],
+            tooltip: { y: { formatter: (val) => val.toFixed(2) + '%' } },
+        });
+    }
+
+    function renderTabelaTribRegime(lista) {
+        const el = document.getElementById('tabela-trib-regime');
+        if (!el) return;
+
+        if (!lista.length) {
+            el.innerHTML = '<p class="text-sm text-gray-400 py-4">Sem dados de notas EFD no periodo.</p>';
+            return;
+        }
+
+        const linhas = lista.map(r => `<tr class="hover:bg-gray-50">
+            <td class="px-4 py-3 font-medium text-gray-900">${r.regime}</td>
+            <td class="px-4 py-3 text-right text-gray-600">${r.total_notas}</td>
+            <td class="px-4 py-3 text-right font-semibold text-gray-900">${formatCurrency(r.vl_total)}</td>
+            <td class="px-4 py-3 text-right text-blue-700">${formatCurrency(r.icms_total)}</td>
+            <td class="px-4 py-3 text-right text-amber-700">${formatCurrency(r.pis_total)}</td>
+            <td class="px-4 py-3 text-right text-red-700">${formatCurrency(r.cofins_total)}</td>
+            <td class="px-4 py-3 text-right text-gray-500">${r.aliquota_media.toFixed(2)}%</td>
+        </tr>`).join('');
+
+        el.innerHTML = `<div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-600">Regime</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600">Notas</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600">Valor Total</th>
+                        <th class="px-4 py-3 text-right font-semibold text-blue-600">ICMS</th>
+                        <th class="px-4 py-3 text-right font-semibold text-amber-600">PIS</th>
+                        <th class="px-4 py-3 text-right font-semibold text-red-600">COFINS</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600">Aliquota Media</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">${linhas}</tbody>
+            </table>
+        </div>`;
+    }
+
+    // Atualiza elemento KPI pelo ID
+    function setKpi(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+    }
+
     // Renderiza um grafico (cria ou atualiza)
     function renderChart(elementId, options) {
         const element = document.getElementById(elementId);
         if (!element) return;
+
+        // Guard: ApexCharts CDN ainda nao carregou, tentar novamente em 300ms
+        if (typeof ApexCharts === 'undefined') {
+            setTimeout(() => renderChart(elementId, options), 300);
+            return;
+        }
 
         // Destroi grafico existente
         if (charts[elementId]) {
@@ -385,13 +1118,7 @@
         if (emptyState) emptyState.classList.add('hidden');
     }
 
-    // Inicializa quando o DOM estiver pronto
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
-
-    // Expoe funcao de inicializacao para SPA
+    // Expoe funcao de inicializacao para SPA (chamada pelo spa.js via tentarExecutarFuncao)
     window.initAnalytics = init;
+    window.__analytics = { abrirFicha };
 })();
