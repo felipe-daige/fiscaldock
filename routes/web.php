@@ -2,12 +2,13 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CreditController;
-use App\Http\Controllers\Dashboard\AnalyticsController;
+use App\Http\Controllers\Dashboard\BiController;
 use App\Http\Controllers\Dashboard\ClienteController;
 use App\Http\Controllers\Dashboard\ConsultaController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\MinhaEmpresaController;
 use App\Http\Controllers\Dashboard\MonitoramentoController;
+use App\Http\Controllers\Dashboard\NotaFiscalController;
 use App\Http\Controllers\Landing\LandingPageController;
 use App\Http\Controllers\SpedUploadController;
 use Illuminate\Support\Facades\Route;
@@ -143,13 +144,24 @@ Route::middleware('auth')->group(function () {
         Route::post('/xml/importacao/{id}/salvar-cnpjs', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'salvarCnpjsNovos'])->name('xml.importacao.salvar-cnpjs');
     });
 
-    // Analytics / BI Fiscal
-    Route::get('app/analytics', [AnalyticsController::class, 'index'])->name('app.analytics.index');
-    Route::prefix('app/analytics')->name('app.analytics.')->group(function () {
-        Route::get('/faturamento', [AnalyticsController::class, 'faturamento'])->name('faturamento');
-        Route::get('/compras', [AnalyticsController::class, 'compras'])->name('compras');
-        Route::get('/tributos', [AnalyticsController::class, 'tributos'])->name('tributos');
-        Route::get('/resumo', [AnalyticsController::class, 'resumo'])->name('resumo');
+    // Notas Fiscais (listagem unificada EFD + XML)
+    Route::get('app/notas-fiscais', [NotaFiscalController::class, 'index'])->name('app.notas-fiscais.index');
+    Route::get('app/notas-fiscais/{origem}/{id}', [NotaFiscalController::class, 'detalhes'])
+        ->name('app.notas-fiscais.detalhes')
+        ->where('origem', 'efd|xml');
+
+    // BI Fiscal
+    Route::get('app/bi', [BiController::class, 'index'])->name('app.bi.index');
+    Route::prefix('app/bi')->name('app.bi.')->group(function () {
+        Route::get('/faturamento', [BiController::class, 'faturamento'])->name('faturamento');
+        Route::get('/compras', [BiController::class, 'compras'])->name('compras');
+        Route::get('/tributos', [BiController::class, 'tributos'])->name('tributos');
+        Route::get('/resumo', [BiController::class, 'resumo'])->name('resumo');
+        Route::get('/efd', [BiController::class, 'efd'])->name('efd');
+        Route::get('/participantes', [BiController::class, 'participantes'])->name('participantes');
+        Route::get('/participantes/{id}/ficha', [BiController::class, 'fichaParticipante'])->name('participantes.ficha');
+        Route::get('/riscos', [BiController::class, 'riscos'])->name('riscos');
+        Route::get('/tributario-efd', [BiController::class, 'tributarioEfd'])->name('tributario-efd');
     });
 
     // Score Fiscal (placeholder público)
