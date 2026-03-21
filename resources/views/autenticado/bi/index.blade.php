@@ -548,4 +548,4 @@
 
 {{-- ApexCharts (local) --}}
 <script src="/js/apexcharts.min.js"></script>
-<script src="/js/analytics.js"></script>
+<script src="/js/bi.js"></script>
