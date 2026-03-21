@@ -15,7 +15,7 @@ beforeEach(function () {
 });
 
 test('faturamento endpoint returns json structure', function () {
-    $response = $this->getJson('/app/analytics/faturamento');
+    $response = $this->getJson('/app/bi/faturamento');
 
     $response->assertStatus(200)
         ->assertJsonStructure([
@@ -26,7 +26,7 @@ test('faturamento endpoint returns json structure', function () {
 });
 
 test('efd endpoint returns json structure', function () {
-    $response = $this->getJson('/app/analytics/efd');
+    $response = $this->getJson('/app/bi/efd');
 
     $response->assertStatus(200)
         ->assertJsonStructure([
@@ -48,7 +48,7 @@ test('efd endpoint returns json structure', function () {
 });
 
 test('participantes endpoint returns json structure', function () {
-    $response = $this->getJson('/app/analytics/participantes');
+    $response = $this->getJson('/app/bi/participantes');
 
     $response->assertStatus(200)
         ->assertJsonStructure([
@@ -62,7 +62,7 @@ test('participantes endpoint returns json structure', function () {
 });
 
 test('riscos endpoint returns json structure', function () {
-    $response = $this->getJson('/app/analytics/riscos');
+    $response = $this->getJson('/app/bi/riscos');
 
     $response->assertStatus(200)
         ->assertJsonStructure([
@@ -75,7 +75,7 @@ test('riscos endpoint returns json structure', function () {
 });
 
 test('tributario efd endpoint returns json structure', function () {
-    $response = $this->getJson('/app/analytics/tributario-efd');
+    $response = $this->getJson('/app/bi/tributario-efd');
 
     $response->assertStatus(200)
         ->assertJsonStructure([
@@ -86,22 +86,22 @@ test('tributario efd endpoint returns json structure', function () {
         ]);
 });
 
-test('analytics page renders for authenticated user', function () {
-    $response = $this->get('/app/analytics');
+test('bi page renders for authenticated user', function () {
+    $response = $this->get('/app/bi');
 
     $response->assertStatus(200);
     $response->assertSee('BI Fiscal');
-    $response->assertSee('analytics.js');
-    $response->assertSee('cdn.jsdelivr.net/npm/apexcharts', false);
+    $response->assertSee('bi.js');
+    $response->assertSee('apexcharts.min.js', false);
 });
 
-test('analytics page does not have version querystring on analytics js', function () {
-    $response = $this->get('/app/analytics');
+test('bi page does not have version querystring on bi js', function () {
+    $response = $this->get('/app/bi');
 
     $response->assertStatus(200);
     // @todo Bug 2 fix (Task 2): this test is a regression pin intentionally failing until
-    // the ?v= version querystring is removed from the analytics.js <script> tag in the view.
-    // Bug 2: script tag deve ser /js/analytics.js sem ?v= para evitar double-load no SPA
-    $response->assertSee('src="/js/analytics.js"', false);
-    $response->assertDontSee('analytics.js?v=', false);
+    // the ?v= version querystring is removed from the bi.js <script> tag in the view.
+    // Bug 2: script tag deve ser /js/bi.js sem ?v= para evitar double-load no SPA
+    $response->assertSee('src="/js/bi.js"', false);
+    $response->assertDontSee('bi.js?v=', false);
 });
