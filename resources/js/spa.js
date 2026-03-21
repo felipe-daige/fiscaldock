@@ -44,7 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
         monitoramentoParticipante: null, // Código inline na view
         consultas: '/js/consulta-lote.js',
         consultaLote: '/js/consulta-lote.js',
-        analytics: null, // Script carregado como tag externa na view — nao tentar recarregar no SPA
+        bi: null, // Script carregado como tag externa na view — nao tentar recarregar no SPA
+        notasFiscais: null, // Código inline na view
     };
 
     // Converte slug (com hífen/underscore) para camelCase
@@ -81,7 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const paginaCamel = slugToCamel(baseSlug);
         const nomePagina = paginaCamel || 'inicio';
         const nomeFuncao = `init${nomePagina.charAt(0).toUpperCase() + nomePagina.slice(1)}`;
-        const scriptPath = _spaScriptOverrides[nomePagina] || `/js/${nomePagina}.js`;
+        const scriptPath = Object.prototype.hasOwnProperty.call(_spaScriptOverrides, nomePagina)
+            ? _spaScriptOverrides[nomePagina]
+            : `/js/${nomePagina}.js`;
 
         return { nomePagina, scriptPath, nomeFuncao };
     }
@@ -104,12 +107,14 @@ document.addEventListener('DOMContentLoaded', () => {
         '/app/importacao/xml': 'initMonitoramentoXml',
         '/app/consultas/nova': 'initConsultaLote',
         '/app/perfil': 'initPerfil',
+        '/app/bi': 'initBi',
         '/dashboard': 'initDashboard',
         '/sobre': 'initSobre',
         '/beneficios': 'initBeneficios',
         '/faq': 'initFaq',
         '/impactos': 'initImpactos',
-        '/precos': 'initPrecos'
+        '/precos': 'initPrecos',
+        '/app/notas-fiscais': null, // IIFE inline na view, sem init function
     };
     
     // 0. LIMPAR RECURSOS ANTES DE NAVEGAR
@@ -209,13 +214,13 @@ document.addEventListener('DOMContentLoaded', () => {
             // Ignorar erro se disconnectSSE não estiver definida (página de consulta não foi carregada)
         }
 
-        // Destruir instâncias ApexCharts e resetar estado do módulo analytics
+        // Destruir instâncias ApexCharts e resetar estado do módulo BI
         try {
-            if (typeof window.cleanupAnalytics === 'function') {
-                window.cleanupAnalytics();
+            if (typeof window.cleanupBi === 'function') {
+                window.cleanupBi();
             }
         } catch (error) {
-            // Ignorar erro se cleanupAnalytics não estiver definida (analytics não foi carregado)
+            // Ignorar erro se cleanupBi não estiver definida (BI não foi carregado)
         }
     }
     
@@ -454,6 +459,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. EXECUTAR SCRIPTS
     function executarScripts() {
         const scripts = app.querySelectorAll('script');
+        const loadPromises = [];
+
         scripts.forEach((script, index) => {
             try {
                 // Script externo com src - carregar dinamicamente
@@ -463,6 +470,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!existente) {
                         const novoScript = document.createElement('script');
                         novoScript.src = scriptSrc;
+                        // Collect a promise for each NEW external script
+                        const p = new Promise((resolve) => {
+                            novoScript.onload = resolve;
+                            novoScript.onerror = resolve; // resolve even on error so we don't hang
+                        });
+                        loadPromises.push(p);
                         document.head.appendChild(novoScript);
                     }
                     script.parentNode.removeChild(script);
@@ -478,7 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     novoScript.onerror = function(error) {
                         console.error('Erro ao executar script:', error);
                     };
-                    
+
                     // Capturar erros de sintaxe antes de appendChild
                     try {
                         // Validar sintaxe básica do script
@@ -487,10 +500,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.error('Erro de sintaxe no script:', syntaxError);
                         throw syntaxError;
                     }
-                    
+
                     // Adicionar ao head para executar
                     document.head.appendChild(novoScript);
-                    
+
                     // Remover script original do app
                     script.parentNode.removeChild(script);
                 } else {
@@ -502,16 +515,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Continuar com outros scripts mesmo se um falhar
             }
         });
-        
-        // Aguardar um pouco para garantir que scripts foram executados
-        setTimeout(() => {
-            // Executar funções específicas de cada página
+
+        function chamarFuncoesEspecificas() {
             try {
                 executarFuncoesEspecificas();
             } catch (error) {
                 console.error('Erro ao executar funções específicas:', error);
             }
-        }, 50);
+        }
+
+        if (loadPromises.length > 0) {
+            // Wait for all newly added external scripts to load before calling init functions
+            Promise.all(loadPromises).then(chamarFuncoesEspecificas);
+        } else {
+            // No new external scripts — keep short fallback for inline scripts
+            setTimeout(chamarFuncoesEspecificas, 50);
+        }
     }
     
     // 4.1. EXECUTAR FUNÇÕES ESPECÍFICAS
@@ -542,7 +561,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (nomePagina && nomePagina !== '') {
             // Verificar se a função já está disponível (código inline já foi executado)
             const infoPagina = obterInfoPagina(caminho);
-            const nomeFuncao = funcoesEspecificas[caminho] || infoPagina.nomeFuncao;
+            const nomeFuncao = Object.prototype.hasOwnProperty.call(funcoesEspecificas, caminho)
+                ? funcoesEspecificas[caminho]
+                : infoPagina.nomeFuncao;
             if (nomeFuncao && window[nomeFuncao] && typeof window[nomeFuncao] === 'function') {
                 // Função já está disponível (provavelmente de código inline), não precisa carregar arquivo
                 return;
@@ -590,8 +611,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // /sobre → initSobre
         // /dashboard → initDashboard
         const infoPagina = obterInfoPagina(caminho);
-        const nomeFuncao = funcoesEspecificas[caminho] || infoPagina.nomeFuncao;
-        
+        const nomeFuncao = Object.prototype.hasOwnProperty.call(funcoesEspecificas, caminho)
+            ? funcoesEspecificas[caminho]
+            : infoPagina.nomeFuncao;
+
         if (nomeFuncao && infoPagina.nomePagina !== '') {
             // Tentar executar a função com retry
             tentarExecutarFuncao(nomeFuncao, 0);
@@ -606,7 +629,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error(`Erro ao executar função ${nomeFuncao}:`, error);
             }
-        } else if (tentativas < 5) {
+        } else if (tentativas < 15) {
             // Função ainda não está disponível, tentar novamente
             setTimeout(() => {
                 tentarExecutarFuncao(nomeFuncao, tentativas + 1);
