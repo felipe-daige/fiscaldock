@@ -671,7 +671,7 @@
                                         <p class="text-xs text-purple-600">Notas Fiscais Extraídas</p>
                                     </div>
                                 </div>
-                                <a href="/app/analytics" class="text-sm text-purple-700 hover:text-purple-800 font-medium hover:underline" data-link>
+                                <a href="/app/bi" class="text-sm text-purple-700 hover:text-purple-800 font-medium hover:underline" data-link>
                                     Ver no BI Fiscal →
                                 </a>
                             </div>
@@ -909,6 +909,30 @@
                         @endforeach
                     </tbody>
                 </table>
+
+                {{-- Paginação --}}
+                @if($importacoes->hasPages())
+                <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between gap-4 text-sm">
+                    <span class="text-gray-500 text-xs">
+                        Mostrando {{ $importacoes->firstItem() }}–{{ $importacoes->lastItem() }} de {{ $importacoes->total() }} importações
+                    </span>
+                    <div class="flex items-center gap-1">
+                        @if($importacoes->onFirstPage())
+                            <span class="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-300 text-xs cursor-not-allowed">Anterior</span>
+                        @else
+                            <a href="{{ $importacoes->previousPageUrl() }}" data-link class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50 transition">Anterior</a>
+                        @endif
+
+                        <span class="px-3 py-1.5 text-xs text-gray-500">{{ $importacoes->currentPage() }} / {{ $importacoes->lastPage() }}</span>
+
+                        @if($importacoes->hasMorePages())
+                            <a href="{{ $importacoes->nextPageUrl() }}" data-link class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50 transition">Próxima</a>
+                        @else
+                            <span class="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-300 text-xs cursor-not-allowed">Próxima</span>
+                        @endif
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
         @endif
@@ -1293,6 +1317,7 @@
         let importandoComNotas = false;
         let reconnectTimer = null;
         let reconnectAttempts = 0;
+        let toastConcluidoMostrado = false; // evita toast duplicado quando SSE mantido aberto
         const MAX_RECONEXOES = 3;
         const DELAY_RECONEXAO_BASE = 3000;
 
@@ -1309,6 +1334,13 @@
                 if (barraProgresso)       barraProgresso.style.width = pct + '%';
                 if (progressoPorcentagem) progressoPorcentagem.textContent = pct + '%';
                 animFrameId = requestAnimationFrame(animarProgresso);
+            } else if (currentProgress > targetProgress) {
+                // Snap imediato para baixo (não animar regressão)
+                currentProgress = targetProgress;
+                const pct = Math.round(currentProgress);
+                if (barraProgresso)       barraProgresso.style.width = pct + '%';
+                if (progressoPorcentagem) progressoPorcentagem.textContent = pct + '%';
+                animFrameId = null;
             } else {
                 animFrameId = null;
             }
@@ -1437,19 +1469,28 @@
             if ((blocos.C || blocos.D) && !blocos.A) blocos.A = { status: 'skip' };
             if (blocos.D && !blocos.C)               blocos.C = { status: 'skip' };
 
-            // Participantes: processando enquanto notas_blocos ainda não chegou;
-            // concluido assim que qualquer bloco de notas aparecer
-            const temQualquerBloco = Object.keys(blocos).length > 0;
-            renderEtapa('participantes', temQualquerBloco ? 'concluido' : 'processando', null);
+            // Participantes (bloco 0): usar status real se presente, senão inferir
+            const isFinalConcluido = payload.status === 'concluido';
+            const bloco0 = blocos['0'];
+            if (bloco0) {
+                const p0Status = (bloco0.status === 'concluido' || bloco0.progresso === 100 || isFinalConcluido)
+                    ? 'concluido' : bloco0.status;
+                renderEtapa('participantes', p0Status, null);
+            } else {
+                // Retrocompatibilidade: se não há bloco 0 mas outros blocos existem, participantes já terminou
+                const temOutroBloco = Object.keys(blocos).some(function(k) { return k !== '0'; });
+                renderEtapa('participantes', temOutroBloco ? 'concluido' : 'processando', null);
+            }
 
             const ordemBlocos = ['A', 'C', 'D'];
-            ordemBlocos.forEach(function(b, i) {
+            ordemBlocos.forEach(function(b) {
                 if (blocos[b]) {
-                    const proximoBlocoIniciou = ordemBlocos.slice(i + 1).some(function(next) { return !!blocos[next]; });
-                    const statusEfetivo = (blocos[b].status !== 'skip' && (blocos[b].progresso === 100 || proximoBlocoIniciou))
+                    const statusEfetivo = (blocos[b].status !== 'skip' && (isFinalConcluido || blocos[b].status === 'concluido' || blocos[b].progresso === 100))
                         ? 'concluido'
                         : blocos[b].status;
                     renderEtapa(b, statusEfetivo, null);
+                } else {
+                    renderEtapa(b, 'pendente', null);
                 }
             });
         }
@@ -1685,8 +1726,9 @@
             // Mini-painel Resumo Final de Notas
             const resumoFinalEl = document.getElementById('resumo-final-notas');
             const resumoFinalContent = document.getElementById('resumo-final-notas-content');
-            if (dados.resumo_final && resumoFinalEl && resumoFinalContent) {
-                const rf = dados.resumo_final;
+            // dados pode ser o próprio resumo_final (n8n envia JSON.stringify) ou conter subchave
+            const rf = dados.resumo_final || (dados.blocos ? dados : null);
+            if (rf && resumoFinalEl && resumoFinalContent) {
                 resumoFinalContent.innerHTML = renderResumoFinal(rf);
                 resumoFinalEl.classList.remove('hidden');
 
@@ -1761,6 +1803,7 @@
                         body: JSON.stringify({
                             ids: participanteIdsFromSSE,
                             page: participantesPage,
+                            importacao_id: importacaoAtualId,
                         }),
                     });
                 } else {
@@ -1812,6 +1855,12 @@
             return 'R$ ' + Number(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
+        function formatDateBR(val) {
+            if (!val) return '—';
+            var p = val.split('T')[0].split('-');
+            return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : val;
+        }
+
         // Helper: renderiza o mini-painel resumo_final
         function renderResumoFinal(rf) {
             if (!rf) return '';
@@ -1821,8 +1870,13 @@
 
             let html = '<div class="space-y-1">';
 
-            // Participantes
-            const part = rf.participantes || {};
+            // Participantes — normaliza tanto rf.participantes (spec) quanto rf.estatisticas (n8n atual)
+            const partRaw = rf.participantes || rf.estatisticas || {};
+            const part = {
+                total:      partRaw.total      ?? (partRaw.total_participantes_processados ?? 0),
+                novos:      partRaw.novos      ?? (partRaw.participantes_novos      ?? 0),
+                duplicados: partRaw.duplicados ?? (partRaw.participantes_repetidos  ?? 0),
+            };
             html += `<div class="flex items-center gap-2 py-1">
                 <span class="text-green-600 font-bold w-4">✓</span>
                 <span class="w-44 text-gray-700">Participantes</span>
@@ -1878,6 +1932,13 @@
                 }
                 return '';
             }
+
+            // Ordenar por quantidade de notas (desc) usando dados do resumo SSE
+            participantes.sort((a, b) => {
+                const aNotas = (participantesResumoMap[a.id] || {}).total_notas || 0;
+                const bNotas = (participantesResumoMap[b.id] || {}).total_notas || 0;
+                return bNotas - aNotas;
+            });
 
             participantes.forEach(p => {
                 const cnpjFormatado = p.cnpj ? p.cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5') : '-';
@@ -1998,11 +2059,11 @@
                                     <th class="px-2 py-1 text-right text-gray-500">Valor</th>
                                 </tr></thead>
                                 <tbody class="divide-y divide-gray-200">` +
-                                notas.slice(0, 50).map(n => `<tr class="hover:bg-gray-50">
+                                notas.slice(0, 50).map(n => `<tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='/app/importacao/efd/nota/${n.id}'">
                                     <td class="px-2 py-1 font-mono">${n.numero || '—'}</td>
                                     <td class="px-2 py-1">${n.serie || '—'}</td>
                                     <td class="px-2 py-1">${n.modelo || '—'}</td>
-                                    <td class="px-2 py-1">${n.data_emissao || '—'}</td>
+                                    <td class="px-2 py-1">${formatDateBR(n.data_emissao)}</td>
                                     <td class="px-2 py-1 text-center">${n.tipo_operacao === '1' ? '<span class="text-green-700">E</span>' : '<span class="text-amber-700">S</span>'}</td>
                                     <td class="px-2 py-1 text-right">${formatBRL(n.valor_total)}</td>
                                 </tr>`).join('') +
@@ -2105,61 +2166,118 @@
                 console.log('[Monitoramento SPED] SSE conectado');
             };
 
-            let rafPendente = null;
-
             eventSourceTxt.onmessage = function(event) {
-                const rawData = event.data;
+                let statusConcluido = false;
+                try {
+                    const dados = JSON.parse(event.data);
+                    console.log('[Monitoramento SPED] Dados SSE:', dados);
+                    atualizarProgresso(dados);
 
-                if (rafPendente !== null) return;
+                    if (dados.status === 'concluido') {
+                        // Usa mensagem do n8n ou monta mensagem com dados
+                        const dadosN8n = dados.dados || {};
+                        // resumo_final vem no top-level do SSE (gravado por receiveNotasEfdProgress)
+                        if (dados.resumo_final && !dadosN8n.resumo_final) {
+                            dadosN8n.resumo_final = dados.resumo_final;
+                        }
 
-                rafPendente = requestAnimationFrame(() => {
-                    rafPendente = null;
-                    let statusConcluido = false;
-                    try {
-                        const dados = JSON.parse(rawData);
-                        console.log('[Monitoramento SPED] Dados SSE:', dados);
-                        atualizarProgresso(dados);
+                        const temResumoFinal = !!(dados.resumo_final || dadosN8n.resumo_final);
 
-                        if (dados.status === 'concluido') {
-                            statusConcluido = true;
-                            if (eventSourceTxt) {
-                                eventSourceTxt.close();
-                                eventSourceTxt = null;
+                        // Sem resumo_final: fase 1 concluída mas notas ainda em andamento.
+                        // NÃO fechar SSE, NÃO setar importacaoEmAndamento=false, NÃO mostrar resultados.
+                        if (!temResumoFinal) {
+                            console.log('[Monitoramento SPED] Status concluido sem resumo_final — aguardando fase de notas');
+                            return;
+                        }
+
+                        // Conclusão real — temos todos os dados
+                        statusConcluido = true;
+                        importacaoEmAndamento = false;
+
+                        // Popular campos flat de stats a partir de resumo_final.estatisticas
+                        // quando os campos diretos estão ausentes (fase 2 é a fonte de verdade)
+                        if (dadosN8n.resumo_final?.estatisticas) {
+                            const s = dadosN8n.resumo_final.estatisticas;
+                            if (!dadosN8n.total_participantes && !dadosN8n.total_processados) {
+                                dadosN8n.total_participantes = s.total_participantes_processados || 0;
                             }
-                            importacaoEmAndamento = false;
+                            if (!dadosN8n.novos_salvos && !dadosN8n.novos) {
+                                dadosN8n.novos_salvos = s.participantes_novos || 0;
+                            }
+                            if (!dadosN8n.duplicados_identificados) {
+                                dadosN8n.duplicados_identificados = s.participantes_repetidos || 0;
+                            }
+                        }
+                        // Fallback: stats via resumo_final.participantes (spec canônico)
+                        if (dadosN8n.resumo_final?.participantes) {
+                            const p = dadosN8n.resumo_final.participantes;
+                            if (!dadosN8n.total_participantes && !dadosN8n.total_processados) {
+                                dadosN8n.total_participantes = p.total || 0;
+                            }
+                            if (!dadosN8n.novos_salvos && !dadosN8n.novos) {
+                                dadosN8n.novos_salvos = p.novos || 0;
+                            }
+                            if (!dadosN8n.duplicados_identificados) {
+                                dadosN8n.duplicados_identificados = p.duplicados || 0;
+                            }
+                        }
+                        // Fallback: estatisticas no nível do payload SSE (não dentro de resumo_final)
+                        if (!dadosN8n.resumo_final?.estatisticas && dadosN8n.estatisticas) {
+                            const s = dadosN8n.estatisticas;
+                            if (!dadosN8n.total_participantes && !dadosN8n.total_processados) {
+                                dadosN8n.total_participantes = s.total_participantes_processados || 0;
+                            }
+                            if (!dadosN8n.novos_salvos && !dadosN8n.novos) {
+                                dadosN8n.novos_salvos = s.participantes_novos || 0;
+                            }
+                            if (!dadosN8n.duplicados_identificados) {
+                                dadosN8n.duplicados_identificados = s.participantes_repetidos || 0;
+                            }
+                        }
+                        // Fallback: notas extraídas a partir de resumo_final.totais
+                        if (!dadosN8n.notas_extraidas && !dadosN8n.total_notas && dadosN8n.resumo_final?.totais?.notas) {
+                            dadosN8n.notas_extraidas = dadosN8n.resumo_final.totais.notas;
+                        }
 
-                            // Usa mensagem do n8n ou monta mensagem com dados
-                            const dadosN8n = dados.dados || {};
-                            console.log('[Monitoramento SPED] Status concluido - dadosN8n:', dadosN8n);
+                        // Fechar SSE — conclusão real com resumo_final
+                        if (eventSourceTxt) {
+                            eventSourceTxt.close();
+                            eventSourceTxt = null;
+                        }
+
+                        console.log('[Monitoramento SPED] Status concluido - dadosN8n:', dadosN8n);
+
+                        // Toast apenas na primeira vez (SSE pode enviar vários concluido)
+                        if (!toastConcluidoMostrado) {
+                            toastConcluidoMostrado = true;
                             const totalImportados = dadosN8n.novos_salvos || dadosN8n.total_a_analisar || 0;
                             const mensagemSucesso = dados.mensagem || ('Importação concluída! ' + totalImportados + ' novos participantes adicionados.');
-
                             if (window.showToast) {
                                 window.showToast(mensagemSucesso, 'success');
                             }
-
-                            // Mostrar seção de resultados em vez de redirecionar
-                            console.log('[Monitoramento SPED] Chamando mostrarResultadoImportacao com:', dadosN8n);
-                            mostrarResultadoImportacao(dadosN8n);
-                        } else if (dados.status === 'erro' || dados.status === 'timeout') {
-                            if (eventSourceTxt) {
-                                eventSourceTxt.close();
-                                eventSourceTxt = null;
-                            }
-                            importacaoEmAndamento = false;
-
-                            // Erro/timeout é tratado pelo atualizarProgresso que mostra a seção de erro
-                            // Não redireciona automaticamente - usuário decide via botão "Tentar Novamente"
                         }
-                    } catch (e) {
-                        console.error('[Monitoramento SPED] Erro ao parsear SSE:', e);
+
+                        // Mostrar seção de resultados em vez de redirecionar
+                        console.log('[Monitoramento SPED] Chamando mostrarResultadoImportacao com:', dadosN8n);
+                        mostrarResultadoImportacao(dadosN8n);
+                    } else if (dados.status === 'erro' || dados.status === 'timeout') {
+                        if (eventSourceTxt) {
+                            eventSourceTxt.close();
+                            eventSourceTxt = null;
+                        }
+                        importacaoEmAndamento = false;
+
+                        // Erro/timeout é tratado pelo atualizarProgresso que mostra a seção de erro
+                        // Não redireciona automaticamente - usuário decide via botão "Tentar Novamente"
                     }
-                    // Safety net FORA do try/catch — garante exibição mesmo se mostrarResultadoImportacao lançar exceção
-                    if (statusConcluido) {
-                        const safeResult = document.getElementById('resultado-importacao');
-                        if (safeResult) safeResult.classList.remove('hidden');
-                    }
-                });
+                } catch (e) {
+                    console.error('[Monitoramento SPED] Erro ao parsear SSE:', e);
+                }
+                // Safety net FORA do try/catch — garante exibição mesmo se mostrarResultadoImportacao lançar exceção
+                if (statusConcluido) {
+                    const safeResult = document.getElementById('resultado-importacao');
+                    if (safeResult) safeResult.classList.remove('hidden');
+                }
             };
 
             eventSourceTxt.onerror = function() {
@@ -2191,6 +2309,17 @@
                 }
             };
         }
+
+        // Reconectar SSE ao voltar à aba se importação ainda estiver em andamento
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && importacaoEmAndamento) {
+                if (!eventSourceTxt || eventSourceTxt.readyState === EventSource.CLOSED) {
+                    console.log('[Monitoramento SPED] Aba reativada — reconectando SSE');
+                    reconnectAttempts = 0;
+                    conectarSSE();
+                }
+            }
+        });
 
         // Botão importar - funcionalidade real
         if (txtImportarBtn) {
@@ -2264,6 +2393,7 @@
 
                     // Marcar como em andamento
                     importacaoEmAndamento = true;
+                    toastConcluidoMostrado = false;
 
                     // Mostrar UI de progresso
                     resetarProgresso();

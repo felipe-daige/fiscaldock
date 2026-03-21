@@ -43,6 +43,14 @@
                 <span class="sidebar-label font-medium">Dashboard</span>
             </a>
 
+            <!-- Dashboard BI -->
+            <a href="/app/bi" data-link class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors w-full leading-5">
+                <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10-3a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1v-7z"></path>
+                </svg>
+                <span class="sidebar-label font-medium">Dashboard BI</span>
+            </a>
+
             <!-- Minha Empresa -->
             <a href="/app/minha-empresa" data-link class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors w-full leading-5">
                 <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,6 +99,17 @@
                     </a>
                 </div>
             </div>
+        </div>
+
+        <!-- NOTAS FISCAIS -->
+        <div class="mt-4">
+            <div class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sidebar-label leading-4">NOTAS FISCAIS</div>
+            <a href="/app/notas-fiscais" data-link class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors w-full leading-5">
+                <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span class="sidebar-label font-medium">Todas as Notas</span>
+            </a>
         </div>
 
         <!-- CADASTROS -->
@@ -199,27 +218,6 @@
             </a>
         </div>
 
-        <!-- BI FISCAL -->
-        <div class="mt-4">
-            <div class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sidebar-label leading-4">BI FISCAL</div>
-
-            <!-- Business Intelligence (EFD) -->
-            <a href="/app/analytics" data-link class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors w-full leading-5">
-                <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
-                <span class="sidebar-label font-medium">Business Intelligence</span>
-            </a>
-
-            <!-- Dashboard BI -->
-            <a href="/app/analytics" data-link title="Em desenvolvimento" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors w-full leading-5">
-                <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                <span class="sidebar-label font-medium">Dashboard BI</span>
-                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" aria-label="Em desenvolvimento"></span>
-            </a>
-        </div>
 
     </nav>
 
