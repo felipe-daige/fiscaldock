@@ -1,5 +1,5 @@
-{{-- BI Analytics - Dashboard --}}
-<div class="min-h-screen bg-gray-50" id="analytics-container">
+{{-- BI Fiscal - Dashboard --}}
+<div class="min-h-screen bg-gray-50" id="bi-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {{-- Page Header --}}
         <div class="mb-4 sm:mb-8">
@@ -208,8 +208,8 @@
         @php
             $defaultTab = $defaultTab ?? 'faturamento';
             $tabClassMobile = fn($tab) => $tab === $defaultTab
-                ? 'analytics-tab active border-blue-500 text-blue-600 whitespace-nowrap py-3 sm:py-4 px-3 sm:px-1 border-b-2 font-medium text-sm'
-                : 'analytics-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 sm:py-4 px-3 sm:px-1 border-b-2 font-medium text-sm';
+                ? 'bi-tab active border-blue-500 text-blue-600 whitespace-nowrap py-3 sm:py-4 px-3 sm:px-1 border-b-2 font-medium text-sm'
+                : 'bi-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 sm:py-4 px-3 sm:px-1 border-b-2 font-medium text-sm';
         @endphp
         <div class="mb-4 sm:mb-6" data-default-tab="{{ $defaultTab }}">
             <div class="border-b border-gray-200 scroll-fade-right sm:after:hidden">
@@ -240,7 +240,7 @@
         </div>
 
         {{-- Tab Faturamento --}}
-        <div id="tab-faturamento" class="analytics-tab-content {{ $defaultTab !== 'faturamento' ? 'hidden' : '' }}">
+        <div id="tab-faturamento" class="bi-tab-content {{ $defaultTab !== 'faturamento' ? 'hidden' : '' }}">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {{-- Grafico Faturamento Mensal --}}
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6 lg:col-span-2">
@@ -263,7 +263,7 @@
         </div>
 
         {{-- Tab Compras --}}
-        <div id="tab-compras" class="analytics-tab-content hidden">
+        <div id="tab-compras" class="bi-tab-content hidden">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {{-- Entradas vs Saídas --}}
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6 lg:col-span-2">
@@ -286,7 +286,7 @@
         </div>
 
         {{-- Tab Tributos --}}
-        <div id="tab-tributos" class="analytics-tab-content hidden">
+        <div id="tab-tributos" class="bi-tab-content hidden">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {{-- Carga Tributária --}}
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6 lg:col-span-2">
@@ -309,7 +309,7 @@
         </div>
 
         {{-- Tab EFD --}}
-        <div id="tab-efd" class="analytics-tab-content {{ $defaultTab !== 'efd' ? 'hidden' : '' }}">
+        <div id="tab-efd" class="bi-tab-content {{ $defaultTab !== 'efd' ? 'hidden' : '' }}">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {{-- Fluxo Mensal --}}
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6 lg:col-span-2">
@@ -344,7 +344,7 @@
         </div>
 
         {{-- Tab Participantes --}}
-        <div id="tab-participantes" class="analytics-tab-content hidden">
+        <div id="tab-participantes" class="bi-tab-content hidden">
             {{-- Alertas de concentracao --}}
             <div id="concentracao-alertas" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6"></div>
 
@@ -452,7 +452,7 @@
         </div>
 
         {{-- Tab Riscos --}}
-        <div id="tab-riscos" class="analytics-tab-content hidden">
+        <div id="tab-riscos" class="bi-tab-content hidden">
             {{-- Score da Carteira --}}
             <div id="score-carteira" class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-3 sm:p-5 text-center">
@@ -499,7 +499,7 @@
         </div>
 
         {{-- Tab Tributário EFD --}}
-        <div id="tab-tributario-efd" class="analytics-tab-content hidden">
+        <div id="tab-tributario-efd" class="bi-tab-content hidden">
             {{-- Consolidado Crédito vs Débito --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6 mb-6">
                 <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">Consolidado Crédito vs Débito</h3>
@@ -528,7 +528,7 @@
         </div>
 
         {{-- Estado vazio --}}
-        <div id="analytics-empty" class="hidden">
+        <div id="bi-empty" class="hidden">
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 sm:p-12 text-center">
                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>

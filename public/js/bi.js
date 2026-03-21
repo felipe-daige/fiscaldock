@@ -91,9 +91,9 @@
 
     // Configura as tabs
     function setupTabs() {
-        document.querySelectorAll('.analytics-tab').forEach(tab => {
-            if (tab._analyticsListenerAdded) return;
-            tab._analyticsListenerAdded = true;
+        document.querySelectorAll('.bi-tab').forEach(tab => {
+            if (tab._biListenerAdded) return;
+            tab._biListenerAdded = true;
             tab.addEventListener('click', function() {
                 const tabName = this.dataset.tab;
                 switchTab(tabName);
@@ -104,7 +104,7 @@
     // Troca de tab
     function switchTab(tabName) {
         // Atualiza tabs
-        document.querySelectorAll('.analytics-tab').forEach(tab => {
+        document.querySelectorAll('.bi-tab').forEach(tab => {
             if (tab.dataset.tab === tabName) {
                 tab.classList.add('active', 'border-blue-500', 'text-blue-600');
                 tab.classList.remove('border-transparent', 'text-gray-500');
@@ -115,7 +115,7 @@
         });
 
         // Atualiza conteúdo
-        document.querySelectorAll('.analytics-tab-content').forEach(content => {
+        document.querySelectorAll('.bi-tab-content').forEach(content => {
             content.classList.add('hidden');
         });
         const targetContent = document.getElementById('tab-' + tabName);
@@ -132,13 +132,13 @@
         const filtroCliente = document.getElementById('filtro-cliente');
         const filtroPeriodo = document.getElementById('filtro-periodo');
 
-        if (filtroCliente && !filtroCliente._analyticsListenerAdded) {
-            filtroCliente._analyticsListenerAdded = true;
+        if (filtroCliente && !filtroCliente._biListenerAdded) {
+            filtroCliente._biListenerAdded = true;
             filtroCliente.addEventListener('change', () => loadData(currentTab));
         }
 
-        if (filtroPeriodo && !filtroPeriodo._analyticsListenerAdded) {
-            filtroPeriodo._analyticsListenerAdded = true;
+        if (filtroPeriodo && !filtroPeriodo._biListenerAdded) {
+            filtroPeriodo._biListenerAdded = true;
             filtroPeriodo.addEventListener('change', () => loadData(currentTab));
         }
     }
@@ -1214,13 +1214,13 @@
     }
 
     function showEmptyState() {
-        const emptyState = document.getElementById('analytics-empty');
+        const emptyState = document.getElementById('bi-empty');
         if (emptyState) emptyState.classList.remove('hidden');
-        document.querySelectorAll('.analytics-tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.bi-tab-content').forEach(el => el.classList.add('hidden'));
     }
 
     function hideEmptyState(tabName) {
-        const emptyState = document.getElementById('analytics-empty');
+        const emptyState = document.getElementById('bi-empty');
         if (emptyState) emptyState.classList.add('hidden');
         // Restaurar conteúdo da tab ativa (pode ter sido ocultado por showEmptyState)
         const activeContent = document.getElementById('tab-' + tabName);
@@ -1247,6 +1247,6 @@
     }
 
     // Expõe função de inicialização para SPA (chamada pelo spa.js via tentarExecutarFuncao)
-    window.initAnalytics = init;
-    window.cleanupAnalytics = cleanup;
+    window.initBi = init;
+    window.cleanupBi = cleanup;
 })();
