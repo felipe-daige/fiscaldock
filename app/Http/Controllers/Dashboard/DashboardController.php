@@ -170,7 +170,10 @@ class DashboardController extends Controller
     public function clienteDetalhes(Request $request, int $id)
     {
         if (!Auth::check()) {
-            return response()->json(['success' => false, 'message' => 'Nao autenticado'], 401);
+            if ($this->isAjaxRequest($request)) {
+                return response()->json(['success' => false, 'message' => 'Nao autenticado'], 401);
+            }
+            return redirect('/login');
         }
 
         $cliente = Cliente::where('id', $id)
@@ -178,7 +181,18 @@ class DashboardController extends Controller
             ->first();
 
         if (!$cliente) {
-            return response()->json(['success' => false, 'message' => 'Cliente nao encontrado'], 404);
+            if ($this->isAjaxRequest($request)) {
+                return response()->json(['success' => false, 'message' => 'Cliente nao encontrado'], 404);
+            }
+            abort(404);
+        }
+
+        // Empresa própria: redirect to /app/minha-empresa
+        if ($cliente->is_empresa_propria) {
+            if ($this->isAjaxRequest($request)) {
+                return response()->json(['redirect' => '/app/minha-empresa']);
+            }
+            return redirect('/app/minha-empresa');
         }
 
         $totalParticipantes = Participante::where('user_id', Auth::id())
@@ -189,27 +203,47 @@ class DashboardController extends Controller
             ->where('cliente_id', $cliente->id)
             ->count();
 
-        return response()->json([
-            'success' => true,
-            'cliente' => [
-                'id' => $cliente->id,
-                'nome' => $cliente->nome,
-                'razao_social' => $cliente->razao_social,
-                'documento_formatado' => $cliente->documento_formatado,
-                'tipo_pessoa' => $cliente->tipo_pessoa,
-                'email' => $cliente->email,
-                'telefone' => $cliente->telefone,
-                'ativo' => $cliente->ativo,
-                'is_empresa_propria' => $cliente->is_empresa_propria,
-                'uf' => $cliente->uf,
-                'cep' => $cliente->cep,
-                'municipio' => $cliente->municipio,
-                'created_at' => $cliente->created_at?->format('d/m/Y H:i'),
-            ],
-            'stats' => [
-                'total_participantes' => $totalParticipantes,
-                'total_notas' => $totalNotas,
-            ],
+        $showView = self::AUTH_VIEW_PREFIX . 'clientes.show';
+
+        if ($this->isAjaxRequest($request)) {
+            // Modal requests send Accept: application/json — return JSON for the modal to populate
+            if ($request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'cliente' => [
+                        'id' => $cliente->id,
+                        'nome' => $cliente->nome,
+                        'razao_social' => $cliente->razao_social,
+                        'documento_formatado' => $cliente->documento_formatado,
+                        'tipo_pessoa' => $cliente->tipo_pessoa,
+                        'email' => $cliente->email,
+                        'telefone' => $cliente->telefone,
+                        'ativo' => $cliente->ativo,
+                        'is_empresa_propria' => $cliente->is_empresa_propria,
+                        'uf' => $cliente->uf,
+                        'cep' => $cliente->cep,
+                        'municipio' => $cliente->municipio,
+                        'created_at' => $cliente->created_at?->format('d/m/Y H:i'),
+                    ],
+                    'stats' => [
+                        'total_participantes' => $totalParticipantes,
+                        'total_notas' => $totalNotas,
+                    ],
+                ]);
+            }
+            // SPA navigation sends Accept: text/html — return HTML view
+            return view($showView, [
+                'cliente' => $cliente,
+                'totalParticipantes' => $totalParticipantes,
+                'totalNotas' => $totalNotas,
+            ]);
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, [
+            'initialView' => $showView,
+            'cliente' => $cliente,
+            'totalParticipantes' => $totalParticipantes,
+            'totalNotas' => $totalNotas,
         ]);
     }
 
@@ -253,7 +287,7 @@ class DashboardController extends Controller
         
         try {
             $validated = $request->validate([
-                'tipo' => 'required|in:EFD Contribuições,EFD Fiscal',
+                'tipo' => 'required|in:EFD PIS/COFINS,EFD ICMS/IPI',
                 'modalidade' => 'required|in:gratuito,completa',
                 'sped' => 'required|file|mimes:txt,text/plain|max:10240', // 10 MB
                 'tab_id' => 'nullable|string|max:36',
@@ -626,7 +660,7 @@ class DashboardController extends Controller
         );
     }
 
-    public function analyticsPlaceholder(Request $request)
+    public function biPlaceholder(Request $request)
     {
         return $this->renderPlaceholder($request,
             'BI Fiscal',
