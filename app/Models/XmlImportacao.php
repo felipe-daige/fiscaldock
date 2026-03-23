@@ -92,6 +92,28 @@ class XmlImportacao extends Model
     }
 
     /**
+     * Tempo de processamento formatado (ex: "2m 34s").
+     */
+    public function getTempoProcessamentoAttribute(): string
+    {
+        if (! $this->iniciado_em || ! $this->concluido_em) {
+            return '—';
+        }
+        $diff = $this->iniciado_em->diff($this->concluido_em);
+        if ($diff->h > 0) {
+            return $diff->h.'h '.$diff->i.'m';
+        }
+        if ($diff->i > 0) {
+            return $diff->i.'m '.$diff->s.'s';
+        }
+        if ($diff->s > 0) {
+            return $diff->s.'s';
+        }
+
+        return '< 1s';
+    }
+
+    /**
      * Tamanho formatado em MB.
      */
     public function getTamanhoFormatadoAttribute(): string

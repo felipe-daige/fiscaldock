@@ -87,7 +87,7 @@ test('tributario efd endpoint returns json structure', function () {
 });
 
 test('bi page renders for authenticated user', function () {
-    $response = $this->get('/app/bi');
+    $response = $this->get('/app/bi/dashboard');
 
     $response->assertStatus(200);
     $response->assertSee('BI Fiscal');
@@ -96,7 +96,7 @@ test('bi page renders for authenticated user', function () {
 });
 
 test('bi page does not have version querystring on bi js', function () {
-    $response = $this->get('/app/bi');
+    $response = $this->get('/app/bi/dashboard');
 
     $response->assertStatus(200);
     // @todo Bug 2 fix (Task 2): this test is a regression pin intentionally failing until

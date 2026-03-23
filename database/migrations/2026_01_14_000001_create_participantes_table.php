@@ -31,11 +31,13 @@ return new class extends Migration
             $table->string('bairro')->nullable();
             $table->string('codigo_municipal')->nullable();
             $table->string('cep', 8)->nullable();
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 11, 8)->nullable();
             $table->string('municipio', 100)->nullable();
             $table->string('telefone', 20)->nullable();
             $table->smallInteger('crt')->nullable(); // 1=Simples, 2=Excesso, 3=Normal
             $table->unsignedBigInteger('importacao_participante_id')->nullable()->index(); // FK sem constraint (criada depois)
-            $table->string('origem_tipo'); // SPED_EFD_FISCAL, SPED_EFD_CONTRIB, NFE, NFSE, MANUAL
+            $table->string('origem_tipo')->nullable(); // SPED_EFD_FISCAL, SPED_EFD_CONTRIB, NFE, NFSE, MANUAL
             $table->json('origem_ref')->nullable(); // {"arquivo": "...", "importado_em": "..."}
             $table->timestamp('ultima_consulta_em')->nullable();
             $table->timestamps();

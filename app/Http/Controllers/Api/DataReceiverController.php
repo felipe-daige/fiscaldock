@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\ConsultaLote;
 use App\Models\ConsultaResultado;
-use App\Models\SpedImportacao;
+use App\Models\EfdImportacao;
 use App\Models\XmlImportacao;
 use App\Models\MonitoramentoConsulta;
 use App\Models\Participante;
@@ -206,26 +206,115 @@ class DataReceiverController extends Controller
         }
 
         $data = $request->validate([
-            'user_id'      => 'required|integer',
-            'tab_id'       => 'required|string|max:36',
-            'status'       => 'required|in:inicio,processando,concluido,skip',
-            'bloco'        => 'nullable|in:0,A,C,D',
-            'progresso'    => 'required|integer|min:0|max:100',
-            'mensagem'     => 'nullable|string|max:255',
-            'importacao_id' => 'nullable|integer',
-            'resumo_final' => 'nullable|array',
+            'user_id'              => 'required|integer',
+            'tab_id'               => 'required|string|max:36',
+            'status'               => 'required|in:inicio,processando,concluido,skip,erro',
+            'bloco'                => 'nullable|in:0,A,C,D',
+            'progresso'            => 'nullable|integer|min:0|max:100',
+            'mensagem'             => 'nullable|string|max:255',
+            'importacao_id'        => 'nullable|integer',
+            'error_code'           => 'nullable|string|max:50',
+            'error_message'        => 'nullable|string|max:500',
+            'resumo_final'         => 'nullable|array',
+            'notas_blocos'         => 'nullable|array',
+            'blocos'               => 'nullable|array',
+            'estatisticas'         => 'nullable|array',
+            'totais'               => 'nullable|array',
+            'participantes_resumo' => 'nullable|array',
+            'dados'                => 'nullable',
         ]);
 
-        // Persiste resumo_final no banco se presente
-        if (!empty($data['resumo_final']) && !empty($data['importacao_id'])) {
-            SpedImportacao::where('id', $data['importacao_id'])
+        // Default progresso=0 quando não enviado (ex: payloads de erro)
+        $data['progresso'] = $data['progresso'] ?? 0;
+
+        // Tratar status de erro: cachear para SSE e persistir no banco
+        if ($data['status'] === 'erro') {
+            $mainKey = "progresso:{$data['user_id']}:{$data['tab_id']}";
+            $existing = Cache::get($mainKey, []);
+            $importacaoId = $data['importacao_id'] ?? ($existing['importacao_id'] ?? null);
+
+            $cachePayload = array_merge($existing, [
+                'user_id'       => $data['user_id'],
+                'tab_id'        => $data['tab_id'],
+                'status'        => 'erro',
+                'progresso'     => $data['progresso'],
+                'mensagem'      => $data['mensagem'] ?? $data['error_message'] ?? 'Erro no processamento',
+                'error_code'    => $data['error_code'] ?? null,
+                'error_message' => $data['error_message'] ?? null,
+                'updated_at'    => now()->toIso8601String(),
+            ]);
+            if (!empty($importacaoId)) {
+                $cachePayload['importacao_id'] = $importacaoId;
+
+                EfdImportacao::where('id', $importacaoId)
+                    ->where('user_id', $data['user_id'])
+                    ->update([
+                        'status' => 'erro',
+                    ]);
+            }
+            Cache::put($mainKey, $cachePayload, 600);
+
+            return response()->json(['status' => 'ok', 'received' => 'erro']);
+        }
+
+        // Se os 4 campos chegaram separados, montar resumo_final internamente.
+        // Mantém compatibilidade: se resumo_final já vier pronto, usa direto.
+        if (empty($data['resumo_final'])
+            && (!empty($data['blocos']) || !empty($data['estatisticas']) || !empty($data['totais']))) {
+            $data['resumo_final'] = [
+                'blocos'               => $data['blocos']               ?? [],
+                'estatisticas'         => $data['estatisticas']         ?? [],
+                'totais'               => $data['totais']               ?? [],
+                'participantes_resumo' => $data['participantes_resumo'] ?? [],
+            ];
+        }
+
+        // Ler cache existente antes de qualquer operação (para fallback de importacao_id)
+        $mainKey = "progresso:{$data['user_id']}:{$data['tab_id']}";
+        $existing = Cache::get($mainKey, []);
+
+        // Usar importacao_id do payload OU do cache existente
+        $importacaoId = $data['importacao_id'] ?? ($existing['importacao_id'] ?? null);
+
+        // Persiste resumo_final no banco se presente, junto com colunas de stats
+        if (!empty($data['resumo_final']) && !empty($importacaoId)) {
+            $rfUpdate = ['resumo_final' => $data['resumo_final']];
+
+            if ($data['status'] === 'concluido') {
+                $rfUpdate['status']       = 'concluido';
+                $rfUpdate['concluido_em'] = now();
+            }
+
+            $est = $data['resumo_final']['estatisticas'] ?? [];
+            if (!empty($est['total_participantes_processados'])) {
+                $rfUpdate['total_participantes'] = (int) $est['total_participantes_processados'];
+            }
+            if (isset($est['participantes_novos'])) {
+                $rfUpdate['novos'] = (int) $est['participantes_novos'];
+            }
+            if (isset($est['participantes_repetidos'])) {
+                $rfUpdate['duplicados'] = (int) $est['participantes_repetidos'];
+            }
+            if (!empty($est['total_cnpjs_unicos'])) {
+                $rfUpdate['total_cnpjs_unicos'] = (int) $est['total_cnpjs_unicos'];
+            }
+            if (!empty($est['total_cpfs_unicos'])) {
+                $rfUpdate['total_cpfs_unicos'] = (int) $est['total_cpfs_unicos'];
+            }
+
+            EfdImportacao::where('id', $importacaoId)
                 ->where('user_id', $data['user_id'])
-                ->update(['resumo_final' => $data['resumo_final']]);
+                ->update($rfUpdate);
+        }
+
+        // Recalcular alertas após importação concluída
+        if ($data['status'] === 'concluido' && !empty($importacaoId)) {
+            dispatch(function () use ($data) {
+                app(\App\Services\AlertaCentralService::class)->recalcular((int) $data['user_id']);
+            })->afterResponse();
         }
 
         // Atualiza cache principal (lido pelo SSE) com o progresso atual
-        $mainKey = "progresso:{$data['user_id']}:{$data['tab_id']}";
-        $existing = Cache::get($mainKey, []);
         $cachePayload = array_merge($existing, [
             'user_id'    => $data['user_id'],
             'tab_id'     => $data['tab_id'],
@@ -235,8 +324,26 @@ class DataReceiverController extends Controller
             'bloco'      => $data['bloco'] ?? null,
             'updated_at' => now()->toIso8601String(),
         ]);
+        // Preservar importacao_id no cache (do payload ou do existente)
+        if (!empty($importacaoId)) {
+            $cachePayload['importacao_id'] = $importacaoId;
+        }
         if (!empty($data['resumo_final'])) {
             $cachePayload['resumo_final'] = $data['resumo_final'];
+        }
+        if (!empty($data['notas_blocos'])) {
+            $cachePayload['notas_blocos'] = $data['notas_blocos'];
+        }
+        $dadosRaw = $data['dados'] ?? null;
+        if (is_string($dadosRaw) && !empty($dadosRaw)) {
+            $dadosParsed = json_decode($dadosRaw, true) ?? [];
+        } elseif (is_array($dadosRaw)) {
+            $dadosParsed = $dadosRaw;
+        } else {
+            $dadosParsed = [];
+        }
+        if (!empty($dadosParsed)) {
+            $cachePayload['dados'] = $dadosParsed;
         }
         Cache::put($mainKey, $cachePayload, 600);
 
@@ -250,6 +357,22 @@ class DataReceiverController extends Controller
                 'mensagem'   => $data['mensagem'] ?? null,
                 'updated_at' => now()->toIso8601String(),
             ], 600);
+
+            // Marcar blocos anteriores como concluídos se ainda estiverem processando
+            if (in_array($data['status'], ['inicio', 'processando'])) {
+                $ordemBlocos = ['0', 'A', 'C', 'D'];
+                $currentIdx = array_search($data['bloco'], $ordemBlocos);
+
+                for ($i = 0; $i < $currentIdx; $i++) {
+                    $priorKey = "efd_notas_progress:{$data['user_id']}:{$data['tab_id']}:{$ordemBlocos[$i]}";
+                    $priorData = Cache::get($priorKey);
+                    if ($priorData && !in_array($priorData['status'], ['concluido', 'skip'])) {
+                        $priorData['status'] = 'concluido';
+                        $priorData['progresso'] = 100;
+                        Cache::put($priorKey, $priorData, 600);
+                    }
+                }
+            }
         }
 
         return response()->json(['success' => true]);
@@ -266,31 +389,73 @@ class DataReceiverController extends Controller
     private function handleNewProgressFormat(Request $request)
     {
         $validated = $request->validate([
-            'user_id' => 'required|integer',
-            'tab_id' => 'required|string|max:36',
-            'progresso' => 'nullable|integer|min:0|max:100',
-            'mensagem' => 'nullable|string|max:255',
-            'status' => 'required|in:iniciando,processando,concluido,erro',
-            // Campos opcionais para erros
-            'error_code' => 'nullable|string|max:50',
+            'user_id'       => 'required|integer',
+            'tab_id'        => 'required|string|max:36',
+            'progresso'     => 'nullable|integer|min:0|max:100',
+            'mensagem'      => 'nullable|string|max:255',
+            'status'        => 'required|in:iniciando,processando,concluido,erro',
+            'error_code'    => 'nullable|string|max:50',
             'error_message' => 'nullable|string|max:500',
-            // Campo flexível para dados agregados (nome empresa, totais, etc.)
-            'dados' => 'nullable',
-            'cliente_id' => 'nullable|integer',
+            'dados'         => 'nullable',
+            'cliente_id'    => 'nullable|integer',
+            'importacao_id' => 'nullable|integer',
+            'resumo_final'     => 'nullable|array',
+            'notas_blocos'     => 'nullable|array',
+            'participante_ids' => 'nullable|array',
         ]);
 
-        // Chave do cache: progresso:{user_id}:{tab_id}
         $cacheKey = "progresso:{$validated['user_id']}:{$validated['tab_id']}";
 
-        // Dados para cache (repassa exatamente o que n8n enviou)
-        $cacheData = [
-            'user_id' => $validated['user_id'],
-            'tab_id' => $validated['tab_id'],
-            'progresso' => $validated['progresso'] ?? 0,
-            'mensagem' => $validated['mensagem'] ?? null,
-            'status' => $validated['status'],
+        // Ler cache existente antes de qualquer operação (para merge e fallback de importacao_id)
+        $existing = Cache::get($cacheKey, []);
+
+        // Idempotência: não grava no cache se progresso/mensagem/status são idênticos.
+        // Bypassar se resumo_final presente — payloads finais devem sempre ser processados.
+        if ($existing &&
+            ($existing['progresso'] ?? null) === ($validated['progresso'] ?? 0) &&
+            ($existing['mensagem'] ?? null) === ($validated['mensagem'] ?? null) &&
+            ($existing['status'] ?? null) === $validated['status'] &&
+            empty($validated['error_code']) &&
+            empty($validated['dados']) &&
+            empty($validated['resumo_final'])
+        ) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Progresso sem alteração (idempotente).',
+                'progresso' => $validated['progresso'],
+            ], Response::HTTP_OK);
+        }
+
+        // Merge com cache existente para preservar importacao_id e outros campos anteriores
+        $cacheData = array_merge($existing, [
+            'user_id'    => $validated['user_id'],
+            'tab_id'     => $validated['tab_id'],
+            'progresso'  => $validated['progresso'] ?? 0,
+            'mensagem'   => $validated['mensagem'] ?? null,
+            'status'     => $validated['status'],
             'updated_at' => now()->toIso8601String(),
-        ];
+        ]);
+
+        // Se a fase de notas está ativa (bloco presente no cache), não sobrescrever
+        // o progresso com o valor do endpoint principal — o endpoint de notas controla.
+        if (isset($existing['bloco']) && $existing['bloco'] !== '' && $validated['status'] !== 'concluido' && $validated['status'] !== 'erro') {
+            $cacheData['progresso'] = $existing['progresso'] ?? $cacheData['progresso'];
+            $cacheData['mensagem']  = $existing['mensagem']  ?? $cacheData['mensagem'];
+        }
+
+        // Preservar importacao_id do cache inicial se n8n não reenviar
+        $importacaoIdTop = $validated['importacao_id'] ?? ($existing['importacao_id'] ?? null);
+        if (!empty($importacaoIdTop)) {
+            $cacheData['importacao_id'] = $importacaoIdTop;
+        }
+
+        // Propagar resumo_final e notas_blocos ao cache
+        if (!empty($validated['resumo_final'])) {
+            $cacheData['resumo_final'] = $validated['resumo_final'];
+        }
+        if (!empty($validated['notas_blocos'])) {
+            $cacheData['notas_blocos'] = $validated['notas_blocos'];
+        }
 
         // Adicionar campos de erro se fornecidos
         if (! empty($validated['error_code'])) {
@@ -300,8 +465,16 @@ class DataReceiverController extends Controller
             $cacheData['error_message'] = $validated['error_message'];
         }
 
-        // Sempre incluir campo dados no cache (mesmo se vazio, para consistência)
-        $cacheData['dados'] = $validated['dados'] ?? [];
+        // n8n pode enviar dados como string JSON (via JSON.stringify) — fazer parse aqui
+        $dadosRaw = $validated['dados'] ?? null;
+        if (is_string($dadosRaw) && !empty($dadosRaw)) {
+            $dadosParsed = json_decode($dadosRaw, true) ?? [];
+        } elseif (is_array($dadosRaw)) {
+            $dadosParsed = $dadosRaw;
+        } else {
+            $dadosParsed = [];
+        }
+        $cacheData['dados'] = $dadosParsed;
 
         // Enriquecer dados com informações do cliente se fornecido
         if (! empty($validated['cliente_id'])) {
@@ -318,40 +491,24 @@ class DataReceiverController extends Controller
             }
         }
 
-        // Idempotência: não grava no cache se progresso/mensagem/status são idênticos.
-        // Evita que loops do n8n que reenviam o mesmo percentual causem múltiplos
-        // eventos SSE no frontend (updated_at diferente mudava o hash de dedup).
-        $existing = Cache::get($cacheKey);
-        if ($existing &&
-            ($existing['progresso'] ?? null) === $cacheData['progresso'] &&
-            ($existing['mensagem'] ?? null) === $cacheData['mensagem'] &&
-            ($existing['status'] ?? null) === $cacheData['status'] &&
-            empty($validated['error_code']) &&
-            empty($validated['dados'])
-        ) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Progresso sem alteração (idempotente).',
-                'progresso' => $validated['progresso'],
-            ], Response::HTTP_OK);
-        }
-
         // Atualizar DB antes do cache para evitar race condition com SSE
         if ($validated['status'] === 'concluido') {
-            $this->updateSpedImportacaoFromProgress($validated);
+            $this->updateEfdImportacaoFromProgress($validated, $importacaoIdTop);
         }
 
         // Armazena em cache (TTL 10 minutos)
         Cache::put($cacheKey, $cacheData, 600);
 
         Log::info('Progresso armazenado em cache (novo formato)', [
-            'cache_key' => $cacheKey,
-            'user_id' => $validated['user_id'],
-            'tab_id' => $validated['tab_id'],
-            'progresso' => $validated['progresso'],
-            'status' => $validated['status'],
-            'has_error' => ! empty($validated['error_code']),
-            'has_dados' => ! empty($validated['dados']),
+            'cache_key'         => $cacheKey,
+            'user_id'           => $validated['user_id'],
+            'tab_id'            => $validated['tab_id'],
+            'progresso'         => $validated['progresso'],
+            'status'            => $validated['status'],
+            'has_error'         => ! empty($validated['error_code']),
+            'has_dados'         => ! empty($validated['dados']),
+            'has_resumo_final'  => ! empty($validated['resumo_final']),
+            'importacao_id'     => $importacaoIdTop,
         ]);
 
         return response()->json([
@@ -676,17 +833,26 @@ class DataReceiverController extends Controller
     }
 
     /**
-     * Atualiza SpedImportacao e vincula participantes ao cliente quando n8n envia status final.
+     * Atualiza EfdImportacao e vincula participantes ao cliente quando n8n envia status final.
      */
-    private function updateSpedImportacaoFromProgress(array $validated): void
+    private function updateEfdImportacaoFromProgress(array $validated, ?int $importacaoIdTop = null): void
     {
-        $dados = $validated['dados'] ?? [];
-        $importacaoId = $dados['importacao_id'] ?? null;
+        $dadosRaw = $validated['dados'] ?? [];
+        if (is_string($dadosRaw)) {
+            $dados = json_decode($dadosRaw, true) ?? [];
+        } else {
+            $dados = is_array($dadosRaw) ? $dadosRaw : [];
+        }
+        // Aceita importacao_id top-level (preferido) ou dentro de dados
+        $importacaoId = $importacaoIdTop
+            ?? $dados['importacao_id']
+            ?? $dados['importacoes_efd_id']
+            ?? null;
 
         if (!$importacaoId) return;
 
         try {
-            $importacao = SpedImportacao::where('id', $importacaoId)
+            $importacao = EfdImportacao::where('id', $importacaoId)
                 ->where('user_id', $validated['user_id'])
                 ->first();
 
@@ -713,14 +879,40 @@ class DataReceiverController extends Controller
                 $updateData['cliente_id'] = $clienteId;
             }
 
-            // participante_ids: aceitar "lita" (typo n8n) ou "lista"
-            $idsStr = $dados['participante_lita_geral_ids']
-                ?? $dados['participante_lista_geral_ids']
-                ?? '';
+            // participante_ids: preferir array top-level (n8n via Execute Query), fallback para string CSV
             $ids = [];
-            if (!empty($idsStr)) {
-                $ids = array_values(array_filter(array_map('intval', explode(',', $idsStr))));
+            if (!empty($validated['participante_ids']) && is_array($validated['participante_ids'])) {
+                $ids = array_values(array_filter(array_map('intval', $validated['participante_ids'])));
                 $updateData['participante_ids'] = $ids;
+            } else {
+                // Fallback: aceitar "lita" (typo n8n) ou "lista" como string CSV
+                $idsStr = $dados['participante_lita_geral_ids']
+                    ?? $dados['participante_lista_geral_ids']
+                    ?? '';
+                if (!empty($idsStr)) {
+                    $ids = array_values(array_filter(array_map('intval', explode(',', $idsStr))));
+                    $updateData['participante_ids'] = $ids;
+                }
+            }
+
+            // Persistir resumo_final: prioridade para o campo top-level, fallback para dados
+            if (!empty($validated['resumo_final'])) {
+                $updateData['resumo_final'] = $validated['resumo_final'];
+            } elseif (!empty($dados['estatisticas']) || !empty($dados['blocos'])) {
+                $updateData['resumo_final'] = $dados;
+            }
+            // Enriquecer contadores a partir de estatisticas (se não vieram nos campos legados)
+            if (!empty($dados['estatisticas'])) {
+                $est = $dados['estatisticas'];
+                if (empty($updateData['total_participantes']) && !empty($est['total_participantes_processados'])) {
+                    $updateData['total_participantes'] = (int) $est['total_participantes_processados'];
+                }
+                if (!isset($updateData['novos']) && isset($est['participantes_novos'])) {
+                    $updateData['novos'] = (int) $est['participantes_novos'];
+                }
+                if (!isset($updateData['duplicados']) && isset($est['participantes_repetidos'])) {
+                    $updateData['duplicados'] = (int) $est['participantes_repetidos'];
+                }
             }
 
             $importacao->update($updateData);
@@ -734,7 +926,7 @@ class DataReceiverController extends Controller
             }
 
         } catch (\Exception $e) {
-            Log::error('Erro ao atualizar SpedImportacao do progresso', [
+            Log::error('Erro ao atualizar EfdImportacao do progresso', [
                 'importacao_id' => $importacaoId,
                 'error' => $e->getMessage(),
             ]);
@@ -844,26 +1036,30 @@ class DataReceiverController extends Controller
 
 
     /**
-     * Recebe progresso de consulta em lote do n8n (endpoint canônico).
+     * Endpoint unificado de progresso, conclusão e erro de consulta em lote.
      *
-     * POST /api/consulta/progress
+     * POST /api/consultas/progresso
+     *
+     * Status possíveis:
+     * - progresso: atualiza cache SSE com progresso parcial
+     * - concluido: persiste resultado no DB + atualiza cache SSE
+     * - erro: persiste erro no DB + refund (parcial ou total) + atualiza cache SSE
      */
-    public function receiveConsultaProgress(Request $request)
+    public function receiveConsultasProgresso(Request $request)
     {
         try {
-            Log::info('Requisição recebida em receiveConsultaProgress', [
+            Log::info('Requisição recebida em receiveConsultasProgresso', [
                 'url' => $request->fullUrl(),
-                'method' => $request->method(),
                 'ip' => $request->ip(),
                 'headers' => [
                     'x-api-token' => $request->hasHeader('X-API-Token') ? 'presente' : 'ausente',
                     'content-type' => $request->header('Content-Type'),
                 ],
-                'body' => $request->except(['dados']),
+                'body' => $request->except(['resultado_resumo']),
             ]);
 
             if (! $this->isTokenValid($request)) {
-                Log::warning('Token inválido em receiveConsultaProgress');
+                Log::warning('Token inválido em receiveConsultasProgresso');
 
                 return $this->unauthorizedResponse($request);
             }
@@ -871,149 +1067,56 @@ class DataReceiverController extends Controller
             $validated = $request->validate([
                 'user_id'          => 'required|integer|exists:users,id',
                 'tab_id'           => 'required|string|max:36',
-                'consulta_lote_id' => 'nullable|integer|exists:consulta_lotes,id',
-                'progresso'        => 'required|integer|min:0|max:100',
+                'status'           => 'required|in:processando,concluido,erro',
+                'progresso'        => 'required_if:status,processando|integer|min:0|max:100',
                 'mensagem'         => 'nullable|string|max:255',
-                'status'           => 'required|in:iniciando,processando,concluido,erro',
-                'error_code'       => 'nullable|string|max:50',
-                'error_message'    => 'nullable|string|max:500',
-                'dados'            => 'nullable',
+                'consulta_lote_id' => 'required_if:status,concluido|required_if:status,erro|nullable|integer|exists:consulta_lotes,id',
+                'resultado_resumo' => 'nullable|array',
+                'error_code'       => 'required_if:status,erro|nullable|string|max:50',
+                'error_message'    => 'required_if:status,erro|nullable|string|max:500',
+                'refund_credits'   => 'nullable|boolean',
+                'refund_amount'    => 'nullable|integer|min:1',
             ]);
 
             $cacheKey = "progresso:{$validated['user_id']}:{$validated['tab_id']}";
+            $status = $validated['status'];
 
-            $cacheData = [
-                'user_id'          => $validated['user_id'],
-                'tab_id'           => $validated['tab_id'],
-                'consulta_lote_id' => $validated['consulta_lote_id'] ?? null,
-                'progresso'        => $validated['progresso'],
-                'mensagem'         => $validated['mensagem'] ?? null,
-                'status'           => $validated['status'],
-                'updated_at'       => now()->toIso8601String(),
-            ];
+            // ── Cenário A: processando (só cache) ──
+            if ($status === 'processando') {
+                $cacheData = [
+                    'user_id'    => $validated['user_id'],
+                    'tab_id'     => $validated['tab_id'],
+                    'progresso'  => $validated['progresso'],
+                    'mensagem'   => $validated['mensagem'] ?? null,
+                    'status'     => 'processando',
+                    'updated_at' => now()->toIso8601String(),
+                ];
 
-            if (! empty($validated['error_code'])) {
-                $cacheData['error_code'] = $validated['error_code'];
-            }
-            if (! empty($validated['error_message'])) {
-                $cacheData['error_message'] = $validated['error_message'];
-            }
+                Cache::put($cacheKey, $cacheData, 600);
 
-            $cacheData['dados'] = $validated['dados'] ?? [];
-
-            Cache::put($cacheKey, $cacheData, 600);
-
-            Log::info('Progresso consulta armazenado em cache (receiveConsultaProgress)', [
-                'cache_key'        => $cacheKey,
-                'user_id'          => $validated['user_id'],
-                'tab_id'           => $validated['tab_id'],
-                'consulta_lote_id' => $validated['consulta_lote_id'] ?? null,
-                'progresso'        => $validated['progresso'],
-                'status'           => $validated['status'],
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Progresso atualizado.',
-                'progresso' => $validated['progresso'],
-            ], Response::HTTP_OK);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::warning('Erro de validação em receiveConsultaProgress', [
-                'errors' => $e->errors(),
-                'request_data' => $request->except(['dados']),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro de validação.',
-                'errors' => $e->errors(),
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
-
-        } catch (\Exception $e) {
-            Log::error('Erro inesperado em receiveConsultaProgress', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'request_data' => $request->except(['dados']),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor. Tente novamente mais tarde.',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    /**
-     * Estorna créditos de um lote de consulta em caso de erro.
-     */
-    private function refundConsultaLoteCredits(ConsultaLote $lote): void
-    {
-        if ($lote->creditos_cobrados <= 0) {
-            return;
-        }
-
-        try {
-            $user = User::find($lote->user_id);
-            if ($user) {
-                $this->creditService->add($user, $lote->creditos_cobrados);
-                Log::info('Créditos estornados para consulta lote com erro', [
-                    'consulta_lote_id' => $lote->id,
-                    'user_id' => $lote->user_id,
-                    'creditos_estornados' => $lote->creditos_cobrados,
+                Log::info('Progresso consulta armazenado em cache', [
+                    'cache_key' => $cacheKey,
+                    'user_id'   => $validated['user_id'],
+                    'tab_id'    => $validated['tab_id'],
+                    'progresso' => $validated['progresso'],
                 ]);
-            }
-        } catch (\Exception $e) {
-            Log::error('Erro ao estornar créditos do consulta lote', [
-                'consulta_lote_id' => $lote->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
-    }
 
-    /**
-     * Recebe o resultado final de uma consulta em lote (status + dados de resultado).
-     *
-     * POST /api/consulta/resultado
-     */
-    public function receiveConsultaResultado(Request $request)
-    {
-        try {
-            Log::info('Requisição recebida em receiveConsultaResultado', [
-                'url' => $request->fullUrl(),
-                'method' => $request->method(),
-                'ip' => $request->ip(),
-                'headers' => [
-                    'x-api-token' => $request->hasHeader('X-API-Token') ? 'presente' : 'ausente',
-                    'content-type' => $request->header('Content-Type'),
-                ],
-                'body' => $request->all(),
-            ]);
-
-            if (! $this->isTokenValid($request)) {
-                Log::warning('Token inválido em receiveConsultaResultado');
-
-                return $this->unauthorizedResponse($request);
+                return response()->json([
+                    'success'   => true,
+                    'message'   => 'Progresso atualizado.',
+                    'progresso' => $validated['progresso'],
+                ], Response::HTTP_OK);
             }
 
-            $validated = $request->validate([
-                'consulta_lote_id' => 'required|integer|exists:consulta_lotes,id',
-                'user_id'          => 'required|integer|exists:users,id',
-                'tab_id'           => 'required|string|max:36',
-                'status'           => 'required|in:concluido,erro',
-                'resultado_resumo' => 'nullable|array',
-                'error_code'       => 'nullable|string|max:50',
-                'error_message'    => 'nullable|string|max:500',
-            ]);
-
+            // ── Cenários B e C: concluido / erro (DB + cache) ──
             $lote = ConsultaLote::where('id', $validated['consulta_lote_id'])
                 ->where('user_id', $validated['user_id'])
                 ->first();
 
             if (! $lote) {
-                Log::warning('receiveConsultaResultado: lote não encontrado para este usuário', [
+                Log::warning('receiveConsultasProgresso: lote não encontrado', [
                     'consulta_lote_id' => $validated['consulta_lote_id'],
-                    'user_id' => $validated['user_id'],
+                    'user_id'          => $validated['user_id'],
                 ]);
 
                 return response()->json([
@@ -1022,72 +1125,131 @@ class DataReceiverController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
 
-            $updateData = [
-                'status'       => $validated['status'],
-                'processado_em' => now(),
-            ];
+            if ($status === 'concluido') {
+                $updateData = [
+                    'status'        => 'concluido',
+                    'processado_em' => now(),
+                ];
 
-            if ($validated['status'] === 'concluido') {
                 if (! empty($validated['resultado_resumo'])) {
                     $updateData['resultado_resumo'] = $validated['resultado_resumo'];
                 }
-            }
 
-            if ($validated['status'] === 'erro') {
-                $updateData['error_code']    = $validated['error_code'] ?? 'UNKNOWN_ERROR';
-                $updateData['error_message'] = $validated['error_message'] ?? 'Erro desconhecido';
+                $lote->update($updateData);
 
-                $this->refundConsultaLoteCredits($lote);
-            }
-
-            $lote->update($updateData);
-
-            if ($validated['status'] === 'concluido') {
-                $cacheKey = "progresso:{$validated['user_id']}:{$validated['tab_id']}";
                 Cache::put($cacheKey, [
                     'user_id'          => $validated['user_id'],
                     'tab_id'           => $validated['tab_id'],
                     'consulta_lote_id' => $lote->id,
                     'progresso'        => 100,
-                    'mensagem'         => 'Consulta concluída.',
+                    'mensagem'         => $validated['mensagem'] ?? 'Consulta concluída.',
                     'status'           => 'concluido',
                     'updated_at'       => now()->toIso8601String(),
                 ], 600);
+
+                Log::info('ConsultaLote concluído', [
+                    'consulta_lote_id' => $lote->id,
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Consulta concluída.',
+                ], Response::HTTP_OK);
             }
 
-            Log::info('ConsultaLote atualizado via receiveConsultaResultado', [
+            // ── status === 'erro' ──
+            $lote->update([
+                'status'        => 'erro',
+                'error_code'    => $validated['error_code'] ?? 'UNKNOWN_ERROR',
+                'error_message' => $validated['error_message'] ?? 'Erro desconhecido',
+                'processado_em' => now(),
+            ]);
+
+            if (! empty($validated['refund_credits'])) {
+                $refundAmount = $validated['refund_amount'] ?? null;
+                $this->refundConsultaLoteCredits($lote, $refundAmount);
+            }
+
+            Cache::put($cacheKey, [
+                'user_id'       => $validated['user_id'],
+                'tab_id'        => $validated['tab_id'],
                 'consulta_lote_id' => $lote->id,
-                'status' => $validated['status'],
+                'progresso'     => $validated['progresso'] ?? 0,
+                'mensagem'      => $validated['error_message'] ?? 'Erro no processamento.',
+                'status'        => 'erro',
+                'error_code'    => $validated['error_code'] ?? 'UNKNOWN_ERROR',
+                'error_message' => $validated['error_message'] ?? 'Erro desconhecido',
+                'updated_at'    => now()->toIso8601String(),
+            ], 600);
+
+            Log::info('ConsultaLote marcado como erro', [
+                'consulta_lote_id' => $lote->id,
+                'error_code'       => $validated['error_code'] ?? 'UNKNOWN_ERROR',
+                'refund_credits'   => $validated['refund_credits'] ?? false,
+                'refund_amount'    => $validated['refund_amount'] ?? null,
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Resultado final armazenado.',
+                'message' => 'Erro registrado.',
             ], Response::HTTP_OK);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::warning('Erro de validação em receiveConsultaResultado', [
-                'errors' => $e->errors(),
-                'request_data' => $request->all(),
+            Log::warning('Erro de validação em receiveConsultasProgresso', [
+                'errors'       => $e->errors(),
+                'request_data' => $request->except(['resultado_resumo']),
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Erro de validação.',
-                'errors' => $e->errors(),
+                'errors'  => $e->errors(),
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
 
         } catch (\Exception $e) {
-            Log::error('Erro inesperado em receiveConsultaResultado', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'request_data' => $request->all(),
+            Log::error('Erro inesperado em receiveConsultasProgresso', [
+                'message'      => $e->getMessage(),
+                'trace'        => $e->getTraceAsString(),
+                'request_data' => $request->except(['resultado_resumo']),
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Erro interno do servidor.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Estorna créditos de um lote de consulta em caso de erro.
+     *
+     * Se $refundAmount for informado, estorna esse valor (refund parcial).
+     * Caso contrário, estorna o total cobrado do lote (refund total).
+     */
+    private function refundConsultaLoteCredits(ConsultaLote $lote, ?int $refundAmount = null): void
+    {
+        $amount = $refundAmount ?? $lote->creditos_cobrados;
+
+        if ($amount <= 0) {
+            return;
+        }
+
+        try {
+            $user = User::find($lote->user_id);
+            if ($user) {
+                $this->creditService->add($user, $amount);
+                Log::info('Créditos estornados para consulta lote com erro', [
+                    'consulta_lote_id'   => $lote->id,
+                    'user_id'            => $lote->user_id,
+                    'creditos_estornados' => $amount,
+                    'tipo_refund'        => $refundAmount ? 'parcial' : 'total',
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Erro ao estornar créditos do consulta lote', [
+                'consulta_lote_id' => $lote->id,
+                'error'            => $e->getMessage(),
+            ]);
         }
     }
 

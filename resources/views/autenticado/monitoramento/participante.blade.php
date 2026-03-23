@@ -1,12 +1,12 @@
 {{-- Monitoramento - Detalhe do Participante --}}
 <div class="min-h-screen bg-gray-50" id="monitoramento-participante-container">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {{-- Page Header --}}
-        <div class="mb-6">
+        <div class="mb-4 sm:mb-6">
             <div class="flex items-center justify-between flex-wrap gap-4">
                 <div class="flex items-center gap-4">
                     <a
-                        href="/app/monitoramento"
+                        href="/app/dashboard"
                         class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
                         data-link
                     >
@@ -16,12 +16,12 @@
                         Voltar
                     </a>
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900">{{ $participante->razao_social ?? 'Participante' }}</h1>
-                        <p class="text-sm text-gray-600 font-mono whitespace-nowrap tabular-nums">{{ $participante->cnpj_formatado }}</p>
+                        <h1 class="text-xl sm:text-2xl font-semibold text-gray-900">{{ $participante->razao_social ?? 'Participante' }}</h1>
+                        <p class="text-sm text-gray-500 font-mono whitespace-nowrap tabular-nums">{{ $participante->cnpj_formatado }}</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    {{-- Badge Situacao Cadastral --}}
+                    {{-- Badge Situação Cadastral --}}
                     @if($participante->situacao_cadastral)
                         @php
                             $situacaoClass = match(strtoupper($participante->situacao_cadastral)) {
@@ -34,7 +34,7 @@
                             {{ strtoupper($participante->situacao_cadastral) }}
                         </span>
                     @endif
-                    {{-- Badge Regime Tributario --}}
+                    {{-- Badge Regime Tributário --}}
                     @if($participante->regime_tributario)
                         @php
                             $regimeClass = match(strtoupper($participante->regime_tributario)) {
@@ -52,7 +52,7 @@
             </div>
         </div>
 
-        {{-- Acoes Rapidas --}}
+        {{-- Ações Rápidas --}}
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-6">
             <div class="flex items-center justify-between flex-wrap gap-4">
                 <div class="flex items-center gap-2 text-sm text-gray-600">
@@ -61,8 +61,8 @@
                     </svg>
                     @php
                         $origemLabel = match($participante->origem_tipo) {
-                            'SPED_EFD_FISCAL' => 'EFD Fiscal',
-                            'SPED_EFD_CONTRIB' => 'EFD Contribuições',
+                            'SPED_EFD_FISCAL' => 'EFD ICMS/IPI',
+                            'SPED_EFD_CONTRIB' => 'EFD PIS/COFINS',
                             'NFE' => 'NF-e',
                             'NFSE' => 'NFS-e',
                             'MANUAL' => 'Manual',
@@ -77,7 +77,7 @@
                     @endif
                     @if($participante->ultima_consulta_em)
                         <span class="mx-2">|</span>
-                        <span>Ultima consulta: <strong class="text-gray-900">{{ $participante->ultima_consulta_em->format('d/m/Y H:i') }}</strong></span>
+                        <span>Última consulta: <strong class="text-gray-900">{{ $participante->ultima_consulta_em->format('d/m/Y H:i') }}</strong></span>
                     @endif
                 </div>
                 <div class="flex items-center gap-3">
@@ -91,16 +91,16 @@
                         </svg>
                         Editar
                     </a>
-                    <button
-                        type="button"
-                        id="btn-consulta-avulsa"
+                    <a
+                        href="/app/consultas/nova?participantes={{ $participante->id }}"
+                        data-link
                         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
-                        Consulta Avulsa
-                    </button>
+                        Consultar
+                    </a>
                     @if(!$assinaturaAtiva)
                         <button
                             type="button"
@@ -117,63 +117,63 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {{-- Coluna Principal --}}
-            <div class="lg:col-span-2 space-y-6">
+            <div class="lg:col-span-2 space-y-4 sm:space-y-6">
                 {{-- Dados Cadastrais --}}
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
                         <h2 class="text-lg font-semibold text-gray-900">Dados Cadastrais</h2>
                     </div>
-                    <div class="p-6">
-                        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                    <div class="p-4 sm:p-6">
+                        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-4">
                             <div>
                                 <dt class="text-xs text-gray-500 uppercase tracking-wide">CNPJ</dt>
                                 <dd class="mt-1 text-sm font-mono text-gray-900">{{ $participante->cnpj_formatado }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-gray-500 uppercase tracking-wide">Razao Social</dt>
+                                <dt class="text-xs text-gray-500 uppercase tracking-wide">Razão Social</dt>
                                 <dd class="mt-1 text-sm text-gray-900">{{ $participante->razao_social ?? '-' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-gray-500 uppercase tracking-wide">Nome Fantasia</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ $participante->nome_fantasia ?? '-' }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-xs text-gray-500 uppercase tracking-wide">Situacao Cadastral</dt>
+                                <dt class="text-xs text-gray-500 uppercase tracking-wide">Situação Cadastral</dt>
                                 <dd class="mt-1 text-sm text-gray-900">{{ $participante->situacao_cadastral ?? '-' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-gray-500 uppercase tracking-wide">Regime Tributario</dt>
+                                <dt class="text-xs text-gray-500 uppercase tracking-wide">Regime Tributário</dt>
                                 <dd class="mt-1 text-sm text-gray-900">{{ $participante->regime_tributario ?? '-' }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-xs text-gray-500 uppercase tracking-wide">Inscricao Estadual</dt>
-                                <dd class="mt-1 text-sm font-mono text-gray-900">{{ $participante->inscricao_estadual ?? '-' }}</dd>
                             </div>
                             <div>
                                 <dt class="text-xs text-gray-500 uppercase tracking-wide">UF</dt>
                                 <dd class="mt-1 text-sm text-gray-900">{{ $participante->uf ?? '-' }}</dd>
                             </div>
                             <div>
+                                <dt class="text-xs text-gray-500 uppercase tracking-wide">Município</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ $participante->municipio ?? '-' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs text-gray-500 uppercase tracking-wide">Porte</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ $participante->porte ?? '-' }}</dd>
+                            </div>
+                            <div>
                                 <dt class="text-xs text-gray-500 uppercase tracking-wide">Cadastrado em</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ $participante->created_at->format('d/m/Y H:i') }}</dd>
+                                <dd class="mt-1 text-sm text-gray-900">{{ $participante->created_at?->format('d/m/Y H:i') ?? '-' }}</dd>
                             </div>
                         </dl>
                     </div>
                 </div>
 
-                {{-- Dados da Ultima Consulta --}}
+                {{-- Dados da Última Consulta --}}
                 @if($ultimaConsulta && $ultimaConsulta->resultado_dados)
                     @php
                         $dados = $ultimaConsulta->resultado_dados;
                         $consultasRealizadas = $dados['consultas_realizadas'] ?? [];
                     @endphp
                     <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <h2 class="text-lg font-semibold text-gray-900">Dados da Ultima Consulta</h2>
+                                    <h2 class="text-lg font-semibold text-gray-900">Dados da Última Consulta</h2>
                                     <p class="text-xs text-gray-500 mt-1">
                                         Consultado em {{ $ultimaConsulta->consultado_em?->format('d/m/Y H:i') }}
                                         @if($ultimaConsulta->lote)
@@ -209,21 +209,21 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="p-6 space-y-6">
+                        <div class="p-4 sm:p-6 space-y-6">
                             {{-- Situacao e Regime --}}
                             @if(isset($dados['situacao_cadastral']) || isset($dados['regime_tributario']) || isset($dados['simples_nacional']))
                             <div>
-                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Situacao e Regime Tributario</h3>
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Situação e Regime Tributário</h3>
                                 <dl class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                     <div class="bg-gray-50 rounded-lg p-3">
-                                        <dt class="text-xs text-gray-500">Situacao Cadastral</dt>
+                                        <dt class="text-xs text-gray-500">Situação Cadastral</dt>
                                         <dd class="mt-1 text-sm font-semibold {{ ($dados['situacao_cadastral'] ?? '') === 'ATIVA' ? 'text-green-600' : 'text-red-600' }}">
                                             {{ $dados['situacao_cadastral'] ?? '-' }}
                                         </dd>
                                     </div>
                                     @if(isset($dados['regime_tributario']))
                                     <div class="bg-gray-50 rounded-lg p-3">
-                                        <dt class="text-xs text-gray-500">Regime Tributario</dt>
+                                        <dt class="text-xs text-gray-500">Regime Tributário</dt>
                                         <dd class="mt-1 text-sm font-medium text-gray-700">
                                             {{ $dados['regime_tributario'] }}
                                         </dd>
@@ -276,7 +276,7 @@
                                 <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     @if(isset($dados['razao_social']))
                                     <div class="bg-gray-50 rounded-lg p-3">
-                                        <dt class="text-xs text-gray-500">Razao Social</dt>
+                                        <dt class="text-xs text-gray-500">Razão Social</dt>
                                         <dd class="mt-1 text-sm text-gray-900">{{ $dados['razao_social'] }}</dd>
                                     </div>
                                     @endif
@@ -288,7 +288,7 @@
                                     @endif
                                     @if(isset($dados['natureza_juridica']))
                                     <div class="bg-gray-50 rounded-lg p-3">
-                                        <dt class="text-xs text-gray-500">Natureza Juridica</dt>
+                                        <dt class="text-xs text-gray-500">Natureza Jurídica</dt>
                                         <dd class="mt-1 text-sm text-gray-900">{{ $dados['natureza_juridica'] }}</dd>
                                     </div>
                                     @endif
@@ -300,7 +300,7 @@
                                     @endif
                                     @if(isset($dados['data_inicio_atividade']))
                                     <div class="bg-gray-50 rounded-lg p-3">
-                                        <dt class="text-xs text-gray-500">Inicio Atividade</dt>
+                                        <dt class="text-xs text-gray-500">Início Atividade</dt>
                                         <dd class="mt-1 text-sm text-gray-900">{{ \Carbon\Carbon::parse($dados['data_inicio_atividade'])->format('d/m/Y') }}</dd>
                                     </div>
                                     @endif
@@ -308,10 +308,10 @@
                             </div>
                             @endif
 
-                            {{-- Endereco --}}
+                            {{-- Endereço --}}
                             @if(isset($dados['endereco']) && is_array($dados['endereco']))
                             <div class="border-t border-gray-200 pt-4">
-                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Endereco</h3>
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Endereço</h3>
                                 @php $end = $dados['endereco']; @endphp
                                 <div class="bg-gray-50 rounded-lg p-4">
                                     <p class="text-sm text-gray-900">
@@ -366,32 +366,18 @@
                                 </div>
                                 @endif
 
-                                {{-- Mapa de Localizacao --}}
-                                @php
-                                    $enderecoCompleto = trim(implode(', ', array_filter([
-                                        $end['logradouro'] ?? '',
-                                        $end['numero'] ?? '',
-                                        $end['bairro'] ?? '',
-                                        $end['municipio'] ?? '',
-                                        $end['uf'] ?? '',
-                                        'Brasil'
-                                    ])));
-                                    $cepMapa = preg_replace('/\D/', '', $end['cep'] ?? '');
-                                @endphp
-                                <div id="participante-mapa-container" class="mt-4">
+                            </div>
+                            @endif
+
+                            {{-- Mapa de Localizacao --}}
+                            @if($participante->latitude && $participante->longitude)
+                            <div class="border-t border-gray-200 pt-4">
+                                <div id="participante-mapa-container">
                                     <div id="participante-mapa"
                                          class="h-48 rounded-lg border border-gray-200 bg-gray-100"
-                                         data-endereco="{{ $enderecoCompleto }}"
-                                         data-cep="{{ $cepMapa }}">
+                                         data-lat="{{ $participante->latitude }}"
+                                         data-lng="{{ $participante->longitude }}">
                                     </div>
-                                    <p id="mapa-loading" class="text-xs text-gray-500 mt-1 text-center">
-                                        <svg class="animate-spin inline w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        Carregando mapa...
-                                    </p>
-                                    <p id="mapa-error" class="hidden text-xs text-red-500 mt-1 text-center"></p>
                                 </div>
                             </div>
                             @endif
@@ -399,7 +385,7 @@
                             {{-- CNAEs --}}
                             @if(isset($dados['cnaes']) && is_array($dados['cnaes']))
                             <div class="border-t border-gray-200 pt-4">
-                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Atividades Economicas (CNAEs)</h3>
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Atividades Econômicas (CNAEs)</h3>
                                 @if(isset($dados['cnaes']['principal']))
                                 <div class="bg-blue-50 rounded-lg p-3 mb-3">
                                     <dt class="text-xs text-blue-600 font-semibold">CNAE Principal</dt>
@@ -416,7 +402,7 @@
                                 @endphp
                                 @if(count($cnaesSecundariosValidos) > 0)
                                 <div class="bg-gray-50 rounded-lg p-3">
-                                    <dt class="text-xs text-gray-500 font-semibold mb-2">CNAEs Secundarios ({{ count($cnaesSecundariosValidos) }})</dt>
+                                    <dt class="text-xs text-gray-500 font-semibold mb-2">CNAEs Secundários ({{ count($cnaesSecundariosValidos) }})</dt>
                                     <dd class="space-y-1 max-h-40 overflow-y-auto">
                                         @foreach(array_slice($cnaesSecundariosValidos, 0, 10) as $cnae)
                                         <div class="text-xs text-gray-700">
@@ -439,17 +425,17 @@
                                 <h3 class="text-sm font-semibold text-gray-700 mb-3">SINTEGRA</h3>
                                 <dl class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                     <div class="bg-gray-50 rounded-lg p-3">
-                                        <dt class="text-xs text-gray-500">Inscricao Estadual</dt>
+                                        <dt class="text-xs text-gray-500">Inscrição Estadual</dt>
                                         <dd class="mt-1 text-sm font-mono text-gray-900">{{ $dados['sintegra']['ie'] ?? '-' }}</dd>
                                     </div>
                                     <div class="bg-gray-50 rounded-lg p-3">
-                                        <dt class="text-xs text-gray-500">Situacao IE</dt>
+                                        <dt class="text-xs text-gray-500">Situação IE</dt>
                                         <dd class="mt-1 text-sm font-semibold {{ ($dados['sintegra']['situacao'] ?? '') === 'HABILITADO' ? 'text-green-600' : 'text-red-600' }}">
                                             {{ $dados['sintegra']['situacao'] ?? '-' }}
                                         </dd>
                                     </div>
                                     <div class="bg-gray-50 rounded-lg p-3">
-                                        <dt class="text-xs text-gray-500">Regime Apuracao</dt>
+                                        <dt class="text-xs text-gray-500">Regime Apuração</dt>
                                         <dd class="mt-1 text-sm text-gray-900">{{ $dados['sintegra']['regime_apuracao'] ?? '-' }}</dd>
                                     </div>
                                 </dl>
@@ -459,7 +445,7 @@
                             {{-- CNDs --}}
                             @if(in_array('cnd_federal', $consultasRealizadas) || in_array('cnd_estadual', $consultasRealizadas) || in_array('crf_fgts', $consultasRealizadas) || in_array('cndt', $consultasRealizadas) || isset($dados['cnd_federal']) || isset($dados['cnd_estadual']) || isset($dados['crf_fgts']) || isset($dados['cndt']))
                             <div class="border-t border-gray-200 pt-4">
-                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Certidoes Negativas</h3>
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Certidões Negativas</h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                     @if(isset($dados['cnd_federal']))
                                     <div class="bg-gray-50 rounded-lg p-3">
@@ -527,15 +513,15 @@
                                         </dd>
                                     </div>
                                     <div class="bg-gray-50 rounded-lg p-3">
-                                        <dt class="text-xs text-gray-500">Acordao TCU</dt>
+                                        <dt class="text-xs text-gray-500">Acórdão TCU</dt>
                                         <dd class="mt-1 text-sm font-semibold {{ !($dados['tcu_consolidada']['acordao_tcu'] ?? false) ? 'text-green-600' : 'text-red-600' }}">
                                             {{ ($dados['tcu_consolidada']['acordao_tcu'] ?? false) ? 'Consta' : 'Nada consta' }}
                                         </dd>
                                     </div>
                                     <div class="bg-gray-50 rounded-lg p-3">
-                                        <dt class="text-xs text-gray-500">Licitacao Impedida</dt>
+                                        <dt class="text-xs text-gray-500">Licitação Impedida</dt>
                                         <dd class="mt-1 text-sm font-semibold {{ !($dados['tcu_consolidada']['licitacao_impedida'] ?? false) ? 'text-green-600' : 'text-red-600' }}">
-                                            {{ ($dados['tcu_consolidada']['licitacao_impedida'] ?? false) ? 'Sim' : 'Nao' }}
+                                            {{ ($dados['tcu_consolidada']['licitacao_impedida'] ?? false) ? 'Sim' : 'Não' }}
                                         </dd>
                                     </div>
                                 </div>
@@ -552,7 +538,7 @@
                                             <tr>
                                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
                                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">CPF/CNPJ</th>
-                                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Qualificacao</th>
+                                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Qualificação</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-gray-100">
@@ -578,7 +564,7 @@
                                 @else
                                     <div class="bg-red-50 rounded-lg p-4">
                                         <p class="text-sm font-semibold text-red-700">{{ count($dados['protestos']) }} protesto(s) encontrado(s)</p>
-                                        <p class="text-xs text-red-600 mt-1">Consulte o relatorio completo para detalhes</p>
+                                        <p class="text-xs text-red-600 mt-1">Consulte o relatório completo para detalhes</p>
                                     </div>
                                 @endif
                             </div>
@@ -599,7 +585,7 @@
                                     @endif
                                     @if(isset($dados['ibama_autuacoes']))
                                     <div class="bg-gray-50 rounded-lg p-3">
-                                        <dt class="text-xs text-gray-500">Autuacoes IBAMA</dt>
+                                        <dt class="text-xs text-gray-500">Autuações IBAMA</dt>
                                         <dd class="mt-1 text-sm font-semibold {{ empty($dados['ibama_autuacoes']) ? 'text-green-600' : 'text-red-600' }}">
                                             {{ empty($dados['ibama_autuacoes']) ? 'Nenhuma' : count($dados['ibama_autuacoes']) . ' autuacao(oes)' }}
                                         </dd>
@@ -613,10 +599,10 @@
                 @else
                     {{-- Estado vazio - nenhuma consulta realizada --}}
                     <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div class="px-6 py-4 border-b border-gray-200">
-                            <h2 class="text-lg font-semibold text-gray-900">Dados da Ultima Consulta</h2>
+                        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                            <h2 class="text-lg font-semibold text-gray-900">Dados da Última Consulta</h2>
                         </div>
-                        <div class="p-6 text-center">
+                        <div class="p-4 sm:p-6 text-center">
                             <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                             </svg>
@@ -626,104 +612,23 @@
                     </div>
                 @endif
 
-                {{-- Historico de Consultas --}}
+                {{-- Histórico de Consultas --}}
+                @if(isset($lotesDoParticipante))
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
                         <div class="flex items-center justify-between">
-                            <h2 class="text-lg font-semibold text-gray-900">Historico de Consultas</h2>
-                            <span class="text-sm text-gray-500">{{ $consultas->total() }} consulta(s)</span>
+                            <h2 class="text-lg font-semibold text-gray-900">Histórico de Consultas</h2>
+                            <span class="text-sm text-gray-500">{{ $lotesDoParticipante->count() }} consulta(s)</span>
                         </div>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Data</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Plano</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Acoes</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                @forelse($consultas as $consulta)
-                                    <tr class="hover:bg-gray-50 transition-colors">
-                                        <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                                            {{ $consulta->created_at->format('d/m/Y H:i') }}
-                                        </td>
-                                        <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
-                                            {{ $consulta->plano->nome ?? '-' }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            @if($consulta->tipo === 'avulso')
-                                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
-                                                    Avulso
-                                                </span>
-                                            @else
-                                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-700">
-                                                    Assinatura
-                                                </span>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            @if($consulta->status === 'sucesso')
-                                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
-                                                    Sucesso
-                                                </span>
-                                            @elseif($consulta->status === 'pendente')
-                                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-amber-100 text-amber-700">
-                                                    Pendente
-                                                </span>
-                                            @elseif($consulta->status === 'processando')
-                                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
-                                                    Processando
-                                                </span>
-                                            @else
-                                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-100 text-red-700">
-                                                    Erro
-                                                </span>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4 text-right whitespace-nowrap">
-                                            <button
-                                                type="button"
-                                                class="btn-ver-consulta inline-flex items-center p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                                                data-consulta-id="{{ $consulta->id }}"
-                                                title="Ver detalhes"
-                                            >
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                                </svg>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">
-                                            Nenhuma consulta realizada para este participante.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                    @if($lotesDoParticipante->isEmpty())
+                    <div class="px-6 py-10 text-center text-gray-400">
+                        <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p class="text-sm">Nenhuma consulta realizada para este participante.</p>
                     </div>
-                    @if($consultas->hasPages())
-                        <div class="px-6 py-4 border-t border-gray-200">
-                            {{ $consultas->links() }}
-                        </div>
-                    @endif
-                </div>
-
-                {{-- Consultas em Lote --}}
-                @if(isset($lotesDoParticipante) && $lotesDoParticipante->count() > 0)
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <h2 class="text-lg font-semibold text-gray-900">Consultas em Lote</h2>
-                            <span class="text-sm text-gray-500">{{ $lotesDoParticipante->count() }} lote(s)</span>
-                        </div>
-                    </div>
+                    @else
                     <div class="divide-y divide-gray-200">
                         @php
                             $lotePlanoBadgeColors = [
@@ -736,6 +641,31 @@
                             ];
                         @endphp
                         @foreach($lotesDoParticipante as $lote)
+                        @php
+                            $resultado = $lote->resultados->first();
+                            $statusResultado = $resultado?->status ?? ($lote->status === 'concluido' ? 'pendente' : $lote->status);
+                            $situacao = $resultado?->getDado('situacao_cadastral');
+                            $simples = $resultado?->getDado('simples_nacional');
+                            $cndFederal = $resultado?->getDado('cnd_federal');
+                            $cndt = $resultado?->getDado('cndt');
+                            $dataConsulta = $resultado?->consultado_em ?? $lote->created_at;
+                            $resultadoStatusColors = [
+                                'sucesso'     => 'bg-green-100 text-green-700',
+                                'erro'        => 'bg-red-100 text-red-700',
+                                'timeout'     => 'bg-red-100 text-red-700',
+                                'pendente'    => $lote->status === 'processando' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700',
+                                'processando' => 'bg-blue-100 text-blue-700',
+                                'concluido'   => 'bg-green-100 text-green-700',
+                            ];
+                            $resultadoStatusLabel = [
+                                'sucesso'     => 'Sucesso',
+                                'erro'        => 'Erro',
+                                'timeout'     => 'Timeout',
+                                'pendente'    => $lote->status === 'processando' ? 'Em andamento' : 'Pendente',
+                                'processando' => 'Em andamento',
+                                'concluido'   => 'Concluído',
+                            ];
+                        @endphp
                         <div class="px-6 py-4 hover:bg-gray-50 transition-colors">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-4">
@@ -748,7 +678,29 @@
                                     </div>
                                     <div>
                                         <p class="text-sm font-semibold text-gray-900">Lote #{{ $lote->id }}</p>
-                                        <p class="text-xs text-gray-500">{{ $lote->created_at->format('d/m/Y H:i') }}</p>
+                                        <p class="text-xs text-gray-500">{{ $dataConsulta?->format('d/m/Y H:i') ?? '-' }}</p>
+                                        @if($statusResultado === 'sucesso' && ($situacao || $simples !== null))
+                                        <p class="text-xs text-gray-500 mt-0.5">
+                                            @if($situacao)
+                                                <span>{{ $situacao }}</span>
+                                            @endif
+                                            @if($simples !== null)
+                                                <span class="mx-1">·</span>
+                                                <span>SN: {{ $simples ? 'Optante' : 'Não optante' }}</span>
+                                            @endif
+                                            @if($cndFederal !== null)
+                                                <span class="mx-1">·</span>
+                                                <span>CND: {{ $cndFederal ? 'Regular' : 'Irregular' }}</span>
+                                            @endif
+                                            @if($cndt !== null)
+                                                <span class="mx-1">·</span>
+                                                <span>CNDT: {{ $cndt ? 'Regular' : 'Irregular' }}</span>
+                                            @endif
+                                        </p>
+                                        @endif
+                                        @if($statusResultado === 'erro' && $resultado?->error_message)
+                                        <p class="text-xs text-red-500 mt-0.5 truncate max-w-xs">{{ $resultado->error_message }}</p>
+                                        @endif
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
@@ -757,16 +709,8 @@
                                         {{ $lote->plano->nome }}
                                     </span>
                                     @endif
-                                    @php
-                                        $loteStatusColors = [
-                                            'pendente' => 'bg-gray-100 text-gray-700',
-                                            'processando' => 'bg-blue-100 text-blue-700',
-                                            'concluido' => 'bg-green-100 text-green-700',
-                                            'erro' => 'bg-red-100 text-red-700',
-                                        ];
-                                    @endphp
-                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium {{ $loteStatusColors[$lote->status] ?? 'bg-gray-100 text-gray-700' }}">
-                                        {{ ucfirst($lote->status) }}
+                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium {{ $resultadoStatusColors[$statusResultado] ?? 'bg-gray-100 text-gray-700' }}">
+                                        {{ $resultadoStatusLabel[$statusResultado] ?? ucfirst($statusResultado) }}
                                     </span>
                                     <a href="/app/consultas/historico?lote={{ $lote->id }}"
                                        class="inline-flex items-center p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
@@ -781,120 +725,26 @@
                         </div>
                         @endforeach
                     </div>
-                </div>
-                @endif
-
-                {{-- Notas Fiscais --}}
-                @if(($totalNotasFiscais ?? 0) > 0)
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <h2 class="text-lg font-semibold text-gray-900">Notas Fiscais</h2>
-                            <span class="text-sm text-gray-500">{{ $totalNotasFiscais }} nota(s)</span>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Data</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Numero/Serie</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Papel</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Contraparte</th>
-                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Valor</th>
-                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Acoes</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                @foreach($notasFiscais as $nota)
-                                    <tr class="hover:bg-gray-50 transition-colors">
-                                        <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                                            {{ $nota->data_emissao?->format('d/m/Y') ?? '-' }}
-                                        </td>
-                                        <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
-                                            <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
-                                                {{ $nota->tipo_documento }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap font-mono">
-                                            {{ $nota->numero_nota ?? '-' }}/{{ $nota->serie ?? '-' }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            @if($nota->papel === 'emitente')
-                                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
-                                                    Emitente
-                                                </span>
-                                            @else
-                                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
-                                                    Destinatario
-                                                </span>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4 text-sm text-gray-900 max-w-[200px]">
-                                            <div class="truncate" title="{{ $nota->contraparte_razao }}">
-                                                {{ $nota->contraparte_razao ?? '-' }}
-                                            </div>
-                                            <div class="text-xs text-gray-500 font-mono">
-                                                @php
-                                                    $cpCnpj = $nota->contraparte_cnpj ?? '';
-                                                    if (strlen($cpCnpj) === 14) {
-                                                        $cpCnpj = preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $cpCnpj);
-                                                    }
-                                                @endphp
-                                                {{ $cpCnpj ?: '-' }}
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 text-sm text-gray-900 text-right whitespace-nowrap font-semibold">
-                                            R$ {{ number_format((float) $nota->valor_total, 2, ',', '.') }}
-                                        </td>
-                                        <td class="px-6 py-4 text-right whitespace-nowrap">
-                                            <div class="flex items-center justify-end gap-1">
-                                                <button
-                                                    type="button"
-                                                    class="btn-ver-nota inline-flex items-center p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                                                    data-nota-id="{{ $nota->id }}"
-                                                    title="Ver detalhes"
-                                                >
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                                    </svg>
-                                                </button>
-                                                @if($nota->contraparte_participante_id)
-                                                    <a
-                                                        href="/app/participante/{{ $nota->contraparte_participante_id }}"
-                                                        class="inline-flex items-center p-2 rounded-lg text-gray-500 hover:text-green-600 hover:bg-green-50 transition-colors"
-                                                        data-link
-                                                        title="Ver contraparte"
-                                                    >
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                                        </svg>
-                                                    </a>
-                                                @endif
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    @if($notasFiscais->hasPages())
-                        <div class="px-6 py-4 border-t border-gray-200">
-                            {{ $notasFiscais->appends(request()->except('notas_page'))->links() }}
-                        </div>
                     @endif
                 </div>
                 @endif
+
+                {{-- Notas Fiscais (EFD + XML unificadas) --}}
+                @include('autenticado.partials.notas-fiscais-card', [
+                    'notas' => $notasFiscais,
+                    'totalNotas' => $totalNotasFiscais,
+                    'ajaxUrl' => $notasAjaxUrl,
+                    'contexto' => $notasContexto,
+                    'entityId' => $notasEntityId,
+                ])
             </div>
 
             {{-- Coluna Lateral --}}
-            <div class="space-y-6">
+            <div class="space-y-4 sm:space-y-6">
                 {{-- Assinatura Ativa --}}
                 @if($assinaturaAtiva)
                     <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
                             <div class="flex items-center justify-between">
                                 <h2 class="text-lg font-semibold text-gray-900">Assinatura Ativa</h2>
                                 <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
@@ -902,13 +752,13 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="p-6 space-y-4">
+                        <div class="p-4 sm:p-6 space-y-4">
                             <div>
                                 <p class="text-xs text-gray-500 uppercase tracking-wide">Plano</p>
                                 <p class="mt-1 text-sm font-semibold text-gray-900">{{ $assinaturaAtiva->plano->nome ?? '-' }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500 uppercase tracking-wide">Frequencia</p>
+                                <p class="text-xs text-gray-500 uppercase tracking-wide">Frequência</p>
                                 <p class="mt-1 text-sm text-gray-900">
                                     @php
                                         $frequencias = [
@@ -922,19 +772,19 @@
                                 </p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500 uppercase tracking-wide">Proxima Execucao</p>
+                                <p class="text-xs text-gray-500 uppercase tracking-wide">Próxima Execução</p>
                                 <p class="mt-1 text-sm text-gray-900">
                                     {{ $assinaturaAtiva->proxima_execucao_em ? $assinaturaAtiva->proxima_execucao_em->format('d/m/Y H:i') : '-' }}
                                 </p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500 uppercase tracking-wide">Ultima Execucao</p>
+                                <p class="text-xs text-gray-500 uppercase tracking-wide">Última Execução</p>
                                 <p class="mt-1 text-sm text-gray-900">
                                     {{ $assinaturaAtiva->ultima_execucao_em ? $assinaturaAtiva->ultima_execucao_em->format('d/m/Y H:i') : 'Nunca' }}
                                 </p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500 uppercase tracking-wide">Creditos/Execucao</p>
+                                <p class="text-xs text-gray-500 uppercase tracking-wide">Créditos/Execução</p>
                                 <p class="mt-1 text-sm text-gray-900">{{ $assinaturaAtiva->plano->custo_creditos ?? 0 }} creditos</p>
                             </div>
                             <div class="pt-4 border-t border-gray-200 flex gap-2">
@@ -979,10 +829,10 @@
 
                 {{-- Estatisticas --}}
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-900">Estatisticas</h2>
+                    <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-900">Estatísticas</h2>
                     </div>
-                    <div class="p-6 space-y-4">
+                    <div class="p-4 sm:p-6 space-y-4">
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Total de consultas</span>
                             <span class="text-sm font-semibold text-gray-900">{{ $estatisticas['total_consultas'] ?? 0 }}</span>
@@ -1015,7 +865,7 @@
                             </svg>
                         </div>
                         <div>
-                            <p class="text-sm text-white/80">Saldo de Creditos</p>
+                            <p class="text-sm text-white/80">Saldo de Créditos</p>
                             <p class="text-2xl font-bold">{{ number_format($credits ?? 0, 0, ',', '.') }}</p>
                         </div>
                     </div>
@@ -1024,7 +874,7 @@
                         class="block w-full text-center px-4 py-2 rounded-lg bg-white/20 text-white text-sm font-semibold transition hover:bg-white/30"
                         data-link
                     >
-                        Comprar Creditos
+                        Comprar Créditos
                     </a>
                 </div>
             </div>
@@ -1032,62 +882,10 @@
     </div>
 </div>
 
-{{-- Modal Consulta Avulsa --}}
-<div id="modal-consulta-avulsa" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl max-w-md w-full">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900">Consulta Avulsa</h3>
-                <button type="button" class="modal-close text-gray-400 hover:text-gray-500">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <form id="form-consulta-avulsa">
-            <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Selecione o Plano</label>
-                    <select name="plano_id" id="select-plano-avulsa" class="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
-                        <option value="">Selecione...</option>
-                        @foreach($planos as $plano)
-                            <option value="{{ $plano->id }}" data-creditos="{{ $plano->custo_creditos }}">
-                                {{ $plano->nome }} ({{ $plano->custo_creditos }} creditos)
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <p class="text-sm text-gray-600 mb-2">Participante:</p>
-                    <p class="text-sm font-semibold text-gray-900">{{ $participante->razao_social ?? $participante->cnpj_formatado }}</p>
-                    <p class="text-xs text-gray-500 font-mono">{{ $participante->cnpj_formatado }}</p>
-                </div>
-                <div id="info-creditos-avulsa" class="hidden bg-blue-50 rounded-lg p-4">
-                    <p class="text-sm text-blue-700">
-                        Custo: <strong id="custo-avulsa">0</strong> creditos
-                    </p>
-                    <p class="text-sm text-blue-600">
-                        Seu saldo: <strong>{{ number_format($credits ?? 0, 0, ',', '.') }}</strong> creditos
-                    </p>
-                </div>
-            </div>
-            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
-                <button type="button" class="modal-close px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
-                    Cancelar
-                </button>
-                <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
-                    Executar Consulta
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
 {{-- Modal Criar Assinatura --}}
 <div id="modal-criar-assinatura" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-xl shadow-xl max-w-md w-full">
-        <div class="px-6 py-4 border-b border-gray-200">
+        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
             <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-gray-900">Criar Assinatura</h3>
                 <button type="button" class="modal-close text-gray-400 hover:text-gray-500">
@@ -1098,7 +896,7 @@
             </div>
         </div>
         <form id="form-criar-assinatura">
-            <div class="p-6 space-y-4">
+            <div class="p-4 sm:p-6 space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Selecione o Plano</label>
                     <select name="plano_id" id="select-plano-assinatura" class="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
@@ -1137,54 +935,6 @@
     </div>
 </div>
 
-{{-- Modal Ver Consulta --}}
-<div id="modal-ver-consulta" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900">Resultado da Consulta</h3>
-                <button type="button" class="modal-close text-gray-400 hover:text-gray-500">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <div class="p-6" id="modal-consulta-content">
-            {{-- Conteudo sera preenchido via JavaScript --}}
-        </div>
-        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end">
-            <button type="button" class="modal-close px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
-                Fechar
-            </button>
-        </div>
-    </div>
-</div>
-
-{{-- Modal Ver Nota Fiscal --}}
-<div id="modal-ver-nota" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900">Detalhes da Nota Fiscal</h3>
-                <button type="button" class="modal-close text-gray-400 hover:text-gray-500">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <div class="p-6" id="modal-nota-content">
-            {{-- Conteudo sera preenchido via JavaScript --}}
-        </div>
-        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end">
-            <button type="button" class="modal-close px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
-                Fechar
-            </button>
-        </div>
-    </div>
-</div>
-
 <script>
 (function() {
     'use strict';
@@ -1202,27 +952,9 @@
         const participanteId = {{ $participante->id }};
 
         // Elementos
-        const btnConsultaAvulsa = document.getElementById('btn-consulta-avulsa');
         const btnCriarAssinatura = document.getElementById('btn-criar-assinatura');
-        const modalConsultaAvulsa = document.getElementById('modal-consulta-avulsa');
         const modalCriarAssinatura = document.getElementById('modal-criar-assinatura');
-        const modalVerConsulta = document.getElementById('modal-ver-consulta');
-        const modalConsultaContent = document.getElementById('modal-consulta-content');
-        const formConsultaAvulsa = document.getElementById('form-consulta-avulsa');
-        const formCriarAssinatura = document.getElementById('form-criar-assinatura');
-        const selectPlanoAvulsa = document.getElementById('select-plano-avulsa');
-        const infoCreditosAvulsa = document.getElementById('info-creditos-avulsa');
-        const custoAvulsa = document.getElementById('custo-avulsa');
-
-        // Abrir modal consulta avulsa
-        if (btnConsultaAvulsa) {
-            btnConsultaAvulsa.addEventListener('click', function() {
-                if (modalConsultaAvulsa) {
-                    modalConsultaAvulsa.classList.remove('hidden');
-                    document.body.style.overflow = 'hidden';
-                }
-            });
-        }
+const formCriarAssinatura = document.getElementById('form-criar-assinatura');
 
         // Abrir modal criar assinatura
         if (btnCriarAssinatura) {
@@ -1230,77 +962,6 @@
                 if (modalCriarAssinatura) {
                     modalCriarAssinatura.classList.remove('hidden');
                     document.body.style.overflow = 'hidden';
-                }
-            });
-        }
-
-        // Mostrar custo ao selecionar plano
-        if (selectPlanoAvulsa) {
-            selectPlanoAvulsa.addEventListener('change', function() {
-                const option = this.options[this.selectedIndex];
-                const creditos = option.dataset.creditos || 0;
-
-                if (this.value) {
-                    infoCreditosAvulsa.classList.remove('hidden');
-                    custoAvulsa.textContent = creditos;
-                } else {
-                    infoCreditosAvulsa.classList.add('hidden');
-                }
-            });
-        }
-
-        // Submit consulta avulsa
-        if (formConsultaAvulsa) {
-            formConsultaAvulsa.addEventListener('submit', async function(e) {
-                e.preventDefault();
-
-                const planoId = selectPlanoAvulsa.value;
-                if (!planoId) {
-                    window.showToast && window.showToast('Selecione um plano', 'error');
-                    return;
-                }
-
-                const submitBtn = this.querySelector('button[type="submit"]');
-                const originalText = submitBtn.textContent;
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Processando...';
-
-                try {
-                    const response = await fetch('/app/monitoramento/consulta-avulsa', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrf,
-                            'Accept': 'application/json',
-                        },
-                        credentials: 'same-origin',
-                        body: JSON.stringify({
-                            participante_id: participanteId,
-                            plano_id: planoId,
-                        }),
-                    });
-
-                    const data = await response.json();
-
-                    if (!response.ok) {
-                        throw new Error(data.error || 'Erro ao processar consulta');
-                    }
-
-                    window.showToast && window.showToast('Consulta iniciada com sucesso!', 'success');
-                    modalConsultaAvulsa.classList.add('hidden');
-                    document.body.style.overflow = '';
-
-                    // Recarregar pagina para atualizar historico
-                    setTimeout(function() {
-                        window.location.reload();
-                    }, 1500);
-
-                } catch (err) {
-                    console.error('[Monitoramento Participante] Erro:', err);
-                    window.showToast && window.showToast(err.message || 'Erro ao processar consulta', 'error');
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = originalText;
                 }
             });
         }
@@ -1362,102 +1023,6 @@
                     submitBtn.textContent = originalText;
                 }
             });
-        }
-
-        // Botoes ver consulta
-        document.querySelectorAll('.btn-ver-consulta').forEach(function(btn) {
-            btn.addEventListener('click', async function() {
-                const consultaId = this.dataset.consultaId;
-
-                modalConsultaContent.innerHTML = '<div class="flex items-center justify-center py-8"><svg class="animate-spin h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>';
-                modalVerConsulta.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
-
-                try {
-                    const response = await fetch('/app/monitoramento/consulta/' + consultaId, {
-                        method: 'GET',
-                        headers: {
-                            'X-CSRF-TOKEN': csrf,
-                            'Accept': 'application/json',
-                        },
-                        credentials: 'same-origin',
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Erro ao carregar resultado');
-                    }
-
-                    const data = await response.json();
-                    renderizarResultado(data);
-                } catch (err) {
-                    console.error('[Monitoramento Participante] Erro:', err);
-                    modalConsultaContent.innerHTML = '<div class="text-center py-8 text-red-600">Erro ao carregar resultado. Tente novamente.</div>';
-                }
-            });
-        });
-
-        // Funcao para renderizar resultado no modal
-        function renderizarResultado(data) {
-            if (!data || !data.resultado) {
-                modalConsultaContent.innerHTML = '<div class="text-center py-8 text-gray-500">Resultado nao disponivel ou consulta ainda em processamento.</div>';
-                return;
-            }
-
-            const r = data.resultado;
-            const cnpjFormatado = r.cnpj ? r.cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5') : '-';
-
-            let html = '<div class="space-y-4">';
-
-            // Header
-            html += '<div class="border-b border-gray-200 pb-4">';
-            html += '<h4 class="text-lg font-semibold text-gray-900">' + (r.razao_social || 'Razao Social nao informada') + '</h4>';
-            html += '<p class="text-sm text-gray-600 font-mono">' + cnpjFormatado + '</p>';
-            html += '</div>';
-
-            // Informacoes basicas
-            html += '<div class="grid grid-cols-2 gap-4">';
-            html += '<div><p class="text-xs text-gray-500">Situacao Cadastral</p><p class="text-sm font-semibold text-gray-900">' + (r.situacao_cadastral || '-') + '</p></div>';
-            html += '<div><p class="text-xs text-gray-500">Regime Tributario</p><p class="text-sm font-semibold text-gray-900">' + (r.regime_tributario || '-') + '</p></div>';
-            html += '</div>';
-
-            // Detalhes adicionais (se houver)
-            if (r.detalhes && Object.keys(r.detalhes).length > 0) {
-                html += '<div class="border-t border-gray-200 pt-4">';
-                html += '<h5 class="text-sm font-semibold text-gray-900 mb-3">Detalhes da Consulta</h5>';
-                html += '<div class="grid grid-cols-2 gap-4">';
-
-                Object.entries(r.detalhes).forEach(function([key, value]) {
-                    if (typeof value === 'object' && value !== null) {
-                        const statusClass = (value.status === 'NEGATIVA' || value.status === 'REGULAR') ? 'text-green-600' : 'text-red-600';
-                        html += '<div class="bg-gray-50 rounded-lg p-3">';
-                        html += '<p class="text-xs text-gray-500">' + key.toUpperCase().replace(/_/g, ' ') + '</p>';
-                        html += '<p class="text-sm font-semibold ' + statusClass + '">' + (value.status || JSON.stringify(value)) + '</p>';
-                        if (value.validade) {
-                            html += '<p class="text-xs text-gray-500 mt-1">Validade: ' + value.validade + '</p>';
-                        }
-                        html += '</div>';
-                    } else {
-                        html += '<div class="bg-gray-50 rounded-lg p-3">';
-                        html += '<p class="text-xs text-gray-500">' + key.toUpperCase().replace(/_/g, ' ') + '</p>';
-                        html += '<p class="text-sm font-semibold text-gray-900">' + value + '</p>';
-                        html += '</div>';
-                    }
-                });
-
-                html += '</div>';
-                html += '</div>';
-            }
-
-            // Metadados
-            html += '<div class="border-t border-gray-200 pt-4 text-xs text-gray-500">';
-            html += '<p>Consulta realizada em: ' + (data.executado_em || data.created_at || '-') + '</p>';
-            html += '<p>Plano: ' + (data.plano?.nome || '-') + '</p>';
-            html += '<p>Creditos utilizados: ' + (data.creditos_cobrados || 0) + '</p>';
-            html += '</div>';
-
-            html += '</div>';
-
-            modalConsultaContent.innerHTML = html;
         }
 
         // Pausar assinatura
@@ -1525,7 +1090,7 @@
         // Cancelar assinatura
         document.querySelectorAll('.btn-cancelar-assinatura').forEach(function(btn) {
             btn.addEventListener('click', async function() {
-                if (!confirm('Tem certeza que deseja cancelar esta assinatura? Esta acao nao pode ser desfeita.')) return;
+                if (!confirm('Tem certeza que deseja cancelar esta assinatura? Esta ação não pode ser desfeita.')) return;
 
                 const assinaturaId = this.dataset.assinaturaId;
                 try {
@@ -1554,131 +1119,6 @@
             });
         });
 
-        // Ver detalhes da nota fiscal
-        const modalVerNota = document.getElementById('modal-ver-nota');
-        const modalNotaContent = document.getElementById('modal-nota-content');
-
-        document.querySelectorAll('.btn-ver-nota').forEach(function(btn) {
-            btn.addEventListener('click', async function() {
-                const notaId = this.dataset.notaId;
-
-                modalNotaContent.innerHTML = '<div class="flex items-center justify-center py-8"><svg class="animate-spin h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>';
-                modalVerNota.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
-
-                try {
-                    const response = await fetch('/app/participante/nota-fiscal/' + notaId, {
-                        method: 'GET',
-                        headers: {
-                            'X-CSRF-TOKEN': csrf,
-                            'Accept': 'application/json',
-                        },
-                        credentials: 'same-origin',
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Erro ao carregar detalhes da nota');
-                    }
-
-                    const result = await response.json();
-                    if (result.success) {
-                        renderizarNotaFiscal(result.data);
-                    } else {
-                        throw new Error(result.message || 'Erro ao carregar detalhes');
-                    }
-                } catch (err) {
-                    console.error('[Monitoramento Participante] Erro:', err);
-                    modalNotaContent.innerHTML = '<div class="text-center py-8 text-red-600">Erro ao carregar detalhes. Tente novamente.</div>';
-                }
-            });
-        });
-
-        // Funcao para renderizar nota fiscal no modal
-        function renderizarNotaFiscal(data) {
-            let html = '<div class="space-y-6">';
-
-            // Dados do documento
-            html += '<div class="border-b border-gray-200 pb-4">';
-            html += '<h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Dados do Documento</h4>';
-            html += '<div class="bg-gray-50 rounded-lg p-3 mb-3">';
-            html += '<p class="text-xs text-gray-500">Chave de Acesso</p>';
-            html += '<p class="text-sm font-mono text-gray-900 break-all">' + (data.nfe_id || '-') + '</p>';
-            html += '</div>';
-            html += '<div class="grid grid-cols-3 gap-4">';
-            html += '<div><p class="text-xs text-gray-500">Tipo</p><p class="text-sm font-semibold text-gray-900">' + (data.tipo_documento || '-') + '</p></div>';
-            html += '<div><p class="text-xs text-gray-500">Numero/Serie</p><p class="text-sm font-semibold text-gray-900">' + (data.numero_nota || '-') + '/' + (data.serie || '-') + '</p></div>';
-            html += '<div><p class="text-xs text-gray-500">Data Emissao</p><p class="text-sm font-semibold text-gray-900">' + (data.data_emissao || '-') + '</p></div>';
-            html += '</div>';
-            html += '<div class="mt-3">';
-            html += '<p class="text-xs text-gray-500">Natureza da Operacao</p>';
-            html += '<p class="text-sm text-gray-900">' + (data.natureza_operacao || '-') + '</p>';
-            html += '</div>';
-            html += '<div class="grid grid-cols-2 gap-4 mt-3">';
-            html += '<div><p class="text-xs text-gray-500">Tipo</p><p class="text-sm font-semibold text-gray-900">' + (data.tipo_nota || '-') + '</p></div>';
-            html += '<div><p class="text-xs text-gray-500">Finalidade</p><p class="text-sm font-semibold text-gray-900">' + (data.finalidade || '-') + '</p></div>';
-            html += '</div>';
-            html += '</div>';
-
-            // Emitente
-            html += '<div class="border-b border-gray-200 pb-4">';
-            html += '<h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Emitente</h4>';
-            html += '<div class="grid grid-cols-2 gap-4">';
-            html += '<div><p class="text-xs text-gray-500">CNPJ</p><p class="text-sm font-mono text-gray-900">' + (data.emit_cnpj || '-') + '</p></div>';
-            html += '<div><p class="text-xs text-gray-500">UF</p><p class="text-sm text-gray-900">' + (data.emit_uf || '-') + '</p></div>';
-            html += '</div>';
-            html += '<div class="mt-2"><p class="text-xs text-gray-500">Razao Social</p><p class="text-sm text-gray-900">' + (data.emit_razao_social || '-') + '</p></div>';
-            html += '</div>';
-
-            // Destinatario
-            html += '<div class="border-b border-gray-200 pb-4">';
-            html += '<h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Destinatario</h4>';
-            html += '<div class="grid grid-cols-2 gap-4">';
-            html += '<div><p class="text-xs text-gray-500">CNPJ</p><p class="text-sm font-mono text-gray-900">' + (data.dest_cnpj || '-') + '</p></div>';
-            html += '<div><p class="text-xs text-gray-500">UF</p><p class="text-sm text-gray-900">' + (data.dest_uf || '-') + '</p></div>';
-            html += '</div>';
-            html += '<div class="mt-2"><p class="text-xs text-gray-500">Razao Social</p><p class="text-sm text-gray-900">' + (data.dest_razao_social || '-') + '</p></div>';
-            html += '</div>';
-
-            // Valores
-            html += '<div>';
-            html += '<h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Valores</h4>';
-            html += '<div class="bg-blue-50 rounded-lg p-4 mb-3">';
-            html += '<p class="text-xs text-blue-600">Valor Total</p>';
-            html += '<p class="text-2xl font-bold text-blue-700">R$ ' + (data.valor_total || '0,00') + '</p>';
-            html += '</div>';
-            html += '<div class="grid grid-cols-3 gap-3">';
-            html += '<div class="bg-gray-50 rounded-lg p-3">';
-            html += '<p class="text-xs text-gray-500">ICMS</p>';
-            html += '<p class="text-sm font-semibold text-gray-900">R$ ' + (data.icms_valor || '0,00') + '</p>';
-            html += '</div>';
-            html += '<div class="bg-gray-50 rounded-lg p-3">';
-            html += '<p class="text-xs text-gray-500">ICMS-ST</p>';
-            html += '<p class="text-sm font-semibold text-gray-900">R$ ' + (data.icms_st_valor || '0,00') + '</p>';
-            html += '</div>';
-            html += '<div class="bg-gray-50 rounded-lg p-3">';
-            html += '<p class="text-xs text-gray-500">PIS</p>';
-            html += '<p class="text-sm font-semibold text-gray-900">R$ ' + (data.pis_valor || '0,00') + '</p>';
-            html += '</div>';
-            html += '<div class="bg-gray-50 rounded-lg p-3">';
-            html += '<p class="text-xs text-gray-500">COFINS</p>';
-            html += '<p class="text-sm font-semibold text-gray-900">R$ ' + (data.cofins_valor || '0,00') + '</p>';
-            html += '</div>';
-            html += '<div class="bg-gray-50 rounded-lg p-3">';
-            html += '<p class="text-xs text-gray-500">IPI</p>';
-            html += '<p class="text-sm font-semibold text-gray-900">R$ ' + (data.ipi_valor || '0,00') + '</p>';
-            html += '</div>';
-            html += '<div class="bg-amber-50 rounded-lg p-3">';
-            html += '<p class="text-xs text-amber-600">Total Tributos</p>';
-            html += '<p class="text-sm font-semibold text-amber-700">R$ ' + (data.tributos_total || '0,00') + '</p>';
-            html += '</div>';
-            html += '</div>';
-            html += '</div>';
-
-            html += '</div>';
-
-            modalNotaContent.innerHTML = html;
-        }
-
         // Copiar chave de acesso
         document.querySelectorAll('.btn-copiar-chave').forEach(function(btn) {
             btn.addEventListener('click', function() {
@@ -1686,7 +1126,7 @@
 
                 if (navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText(chave).then(function() {
-                        window.showToast && window.showToast('Chave copiada para a area de transferencia!', 'success');
+                        window.showToast && window.showToast('Chave copiada para a área de transferência!', 'success');
                     }).catch(function() {
                         fallbackCopyTextToClipboard(chave);
                     });
@@ -1709,7 +1149,7 @@
 
             try {
                 document.execCommand('copy');
-                window.showToast && window.showToast('Chave copiada para a area de transferencia!', 'success');
+                window.showToast && window.showToast('Chave copiada para a área de transferência!', 'success');
             } catch (err) {
                 window.showToast && window.showToast('Erro ao copiar chave', 'error');
             }
@@ -1729,7 +1169,7 @@
         });
 
         // Fechar modal clicando fora
-        [modalConsultaAvulsa, modalCriarAssinatura, modalVerConsulta, modalVerNota].forEach(function(modal) {
+        [modalCriarAssinatura].forEach(function(modal) {
             if (modal) {
                 modal.addEventListener('click', function(e) {
                     if (e.target === modal) {
@@ -1740,100 +1180,24 @@
             }
         });
 
-        // Inicializar mapa de localizacao
+        // Inicializar mapa de localizacao via Leaflet
         var mapContainer = document.getElementById('participante-mapa');
-        if (mapContainer && typeof L !== 'undefined') {
-            var endereco = mapContainer.dataset.endereco;
-            var cep = (mapContainer.dataset.cep || '').replace(/\D/g, '');
-            var loadingEl = document.getElementById('mapa-loading');
-            var errorEl = document.getElementById('mapa-error');
-
-            // Verifica se tem endereco valido
-            if (!endereco || endereco.trim() === '' || endereco.trim() === 'Brasil') {
-                if (loadingEl) loadingEl.classList.add('hidden');
-                var mapaContainerEl = document.getElementById('participante-mapa-container');
-                if (mapaContainerEl) mapaContainerEl.classList.add('hidden');
+        if (mapContainer) {
+            var lat = parseFloat(mapContainer.dataset.lat);
+            var lng = parseFloat(mapContainer.dataset.lng);
+            if (lat && lng) {
+                var map = L.map('participante-mapa').setView([lat, lng], 16);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+                L.marker([lat, lng]).addTo(map);
             } else {
-                // Funcao para inicializar mapa com coordenadas
-                function initMap(lat, lon) {
-                    var map = L.map('participante-mapa').setView([lat, lon], 16);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-                        maxZoom: 19
-                    }).addTo(map);
-                    L.marker([lat, lon]).addTo(map)
-                        .bindPopup('<strong>Localizacao</strong><br>' + endereco)
-                        .openPopup();
-                    setTimeout(function() { map.invalidateSize(); }, 100);
-                }
-
-                // Funcao para mostrar erro
-                function showMapError(msg) {
-                    if (loadingEl) loadingEl.classList.add('hidden');
-                    if (errorEl) {
-                        errorEl.textContent = msg || 'Endereco nao encontrado';
-                        errorEl.classList.remove('hidden');
-                    }
-                    mapContainer.classList.add('hidden');
-                }
-
-                // Funcao para geocodificar via Nominatim (fallback)
-                function geocodeWithNominatim(addr) {
-                    var url = 'https://nominatim.openstreetmap.org/search?' + new URLSearchParams({
-                        q: addr,
-                        format: 'json',
-                        limit: 1,
-                        countrycodes: 'br'
-                    });
-
-                    fetch(url, {
-                        headers: { 'User-Agent': 'FiscalDock/1.0 (contato@fiscaldock.com.br)' }
-                    })
-                    .then(function(res) { return res.json(); })
-                    .then(function(data) {
-                        if (loadingEl) loadingEl.classList.add('hidden');
-                        if (data && data.length > 0) {
-                            initMap(parseFloat(data[0].lat), parseFloat(data[0].lon));
-                        } else {
-                            showMapError('Endereco nao encontrado no mapa');
-                        }
-                    })
-                    .catch(function(err) {
-                        console.error('[Mapa] Erro Nominatim:', err);
-                        showMapError('Erro ao carregar mapa');
-                    });
-                }
-
-                // Tentar primeiro por CEP usando BrasilAPI (mais confiavel para BR)
-                if (cep && cep.length === 8) {
-                    fetch('https://brasilapi.com.br/api/cep/v2/' + cep)
-                    .then(function(res) {
-                        if (!res.ok) throw new Error('CEP nao encontrado');
-                        return res.json();
-                    })
-                    .then(function(data) {
-                        if (loadingEl) loadingEl.classList.add('hidden');
-                        if (data.location && data.location.coordinates && data.location.coordinates.latitude && data.location.coordinates.longitude) {
-                            initMap(data.location.coordinates.latitude, data.location.coordinates.longitude);
-                        } else {
-                            // CEP encontrado mas sem coordenadas - tentar Nominatim
-                            console.log('[Mapa] CEP sem coordenadas, tentando Nominatim...');
-                            geocodeWithNominatim(endereco);
-                        }
-                    })
-                    .catch(function(err) {
-                        console.log('[Mapa] BrasilAPI falhou, tentando Nominatim...', err);
-                        // Fallback para Nominatim
-                        geocodeWithNominatim(endereco);
-                    });
-                } else {
-                    // Sem CEP valido - usar Nominatim diretamente
-                    geocodeWithNominatim(endereco);
-                }
+                var cont = mapContainer.closest('#participante-mapa-container');
+                if (cont) cont.classList.add('hidden');
             }
         }
 
-        console.log('[Monitoramento Participante] Inicializacao concluida');
+        console.log('[Monitoramento Participante] Inicialização concluída');
     }
 
     // Expor globalmente para SPA

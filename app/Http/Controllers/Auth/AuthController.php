@@ -24,10 +24,10 @@ class AuthController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Você já está logado',
-                    'redirect' => '/dashboard'
+                    'redirect' => '/app/dashboard'
                 ]);
             }
-            return redirect('/dashboard');
+            return redirect('/app/dashboard');
         }
 
         if($request->ajax()){
@@ -45,10 +45,10 @@ class AuthController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Você já está logado',
-                    'redirect' => '/dashboard'
+                    'redirect' => '/app/dashboard'
                 ]);
             }
-            return redirect('/dashboard');
+            return redirect('/app/dashboard');
         }
 
         if($request->ajax()){
@@ -118,10 +118,10 @@ class AuthController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Login realizado com sucesso',
-                'redirect' => '/dashboard'
+                'redirect' => '/app/dashboard'
             ]);
         }
-        return redirect('/dashboard');
+        return redirect('/app/dashboard');
     }
 
     public function agendar(Request $request){
@@ -206,7 +206,7 @@ class AuthController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Cadastro realizado com sucesso!',
-                'redirect' => '/dashboard'
+                'redirect' => '/app/dashboard'
             ]);
 
         } catch (Exception $e) {

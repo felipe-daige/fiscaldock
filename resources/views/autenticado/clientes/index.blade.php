@@ -1,30 +1,23 @@
 {{-- Clientes - Autenticado --}}
 <div class="min-h-screen bg-gray-50" id="clientes-container">
-    {{-- Header Section --}}
-    <div class="bg-white border-b border-gray-200 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-xl font-bold text-gray-800">
-                        Clientes
-                    </h1>
-                    <p class="text-xs text-gray-500 mt-1">
-                        Gerencie seus clientes e monitore alertas e analises
-                    </p>
-                </div>
-                <a href="/app/novo-cliente" data-link class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Novo Cliente
-                </a>
-            </div>
-        </div>
-    </div>
-
-    {{-- Main Content --}}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div class="space-y-6">
+            {{-- Page Header --}}
+            <div class="mb-4 sm:mb-8">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-semibold text-gray-900">Clientes</h1>
+                        <p class="mt-1 text-sm text-gray-500">Gerencie seus clientes e monitore alertas e analises</p>
+                    </div>
+                    <a href="/app/novo-cliente" data-link class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2 self-start sm:self-auto">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Novo Cliente
+                    </a>
+                </div>
+            </div>
+
             <style>
                 @keyframes card-slide-in {
                     from { opacity: 0; transform: translateY(60px); }
@@ -40,16 +33,17 @@
             </style>
 
             {{-- Cards de Resumo --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 cli-animate">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                 {{-- Card: Clientes Ativos --}}
-                <div id="card-total-clientes" class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 cursor-pointer hover:border-blue-300 transition-colors">
+                <div id="card-total-clientes" class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 cursor-pointer hover:border-blue-300 transition-colors cli-animate">
                     <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500">Clientes Ativos</p>
-                            <p class="text-2xl font-bold text-gray-900">{{ $totalAtivos ?? 0 }}</p>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Clientes Ativos</p>
+                            <p class="text-xl sm:text-3xl font-semibold text-gray-900">{{ $totalAtivos ?? 0 }}</p>
+                            <p class="text-xs text-gray-400 mt-1 sm:mt-2">Cadastros ativos</p>
                         </div>
-                        <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-blue-50 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
+                            <svg class="w-4 h-4 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                             </svg>
                         </div>
@@ -57,14 +51,15 @@
                 </div>
 
                 {{-- Card: Clientes Inativos --}}
-                <div id="card-inativos" class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 cursor-pointer hover:border-gray-400 transition-colors">
+                <div id="card-inativos" class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 cursor-pointer hover:border-gray-400 transition-colors cli-animate" style="animation-delay: 0.1s">
                     <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500">Clientes Inativos</p>
-                            <p class="text-2xl font-bold text-gray-900">{{ $totalInativos ?? 0 }}</p>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Clientes Inativos</p>
+                            <p class="text-xl sm:text-3xl font-semibold text-gray-900">{{ $totalInativos ?? 0 }}</p>
+                            <p class="text-xs text-gray-400 mt-1 sm:mt-2">Cadastros inativos</p>
                         </div>
-                        <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
+                            <svg class="w-4 h-4 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
                             </svg>
                         </div>
@@ -72,14 +67,15 @@
                 </div>
 
                 {{-- Card: Pessoa Juridica --}}
-                <div id="card-pj" class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 cursor-pointer hover:border-amber-300 transition-colors">
+                <div id="card-pj" class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 cursor-pointer hover:border-amber-300 transition-colors cli-animate" style="animation-delay: 0.2s">
                     <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500">Pessoa Juridica</p>
-                            <p class="text-2xl font-bold text-gray-900">{{ $totalPJ ?? 0 }}</p>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Pessoa Juridica</p>
+                            <p class="text-xl sm:text-3xl font-semibold text-gray-900">{{ $totalPJ ?? 0 }}</p>
+                            <p class="text-xs text-gray-400 mt-1 sm:mt-2">CNPJ cadastrados</p>
                         </div>
-                        <div class="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-amber-50 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
+                            <svg class="w-4 h-4 sm:w-6 sm:h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                             </svg>
                         </div>
@@ -87,14 +83,15 @@
                 </div>
 
                 {{-- Card: Pessoa Fisica --}}
-                <div id="card-pf" class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 cursor-pointer hover:border-green-300 transition-colors">
+                <div id="card-pf" class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 cursor-pointer hover:border-green-300 transition-colors cli-animate" style="animation-delay: 0.3s">
                     <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500">Pessoa Fisica</p>
-                            <p class="text-2xl font-bold text-gray-900">{{ $totalPF ?? 0 }}</p>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Pessoa Fisica</p>
+                            <p class="text-xl sm:text-3xl font-semibold text-gray-900">{{ $totalPF ?? 0 }}</p>
+                            <p class="text-xs text-gray-400 mt-1 sm:mt-2">CPF cadastrados</p>
                         </div>
-                        <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-green-50 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
+                            <svg class="w-4 h-4 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
                         </div>
@@ -103,47 +100,88 @@
             </div>
 
             {{-- Barra de Busca e Filtros --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 cli-animate" style="animation-delay: 0.1s">
-                <div class="mb-4">
-                    <div class="relative">
-                        <input
-                            type="text"
-                            id="buscar-cliente"
-                            placeholder="Buscar por nome, CNPJ ou CPF..."
-                            class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 cli-animate" style="animation-delay: 0.4s">
+                <div class="flex flex-col lg:flex-row lg:items-end gap-4">
+                    {{-- Filtro Status --}}
+                    <div class="min-w-0 sm:min-w-[150px]">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select id="filtro-status" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="todos">Todos</option>
+                            <option value="ativos">Ativos</option>
+                            <option value="inativos">Inativos</option>
+                        </select>
+                    </div>
+
+                    {{-- Filtro Tipo --}}
+                    <div class="min-w-0 sm:min-w-[150px]">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                        <select id="filtro-tipo" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="todos">Todos</option>
+                            <option value="pj">Pessoa Juridica (CNPJ)</option>
+                            <option value="pf">Pessoa Fisica (CPF)</option>
+                        </select>
+                    </div>
+
+                    {{-- Busca --}}
+                    <div class="flex-1 min-w-0 sm:min-w-[250px]">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+                        <div class="relative">
+                            <input
+                                type="text"
+                                id="buscar-cliente"
+                                placeholder="Nome, CNPJ ou CPF..."
+                                class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    {{-- Botoes --}}
+                    <div class="flex gap-2 items-center">
+                        <button type="button" id="btn-filtrar-clientes" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
+                            Filtrar
+                        </button>
+                        <button type="button" id="btn-limpar-filtros-clientes" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
+                            Limpar
+                        </button>
                     </div>
                 </div>
-                <div class="flex flex-wrap gap-3">
-                    <select id="filtro-status" class="px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="todos">Status: Todos</option>
-                        <option value="ativos">Ativos</option>
-                        <option value="inativos">Inativos</option>
+                <div class="flex flex-wrap gap-3 mt-3 pt-3 border-t border-gray-100">
+                    <select id="filtro-regime" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="todos">Regime: Todos</option>
+                        <option value="simples nacional">Simples Nacional</option>
+                        <option value="lucro presumido">Lucro Presumido</option>
+                        <option value="lucro real">Lucro Real</option>
+                        <option value="mei">MEI</option>
                     </select>
-                    <select id="filtro-tipo" class="px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="todos">Tipo: Todos</option>
-                        <option value="pj">Pessoa Juridica (CNPJ)</option>
-                        <option value="pf">Pessoa Fisica (CPF)</option>
+                    <select id="filtro-situacao" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="todos">Situacao: Todos</option>
+                        <option value="ativa">Ativa</option>
+                        <option value="baixada">Baixada</option>
+                        <option value="suspensa">Suspensa</option>
+                        <option value="inapta">Inapta</option>
+                    </select>
+                    <select id="filtro-uf" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="todos">UF: Todos</option>
                     </select>
                 </div>
-            </div>
 
-            {{-- Barra de selecao global --}}
-            <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                <div class="flex items-center gap-4 text-sm">
-                    <button type="button" id="btn-selecionar-todos-clientes" class="text-blue-600 hover:text-blue-800 font-medium">
-                        Selecionar todos
-                    </button>
-                    <button type="button" id="btn-limpar-selecao-clientes" class="text-gray-500 hover:text-gray-700 hidden">
-                        Limpar selecao
-                    </button>
+                {{-- Barra de selecao global --}}
+                <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                    <div class="flex items-center gap-4 text-sm">
+                        <button type="button" id="btn-selecionar-todos-clientes" class="text-blue-600 hover:text-blue-800 font-medium">
+                            Selecionar todos
+                        </button>
+                        <button type="button" id="btn-limpar-selecao-clientes" class="text-gray-500 hover:text-gray-700 hidden">
+                            Limpar selecao
+                        </button>
+                    </div>
+                    <span id="total-selecionados-clientes-info" class="text-xs text-gray-500 hidden">
+                        <span id="total-selecionados-clientes">0</span> selecionados
+                    </span>
                 </div>
-                <span id="total-selecionados-clientes-info" class="text-xs text-gray-500 hidden">
-                    <span id="total-selecionados-clientes">0</span> selecionados
-                </span>
             </div>
 
             {{-- Acoes em lote (aparece quando ha selecao) --}}
@@ -180,7 +218,7 @@
             </div>
 
             {{-- Tabela de Clientes --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm cli-animate" style="animation-delay: 0.2s">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm cli-animate" style="animation-delay: 0.5s">
                 @if(isset($clientes) && $clientes->count() > 0)
                 <div class="overflow-x-auto">
                     <table class="w-full" id="tabela-clientes">
@@ -202,7 +240,7 @@
                                     Telefone
                                 </th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                    Cidade/UF
+                                    UF
                                 </th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                     Status
@@ -219,17 +257,20 @@
                                 data-nome="{{ strtolower($cliente->tipo_pessoa === 'PJ' ? ($cliente->razao_social ?? $cliente->nome ?? '') : ($cliente->nome ?? '')) }}"
                                 data-documento="{{ $cliente->documento }}"
                                 data-tipo="{{ $cliente->tipo_pessoa }}"
-                                data-status="{{ $cliente->ativo ? 'ativos' : 'inativos' }}">
+                                data-status="{{ $cliente->ativo ? 'ativos' : 'inativos' }}"
+                                data-regime="{{ strtolower($cliente->regime_tributario ?? '') }}"
+                                data-situacao="{{ strtolower($cliente->situacao_cadastral ?? '') }}"
+                                data-uf="{{ strtolower($cliente->uf ?? '') }}">
                                 <td class="px-4 py-4 whitespace-nowrap">
                                     <input type="checkbox" class="cliente-checkbox w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" data-id="{{ $cliente->id }}">
                                 </td>
                                 <td class="px-4 py-4 whitespace-nowrap">
                                     <div class="flex items-center gap-2">
                                         @if($cliente->tipo_pessoa === 'PJ')
-                                            <div class="text-sm font-medium text-gray-900">{{ $cliente->razao_social ?? '-' }}</div>
+                                            <div class="text-sm font-medium text-gray-900 truncate" style="max-width:200px" title="{{ $cliente->razao_social ?? '-' }}">{{ $cliente->razao_social ?? '-' }}</div>
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-700">PJ</span>
                                         @else
-                                            <div class="text-sm font-medium text-gray-900">{{ $cliente->nome ?? '-' }}</div>
+                                            <div class="text-sm font-medium text-gray-900 truncate" style="max-width:200px" title="{{ $cliente->nome ?? '-' }}">{{ $cliente->nome ?? '-' }}</div>
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-purple-100 text-purple-700">PF</span>
                                         @endif
                                         @if($cliente->is_empresa_propria)
@@ -237,7 +278,7 @@
                                         @endif
                                     </div>
                                     @if($cliente->tipo_pessoa === 'PJ' && $cliente->nome)
-                                        <div class="text-xs text-gray-500">{{ $cliente->nome }}</div>
+                                        <div class="text-xs text-gray-500 truncate" style="max-width:200px" title="{{ $cliente->nome }}">{{ $cliente->nome }}</div>
                                     @endif
                                 </td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm font-mono text-gray-700">
@@ -250,8 +291,8 @@
                                     {{ $cliente->telefone ?? '-' }}
                                 </td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
-                                    @if($cliente->municipio || $cliente->uf)
-                                        {{ implode('/', array_filter([$cliente->municipio, $cliente->uf])) }}
+                                    @if($cliente->uf)
+                                        {{ $cliente->uf }}
                                     @else
                                         -
                                     @endif
@@ -311,8 +352,6 @@
                 @endif
             </div>
         </div>
-    </div>
-
     </div>
 </div>
 
@@ -544,11 +583,32 @@
         var buscarInput = document.getElementById('buscar-cliente');
         var filtroStatus = document.getElementById('filtro-status');
         var filtroTipo = document.getElementById('filtro-tipo');
+        var filtroRegime = document.getElementById('filtro-regime');
+        var filtroSituacao = document.getElementById('filtro-situacao');
+        var filtroUf = document.getElementById('filtro-uf');
+
+        // Popular filtro UF com valores únicos
+        if (filtroUf) {
+            var ufs = new Set();
+            container.querySelectorAll('.cliente-row').forEach(function(row) {
+                var uf = (row.dataset.uf || '').toUpperCase();
+                if (uf) ufs.add(uf);
+            });
+            Array.from(ufs).sort().forEach(function(uf) {
+                var opt = document.createElement('option');
+                opt.value = uf.toLowerCase();
+                opt.textContent = uf;
+                filtroUf.appendChild(opt);
+            });
+        }
 
         function aplicarFiltros() {
             var busca = (buscarInput ? buscarInput.value : '').toLowerCase();
             var status = filtroStatus ? filtroStatus.value : 'todos';
             var tipo = filtroTipo ? filtroTipo.value : 'todos';
+            var regime = filtroRegime ? filtroRegime.value : 'todos';
+            var situacao = filtroSituacao ? filtroSituacao.value : 'todos';
+            var uf = filtroUf ? filtroUf.value : 'todos';
 
             var rows = container.querySelectorAll('.cliente-row');
             var visibleCount = 0;
@@ -571,6 +631,16 @@
                     var tipoFiltro = tipo === 'pj' ? 'PJ' : 'PF';
                     if (tipoCliente !== tipoFiltro) show = false;
                 }
+                if (regime !== 'todos') {
+                    var regimeCliente = row.dataset.regime || '';
+                    if (regimeCliente.indexOf(regime) === -1) show = false;
+                }
+                if (situacao !== 'todos' && (row.dataset.situacao || '') !== situacao) {
+                    show = false;
+                }
+                if (uf !== 'todos' && (row.dataset.uf || '') !== uf) {
+                    show = false;
+                }
 
                 row.style.display = show ? '' : 'none';
                 if (show) visibleCount++;
@@ -587,6 +657,25 @@
         if (buscarInput) buscarInput.addEventListener('input', aplicarFiltros);
         if (filtroStatus) filtroStatus.addEventListener('change', aplicarFiltros);
         if (filtroTipo) filtroTipo.addEventListener('change', aplicarFiltros);
+        if (filtroRegime) filtroRegime.addEventListener('change', aplicarFiltros);
+        if (filtroSituacao) filtroSituacao.addEventListener('change', aplicarFiltros);
+        if (filtroUf) filtroUf.addEventListener('change', aplicarFiltros);
+
+        // Botao Filtrar
+        var btnFiltrar = document.getElementById('btn-filtrar-clientes');
+        if (btnFiltrar) btnFiltrar.addEventListener('click', aplicarFiltros);
+
+        // Botao Limpar
+        var btnLimpar = document.getElementById('btn-limpar-filtros-clientes');
+        if (btnLimpar) {
+            btnLimpar.addEventListener('click', function() {
+                if (buscarInput) buscarInput.value = '';
+                [filtroStatus, filtroTipo, filtroRegime, filtroSituacao, filtroUf].forEach(function(el) {
+                    if (el) el.value = el.options[0].value;
+                });
+                aplicarFiltros();
+            });
+        }
 
         // Aplicar filtro de busca via query param (?search=...)
         var urlParams = new URLSearchParams(window.location.search);

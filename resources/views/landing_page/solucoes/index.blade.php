@@ -110,10 +110,10 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center fade-in-up">
             <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6">
-                Soluções que Transformam o Dia a Dia Fiscal
+                Inteligência Fiscal para Contadores
             </h1>
             <p class="text-lg sm:text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto mb-6 md:mb-8 px-4">
-                Seis funcionalidades principais que automatizam e otimizam processos fiscais e contábeis
+                Importe SPED, monitore fornecedores e antecipe riscos fiscais antes que virem autuações
             </p>
         </div>
     </div>
@@ -124,8 +124,8 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="demo-area">
             <div class="text-center mb-8">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4">Veja Nossas Funcionalidades</h2>
-                <p class="text-lg text-gray-600">Seis funcionalidades principais que transformam o dia a dia do escritório contábil e das empresas</p>
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">O que o FiscalDock Faz por Você</h2>
+                <p class="text-lg text-gray-600">Seis ferramentas que eliminam o trabalho manual e reduzem o risco de autuação no seu escritório</p>
             </div>
 
             <!-- Swiper -->
@@ -135,60 +135,60 @@
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Importação de SPED" class="w-16 h-16 mx-auto object-contain">
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Central de Documentos</h3>
-                        <p class="text-gray-600 text-center">Upload e organização por empresa, competência e tipo. Versionamento e busca inteligente com histórico e evidência.</p>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Importação de SPED</h3>
+                        <p class="text-gray-600 text-center">Importe arquivos EFD ICMS/IPI e PIS/COFINS. Extração automática de participantes, notas e valores por bloco.</p>
                     </div>
                 </div>
 
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="Monitoramento de Participantes" class="w-16 h-16 mx-auto object-contain">
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Leitura e Diagnóstico</h3>
-                        <p class="text-gray-600 text-center">Importação e estruturação de SPED, detecção de inconsistências e semáforo por competência com alertas.</p>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Monitoramento de Participantes</h3>
+                        <p class="text-gray-600 text-center">Acompanhe a situação cadastral de fornecedores e clientes em tempo real via Receita Federal e SINTEGRA.</p>
                     </div>
                 </div>
 
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/clipboard-gear.gif') }}" alt="Consultas Tributárias em Lote" class="w-16 h-16 mx-auto object-contain">
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Motor de Regras</h3>
-                        <p class="text-gray-600 text-center">Regras parametrizáveis por operação. Classificação automática e evolução contínua que aprende seu padrão.</p>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Consultas Tributárias em Lote</h3>
+                        <p class="text-gray-600 text-center">Consulte centenas de CNPJs de uma vez: situação cadastral, regime tributário, Simples Nacional e IE.</p>
                     </div>
                 </div>
 
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/secure-payment.gif') }}" alt="Dashboard e BI Fiscal" class="w-16 h-16 mx-auto object-contain">
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Compliance e Situação Fiscal</h3>
-                        <p class="text-gray-600 text-center">Painel de situação por CNPJ, alertas de vencimento e relatório de risco com evidências e histórico.</p>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Dashboard e BI Fiscal</h3>
+                        <p class="text-gray-600 text-center">Dashboards interativos com análise de faturamento, compras e tributos por CFOP, participante e período.</p>
                     </div>
                 </div>
 
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/customer-service.gif') }}" alt="Central de Alertas" class="w-16 h-16 mx-auto object-contain">
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Automação de Comunicação</h3>
-                        <p class="text-gray-600 text-center">Cobrança automática via WhatsApp e portal. Mensagens com contexto e registro completo da conversa.</p>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Central de Alertas</h3>
+                        <p class="text-gray-600 text-center">Alertas automáticos para CNPJ irregular, IE suspensa e empresas listadas no CEIS. Sem surpresas na fiscalização.</p>
                     </div>
                 </div>
 
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Compliance e Enriquecimento" class="w-16 h-16 mx-auto object-contain">
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Portal do Cliente</h3>
-                        <p class="text-gray-600 text-center">Checklist do mês, pendências, prazos e histórico. Permissões por perfil para menos atrito e mais previsibilidade.</p>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Compliance e Enriquecimento</h3>
+                        <p class="text-gray-600 text-center">Enriqueça dados de participantes com Receita Federal, SINTEGRA e CEIS. Due diligence fiscal automatizada.</p>
                     </div>
                 </div>
 
@@ -196,60 +196,60 @@
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Importação de SPED" class="w-16 h-16 mx-auto object-contain">
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Central de Documentos</h3>
-                        <p class="text-gray-600 text-center">Upload e organização por empresa, competência e tipo. Versionamento e busca inteligente com histórico e evidência.</p>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Importação de SPED</h3>
+                        <p class="text-gray-600 text-center">Importe arquivos EFD ICMS/IPI e PIS/COFINS. Extração automática de participantes, notas e valores por bloco.</p>
                     </div>
                 </div>
 
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="Monitoramento de Participantes" class="w-16 h-16 mx-auto object-contain">
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Leitura e Diagnóstico</h3>
-                        <p class="text-gray-600 text-center">Importação e estruturação de SPED, detecção de inconsistências e semáforo por competência com alertas.</p>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Monitoramento de Participantes</h3>
+                        <p class="text-gray-600 text-center">Acompanhe a situação cadastral de fornecedores e clientes em tempo real via Receita Federal e SINTEGRA.</p>
                     </div>
                 </div>
 
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/clipboard-gear.gif') }}" alt="Consultas Tributárias em Lote" class="w-16 h-16 mx-auto object-contain">
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Motor de Regras</h3>
-                        <p class="text-gray-600 text-center">Regras parametrizáveis por operação. Classificação automática e evolução contínua que aprende seu padrão.</p>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Consultas Tributárias em Lote</h3>
+                        <p class="text-gray-600 text-center">Consulte centenas de CNPJs de uma vez: situação cadastral, regime tributário, Simples Nacional e IE.</p>
                     </div>
                 </div>
 
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/secure-payment.gif') }}" alt="Dashboard e BI Fiscal" class="w-16 h-16 mx-auto object-contain">
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Compliance e Situação Fiscal</h3>
-                        <p class="text-gray-600 text-center">Painel de situação por CNPJ, alertas de vencimento e relatório de risco com evidências e histórico.</p>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Dashboard e BI Fiscal</h3>
+                        <p class="text-gray-600 text-center">Dashboards interativos com análise de faturamento, compras e tributos por CFOP, participante e período.</p>
                     </div>
                 </div>
 
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/customer-service.gif') }}" alt="Central de Alertas" class="w-16 h-16 mx-auto object-contain">
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Automação de Comunicação</h3>
-                        <p class="text-gray-600 text-center">Cobrança automática via WhatsApp e portal. Mensagens com contexto e registro completo da conversa.</p>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Central de Alertas</h3>
+                        <p class="text-gray-600 text-center">Alertas automáticos para CNPJ irregular, IE suspensa e empresas listadas no CEIS. Sem surpresas na fiscalização.</p>
                     </div>
                 </div>
 
                 <div class="swiper-slide">
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
                         <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-16 h-16 mx-auto object-contain">
+                            <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Compliance e Enriquecimento" class="w-16 h-16 mx-auto object-contain">
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Portal do Cliente</h3>
-                        <p class="text-gray-600 text-center">Checklist do mês, pendências, prazos e histórico. Permissões por perfil para menos atrito e mais previsibilidade.</p>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Compliance e Enriquecimento</h3>
+                        <p class="text-gray-600 text-center">Enriqueça dados de participantes com Receita Federal, SINTEGRA e CEIS. Due diligence fiscal automatizada.</p>
                     </div>
                 </div>
             </div>
@@ -262,60 +262,60 @@
 <section class="py-16 bg-gray-50 section-fade-in">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
-            <h2 class="text-4xl font-bold text-gray-900 mb-4">O que Fazemos</h2>
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">Como o FiscalDock Protege seu Escritório</h2>
             <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-                Seis funcionalidades principais que automatizam e otimizam processos fiscais e contábeis, 
-                transformando o dia a dia do escritório contábil e das empresas.
+                Da importação do SPED ao alerta de risco fiscal, cada ferramenta foi pensada para
+                reduzir o trabalho manual e blindar seus clientes contra autuações.
             </p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
                 <div class="text-center mb-4">
-                    <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-16 h-16 mx-auto object-contain">
+                    <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Importação de SPED" class="w-16 h-16 mx-auto object-contain">
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Central de Documentos</h3>
-                <p class="text-gray-600">Upload e organização por empresa, competência e tipo. Versionamento e busca inteligente.</p>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Importação de SPED</h3>
+                <p class="text-gray-600">Faça upload do EFD ICMS/IPI ou PIS/COFINS e veja participantes, notas e valores extraídos automaticamente.</p>
             </div>
 
             <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
                 <div class="text-center mb-4">
-                    <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-16 h-16 mx-auto object-contain">
+                    <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="Monitoramento de Participantes" class="w-16 h-16 mx-auto object-contain">
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Leitura e Diagnóstico</h3>
-                <p class="text-gray-600">Importação e estruturação de SPED, detecção de inconsistências e semáforo por competência.</p>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Monitoramento de Participantes</h3>
+                <p class="text-gray-600">Saiba em tempo real se algum fornecedor teve CNPJ baixado, IE suspensa ou mudança de regime tributário.</p>
             </div>
 
             <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
                 <div class="text-center mb-4">
-                    <img src="{{ asset('binary_files/icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-16 h-16 mx-auto object-contain">
+                    <img src="{{ asset('binary_files/icone-gif/clipboard-gear.gif') }}" alt="Consultas Tributárias em Lote" class="w-16 h-16 mx-auto object-contain">
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Motor de Regras</h3>
-                <p class="text-gray-600">Regras parametrizáveis por operação. Classificação automática e evolução contínua.</p>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Consultas Tributárias em Lote</h3>
+                <p class="text-gray-600">Envie uma lista de CNPJs e receba situação cadastral, regime tributário, Simples Nacional e IE de uma só vez.</p>
             </div>
 
             <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
                 <div class="text-center mb-4">
-                    <img src="{{ asset('binary_files/icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-16 h-16 mx-auto object-contain">
+                    <img src="{{ asset('binary_files/icone-gif/secure-payment.gif') }}" alt="Dashboard e BI Fiscal" class="w-16 h-16 mx-auto object-contain">
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Compliance e Situação Fiscal</h3>
-                <p class="text-gray-600">Painel de situação por CNPJ, alertas de vencimento e relatório de risco.</p>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Dashboard e BI Fiscal</h3>
+                <p class="text-gray-600">Visualize faturamento, compras e tributos em painéis interativos filtrados por CFOP, participante e período.</p>
             </div>
 
             <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
                 <div class="text-center mb-4">
-                    <img src="{{ asset('binary_files/icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-16 h-16 mx-auto object-contain">
+                    <img src="{{ asset('binary_files/icone-gif/customer-service.gif') }}" alt="Central de Alertas" class="w-16 h-16 mx-auto object-contain">
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Automação de Comunicação</h3>
-                <p class="text-gray-600">Cobrança automática via WhatsApp e portal. Mensagens com contexto e registro completo.</p>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Central de Alertas</h3>
+                <p class="text-gray-600">Receba alertas automáticos quando um participante apresentar irregularidade cadastral ou fiscal.</p>
             </div>
 
             <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
                 <div class="text-center mb-4">
-                    <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-16 h-16 mx-auto object-contain">
+                    <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Compliance e Enriquecimento" class="w-16 h-16 mx-auto object-contain">
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Portal do Cliente</h3>
-                <p class="text-gray-600">Checklist do mês, pendências, prazos e histórico. Permissões por perfil.</p>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Compliance e Enriquecimento</h3>
+                <p class="text-gray-600">Cruze dados de Receita Federal, SINTEGRA e CEIS para uma due diligence fiscal completa e automatizada.</p>
             </div>
         </div>
     </div>
@@ -326,10 +326,10 @@
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Soluções <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">Detalhadas</span>
+                Solução <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">em Detalhe</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                Conheça em detalhes as soluções que automatizam e otimizam processos fiscais e contábeis
+                Veja como o FiscalDock transforma arquivos SPED em inteligência fiscal acionável
             </p>
         </div>
 
@@ -342,8 +342,8 @@
                             <img src="{{ asset('binary_files/icone-gif/accounting.gif') }}" alt="Inteligência Tributária" class="w-8 h-8 object-contain">
                         </div>
                         <div>
-                            <h3 class="text-xl font-bold text-gray-900">Inteligência Tributária: Apuração de Impostos no Piloto Automático</h3>
-                            <p class="text-sm text-gray-500 mt-1">Do Simples Nacional ao Lucro Presumido: troque planilhas complexas por precisão absoluta</p>
+                            <h3 class="text-xl font-bold text-gray-900">Importação SPED + Monitoramento: do Arquivo ao Alerta em Minutos</h3>
+                            <p class="text-sm text-gray-500 mt-1">Importe EFD, extraia participantes e monitore a situação cadastral de cada fornecedor automaticamente</p>
                         </div>
                     </div>
                     <svg class="w-5 h-5 text-gray-500 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -354,12 +354,12 @@
                     <div class="p-6 pt-0">
                         <!-- Subtítulo -->
                         <p class="text-lg font-semibold text-gray-900 mb-4">
-                            Automatize o cálculo e a geração de guias de impostos com precisão absoluta e zero erro humano
+                            Pare de verificar fornecedores manualmente e elimine o risco de aceitar notas de CNPJs irregulares
                         </p>
-                        
+
                         <!-- Descrição Principal -->
                         <p class="text-gray-600 leading-relaxed mb-6">
-                            O Rubi analisa o faturamento e as notas de entrada/saída, aplica as regras do regime tributário (incluindo anexos do Simples e retenções) e calcula o imposto devido em segundos. Elimine planilhas complexas e reduza o tempo de apuração de horas para minutos.
+                            O FiscalDock recebe seus arquivos EFD ICMS/IPI e PIS/COFINS, extrai automaticamente todos os participantes, notas fiscais e valores por bloco (A, C, D), e cruza os dados com Receita Federal, SINTEGRA e CEIS. Você recebe alertas instantâneos sobre irregularidades cadastrais que podem gerar autuações.
                         </p>
                         
                         <!-- Três Pilares -->
@@ -371,9 +371,9 @@
                                     </svg>
                                 </div>
                                 <div>
-                                    <h4 class="text-lg font-bold text-gray-900 mb-2">Cálculo à Prova de Falhas</h4>
+                                    <h4 class="text-lg font-bold text-gray-900 mb-2">Extração Automática do SPED</h4>
                                     <p class="text-gray-700 leading-relaxed">
-                                        Eliminação completa do erro humano. O sistema aplica automaticamente todas as regras tributárias, considerando anexos do Simples Nacional, retenções, alíquotas progressivas e todas as nuances da legislação vigente. Cada cálculo é auditável e rastreável.
+                                        Faça upload do arquivo EFD e o FiscalDock extrai participantes, notas fiscais e valores organizados por bloco. Sem digitar nada, sem planilhas intermediárias. Tudo fica indexado por CNPJ, CFOP e período, pronto para análise.
                                     </p>
                                 </div>
                             </div>
@@ -385,9 +385,9 @@
                                     </svg>
                                 </div>
                                 <div>
-                                    <h4 class="text-lg font-bold text-gray-900 mb-2">Geração Instantânea</h4>
+                                    <h4 class="text-lg font-bold text-gray-900 mb-2">Monitoramento em Tempo Real</h4>
                                     <p class="text-gray-700 leading-relaxed">
-                                        Emissão de guias de impostos com um único clique. Todas as guias necessárias são geradas automaticamente no formato correto, prontas para pagamento. Economize horas de trabalho manual e reduza drasticamente o tempo de processamento.
+                                        Cada participante extraído do SPED é monitorado automaticamente via Receita Federal e SINTEGRA. CNPJ baixado, IE suspensa, mudança de regime tributário ou entrada no CEIS geram alertas instantâneos para que você aja antes da fiscalização.
                                     </p>
                                 </div>
                             </div>
@@ -399,9 +399,9 @@
                                     </svg>
                                 </div>
                                 <div>
-                                    <h4 class="text-lg font-bold text-gray-900 mb-2">Entrega Direta</h4>
+                                    <h4 class="text-lg font-bold text-gray-900 mb-2">BI Fiscal e Dashboards</h4>
                                     <p class="text-gray-700 leading-relaxed">
-                                        Envio automático das guias geradas diretamente para o cliente através do portal. O cliente recebe tudo organizado, com explicações claras e pode acompanhar o histórico completo. Menos retrabalho e mais transparência.
+                                        Todos os dados extraídos alimentam dashboards interativos com análise por CFOP, participante e período. Visualize faturamento, compras e tributos em painéis que ajudam a identificar oportunidades e riscos rapidamente.
                                     </p>
                                 </div>
                             </div>
@@ -409,11 +409,11 @@
                         
                         <!-- Comparativo Visual de Tempo -->
                         <div class="bg-gray-50 rounded-lg p-6 mb-6 border border-gray-200">
-                            <h4 class="text-lg font-bold text-gray-900 mb-4 text-center">Redução de Tempo: De Horas para Minutos</h4>
+                            <h4 class="text-lg font-bold text-gray-900 mb-4 text-center">Verificação de Fornecedores: De Horas para Minutos</h4>
                             <div class="space-y-4">
                                 <div>
                                     <div class="flex justify-between items-center mb-2">
-                                        <span class="text-sm font-semibold text-gray-700">Processo Manual</span>
+                                        <span class="text-sm font-semibold text-gray-700">Consulta manual (CNPJ por CNPJ)</span>
                                         <span class="text-sm font-bold text-red-600">4 horas</span>
                                     </div>
                                     <div class="w-full bg-gray-200 rounded-full h-4">
@@ -422,7 +422,7 @@
                                 </div>
                                 <div>
                                     <div class="flex justify-between items-center mb-2">
-                                        <span class="text-sm font-semibold text-gray-700">Com Rubi</span>
+                                        <span class="text-sm font-semibold text-gray-700">Com FiscalDock</span>
                                         <span class="text-sm font-bold text-green-600">2 minutos</span>
                                     </div>
                                     <div class="w-full bg-gray-200 rounded-full h-4">
@@ -431,7 +431,7 @@
                                 </div>
                             </div>
                             <p class="text-center text-sm text-gray-600 mt-4">
-                                <span class="font-bold text-green-600">99,2% de redução</span> no tempo de processamento
+                                <span class="font-bold text-green-600">99,2% de redução</span> no tempo de verificação cadastral
                             </p>
                         </div>
                         
@@ -442,11 +442,11 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                                 </svg>
                                 <p class="text-2xl font-bold text-white">
-                                    100% Atualizado com a Legislação
+                                    Dados Sempre Atualizados
                                 </p>
                             </div>
                             <p class="text-green-100 mt-2 text-sm">
-                                Nossas regras são atualizadas automaticamente conforme mudanças na legislação tributária
+                                Consultas automáticas a Receita Federal, SINTEGRA e CEIS mantêm os dados dos seus participantes sempre em dia
                             </p>
                         </div>
                         
@@ -458,43 +458,43 @@
                                     <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span>Análise automática do faturamento e notas fiscais de entrada e saída</span>
+                                    <span>Upload de arquivos EFD ICMS/IPI e EFD PIS/COFINS com extração automática de blocos A, C e D</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span>Aplicação automática das regras do regime tributário (Simples Nacional, Lucro Presumido, etc.)</span>
+                                    <span>Identificação automática de todos os participantes (fornecedores e clientes) do arquivo</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span>Cálculo preciso considerando anexos do Simples, retenções e alíquotas progressivas</span>
+                                    <span>Consulta em lote de CNPJs na Receita Federal, SINTEGRA e CEIS</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span>Geração automática de todas as guias de impostos no formato correto</span>
+                                    <span>Alertas automáticos para CNPJ irregular, IE suspensa ou empresa inidônea</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span>Envio automático das guias para o cliente através do portal</span>
+                                    <span>Dashboards com análise de faturamento, compras e tributos por CFOP, participante e período</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span>Auditoria completa e rastreabilidade de todos os cálculos realizados</span>
+                                    <span>Enriquecimento contínuo dos dados cadastrais de cada participante monitorado</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    <span>Atualização automática conforme mudanças na legislação tributária</span>
+                                    <span>Progresso em tempo real via SSE para acompanhar importações e consultas</span>
                                 </li>
                             </ul>
                         </div>
@@ -510,14 +510,14 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center fade-in-up">
             <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 md:mb-6">
-                Pronto para Transformar seu Escritório?
+                Chega de Risco Fiscal no Escuro
             </h2>
             <p class="text-lg sm:text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto mb-6 md:mb-8 px-4">
-                Descubra como nossas soluções podem automatizar e otimizar seus processos fiscais e contábeis
+                Comece a monitorar fornecedores e antecipar irregularidades antes que virem autuações
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 <a href="#solucoes-detalhadas" class="bg-white text-blue-600 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-50 transition-colors">
-                    Conheça Nossas Soluções
+                    Veja Como Funciona
                 </a>
                 <a href="/contato" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors border-2 border-white">
                     Fale Conosco

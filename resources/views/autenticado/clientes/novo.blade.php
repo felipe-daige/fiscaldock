@@ -5,7 +5,7 @@
     $estados = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
 @endphp
 <div class="min-h-screen bg-gray-50" id="novo-cliente-container">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <style>
             @keyframes card-slide-in {
                 from { opacity: 0; transform: translateY(60px); }
@@ -21,10 +21,10 @@
         </style>
 
         {{-- Header --}}
-        <div class="mb-6">
+        <div class="mb-4 sm:mb-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">{{ $isEditing ? 'Editar Cliente' : 'Novo Cliente' }}</h1>
+                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900">{{ $isEditing ? 'Editar Cliente' : 'Novo Cliente' }}</h1>
                     <p class="mt-1 text-sm text-gray-600">
                         @if($isEditing)
                             Atualize os dados do cliente. Tipo de pessoa e documento nao podem ser alterados.
@@ -43,12 +43,12 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {{-- Form Column (2/3) --}}
-            <div class="lg:col-span-2 space-y-6">
+            <div class="lg:col-span-2 space-y-4 sm:space-y-6">
 
                 {{-- Card 1: Dados do Cliente --}}
-                <div class="nc-animate bg-white rounded-lg border border-gray-100 p-6" style="animation-delay: 0.1s">
+                <div class="nc-animate bg-white rounded-lg border border-gray-100 p-4 sm:p-6" style="animation-delay: 0.1s">
                     <h2 class="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-5">Dados do Cliente</h2>
 
                     {{-- Tipo Pessoa Toggle --}}
@@ -168,7 +168,7 @@
                 </div>
 
                 {{-- Card 2: Endereco --}}
-                <div class="nc-animate bg-white rounded-lg border border-gray-100 p-6" style="animation-delay: 0.2s">
+                <div class="nc-animate bg-white rounded-lg border border-gray-100 p-4 sm:p-6" style="animation-delay: 0.2s">
                     <h2 class="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-5">Endereco</h2>
 
                     {{-- CEP com busca --}}
@@ -250,7 +250,7 @@
                 </div>
 
                 {{-- Card 3: Dados Receita Federal (PJ only) --}}
-                <div id="card-dados-rf" class="nc-animate bg-white rounded-lg border border-gray-100 p-6 {{ $tipoPessoa === 'PF' ? 'hidden' : '' }}" style="animation-delay: 0.3s">
+                <div id="card-dados-rf" class="nc-animate bg-white rounded-lg border border-gray-100 p-4 sm:p-6 {{ $tipoPessoa === 'PF' ? 'hidden' : '' }}" style="animation-delay: 0.3s">
                     <h2 class="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-5">Dados Receita Federal</h2>
                     <p class="text-xs text-gray-400 mb-4">Campos preenchidos automaticamente por consultas ou manualmente.</p>
 
@@ -369,7 +369,7 @@
 
             {{-- Preview Column (1/3) --}}
             <div class="lg:col-span-1">
-                <div class="nc-animate sticky top-4 bg-white rounded-lg border border-gray-100 p-6" style="animation-delay: 0.3s">
+                <div class="nc-animate sticky top-4 bg-white rounded-lg border border-gray-100 p-4 sm:p-6" style="animation-delay: 0.3s">
                     <h3 class="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-4">Preview</h3>
 
                     <div class="space-y-4">
@@ -457,6 +457,7 @@
 </div>
 
 <script>
+    var viaCepBaseUrl = '{{ config("services.viacep.url") }}';
 (function() {
     const isEditing = {{ $isEditing ? 'true' : 'false' }};
     const clienteId = {{ $isEditing ? $cliente->id : 'null' }};
@@ -554,7 +555,7 @@
         statusEl.className = 'mt-1 text-xs text-gray-500';
         btnCep.disabled = true;
 
-        fetch('https://viacep.com.br/ws/' + cep + '/json/')
+        fetch(viaCepBaseUrl + '/' + cep + '/json/')
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 btnCep.disabled = false;

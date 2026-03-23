@@ -1,2 +1,6 @@
 User-agent: *
-Disallow:
+Disallow: /app/
+Disallow: /api/
+Allow: /
+
+Sitemap: https://fiscaldock.com/sitemap.xml

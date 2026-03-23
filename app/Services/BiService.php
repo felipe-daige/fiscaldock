@@ -538,12 +538,12 @@ class BiService
 
     public function getKpisEfd(int $userId, ?string $dataInicio, ?string $dataFim): array
     {
-        $query = DB::table('efd_notas')->where('user_id', $userId);
+        $query = DB::table('efd_notas')->where('efd_notas.user_id', $userId);
         if ($dataInicio) {
-            $query->where('data_emissao', '>=', $dataInicio);
+            $query->where('efd_notas.data_emissao', '>=', $dataInicio);
         }
         if ($dataFim) {
-            $query->where('data_emissao', '<=', $dataFim);
+            $query->where('efd_notas.data_emissao', '<=', $dataFim);
         }
 
         $totais = (clone $query)->select([
@@ -565,6 +565,9 @@ class BiService
 
         $entradasValor = (float) ($totais->entradas_valor ?? 0);
         $saidasValor = (float) ($totais->saidas_valor ?? 0);
+        $entradasNotas = (int) ($totais->entradas_notas ?? 0);
+        $saidasNotas = (int) ($totais->saidas_notas ?? 0);
+        $totalNotas = $entradasNotas + $saidasNotas;
 
         $cargaTributaria = (float) DB::table('efd_notas_itens as i')
             ->join('efd_notas as n', 'n.id', '=', 'i.efd_nota_id')
@@ -573,15 +576,22 @@ class BiService
             ->when($dataFim, fn ($q) => $q->where('n.data_emissao', '<=', $dataFim))
             ->sum(DB::raw('COALESCE(i.valor_icms, 0) + COALESCE(i.valor_pis, 0) + COALESCE(i.valor_cofins, 0)'));
 
+        $notasSemItens = (clone $query)
+            ->leftJoin('efd_notas_itens as i', 'i.efd_nota_id', '=', 'efd_notas.id')
+            ->whereNull('i.id')
+            ->count();
+
         return [
             'total_entradas_valor' => $entradasValor,
-            'total_entradas_notas' => (int) ($totais->entradas_notas ?? 0),
+            'total_entradas_notas' => $entradasNotas,
             'total_saidas_valor' => $saidasValor,
-            'total_saidas_notas' => (int) ($totais->saidas_notas ?? 0),
+            'total_saidas_notas' => $saidasNotas,
             'saldo_liquido' => $entradasValor - $saidasValor,
             'carga_tributaria' => $cargaTributaria,
             'participantes_ativos' => (int) ($totais->participantes_ativos ?? 0),
             'notas_em_risco' => $notasEmRisco,
+            'ticket_medio' => $totalNotas > 0 ? ($entradasValor + $saidasValor) / $totalNotas : 0,
+            'notas_sem_itens' => $notasSemItens,
         ];
     }
 

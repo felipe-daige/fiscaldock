@@ -1,15 +1,29 @@
 {{-- Monitoramento - Historico de Consultas --}}
 <div class="min-h-screen bg-gray-50" id="monitoramento-historico-container">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <style>
+            @keyframes card-slide-in {
+                from { opacity: 0; transform: translateY(60px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .hist-animate {
+                opacity: 0;
+                animation: card-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            @media (prefers-reduced-motion: reduce) {
+                .hist-animate { opacity: 1; animation: none; }
+            }
+        </style>
+
         {{-- Page Header --}}
-        <div class="mb-6">
+        <div class="mb-4 sm:mb-8 hist-animate">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Historico de Consultas</h1>
-                    <p class="mt-1 text-sm text-gray-600">Visualize todas as consultas realizadas.</p>
+                    <h1 class="text-xl sm:text-2xl font-semibold text-gray-900">Historico de Consultas</h1>
+                    <p class="mt-1 text-sm text-gray-500">Visualize todas as consultas realizadas.</p>
                 </div>
                 <a
-                    href="/app/monitoramento"
+                    href="/app/dashboard"
                     class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
                     data-link
                 >
@@ -21,8 +35,54 @@
             </div>
         </div>
 
+        {{-- KPIs --}}
+        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-6">
+            <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 hist-animate" style="animation-delay: 0.05s">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Total de Consultas</p>
+                        <p class="text-xl sm:text-3xl font-semibold text-gray-900">{{ $totalConsultas ?? 0 }}</p>
+                        <p class="text-xs text-gray-400 mt-1 sm:mt-2">Consultas realizadas</p>
+                    </div>
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 bg-blue-50 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
+                        <svg class="w-4 h-4 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 hist-animate" style="animation-delay: 0.1s">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Creditos Utilizados</p>
+                        <p class="text-xl sm:text-3xl font-semibold text-gray-900">{{ $totalCreditos ?? 0 }}</p>
+                        <p class="text-xs text-gray-400 mt-1 sm:mt-2">Creditos consumidos</p>
+                    </div>
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 bg-amber-50 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
+                        <svg class="w-4 h-4 sm:w-6 sm:h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 hist-animate" style="animation-delay: 0.15s">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Taxa de Sucesso</p>
+                        <p class="text-xl sm:text-3xl font-semibold text-green-600">{{ $taxaSucesso ?? 0 }}%</p>
+                        <p class="text-xs text-gray-400 mt-1 sm:mt-2">Consultas com sucesso</p>
+                    </div>
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 bg-green-50 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
+                        <svg class="w-4 h-4 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- Filtros --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-6">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-6 hist-animate" style="animation-delay: 0.2s">
             <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                 {{-- Filtro por tipo --}}
                 <div class="flex items-center gap-2">
@@ -79,7 +139,7 @@
         </div>
 
         {{-- Lista de Consultas --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm hist-animate" style="animation-delay: 0.25s">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50">
@@ -204,21 +264,6 @@
             @endif
         </div>
 
-        {{-- Resumo do periodo --}}
-        <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-                <p class="text-sm text-gray-500">Total de consultas</p>
-                <p class="text-2xl font-bold text-gray-900">{{ $totalConsultas ?? 0 }}</p>
-            </div>
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-                <p class="text-sm text-gray-500">Creditos utilizados</p>
-                <p class="text-2xl font-bold text-gray-900">{{ $totalCreditos ?? 0 }}</p>
-            </div>
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-                <p class="text-sm text-gray-500">Taxa de sucesso</p>
-                <p class="text-2xl font-bold text-green-600">{{ $taxaSucesso ?? 0 }}%</p>
-            </div>
-        </div>
     </div>
 </div>
 

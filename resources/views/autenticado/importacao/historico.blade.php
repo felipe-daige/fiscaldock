@@ -60,8 +60,8 @@
                 // Tipo badge + label
                 if ($tipo === 'efd') {
                     $href = '/app/importacao/efd/' . $id;
-                    $tipoDocLabel = ($imp['tipo_efd'] ?? '') === 'efd-contrib' ? 'EFD Contrib' : 'EFD Fiscal';
-                    $tipoBadgeClass = ($imp['tipo_efd'] ?? '') === 'efd-contrib'
+                    $tipoDocLabel = ($imp['tipo_efd'] ?? '') === 'EFD PIS/COFINS' ? 'EFD PIS/COFINS' : 'EFD ICMS/IPI';
+                    $tipoBadgeClass = ($imp['tipo_efd'] ?? '') === 'EFD PIS/COFINS'
                         ? 'bg-purple-100 text-purple-700'
                         : 'bg-blue-100 text-blue-700';
                 } else {
@@ -84,6 +84,18 @@
                 $dataFormatada = isset($imp['created_at'])
                     ? \Carbon\Carbon::parse($imp['created_at'])->format('d/m/Y H:i')
                     : '—';
+
+                // Tempo de processamento
+                $tempoProc = '—';
+                if (!empty($imp['iniciado_em']) && !empty($imp['concluido_em'])) {
+                    $inicio = \Carbon\Carbon::parse($imp['iniciado_em']);
+                    $fim = \Carbon\Carbon::parse($imp['concluido_em']);
+                    $diff = $inicio->diff($fim);
+                    if ($diff->h > 0) { $tempoProc = $diff->h . 'h ' . $diff->i . 'm'; }
+                    elseif ($diff->i > 0) { $tempoProc = $diff->i . 'm ' . $diff->s . 's'; }
+                    elseif ($diff->s > 0) { $tempoProc = $diff->s . 's'; }
+                    else { $tempoProc = '< 1s'; }
+                }
 
                 // Contador
                 if ($tipo === 'efd') {
@@ -119,7 +131,13 @@
 
                 {{-- Rodapé --}}
                 <div class="flex items-center justify-between mt-auto pt-2 border-t border-gray-100">
-                    <span class="text-xs text-gray-400">{{ $dataFormatada }}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-400">{{ $dataFormatada }}</span>
+                        @if($tempoProc !== '—')
+                            <span class="text-xs text-gray-300">&middot;</span>
+                            <span class="text-xs text-gray-400">{{ $tempoProc }}</span>
+                        @endif
+                    </div>
                     <span class="text-xs text-gray-500 font-medium">{{ $contador }}</span>
                 </div>
             </a>

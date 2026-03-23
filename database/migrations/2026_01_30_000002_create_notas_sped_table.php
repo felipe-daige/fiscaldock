@@ -2,67 +2,73 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('notas_sped', function (Blueprint $table) {
+        // Cabeçalhos de NF-e, NFS-e, CT-e (Registros A100, C100, D100)
+        Schema::create('efd_notas', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('cliente_id')->nullable()->constrained('clientes')->nullOnDelete();
-            $table->foreignId('importacao_sped_id')->constrained('importacoes_sped')->cascadeOnDelete();
-            $table->foreignId('emit_participante_id')->nullable()->constrained('participantes')->nullOnDelete();
-            $table->foreignId('dest_participante_id')->nullable()->constrained('participantes')->nullOnDelete();
-
-            // Dados basicos da nota (extraidos do SPED)
-            $table->string('tipo_efd', 30); // EFD_FISCAL, EFD_CONTRIB
-            $table->string('registro', 10); // C100, C170, M100, etc.
-            $table->smallInteger('tipo_nota'); // 0=entrada, 1=saida
-            $table->string('modelo_doc', 2)->nullable(); // 55=NFe, 57=CTe, etc.
-            $table->string('serie', 3)->nullable();
-            $table->string('numero_nota', 20)->nullable();
-            $table->string('chave_acesso', 44)->nullable()->index();
-            $table->date('data_emissao')->nullable();
-            $table->date('data_entrada_saida')->nullable();
-
-            // Valores
-            $table->decimal('valor_total', 15, 2)->default(0);
-            $table->decimal('valor_icms', 15, 2)->default(0);
-            $table->decimal('valor_icms_st', 15, 2)->default(0);
-            $table->decimal('valor_ipi', 15, 2)->default(0);
-            $table->decimal('valor_pis', 15, 2)->default(0);
-            $table->decimal('valor_cofins', 15, 2)->default(0);
-            $table->decimal('valor_frete', 15, 2)->default(0);
+            $table->foreignId('cliente_id')->constrained('clientes')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('participante_id')->nullable()->constrained('participantes')->nullOnDelete();
+            $table->foreignId('importacao_id')->constrained('importacoes_sped')->cascadeOnDelete();
+            $table->string('chave_acesso', 44)->nullable();
+            $table->string('modelo', 2)->index();
+            $table->bigInteger('numero');
+            $table->string('serie', 10)->nullable();
+            $table->date('data_emissao')->index();
+            $table->enum('tipo_operacao', ['entrada', 'saida'])->index();
+            $table->string('origem_arquivo')->nullable();
+            $table->decimal('valor_total', 15, 2);
             $table->decimal('valor_desconto', 15, 2)->default(0);
-
-            // CFOP principal (para analise)
-            $table->string('cfop_principal', 4)->nullable();
-
-            // Payload completo (opcional)
-            $table->jsonb('payload')->nullable();
-
-            // Validacao VCI (futuro)
-            $table->jsonb('validacao')->nullable();
-
+            $table->jsonb('metadados')->nullable();
             $table->timestamps();
 
-            // Indices
-            $table->index(['user_id', 'data_emissao']);
-            $table->index(['user_id', 'tipo_nota']);
-            $table->index(['importacao_sped_id']);
+            $table->index(['cliente_id', 'data_emissao', 'tipo_operacao'], 'efd_notas_cliente_data_tipo_idx');
+        });
+
+        // Índice único parcial: NULL em chave_acesso = NFS-e sem chave (não conta para unicidade)
+        DB::statement('
+            CREATE UNIQUE INDEX efd_notas_unique_nota
+            ON efd_notas (cliente_id, chave_acesso, modelo, numero, serie)
+            WHERE chave_acesso IS NOT NULL
+        ');
+
+        // Itens/produtos (Registros A170, C170)
+        Schema::create('efd_notas_itens', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('efd_nota_id')->constrained('efd_notas')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->integer('numero_item');
+            $table->string('codigo_item')->index();
+            $table->text('descricao');
+            $table->decimal('quantidade', 15, 4)->nullable();
+            $table->string('unidade_medida', 6)->nullable();
+            $table->decimal('valor_unitario', 15, 4)->nullable();
+            $table->decimal('valor_total', 15, 2);
+            $table->integer('cfop')->nullable()->index();
+            $table->string('cst_icms', 10)->nullable();
+            $table->decimal('aliquota_icms', 10, 4)->nullable();
+            $table->decimal('valor_icms', 15, 2)->nullable();
+            $table->string('cst_pis', 10)->nullable();
+            $table->decimal('aliquota_pis', 10, 4)->nullable();
+            $table->decimal('valor_pis', 15, 2)->nullable();
+            $table->string('cst_cofins', 10)->nullable();
+            $table->decimal('aliquota_cofins', 10, 4)->nullable();
+            $table->decimal('valor_cofins', 15, 2)->nullable();
+            $table->jsonb('metadados')->nullable();
+            $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('notas_sped');
+        DB::statement('DROP INDEX IF EXISTS efd_notas_unique_nota');
+        Schema::dropIfExists('efd_notas_itens');
+        Schema::dropIfExists('efd_notas');
     }
 };

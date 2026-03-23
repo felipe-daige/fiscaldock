@@ -70,7 +70,6 @@ class User extends Authenticatable
     {
         return $this->clientes()
             ->where('is_empresa_propria', true)
-            ->where('tipo_pessoa', 'PJ')
             ->first();
     }
 }

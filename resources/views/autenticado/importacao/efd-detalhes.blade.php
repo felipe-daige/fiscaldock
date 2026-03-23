@@ -69,7 +69,7 @@
             <div class="px-6 py-4 border-b border-gray-200">
                 <h2 class="text-base font-semibold text-gray-900">Informações da Importação</h2>
             </div>
-            <div class="p-6 grid grid-cols-2 sm:grid-cols-4 gap-6">
+            <div class="p-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
                 <div>
                     <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Tipo EFD</p>
                     <span class="px-2.5 py-1 text-xs font-semibold rounded-full {{ $tipoClass }}">
@@ -89,6 +89,10 @@
                     @else
                         <p class="text-sm text-gray-400">—</p>
                     @endif
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Tempo</p>
+                    <p class="text-sm font-medium text-gray-900">{{ $importacao->tempo_processamento }}</p>
                 </div>
                 <div>
                     <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Créditos cobrados</p>
@@ -168,11 +172,11 @@
             <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-4 flex-wrap">
                 <h2 class="text-base font-semibold text-gray-900">
                     Participantes
-                    @if($participantes->count() > 0)
-                        <span class="ml-1.5 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">{{ $participantes->count() }}</span>
+                    @if($participantes->total() > 0)
+                        <span class="ml-1.5 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">{{ $participantes->total() }}</span>
                     @endif
                 </h2>
-                @if($participantes->count() > 0)
+                @if($participantes->total() > 0)
                 <div class="relative">
                     <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -187,7 +191,7 @@
                 @endif
             </div>
 
-            @if($participantes->count() > 0)
+            @if($participantes->total() > 0)
             {{-- Desktop: Table --}}
             <div class="hidden md:block overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200" id="tabela-participantes-efd">
@@ -239,6 +243,30 @@
                 @endforeach
             </div>
 
+            {{-- Paginação --}}
+            @if($participantes->hasPages())
+            <div class="px-6 py-4 flex items-center justify-between gap-4 text-sm border-t border-gray-100">
+                <span class="text-gray-500 text-xs">
+                    Mostrando {{ $participantes->firstItem() }}–{{ $participantes->lastItem() }} de {{ $participantes->total() }} participantes
+                </span>
+                <div class="flex items-center gap-1">
+                    @if($participantes->onFirstPage())
+                        <span class="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-300 text-xs cursor-not-allowed">Anterior</span>
+                    @else
+                        <a href="{{ $participantes->previousPageUrl() }}" data-link class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50 transition">Anterior</a>
+                    @endif
+
+                    <span class="px-3 py-1.5 text-xs text-gray-500">{{ $participantes->currentPage() }} / {{ $participantes->lastPage() }}</span>
+
+                    @if($participantes->hasMorePages())
+                        <a href="{{ $participantes->nextPageUrl() }}" data-link class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50 transition">Próxima</a>
+                    @else
+                        <span class="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-300 text-xs cursor-not-allowed">Próxima</span>
+                    @endif
+                </div>
+            </div>
+            @endif
+
             {{-- Zero-state de busca --}}
             <div id="zero-state-busca" class="hidden px-6 py-12 text-center">
                 <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -286,13 +314,24 @@
                         $nomesBloco = ['A' => 'Bloco A (PIS/COFINS)', 'C' => 'Bloco C (ICMS/IPI — NF-e)', 'D' => 'Bloco D (CT-e)'];
                     @endphp
 
-                    {{-- Participantes --}}
-                    @if(!empty($rf['participantes']))
+                    {{-- Participantes — normaliza tanto rf.participantes (spec) quanto rf.estatisticas (n8n atual) --}}
+                    @php
+                        $rfParticipantes = $rf['participantes'] ?? null;
+                        if (!$rfParticipantes && !empty($rf['estatisticas'])) {
+                            $rfParticipantes = [
+                                'total'      => ($rf['estatisticas']['participantes_novos'] ?? 0)
+                                              + ($rf['estatisticas']['participantes_repetidos'] ?? 0),
+                                'novos'      => $rf['estatisticas']['participantes_novos'] ?? 0,
+                                'duplicados' => $rf['estatisticas']['participantes_repetidos'] ?? 0,
+                            ];
+                        }
+                    @endphp
+                    @if(!empty($rfParticipantes))
                     <div class="flex items-center gap-2 py-1">
                         <span class="text-green-600 font-bold w-4">✓</span>
                         <span class="w-52 text-gray-700">Participantes</span>
-                        <span class="text-gray-900 font-medium">{{ $rf['participantes']['total'] ?? 0 }} registros</span>
-                        <span class="text-gray-400 text-xs ml-2">{{ $rf['participantes']['novos'] ?? 0 }} novos · {{ $rf['participantes']['duplicados'] ?? 0 }} já existentes</span>
+                        <span class="text-gray-900 font-medium">{{ $rfParticipantes['total'] ?? 0 }} registros</span>
+                        <span class="text-gray-400 text-xs ml-2">{{ $rfParticipantes['novos'] ?? 0 }} novos · {{ $rfParticipantes['duplicados'] ?? 0 }} já existentes</span>
                     </div>
                     @endif
 
@@ -385,11 +424,12 @@
                                 </td>
                                 <td class="px-4 py-3 text-right">
                                     <div class="flex items-center justify-end gap-2">
-                                        @if($temNotas)
+                                        @if($pr)
                                         <button
                                             type="button"
                                             class="btn-expand-notas-detalhes text-blue-600 hover:text-blue-800 text-xs font-medium px-1.5 py-0.5 rounded border border-blue-200 hover:bg-blue-50 transition"
                                             data-participante-id="{{ $part->id }}"
+                                            data-importacao-id="{{ $importacao->id }}"
                                             data-nota-ids="{{ json_encode($pr['nota_ids'] ?? []) }}"
                                             data-bi="{{ json_encode($pr['bi'] ?? []) }}"
                                             title="Ver notas"
@@ -402,6 +442,29 @@
                             @endforeach
                         </tbody>
                     </table>
+                    {{-- Paginação --}}
+                    @if($participantes->hasPages())
+                    <div class="mt-4 flex items-center justify-between gap-4 text-sm">
+                        <span class="text-gray-500 text-xs">
+                            Mostrando {{ $participantes->firstItem() }}–{{ $participantes->lastItem() }} de {{ $participantes->total() }} participantes
+                        </span>
+                        <div class="flex items-center gap-1">
+                            @if($participantes->onFirstPage())
+                                <span class="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-300 text-xs cursor-not-allowed">Anterior</span>
+                            @else
+                                <a href="{{ $participantes->previousPageUrl() }}" data-link class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50 transition">Anterior</a>
+                            @endif
+
+                            <span class="px-3 py-1.5 text-xs text-gray-500">{{ $participantes->currentPage() }} / {{ $participantes->lastPage() }}</span>
+
+                            @if($participantes->hasMorePages())
+                                <a href="{{ $participantes->nextPageUrl() }}" data-link class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50 transition">Próxima</a>
+                            @else
+                                <span class="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-300 text-xs cursor-not-allowed">Próxima</span>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
             @endif
@@ -412,7 +475,53 @@
 </div>
 
 <script>
-(function () {
+// ── Helpers (fora do init para que _efdRenderNotas seja referenciável internamente) ──
+function _efdFormatBRL(valor) {
+    return 'R$ ' + Number(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function _efdFormatDate(val) {
+    if (!val) return '-';
+    var p = val.split('T')[0].split('-');
+    return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : val;
+}
+
+function _efdRenderNotas(contentDiv, notas, biHtml, cache, pid) {
+    cache[pid] = notas;
+    var notasHtml = '';
+    if (notas && notas.length > 0) {
+        notasHtml = '<div class="overflow-x-auto mt-2"><table class="w-full text-xs border border-gray-200 rounded">' +
+            '<thead class="bg-gray-100"><tr>' +
+            '<th class="px-2 py-1 text-left text-gray-500">Nº Doc</th>' +
+            '<th class="px-2 py-1 text-left text-gray-500">Série</th>' +
+            '<th class="px-2 py-1 text-left text-gray-500">Modelo</th>' +
+            '<th class="px-2 py-1 text-left text-gray-500">Emissão</th>' +
+            '<th class="px-2 py-1 text-center text-gray-500">Tipo</th>' +
+            '<th class="px-2 py-1 text-right text-gray-500">Valor</th>' +
+            '</tr></thead><tbody class="divide-y divide-gray-200">' +
+            notas.slice(0, 50).map(function(n) {
+                var tipoHtml = n.tipo_operacao === 'entrada'
+                    ? '<span class="text-green-700">E</span>'
+                    : '<span class="text-amber-700">S</span>';
+                return '<tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location=\'/app/notas-fiscais/efd/' + n.id + '\'">' +
+                    '<td class="px-2 py-1 font-mono">' + (n.numero  || '-') + '</td>' +
+                    '<td class="px-2 py-1">'           + (n.serie   || '-') + '</td>' +
+                    '<td class="px-2 py-1">'           + (n.modelo  || '-') + '</td>' +
+                    '<td class="px-2 py-1">'           + _efdFormatDate(n.data_emissao) + '</td>' +
+                    '<td class="px-2 py-1 text-center">' + tipoHtml + '</td>' +
+                    '<td class="px-2 py-1 text-right">' + _efdFormatBRL(n.valor_total) + '</td>' +
+                    '</tr>';
+            }).join('') +
+            '</tbody></table>' +
+            (notas.length > 50 ? '<p class="text-xs text-gray-400 mt-1">Mostrando 50 de ' + notas.length + ' notas.</p>' : '') +
+            '</div>';
+    } else {
+        notasHtml = '<p class="text-xs text-gray-400 mt-2">Nenhuma nota disponivel.</p>';
+    }
+    contentDiv.innerHTML = biHtml + notasHtml;
+}
+
+window.initImportacao = function() {
     // Row-click navigation (SPA-aware)
     function navigateToHref(el) {
         var href = el.getAttribute('data-href');
@@ -424,22 +533,78 @@
         link.click();
         document.body.removeChild(link);
     }
-
-    document.querySelectorAll('[data-href]').forEach(function (row) {
-        row.addEventListener('click', function () { navigateToHref(this); });
+    document.querySelectorAll('[data-href]').forEach(function(row) {
+        row.addEventListener('click', function() { navigateToHref(this); });
     });
+
+    // ── Expansão inline de notas ──────────────────────────────────────────
+    var notasCache = {};
+    var container = document.getElementById('tabela-notas-participantes-detalhes');
+    if (container && !container._efdInitDone) {
+        container._efdInitDone = true;
+        container.addEventListener('click', function(e) {
+            var btn = e.target.closest('.btn-expand-notas-detalhes');
+            if (!btn) return;
+            e.stopPropagation();
+
+            var pid          = parseInt(btn.dataset.participanteId);
+            var importacaoId = parseInt(btn.dataset.importacaoId);
+            var notaIds      = [];
+            var bi           = {};
+            try { notaIds = JSON.parse(btn.dataset.notaIds || '[]'); } catch(x) {}
+            try { bi      = JSON.parse(btn.dataset.bi     || '{}'); } catch(x) {}
+
+            var parentTr = btn.closest('tr');
+            if (!parentTr) return;
+
+            var existingRow = parentTr.nextElementSibling;
+            if (existingRow && existingRow.classList.contains('expand-notas-row-detalhes')) {
+                existingRow.remove();
+                btn.textContent = '\u25B6';
+                return;
+            }
+            btn.textContent = '\u25BC';
+
+            var expandTr = document.createElement('tr');
+            expandTr.className = 'expand-notas-row-detalhes bg-blue-50';
+            expandTr.innerHTML = '<td colspan="6" class="px-4 py-3"><div class="expand-content text-sm"><div class="text-gray-500 text-xs">Carregando notas...</div></div></td>';
+            parentTr.after(expandTr);
+            var contentDiv = expandTr.querySelector('.expand-content');
+
+            var biHtml = '';
+            if (bi && Object.keys(bi).length > 0) {
+                biHtml = '<div class="flex flex-wrap gap-4 mb-2">' +
+                    Object.entries(bi).map(function(kv) {
+                        return '<span class="text-xs text-gray-600"><span class="font-medium text-gray-700">' + kv[0].replace(/_/g,' ') + ':</span> ' + kv[1] + '</span>';
+                    }).join('') + '</div>';
+            }
+
+            if (notasCache[pid] !== undefined) {
+                _efdRenderNotas(contentDiv, notasCache[pid], biHtml, notasCache, pid);
+                return;
+            }
+
+            var url = notaIds.length > 0
+                ? '/app/importacao/efd/notas?' + notaIds.map(function(id) { return 'ids[]=' + id; }).join('&')
+                : '/app/importacao/efd/notas-participante?participante_id=' + pid + '&importacao_id=' + importacaoId;
+
+            fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function(r) { return r.ok ? r.json() : []; })
+                .catch(function() { return []; })
+                .then(function(notas) { _efdRenderNotas(contentDiv, notas, biHtml, notasCache, pid); });
+        });
+    }
+    // ── fim expansão inline ────────────────────────────────────────────
 
     // Client-side search filter
     var input = document.getElementById('busca-participantes-efd');
     if (!input) return;
-
-    input.addEventListener('input', function () {
+    input.addEventListener('input', function() {
         var q = this.value.toLowerCase().trim();
-        var rows   = document.querySelectorAll('#tbody-participantes-efd tr');
-        var cards  = document.querySelectorAll('#mobile-participantes-efd > div');
+        var rows  = document.querySelectorAll('#tbody-participantes-efd tr');
+        var cards = document.querySelectorAll('#mobile-participantes-efd > div');
         var zeroBusca = document.getElementById('zero-state-busca');
         var visible = 0;
-
         function filterEl(el) {
             var razao = el.getAttribute('data-razao') || '';
             var doc   = el.getAttribute('data-doc')   || '';
@@ -447,93 +612,12 @@
             el.style.display = match ? '' : 'none';
             if (match) visible++;
         }
-
         rows.forEach(filterEl);
         cards.forEach(filterEl);
-
         if (zeroBusca) zeroBusca.classList.toggle('hidden', visible > 0 || !q);
     });
+};
 
-    // Expansão inline de notas na tabela de detalhes
-    var notasCacheDetalhes = {};
-
-    function formatBRLDetalhes(valor) {
-        return 'R$ ' + Number(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-
-    document.querySelectorAll('.btn-expand-notas-detalhes').forEach(function(btn) {
-        btn.addEventListener('click', async function() {
-            var pid = parseInt(this.dataset.participanteId);
-            var notaIds = JSON.parse(this.dataset.notaIds || '[]');
-            var bi = JSON.parse(this.dataset.bi || '{}');
-            var parentTr = this.closest('tr');
-
-            var existingRow = parentTr.nextElementSibling;
-            if (existingRow && existingRow.classList.contains('expand-notas-row-detalhes')) {
-                existingRow.remove();
-                this.textContent = '▶';
-                return;
-            }
-            this.textContent = '▼';
-
-            var expandTr = document.createElement('tr');
-            expandTr.className = 'expand-notas-row-detalhes bg-blue-50';
-            expandTr.innerHTML = '<td colspan="6" class="px-4 py-3"><div class="expand-content text-sm"><div class="text-gray-500 text-xs">Carregando notas...</div></div></td>';
-            parentTr.after(expandTr);
-
-            var contentDiv = expandTr.querySelector('.expand-content');
-
-            var biHtml = '';
-            if (bi && Object.keys(bi).length > 0) {
-                biHtml = '<div class="flex flex-wrap gap-4 mb-2">' +
-                    Object.entries(bi).map(function(e) {
-                        return '<span class="text-xs text-gray-600"><span class="font-medium text-gray-700">' + e[0].replace(/_/g,' ') + ':</span> ' + e[1] + '</span>';
-                    }).join('') + '</div>';
-            }
-
-            if (!notasCacheDetalhes[pid] && notaIds.length > 0) {
-                try {
-                    var params = notaIds.map(function(id) { return 'ids[]=' + id; }).join('&');
-                    var resp = await fetch('/app/importacao/efd/notas?' + params, {
-                        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
-                    });
-                    notasCacheDetalhes[pid] = resp.ok ? await resp.json() : [];
-                } catch(e) {
-                    notasCacheDetalhes[pid] = [];
-                }
-            }
-
-            var notas = notasCacheDetalhes[pid] || [];
-            var notasHtml = '';
-            if (notas.length > 0) {
-                notasHtml = '<div class="overflow-x-auto mt-2"><table class="w-full text-xs border border-gray-200 rounded">' +
-                    '<thead class="bg-gray-100"><tr>' +
-                    '<th class="px-2 py-1 text-left text-gray-500">Nº Doc</th>' +
-                    '<th class="px-2 py-1 text-left text-gray-500">Série</th>' +
-                    '<th class="px-2 py-1 text-left text-gray-500">Modelo</th>' +
-                    '<th class="px-2 py-1 text-left text-gray-500">Emissão</th>' +
-                    '<th class="px-2 py-1 text-center text-gray-500">Tipo</th>' +
-                    '<th class="px-2 py-1 text-right text-gray-500">Valor</th>' +
-                    '</tr></thead><tbody class="divide-y divide-gray-200">' +
-                    notas.slice(0, 50).map(function(n) {
-                        return '<tr class="hover:bg-gray-50">' +
-                            '<td class="px-2 py-1 font-mono">' + (n.numero || '—') + '</td>' +
-                            '<td class="px-2 py-1">' + (n.serie || '—') + '</td>' +
-                            '<td class="px-2 py-1">' + (n.modelo || '—') + '</td>' +
-                            '<td class="px-2 py-1">' + (n.data_emissao || '—') + '</td>' +
-                            '<td class="px-2 py-1 text-center">' + (n.tipo_operacao === '1' ? '<span class="text-green-700">E</span>' : '<span class="text-amber-700">S</span>') + '</td>' +
-                            '<td class="px-2 py-1 text-right">' + formatBRLDetalhes(n.valor_total) + '</td>' +
-                            '</tr>';
-                    }).join('') +
-                    '</tbody></table>' +
-                    (notas.length > 50 ? '<p class="text-xs text-gray-400 mt-1">Mostrando 50 de ' + notas.length + ' notas.</p>' : '') +
-                    '</div>';
-            } else {
-                notasHtml = '<p class="text-xs text-gray-400 mt-2">Nenhuma nota disponível.</p>';
-            }
-
-            contentDiv.innerHTML = biHtml + notasHtml;
-        });
-    });
-})();
+// Execução imediata para carregamento direto (F5) — spa.js chama novamente via initImportacao()
+window.initImportacao();
 </script>

@@ -49,3 +49,4 @@ docker-stack-resolved.yml
 /storage/logs/*.log
 npm-debug.log*
 yarn-error.log
+.superpowers/

@@ -26,8 +26,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <script src="{{ asset('js/layout.js') }}"></script>
-    <script src="{{ asset('js/toast.js') }}"></script>
+    <script src="{{ asset('js/layout.js') }}?v={{ filemtime(public_path('js/layout.js')) }}"></script>
+    <script src="{{ asset('js/toast.js') }}?v={{ filemtime(public_path('js/toast.js')) }}"></script>
 </head>
 <body class="{{ $themeClass ?? 'bg-surface text-slate-900 font-sans antialiased' }}">
     <div class="min-h-screen md:flex">
@@ -43,7 +43,7 @@
                         </svg>
                     </button>
 
-                    <a href="/dashboard" class="flex items-center gap-2" data-link data-no-active>
+                    <a href="/app/dashboard" class="flex items-center gap-2" data-link data-no-active>
                         <img src="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}" alt="FiscalDock" class="h-7 object-contain">
                         <span class="text-base font-bold text-brand">FiscalDock</span>
                     </a>

@@ -1,3 +1,24 @@
+@push('structured-data')
+<script type="application/ld+json">
+{
+    "@@context": "https://schema.org",
+    "@@type": "Organization",
+    "name": "FiscalDock",
+    "url": "https://fiscaldock.com",
+    "logo": "{{ asset('binary_files/logo/Logo FiscalDock.png') }}",
+    "description": "Plataforma de inteligencia fiscal para contadores e escritorios contabeis. Importacao de SPED, monitoramento de participantes e compliance automatizado.",
+    "sameAs": []
+}
+</script>
+<script type="application/ld+json">
+{
+    "@@context": "https://schema.org",
+    "@@type": "WebSite",
+    "name": "FiscalDock",
+    "url": "https://fiscaldock.com"
+}
+</script>
+@endpush
 
 <style>
 /* Solutions Carousel Styles */
@@ -83,15 +104,9 @@
     pointer-events: none;
 }
 
-/* Ajustar mockup para ter efeito de profundidade */
-.solution-card-inner .bg-white.rounded-xl {
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-}
-
-.solution-card .bg-gray-50 {
-    flex: 1;
-    overflow-y: auto;
-    min-height: 0;
+/* Coluna direita: ícone + métrica */
+.solution-card-inner > .grid > div:last-child {
+    min-height: 280px;
 }
 
 .solution-card.active {
@@ -174,43 +189,21 @@
         min-height: 600px;
     }
     
-    /* Em mobile, colunas empilhadas - texto primeiro, depois imagem */
+    /* Em mobile, colunas empilhadas - ícone/métrica primeiro, texto depois */
     .solution-card-inner .grid {
         grid-template-columns: 1fr;
     }
-    
+
     .solution-card-inner > .grid > div:first-child {
-        min-height: 250px;
+        min-height: auto;
         order: 2;
-        padding: 1rem;
+        padding: 1.25rem;
     }
-    
+
     .solution-card-inner > .grid > div:last-child {
         order: 1;
         padding: 1.5rem;
-    }
-    
-    /* Ajustar headline do mockup em mobile */
-    .solution-card-inner > .grid > div:first-child .absolute {
-        position: relative;
-        top: auto;
-        right: auto;
-        left: auto;
-        padding: 1rem 0;
-    }
-    
-    .solution-card-inner > .grid > div:first-child .absolute h4 {
-        font-size: 1.25rem;
-        margin-bottom: 1rem;
-    }
-    
-    /* Ajustar tamanhos de texto em mobile */
-    .solution-card-inner > .grid > div:last-child h3 {
-        font-size: 1.75rem;
-    }
-    
-    .solution-card-inner > .grid > div:last-child p {
-        font-size: 1rem;
+        min-height: 200px;
     }
 }
 
@@ -418,24 +411,24 @@
                 <!-- Badge -->
                 <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold mb-4">
                     <span class="w-2 h-2 rounded-full bg-blue-400"></span>
-                    Ambiente de desenvolvimento ativo - FiscalDock
+                    Plataforma de inteligência fiscal para contadores
                 </div>
 
                 <!-- Título -->
                 <h1 class="font-extrabold leading-tight tracking-tight text-3xl sm:text-4xl xl:text-5xl">
-                    O FiscalDock que transforma
-                    <span class="block text-white [text-shadow:0_1px_4px_rgba(0,0,0,0.45),0_0_1px_rgba(0,0,0,0.35),0_0_8px_rgba(0,0,0,0.25)]">SPED em Ações e Relatórios</span>
+                    Importe seu SPED e descubra
+                    <span class="block text-white [text-shadow:0_1px_4px_rgba(0,0,0,0.45),0_0_1px_rgba(0,0,0,0.35),0_0_8px_rgba(0,0,0,0.25)]">riscos fiscais em minutos</span>
                 </h1>
 
                 <!-- Subtítulo -->
                 <p class="mt-4 text-base sm:text-lg text-white/80 max-w-2xl">
-                    Centralize arquivos fiscais, identifique pendências e riscos automaticamente, gere relatórios prontos para decisão e automatize cobranças/entregas pelo WhatsApp — com trilha de evidências.
+                    Cruze dados do SPED com a Receita Federal, SINTEGRA e CEIS para identificar fornecedores irregulares, notas com problemas e oportunidades de crédito tributário — antes que o fisco encontre.
                 </p>
 
                 <!-- CTAs -->
                 <div class="mt-5">
                     <a href="/agendar" data-link data-button="cta" class="btn-cta">
-                        <span class="whitespace-nowrap">Quero conhecer</span>
+                        <span class="whitespace-nowrap">Testar Gratuitamente</span>
                         <svg class="h-5 w-5 shrink-0 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                         </svg>
@@ -444,7 +437,7 @@
 
                 <!-- Frase de apoio -->
                 <p class="mt-3 text-sm text-white/70 max-w-2xl">
-                    Feito para escritórios contábeis e empresas que precisam de controle, conformidade e velocidade, sem planilhas infinitas.
+                    Feito para contadores e escritórios contábeis que querem proteger seus clientes contra riscos fiscais.
                 </p>
 
                 <!-- Social Proof: Avatares + Avaliação -->
@@ -483,7 +476,7 @@
                             <span class="text-white font-bold text-lg">5.0</span>
                         </div>
                         <!-- Texto de contagem -->
-                        <p class="text-white/80 text-sm mt-1">+ de 440k empresas</p>
+                        <p class="text-white/80 text-sm mt-1">Contadores que confiam no FiscalDock</p>
                     </div>
                 </div>
             </div>
@@ -493,7 +486,7 @@
                 <div class="relative rounded-3xl border border-white/15 bg-white/5 p-2 shadow-lg shadow-blue-950/10">
                     <img
                         src="{{ asset('binary_files/mockups/dashboard-mockup.jpg') }}"
-                        alt="Mockup do dashboard ReformaTax"
+                        alt="Dashboard do FiscalDock"
                         loading="eager"
                         fetchpriority="high"
                         decoding="async"
@@ -518,10 +511,10 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Soluções que <span class="text-brand">transformam</span> a rotina
+                Soluções que <span class="text-brand">protegem</span> seu escritório
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                Um ecossistema completo para alta performance
+                Ferramentas integradas para importação, monitoramento e compliance fiscal
             </p>
         </div>
 
@@ -542,863 +535,288 @@
             <!-- Cards de Soluções -->
             <div class="solutions-cards-wrapper relative overflow-hidden mx-12">
                 <div class="solutions-cards-track flex transition-transform duration-500 ease-in-out" style="transform: translateX(0px);">
-                    <!-- Card Duplicado: Portal do Cliente (para loop infinito) -->
-                    <div class="solution-card solution-card-duplicate flex-shrink-0 w-full px-4" data-index="duplicate" data-solution="portal">
-                        <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
-                            <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
-                                <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900 shadow-md">
-                                    <!-- Logo e Título -->
-                                    <div>
-                                        <div class="text-center mb-8">
-                                            <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Portal do Cliente</h3>
-                                        </div>
-                                        
-                                        <!-- Descrição Principal -->
-                                        <p class="text-xl lg:text-2xl text-gray-700 mb-6 leading-relaxed">
-                                            Área exclusiva do cliente com checklist do mês, pendências e prazos claros. Envio simplificado de documentos.
-                                        </p>
-                                        
-                                        <!-- Descrição Secundária (com bullet visual) -->
-                                        <div class="mb-4">
-                                            <p class="text-lg text-gray-600 leading-relaxed">
-                                                Histórico completo de entregas e relatórios acessíveis. Permissões por perfil garantindo acesso adequado.
-                                            </p>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Call-to-Action -->
-                                    <div class="mt-8">
-                                        <a href="#" class="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 font-semibold transition-colors text-lg">
-                                            Saiba mais
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
-                                        </a>
-                                    </div>
-                                </div>
-                                
-                                <!-- Coluna Direita: Mockup/Imagem Interativa -->
-                                <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
-                                    <!-- Headline sobre o mockup -->
-                                    <div class="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full px-4">
-                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4 text-center">
-                                            Portal transparente e intuitivo
-                                        </h4>
-                                    </div>
-                                    
-                                    <!-- Mockup do Dashboard -->
-                                    <div class="relative w-full h-full max-w-5xl mt-16">
-                                        <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-700" style="transform: scale(0.85);">
-                                            <!-- Header do mockup -->
-                                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
-                                                        <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-5 h-5 object-contain">
-                                                    </div>
-                                                    <span class="text-sm font-semibold text-gray-900">Portal do Cliente</span>
-                                                </div>
-                                                <div class="flex gap-2">
-                                                    <span class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded font-semibold">Dashboard</span>
-                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Checklist</span>
-                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Histórico</span>
-                                                </div>
-                                            </div>
-                                            <!-- Conteúdo do mockup (simplificado) -->
-                                            <div class="p-6 bg-gray-50">
-                                                <div class="grid grid-cols-2 gap-4 mb-4">
-                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
-                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
-                                                    </div>
-                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
-                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid grid-cols-2 gap-4">
-                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                                                        <div class="h-20 bg-gray-100 rounded"></div>
-                                                    </div>
-                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                                                        <div class="h-20 bg-gray-100 rounded"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Card 1: Central de Documentos -->
-                    <div class="solution-card active flex-shrink-0 w-full px-4" data-index="0" data-solution="documentos" style="opacity: 1 !important;">
+                    <!-- Card Duplicado: Importação XML (para loop infinito - início) -->
+                    <div class="solution-card solution-card-duplicate flex-shrink-0 w-full px-4" data-index="duplicate" data-solution="xml">
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
-                                <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900 shadow-md">
-                                    <!-- Logo e Título -->
+                                <div class="flex flex-col justify-between p-8 lg:p-10 bg-white">
                                     <div>
-                                        <div class="text-center mb-6">
-                                            <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Central de Documentos</h3>
-                                        </div>
-                                        
-                                        <!-- Descrição Principal -->
-                                        <p class="text-lg text-gray-700 mb-4 leading-relaxed">
-                                            Upload e organização por empresa, competência e tipo. Versionamento e busca inteligente com histórico e evidência.
-                                        </p>
-                                        
-                                        <!-- Lista simples -->
-                                        <ul class="mb-4 space-y-2 text-gray-600">
-                                            <li class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <span>Organização automática por empresa, competência e tipo</span>
-                                            </li>
-                                            <li class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <span>Versionamento completo com histórico</span>
-                                            </li>
-                                            <li class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <span>Busca inteligente e compartilhamento seguro</span>
-                                            </li>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 mb-4">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                                            Importação
+                                        </span>
+                                        <h3 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">Notas fiscais organizadas automaticamente</h3>
+                                        <p class="text-base text-gray-600 mb-6 leading-relaxed">Importe XMLs de NFe e o FiscalDock extrai chave de acesso, valores, CFOP e dados do emitente/destinatário.</p>
+                                        <ul class="space-y-3 text-gray-600">
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Upload de XMLs com validacao automatica</span></li>
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Chave de acesso e valores extraidos por nota</span></li>
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Organizado por emitente, destinatario e CFOP</span></li>
                                         </ul>
                                     </div>
-                                    
-                                    <!-- Call-to-Action -->
                                     <div class="mt-6">
-                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 font-semibold transition-colors">
+                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors">
                                             Saiba mais
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                         </a>
                                     </div>
                                 </div>
-                                
-                                <!-- Coluna Direita: Mockup/Imagem Interativa -->
-                                <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
-                                    <!-- Mockup do Dashboard -->
-                                    <div class="relative w-full h-full max-w-5xl mt-24">
-                                        <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-700" style="transform: scale(0.85);">
-                                            <!-- Header do mockup -->
-                                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
-                                                        <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-5 h-5 object-contain">
-                                                    </div>
-                                                    <span class="text-sm font-semibold text-gray-900">Central de Documentos</span>
-                                                </div>
-                                                <div class="flex gap-2">
-                                                    <span class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded font-semibold">Por Empresa</span>
-                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Por Competência</span>
-                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Histórico</span>
-                                                </div>
-                                            </div>
-                                            <!-- Conteúdo do mockup (simplificado) -->
-                                            <div class="p-6 bg-gray-50">
-                                                <div class="grid grid-cols-2 gap-4 mb-4">
-                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                                                        <div class="flex items-center gap-2 mb-2">
-                                                            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                                                            <span class="text-xs font-semibold text-gray-700">Empresa A - Jan/2024</span>
-                                                        </div>
-                                                        <div class="h-16 bg-gray-100 rounded mb-2"></div>
-                                                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
-                                                    </div>
-                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                                                        <div class="flex items-center gap-2 mb-2">
-                                                            <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
-                                                            <span class="text-xs font-semibold text-gray-700">Empresa B - Jan/2024</span>
-                                                        </div>
-                                                        <div class="h-16 bg-gray-100 rounded mb-2"></div>
-                                                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid grid-cols-2 gap-4">
-                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                                                        <div class="text-xs text-gray-500 mb-2">Versões</div>
-                                                        <div class="h-12 bg-gray-100 rounded"></div>
-                                                    </div>
-                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                                                        <div class="text-xs text-gray-500 mb-2">Busca Inteligente</div>
-                                                        <div class="h-12 bg-gray-100 rounded"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                <div class="relative bg-gradient-to-br from-primary-700 to-primary-500 p-8 lg:p-12 flex flex-col items-center justify-center overflow-hidden">
+                                    <div class="w-24 h-24 lg:w-32 lg:h-32 mb-8 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                                        <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Importacao de XML" class="w-16 h-16 lg:w-20 lg:h-20 object-contain" loading="lazy">
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-4xl lg:text-5xl font-bold text-white mb-2">Automatico</div>
+                                        <p class="text-base text-white/80">extracao inteligente de dados fiscais</p>
+                                    </div>
+                                    <div class="mt-6 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
+                                        <p class="text-sm text-white/90 font-medium">Sem digitacao manual</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Card 2: Leitura e Diagnóstico -->
-                    <div class="solution-card flex-shrink-0 w-full px-4" data-index="1" data-solution="diagnostico">
+                    <!-- Card 1: Importação de SPED -->
+                    <div class="solution-card active flex-shrink-0 w-full px-4" data-index="0" data-solution="sped" style="opacity: 1 !important;">
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
-                                <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900 shadow-md">
-                                    <!-- Logo e Título -->
+                                <div class="flex flex-col justify-between p-8 lg:p-10 bg-white">
                                     <div>
-                                        <div class="text-center mb-6">
-                                            <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Leitura e Diagnóstico</h3>
-                                        </div>
-                                        
-                                        <!-- Descrição Principal -->
-                                        <p class="text-lg text-gray-700 mb-4 leading-relaxed">
-                                            Importação e estruturação de SPED, detecção de inconsistências e semáforo por competência com alertas.
-                                        </p>
-                                        
-                                        <!-- Lista simples -->
-                                        <ul class="mb-4 space-y-2 text-gray-600">
-                                            <li class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <span>Importação e estruturação automática de SPED</span>
-                                            </li>
-                                            <li class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <span>Detecção automática de inconsistências e lacunas</span>
-                                            </li>
-                                            <li class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <span>Semáforo visual: OK / Atenção / Pendência</span>
-                                            </li>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 mb-4">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                            SPED/EFD
+                                        </span>
+                                        <h3 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">Importe SPED em segundos, nao em horas</h3>
+                                        <p class="text-base text-gray-600 mb-6 leading-relaxed">Upload de EFD ICMS/IPI e PIS/COFINS com extracao automatica de participantes, notas e valores por bloco.</p>
+                                        <ul class="space-y-3 text-gray-600">
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Arraste e importe arquivos .txt direto na plataforma</span></li>
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Extracao automatica por bloco (A, C, D)</span></li>
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Participantes identificados instantaneamente</span></li>
                                         </ul>
                                     </div>
-                                    
-                                    <!-- Call-to-Action -->
                                     <div class="mt-6">
-                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 font-semibold transition-colors">
+                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors">
                                             Saiba mais
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                         </a>
                                     </div>
                                 </div>
-                                
-                                <!-- Coluna Direita: Mockup/Imagem Interativa -->
-                                <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
-                                    <!-- Mockup do Dashboard -->
-                                    <div class="relative w-full h-full max-w-5xl mt-24">
-                                        <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-700" style="transform: scale(0.85);">
-                                            <!-- Header do mockup -->
-                                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
-                                                        <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-5 h-5 object-contain">
-                                                    </div>
-                                                    <span class="text-sm font-semibold text-gray-900">Leitura e Diagnóstico</span>
-                                                </div>
-                                                <div class="flex gap-2">
-                                                    <span class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded font-semibold">SPED</span>
-                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Semáforo</span>
-                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Alertas</span>
-                                                </div>
-                                            </div>
-                                            <!-- Conteúdo do mockup (simplificado) -->
-                                            <div class="p-6 bg-gray-50">
-                                                <div class="space-y-3 mb-4">
-                                                    <!-- Competência OK -->
-                                                    <div class="bg-white rounded-lg p-4 border-2 border-green-400">
-                                                        <div class="flex items-center justify-between mb-2">
-                                                            <span class="text-sm font-semibold text-gray-900">Jan/2024</span>
-                                                            <div class="flex items-center gap-2">
-                                                                <div class="w-4 h-4 bg-green-500 rounded-full"></div>
-                                                                <span class="text-xs font-bold text-green-600">OK</span>
-                                                            </div>
-                                                        </div>
-                                                        <p class="text-xs text-gray-600">SPED importado e estruturado corretamente</p>
-                                                    </div>
-                                                    <!-- Competência Atenção -->
-                                                    <div class="bg-white rounded-lg p-4 border-2 border-yellow-400">
-                                                        <div class="flex items-center justify-between mb-2">
-                                                            <span class="text-sm font-semibold text-gray-900">Fev/2024</span>
-                                                            <div class="flex items-center gap-2">
-                                                                <div class="w-4 h-4 bg-yellow-500 rounded-full"></div>
-                                                                <span class="text-xs font-bold text-yellow-600">ATENÇÃO</span>
-                                                            </div>
-                                                        </div>
-                                                        <p class="text-xs text-gray-600">Inconsistências detectadas - requer revisão</p>
-                                                    </div>
-                                                    <!-- Competência Pendência -->
-                                                    <div class="bg-white rounded-lg p-4 border-2 border-red-400">
-                                                        <div class="flex items-center justify-between mb-2">
-                                                            <span class="text-sm font-semibold text-gray-900">Mar/2024</span>
-                                                            <div class="flex items-center gap-2">
-                                                                <div class="w-4 h-4 bg-red-500 rounded-full"></div>
-                                                                <span class="text-xs font-bold text-red-600">PENDÊNCIA</span>
-                                                            </div>
-                                                        </div>
-                                                        <p class="text-xs text-gray-600">Lacunas identificadas - ação necessária</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                <div class="relative bg-gradient-to-br from-primary-700 to-primary-500 p-8 lg:p-12 flex flex-col items-center justify-center overflow-hidden">
+                                    <div class="w-24 h-24 lg:w-32 lg:h-32 mb-8 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                                        <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Importacao de SPED" class="w-16 h-16 lg:w-20 lg:h-20 object-contain" loading="lazy">
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-4xl lg:text-5xl font-bold text-white mb-2">Segundos</div>
+                                        <p class="text-base text-white/80">o que levava horas de trabalho manual</p>
+                                    </div>
+                                    <div class="mt-6 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
+                                        <p class="text-sm text-white/90 font-medium">Extracao 100% automatica</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Card 3: Motor de Regras -->
-                    <div class="solution-card flex-shrink-0 w-full px-4" data-index="2" data-solution="regras">
+                    <!-- Card 2: Monitoramento de Participantes -->
+                    <div class="solution-card flex-shrink-0 w-full px-4" data-index="1" data-solution="monitoramento">
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
-                                <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900 shadow-md">
-                                    <!-- Logo e Título -->
+                                <div class="flex flex-col justify-between p-8 lg:p-10 bg-white">
                                     <div>
-                                        <div class="text-center mb-6">
-                                            <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Motor de Regras</h3>
-                                        </div>
-                                        
-                                        <!-- Descrição Principal -->
-                                        <p class="text-lg text-gray-700 mb-4 leading-relaxed">
-                                            Regras parametrizáveis por operação. Classificação automática e evolução contínua que aprende seu padrão.
-                                        </p>
-                                        
-                                        <!-- Lista simples -->
-                                        <ul class="mb-4 space-y-2 text-gray-600">
-                                            <li class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <span>Regras parametrizáveis por tipo de operação</span>
-                                            </li>
-                                            <li class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <span>Classificação automática: gera crédito / atenção / não gera</span>
-                                            </li>
-                                            <li class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <span>Evolução contínua que aprende seu padrão</span>
-                                            </li>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 mb-4">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                                            Monitoramento
+                                        </span>
+                                        <h3 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">Saiba antes da fiscalizacao quando algo muda</h3>
+                                        <p class="text-base text-gray-600 mb-6 leading-relaxed">Acompanhe fornecedores e clientes em tempo real. Alertas automaticos de CNPJ irregular, IE suspensa e mudancas na Receita Federal.</p>
+                                        <ul class="space-y-3 text-gray-600">
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Consulta automatica de situacao cadastral</span></li>
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Alertas de CNPJ baixado, IE suspensa ou CEIS</span></li>
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Agrupamento por categoria e prioridade</span></li>
                                         </ul>
                                     </div>
-                                    
-                                    <!-- Call-to-Action -->
                                     <div class="mt-6">
-                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 font-semibold transition-colors">
+                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors">
                                             Saiba mais
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                         </a>
                                     </div>
                                 </div>
-                                
-                                <!-- Coluna Direita: Mockup/Imagem Interativa -->
-                                <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
-                                    <!-- Mockup do Dashboard -->
-                                    <div class="relative w-full h-full max-w-5xl mt-24">
-                                        <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-700" style="transform: scale(0.85);">
-                                            <!-- Header do mockup -->
-                                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
-                                                        <img src="{{ asset('binary_files/icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-5 h-5 object-contain">
-                                                    </div>
-                                                    <span class="text-sm font-semibold text-gray-900">Motor de Regras</span>
-                                                </div>
-                                                <div class="flex gap-2">
-                                                    <span class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded font-semibold">Classificação</span>
-                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Regras</span>
-                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Histórico</span>
-                                                </div>
-                                            </div>
-                                            <!-- Conteúdo do mockup (simplificado) -->
-                                            <div class="p-6 bg-gray-50">
-                                                <div class="space-y-3 mb-4">
-                                                    <!-- Operação: Gera Crédito -->
-                                                    <div class="bg-white rounded-lg p-4 border-2 border-green-400">
-                                                        <div class="flex items-center justify-between mb-2">
-                                                            <span class="text-sm font-semibold text-gray-900">Operação A</span>
-                                                            <span class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded font-bold">GERA CRÉDITO</span>
-                                                        </div>
-                                                        <p class="text-xs text-gray-600">Regra aplicada automaticamente</p>
-                                                    </div>
-                                                    <!-- Operação: Atenção -->
-                                                    <div class="bg-white rounded-lg p-4 border-2 border-yellow-400">
-                                                        <div class="flex items-center justify-between mb-2">
-                                                            <span class="text-sm font-semibold text-gray-900">Operação B</span>
-                                                            <span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded font-bold">ATENÇÃO</span>
-                                                        </div>
-                                                        <p class="text-xs text-gray-600">Requer revisão manual</p>
-                                                    </div>
-                                                    <!-- Operação: Não Gera -->
-                                                    <div class="bg-white rounded-lg p-4 border-2 border-gray-400">
-                                                        <div class="flex items-center justify-between mb-2">
-                                                            <span class="text-sm font-semibold text-gray-900">Operação C</span>
-                                                            <span class="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded font-bold">NÃO GERA</span>
-                                                        </div>
-                                                        <p class="text-xs text-gray-600">Classificação automática aplicada</p>
-                                                    </div>
-                                                </div>
-                                                <div class="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                                                    <p class="text-xs text-blue-700 font-semibold">✓ Aprendizado contínuo ativo</p>
-                                                </div>
-                                            </div>
-                                        </div>
+                                <div class="relative bg-gradient-to-br from-primary-700 to-primary-500 p-8 lg:p-12 flex flex-col items-center justify-center overflow-hidden">
+                                    <div class="w-24 h-24 lg:w-32 lg:h-32 mb-8 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                                        <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Monitoramento de Participantes" class="w-16 h-16 lg:w-20 lg:h-20 object-contain" loading="lazy">
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-4xl lg:text-5xl font-bold text-white mb-2">450+</div>
+                                        <p class="text-base text-white/80">empresas monitoradas</p>
+                                    </div>
+                                    <div class="mt-6 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
+                                        <p class="text-sm text-white/90 font-medium">Alertas antes da fiscalizacao</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Card 4: Compliance e Situação Fiscal -->
-                    <div class="solution-card flex-shrink-0 w-full px-4" data-index="3" data-solution="compliance">
+                    <!-- Card 3: Consultas Tributárias em Lote -->
+                    <div class="solution-card flex-shrink-0 w-full px-4" data-index="2" data-solution="consultas">
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
-                                <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900 shadow-md">
-                                    <!-- Logo e Título -->
+                                <div class="flex flex-col justify-between p-8 lg:p-10 bg-white">
                                     <div>
-                                        <div class="text-center mb-6">
-                                            <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Compliance e Situação Fiscal</h3>
-                                        </div>
-                                        
-                                        <!-- Descrição Principal -->
-                                        <p class="text-lg text-gray-700 mb-4 leading-relaxed">
-                                            Painel de situação por CNPJ, alertas de vencimento e relatório de risco com evidências e histórico.
-                                        </p>
-                                        
-                                        <!-- Lista simples -->
-                                        <ul class="mb-4 space-y-2 text-gray-600">
-                                            <li class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <span>Painel de situação por CNPJ com mapa visual</span>
-                                            </li>
-                                            <li class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <span>Alertas automáticos de vencimento</span>
-                                            </li>
-                                            <li class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <span>Relatório de risco com evidências e histórico</span>
-                                            </li>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 mb-4">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                            Consultas
+                                        </span>
+                                        <h3 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">Centenas de CNPJs consultados de uma vez</h3>
+                                        <p class="text-base text-gray-600 mb-6 leading-relaxed">Situacao cadastral, regime tributario, Simples Nacional e IE — com resultados em tempo real.</p>
+                                        <ul class="space-y-3 text-gray-600">
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Upload de planilha ou selecao de participantes</span></li>
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Progresso por CNPJ em tempo real</span></li>
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Resultados exportaveis com alertas automaticos</span></li>
                                         </ul>
                                     </div>
-                                    
-                                    <!-- Call-to-Action -->
                                     <div class="mt-6">
-                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 font-semibold transition-colors">
+                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors">
                                             Saiba mais
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                         </a>
                                     </div>
                                 </div>
-                                
-                                <!-- Coluna Direita: Mockup/Imagem Interativa -->
-                                <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
-                                    <!-- Mockup do Dashboard -->
-                                    <div class="relative w-full h-full max-w-5xl mt-24">
-                                        <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-700" style="transform: scale(0.85);">
-                                            <!-- Header do mockup -->
-                                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
-                                                        <img src="{{ asset('binary_files/icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-5 h-5 object-contain">
-                                                    </div>
-                                                    <span class="text-sm font-semibold text-gray-900">Compliance e Situação Fiscal</span>
-                                                </div>
-                                                <div class="flex gap-2">
-                                                    <span class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded font-semibold">Por CNPJ</span>
-                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Alertas</span>
-                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Riscos</span>
-                                                </div>
-                                            </div>
-                                            <!-- Conteúdo do mockup (simplificado) -->
-                                            <div class="p-6 bg-gray-50">
-                                                <div class="space-y-3 mb-4">
-                                                    <!-- CNPJ Regular -->
-                                                    <div class="bg-white rounded-lg p-4 border-2 border-green-400">
-                                                        <div class="flex items-center justify-between mb-2">
-                                                            <div>
-                                                                <p class="text-sm font-semibold text-gray-900">12.345.678/0001-90</p>
-                                                                <p class="text-xs text-gray-500">Empresa A</p>
-                                                            </div>
-                                                            <span class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded font-bold">REGULAR</span>
-                                                        </div>
-                                                        <div class="text-xs text-gray-600">Sem pendências • CND válida</div>
-                                                    </div>
-                                                    <!-- CNPJ com Alerta -->
-                                                    <div class="bg-white rounded-lg p-4 border-2 border-yellow-400">
-                                                        <div class="flex items-center justify-between mb-2">
-                                                            <div>
-                                                                <p class="text-sm font-semibold text-gray-900">98.765.432/0001-10</p>
-                                                                <p class="text-xs text-gray-500">Empresa B</p>
-                                                            </div>
-                                                            <span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded font-bold">ALERTA</span>
-                                                        </div>
-                                                        <div class="text-xs text-gray-600">Vencimento em 5 dias • DAS a pagar</div>
-                                                    </div>
-                                                    <!-- CNPJ com Risco -->
-                                                    <div class="bg-white rounded-lg p-4 border-2 border-red-400">
-                                                        <div class="flex items-center justify-between mb-2">
-                                                            <div>
-                                                                <p class="text-sm font-semibold text-gray-900">11.222.333/0001-44</p>
-                                                                <p class="text-xs text-gray-500">Empresa C</p>
-                                                            </div>
-                                                            <span class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded font-bold">RISCO</span>
-                                                        </div>
-                                                        <div class="text-xs text-gray-600">Pendências detectadas • Ação necessária</div>
-                                                    </div>
-                                                </div>
-                                                <div class="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                                                    <p class="text-xs text-blue-700 font-semibold">📊 Relatório de risco disponível com evidências</p>
-                                                </div>
-                                            </div>
-                                        </div>
+                                <div class="relative bg-gradient-to-br from-primary-700 to-primary-500 p-8 lg:p-12 flex flex-col items-center justify-center overflow-hidden">
+                                    <div class="w-24 h-24 lg:w-32 lg:h-32 mb-8 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                                        <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="Consultas em Lote" class="w-16 h-16 lg:w-20 lg:h-20 object-contain" loading="lazy">
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-4xl lg:text-5xl font-bold text-white mb-2">Tempo real</div>
+                                        <p class="text-base text-white/80">resultados via Server-Sent Events</p>
+                                    </div>
+                                    <div class="mt-6 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
+                                        <p class="text-sm text-white/90 font-medium">Consulte centenas de CNPJs de uma vez</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Card 5: Automação de Comunicação -->
-                    <div class="solution-card flex-shrink-0 w-full px-4" data-index="4" data-solution="comunicacao">
+                    <!-- Card 4: Dashboard e BI Fiscal -->
+                    <div class="solution-card flex-shrink-0 w-full px-4" data-index="3" data-solution="dashboard">
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
-                                <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900 shadow-md">
-                                    <!-- Logo e Título -->
+                                <div class="flex flex-col justify-between p-8 lg:p-10 bg-white">
                                     <div>
-                                        <div class="text-center mb-6">
-                                            <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Automação de Comunicação</h3>
-                                        </div>
-                                        
-                                        <!-- Descrição Principal -->
-                                        <p class="text-lg text-gray-700 mb-4 leading-relaxed">
-                                            Cobrança automática via WhatsApp e portal. Mensagens com contexto e registro completo da conversa.
-                                        </p>
-                                        
-                                        <!-- Lista simples -->
-                                        <ul class="mb-4 space-y-2 text-gray-600">
-                                            <li class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <span>Cobrança automática por competência via WhatsApp e portal</span>
-                                            </li>
-                                            <li class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <span>Mensagens inteligentes com contexto completo</span>
-                                            </li>
-                                            <li class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <span>Registro completo com trilha de auditoria</span>
-                                            </li>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 mb-4">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                            BI Fiscal
+                                        </span>
+                                        <h3 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">Visualize riscos e oportunidades em um clique</h3>
+                                        <p class="text-base text-gray-600 mb-6 leading-relaxed">Dashboards interativos com faturamento, compras, tributos e analise inteligente por CFOP e participante.</p>
+                                        <ul class="space-y-3 text-gray-600">
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Graficos interativos com filtros avancados</span></li>
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Analise por CFOP, participante e tipo de EFD</span></li>
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Visao consolidada de entradas, saidas e tributos</span></li>
                                         </ul>
                                     </div>
-                                    
-                                    <!-- Call-to-Action -->
                                     <div class="mt-6">
-                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 font-semibold transition-colors">
+                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors">
                                             Saiba mais
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                         </a>
                                     </div>
                                 </div>
-                                
-                                <!-- Coluna Direita: Mockup/Imagem Interativa -->
-                                <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
-                                    <!-- Mockup do Dashboard -->
-                                    <div class="relative w-full h-full max-w-5xl mt-24">
-                                        <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-700" style="transform: scale(0.85);">
-                                            <!-- Header do mockup -->
-                                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
-                                                        <img src="{{ asset('binary_files/icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-5 h-5 object-contain">
-                                                    </div>
-                                                    <span class="text-sm font-semibold text-gray-900">Automação de Comunicação</span>
-                                                </div>
-                                                <div class="flex gap-2">
-                                                    <span class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded font-semibold">WhatsApp</span>
-                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Portal</span>
-                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Histórico</span>
-                                                </div>
-                                            </div>
-                                            <!-- Conteúdo do mockup (simplificado) -->
-                                            <div class="p-6 bg-gray-50">
-                                                <!-- Simulação de mensagem WhatsApp -->
-                                                <div class="bg-green-50 rounded-lg p-4 mb-3 border border-green-200">
-                                                    <div class="flex items-start gap-3">
-                                                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                                            <span class="text-white text-xs font-bold">WA</span>
-                                                        </div>
-                                                        <div class="flex-1">
-                                                            <div class="flex items-center gap-2 mb-1">
-                                                                <span class="text-xs font-semibold text-gray-900">Mensagem Automática</span>
-                                                                <span class="text-xs text-gray-500">Hoje, 14:30</span>
-                                                            </div>
-                                                            <p class="text-sm text-gray-700 mb-1">Olá! Lembramos que os documentos de <strong>Janeiro/2024</strong> estão pendentes.</p>
-                                                            <p class="text-xs text-gray-500">Contexto: SPED não recebido • Prazo: 5 dias</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <!-- Simulação de entrega automática -->
-                                                <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                                                    <div class="flex items-center gap-2 mb-2">
-                                                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                        </svg>
-                                                        <span class="text-xs font-semibold text-blue-700">Relatório entregue automaticamente</span>
-                                                    </div>
-                                                    <p class="text-xs text-gray-600">Confirmação recebida • Registrado em trilha de auditoria</p>
-                                                </div>
-                                            </div>
-                                        </div>
+                                <div class="relative bg-gradient-to-br from-primary-700 to-primary-500 p-8 lg:p-12 flex flex-col items-center justify-center overflow-hidden">
+                                    <div class="w-24 h-24 lg:w-32 lg:h-32 mb-8 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                                        <img src="{{ asset('binary_files/icone-gif/clipboard-gear.gif') }}" alt="Dashboard e BI Fiscal" class="w-16 h-16 lg:w-20 lg:h-20 object-contain" loading="lazy">
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-4xl lg:text-5xl font-bold text-white mb-2">6 abas</div>
+                                        <p class="text-base text-white/80">de analise fiscal integrada</p>
+                                    </div>
+                                    <div class="mt-6 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
+                                        <p class="text-sm text-white/90 font-medium">Dados atualizados automaticamente</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Card 6: Portal do Cliente -->
-                    <div class="solution-card flex-shrink-0 w-full px-4" data-index="5" data-solution="portal">
+                    <!-- Card 5: Importação de XML -->
+                    <div class="solution-card flex-shrink-0 w-full px-4" data-index="4" data-solution="xml">
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
-                                <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900 shadow-md">
-                                    <!-- Logo e Título -->
+                                <div class="flex flex-col justify-between p-8 lg:p-10 bg-white">
                                     <div>
-                                        <div class="text-center mb-6">
-                                            <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Portal do Cliente</h3>
-                                        </div>
-                                        
-                                        <!-- Descrição Principal -->
-                                        <p class="text-lg text-gray-700 mb-4 leading-relaxed">
-                                            Checklist do mês, pendências, prazos e histórico. Permissões por perfil para menos atrito e mais previsibilidade.
-                                        </p>
-                                        
-                                        <!-- Lista simples -->
-                                        <ul class="mb-4 space-y-2 text-gray-600">
-                                            <li class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <span>Checklist mensal com pendências e prazos claros</span>
-                                            </li>
-                                            <li class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <span>Histórico completo de entregas e relatórios</span>
-                                            </li>
-                                            <li class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <span>Permissões por perfil garantindo acesso adequado</span>
-                                            </li>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 mb-4">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                                            Importacao
+                                        </span>
+                                        <h3 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">Notas fiscais organizadas automaticamente</h3>
+                                        <p class="text-base text-gray-600 mb-6 leading-relaxed">Importe XMLs de NFe e o FiscalDock extrai chave de acesso, valores, CFOP e dados do emitente/destinatario.</p>
+                                        <ul class="space-y-3 text-gray-600">
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Upload de XMLs com validacao automatica</span></li>
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Chave de acesso e valores extraidos por nota</span></li>
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Organizado por emitente, destinatario e CFOP</span></li>
                                         </ul>
                                     </div>
-                                    
-                                    <!-- Call-to-Action -->
                                     <div class="mt-6">
-                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 font-semibold transition-colors">
+                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors">
                                             Saiba mais
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                         </a>
                                     </div>
                                 </div>
-                                
-                                <!-- Coluna Direita: Mockup/Imagem Interativa -->
-                                <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
-                                    <!-- Mockup do Dashboard -->
-                                    <div class="relative w-full h-full max-w-5xl mt-24">
-                                        <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-700" style="transform: scale(0.85);">
-                                            <!-- Header do mockup -->
-                                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
-                                                        <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-5 h-5 object-contain">
-                                                    </div>
-                                                    <span class="text-sm font-semibold text-gray-900">Portal do Cliente</span>
-                                                </div>
-                                                <div class="flex gap-2">
-                                                    <span class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded font-semibold">Dashboard</span>
-                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Checklist</span>
-                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Histórico</span>
-                                                </div>
-                                            </div>
-                                            <!-- Conteúdo do mockup -->
-                                            <div class="p-6 bg-gray-50">
-                                                <!-- Checklist do Mês -->
-                                                <div class="bg-white rounded-lg p-4 border border-gray-200 mb-4">
-                                                    <div class="flex items-center justify-between mb-3">
-                                                        <h5 class="text-sm font-semibold text-gray-900">Checklist Janeiro/2024</h5>
-                                                        <span class="text-xs text-gray-500">3/5 concluído</span>
-                                                    </div>
-                                                    <div class="space-y-2">
-                                                        <div class="flex items-center gap-2">
-                                                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                            </svg>
-                                                            <span class="text-xs text-gray-700">SPED Fiscal</span>
-                                                        </div>
-                                                        <div class="flex items-center gap-2">
-                                                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                            </svg>
-                                                            <span class="text-xs text-gray-700">Notas Fiscais</span>
-                                                        </div>
-                                                        <div class="flex items-center gap-2">
-                                                            <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                            </svg>
-                                                            <span class="text-xs text-gray-700">DAS a pagar</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Pendências e Histórico -->
-                                                <div class="grid grid-cols-2 gap-4">
-                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                                                        <div class="flex items-center gap-2 mb-2">
-                                                            <div class="w-2 h-2 bg-red-500 rounded-full"></div>
-                                                            <span class="text-xs font-semibold text-gray-900">Pendências</span>
-                                                        </div>
-                                                        <p class="text-xs text-gray-600">2 documentos aguardando</p>
-                                                    </div>
-                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                                                        <div class="flex items-center gap-2 mb-2">
-                                                            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                            </svg>
-                                                            <span class="text-xs font-semibold text-gray-900">Histórico</span>
-                                                        </div>
-                                                        <p class="text-xs text-gray-600">Última entrega: 15/01</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                <div class="relative bg-gradient-to-br from-primary-700 to-primary-500 p-8 lg:p-12 flex flex-col items-center justify-center overflow-hidden">
+                                    <div class="w-24 h-24 lg:w-32 lg:h-32 mb-8 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                                        <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Importacao de XML" class="w-16 h-16 lg:w-20 lg:h-20 object-contain" loading="lazy">
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-4xl lg:text-5xl font-bold text-white mb-2">Automatico</div>
+                                        <p class="text-base text-white/80">extracao inteligente de dados fiscais</p>
+                                    </div>
+                                    <div class="mt-6 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
+                                        <p class="text-sm text-white/90 font-medium">Sem digitacao manual</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Card Duplicado: Central de Documentos (para loop infinito - fim) -->
-                    <div class="solution-card solution-card-duplicate flex-shrink-0 w-full px-4" data-index="duplicate-end" data-solution="documentos">
+                    <!-- Card Duplicado: Importação SPED (para loop infinito - fim) -->
+                    <div class="solution-card solution-card-duplicate flex-shrink-0 w-full px-4" data-index="duplicate-end" data-solution="sped">
                         <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
                             <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
-                                <!-- Coluna Esquerda: Descrição -->
-                                <div class="flex flex-col justify-between p-8 lg:p-12 bg-white text-gray-900 shadow-md">
-                                    <!-- Logo e Título -->
+                                <div class="flex flex-col justify-between p-8 lg:p-10 bg-white">
                                     <div>
-                                        <div class="text-center mb-8">
-                                            <h3 class="text-3xl lg:text-4xl font-bold text-gray-900">Central de Documentos</h3>
-                                        </div>
-                                        
-                                        <!-- Descrição Principal -->
-                                        <p class="text-xl lg:text-2xl text-gray-700 mb-6 leading-relaxed">
-                                            Centralize todos os documentos contábeis da sua carteira de clientes. Tenha organização por pastas, datas e categorias com acesso seguro.
-                                        </p>
-                                        
-                                        <!-- Descrição Secundária (com bullet visual) -->
-                                        <div class="mb-4">
-                                            <p class="text-lg text-gray-600 leading-relaxed">
-                                                Compartilhamento ágil com sua equipe e com o cliente final. Tudo em nuvem, com backup automático e controle total de acesso.
-                                            </p>
-                                        </div>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 mb-4">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                            SPED/EFD
+                                        </span>
+                                        <h3 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">Importe SPED em segundos, nao em horas</h3>
+                                        <p class="text-base text-gray-600 mb-6 leading-relaxed">Upload de EFD ICMS/IPI e PIS/COFINS com extracao automatica de participantes, notas e valores por bloco.</p>
+                                        <ul class="space-y-3 text-gray-600">
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Arraste e importe arquivos .txt direto na plataforma</span></li>
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Extracao automatica por bloco (A, C, D)</span></li>
+                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Participantes identificados instantaneamente</span></li>
+                                        </ul>
                                     </div>
-                                    
-                                    <!-- Call-to-Action -->
-                                    <div class="mt-8">
-                                        <a href="#" class="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 font-semibold transition-colors text-lg">
+                                    <div class="mt-6">
+                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors">
                                             Saiba mais
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                         </a>
                                     </div>
                                 </div>
-                                
-                                <!-- Coluna Direita: Mockup/Imagem Interativa -->
-                                <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
-                                    <!-- Headline sobre o mockup -->
-                                    <div class="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full px-4">
-                                        <h4 class="text-2xl lg:text-3xl font-bold text-white mb-4 text-center">
-                                            Documentos mais organizados e seguros
-                                        </h4>
+                                <div class="relative bg-gradient-to-br from-primary-700 to-primary-500 p-8 lg:p-12 flex flex-col items-center justify-center overflow-hidden">
+                                    <div class="w-24 h-24 lg:w-32 lg:h-32 mb-8 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                                        <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Importacao de SPED" class="w-16 h-16 lg:w-20 lg:h-20 object-contain" loading="lazy">
                                     </div>
-                                    
-                                    <!-- Mockup do Dashboard -->
-                                    <div class="relative w-full h-full max-w-5xl mt-16">
-                                        <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-700" style="transform: scale(0.85);">
-                                            <!-- Header do mockup -->
-                                            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 bg-surface-alt rounded-lg flex items-center justify-center">
-                                                        <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-5 h-5 object-contain">
-                                                    </div>
-                                                    <span class="text-sm font-semibold text-gray-900">Central de Documentos</span>
-                                                </div>
-                                                <div class="flex gap-2">
-                                                    <span class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded font-semibold">Dashboard</span>
-                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Documentos</span>
-                                                    <span class="px-3 py-1 text-xs text-gray-600 rounded">Relatórios</span>
-                                                </div>
-                                            </div>
-                                            <!-- Conteúdo do mockup (simplificado) -->
-                                            <div class="p-6 bg-gray-50">
-                                                <div class="grid grid-cols-2 gap-4 mb-4">
-                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
-                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
-                                                    </div>
-                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                                                        <div class="h-24 bg-gray-100 rounded mb-2"></div>
-                                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid grid-cols-2 gap-4">
-                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                                                        <div class="h-20 bg-gray-100 rounded"></div>
-                                                    </div>
-                                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                                                        <div class="h-20 bg-gray-100 rounded"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <div class="text-center">
+                                        <div class="text-4xl lg:text-5xl font-bold text-white mb-2">Segundos</div>
+                                        <p class="text-base text-white/80">o que levava horas de trabalho manual</p>
+                                    </div>
+                                    <div class="mt-6 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
+                                        <p class="text-sm text-white/90 font-medium">Extracao 100% automatica</p>
                                     </div>
                                 </div>
                             </div>
@@ -1410,23 +828,20 @@
             <!-- Navegação por Pills -->
             <div class="w-full flex justify-center mt-6 overflow-x-auto">
                 <div class="solution-pill-group inline-flex flex-nowrap items-center justify-center whitespace-nowrap gap-1.5 sm:gap-[0.625rem] px-3.5 sm:px-5 py-2.5 rounded-full bg-gray-50 shadow-sm min-w-fit">
-                    <button class="solution-pill active px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="documentos">
-                        Central de Documentos
+                    <button class="solution-pill active px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="sped">
+                        Importacao SPED
                     </button>
-                    <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="diagnostico">
-                        Leitura e Diagnóstico
+                    <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="monitoramento">
+                        Monitoramento
                     </button>
-                    <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="regras">
-                        Motor de Regras
+                    <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="consultas">
+                        Consultas em Lote
                     </button>
-                    <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="compliance">
-                        Compliance Fiscal
+                    <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="dashboard">
+                        Dashboard e BI
                     </button>
-                    <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="comunicacao">
-                        Automação WhatsApp
-                    </button>
-                    <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="portal">
-                        Portal do Cliente
+                    <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="xml">
+                        Importacao XML
                     </button>
                 </div>
             </div>
@@ -1445,10 +860,10 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Por que escolher <span class="text-brand">nossa solução</span>
+                Por que contadores escolhem o <span class="text-brand">FiscalDock</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                Transforme o caos de documentos e pendências em organização, controle e previsibilidade
+                Automatize horas de trabalho manual e proteja seus clientes contra riscos fiscais
             </p>
         </div>
 
@@ -1457,42 +872,42 @@
                 <div class="mb-4">
                     <img src="{{ asset('binary_files/icone-gif/financial-decline.gif') }}" alt="Financial Decline" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
                 </div>
-                <p class="text-gray-600 font-medium">Redução de até 30% na carga tributária com planejamento adequado</p>
+                <p class="text-gray-600 font-medium">Importe SPED e identifique riscos em minutos — o que levava dias agora é automático</p>
             </div>
 
             <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500 text-center">
                 <div class="mb-4">
                     <img src="{{ asset('binary_files/icone-gif/contract.gif') }}" alt="Contract" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
                 </div>
-                <p class="text-gray-600 font-medium">Conformidade total com rastreabilidade e evidências completas</p>
+                <p class="text-gray-600 font-medium">Fornecedores irregulares, notas com problemas e créditos indevidos no radar antes da auditoria</p>
             </div>
 
             <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500 text-center">
                 <div class="mb-4">
                     <img src="{{ asset('binary_files/icone-gif/process.gif') }}" alt="Process" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
                 </div>
-                <p class="text-gray-600 font-medium">Processos automatizados que economizam tempo e recursos</p>
+                <p class="text-gray-600 font-medium">Consulte centenas de CNPJs de uma vez com resultados em tempo real</p>
             </div>
 
             <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500 text-center">
                 <div class="mb-4">
                     <img src="{{ asset('binary_files/icone-gif/budgeting.gif') }}" alt="Budgeting" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
                 </div>
-                <p class="text-gray-600 font-medium">Visibilidade completa dos impactos financeiros em tempo real</p>
+                <p class="text-gray-600 font-medium">Dashboards interativos com faturamento, compras, tributos e análise por CFOP</p>
             </div>
 
             <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500 text-center">
                 <div class="mb-4">
                     <img src="{{ asset('binary_files/icone-gif/customer-service.gif') }}" alt="Customer Service" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
                 </div>
-                <p class="text-gray-600 font-medium">Equipe de especialistas disponível para suporte contínuo</p>
+                <p class="text-gray-600 font-medium">Alertas automáticos quando a situação cadastral de um participante muda</p>
             </div>
 
             <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500 text-center">
                 <div class="mb-4">
                     <img src="{{ asset('binary_files/icone-gif/investment.gif') }}" alt="Investment" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
                 </div>
-                <p class="text-gray-600 font-medium">ROI comprovado em menos de 6 meses</p>
+                <p class="text-gray-600 font-medium">Dados de SPED, participantes e notas fiscais centralizados em um único lugar</p>
             </div>
         </div>
     </div>
@@ -1504,28 +919,52 @@
     </div>
 </section>
 
+<!-- Métricas Section -->
+<section id="metricas" class="bg-gray-50 pt-8 pb-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div>
+                <div class="text-3xl sm:text-4xl font-bold text-blue-600">R$ 2,3M+</div>
+                <p class="text-gray-600 mt-2 text-sm">em riscos detectados</p>
+            </div>
+            <div>
+                <div class="text-3xl sm:text-4xl font-bold text-blue-600">450+</div>
+                <p class="text-gray-600 mt-2 text-sm">empresas monitoradas</p>
+            </div>
+            <div>
+                <div class="text-3xl sm:text-4xl font-bold text-blue-600">12.000+</div>
+                <p class="text-gray-600 mt-2 text-sm">notas analisadas</p>
+            </div>
+            <div>
+                <div class="text-3xl sm:text-4xl font-bold text-blue-600">99,8%</div>
+                <p class="text-gray-600 mt-2 text-sm">uptime da plataforma</p>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- IA Financeira Section -->
 <section id="notebook" class="bg-gray-50 pt-4 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div class="space-y-6">
                 <div class="text-sm font-semibold text-blue-600 uppercase tracking-wide">
-                    Gestão financeira assistida por IA
+                    Inteligência fiscal automatizada
                 </div>
                 <h2 class="text-4xl sm:text-5xl font-bold text-gray-900 leading-tight">
-                    Deixe nossa IA cuidar da gestão do seu negócio
+                    Deixe o FiscalDock cuidar do compliance fiscal
                 </h2>
                 <p class="text-lg text-gray-600">
-                    Sistema simples, intuitivo e poderoso: acompanhe fluxo de caixa, automatize cobranças, organize contas e ganhe agilidade com inteligência artificial integrada.
+                    Importe seus arquivos SPED, monitore participantes e receba alertas de risco automaticamente. Tudo em uma plataforma simples e intuitiva feita para contadores.
                 </p>
                 <div class="flex flex-wrap items-center gap-4">
-                    <a href="#"
+                    <a href="/agendar"
                        class="inline-flex items-center justify-center px-6 py-3 rounded-full text-base font-semibold text-blue-900 bg-yellow-400 hover:bg-yellow-300 transition">
-                        Teste grátis
+                        Testar Gratuitamente
                     </a>
-                    <a href="#"
+                    <a href="/solucoes"
                        class="inline-flex items-center justify-center px-6 py-3 rounded-full text-base font-semibold text-blue-600 border-2 border-blue-500 hover:text-white hover:bg-blue-500 transition">
-                        Saiba mais
+                        Ver Soluções
                     </a>
                 </div>
             </div>
@@ -1534,7 +973,7 @@
                     <div class="w-48 h-48 bg-blue-100 rounded-full blur-3xl opacity-50 absolute top-0 left-6"></div>
                     <div class="w-40 h-40 bg-yellow-100 rounded-full blur-3xl opacity-50 absolute bottom-6 right-0"></div>
                 </div>
-                <img src="{{ asset('binary_files/mockups/macbook-mockup.png') }}" alt="Demonstração de fluxo de caixa em um notebook" class="w-full max-w-2xl mx-auto drop-shadow-2xl">
+                <img src="{{ asset('binary_files/mockups/macbook-mockup.png') }}" alt="Dashboard do FiscalDock em um notebook" class="w-full max-w-2xl mx-auto drop-shadow-2xl">
             </div>
         </div>
     </div>
@@ -1554,7 +993,7 @@
                 Para <span class="text-brand">quem é</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                O HUB atende escritórios contábeis, empresas e BPO financeiro que precisam de controle, conformidade e velocidade
+                O FiscalDock atende escritórios contábeis, empresas e contadores autônomos que precisam de compliance fiscal, monitoramento e agilidade
             </p>
         </div>
 
@@ -1569,15 +1008,15 @@
                 <ul class="space-y-3 text-gray-600">
                     <li class="flex items-start gap-2">
                         <span class="text-blue-500 mt-1">✓</span>
-                        <span>Padroniza o mês, reduz retrabalho e dá previsibilidade</span>
+                        <span>Importação de SPED com extração automática de participantes e notas</span>
                     </li>
                     <li class="flex items-start gap-2">
                         <span class="text-blue-500 mt-1">✓</span>
-                        <span>Menos cobrança manual, mais controle e evidência</span>
+                        <span>Monitoramento contínuo de fornecedores e clientes na Receita Federal</span>
                     </li>
                     <li class="flex items-start gap-2">
                         <span class="text-blue-500 mt-1">✓</span>
-                        <span>Organização automática de documentos e pendências</span>
+                        <span>Alertas automáticos de riscos fiscais e situação cadastral</span>
                     </li>
                 </ul>
             </div>
@@ -1592,15 +1031,15 @@
                 <ul class="space-y-3 text-gray-600">
                     <li class="flex items-start gap-2">
                         <span class="text-blue-500 mt-1">✓</span>
-                        <span>Transparência do que falta e do que foi entregue</span>
+                        <span>Visibilidade completa dos fornecedores e sua situação cadastral</span>
                     </li>
                     <li class="flex items-start gap-2">
                         <span class="text-blue-500 mt-1">✓</span>
-                        <span>Menos risco, menos surpresa, mais governança</span>
+                        <span>Dashboards com faturamento, compras e análise tributária</span>
                     </li>
                     <li class="flex items-start gap-2">
                         <span class="text-blue-500 mt-1">✓</span>
-                        <span>Portal do cliente com checklist e prazos claros</span>
+                        <span>Consultas em lote de CNPJ com resultados em tempo real</span>
                     </li>
                 </ul>
             </div>
@@ -1611,19 +1050,19 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                     </svg>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-900 mb-4">BPO Financeiro</h3>
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">Contadores Autônomos</h3>
                 <ul class="space-y-3 text-gray-600">
                     <li class="flex items-start gap-2">
                         <span class="text-blue-500 mt-1">✓</span>
-                        <span>Rotina de documentos e pendências com rastreabilidade</span>
+                        <span>Planos acessíveis com créditos para consultas tributárias</span>
                     </li>
                     <li class="flex items-start gap-2">
                         <span class="text-blue-500 mt-1">✓</span>
-                        <span>Comunicação e evidência para aprovação/entrega</span>
+                        <span>Dashboard simplificado para acompanhar seus clientes</span>
                     </li>
                     <li class="flex items-start gap-2">
                         <span class="text-blue-500 mt-1">✓</span>
-                        <span>Controle total com trilha de auditoria completa</span>
+                        <span>Importação de SPED e XML em uma interface intuitiva</span>
                     </li>
                 </ul>
             </div>
@@ -1642,10 +1081,10 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Por que o HUB é <span class="text-brand">diferente</span>
+                Por que o FiscalDock é <span class="text-brand">diferente</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                Não substitui seu sistema contábil/ERP: integra ao ecossistema e resolve o que ninguém quer fazer manualmente
+                Não substitui seu sistema contábil: complementa com inteligência fiscal, monitoramento e compliance automatizado
             </p>
         </div>
 
@@ -1660,7 +1099,7 @@
                     <div>
                         <h3 class="text-xl font-bold text-gray-900 mb-2">Integra, não substitui</h3>
                         <p class="text-gray-600">
-                            Não substitui Domínio/Alterdata/Contmatic. O HUB atua como uma camada de organização, diagnóstico, relatórios e automação, reduzindo caos e retrabalho.
+                            Não substitui Domínio, Alterdata ou Contmatic. O FiscalDock atua como uma camada de inteligência fiscal: importa seus SPEDs, monitora participantes e gera alertas automaticamente.
                         </p>
                     </div>
                 </div>
@@ -1676,7 +1115,7 @@
                     <div>
                         <h3 class="text-xl font-bold text-gray-900 mb-2">Operacional + Inteligência</h3>
                         <p class="text-gray-600">
-                            Diagnóstico vira ação automaticamente. Não é só análise: é organização, validação, cobrança e entrega no mesmo lugar.
+                            Não é só análise de dados: é importação, extração, monitoramento, consulta e alerta — tudo integrado e automatizado no mesmo lugar.
                         </p>
                     </div>
                 </div>
@@ -1692,7 +1131,7 @@
                     <div>
                         <h3 class="text-xl font-bold text-gray-900 mb-2">Trilha de Evidência</h3>
                         <p class="text-gray-600">
-                            Você para de "discutir sensação" e passa a mostrar fatos. Quem enviou, quando, qual arquivo, qual evidência — tudo registrado.
+                            Cada consulta, cada importação, cada alerta é registrado. Saiba exatamente quando um fornecedor mudou de status e qual ação foi tomada.
                         </p>
                     </div>
                 </div>
@@ -1708,7 +1147,7 @@
                     <div>
                         <h3 class="text-xl font-bold text-gray-900 mb-2">Automação Real</h3>
                         <p class="text-gray-600">
-                            Mensagens, cobranças e entregas com histórico. Não é só disparo: é comunicação contextualizada e rastreável.
+                            Importação de SPED com extração automática, consultas em lote com progresso em tempo real, alertas disparados sem intervenção manual.
                         </p>
                     </div>
                 </div>
@@ -1795,7 +1234,7 @@
                     O que nossos <span class="text-brand">clientes dizem</span>
                 </h2>
                 <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                    Resultados reais de escritórios contábeis e empresas que transformaram seu dia a dia com o HUB
+                    Resultados reais de escritórios contábeis que transformaram seu compliance fiscal com o FiscalDock
                 </p>
             </div>
         </div>
@@ -1809,7 +1248,7 @@
                         <img src="{{ asset('binary_files/people-pictures/random_person-1.jpg') }}" alt="Maria Silva" class="avatar-gradient w-14 h-14 rounded-full object-cover shadow-lg ring-4 ring-purple-100">
                         <div class="flex-1">
                             <div class="font-bold text-gray-900 text-lg">Maria Silva</div>
-                            <div class="text-sm text-gray-600">CEO, TechCorp</div>
+                            <div class="text-sm text-gray-600">Sócia, Silva Contabilidade</div>
                             <div class="verified-badge inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-xs font-semibold">
                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
                                 Verificado
@@ -1817,10 +1256,10 @@
                         </div>
                     </div>
                     <div class="testimonial-metric mb-4 relative z-10">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md">R$ 500k economizados</span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md">80% menos tempo</span>
                     </div>
                     <p class="testimonial-text text-gray-700 mb-6 leading-relaxed relative z-10 text-base">
-                        "A solução nos ajudou a economizar mais de R$ 500 mil em impostos no primeiro ano. O ROI foi impressionante!"
+                        "Antes do FiscalDock, levávamos dias para revisar fornecedores de um único cliente. Agora importamos o SPED e temos tudo em minutos."
                     </p>
                     <div class="testimonial-footer flex items-center justify-between relative z-10">
                         <div class="stars text-yellow-400 text-xl">★★★★★</div>
@@ -1834,7 +1273,7 @@
                         <img src="{{ asset('binary_files/people-pictures/random_person-2.jpg') }}" alt="João Santos" class="avatar-gradient w-14 h-14 rounded-full object-cover shadow-lg ring-4 ring-blue-100">
                         <div class="flex-1">
                             <div class="font-bold text-gray-900 text-lg">João Santos</div>
-                            <div class="text-sm text-gray-600">Diretor Financeiro, Inovação Ltda</div>
+                            <div class="text-sm text-gray-600">Contador, Santos & Associados</div>
                             <div class="verified-badge inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-xs font-semibold">
                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
                                 Verificado
@@ -1845,7 +1284,7 @@
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md">70% redução</span>
                     </div>
                     <p class="testimonial-text text-gray-700 mb-6 leading-relaxed relative z-10 text-base">
-                        "A automação dos processos fiscais reduziu nosso tempo de trabalho em 70%. Altamente recomendado!"
+                        "As consultas em lote e os alertas automáticos reduziram em 70% o tempo que gastávamos verificando situação cadastral de participantes."
                     </p>
                     <div class="testimonial-footer flex items-center justify-between relative z-10">
                         <div class="stars text-yellow-400 text-xl">★★★★★</div>
@@ -1859,7 +1298,7 @@
                         <img src="{{ asset('binary_files/people-pictures/random_person-3.jpg') }}" alt="Ana Costa" class="avatar-gradient w-14 h-14 rounded-full object-cover shadow-lg ring-4 ring-green-100">
                         <div class="flex-1">
                             <div class="font-bold text-gray-900 text-lg">Ana Costa</div>
-                            <div class="text-sm text-gray-600">Contadora, Empresa ABC</div>
+                            <div class="text-sm text-gray-600">Contadora, Costa Assessoria Contábil</div>
                             <div class="verified-badge inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-xs font-semibold">
                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
                                 Verificado
@@ -1870,7 +1309,7 @@
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-md">100% compliance</span>
                     </div>
                     <p class="testimonial-text text-gray-700 mb-6 leading-relaxed relative z-10 text-base">
-                        "A plataforma é intuitiva e os especialistas são excepcionais. Nosso compliance está 100% em dia."
+                        "Com o monitoramento contínuo e os dashboards, nosso compliance fiscal está 100% em dia. Identificamos um fornecedor no CEIS antes da auditoria."
                     </p>
                     <div class="testimonial-footer flex items-center justify-between relative z-10">
                         <div class="stars text-yellow-400 text-xl">★★★★★</div>
@@ -1903,70 +1342,70 @@
         <div class="max-w-3xl mx-auto">
             <div class="faq-item border border-gray-200 rounded-lg mb-4 hover:border-blue-500 transition-colors overflow-hidden">
                 <button class="faq-question w-full text-left px-6 py-4 font-semibold text-gray-900 hover:text-blue-500 flex justify-between items-center">
-                    <span>Como funciona a integração com sistemas existentes?</span>
+                    <span>O que é o FiscalDock e para quem é?</span>
                     <svg class="w-5 h-5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </button>
                 <div class="faq-answer hidden">
                     <div class="px-6 py-4 text-gray-600 bg-white border-t border-gray-100">
-                        O HUB trabalha como uma camada acima dos seus sistemas. Você pode importar dados, documentos e SPEDs de qualquer fonte. Ele organiza, valida e gera relatórios sem precisar substituir ou modificar seus sistemas contábeis atuais.
+                        O FiscalDock é uma plataforma de inteligência fiscal para contadores e escritórios contábeis. Permite importar arquivos SPED (EFD ICMS/IPI e PIS/COFINS), monitorar a situação cadastral de participantes, fazer consultas tributárias em lote e visualizar tudo em dashboards interativos.
                     </div>
                 </div>
             </div>
 
             <div class="faq-item border border-gray-200 rounded-lg mb-4 hover:border-blue-500 transition-colors overflow-hidden">
                 <button class="faq-question w-full text-left px-6 py-4 font-semibold text-gray-900 hover:text-blue-500 flex justify-between items-center">
-                    <span>Como sua solução ajuda na adaptação à reforma?</span>
+                    <span>Como funciona a importação de SPED?</span>
                     <svg class="w-5 h-5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </button>
                 <div class="faq-answer hidden">
                     <div class="px-6 py-4 text-gray-600 bg-white border-t border-gray-100">
-                        Nossa plataforma oferece análise detalhada de impactos, simulações precisas, automação de processos fiscais e orientação especializada para garantir que sua empresa esteja 100% preparada e em conformidade.
+                        Você faz o upload do arquivo .txt do SPED e o FiscalDock extrai automaticamente participantes, notas fiscais e valores organizados por bloco (A, C, D). O progresso é exibido em tempo real e, ao final, você tem um resumo completo com totais por bloco e por participante.
                     </div>
                 </div>
             </div>
 
             <div class="faq-item border border-gray-200 rounded-lg mb-4 hover:border-blue-500 transition-colors overflow-hidden">
                 <button class="faq-question w-full text-left px-6 py-4 font-semibold text-gray-900 hover:text-blue-500 flex justify-between items-center">
-                    <span>Quais empresas podem se beneficiar?</span>
+                    <span>O FiscalDock substitui meu sistema contábil?</span>
                     <svg class="w-5 h-5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </button>
                 <div class="faq-answer hidden">
                     <div class="px-6 py-4 text-gray-600 bg-white border-t border-gray-100">
-                        Empresas de todos os portes e setores podem se beneficiar. A reforma impacta todas as organizações que lidam com tributação, desde pequenos negócios até grandes corporações.
+                        Não. O FiscalDock complementa sistemas como Domínio, Alterdata e Contmatic. Ele atua como uma camada de inteligência fiscal: importa seus SPEDs, monitora participantes na Receita Federal e SINTEGRA, e gera alertas automáticos de riscos.
                     </div>
                 </div>
             </div>
 
             <div class="faq-item border border-gray-200 rounded-lg mb-4 hover:border-blue-500 transition-colors overflow-hidden">
                 <button class="faq-question w-full text-left px-6 py-4 font-semibold text-gray-900 hover:text-blue-500 flex justify-between items-center">
-                    <span>Qual é o prazo ideal para começar a preparação?</span>
+                    <span>Quais riscos fiscais o FiscalDock detecta?</span>
                     <svg class="w-5 h-5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </button>
                 <div class="faq-answer hidden">
                     <div class="px-6 py-4 text-gray-600 bg-white border-t border-gray-100">
-                        O ideal é começar imediatamente. Quanto antes sua empresa iniciar a preparação, mais tempo terá para implementar mudanças necessárias, treinar equipes e otimizar processos antes da entrada em vigor.
+                        O FiscalDock cruza dados do SPED com fontes como Receita Federal, SINTEGRA e CEIS para identificar fornecedores com CNPJ irregular, IE suspensa, empresas inidôneas e divergências em notas fiscais. Alertas são gerados automaticamente quando algo muda.
                     </div>
                 </div>
             </div>
 
             <div class="faq-item border border-gray-200 rounded-lg mb-4 hover:border-blue-500 transition-colors overflow-hidden">
                 <button class="faq-question w-full text-left px-6 py-4 font-semibold text-gray-900 hover:text-blue-500 flex justify-between items-center">
-                    <span>Como funciona o processo de implementação?</span>
+                    <span>Posso testar antes de assinar?</span>
                     <svg class="w-5 h-5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </button>
                 <div class="faq-answer hidden">
                     <div class="px-6 py-4 text-gray-600 bg-white border-t border-gray-100">
-                        Nosso processo é dividido em etapas: análise inicial, diagnóstico detalhado, planejamento estratégico, implementação de soluções e acompanhamento contínuo. Todo o processo é personalizado conforme as necessidades de cada empresa.
+                        Sim! Oferecemos um período de teste gratuito para que você conheça todas as funcionalidades. Agende uma demonstração e comece a proteger seus clientes contra riscos fiscais.
                     </div>
                 </div>
             </div>
@@ -1988,7 +1427,7 @@
                 Fale com <span class="text-brand">nossos especialistas</span>
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                Agende uma demonstração gratuita e descubra como o HUB pode transformar o dia a dia do seu escritório ou empresa
+                Agende uma demonstração gratuita e descubra como o FiscalDock pode transformar o compliance fiscal do seu escritório
             </p>
         </div>
 
@@ -2021,7 +1460,7 @@
                         </div>
                         <div>
                             <div class="text-sm text-gray-600 font-medium">Email</div>
-                            <div class="text-gray-900 font-semibold">contato@reformatributaria.com</div>
+                            <div class="text-gray-900 font-semibold">contato@fiscaldock.com</div>
                         </div>
                     </div>
                     <div class="flex items-center gap-4 mb-6">
@@ -2052,9 +1491,9 @@
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-8 mt-8">
                     <h3>Consultoria Gratuita</h3>
                     <p>
-                        Agende agora uma demonstração sem compromisso e descubra como o HUB pode organizar seu dia a dia.
+                        Agende uma demonstração sem compromisso e descubra como o FiscalDock pode proteger seus clientes contra riscos fiscais.
                     </p>
-                    <a href="#" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors inline-block">Agendar Agora</a>
+                    <a href="/agendar" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors inline-block">Agendar Agora</a>
                 </div>
             </div>
         </div>

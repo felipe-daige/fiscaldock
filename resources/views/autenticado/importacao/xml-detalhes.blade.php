@@ -78,7 +78,7 @@
             <div class="px-6 py-4 border-b border-gray-200">
                 <h2 class="text-base font-semibold text-gray-900">Informações da Importação</h2>
             </div>
-            <div class="p-6 grid grid-cols-2 sm:grid-cols-4 gap-6">
+            <div class="p-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
                 <div>
                     <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Tipo Documento</p>
                     <span class="px-2.5 py-1 text-xs font-semibold rounded-full {{ $tipoBadgeClass }}">{{ $tipoDocLabel }}</span>
@@ -96,6 +96,10 @@
                     @else
                         <p class="text-sm text-gray-400">—</p>
                     @endif
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Tempo</p>
+                    <p class="text-sm font-medium text-gray-900">{{ $importacao->tempo_processamento }}</p>
                 </div>
                 <div>
                     <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Tamanho</p>

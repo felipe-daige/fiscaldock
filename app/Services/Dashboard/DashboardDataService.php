@@ -2,19 +2,22 @@
 
 namespace App\Services\Dashboard;
 
-use App\Models\XmlNota;
+use App\Models\ConsultaLote;
+use App\Models\EfdImportacao;
+use App\Models\EfdNota;
 use App\Models\Participante;
 use App\Models\User;
 use App\Services\CreditService;
-use App\Services\RiskScoreService;
+use App\Services\NotasFiscaisAlertService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class DashboardDataService
 {
     public function __construct(
-        protected RiskScoreService $riskScoreService,
-        protected CreditService $creditService
+        protected CreditService $creditService,
+        protected NotasFiscaisAlertService $alertService
     ) {}
 
     /**
@@ -22,66 +25,109 @@ class DashboardDataService
      */
     public function getKpis(int $userId, User $user): array
     {
+        $mesInicio = now()->startOfMonth();
+        $mesFim = now()->endOfMonth();
+
+        // Volume processado
+        $volumeNotas = EfdNota::where('user_id', $userId)->count();
+        $volumeValor = (float) EfdNota::where('user_id', $userId)->sum('valor_total');
+
+        // Participantes
+        $participantesTotal = $this->getTotalParticipantes($userId);
+        $participantesRisco = DB::table('participante_scores')
+            ->join('participantes', 'participantes.id', '=', 'participante_scores.participante_id')
+            ->where('participantes.user_id', $userId)
+            ->whereIn('participante_scores.classificacao', ['alto', 'critico'])
+            ->count();
+
+        // Créditos
+        $creditos = $this->creditService->getBalance($user);
+        $creditosConsultas = (int) ConsultaLote::where('user_id', $userId)
+            ->where('status', 'concluido')
+            ->whereBetween('created_at', [$mesInicio, $mesFim])
+            ->sum('creditos_cobrados');
+        $creditosImportacoes = (int) EfdImportacao::where('user_id', $userId)
+            ->whereBetween('created_at', [$mesInicio, $mesFim])
+            ->sum('creditos_cobrados');
+        $creditosUsadosMes = $creditosConsultas + $creditosImportacoes;
+
+        // Alertas
+        $alertaData = $this->alertService->detectar($userId, []);
+        $alertasTotal = $alertaData['resumo']['total'] ?? 0;
+        $alertasAlta = $alertaData['resumo']['alta'] ?? 0;
+
         return [
-            'conformidade' => $this->getConformidadePercent($userId),
-            'impostos_recuperaveis' => $this->getImpostosRecuperaveis($userId),
-            'creditos' => $this->creditService->getBalance($user),
-            'alertas_criticos' => $this->getAlertasCriticos($userId),
+            'volume_total_notas' => $volumeNotas,
+            'volume_valor_total' => $volumeValor,
+            'participantes_total' => $participantesTotal,
+            'participantes_risco' => $participantesRisco,
+            'creditos' => $creditos,
+            'creditos_usados_mes' => $creditosUsadosMes,
+            'alertas_total' => $alertasTotal,
+            'alertas_alta' => $alertasAlta,
         ];
     }
 
     /**
-     * Calcula % de participantes com baixo risco (classificacao = 'baixo').
+     * Retorna atividade recente mesclando importações e consultas.
      */
-    public function getConformidadePercent(int $userId): float
+    public function getAtividadeRecente(int $userId): Collection
     {
-        $estatisticas = $this->riskScoreService->getEstatisticas($userId);
+        $importacoes = EfdImportacao::where('user_id', $userId)
+            ->latest()
+            ->limit(3)
+            ->get()
+            ->map(fn ($i) => [
+                'tipo' => 'importacao',
+                'descricao' => $i->filename ?? 'Importação EFD',
+                'tipo_efd' => $i->tipo_efd,
+                'status' => $i->status,
+                'data' => $i->created_at,
+            ]);
 
-        $totalAvaliados = $estatisticas['total_avaliados'] ?? 0;
-        $baixoRisco = $estatisticas['baixo_risco'] ?? 0;
+        $consultas = ConsultaLote::where('user_id', $userId)
+            ->with('plano:id,nome,codigo')
+            ->latest()
+            ->limit(3)
+            ->get()
+            ->map(fn ($c) => [
+                'tipo' => 'consulta',
+                'descricao' => $c->plano?->nome ?? 'Consulta',
+                'status' => $c->status,
+                'data' => $c->created_at,
+            ]);
 
-        if ($totalAvaliados === 0) {
-            return 0;
-        }
-
-        return round(($baixoRisco / $totalAvaliados) * 100, 1);
+        return $importacoes->concat($consultas)
+            ->sortByDesc('data')
+            ->take(5)
+            ->values();
     }
 
     /**
-     * Calcula SUM(pis_valor + cofins_valor) de notas entrada (tipo_nota=0), excluindo devoluções.
+     * Verifica se o usuário é novo (sem participantes e sem importações).
      */
-    public function getImpostosRecuperaveis(int $userId): float
+    public function isUsuarioNovo(int $userId): bool
     {
-        $total = XmlNota::where('user_id', $userId)
-            ->where('tipo_nota', XmlNota::TIPO_ENTRADA)
-            ->where('finalidade', '!=', XmlNota::FINALIDADE_DEVOLUCAO)
-            ->select(DB::raw('SUM(COALESCE(pis_valor, 0) + COALESCE(cofins_valor, 0)) as total'))
-            ->value('total');
-
-        return (float) ($total ?? 0);
+        return Participante::where('user_id', $userId)->count() === 0
+            && EfdImportacao::where('user_id', $userId)->count() === 0;
     }
 
     /**
-     * Conta alertas críticos:
-     * 1. Participantes com situacao_cadastral NOT IN ('ATIVA', '', null)
-     * 2. Notas com alertas bloqueantes (validacao->'alertas' WHERE nivel='bloqueante')
+     * Retorna a última importação EFD do usuário.
      */
-    public function getAlertasCriticos(int $userId): int
+    public function getUltimaImportacao(int $userId): ?EfdImportacao
     {
-        // Participantes com situação irregular
-        $participantesIrregulares = Participante::where('user_id', $userId)
-            ->whereNotNull('situacao_cadastral')
-            ->where('situacao_cadastral', '!=', '')
-            ->whereNotIn('situacao_cadastral', ['ATIVA', 'ativa'])
-            ->count();
+        return EfdImportacao::where('user_id', $userId)
+            ->latest()
+            ->first();
+    }
 
-        // Notas com alertas bloqueantes
-        $notasBloqueantes = XmlNota::where('user_id', $userId)
-            ->whereNotNull('validacao')
-            ->whereRaw("EXISTS (SELECT 1 FROM jsonb_array_elements(validacao->'alertas') AS a WHERE a->>'nivel' = 'bloqueante')")
-            ->count();
-
-        return $participantesIrregulares + $notasBloqueantes;
+    /**
+     * Retorna o total de participantes do usuário.
+     */
+    public function getTotalParticipantes(int $userId): int
+    {
+        return Participante::where('user_id', $userId)->count();
     }
 
     /**
@@ -95,7 +141,6 @@ class DashboardDataService
             ->select('participantes.*')
             ->when($busca, function ($q) use ($busca) {
                 $busca = trim($busca);
-                // Remove caracteres especiais para busca por CNPJ
                 $cnpjLimpo = preg_replace('/[^0-9]/', '', $busca);
 
                 $q->where(function ($q) use ($busca, $cnpjLimpo) {
@@ -108,13 +153,5 @@ class DashboardDataService
             ->orderBy('participantes.razao_social')
             ->paginate($perPage)
             ->withQueryString();
-    }
-
-    /**
-     * Retorna o total de participantes do usuário.
-     */
-    public function getTotalParticipantes(int $userId): int
-    {
-        return Participante::where('user_id', $userId)->count();
     }
 }

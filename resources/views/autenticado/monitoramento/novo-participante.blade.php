@@ -5,7 +5,7 @@
 @endphp
 <div class="min-h-screen bg-gray-50" id="novo-participante-container">
     {{-- Main Content --}}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <style>
             @keyframes card-slide-in {
                 from { opacity: 0; transform: translateY(60px); }
@@ -21,11 +21,11 @@
         </style>
 
         {{-- Header inline --}}
-        <div class="mb-6">
+        <div class="mb-4 sm:mb-8">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">{{ $isEditing ? 'Editar Participante' : 'Novo Participante' }}</h1>
-                    <p class="mt-1 text-sm text-gray-600">
+                    <h1 class="text-xl sm:text-2xl font-semibold text-gray-900">{{ $isEditing ? 'Editar Participante' : 'Novo Participante' }}</h1>
+                    <p class="mt-1 text-sm text-gray-500">
                         @if($isEditing)
                             Atualize os dados do participante <strong>{{ $participante->cnpj_formatado }}</strong>.
                         @else
@@ -67,20 +67,20 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {{-- Form Area (2/3) --}}
-            <div class="lg:col-span-2 space-y-6">
-                <form id="form-novo-participante" method="POST" class="space-y-6"
+            <div class="lg:col-span-2 space-y-4 sm:space-y-6">
+                <form id="form-novo-participante" method="POST" class="space-y-4 sm:space-y-6"
                     @if($isEditing) data-participante-id="{{ $participante->id }}" @endif>
                     @csrf
                     <input type="hidden" name="tipo_documento" id="np_tipo_documento" value="{{ $tipoDoc }}">
 
                     {{-- Card: Tipo de Pessoa + Dados --}}
                     <div class="bg-white rounded-xl border border-gray-200 shadow-sm np-animate" style="animation-delay: 0.1s">
-                        <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
                             <h2 class="text-base font-semibold text-gray-800">Dados do Participante</h2>
                         </div>
-                        <div class="px-6 py-5 space-y-5">
+                        <div class="px-4 sm:px-6 py-4 sm:py-5 space-y-5">
 
                             {{-- Toggle PF/PJ --}}
                             <div class="grid grid-cols-2 gap-3 {{ $isEditing ? 'pointer-events-none opacity-60' : '' }}">
@@ -234,10 +234,10 @@
 
                     {{-- Card: Endereço --}}
                     <div class="bg-white rounded-xl border border-gray-200 shadow-sm np-animate" style="animation-delay: 0.2s">
-                        <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
                             <h2 class="text-base font-semibold text-gray-800">Endereço</h2>
                         </div>
-                        <div class="px-6 py-5 space-y-4">
+                        <div class="px-4 sm:px-6 py-4 sm:py-5 space-y-4">
                             {{-- CEP --}}
                             <div>
                                 <label for="np_cep" class="block text-sm font-medium text-gray-700 mb-1">
@@ -499,6 +499,7 @@
 </div>
 
 <script>
+    var viaCepBaseUrl = '{{ config("services.viacep.url") }}';
 (function() {
     'use strict';
 
@@ -693,7 +694,7 @@
         statusEl.classList.remove('hidden');
 
         try {
-            var response = await fetch('https://viacep.com.br/ws/' + cepLimpo + '/json/');
+            var response = await fetch(viaCepBaseUrl + '/' + cepLimpo + '/json/');
             var data = await response.json();
 
             if (!data.erro) {

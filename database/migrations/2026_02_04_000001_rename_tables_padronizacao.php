@@ -6,39 +6,33 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Padroniza nomes de tabelas usando prefixo por origem (xml_*, sped_*).
+     * Padroniza nomes de tabelas usando prefixo por origem (xml_*, efd_*).
      *
-     * Mudanças:
      * - importacoes_xml → xml_importacoes
      * - notas_fiscais → xml_notas
-     * - importacoes_sped → sped_importacoes
-     * - notas_sped → sped_notas
+     * - importacoes_sped → efd_importacoes
      *
-     * Nota: xml_chaves_processadas será dropada em migration separada
-     * (tabela redundante - dados já existem em xml_notas)
+     * Nota: notas_sped foi substituída por efd_notas (create_notas_sped_table.php).
      */
     public function up(): void
     {
-        // XML tables
         Schema::rename('importacoes_xml', 'xml_importacoes');
         Schema::rename('notas_fiscais', 'xml_notas');
+        Schema::rename('importacoes_sped', 'efd_importacoes');
 
-        // SPED tables
-        Schema::rename('importacoes_sped', 'sped_importacoes');
-        Schema::rename('notas_sped', 'sped_notas');
+        Schema::table('participantes', function ($table) {
+            $table->renameColumn('importacao_sped_id', 'importacao_efd_id');
+        });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        // XML tables (restore original names)
+        Schema::table('participantes', function ($table) {
+            $table->renameColumn('importacao_efd_id', 'importacao_sped_id');
+        });
+
         Schema::rename('xml_importacoes', 'importacoes_xml');
         Schema::rename('xml_notas', 'notas_fiscais');
-
-        // SPED tables (restore original names)
-        Schema::rename('sped_importacoes', 'importacoes_sped');
-        Schema::rename('sped_notas', 'notas_sped');
+        Schema::rename('efd_importacoes', 'importacoes_sped');
     }
 };

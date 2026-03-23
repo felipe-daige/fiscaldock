@@ -134,12 +134,32 @@
 
         if (filtroCliente && !filtroCliente._biListenerAdded) {
             filtroCliente._biListenerAdded = true;
-            filtroCliente.addEventListener('change', () => loadData(currentTab));
+            filtroCliente.addEventListener('change', () => { loadData(currentTab); updateResumoKpis(); });
         }
 
         if (filtroPeriodo && !filtroPeriodo._biListenerAdded) {
             filtroPeriodo._biListenerAdded = true;
-            filtroPeriodo.addEventListener('change', () => loadData(currentTab));
+            filtroPeriodo.addEventListener('change', () => { loadData(currentTab); updateResumoKpis(); });
+        }
+    }
+
+    // Atualiza KPIs do resumo geral via AJAX
+    async function updateResumoKpis() {
+        const params = getFilterParams();
+        try {
+            const response = await fetch(`/app/bi/resumo?${params}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            });
+            if (!response.ok) return;
+            const resumo = await response.json();
+            setKpi('kpi-faturamento', formatCompactCurrency(resumo.total_vendas || 0));
+            setKpi('kpi-faturamento-notas', (resumo.total_notas || 0).toLocaleString('pt-BR') + ' notas emitidas');
+            setKpi('kpi-faturamento-aliquota', (resumo.aliquota_media || 0) + '%');
+            setKpi('kpi-aquisicoes', formatCompactCurrency(resumo.total_compras || 0));
+            setKpi('kpi-tributacao', formatCompactCurrency(resumo.total_tributos || 0));
+            setKpi('kpi-sec-fornecedores', resumo.total_fornecedores || 0);
+        } catch (e) {
+            console.error('Erro ao atualizar resumo KPIs:', e);
         }
     }
 
@@ -449,27 +469,30 @@
     function renderEfdCharts(data) {
         const kpis = data.kpis || {};
 
-        // Atualiza KPIs
-        setKpi('kpi-efd-entradas', formatCompactCurrency(kpis.total_entradas_valor || 0));
-        setKpi('kpi-efd-entradas-sub', (kpis.total_entradas_notas || 0) + ' notas de entrada');
-        setKpi('kpi-efd-saidas', formatCompactCurrency(kpis.total_saidas_valor || 0));
-        setKpi('kpi-efd-saidas-sub', (kpis.total_saidas_notas || 0) + ' notas de saída');
-        setKpi('kpi-efd-tributos', formatCompactCurrency(kpis.carga_tributaria || 0));
-        setKpi('kpi-efd-participantes', kpis.participantes_ativos || 0);
+        // Atualiza KPIs consolidados (dados EFD)
+        setKpi('kpi-aquisicoes-notas', (kpis.total_entradas_notas || 0).toLocaleString('pt-BR') + ' notas recebidas');
+        setKpi('kpi-aquisicoes-ticket', formatCompactCurrency(kpis.ticket_medio || 0));
+        setKpi('kpi-tributacao-efd', formatCompactCurrency(kpis.carga_tributaria || 0));
+        setKpi('kpi-saldo-entradas', formatCompactCurrency(kpis.total_entradas_valor || 0));
+        setKpi('kpi-saldo-saidas', formatCompactCurrency(kpis.total_saidas_valor || 0));
 
         const saldo = kpis.saldo_liquido || 0;
-        const saldoEl = document.getElementById('kpi-efd-saldo');
+        const saldoEl = document.getElementById('kpi-saldo');
         if (saldoEl) {
             saldoEl.textContent = formatCompactCurrency(saldo);
-            saldoEl.className = saldoEl.className.replace(/text-(green|red)-\d+/, '');
-            saldoEl.classList.add(saldo >= 0 ? 'text-green-600' : 'text-red-600');
+            saldoEl.className = saldoEl.className.replace(/text-(gray|rose)-\d+/g, '');
+            saldoEl.classList.add(saldo >= 0 ? 'text-gray-900' : 'text-rose-600');
         }
 
+        // Barra de métricas secundárias
+        setKpi('kpi-sec-participantes', kpis.participantes_ativos || 0);
+        setKpi('kpi-sec-sem-itens', kpis.notas_sem_itens || 0);
+
         const riscoVal = kpis.notas_em_risco || 0;
-        const riscoEl = document.getElementById('kpi-efd-risco');
+        const riscoEl = document.getElementById('kpi-sec-risco');
         if (riscoEl) {
             riscoEl.textContent = riscoVal;
-            riscoEl.className = riscoEl.className.replace(/text-(rose|gray)-\d+/, '');
+            riscoEl.className = riscoEl.className.replace(/text-(rose|gray)-\d+/g, '');
             riscoEl.classList.add(riscoVal > 0 ? 'text-rose-600' : 'text-gray-900');
         }
 

@@ -56,7 +56,8 @@ class RegimeTributarioService
     {
         try {
             // API ReceitaWS (gratuita, mas com limitações)
-            $response = Http::timeout(10)->get("https://www.receitaws.com.br/v1/{$cnpj}");
+            $url = config('services.receitaws.url') . '/' . $cnpj;
+            $response = Http::timeout(10)->get($url);
 
             if ($response->successful()) {
                 $data = $response->json();

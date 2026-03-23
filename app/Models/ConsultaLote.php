@@ -31,8 +31,6 @@ class ConsultaLote extends Model
         'creditos_cobrados',
         'tab_id',
         'resultado_resumo',
-        'report_csv_base64',
-        'filename',
         'error_code',
         'error_message',
         'processado_em',

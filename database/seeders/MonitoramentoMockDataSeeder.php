@@ -34,10 +34,10 @@ class MonitoramentoMockDataSeeder extends Seeder
     public function run(): void
     {
         // Buscar usuário principal (criado pelo DatabaseSeeder)
-        $user = User::where('email', 'admin@fiscaldock.test')->first();
+        $user = User::find(1);
 
         if (! $user) {
-            $this->command->error('Usuário admin@fiscaldock.test não encontrado. Execute DatabaseSeeder primeiro.');
+            $this->command->error('Usuário ID=1 não encontrado. Execute DatabaseSeeder primeiro.');
             return;
         }
 

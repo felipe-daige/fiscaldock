@@ -56,6 +56,11 @@
         isExecuting: false
     };
 
+    // Estado de paginação dos resultados
+    var resultadosPaginaAtual = 1;
+    var resultadosPerPage = 25;
+    var todosResultados = [];
+
     // Elementos DOM
     let elements = {};
 
@@ -149,6 +154,9 @@
             resultadoConsultaInfo: document.getElementById('resultado-consulta-info'),
             linkDownloadRelatorio: document.getElementById('link-download-relatorio'),
             btnNovaConsulta: document.getElementById('btn-nova-consulta'),
+            resultadosTableContainer: document.getElementById('resultados-table-container'),
+            resultadosLoading: document.getElementById('resultados-loading'),
+            resultadosTableWrapper: document.getElementById('resultados-table-wrapper'),
 
             // Adicionar CNPJ
             inputAdicionarCnpj: document.getElementById('input-adicionar-cnpj'),
@@ -395,7 +403,7 @@
                     </div>
                 </td>
                 <td class="block md:table-cell md:px-4 md:py-3 md:max-w-0 overflow-hidden">
-                    <div class="text-sm font-medium text-gray-900 truncate min-w-0">${p.razao_social || '-'}</div>
+                    <a href="/app/participante/${p.id}" class="text-sm font-medium text-blue-700 hover:text-blue-900 hover:underline truncate min-w-0" title="Ver perfil" onclick="event.stopPropagation()">${p.razao_social || '-'}</a>
                     ${sublineHtml}
                     ${situacaoBadge ? `<div class="hidden md:block mt-0.5">${situacaoBadge}</div>` : ''}
                 </td>
@@ -761,6 +769,11 @@
                 })
             });
 
+            if (response.status === 419) {
+                window.location.href = '/login';
+                return;
+            }
+
             // Parse JSON - handle invalid JSON response
             let data;
             try {
@@ -995,6 +1008,171 @@
 
         // Limpar selecao
         limparSelecao();
+
+        // Carregar tabela de resultados inline
+        if (state.consultaLoteId && window.consultaData.routes.resultadosLote) {
+            carregarResultados(state.consultaLoteId);
+        }
+    }
+
+    /**
+     * Carrega os resultados do lote e renderiza a tabela inline.
+     */
+    function carregarResultados(loteId) {
+        var url = window.consultaData.routes.resultadosLote.replace('{id}', loteId);
+
+        if (elements.resultadosLoading) elements.resultadosLoading.classList.remove('hidden');
+        if (elements.resultadosTableWrapper) elements.resultadosTableWrapper.classList.add('hidden');
+
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': window.consultaData.csrfToken
+            }
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (elements.resultadosLoading) elements.resultadosLoading.classList.add('hidden');
+            if (data.success && data.resultados && data.resultados.length > 0) {
+                resultadosPaginaAtual = 1;
+                renderResultadosTable(data.resultados);
+            } else {
+                if (elements.resultadosLoading) {
+                    elements.resultadosLoading.textContent = 'Nenhum resultado disponível.';
+                    elements.resultadosLoading.classList.remove('hidden');
+                }
+            }
+        })
+        .catch(function() {
+            if (elements.resultadosLoading) {
+                elements.resultadosLoading.textContent = 'Não foi possível carregar os resultados.';
+                elements.resultadosLoading.classList.remove('hidden');
+            }
+        });
+    }
+
+    /**
+     * Renderiza a tabela de resultados no container (com paginação).
+     */
+    function renderResultadosTable(resultados) {
+        if (!elements.resultadosTableWrapper) return;
+
+        todosResultados = resultados;
+        resultadosPaginaAtual = 1;
+        renderResultadosPagina(1);
+    }
+
+    function formatRegularidade(dado) {
+        if (dado === null || dado === undefined) return '<span class="text-gray-400">-</span>';
+        if (typeof dado === 'object' && dado !== null) {
+            var situacao = dado.situacao || dado.status || dado.regularidade || '';
+            situacao = String(situacao).toLowerCase();
+            if (situacao.includes('regular') && !situacao.includes('irregular')) {
+                return '<span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Regular</span>';
+            }
+            if (situacao.includes('irregular') || situacao.includes('devedor') || situacao.includes('negativa')) {
+                return '<span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">Irregular</span>';
+            }
+            return '<span class="text-gray-500 text-xs">' + (situacao || '-') + '</span>';
+        }
+        var val = String(dado).toLowerCase();
+        if (val === 'true' || val === 'sim' || val === 'regular') {
+            return '<span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Sim</span>';
+        }
+        if (val === 'false' || val === 'nao' || val === 'não' || val === 'irregular') {
+            return '<span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">Não</span>';
+        }
+        return '<span class="text-gray-700 text-xs">' + dado + '</span>';
+    }
+
+    function formatCnpj(cnpj) {
+        if (!cnpj) return '-';
+        var d = String(cnpj).replace(/\D/g, '');
+        if (d.length === 14) {
+            return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+        }
+        return cnpj;
+    }
+
+    /**
+     * Renderiza a página N dos resultados (usa todosResultados global).
+     */
+    function renderResultadosPagina(pagina) {
+        if (!elements.resultadosTableWrapper) return;
+
+        var total = todosResultados.length;
+        var totalPaginas = Math.ceil(total / resultadosPerPage);
+        pagina = Math.max(1, Math.min(pagina, totalPaginas || 1));
+        resultadosPaginaAtual = pagina;
+
+        var inicio = (pagina - 1) * resultadosPerPage;
+        var fim = Math.min(inicio + resultadosPerPage, total);
+        var pagResultados = todosResultados.slice(inicio, fim);
+
+        var rows = pagResultados.map(function(r) {
+            var statusBadge = r.status === 'sucesso'
+                ? '<span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Sucesso</span>'
+                : '<span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">' + (r.status || 'Erro') + '</span>';
+
+            return '<tr class="border-b border-gray-100 hover:bg-gray-50">'
+                + '<td class="px-3 py-2 text-xs text-gray-700 whitespace-nowrap">' + formatCnpj(r.participante && r.participante.cnpj) + '</td>'
+                + '<td class="px-3 py-2 text-xs text-gray-700">' + (r.participante ? '<a href="/app/participante/' + r.participante.id + '" class="text-blue-700 hover:text-blue-900 hover:underline" title="Ver perfil">' + (r.participante.razao_social || '-') + '</a>' : '-') + '</td>'
+                + '<td class="px-3 py-2 text-xs text-gray-500 text-center">' + ((r.participante && r.participante.uf) || '-') + '</td>'
+                + '<td class="px-3 py-2 text-xs text-center">' + (r.situacao_cadastral ? '<span class="text-xs text-gray-700">' + r.situacao_cadastral + '</span>' : '<span class="text-gray-400">-</span>') + '</td>'
+                + '<td class="px-3 py-2 text-xs text-center">' + formatRegularidade(r.simples_nacional) + '</td>'
+                + '<td class="px-3 py-2 text-xs text-center">' + formatRegularidade(r.mei) + '</td>'
+                + '<td class="px-3 py-2 text-xs text-center">' + formatRegularidade(r.cnd_federal) + '</td>'
+                + '<td class="px-3 py-2 text-xs text-center">' + formatRegularidade(r.crf_fgts) + '</td>'
+                + '<td class="px-3 py-2 text-xs text-center">' + formatRegularidade(r.cndt) + '</td>'
+                + '<td class="px-3 py-2 text-xs text-center">' + statusBadge + '</td>'
+                + '</tr>';
+        }).join('');
+
+        var paginacaoHtml = '';
+        if (total > resultadosPerPage) {
+            var anteriorDisabled = pagina <= 1 ? ' disabled' : '';
+            var proximoDisabled = pagina >= totalPaginas ? ' disabled' : '';
+            paginacaoHtml = '<div class="flex items-center justify-between px-3 py-2 text-xs text-gray-500 border-t border-gray-100">'
+                + '<span>Exibindo ' + (inicio + 1) + '–' + fim + ' de ' + total + '</span>'
+                + '<div class="flex items-center gap-2">'
+                + '<button id="res-pag-anterior" class="px-2 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"' + anteriorDisabled + '>← Anterior</button>'
+                + '<span>Página ' + pagina + ' de ' + totalPaginas + '</span>'
+                + '<button id="res-pag-proximo" class="px-2 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"' + proximoDisabled + '>Próxima →</button>'
+                + '</div>'
+                + '</div>';
+        }
+
+        elements.resultadosTableWrapper.innerHTML = '<table class="min-w-full text-left">'
+            + '<thead><tr class="border-b border-gray-200 bg-gray-50">'
+            + '<th class="px-3 py-2 text-xs font-semibold text-gray-600 whitespace-nowrap">CNPJ</th>'
+            + '<th class="px-3 py-2 text-xs font-semibold text-gray-600">Razão Social</th>'
+            + '<th class="px-3 py-2 text-xs font-semibold text-gray-600 text-center">UF</th>'
+            + '<th class="px-3 py-2 text-xs font-semibold text-gray-600 text-center">Sit. Cadastral</th>'
+            + '<th class="px-3 py-2 text-xs font-semibold text-gray-600 text-center">Simples</th>'
+            + '<th class="px-3 py-2 text-xs font-semibold text-gray-600 text-center">MEI</th>'
+            + '<th class="px-3 py-2 text-xs font-semibold text-gray-600 text-center">CND Federal</th>'
+            + '<th class="px-3 py-2 text-xs font-semibold text-gray-600 text-center">FGTS</th>'
+            + '<th class="px-3 py-2 text-xs font-semibold text-gray-600 text-center">CNDT</th>'
+            + '<th class="px-3 py-2 text-xs font-semibold text-gray-600 text-center">Status</th>'
+            + '</tr></thead>'
+            + '<tbody>' + rows + '</tbody>'
+            + '</table>'
+            + paginacaoHtml;
+
+        elements.resultadosTableWrapper.classList.remove('hidden');
+
+        var btnAnterior = document.getElementById('res-pag-anterior');
+        var btnProximo = document.getElementById('res-pag-proximo');
+        if (btnAnterior) {
+            btnAnterior.addEventListener('click', function() {
+                renderResultadosPagina(resultadosPaginaAtual - 1);
+            });
+        }
+        if (btnProximo) {
+            btnProximo.addEventListener('click', function() {
+                renderResultadosPagina(resultadosPaginaAtual + 1);
+            });
+        }
     }
 
     /**
@@ -1446,7 +1624,7 @@
                 + '<input type="checkbox" class="expansion-checkbox w-4 h-4 text-blue-600 rounded border-gray-300" data-participante-id="' + p.id + '"'
                 + (isSelected ? ' checked' : '') + '>'
                 + '<span class="text-sm font-mono text-gray-600 tabular-nums whitespace-nowrap">' + cnpjFormatado + '</span>'
-                + '<span class="text-sm text-gray-900 truncate">' + escapeHtml(p.razao_social || '-') + '</span>'
+                + '<a href="/app/participante/' + p.id + '" class="text-sm text-blue-700 hover:text-blue-900 hover:underline truncate" title="Ver perfil" onclick="event.stopPropagation()">' + escapeHtml(p.razao_social || '-') + '</a>'
                 + '</label>';
         });
 
@@ -1775,7 +1953,7 @@
                 + '<td class="block overflow-hidden md:table-cell md:px-4 md:py-3 md:max-w-0">'
                 + '<div class="flex items-center gap-2 min-w-0" title="' + nomeTitle.replace(/"/g, '&quot;') + '">'
                 + propriaDot
-                + '<div class="text-sm font-medium text-gray-900 truncate min-w-0">' + (c.razao_social || '-') + '</div>'
+                + '<a href="/app/cliente/' + c.id + '" class="text-sm font-medium text-blue-700 hover:text-blue-900 hover:underline truncate min-w-0" title="Ver perfil" onclick="event.stopPropagation()">' + (c.razao_social || '-') + '</a>'
                 + tipoBadge
                 + chevronSvg
                 + '</div>'

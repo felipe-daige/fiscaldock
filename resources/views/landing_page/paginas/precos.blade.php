@@ -6,7 +6,7 @@
                 Planos e Preços
             </h1>
             <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-                O melhor custo benefício para sua empresa. Escolha o plano ideal para suas necessidades.
+                Pare de perder horas verificando fornecedores manualmente. Escolha o plano ideal para blindar seu escritório contra riscos fiscais.
             </p>
         </div>
     </div>
@@ -56,7 +56,7 @@
             <!-- Plano Light -->
             <div class="plan-card bg-white rounded-xl shadow-sm border-2 border-gray-200 p-8 hover:shadow-lg transition-all duration-300" data-plan="light">
                 <div class="text-center mb-6">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Light</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Essencial</h3>
                     <div class="mb-4">
                         <span class="plan-price text-4xl font-bold text-gray-900" data-period="anual">R$ 159</span>
                         <span class="plan-price text-4xl font-bold text-gray-900 hidden" data-period="semestral">R$ 189</span>
@@ -87,37 +87,37 @@
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Emissão e automação de NFS-e</span>
+                        <span class="text-gray-600">Importação de SPED EFD ICMS/IPI</span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Agendamentos recorrentes</span>
+                        <span class="text-gray-600">Importação de SPED EFD PIS/COFINS</span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Contas a pagar e receber</span>
+                        <span class="text-gray-600">Consultas CNPJ na Receita Federal</span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Automação de boletos</span>
+                        <span class="text-gray-600">Dashboard interativo com BI fiscal</span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Conciliação bancária inteligente</span>
+                        <span class="text-gray-600">Alertas fiscais automatizados</span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Importação automática de extratos</span>
+                        <span class="text-gray-600">50 créditos de consulta inclusos/mês</span>
                     </li>
                 </ul>
 
@@ -135,7 +135,7 @@
                     Mais Popular
                 </div>
                 <div class="text-center mb-6">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Plus</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Profissional</h3>
                     <div class="mb-4">
                         <span class="plan-price text-4xl font-bold text-gray-900" data-period="anual">R$ 239</span>
                         <span class="plan-price text-4xl font-bold text-gray-900 hidden" data-period="semestral">R$ 284</span>
@@ -162,7 +162,7 @@
                 </a>
 
                 <div class="mb-4">
-                    <p class="text-sm font-semibold text-gray-900 mb-3">Todos os itens do plano LIGHT +</p>
+                    <p class="text-sm font-semibold text-gray-900 mb-3">Todos os itens do plano ESSENCIAL +</p>
                 </div>
 
                 <ul class="space-y-3 mb-6">
@@ -170,31 +170,31 @@
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Rateio de despesas e receitas</span>
+                        <span class="text-gray-600">Monitoramento contínuo de participantes</span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Permissão de acesso</span>
+                        <span class="text-gray-600">Consultas em lote (CNPJ em massa)</span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Centros de custo</span>
+                        <span class="text-gray-600">Consulta SINTEGRA (IE e situação cadastral)</span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Regime de competência</span>
+                        <span class="text-gray-600">Detecção de Simples Nacional em fornecedores</span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Análise vertical e horizontal</span>
+                        <span class="text-gray-600">200 créditos de consulta inclusos/mês</span>
                     </li>
                 </ul>
 
@@ -209,7 +209,7 @@
             <!-- Plano Premium -->
             <div class="plan-card bg-white rounded-xl shadow-sm border-2 border-gray-200 p-8 hover:shadow-lg transition-all duration-300" data-plan="premium">
                 <div class="text-center mb-6">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Premium</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Compliance</h3>
                     <div class="mb-4">
                         <span class="plan-price text-4xl font-bold text-gray-900" data-period="anual">R$ 367</span>
                         <span class="plan-price text-4xl font-bold text-gray-900 hidden" data-period="semestral">R$ 436</span>
@@ -236,7 +236,7 @@
                 </a>
 
                 <div class="mb-4">
-                    <p class="text-sm font-semibold text-gray-900 mb-3">Todos os itens do plano PLUS +</p>
+                    <p class="text-sm font-semibold text-gray-900 mb-3">Todos os itens do plano PROFISSIONAL +</p>
                 </div>
 
                 <ul class="space-y-3 mb-6">
@@ -244,43 +244,43 @@
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Planejamento orçamentário</span>
+                        <span class="text-gray-600">Enriquecimento CEIS (empresas inidôneas)</span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Pagamento reembolsável</span>
+                        <span class="text-gray-600">Consulta CND Federal (PGFN)</span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Emissão de boletos em lote</span>
+                        <span class="text-gray-600">Verificação de protestos em cartório</span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Emissão de NFS-e em lote</span>
+                        <span class="text-gray-600">Regularidade FGTS e CND Estadual</span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Central de cobranças</span>
+                        <span class="text-gray-600">Validação de NFe na SEFAZ (nota fria)</span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">CNAB de pagamento bancos Itaú e Inter</span>
+                        <span class="text-gray-600">Suporte prioritário</span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">API Pública</span>
+                        <span class="text-gray-600">500 créditos de consulta inclusos/mês</span>
                     </li>
                 </ul>
 
@@ -309,14 +309,14 @@
                 <thead>
                     <tr class="border-b-2 border-gray-200">
                         <th class="text-left py-4 px-4 font-semibold text-gray-900">Recursos</th>
-                        <th class="text-center py-4 px-4 font-semibold text-gray-900">Light</th>
-                        <th class="text-center py-4 px-4 font-semibold text-gray-900 bg-blue-50">Plus</th>
-                        <th class="text-center py-4 px-4 font-semibold text-gray-900">Premium</th>
+                        <th class="text-center py-4 px-4 font-semibold text-gray-900">Essencial</th>
+                        <th class="text-center py-4 px-4 font-semibold text-gray-900 bg-blue-50">Profissional</th>
+                        <th class="text-center py-4 px-4 font-semibold text-gray-900">Compliance</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Usuários</td>
+                        <td class="py-4 px-4 text-gray-700">Clientes cadastrados</td>
                         <td class="py-4 px-4 text-center">
                             <span class="text-green-500 font-semibold">Ilimitado</span>
                         </td>
@@ -328,7 +328,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Contas bancárias automatizadas</td>
+                        <td class="py-4 px-4 text-gray-700">Importações SPED por mês</td>
                         <td class="py-4 px-4 text-center">
                             <span class="text-green-500 font-semibold">Ilimitado</span>
                         </td>
@@ -340,7 +340,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Conciliação bancária inteligente</td>
+                        <td class="py-4 px-4 text-gray-700">Importação EFD ICMS/IPI</td>
                         <td class="py-4 px-4 text-center">
                             <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -358,7 +358,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Histórico de atividades</td>
+                        <td class="py-4 px-4 text-gray-700">Importação EFD PIS/COFINS</td>
                         <td class="py-4 px-4 text-center">
                             <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -376,7 +376,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Exportação contábil</td>
+                        <td class="py-4 px-4 text-gray-700">Consulta CNPJ na Receita Federal</td>
                         <td class="py-4 px-4 text-center">
                             <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -394,7 +394,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Emissão de boletos</td>
+                        <td class="py-4 px-4 text-gray-700">Dashboard interativo com BI fiscal</td>
                         <td class="py-4 px-4 text-center">
                             <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -412,7 +412,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Relatórios gerenciais</td>
+                        <td class="py-4 px-4 text-gray-700">Alertas fiscais automatizados</td>
                         <td class="py-4 px-4 text-center">
                             <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -430,7 +430,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Caixa de entrada</td>
+                        <td class="py-4 px-4 text-gray-700">Progresso em tempo real (SSE)</td>
                         <td class="py-4 px-4 text-center">
                             <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -448,7 +448,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Emissão de NFS-e</td>
+                        <td class="py-4 px-4 text-gray-700">Análise por CFOP e participante</td>
                         <td class="py-4 px-4 text-center">
                             <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -466,7 +466,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Agendamentos recorrentes</td>
+                        <td class="py-4 px-4 text-gray-700">Histórico de consultas e importações</td>
                         <td class="py-4 px-4 text-center">
                             <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -484,7 +484,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Agendamento de contas a pagar e receber</td>
+                        <td class="py-4 px-4 text-gray-700">Gestão de múltiplos clientes</td>
                         <td class="py-4 px-4 text-center">
                             <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -502,7 +502,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Automação de NFS-e/Boletos</td>
+                        <td class="py-4 px-4 text-gray-700">Créditos de consulta inclusos</td>
                         <td class="py-4 px-4 text-center">
                             <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -520,7 +520,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Rateio de despesas e receitas</td>
+                        <td class="py-4 px-4 text-gray-700">Monitoramento contínuo de participantes</td>
                         <td class="py-4 px-4 text-center">
                             <span class="text-gray-400">—</span>
                         </td>
@@ -536,7 +536,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Consulta de notas fiscais</td>
+                        <td class="py-4 px-4 text-gray-700">Consultas CNPJ em lote</td>
                         <td class="py-4 px-4 text-center">
                             <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -554,7 +554,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Relatórios de Análise Horizontal e Vertical</td>
+                        <td class="py-4 px-4 text-gray-700">Consulta SINTEGRA (IE e situação cadastral)</td>
                         <td class="py-4 px-4 text-center">
                             <span class="text-gray-400">—</span>
                         </td>
@@ -570,73 +570,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Emissão de recibos</td>
-                        <td class="py-4 px-4 text-center">
-                            <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </td>
-                        <td class="py-4 px-4 text-center bg-blue-50">
-                            <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </td>
-                        <td class="py-4 px-4 text-center">
-                            <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Permissões de acesso por usuário</td>
-                        <td class="py-4 px-4 text-center">
-                            <span class="text-gray-400">—</span>
-                        </td>
-                        <td class="py-4 px-4 text-center bg-blue-50">
-                            <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </td>
-                        <td class="py-4 px-4 text-center">
-                            <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Centros de custo</td>
-                        <td class="py-4 px-4 text-center">
-                            <span class="text-gray-400">—</span>
-                        </td>
-                        <td class="py-4 px-4 text-center bg-blue-50">
-                            <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </td>
-                        <td class="py-4 px-4 text-center">
-                            <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Regime de competência</td>
-                        <td class="py-4 px-4 text-center">
-                            <span class="text-gray-400">—</span>
-                        </td>
-                        <td class="py-4 px-4 text-center bg-blue-50">
-                            <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </td>
-                        <td class="py-4 px-4 text-center">
-                            <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Controle de agendamento no banco</td>
+                        <td class="py-4 px-4 text-gray-700">Detecção de Simples Nacional</td>
                         <td class="py-4 px-4 text-center">
                             <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -654,7 +588,73 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">CNAB de pagamentos Banco Itaú</td>
+                        <td class="py-4 px-4 text-gray-700">Grupos de monitoramento</td>
+                        <td class="py-4 px-4 text-center">
+                            <span class="text-gray-400">—</span>
+                        </td>
+                        <td class="py-4 px-4 text-center bg-blue-50">
+                            <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </td>
+                        <td class="py-4 px-4 text-center">
+                            <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-4 px-4 text-gray-700">Ranking de risco por participante</td>
+                        <td class="py-4 px-4 text-center">
+                            <span class="text-gray-400">—</span>
+                        </td>
+                        <td class="py-4 px-4 text-center bg-blue-50">
+                            <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </td>
+                        <td class="py-4 px-4 text-center">
+                            <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-4 px-4 text-gray-700">Resumo tributário por bloco (A, C, D)</td>
+                        <td class="py-4 px-4 text-center">
+                            <span class="text-gray-400">—</span>
+                        </td>
+                        <td class="py-4 px-4 text-center bg-blue-50">
+                            <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </td>
+                        <td class="py-4 px-4 text-center">
+                            <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-4 px-4 text-gray-700">Importação de participantes via SPED</td>
+                        <td class="py-4 px-4 text-center">
+                            <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </td>
+                        <td class="py-4 px-4 text-center bg-blue-50">
+                            <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </td>
+                        <td class="py-4 px-4 text-center">
+                            <svg class="w-5 h-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-4 px-4 text-gray-700">Enriquecimento CEIS (empresas inidôneas)</td>
                         <td class="py-4 px-4 text-center">
                             <span class="text-gray-400">—</span>
                         </td>
@@ -668,7 +668,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">CNAB de pagamentos Banco Inter</td>
+                        <td class="py-4 px-4 text-gray-700">Consulta CND Federal (PGFN)</td>
                         <td class="py-4 px-4 text-center">
                             <span class="text-gray-400">—</span>
                         </td>
@@ -682,7 +682,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">API Pública</td>
+                        <td class="py-4 px-4 text-gray-700">Verificação de protestos em cartório</td>
                         <td class="py-4 px-4 text-center">
                             <span class="text-gray-400">—</span>
                         </td>
@@ -696,7 +696,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Planejamento orçamentário</td>
+                        <td class="py-4 px-4 text-gray-700">Regularidade FGTS e CND Estadual</td>
                         <td class="py-4 px-4 text-center">
                             <span class="text-gray-400">—</span>
                         </td>
@@ -710,7 +710,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Central de cobranças</td>
+                        <td class="py-4 px-4 text-gray-700">Validação de NFe na SEFAZ (nota fria)</td>
                         <td class="py-4 px-4 text-center">
                             <span class="text-gray-400">—</span>
                         </td>
@@ -724,7 +724,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Emissão de faturas</td>
+                        <td class="py-4 px-4 text-gray-700">Cruzamento CTe declarados vs autorizados</td>
                         <td class="py-4 px-4 text-center">
                             <span class="text-gray-400">—</span>
                         </td>
@@ -738,7 +738,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Emissão de boletos em lote</td>
+                        <td class="py-4 px-4 text-gray-700">Verificação de trabalho escravo</td>
                         <td class="py-4 px-4 text-center">
                             <span class="text-gray-400">—</span>
                         </td>
@@ -752,7 +752,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Emissão de NFS-e em lote</td>
+                        <td class="py-4 px-4 text-gray-700">Suporte prioritário</td>
                         <td class="py-4 px-4 text-center">
                             <span class="text-gray-400">—</span>
                         </td>
@@ -766,7 +766,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="py-4 px-4 text-gray-700">Pagamento reembolsável</td>
+                        <td class="py-4 px-4 text-gray-700">500 créditos de consulta inclusos/mês</td>
                         <td class="py-4 px-4 text-center">
                             <span class="text-gray-400">—</span>
                         </td>

@@ -18,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(\App\Http\Middleware\TrustProxies::class);
         // Logar todas as requisições HTTP recebidas
         $middleware->append(\App\Http\Middleware\LogHttpRequests::class);
+        // Garantir que a empresa própria do usuário existe (recria silenciosamente se ausente)
+        $middleware->appendToGroup('web', \App\Http\Middleware\EnsureEmpresaPropriaExists::class);
         
         // Excluir rotas de API do CSRF para permitir chamadas externas (n8n)
         // No Laravel 12, rotas em api.php não têm CSRF por padrão, mas garantimos aqui
@@ -27,7 +29,6 @@ return Application::configure(basePath: dirname(__DIR__))
             '/api/*',
             'api/data/receive',
             '/api/data/receive',
-            '/app/raf/confirmar',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -59,5 +60,10 @@ return Application::configure(basePath: dirname(__DIR__))
             
             // Para requisições web normais, deixar o Laravel tratar (redirecionar)
             return null;
+        });
+
+        // Redirecionar para /login quando o CSRF token expirar (sessão expirada)
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, \Illuminate\Http\Request $request) {
+            return redirect('/login')->with('error', 'Sua sessão expirou. Faça login novamente.');
         });
     })->create();

@@ -1,33 +1,42 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * Cria índice único parcial para evitar duplicatas de notas
-     * com mesma chave de acesso dentro da mesma importação.
-     */
     public function up(): void
     {
-        // Índice único parcial: só aplica quando chave_acesso não é null
-        DB::statement('
-            CREATE UNIQUE INDEX IF NOT EXISTS notas_sped_unique_chave
-            ON notas_sped (user_id, importacao_sped_id, chave_acesso)
-            WHERE chave_acesso IS NOT NULL
-        ');
+        DB::unprepared("
+            CREATE OR REPLACE FUNCTION efd_notas_ignore_duplicate()
+            RETURNS TRIGGER AS \$\$
+            BEGIN
+                IF EXISTS (
+                    SELECT 1 FROM efd_notas
+                    WHERE cliente_id   = NEW.cliente_id
+                      AND chave_acesso = NEW.chave_acesso
+                      AND modelo       = NEW.modelo
+                      AND numero       = NEW.numero
+                      AND serie        = NEW.serie
+                ) THEN
+                    RETURN NULL;
+                END IF;
+                RETURN NEW;
+            END;
+            \$\$ LANGUAGE plpgsql;
+        ");
+
+        DB::unprepared("
+            DROP TRIGGER IF EXISTS trg_efd_notas_ignore_duplicate ON efd_notas;
+            CREATE TRIGGER trg_efd_notas_ignore_duplicate
+                BEFORE INSERT ON efd_notas
+                FOR EACH ROW EXECUTE FUNCTION efd_notas_ignore_duplicate();
+        ");
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        DB::statement('DROP INDEX IF EXISTS notas_sped_unique_chave');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_efd_notas_ignore_duplicate ON efd_notas');
+        DB::unprepared('DROP FUNCTION IF EXISTS efd_notas_ignore_duplicate()');
     }
 };

@@ -32,7 +32,7 @@
                 if (fim) params.set('data_fim', fim);
             }
 
-            window.location.href = '/app/bi?' + params.toString();
+            window.location.href = '/app/bi/dashboard?' + params.toString();
         });
     }
 

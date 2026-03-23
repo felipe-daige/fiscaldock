@@ -18,7 +18,7 @@ class Participante extends Model
     protected $fillable = [
         'user_id',
         'cliente_id',
-        'importacao_sped_id',
+        'importacao_efd_id',
         'importacao_xml_id',
         'cnpj',
         'tipo_documento',
@@ -79,11 +79,11 @@ class Participante extends Model
     }
 
     /**
-     * Importação SPED que criou este participante (opcional).
+     * Importação EFD que criou este participante (opcional).
      */
-    public function importacaoSped(): BelongsTo
+    public function importacaoEfd(): BelongsTo
     {
-        return $this->belongsTo(SpedImportacao::class, 'importacao_sped_id');
+        return $this->belongsTo(EfdImportacao::class, 'importacao_efd_id');
     }
 
     /**
@@ -136,19 +136,24 @@ class Participante extends Model
     }
 
     /**
-     * Notas SPED onde o participante é o emitente.
+     * Notas EFD onde o participante é o emitente.
      */
-    public function notasSpedComoEmitente(): HasMany
+    public function notasEfdComoEmitente(): HasMany
     {
-        return $this->hasMany(SpedNota::class, 'emit_participante_id');
+        return $this->hasMany(EfdNota::class, 'emit_participante_id');
     }
 
     /**
-     * Notas SPED onde o participante é o destinatário.
+     * Notas EFD onde o participante é o destinatário.
      */
-    public function notasSpedComoDestinatario(): HasMany
+    public function notasEfdComoDestinatario(): HasMany
     {
-        return $this->hasMany(SpedNota::class, 'dest_participante_id');
+        return $this->hasMany(EfdNota::class, 'dest_participante_id');
+    }
+
+    public function efdNotas(): HasMany
+    {
+        return $this->hasMany(EfdNota::class, 'participante_id');
     }
 
     /**
@@ -157,6 +162,26 @@ class Participante extends Model
     public function score(): HasOne
     {
         return $this->hasOne(ParticipanteScore::class);
+    }
+
+    /**
+     * Exclui participantes cujo cliente é empresa própria.
+     */
+    public function scopeExcluindoEmpresaPropria($query)
+    {
+        $query->whereDoesntHave('cliente', fn ($q) => $q->where('is_empresa_propria', true));
+
+        $userCnpj = auth()->user()?->cnpj;
+        if ($userCnpj) {
+            $query->where('cnpj', '!=', $userCnpj);
+        }
+
+        return $query;
+    }
+
+    public function scopeExcludingEmpresaPropria($query)
+    {
+        return $this->scopeExcluindoEmpresaPropria($query);
     }
 
     /**

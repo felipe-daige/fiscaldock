@@ -23,7 +23,7 @@
                     <p class="mt-1 text-sm text-gray-600">Adicione CNPJs a sua lista de monitoramento a partir de arquivos XML de NF-e, NFS-e ou CT-e.</p>
                 </div>
                 <a
-                    href="/app/monitoramento"
+                    href="/app/dashboard"
                     class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
                     data-link
                 >
@@ -988,7 +988,7 @@
                     <div class="px-6 py-4">
                         <div class="flex justify-end">
                             <a
-                                href="/app/monitoramento"
+                                href="/app/dashboard"
                                 class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition"
                                 data-link
                             >

@@ -1,5 +1,5 @@
-{{-- Monitoramento - Importar do SPED --}}
-<div class="min-h-screen bg-gray-50" id="importacao-sped-container">
+{{-- Monitoramento - Importar EFD --}}
+<div class="min-h-screen bg-gray-50" id="importacao-efd-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         <style>
@@ -7,12 +7,12 @@
                 from { opacity: 0; transform: translateY(60px); }
                 to { opacity: 1; transform: translateY(0); }
             }
-            .sped-animate {
+            .efd-animate {
                 opacity: 0;
                 animation: card-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             }
             @media (prefers-reduced-motion: reduce) {
-                .sped-animate { opacity: 1; animation: none; }
+                .efd-animate { opacity: 1; animation: none; }
             }
         </style>
 
@@ -21,10 +21,10 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900">Importar Participantes</h1>
-                    <p class="mt-1 text-sm text-gray-600">Adicione CNPJs à sua lista de monitoramento a partir de arquivos SPED ou relatórios RAF.</p>
+                    <p class="mt-1 text-sm text-gray-600">Adicione CNPJs à sua lista de monitoramento a partir de arquivos EFD ou relatórios RAF.</p>
                 </div>
                 <a
-                    href="/app/monitoramento"
+                    href="/app/dashboard"
                     class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
                     data-link
                 >
@@ -37,7 +37,7 @@
         </div>
 
         {{-- Info Box --}}
-        <div class="sped-animate bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+        <div class="efd-animate bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
             <div class="flex items-start gap-3">
                 <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -45,7 +45,7 @@
                 <div>
                     <h3 class="text-sm font-semibold text-blue-900">Como funciona?</h3>
                     <p class="text-sm text-blue-800 mt-1">
-                        Faça upload do seu arquivo SPED EFD (.txt) e o sistema extrairá automaticamente todos os CNPJs de fornecedores e clientes registrados no bloco de participantes (registro 0150). Os CNPJs extraídos são adicionados à sua base de participantes, ficando disponíveis para consultas, monitoramento e análises de compliance.
+                        Faça upload do seu arquivo EFD (.txt) e o sistema extrairá automaticamente todos os CNPJs de fornecedores e clientes registrados no bloco de participantes (registro 0150). Os CNPJs extraídos são adicionados à sua base de participantes, ficando disponíveis para consultas, monitoramento e análises de compliance.
                     </p>
                 </div>
             </div>
@@ -55,17 +55,17 @@
         <div class="mb-6">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {{-- Card Upload (Esquerdo) --}}
-                <div class="sped-animate bg-white rounded-xl border border-gray-200 shadow-sm" style="animation-delay: 0.1s">
+                <div class="efd-animate bg-white rounded-xl border border-gray-200 shadow-sm" style="animation-delay: 0.1s">
                     <div class="px-6 py-4 border-b border-gray-200">
                         <h3 class="text-base font-semibold text-gray-900">Enviar Arquivo</h3>
                     </div>
                     <div class="p-6">
-                        {{-- Seleção Tipo SPED --}}
+                        {{-- Seleção Tipo EFD --}}
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de SPED:</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de EFD:</label>
                             <div class="space-y-2">
-                                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition tipo-sped-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-tipo="efd-fiscal">
-                                    <input type="radio" name="tipo-sped" value="efd-fiscal" class="w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
+                                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition tipo-efd-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-tipo="efd-fiscal">
+                                    <input type="radio" name="tipo-efd" value="efd-fiscal" class="w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
                                     <div class="flex-shrink-0 w-7 h-7 rounded-md bg-blue-100 flex items-center justify-center">
                                         <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
@@ -79,8 +79,8 @@
                                         <p class="text-xs text-gray-500 mt-0.5 truncate">ICMS/IPI - Escrituração Fiscal Digital</p>
                                     </div>
                                 </label>
-                                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition tipo-sped-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-tipo="efd-contrib">
-                                    <input type="radio" name="tipo-sped" value="efd-contrib" class="w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
+                                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition tipo-efd-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-tipo="efd-contrib">
+                                    <input type="radio" name="tipo-efd" value="efd-contrib" class="w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
                                     <div class="flex-shrink-0 w-7 h-7 rounded-md bg-purple-100 flex items-center justify-center">
                                         <svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
@@ -98,22 +98,15 @@
                         </div>
 
                         {{-- Opção Extrair Notas Fiscais --}}
-                        <div class="relative mb-4 group {{ $extrairNotasEnabled ? '' : 'opacity-50' }}">
-                            <label class="flex items-start p-3 border-2 border-gray-200 rounded-lg {{ $extrairNotasEnabled ? 'cursor-pointer hover:border-blue-400 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50' : 'cursor-not-allowed' }} transition">
+                        <div class="relative mb-4 group">
+                            <label class="flex items-start p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition">
                                 <input type="checkbox"
                                        id="extrair-notas"
                                        name="extrair_notas"
-                                       {{ $extrairNotasEnabled ? '' : 'disabled' }}
                                        class="mt-1 mr-3 w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-2">
                                         <span class="font-semibold text-gray-800 text-sm">Extrair Notas Fiscais</span>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 border border-amber-200">
-                                            <svg class="w-2.5 h-2.5 mr-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                            </svg>
-                                            Beta
-                                        </span>
                                     </div>
                                     <div class="text-xs text-gray-600 mt-0.5">
                                         Importa também as notas fiscais para análise de BI Fiscal
@@ -125,16 +118,9 @@
                                             </svg>
                                             Gratuito
                                         </span>
-                                        <span class="text-xs text-gray-400">•</span>
-                                        <span class="text-xs text-gray-500">{{ $extrairNotasEnabled ? 'Em fase de testes' : 'Em breve' }}</span>
                                     </div>
                                 </div>
                             </label>
-                            @unless($extrairNotasEnabled)
-                                <div class="invisible group-hover:visible absolute left-0 right-0 top-full mt-1 z-50 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg leading-relaxed">
-                                    Esta funcionalidade está em fase final de desenvolvimento e será liberada em breve. Estamos ajustando os últimos detalhes para garantir a melhor experiência na extração de notas fiscais do SPED.
-                                </div>
-                            @endunless
                         </div>
 
                         {{-- Instruções --}}
@@ -150,7 +136,7 @@
                                     <strong class="text-blue-900">1. Selecione o tipo:</strong> Escolha entre EFD Fiscal ou EFD Contribuições.
                                 </div>
                                 <div>
-                                    <strong class="text-blue-900">2. Faça upload:</strong> Envie o arquivo .txt exportado do seu sistema contábil (SPED EFD válido).
+                                    <strong class="text-blue-900">2. Faça upload:</strong> Envie o arquivo .txt exportado do seu sistema contábil (EFD válido).
                                 </div>
                                 <div>
                                     <strong class="text-blue-900">3. Aguarde o processamento:</strong> O progresso será exibido em tempo real. Ao finalizar, você verá o resumo com participantes novos e duplicados.
@@ -166,7 +152,7 @@
                                     </svg>
                                 </div>
                                 <div class="space-y-1 text-center">
-                                    <p class="text-sm font-medium text-gray-500" id="txt-dropzone-main-text">Selecione o tipo de SPED primeiro</p>
+                                    <p class="text-sm font-medium text-gray-500" id="txt-dropzone-main-text">Selecione o tipo de EFD primeiro</p>
                                     <p class="text-xs text-gray-400" id="txt-dropzone-sub-text">Depois arraste o arquivo .txt aqui ou clique para selecionar</p>
                                     <p class="text-xs text-gray-400 mt-2">.txt | Máximo: 10MB</p>
                                 </div>
@@ -231,7 +217,7 @@
                 </div>
 
                 {{-- Card Informações (Direito) --}}
-                <div class="sped-animate bg-white rounded-xl border border-gray-200 shadow-sm" style="animation-delay: 0.2s">
+                <div class="efd-animate bg-white rounded-xl border border-gray-200 shadow-sm" style="animation-delay: 0.2s">
                     <div class="px-6 py-4 border-b border-gray-200">
                         <div class="flex items-center gap-2">
                             <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,7 +235,7 @@
                                 <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">1</div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">Importação</p>
-                                    <p class="text-xs text-gray-500">Adicione CNPJs via arquivo EFD (SPED) .txt ou a partir de relatórios RAF já processados.</p>
+                                    <p class="text-xs text-gray-500">Adicione CNPJs via arquivo EFD .txt ou a partir de relatórios RAF já processados.</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-3">
@@ -406,6 +392,114 @@
             </div>
         </div>
 
+        {{-- Card Histórico de Importações EFD --}}
+        <div id="historico-importacoes" class="efd-animate bg-white rounded-xl border border-gray-200 shadow-sm mt-6 mb-6" style="animation-delay: 0.3s">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-base font-semibold text-gray-900">Histórico de Importações</h3>
+                <a href="/app/importacao/historico" data-link class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors inline-flex items-center gap-1">
+                    Ver tudo
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+            </div>
+
+            @if($importacoes->isNotEmpty())
+            <div class="divide-y divide-gray-100">
+                @foreach($importacoes as $imp)
+                @php
+                    [$statusClass, $statusLabel] = match($imp->status) {
+                        'concluido'   => ['bg-green-100 text-green-700', 'Concluído'],
+                        'processando' => ['bg-blue-100 text-blue-700', 'Processando'],
+                        'erro'        => ['bg-red-100 text-red-700', 'Erro'],
+                        default       => ['bg-gray-100 text-gray-700', 'Pendente'],
+                    };
+                    $tipoLabel = $imp->tipo_efd === 'EFD PIS/COFINS' ? 'PIS/COFINS' : 'ICMS/IPI';
+                    $tipoBadge = $imp->tipo_efd === 'EFD PIS/COFINS'
+                        ? 'bg-purple-100 text-purple-700'
+                        : 'bg-blue-100 text-blue-700';
+                    $filename = $imp->filename ?? 'Importação #'.$imp->id;
+                    $clienteNome = $imp->cliente->razao_social ?? null;
+                    $totalPart = ($imp->novos ?? 0) + ($imp->duplicados ?? 0);
+                @endphp
+                <a
+                    href="/app/importacao/efd/{{ $imp->id }}"
+                    data-link
+                    class="group flex items-center gap-4 px-6 py-3.5 hover:bg-gray-50 transition-colors"
+                >
+                    {{-- Ícone --}}
+                    <div class="flex-shrink-0 w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+                        <svg class="w-4.5 h-4.5 text-gray-400 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+
+                    {{-- Conteúdo --}}
+                    <div class="flex-1 min-w-0">
+                        {{-- Linha 1: arquivo + badges --}}
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-sm font-medium text-gray-900 truncate max-w-[200px] sm:max-w-[300px] group-hover:text-blue-600 transition-colors">{{ $filename }}</span>
+                            <span class="px-1.5 py-0.5 text-[10px] font-semibold rounded {{ $tipoBadge }}">{{ $tipoLabel }}</span>
+                            <span class="px-1.5 py-0.5 text-[10px] font-semibold rounded {{ $statusClass }}">{{ $statusLabel }}</span>
+                        </div>
+                        {{-- Linha 2: meta --}}
+                        <div class="flex items-center gap-1.5 mt-0.5 text-xs text-gray-400 flex-wrap">
+                            @if($clienteNome)
+                                <span class="text-gray-500 truncate max-w-[150px]">{{ $clienteNome }}</span>
+                                <span>&middot;</span>
+                            @endif
+                            <span>{{ $totalPart }} participante{{ $totalPart !== 1 ? 's' : '' }}</span>
+                            <span>&middot;</span>
+                            <span>{{ $imp->tempo_processamento }}</span>
+                            <span>&middot;</span>
+                            <span>{{ $imp->created_at->format('d/m/Y H:i') }}</span>
+                        </div>
+                    </div>
+
+                    {{-- Seta --}}
+                    <svg class="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors flex-shrink-0 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+                @endforeach
+            </div>
+
+            {{-- Paginação --}}
+            @if($importacoes->hasPages())
+            <div class="px-6 py-3 flex items-center justify-between gap-4 text-sm border-t border-gray-100">
+                <span class="text-gray-500 text-xs">
+                    Mostrando {{ $importacoes->firstItem() }}–{{ $importacoes->lastItem() }} de {{ $importacoes->total() }}
+                </span>
+                <div class="flex items-center gap-1">
+                    @if($importacoes->onFirstPage())
+                        <span class="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-300 text-xs cursor-not-allowed">Anterior</span>
+                    @else
+                        <a href="{{ $importacoes->previousPageUrl() }}" data-link class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50 transition">Anterior</a>
+                    @endif
+
+                    <span class="px-3 py-1.5 text-xs text-gray-500">{{ $importacoes->currentPage() }} / {{ $importacoes->lastPage() }}</span>
+
+                    @if($importacoes->hasMorePages())
+                        <a href="{{ $importacoes->nextPageUrl() }}" data-link class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50 transition">Próxima</a>
+                    @else
+                        <span class="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-300 text-xs cursor-not-allowed">Próxima</span>
+                    @endif
+                </div>
+            </div>
+            @endif
+
+            @else
+            {{-- Zero state --}}
+            <div class="px-6 py-12 text-center">
+                <svg class="w-10 h-10 text-gray-200 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                </svg>
+                <p class="text-sm text-gray-500">Nenhuma importação EFD realizada ainda.</p>
+                <p class="text-xs text-gray-400 mt-1">Suas importações aparecerão aqui.</p>
+            </div>
+            @endif
+        </div>
+
         {{-- Modal: Carousel de Planos --}}
         <div id="modal-planos-carousel" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
             <div class="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] flex flex-col relative overflow-visible">
@@ -542,7 +636,7 @@
                             Aguardando dados...
                         </h3>
                         <p id="progresso-documento" class="text-sm text-gray-500 hidden">
-                            {{-- Tipo SPED • Período --}}
+                            {{-- Tipo EFD • Período --}}
                         </p>
                     </div>
                 </div>
@@ -671,7 +765,7 @@
                                         <p class="text-xs text-purple-600">Notas Fiscais Extraídas</p>
                                     </div>
                                 </div>
-                                <a href="/app/bi" class="text-sm text-purple-700 hover:text-purple-800 font-medium hover:underline" data-link>
+                                <a href="/app/bi/dashboard" class="text-sm text-purple-700 hover:text-purple-800 font-medium hover:underline" data-link>
                                     Ver no BI Fiscal →
                                 </a>
                             </div>
@@ -692,7 +786,10 @@
                         <div class="flex items-center gap-6 flex-wrap">
                             <div>
                                 <p class="text-xs text-gray-500 mb-0.5">Razão Social</p>
-                                <p class="text-sm font-semibold text-gray-900" id="resultado-cliente-nome">—</p>
+                                <a id="resultado-cliente-nome-link" href="#" data-link
+                                   class="text-sm font-semibold text-blue-700 hover:text-blue-800 hover:underline cursor-pointer">
+                                    <span id="resultado-cliente-nome">—</span>
+                                </a>
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 mb-0.5" id="resultado-cliente-doc-label">Documento</p>
@@ -776,7 +873,7 @@
                     <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
                         <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
                             <a
-                                href="/app/monitoramento"
+                                href="/app/dashboard"
                                 class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition"
                                 data-link
                             >
@@ -787,14 +884,14 @@
                             </a>
                             <a
                                 id="link-filtrar-importacao"
-                                href="/app/participantes?importacao="
+                                href="/app/importacao/efd/"
                                 class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm hover:bg-blue-700 transition"
                                 data-link
                             >
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
-                                Ver Apenas Esta Importação
+                                Ver Detalhes da Importação
                             </a>
                         </div>
                     </div>
@@ -802,145 +899,11 @@
             </div>
         </div>
 
-        {{-- Historico de Importacoes SPED --}}
-        @if(isset($importacoes) && $importacoes->count() > 0)
-        <div id="historico-importacoes" class="sped-animate bg-white rounded-xl border border-gray-200 shadow-sm mt-6" style="animation-delay: 0.3s">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">Ultimas Importacoes</h2>
-            </div>
-
-            {{-- Mobile: Cards --}}
-            <div class="md:hidden divide-y divide-gray-200">
-                @foreach($importacoes as $imp)
-                <div class="px-4 py-4 space-y-2">
-                    <div class="flex items-start justify-between gap-3">
-                        <p class="text-sm font-medium text-gray-900 min-w-0 break-all">{{ $imp->filename }}</p>
-                        @if($imp->status === 'concluido')
-                            <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700 flex-shrink-0">Concluido</span>
-                        @elseif($imp->status === 'processando')
-                            <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700 flex-shrink-0">Processando</span>
-                        @elseif($imp->status === 'erro')
-                            <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-red-100 text-red-700 flex-shrink-0">Erro</span>
-                        @else
-                            <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-700 flex-shrink-0">Pendente</span>
-                        @endif
-                    </div>
-                    <div class="flex items-center gap-4 text-xs text-gray-500">
-                        <span>{{ $imp->tipo_efd }}</span>
-                        <span>&middot;</span>
-                        <span>{{ ($imp->novos ?? 0) + ($imp->duplicados ?? 0) }} participantes</span>
-                        <span>&middot;</span>
-                        <span>{{ $imp->created_at->format('d/m/Y H:i') }}</span>
-                    </div>
-                    <a
-                        href="/app/importacao/efd/{{ $imp->id }}"
-                        data-link
-                        class="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 transition mt-1"
-                    >
-                        Ver detalhes
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </a>
-                </div>
-                @endforeach
-            </div>
-
-            {{-- Desktop: Table --}}
-            <div class="hidden md:block overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Arquivo</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Participantes</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach($importacoes as $imp)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @if($imp->cliente)
-                                    <div class="flex items-center gap-2">
-                                        <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700">Cliente</span>
-                                        <span class="text-sm text-gray-900">{{ $imp->cliente->razao_social }}</span>
-                                    </div>
-                                @else
-                                    <span class="text-sm text-gray-400">—</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-900 max-w-[280px] truncate">{{ $imp->filename }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $imp->tipo_efd }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @if($imp->status === 'concluido')
-                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Concluido</span>
-                                @elseif($imp->status === 'processando')
-                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">Processando</span>
-                                @elseif($imp->status === 'erro')
-                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700">Erro</span>
-                                @else
-                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700">Pendente</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
-                                {{ ($imp->novos ?? 0) + ($imp->duplicados ?? 0) }}
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                                {{ $imp->created_at->format('d/m/Y H:i') }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <a
-                                    href="/app/importacao/efd/{{ $imp->id }}"
-                                    data-link
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 transition"
-                                >
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                    </svg>
-                                    Ver
-                                </a>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-
-                {{-- Paginação --}}
-                @if($importacoes->hasPages())
-                <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between gap-4 text-sm">
-                    <span class="text-gray-500 text-xs">
-                        Mostrando {{ $importacoes->firstItem() }}–{{ $importacoes->lastItem() }} de {{ $importacoes->total() }} importações
-                    </span>
-                    <div class="flex items-center gap-1">
-                        @if($importacoes->onFirstPage())
-                            <span class="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-300 text-xs cursor-not-allowed">Anterior</span>
-                        @else
-                            <a href="{{ $importacoes->previousPageUrl() }}" data-link class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50 transition">Anterior</a>
-                        @endif
-
-                        <span class="px-3 py-1.5 text-xs text-gray-500">{{ $importacoes->currentPage() }} / {{ $importacoes->lastPage() }}</span>
-
-                        @if($importacoes->hasMorePages())
-                            <a href="{{ $importacoes->nextPageUrl() }}" data-link class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50 transition">Próxima</a>
-                        @else
-                            <span class="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-300 text-xs cursor-not-allowed">Próxima</span>
-                        @endif
-                    </div>
-                </div>
-                @endif
-            </div>
-        </div>
-        @endif
     </div>
 </div>
 
-{{-- Modal Monitorar Participante Individual (SPED) --}}
-<div id="modal-monitorar-individual-sped" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+{{-- Modal Monitorar Participante Individual (EFD) --}}
+<div id="modal-monitorar-individual-efd" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
         <div class="px-6 py-4 border-b border-gray-200">
             <div class="flex items-center justify-between">
@@ -956,8 +919,8 @@
             {{-- Info do participante --}}
             <div class="mb-4 p-3 bg-gray-50 rounded-lg">
                 <p class="text-xs text-gray-500 mb-1">Participante</p>
-                <p class="text-sm font-mono font-semibold text-gray-900" id="modal-monitorar-cnpj-sped">00.000.000/0001-00</p>
-                <p class="text-sm text-gray-600" id="modal-monitorar-razao-sped">Razão Social</p>
+                <p class="text-sm font-mono font-semibold text-gray-900" id="modal-monitorar-cnpj-efd">00.000.000/0001-00</p>
+                <p class="text-sm text-gray-600" id="modal-monitorar-razao-efd">Razão Social</p>
             </div>
 
             {{-- Selecao de plano --}}
@@ -976,7 +939,7 @@
                 @endphp
                 @foreach($planosDisponiveis as $plano)
                     <label class="plano-option flex items-center gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-colors has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                        <input type="radio" name="plano_selecionado_sped" value="{{ $plano['id'] }}" data-creditos="{{ $plano['creditos'] }}" class="text-blue-600 focus:ring-blue-500">
+                        <input type="radio" name="plano_selecionado_efd" value="{{ $plano['id'] }}" data-creditos="{{ $plano['creditos'] }}" class="text-blue-600 focus:ring-blue-500">
                         <div class="flex-1">
                             <div class="flex items-center gap-2">
                                 <span class="text-sm font-semibold text-gray-900">{{ $plano['nome'] }}</span>
@@ -1000,7 +963,7 @@
                 </div>
                 <div class="flex items-center justify-between text-sm mt-1">
                     <span class="text-gray-600">Custo por consulta:</span>
-                    <span class="font-semibold text-blue-600" id="modal-monitorar-custo-sped">0 créditos</span>
+                    <span class="font-semibold text-blue-600" id="modal-monitorar-custo-efd">0 créditos</span>
                 </div>
             </div>
         </div>
@@ -1008,13 +971,13 @@
             <button type="button" class="modal-close px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
                 Cancelar
             </button>
-            <button type="button" id="btn-confirmar-monitorar-sped" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            <button type="button" id="btn-confirmar-monitorar-efd" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                 Ativar Monitoramento
             </button>
         </div>
     </div>
 </div>
-<input type="hidden" id="modal-monitorar-participante-id-sped" value="">
+<input type="hidden" id="modal-monitorar-participante-id-efd" value="">
 
 <style>
     #swiper-planos-pagination .swiper-pagination-bullet {
@@ -1043,14 +1006,14 @@
 (function() {
     'use strict';
 
-    function initImportacaoSped() {
-        const container = document.getElementById('importacao-sped-container');
+    function initImportacaoEfd() {
+        const container = document.getElementById('importacao-efd-container');
         if (!container) return;
 
         if (container.dataset.initialized === '1') return;
         container.dataset.initialized = '1';
 
-        console.log('[Monitoramento SPED] Inicializando...');
+        console.log('[Monitoramento EFD] Inicializando...');
 
         const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
@@ -1063,7 +1026,7 @@
         function regenerarTabId() {
             tabId = crypto.randomUUID ? crypto.randomUUID() :
                 (Date.now().toString(36) + Math.random().toString(36).substr(2));
-            console.log('[Monitoramento SPED] Novo tabId gerado:', tabId);
+            console.log('[Monitoramento EFD] Novo tabId gerado:', tabId);
         }
 
         // ===== Funcionalidade de Upload de Arquivo .txt =====
@@ -1076,20 +1039,20 @@
         const txtImportarBtn = document.getElementById('txt-importar-btn');
         const txtErrorMessage = document.getElementById('txt-error-message');
         const txtErrorText = document.getElementById('txt-error-text');
-        const tipoSpedRadios = document.querySelectorAll('input[name="tipo-sped"]');
+        const tipoEfdRadios = document.querySelectorAll('input[name="tipo-efd"]');
 
         const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-        // Função para obter tipo SPED selecionado
-        function getSelectedTipoSped() {
-            const selected = Array.from(tipoSpedRadios).find(radio => radio.checked);
+        // Função para obter tipo EFD selecionado
+        function getSelectedTipoEfd() {
+            const selected = Array.from(tipoEfdRadios).find(radio => radio.checked);
             return selected ? selected.value : '';
         }
 
-        // Função para atualizar visual dos labels do tipo SPED
-        function updateTipoSpedLabels() {
-            const selectedValue = getSelectedTipoSped();
-            document.querySelectorAll('.tipo-sped-label').forEach(function(label) {
+        // Função para atualizar visual dos labels do tipo EFD
+        function updateTipoEfdLabels() {
+            const selectedValue = getSelectedTipoEfd();
+            document.querySelectorAll('.tipo-efd-label').forEach(function(label) {
                 const radio = label.querySelector('input[type="radio"]');
                 if (radio && radio.value === selectedValue) {
                     label.classList.remove('border-gray-200', 'hover:border-gray-300', 'hover:bg-gray-500/8');
@@ -1103,12 +1066,12 @@
 
         // Função para atualizar estado do dropzone
         function updateDropzoneState() {
-            const hasTipoSped = getSelectedTipoSped() !== '';
+            const hasTipoEfd = getSelectedTipoEfd() !== '';
             const dropzoneMainText = document.getElementById('txt-dropzone-main-text');
             const dropzoneSubText = document.getElementById('txt-dropzone-sub-text');
             
             if (txtDropzone && txtFileInput) {
-                if (hasTipoSped) {
+                if (hasTipoEfd) {
                     // Habilitar dropzone
                     txtDropzone.classList.remove('border-gray-300', 'bg-gray-100', 'opacity-60', 'cursor-not-allowed', 'pointer-events-none');
                     txtDropzone.classList.add('border-gray-300', 'bg-gray-50', 'hover:border-blue-400', 'hover:bg-blue-50', 'cursor-pointer');
@@ -1149,7 +1112,7 @@
                     
                     // Atualizar textos
                     if (dropzoneMainText) {
-                        dropzoneMainText.textContent = 'Selecione o tipo de SPED primeiro';
+                        dropzoneMainText.textContent = 'Selecione o tipo de EFD primeiro';
                         dropzoneMainText.classList.remove('text-gray-700', 'font-medium');
                         dropzoneMainText.classList.add('text-gray-500');
                     }
@@ -1164,11 +1127,11 @@
 
         // Função para atualizar habilitação do botão
         function updateImportButtonState() {
-            const hasTipoSped = getSelectedTipoSped() !== '';
+            const hasTipoEfd = getSelectedTipoEfd() !== '';
             const hasFile = txtFileInput && txtFileInput.files && txtFileInput.files.length > 0;
             
             if (txtImportarBtn) {
-                txtImportarBtn.disabled = !(hasTipoSped && hasFile);
+                txtImportarBtn.disabled = !(hasTipoEfd && hasFile);
             }
         }
 
@@ -1300,11 +1263,11 @@
             });
         }
 
-        // Event listeners para radio buttons do tipo SPED
-        if (tipoSpedRadios && tipoSpedRadios.length > 0) {
-            tipoSpedRadios.forEach(function(radio) {
+        // Event listeners para radio buttons do tipo EFD
+        if (tipoEfdRadios && tipoEfdRadios.length > 0) {
+            tipoEfdRadios.forEach(function(radio) {
                 radio.addEventListener('change', function() {
-                    updateTipoSpedLabels();
+                    updateTipoEfdLabels();
                     updateDropzoneState();
                     updateImportButtonState();
                 });
@@ -1607,37 +1570,37 @@
 
         // Função para mostrar seção de resultados após importação concluída
         function mostrarResultadoImportacao(dados) {
-            console.log('[Monitoramento SPED] mostrarResultadoImportacao - dados recebidos:', dados);
+            console.log('[Monitoramento EFD] mostrarResultadoImportacao - dados recebidos:', dados);
             const resultadoEl = resultadoContainer || document.getElementById('resultado-importacao');
-            console.log('[Monitoramento SPED] resultadoContainer existe?', !!resultadoEl);
+            console.log('[Monitoramento EFD] resultadoContainer existe?', !!resultadoEl);
 
             if (!resultadoEl) {
-                console.error('[Monitoramento SPED] resultadoContainer NAO ENCONTRADO no DOM!');
+                console.error('[Monitoramento EFD] resultadoContainer NAO ENCONTRADO no DOM!');
                 return;
             }
 
             // Preencher dados
-            console.log('[Monitoramento SPED] Preenchendo cards...');
-            console.log('[Monitoramento SPED] total_participantes:', dados.total_participantes);
-            console.log('[Monitoramento SPED] duplicados_identificados:', dados.duplicados_identificados);
-            console.log('[Monitoramento SPED] participante_ids:', dados.participante_ids);
+            console.log('[Monitoramento EFD] Preenchendo cards...');
+            console.log('[Monitoramento EFD] total_participantes:', dados.total_participantes);
+            console.log('[Monitoramento EFD] duplicados_identificados:', dados.duplicados_identificados);
+            console.log('[Monitoramento EFD] participante_ids:', dados.participante_ids);
 
             if (resultadoEmpresa) {
                 resultadoEmpresa.textContent = dados.cliente_nome || 'Importação concluída';
             }
             if (resultadoTotalParticipantes) {
                 const valor = dados.total_participantes || dados.total_processados || 0;
-                console.log('[Monitoramento SPED] Setando Total Participantes para:', valor);
+                console.log('[Monitoramento EFD] Setando Total Participantes para:', valor);
                 resultadoTotalParticipantes.textContent = valor;
             }
             if (resultadoNovos) {
                 const valor = dados.novos_salvos || dados.novos || 0;
-                console.log('[Monitoramento SPED] Setando Novos para:', valor);
+                console.log('[Monitoramento EFD] Setando Novos para:', valor);
                 resultadoNovos.textContent = valor;
             }
             if (resultadoDuplicados) {
                 const valor = dados.duplicados_identificados || 0;
-                console.log('[Monitoramento SPED] Setando Duplicados para:', valor);
+                console.log('[Monitoramento EFD] Setando Duplicados para:', valor);
                 resultadoDuplicados.textContent = valor;
             }
 
@@ -1649,7 +1612,7 @@
             if (totalNotas > 0 && resultadoNotas && notasExtraidasCount) {
                 notasExtraidasCount.textContent = totalNotas;
                 resultadoNotas.classList.remove('hidden');
-                console.log('[Monitoramento SPED] Notas extraídas:', totalNotas);
+                console.log('[Monitoramento EFD] Notas extraídas:', totalNotas);
             } else if (resultadoNotas) {
                 resultadoNotas.classList.add('hidden');
             }
@@ -1657,7 +1620,7 @@
             // Guardar ID da importação se disponível nos dados do SSE
             if (dados.importacao_id) {
                 importacaoAtualId = dados.importacao_id;
-                console.log('[Monitoramento SPED] importacaoAtualId setado para:', importacaoAtualId);
+                console.log('[Monitoramento EFD] importacaoAtualId setado para:', importacaoAtualId);
             }
 
             // Guardar IDs dos participantes se disponível (enviados pelo n8n)
@@ -1671,7 +1634,7 @@
                     participanteIdsFromSSE = idsGeral.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
                 }
                 if (participanteIdsFromSSE && participanteIdsFromSSE.length > 0) {
-                    console.log('[Monitoramento SPED] participanteIdsFromSSE setado, total:', participanteIdsFromSSE.length);
+                    console.log('[Monitoramento EFD] participanteIdsFromSSE setado, total:', participanteIdsFromSSE.length);
                 }
             }
 
@@ -1683,7 +1646,7 @@
                     novosIdsFromSSE = dados.participante_novos_ids.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
                 }
                 if (novosIdsFromSSE && novosIdsFromSSE.length > 0) {
-                    console.log('[Monitoramento SPED] novosIdsFromSSE setado, total:', novosIdsFromSSE.length);
+                    console.log('[Monitoramento EFD] novosIdsFromSSE setado, total:', novosIdsFromSSE.length);
                 }
             }
 
@@ -1695,7 +1658,7 @@
                     duplicadosIdsFromSSE = dados.participante_repetido_ids.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
                 }
                 if (duplicadosIdsFromSSE && duplicadosIdsFromSSE.length > 0) {
-                    console.log('[Monitoramento SPED] duplicadosIdsFromSSE setado, total:', duplicadosIdsFromSSE.length);
+                    console.log('[Monitoramento EFD] duplicadosIdsFromSSE setado, total:', duplicadosIdsFromSSE.length);
                 }
             }
 
@@ -1710,17 +1673,24 @@
                 if (resultadoClienteNome)     resultadoClienteNome.textContent     = dados.cliente_nome || '—';
                 if (resultadoClienteDocLabel) resultadoClienteDocLabel.textContent = dados.cliente_tipo_pessoa === 'PJ' ? 'CNPJ' : 'CPF';
                 if (resultadoClienteDoc)      resultadoClienteDoc.textContent      = dados.cliente_documento || '—';
-                if (resultadoClienteLink && dados.cliente_documento) {
-                    resultadoClienteLink.href = '/app/clientes?search=' + encodeURIComponent(dados.cliente_documento);
+
+                // Link direto ao perfil do cliente
+                const clientePerfilUrl = '/app/cliente/' + dados.cliente_id;
+                const resultadoClienteNomeLink = document.getElementById('resultado-cliente-nome-link');
+                if (resultadoClienteNomeLink) {
+                    resultadoClienteNomeLink.href = clientePerfilUrl;
+                }
+                if (resultadoClienteLink) {
+                    resultadoClienteLink.href = clientePerfilUrl;
                 }
                 resultadoCliente.classList.remove('hidden');
             } else if (resultadoCliente) {
                 resultadoCliente.classList.add('hidden');
             }
 
-            // Atualizar link de filtro se temos o ID da importação (do SSE ou do upload inicial)
+            // Atualizar link para detalhes da importação
             if (importacaoAtualId && linkFiltrarImportacao) {
-                linkFiltrarImportacao.href = '/app/participantes?importacao=' + importacaoAtualId;
+                linkFiltrarImportacao.href = '/app/importacao/efd/' + importacaoAtualId;
             }
 
             // Mini-painel Resumo Final de Notas
@@ -1756,7 +1726,7 @@
             resultadoEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
             // Atualizar histórico de importações após conclusão
-            fetch('/monitoramento/sped', {
+            fetch('/monitoramento/efd', {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
             .then(r => r.text())
@@ -1778,7 +1748,7 @@
         async function carregarParticipantes() {
             // Verificar se temos IDs dos participantes (via SSE) ou ID da importação
             if (!participanteIdsFromSSE && !importacaoAtualId) {
-                console.warn('[Monitoramento SPED] Nenhum ID disponível para carregar participantes');
+                console.warn('[Monitoramento EFD] Nenhum ID disponível para carregar participantes');
                 return;
             }
 
@@ -1841,7 +1811,7 @@
                 if (listaParticipantesTabela) listaParticipantesTabela.classList.remove('hidden');
 
             } catch (err) {
-                console.error('[Monitoramento SPED] Erro ao carregar participantes:', err);
+                console.error('[Monitoramento EFD] Erro ao carregar participantes:', err);
                 if (listaParticipantesLoading) listaParticipantesLoading.classList.add('hidden');
                 if (listaParticipantesContainer) {
                     listaParticipantesContainer.classList.remove('hidden');
@@ -1879,7 +1849,7 @@
             };
             html += `<div class="flex items-center gap-2 py-1">
                 <span class="text-green-600 font-bold w-4">✓</span>
-                <span class="w-44 text-gray-700">Participantes</span>
+                <span class="w-44 whitespace-nowrap text-gray-700">Participantes</span>
                 <span class="text-gray-900 font-medium">${part.total || 0} registros</span>
                 <span class="text-gray-400 text-xs ml-2">${part.novos || 0} novos · ${part.duplicados || 0} já existentes</span>
             </div>`;
@@ -1893,7 +1863,7 @@
                 const valor = isSkip ? '<span class="text-gray-400 text-xs">Vazio</span>' : `<span class="text-gray-900 font-medium">${(bd.total_notas || 0)} notas</span><span class="text-gray-500 text-xs ml-2">${formatBRL(bd.valor_total)}</span>`;
                 html += `<div class="flex items-center gap-2 py-1">
                     ${icon}
-                    <span class="w-44 text-gray-700">${nomeBloco[b] || 'Bloco ' + b}</span>
+                    <span class="w-44 whitespace-nowrap text-gray-700">${nomeBloco[b] || 'Bloco ' + b}</span>
                     ${valor}
                 </div>`;
             });
@@ -1902,7 +1872,7 @@
             const tot = rf.totais || {};
             html += `<div class="border-t border-gray-300 pt-1 mt-1 flex items-center gap-2 py-1">
                 <span class="w-4"></span>
-                <span class="w-44 text-gray-700 font-semibold">Total</span>
+                <span class="w-44 whitespace-nowrap text-gray-700 font-semibold">Total</span>
                 <span class="text-gray-900 font-bold">${(tot.notas || 0)} notas</span>
                 <span class="text-gray-500 text-xs ml-2">${formatBRL(tot.valor)}</span>
             </div>`;
@@ -2059,7 +2029,7 @@
                                     <th class="px-2 py-1 text-right text-gray-500">Valor</th>
                                 </tr></thead>
                                 <tbody class="divide-y divide-gray-200">` +
-                                notas.slice(0, 50).map(n => `<tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='/app/importacao/efd/nota/${n.id}'">
+                                notas.slice(0, 50).map(n => `<tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='/app/notas-fiscais/efd/${n.id}'">
                                     <td class="px-2 py-1 font-mono">${n.numero || '—'}</td>
                                     <td class="px-2 py-1">${n.serie || '—'}</td>
                                     <td class="px-2 py-1">${n.modelo || '—'}</td>
@@ -2158,19 +2128,19 @@
             }
 
             const sseUrl = '/app/importacao/efd/progresso/stream?tab_id=' + encodeURIComponent(tabId);
-            console.log('[Monitoramento SPED] Conectando ao SSE:', sseUrl);
+            console.log('[Monitoramento EFD] Conectando ao SSE:', sseUrl);
             eventSourceTxt = new EventSource(sseUrl);
 
             eventSourceTxt.onopen = function() {
                 reconnectAttempts = 0;
-                console.log('[Monitoramento SPED] SSE conectado');
+                console.log('[Monitoramento EFD] SSE conectado');
             };
 
             eventSourceTxt.onmessage = function(event) {
                 let statusConcluido = false;
                 try {
                     const dados = JSON.parse(event.data);
-                    console.log('[Monitoramento SPED] Dados SSE:', dados);
+                    console.log('[Monitoramento EFD] Dados SSE:', dados);
                     atualizarProgresso(dados);
 
                     if (dados.status === 'concluido') {
@@ -2186,7 +2156,7 @@
                         // Sem resumo_final: fase 1 concluída mas notas ainda em andamento.
                         // NÃO fechar SSE, NÃO setar importacaoEmAndamento=false, NÃO mostrar resultados.
                         if (!temResumoFinal) {
-                            console.log('[Monitoramento SPED] Status concluido sem resumo_final — aguardando fase de notas');
+                            console.log('[Monitoramento EFD] Status concluido sem resumo_final — aguardando fase de notas');
                             return;
                         }
 
@@ -2245,7 +2215,7 @@
                             eventSourceTxt = null;
                         }
 
-                        console.log('[Monitoramento SPED] Status concluido - dadosN8n:', dadosN8n);
+                        console.log('[Monitoramento EFD] Status concluido - dadosN8n:', dadosN8n);
 
                         // Toast apenas na primeira vez (SSE pode enviar vários concluido)
                         if (!toastConcluidoMostrado) {
@@ -2258,7 +2228,7 @@
                         }
 
                         // Mostrar seção de resultados em vez de redirecionar
-                        console.log('[Monitoramento SPED] Chamando mostrarResultadoImportacao com:', dadosN8n);
+                        console.log('[Monitoramento EFD] Chamando mostrarResultadoImportacao com:', dadosN8n);
                         mostrarResultadoImportacao(dadosN8n);
                     } else if (dados.status === 'erro' || dados.status === 'timeout') {
                         if (eventSourceTxt) {
@@ -2271,7 +2241,7 @@
                         // Não redireciona automaticamente - usuário decide via botão "Tentar Novamente"
                     }
                 } catch (e) {
-                    console.error('[Monitoramento SPED] Erro ao parsear SSE:', e);
+                    console.error('[Monitoramento EFD] Erro ao parsear SSE:', e);
                 }
                 // Safety net FORA do try/catch — garante exibição mesmo se mostrarResultadoImportacao lançar exceção
                 if (statusConcluido) {
@@ -2291,7 +2261,7 @@
                 if (tentativas < MAX_RECONEXOES) {
                     reconnectAttempts++;
                     const delay = DELAY_RECONEXAO_BASE * Math.pow(2, tentativas);
-                    console.warn('[SPED] SSE desconectado, tentativa ' + reconnectAttempts + '/' + MAX_RECONEXOES + ' em ' + delay + 'ms');
+                    console.warn('[EFD] SSE desconectado, tentativa ' + reconnectAttempts + '/' + MAX_RECONEXOES + ' em ' + delay + 'ms');
 
                     reconnectTimer = setTimeout(() => {
                         reconnectTimer = null;
@@ -2314,7 +2284,7 @@
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden && importacaoEmAndamento) {
                 if (!eventSourceTxt || eventSourceTxt.readyState === EventSource.CLOSED) {
-                    console.log('[Monitoramento SPED] Aba reativada — reconectando SSE');
+                    console.log('[Monitoramento EFD] Aba reativada — reconectando SSE');
                     reconnectAttempts = 0;
                     conectarSSE();
                 }
@@ -2324,12 +2294,12 @@
         // Botão importar - funcionalidade real
         if (txtImportarBtn) {
             txtImportarBtn.addEventListener('click', async function() {
-                const tipoSped = getSelectedTipoSped();
-                if (!tipoSped) {
+                const tipoEfd = getSelectedTipoEfd();
+                if (!tipoEfd) {
                     if (window.showToast) {
-                        window.showToast('Selecione o tipo de SPED antes de importar.', 'error');
+                        window.showToast('Selecione o tipo de EFD antes de importar.', 'error');
                     } else {
-                        alert('Selecione o tipo de SPED antes de importar.');
+                        alert('Selecione o tipo de EFD antes de importar.');
                     }
                     return;
                 }
@@ -2356,8 +2326,8 @@
 
                 try {
                     const formData = new FormData();
-                    formData.append('file', txtFileInput.files[0]);
-                    formData.append('tipo_efd', tipoSped === 'efd-fiscal' ? 'EFD ICMS/IPI' : 'EFD PIS/COFINS');
+                    formData.append('arquivo', txtFileInput.files[0]);
+                    formData.append('tipo_efd', tipoEfd === 'efd-fiscal' ? 'EFD ICMS/IPI' : 'EFD PIS/COFINS');
                     formData.append('tab_id', tabId);
 
                     // Opção de extração de notas fiscais
@@ -2367,7 +2337,7 @@
                         formData.append('extrair_notas', '1');
                     }
 
-                    const response = await fetch('/app/sped/upload', {
+                    const response = await fetch('/app/importacao/efd/importar-txt', {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': csrf,
@@ -2383,12 +2353,12 @@
                         throw new Error(data.error || data.message || 'Erro ao enviar arquivo');
                     }
 
-                    console.log('[Monitoramento SPED] Arquivo enviado com tab_id:', tabId);
+                    console.log('[Monitoramento EFD] Arquivo enviado com tab_id:', tabId);
 
-                    // Guardar ID da importação retornado pelo SpedUploadController
+                    // Guardar ID da importação retornado pelo n8n
                     if (data.importacao_id) {
                         importacaoAtualId = data.importacao_id;
-                        console.log('[Monitoramento SPED] Importação ID:', importacaoAtualId);
+                        console.log('[Monitoramento EFD] Importação ID:', importacaoAtualId);
                     }
 
                     // Marcar como em andamento
@@ -2403,7 +2373,7 @@
                     conectarSSE();
 
                 } catch (err) {
-                    console.error('[Monitoramento SPED] Erro ao enviar arquivo:', err);
+                    console.error('[Monitoramento EFD] Erro ao enviar arquivo:', err);
                     if (window.showToast) {
                         window.showToast(err.message || 'Erro ao enviar arquivo.', 'error');
                     } else {
@@ -2420,7 +2390,7 @@
 
         // Cleanup ao sair da página (para SPA)
         window._cleanupFunctions = window._cleanupFunctions || {};
-        window._cleanupFunctions.initImportacaoSped = function() {
+        window._cleanupFunctions.initImportacaoEfd = function() {
             if (reconnectTimer !== null) {
                 clearTimeout(reconnectTimer);
                 reconnectTimer = null;
@@ -2462,7 +2432,7 @@
         }
 
         // Inicializar estado inicial
-        updateTipoSpedLabels();
+        updateTipoEfdLabels();
         updateDropzoneState();
         updateImportButtonState();
 
@@ -2470,7 +2440,7 @@
         // MONITORAR PARTICIPANTE INDIVIDUAL (delegação de eventos)
         // =====================================================
 
-        const modalMonitorarIndividualSped = document.getElementById('modal-monitorar-individual-sped');
+        const modalMonitorarIndividualEfd = document.getElementById('modal-monitorar-individual-efd');
 
         // Event delegation para botões dinâmicos
         document.addEventListener('click', function(e) {
@@ -2489,50 +2459,50 @@
             if (temPlano) {
                 // Já tem plano - executar consulta
                 if (confirm('Executar consulta agora para este participante?\n\nCNPJ: ' + cnpjFormatado)) {
-                    executarConsultaSped(participanteId);
+                    executarConsultaEfd(participanteId);
                 }
             } else {
                 // Não tem plano - abrir modal
-                if (modalMonitorarIndividualSped) {
-                    document.getElementById('modal-monitorar-cnpj-sped').textContent = cnpjFormatado;
-                    document.getElementById('modal-monitorar-razao-sped').textContent = razaoSocial || '-';
-                    document.getElementById('modal-monitorar-participante-id-sped').value = participanteId;
-                    document.getElementById('modal-monitorar-custo-sped').textContent = '0 créditos';
-                    document.getElementById('btn-confirmar-monitorar-sped').disabled = true;
+                if (modalMonitorarIndividualEfd) {
+                    document.getElementById('modal-monitorar-cnpj-efd').textContent = cnpjFormatado;
+                    document.getElementById('modal-monitorar-razao-efd').textContent = razaoSocial || '-';
+                    document.getElementById('modal-monitorar-participante-id-efd').value = participanteId;
+                    document.getElementById('modal-monitorar-custo-efd').textContent = '0 créditos';
+                    document.getElementById('btn-confirmar-monitorar-efd').disabled = true;
 
                     // Limpar seleção anterior
-                    document.querySelectorAll('input[name="plano_selecionado_sped"]').forEach(r => r.checked = false);
+                    document.querySelectorAll('input[name="plano_selecionado_efd"]').forEach(r => r.checked = false);
 
-                    modalMonitorarIndividualSped.classList.remove('hidden');
+                    modalMonitorarIndividualEfd.classList.remove('hidden');
                     document.body.style.overflow = 'hidden';
                 }
             }
         });
 
         // Atualizar custo quando selecionar plano
-        document.querySelectorAll('input[name="plano_selecionado_sped"]').forEach(function(radio) {
+        document.querySelectorAll('input[name="plano_selecionado_efd"]').forEach(function(radio) {
             radio.addEventListener('change', function() {
-                document.getElementById('modal-monitorar-custo-sped').textContent = radio.dataset.creditos + ' créditos';
-                document.getElementById('btn-confirmar-monitorar-sped').disabled = false;
+                document.getElementById('modal-monitorar-custo-efd').textContent = radio.dataset.creditos + ' créditos';
+                document.getElementById('btn-confirmar-monitorar-efd').disabled = false;
             });
         });
 
         // Fechar modal
-        if (modalMonitorarIndividualSped) {
-            modalMonitorarIndividualSped.addEventListener('click', function(e) {
-                if (e.target === modalMonitorarIndividualSped || e.target.closest('.modal-close')) {
-                    modalMonitorarIndividualSped.classList.add('hidden');
+        if (modalMonitorarIndividualEfd) {
+            modalMonitorarIndividualEfd.addEventListener('click', function(e) {
+                if (e.target === modalMonitorarIndividualEfd || e.target.closest('.modal-close')) {
+                    modalMonitorarIndividualEfd.classList.add('hidden');
                     document.body.style.overflow = '';
                 }
             });
         }
 
         // Confirmar monitoramento
-        const btnConfirmarMonitorarSped = document.getElementById('btn-confirmar-monitorar-sped');
-        if (btnConfirmarMonitorarSped) {
-            btnConfirmarMonitorarSped.addEventListener('click', async function() {
-                const participanteId = document.getElementById('modal-monitorar-participante-id-sped').value;
-                const planoSelecionado = document.querySelector('input[name="plano_selecionado_sped"]:checked');
+        const btnConfirmarMonitorarEfd = document.getElementById('btn-confirmar-monitorar-efd');
+        if (btnConfirmarMonitorarEfd) {
+            btnConfirmarMonitorarEfd.addEventListener('click', async function() {
+                const participanteId = document.getElementById('modal-monitorar-participante-id-efd').value;
+                const planoSelecionado = document.querySelector('input[name="plano_selecionado_efd"]:checked');
 
                 if (!participanteId || !planoSelecionado) {
                     alert('Selecione um plano de monitoramento.');
@@ -2540,8 +2510,8 @@
                 }
 
                 try {
-                    btnConfirmarMonitorarSped.disabled = true;
-                    btnConfirmarMonitorarSped.textContent = 'Ativando...';
+                    btnConfirmarMonitorarEfd.disabled = true;
+                    btnConfirmarMonitorarEfd.textContent = 'Ativando...';
 
                     const response = await fetch('/app/participante/' + participanteId + '/ativar', {
                         method: 'POST',
@@ -2556,7 +2526,7 @@
                     const data = await response.json();
 
                     if (data.success) {
-                        modalMonitorarIndividualSped.classList.add('hidden');
+                        modalMonitorarIndividualEfd.classList.add('hidden');
                         document.body.style.overflow = '';
                         alert('Monitoramento ativado com sucesso!');
                         // Atualizar botão na tabela
@@ -2573,14 +2543,14 @@
                     console.error('Erro ao ativar monitoramento:', error);
                     alert('Erro ao ativar monitoramento. Tente novamente.');
                 } finally {
-                    btnConfirmarMonitorarSped.disabled = false;
-                    btnConfirmarMonitorarSped.textContent = 'Ativar Monitoramento';
+                    btnConfirmarMonitorarEfd.disabled = false;
+                    btnConfirmarMonitorarEfd.textContent = 'Ativar Monitoramento';
                 }
             });
         }
 
         // Função para executar consulta
-        async function executarConsultaSped(participanteId) {
+        async function executarConsultaEfd(participanteId) {
             try {
                 const response = await fetch('/app/participante/' + participanteId + '/consultar', {
                     method: 'POST',
@@ -2604,7 +2574,7 @@
             }
         }
 
-        console.log('[Monitoramento SPED] Inicializacao concluida');
+        console.log('[Monitoramento EFD] Inicializacao concluida');
     }
 
     // ==========================================
@@ -2700,13 +2670,13 @@
             });
         });
 
-        console.log('[Monitoramento SPED] Carousel de planos inicializado');
+        console.log('[Monitoramento EFD] Carousel de planos inicializado');
     }
 
     // Auto-inicializar (funcoes independentes com try-catch)
     function _initAll() {
-        try { initImportacaoSped(); } catch(e) { console.error('[SPED] Erro init:', e); }
-        try { initCarouselPlanos(); } catch(e) { console.error('[SPED] Erro carousel:', e); }
+        try { initImportacaoEfd(); } catch(e) { console.error('[EFD] Erro init:', e); }
+        try { initCarouselPlanos(); } catch(e) { console.error('[EFD] Erro carousel:', e); }
     }
 
     if (document.readyState === 'loading') {
@@ -2716,9 +2686,9 @@
     }
 
     // Expor globalmente para SPA (chama ambas as funcoes)
-    window.initImportacaoSped = function() {
-        try { initImportacaoSped(); } catch(e) { console.error('[SPED] Erro init:', e); }
-        try { initCarouselPlanos(); } catch(e) { console.error('[SPED] Erro carousel:', e); }
+    window.initImportacaoEfd = function() {
+        try { initImportacaoEfd(); } catch(e) { console.error('[EFD] Erro init:', e); }
+        try { initCarouselPlanos(); } catch(e) { console.error('[EFD] Erro carousel:', e); }
     };
 })();
 </script>

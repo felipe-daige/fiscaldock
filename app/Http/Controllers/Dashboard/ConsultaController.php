@@ -119,6 +119,7 @@ class ConsultaController extends Controller
         $perPage = $validated['per_page'] ?? 50;
 
         $query = Participante::where('user_id', $user->id)
+            ->excludingEmpresaPropria()
             ->with(['grupos:id,nome,cor', 'cliente:id,razao_social,is_empresa_propria']);
 
         // Filtro por grupo
@@ -324,10 +325,10 @@ class ConsultaController extends Controller
             ], Response::HTTP_PAYMENT_REQUIRED);
         }
 
-        $webhookUrl = config('services.webhook.consultas_lotes_url');
+        $webhookUrl = config('services.webhook.consultas_url');
 
         if (empty($webhookUrl)) {
-            Log::error('Consultas: webhook não configurado (WEBHOOK_CONSULTAS_LOTES_URL)');
+            Log::error('Consultas: webhook não configurado (WEBHOOK_CONSULTAS_URL)');
 
             return response()->json([
                 'success' => false,
@@ -385,8 +386,7 @@ class ConsultaController extends Controller
                         'crt' => $p->crt,
                     ];
                 })->toArray(),
-                'progress_url' => url('/api/consulta/progress'),
-                'resultado_url' => url('/api/consultas/lote/resultado'),
+                'progress_url' => url('/api/consultas/progresso'),
             ];
 
             // Enviar para n8n
@@ -640,21 +640,7 @@ class ConsultaController extends Controller
 
             // CSV
             $csvContent = $this->reportService->gerarCsv($lote);
-            $filename = $lote->filename ?? "consulta_lote_{$lote->id}.csv";
-
-            return response($csvContent)
-                ->header('Content-Type', 'text/csv; charset=utf-8')
-                ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
-        }
-
-        // Fallback: usar CSV pré-gerado (compatibilidade com lotes antigos)
-        if (! empty($lote->report_csv_base64)) {
-            if ($formato === 'pdf') {
-                abort(400, 'Formato PDF não disponível para este lote. Use CSV.');
-            }
-
-            $csvContent = base64_decode($lote->report_csv_base64);
-            $filename = $lote->filename ?? "consulta_lote_{$lote->id}.csv";
+            $filename = "consulta_lote_{$lote->id}.csv";
 
             return response($csvContent)
                 ->header('Content-Type', 'text/csv; charset=utf-8')
@@ -872,8 +858,9 @@ class ConsultaController extends Controller
 
         $user = Auth::user();
 
-        // Lotes de consultas
+        // Lotes de consultas (excluindo lotes associados à empresa própria)
         $lotes = ConsultaLote::where('user_id', $user->id)
+            ->whereDoesntHave('cliente', fn ($q) => $q->where('is_empresa_propria', true))
             ->with('plano')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
@@ -917,6 +904,46 @@ class ConsultaController extends Controller
             'progresso' => $progresso,
             'total_participantes' => $lote->total_participantes,
             'total_resultados' => $totalResultados,
+        ]);
+    }
+
+    /**
+     * Retorna resultados individuais de um lote (para exibição inline).
+     */
+    public function resultadosLote(Request $request, int $id): JsonResponse
+    {
+        $lote = ConsultaLote::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (! $lote) {
+            return response()->json(['success' => false], 404);
+        }
+
+        $resultados = $lote->resultados()
+            ->with('participante:id,cnpj,razao_social,uf')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'lote_id' => $lote->id,
+            'total' => $resultados->count(),
+            'resultados' => $resultados->map(fn ($r) => [
+                'participante' => [
+                    'cnpj'         => $r->participante?->cnpj,
+                    'razao_social' => $r->participante?->razao_social,
+                    'uf'           => $r->participante?->uf,
+                ],
+                'status'             => $r->status,
+                'error_message'      => $r->error_message,
+                'situacao_cadastral' => $r->getDado('situacao_cadastral'),
+                'simples_nacional'   => $r->getDado('simples_nacional'),
+                'mei'                => $r->getDado('mei'),
+                'cnd_federal'        => $r->getDado('cnd_federal'),
+                'crf_fgts'           => $r->getDado('crf_fgts'),
+                'cndt'               => $r->getDado('cndt'),
+                'cnd_estadual'       => $r->getDado('cnd_estadual'),
+            ]),
         ]);
     }
 

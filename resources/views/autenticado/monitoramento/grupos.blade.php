@@ -1,16 +1,30 @@
 {{-- Monitoramento - Grupos de Participantes --}}
 <div class="min-h-screen bg-gray-50" id="monitoramento-grupos-container">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <style>
+            @keyframes card-slide-in {
+                from { opacity: 0; transform: translateY(60px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .grp-animate {
+                opacity: 0;
+                animation: card-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            @media (prefers-reduced-motion: reduce) {
+                .grp-animate { opacity: 1; animation: none; }
+            }
+        </style>
+
         {{-- Page Header --}}
-        <div class="mb-6">
+        <div class="mb-4 sm:mb-8 grp-animate">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Grupos de Participantes</h1>
-                    <p class="mt-1 text-sm text-gray-600">Organize seus participantes em grupos para facilitar a gestao.</p>
+                    <h1 class="text-xl sm:text-2xl font-semibold text-gray-900">Grupos de Participantes</h1>
+                    <p class="mt-1 text-sm text-gray-500">Organize seus participantes em grupos para facilitar a gestao.</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <a
-                        href="/app/monitoramento"
+                        href="/app/dashboard"
                         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
                         data-link
                     >
@@ -34,7 +48,7 @@
         </div>
 
         {{-- Lista de Grupos --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 grp-animate" style="animation-delay: 0.1s">
             @forelse($grupos ?? [] as $grupo)
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow" data-grupo-id="{{ $grupo->id }}">
                     <div class="p-6">

@@ -231,8 +231,8 @@
                                         <option value="NFE">NF-e</option>
                                         <option value="NFSE">NFS-e</option>
                                         <option value="CTE">CT-e</option>
-                                        <option value="SPED_EFD_FISCAL">SPED EFD Fiscal</option>
-                                        <option value="SPED_EFD_CONTRIB">SPED EFD Contribuicoes</option>
+                                        <option value="SPED_EFD_FISCAL">EFD Fiscal</option>
+                                        <option value="SPED_EFD_CONTRIB">EFD Contribuições</option>
                                         <option value="MANUAL">Manual</option>
                                     </select>
                                     <input
@@ -530,6 +530,14 @@
                                 </svg>
                                 Baixar Relatório
                             </a>
+
+                            {{-- Tabela de resultados (injetada por JS) --}}
+                            <div id="resultados-table-container" class="mt-4 border-t border-gray-100 pt-4">
+                                <div id="resultados-loading" class="text-sm text-gray-500 text-center py-4">
+                                    Carregando resultados...
+                                </div>
+                                <div id="resultados-table-wrapper" class="hidden overflow-x-auto"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -711,6 +719,7 @@
             progressoStream: '/app/consultas/nova/progresso/stream',
             baixarLote: '/app/consultas/lote/{id}/baixar',
             loteStatus: '/app/consultas/lote/{id}/status',
+            resultadosLote: '/app/consultas/lote/{id}/resultados',
             participantesPorClientes: '/app/consultas/nova/participantes-por-clientes'
         },
         planos: {

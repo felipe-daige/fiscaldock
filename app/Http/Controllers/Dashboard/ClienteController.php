@@ -345,6 +345,13 @@ class ClienteController extends Controller
             return response()->json(['success' => false, 'message' => 'Cliente nao encontrado'], 404);
         }
 
+        if ($cliente->is_empresa_propria) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Não é possível excluir a empresa própria.',
+            ], 403);
+        }
+
         try {
             $nome = $cliente->razao_social ?? $cliente->nome ?? '';
             $documento = $cliente->documento;
@@ -392,6 +399,7 @@ class ClienteController extends Controller
 
         try {
             $count = Cliente::where('user_id', $user->id)
+                ->where('is_empresa_propria', false)
                 ->whereIn('id', $validated['ids'])
                 ->delete();
 

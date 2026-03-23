@@ -18,52 +18,7 @@ services:
       - /etc/fiscaldock/.env:/var/www/html/.env:ro
       - app_storage:/var/www/html/storage
       - ./storage/logs:/var/www/html/storage/logs
-    environment:
-      # App
-      APP_ENV: ${APP_ENV:-production}
-      APP_DEBUG: ${APP_DEBUG:-false}
-      APP_URL: ${APP_URL:-https://fiscaldock.com.br}
-      ASSET_URL: ${ASSET_URL:-https://fiscaldock.com.br}
-      APP_KEY: ${APP_KEY}
-
-      # Database
-      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
-      DB_HOST: ${DB_HOST:-postgres}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_DATABASE: ${DB_DATABASE:-fiscaldock}
-      DB_USERNAME: ${DB_USERNAME:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD}
-
-      # Cache & Session
-      CACHE_STORE: ${CACHE_STORE:-redis}
-      SESSION_DRIVER: ${SESSION_DRIVER:-database}
-      SESSION_LIFETIME: ${SESSION_LIFETIME:-120}
-      SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-true}
-      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
-
-      # Redis (opcional)
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      REDIS_PORT: ${REDIS_PORT:-6379}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-
-      # Proxy & Security
-      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-*}
-      TRUSTED_HOSTS: ${TRUSTED_HOSTS:-fiscaldock.com.br,www.fiscaldock.com.br}
-
-      # Logging
-      LOG_CHANNEL: ${LOG_CHANNEL:-stack}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      # API & Webhooks
-      API_TOKEN: ${API_TOKEN}
-      WEBHOOK_SPED_CONTRIBUICOES_URL: ${WEBHOOK_SPED_CONTRIBUICOES_URL}
-      WEBHOOK_SPED_FISCAL_URL: ${WEBHOOK_SPED_FISCAL_URL}
-      WEBHOOK_SPED_CONTRIBUICOES_COMPLETA_URL: ${WEBHOOK_SPED_CONTRIBUICOES_COMPLETA_URL}
-      WEBHOOK_SPED_FISCAL_COMPLETA_URL: ${WEBHOOK_SPED_FISCAL_COMPLETA_URL}
-      WEBHOOK_MONITORAMENTO_IMPORTACAO_CONTRIBUICOES_URL: ${WEBHOOK_MONITORAMENTO_IMPORTACAO_CONTRIBUICOES_URL}
-      WEBHOOK_MONITORAMENTO_IMPORTACAO_FISCAL_URL: ${WEBHOOK_MONITORAMENTO_IMPORTACAO_FISCAL_URL}
-      WEBHOOK_MONITORAMENTO_CONSULTA_URL: ${WEBHOOK_MONITORAMENTO_CONSULTA_URL}
-      WEBHOOK_IMPORTACAO_XML_URL: ${WEBHOOK_IMPORTACAO_XML_URL}
-      WEBHOOK_CONSULTAS_LOTES_URL: ${WEBHOOK_CONSULTAS_LOTES_URL}
+    env_file: /etc/fiscaldock/.env
     labels:
       # Habilitar Traefik
       - "traefik.enable=true"
@@ -120,38 +75,7 @@ services:
       - app_storage:/var/www/html/storage
       - ./storage/logs:/var/www/html/storage/logs
     command: php artisan schedule:work
-    environment:
-      APP_ENV: ${APP_ENV:-production}
-      APP_DEBUG: ${APP_DEBUG:-false}
-      APP_URL: ${APP_URL:-https://fiscaldock.com.br}
-      APP_KEY: ${APP_KEY}
-      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
-      DB_HOST: ${DB_HOST:-postgres}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_DATABASE: ${DB_DATABASE:-fiscaldock}
-      DB_USERNAME: ${DB_USERNAME:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD}
-      CACHE_STORE: ${CACHE_STORE:-redis}
-      SESSION_DRIVER: ${SESSION_DRIVER:-database}
-      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      REDIS_PORT: ${REDIS_PORT:-6379}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-*}
-      TRUSTED_HOSTS: ${TRUSTED_HOSTS:-fiscaldock.com.br,www.fiscaldock.com.br}
-      LOG_CHANNEL: ${LOG_CHANNEL:-stack}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      # API & Webhooks
-      API_TOKEN: ${API_TOKEN}
-      WEBHOOK_SPED_CONTRIBUICOES_URL: ${WEBHOOK_SPED_CONTRIBUICOES_URL}
-      WEBHOOK_SPED_FISCAL_URL: ${WEBHOOK_SPED_FISCAL_URL}
-      WEBHOOK_SPED_CONTRIBUICOES_COMPLETA_URL: ${WEBHOOK_SPED_CONTRIBUICOES_COMPLETA_URL}
-      WEBHOOK_SPED_FISCAL_COMPLETA_URL: ${WEBHOOK_SPED_FISCAL_COMPLETA_URL}
-      WEBHOOK_MONITORAMENTO_IMPORTACAO_CONTRIBUICOES_URL: ${WEBHOOK_MONITORAMENTO_IMPORTACAO_CONTRIBUICOES_URL}
-      WEBHOOK_MONITORAMENTO_IMPORTACAO_FISCAL_URL: ${WEBHOOK_MONITORAMENTO_IMPORTACAO_FISCAL_URL}
-      WEBHOOK_MONITORAMENTO_CONSULTA_URL: ${WEBHOOK_MONITORAMENTO_CONSULTA_URL}
-      WEBHOOK_IMPORTACAO_XML_URL: ${WEBHOOK_IMPORTACAO_XML_URL}
-      WEBHOOK_CONSULTAS_LOTES_URL: ${WEBHOOK_CONSULTAS_LOTES_URL}
+    env_file: /etc/fiscaldock/.env
     depends_on:
       - app
 
@@ -167,38 +91,9 @@ services:
       - app_storage:/var/www/html/storage
       - ./storage/logs:/var/www/html/storage/logs
     command: php artisan queue:work --verbose --tries=3 --timeout=90
+    env_file: /etc/fiscaldock/.env
     environment:
-      APP_ENV: ${APP_ENV:-production}
-      APP_DEBUG: ${APP_DEBUG:-false}
-      APP_URL: ${APP_URL:-https://fiscaldock.com.br}
-      APP_KEY: ${APP_KEY}
-      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
-      DB_HOST: ${DB_HOST:-postgres}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_DATABASE: ${DB_DATABASE:-fiscaldock}
-      DB_USERNAME: ${DB_USERNAME:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD}
-      CACHE_STORE: ${CACHE_STORE:-redis}
-      SESSION_DRIVER: ${SESSION_DRIVER:-database}
       QUEUE_CONNECTION: database
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      REDIS_PORT: ${REDIS_PORT:-6379}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-*}
-      TRUSTED_HOSTS: ${TRUSTED_HOSTS:-fiscaldock.com.br,www.fiscaldock.com.br}
-      LOG_CHANNEL: ${LOG_CHANNEL:-stack}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      # API & Webhooks
-      API_TOKEN: ${API_TOKEN}
-      WEBHOOK_SPED_CONTRIBUICOES_URL: ${WEBHOOK_SPED_CONTRIBUICOES_URL}
-      WEBHOOK_SPED_FISCAL_URL: ${WEBHOOK_SPED_FISCAL_URL}
-      WEBHOOK_SPED_CONTRIBUICOES_COMPLETA_URL: ${WEBHOOK_SPED_CONTRIBUICOES_COMPLETA_URL}
-      WEBHOOK_SPED_FISCAL_COMPLETA_URL: ${WEBHOOK_SPED_FISCAL_COMPLETA_URL}
-      WEBHOOK_MONITORAMENTO_IMPORTACAO_CONTRIBUICOES_URL: ${WEBHOOK_MONITORAMENTO_IMPORTACAO_CONTRIBUICOES_URL}
-      WEBHOOK_MONITORAMENTO_IMPORTACAO_FISCAL_URL: ${WEBHOOK_MONITORAMENTO_IMPORTACAO_FISCAL_URL}
-      WEBHOOK_MONITORAMENTO_CONSULTA_URL: ${WEBHOOK_MONITORAMENTO_CONSULTA_URL}
-      WEBHOOK_IMPORTACAO_XML_URL: ${WEBHOOK_IMPORTACAO_XML_URL}
-      WEBHOOK_CONSULTAS_LOTES_URL: ${WEBHOOK_CONSULTAS_LOTES_URL}
     depends_on:
       - app
 

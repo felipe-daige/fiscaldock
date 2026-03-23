@@ -13,7 +13,9 @@ use App\Http\Controllers\Dashboard\MonitoramentoController;
 use App\Http\Controllers\Dashboard\NotaFiscalController;
 use App\Http\Controllers\Dashboard\ParticipanteController;
 use App\Http\Controllers\Dashboard\ParticipanteGrupoController;
+use App\Http\Controllers\Landing\BlogController;
 use App\Http\Controllers\Landing\LandingPageController;
+use App\Http\Controllers\Landing\SitemapController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingPageController::class, 'inicio'])->name('home');
@@ -22,8 +24,10 @@ Route::get('/inicio', [LandingPageController::class, 'inicio'])->name('inicio');
 Route::get('/solucoes', [LandingPageController::class, 'solucoes'])->name('solucoes');
 Route::get('/precos', [LandingPageController::class, 'precos'])->name('precos');
 Route::get('/faq', [LandingPageController::class, 'faq'])->name('faq');
-Route::get('/blog', [LandingPageController::class, 'blog'])->name('blog');
-Route::get('/blog/{slug}', [LandingPageController::class, 'blogPost'])->name('blog.post');
+Route::get('/blog', [BlogController::class, 'index'])->name('blog');
+Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.post');
+
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');

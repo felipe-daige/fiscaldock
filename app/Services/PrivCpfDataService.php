@@ -193,14 +193,14 @@ class PrivCpfDataService
     }
 
     /**
-     * Processa um participante completo do SPED (cadastro + operação + relacionamento).
+     * Processa um participante completo do EFD (cadastro + operação + relacionamento).
      * Método de conveniência que orquestra os 3 anteriores.
      *
      * @param array $participante Dados do registro 0150 (cadastro)
      * @param array $operacao Dados do documento fiscal (C100, C170, D100)
      * @return void
      */
-    public function processarParticipanteSped(array $participante, array $operacao): void
+    public function processarParticipanteEfd(array $participante, array $operacao): void
     {
         try {
             // 1. Upsert cadastro
@@ -232,7 +232,7 @@ class PrivCpfDataService
                 );
             }
         } catch (\Exception $e) {
-            Log::error('Erro ao processar participante SPED', [
+            Log::error('Erro ao processar participante EFD', [
                 'participante' => $participante,
                 'operacao' => $operacao,
                 'error' => $e->getMessage(),

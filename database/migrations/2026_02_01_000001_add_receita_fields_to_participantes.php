@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('cnae_principal', 10)->nullable()->after('data_inicio_atividade');
             $table->string('cnae_principal_descricao', 255)->nullable()->after('cnae_principal');
 
-            // JSONB fields for arrays
+            // jsonb: n8n passa arrays nativos para colunas jsonb sem stringify
             $table->jsonb('cnaes_secundarios')->nullable()->after('cnae_principal_descricao');
             $table->jsonb('qsa')->nullable()->after('cnaes_secundarios');
 
@@ -33,18 +33,13 @@ return new class extends Migration
             $table->index('porte');
         });
 
-        // GIN index for JSONB array queries (PostgreSQL specific)
-        DB::statement('CREATE INDEX idx_participantes_cnaes_secundarios ON participantes USING GIN(cnaes_secundarios)');
-    }
+}
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        // Drop GIN index first
-        DB::statement('DROP INDEX IF EXISTS idx_participantes_cnaes_secundarios');
-
         Schema::table('participantes', function (Blueprint $table) {
             $table->dropIndex(['cnae_principal']);
             $table->dropIndex(['porte']);

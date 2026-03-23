@@ -13,10 +13,14 @@ Route::get('/health', [DataReceiverController::class, 'health'])
 // Importação EFD
 // ============================================
 
-// Recebe progresso de importação de arquivo EFD (SPED)
-// n8n envia progresso para Laravel armazenar em cache (SSE lê do cache)
-Route::post('/importacao/efd/importacao-txt/progress', [DataReceiverController::class, 'receiveImportacaoTxtProgress'])
-    ->name('api.importacao.efd.importacao-txt.progress');
+// Recebe progresso de importação EFD (usado pelo n8n)
+Route::post('/importacao/efd/progresso', [DataReceiverController::class, 'receiveImportacaoTxtProgress'])
+    ->name('api.importacao.efd.progresso');
+
+// Recebe progresso de extração de notas EFD por bloco (A, C, D)
+// n8n envia fase + contadores por bloco; SSE lê e mescla no payload principal
+Route::post('/importacao/efd/notas/progresso', [DataReceiverController::class, 'receiveNotasEfdProgress'])
+    ->name('api.importacao.efd.notas.progresso');
 
 // ============================================
 // Importação XML
@@ -37,16 +41,11 @@ Route::post('/monitoramento/consulta/resultado', [DataReceiverController::class,
     ->name('api.monitoramento.consulta.resultado');
 
 // ============================================
-// Consultas de lotes
+// Consultas
 // ============================================
 
-// Recebe progresso de consulta em lote
-// n8n envia progresso para Laravel armazenar em cache (SSE lê do cache)
-Route::post('/consulta/progress', [DataReceiverController::class, 'receiveConsultaProgress'])
-    ->name('api.consulta.progress');
-
-// Recebe resultado individual de consulta (por participante)
-// n8n envia resultado de cada participante para armazenar em consulta_resultados
-Route::post('/consultas/lote/resultado', [DataReceiverController::class, 'receiveConsultaLoteResultado'])
-    ->name('api.consultas.lote.resultado');
+// Endpoint unificado de progresso, conclusão e erro de consulta em lote
+// n8n envia status=progresso (cache SSE), status=concluido (DB + cache) ou status=erro (refund + cache)
+Route::post('/consultas/progresso', [DataReceiverController::class, 'receiveConsultasProgresso'])
+    ->name('api.consultas.progresso');
 

@@ -36,21 +36,15 @@ return [
     ],
 
     'webhook' => [
-        // Webhooks SPED - LEGADO
-        'sped_contribuicoes_url' => env('WEBHOOK_SPED_CONTRIBUICOES_URL'),
-        'sped_fiscal_url' => env('WEBHOOK_SPED_FISCAL_URL'),
-        // Webhooks SPED - LEGADO
-        'sped_contribuicoes_completa_url' => env('WEBHOOK_SPED_CONTRIBUICOES_COMPLETA_URL'),
-        'sped_fiscal_completa_url' => env('WEBHOOK_SPED_FISCAL_COMPLETA_URL'),
-        // Webhook Monitoramento - importação de arquivo .txt (separado por tipo)
-        'monitoramento_importacao_contribuicoes_url' => env('WEBHOOK_MONITORAMENTO_IMPORTACAO_CONTRIBUICOES_URL'),
-        'monitoramento_importacao_fiscal_url' => env('WEBHOOK_MONITORAMENTO_IMPORTACAO_FISCAL_URL'),
-        // Webhook Monitoramento - consultas avulsas e de assinatura
-        'monitoramento_consulta_url' => env('WEBHOOK_MONITORAMENTO_CONSULTA_URL'),
+        // Webhooks EFD (participantes / com extração de notas)
+        'efd_contribuicoes_url' => env('WEBHOOK_EFD_CONTRIBUICOES_URL'),
+        'efd_contribuicoes_notas_url' => env('WEBHOOK_EFD_CONTRIBUICOES_NOTAS_URL'),
+        'efd_fiscal_url' => env('WEBHOOK_EFD_FISCAL_URL'),
+        'efd_fiscal_notas_url' => env('WEBHOOK_EFD_FISCAL_NOTAS_URL'),
         // Webhook Importação de XMLs (NF-e, NFS-e, CT-e)
         'importacao_xml_url' => env('WEBHOOK_IMPORTACAO_XML_URL'),
-        // Webhook Consultas - consulta de lotes de participantes (substitui RAF)
-        'consultas_lotes_url' => env('WEBHOOK_CONSULTAS_LOTES_URL'),
+        // Webhook Consultas - endpoint unificado (avulsa e lote)
+        'consultas_url' => env('WEBHOOK_CONSULTAS_URL'),
         // Credenciais
         'username' => env('WEBHOOK_SPED_USERNAME'),
         'password' => env('WEBHOOK_SPED_PASSWORD'),
@@ -58,6 +52,14 @@ return [
 
     'api' => [
         'token' => env('API_TOKEN', ''),
+    ],
+
+    'receitaws' => [
+        'url' => env('RECEITAWS_API_URL', 'https://www.receitaws.com.br/v1'),
+    ],
+
+    'viacep' => [
+        'url' => env('VIACEP_API_URL', 'https://viacep.com.br/ws'),
     ],
 
 ];

@@ -45,22 +45,6 @@ class LandingPageController extends Controller
         ]);
     }
 
-    public function blog(Request $request)
-    {
-        return $this->renderLanding($request, 'paginas.blog', [
-            'title' => 'Blog — FiscalDock | Conteúdo para Contadores',
-            'description' => 'Artigos sobre compliance fiscal, SPED, riscos tributários e boas práticas para escritórios contábeis.',
-        ]);
-    }
-
-    public function blogPost(Request $request, string $slug)
-    {
-        return $this->renderLanding($request, 'paginas.blog-post', [
-            'title' => 'Blog — FiscalDock | Conteúdo para Contadores',
-            'description' => 'Artigos sobre compliance fiscal, SPED, riscos tributários e boas práticas para escritórios contábeis.',
-        ]);
-    }
-
     /**
      * Renderiza uma view da landing page aplicando o tema padrão e redirecionando
      * usuários autenticados para o dashboard.

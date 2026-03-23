@@ -137,7 +137,6 @@
                     <thead class="bg-gray-50 border-b border-gray-200">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-44">Data</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Arquivo</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">Participantes</th>
                             <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider w-28">Ações</th>
                         </tr>
@@ -148,26 +147,11 @@
                                 <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
                                     {{ $relatorio->created_at->format('d/m/Y H:i') }}
                                 </td>
-                                <td class="px-6 py-4 text-sm">
-                                    <span class="font-medium text-gray-800">{{ $relatorio->filename ?? '-' }}</span>
-                                </td>
                                 <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap tabular-nums">
                                     {{ $relatorio->total_participants ?? '-' }}
                                 </td>
                                 <td class="px-6 py-4 text-sm text-right">
-                                    @if($relatorio->report_csv_base64)
-                                        <a
-                                            href="/app/consultas/lote/{{ $relatorio->id }}/baixar"
-                                            class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium"
-                                        >
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                            </svg>
-                                            Baixar CSV
-                                        </a>
-                                    @else
-                                        <span class="text-gray-400">-</span>
-                                    @endif
+                                    <span class="text-gray-400">-</span>
                                 </td>
                             </tr>
                         @endforeach
