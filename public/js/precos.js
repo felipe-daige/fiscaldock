@@ -7,26 +7,31 @@ function initPrecos() {
     if (_precosInitialized) {
         cleanupPrecos();
     }
-
+    
     const periodButtons = document.querySelectorAll('.period-btn');
-
+    
     if (periodButtons.length === 0) {
         return; // Se não existir, não inicializa
     }
-
+    
     let currentPeriod = 'anual'; // Período padrão
 
     // Dados dos preços por período e plano
     const prices = {
-        essencial: {
-            anual: { price: 'R$ 97', savings: 'R$ 360', total: 'R$ 1.164/ano' },
-            semestral: { price: 'R$ 112', savings: 'R$ 90', total: 'R$ 672/semestre' },
-            mensal: { price: 'R$ 127', savings: null, total: null }
+        light: {
+            anual: { price: 'R$ 159', savings: 'R$ 480', total: 'R$ 1.908/ano' },
+            semestral: { price: 'R$ 189', savings: 'R$ 60', total: 'R$ 1.134/semestre' },
+            mensal: { price: 'R$ 199', savings: null, total: null }
         },
-        profissional: {
-            anual: { price: 'R$ 197', savings: 'R$ 600', total: 'R$ 2.364/ano' },
-            semestral: { price: 'R$ 222', savings: 'R$ 150', total: 'R$ 1.332/semestre' },
-            mensal: { price: 'R$ 247', savings: null, total: null }
+        plus: {
+            anual: { price: 'R$ 239', savings: 'R$ 720', total: 'R$ 2.868/ano' },
+            semestral: { price: 'R$ 284', savings: 'R$ 90', total: 'R$ 1.704/semestre' },
+            mensal: { price: 'R$ 299', savings: null, total: null }
+        },
+        premium: {
+            anual: { price: 'R$ 367', savings: 'R$ 1.104', total: 'R$ 4.404/ano' },
+            semestral: { price: 'R$ 436', savings: 'R$ 138', total: 'R$ 2.616/semestre' },
+            mensal: { price: 'R$ 459', savings: null, total: null }
         }
     };
 
@@ -47,7 +52,7 @@ function initPrecos() {
         Object.keys(prices).forEach(planName => {
             const planData = prices[planName][period];
             const planCard = document.querySelector(`[data-plan="${planName}"]`);
-
+            
             if (!planCard) return;
 
             // Atualizar preço principal
@@ -97,14 +102,14 @@ function initPrecos() {
             const period = this.dataset.period;
             updatePrices(period);
         };
-
+        
         button.addEventListener('click', handler);
         _precosHandlers.push({ element: button, handler });
     });
 
     // Inicializar com período anual
     updatePrices('anual');
-
+    
     _precosInitialized = true;
 }
 
