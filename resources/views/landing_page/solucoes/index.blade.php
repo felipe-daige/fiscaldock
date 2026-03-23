@@ -1,502 +1,183 @@
-<style>
-    /* Estilos existentes do swiper */
-    .solutions-swiper .swiper-slide {
-        width: 320px;
-        height: 280px;
-        pointer-events: none;
-    }
-
-    .solutions-swiper .swiper-slide > div {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
-
-    .solutions-swiper .swiper-slide * {
-        pointer-events: none;
-    }
-
-    .solutions-swiper {
-        overflow: hidden;
-    }
-
-    .solutions-swiper .swiper-wrapper {
-        transition-timing-function: linear !important;
-    }
-
-    /* Estilos do accordion existentes */
-    .solution-accordion-item {
-        margin-bottom: 1rem;
-    }
-
-    .solution-accordion-header {
-        outline: none;
-    }
-
-    .solution-accordion-header[aria-expanded="true"] svg {
-        transform: rotate(180deg);
-    }
-
-    .solution-accordion-content {
-        transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
-    }
-
-    /* Novos estilos do design de Importação XML */
-    .hero-gradient {
-        background: linear-gradient(135deg, #0b1f3a 0%, #1e4fa0 50%, #133a73 100%);
-    }
-
-    .fade-in-up {
-        animation: fadeInUp 0.6s ease-out forwards;
-        opacity: 0;
-    }
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .section-fade-in {
-        opacity: 0;
-        transform: translateY(30px);
-        transition: all 0.6s ease;
-    }
-
-    .section-fade-in.visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    .feature-card {
-        transition: all 0.3s ease;
-    }
-
-    .feature-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    }
-
-    .demo-area {
-        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-        border-radius: 1rem;
-        padding: 3rem;
-        position: relative;
-    }
-
-    @media (max-width: 640px) {
-        .hero-gradient h1 {
-            font-size: 2rem;
-        }
-        
-        .hero-gradient p {
-            font-size: 1rem;
-        }
-
-        .demo-area {
-            padding: 1.5rem;
-        }
-    }
-</style>
-
 <!-- Hero Section -->
-<section class="hero-gradient py-12 md:py-20 text-white">
+<section class="bg-gradient-to-br from-blue-50 via-blue-100 to-white py-16 md:py-24">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+            Tudo que seu escritório precisa para compliance fiscal
+        </h1>
+        <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+            Conheça as ferramentas que automatizam seu trabalho e protegem seus clientes contra riscos fiscais.
+        </p>
+    </div>
+</section>
+
+<!-- Solução 1: Importação de SPED -->
+<section class="py-16 md:py-24 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center fade-in-up">
-            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6">
-                Soluções que Transformam o Dia a Dia Fiscal
-            </h1>
-            <p class="text-lg sm:text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto mb-6 md:mb-8 px-4">
-                Seis funcionalidades principais que automatizam e otimizam processos fiscais e contábeis
-            </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <!-- Text -->
+            <div>
+                <span class="inline-block text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">Importação de SPED</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Importe seu SPED e descubra riscos em minutos</h2>
+                <ul class="space-y-4">
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Upload de arquivos EFD ICMS/IPI e PIS/COFINS</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Extração automática de participantes, notas e valores</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Identificação de notas por bloco (A, C, D)</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Resumo completo com totais por bloco e participante</span>
+                    </li>
+                </ul>
+            </div>
+            <!-- Illustration -->
+            <div class="flex justify-center">
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-8 w-full max-w-sm border border-blue-200">
+                    <div class="bg-white rounded-xl p-6 shadow-sm space-y-4">
+                        <div class="flex items-center gap-3 mb-4">
+                            <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                            <span class="font-semibold text-gray-700">Upload SPED</span>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                <div class="h-2 bg-green-200 rounded-full flex-1"></div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                <div class="h-2 bg-green-200 rounded-full flex-1"></div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                <div class="h-2 bg-green-200 rounded-full flex-1"></div>
+                            </div>
+                        </div>
+                        <div class="pt-3 border-t border-gray-100">
+                            <div class="text-xs text-gray-400 uppercase tracking-wider mb-1">Total processado</div>
+                            <div class="text-lg font-bold text-gray-800">357 notas</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
-<!-- Seção 2: Demonstração Visual Interativa -->
-<section id="solucoes-funcionalidades" class="py-16 bg-white">
+<!-- Solução 2: Monitoramento de Participantes -->
+<section class="py-16 md:py-24 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="demo-area">
-            <div class="text-center mb-8">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4">Veja Nossas Funcionalidades</h2>
-                <p class="text-lg text-gray-600">Seis funcionalidades principais que transformam o dia a dia do escritório contábil e das empresas</p>
-            </div>
-
-            <!-- Swiper -->
-        <div class="swiper solutions-swiper">
-            <div class="swiper-wrapper">
-                <!-- Primeira sequência -->
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-16 h-16 mx-auto object-contain">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <!-- Illustration (left on desktop) -->
+            <div class="flex justify-center order-2 md:order-1">
+                <div class="bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl p-8 w-full max-w-sm border border-orange-200">
+                    <div class="bg-white rounded-xl p-6 shadow-sm space-y-3">
+                        <div class="flex items-center gap-3 mb-4">
+                            <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                            <span class="font-semibold text-gray-700">Monitoramento</span>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Central de Documentos</h3>
-                        <p class="text-gray-600 text-center">Upload e organização por empresa, competência e tipo. Versionamento e busca inteligente com histórico e evidência.</p>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-16 h-16 mx-auto object-contain">
+                        <div class="flex items-center justify-between bg-green-50 rounded-lg px-4 py-2">
+                            <span class="text-sm text-gray-600">Fornecedor A</span>
+                            <span class="text-xs font-medium text-green-600 bg-green-100 px-2 py-0.5 rounded-full">Ativo</span>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Leitura e Diagnóstico</h3>
-                        <p class="text-gray-600 text-center">Importação e estruturação de SPED, detecção de inconsistências e semáforo por competência com alertas.</p>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-16 h-16 mx-auto object-contain">
+                        <div class="flex items-center justify-between bg-red-50 rounded-lg px-4 py-2">
+                            <span class="text-sm text-gray-600">Fornecedor B</span>
+                            <span class="text-xs font-medium text-red-600 bg-red-100 px-2 py-0.5 rounded-full">Baixado</span>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Motor de Regras</h3>
-                        <p class="text-gray-600 text-center">Regras parametrizáveis por operação. Classificação automática e evolução contínua que aprende seu padrão.</p>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-16 h-16 mx-auto object-contain">
+                        <div class="flex items-center justify-between bg-yellow-50 rounded-lg px-4 py-2">
+                            <span class="text-sm text-gray-600">Fornecedor C</span>
+                            <span class="text-xs font-medium text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded-full">Suspenso</span>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Compliance e Situação Fiscal</h3>
-                        <p class="text-gray-600 text-center">Painel de situação por CNPJ, alertas de vencimento e relatório de risco com evidências e histórico.</p>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-16 h-16 mx-auto object-contain">
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Automação de Comunicação</h3>
-                        <p class="text-gray-600 text-center">Cobrança automática via WhatsApp e portal. Mensagens com contexto e registro completo da conversa.</p>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-16 h-16 mx-auto object-contain">
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Portal do Cliente</h3>
-                        <p class="text-gray-600 text-center">Checklist do mês, pendências, prazos e histórico. Permissões por perfil para menos atrito e mais previsibilidade.</p>
-                    </div>
-                </div>
-
-                <!-- Segunda sequência (duplicação para loop infinito) -->
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-16 h-16 mx-auto object-contain">
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Central de Documentos</h3>
-                        <p class="text-gray-600 text-center">Upload e organização por empresa, competência e tipo. Versionamento e busca inteligente com histórico e evidência.</p>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-16 h-16 mx-auto object-contain">
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Leitura e Diagnóstico</h3>
-                        <p class="text-gray-600 text-center">Importação e estruturação de SPED, detecção de inconsistências e semáforo por competência com alertas.</p>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-16 h-16 mx-auto object-contain">
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Motor de Regras</h3>
-                        <p class="text-gray-600 text-center">Regras parametrizáveis por operação. Classificação automática e evolução contínua que aprende seu padrão.</p>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-16 h-16 mx-auto object-contain">
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Compliance e Situação Fiscal</h3>
-                        <p class="text-gray-600 text-center">Painel de situação por CNPJ, alertas de vencimento e relatório de risco com evidências e histórico.</p>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-16 h-16 mx-auto object-contain">
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Automação de Comunicação</h3>
-                        <p class="text-gray-600 text-center">Cobrança automática via WhatsApp e portal. Mensagens com contexto e registro completo da conversa.</p>
-                    </div>
-                </div>
-
-                <div class="swiper-slide">
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500">
-                        <div class="text-center mb-4">
-                            <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-16 h-16 mx-auto object-contain">
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Portal do Cliente</h3>
-                        <p class="text-gray-600 text-center">Checklist do mês, pendências, prazos e histórico. Permissões por perfil para menos atrito e mais previsibilidade.</p>
                     </div>
                 </div>
             </div>
-        </div>
+            <!-- Text -->
+            <div class="order-1 md:order-2">
+                <span class="inline-block text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">Monitoramento de Participantes</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Saiba quando um fornecedor vira risco antes da auditoria</h2>
+                <ul class="space-y-4">
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Consulta automática de situação cadastral</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Alertas quando CNPJ muda de status</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Agrupamento por categoria (fornecedores, clientes)</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Histórico completo de consultas</span>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 </section>
 
-<!-- Seção 3: O que Fazemos -->
-<section class="py-16 bg-gray-50 section-fade-in">
+<!-- Solução 3: Consultas Tributárias em Lote -->
+<section class="py-16 md:py-24 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-            <h2 class="text-4xl font-bold text-gray-900 mb-4">O que Fazemos</h2>
-            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-                Seis funcionalidades principais que automatizam e otimizam processos fiscais e contábeis, 
-                transformando o dia a dia do escritório contábil e das empresas.
-            </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
-                <div class="text-center mb-4">
-                    <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Central de Documentos" class="w-16 h-16 mx-auto object-contain">
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Central de Documentos</h3>
-                <p class="text-gray-600">Upload e organização por empresa, competência e tipo. Versionamento e busca inteligente.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <!-- Text -->
+            <div>
+                <span class="inline-block text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">Consultas em Lote</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Consulte centenas de CNPJs de uma vez</h2>
+                <ul class="space-y-4">
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Consulta em lote por arquivo ou seleção</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Resultados em tempo real via SSE</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Download de relatório com resultados</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Integração com Receita Federal e SINTEGRA</span>
+                    </li>
+                </ul>
             </div>
-
-            <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
-                <div class="text-center mb-4">
-                    <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="Leitura e Diagnóstico" class="w-16 h-16 mx-auto object-contain">
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Leitura e Diagnóstico</h3>
-                <p class="text-gray-600">Importação e estruturação de SPED, detecção de inconsistências e semáforo por competência.</p>
-            </div>
-
-            <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
-                <div class="text-center mb-4">
-                    <img src="{{ asset('binary_files/icone-gif/clipboard-gear.gif') }}" alt="Motor de Regras" class="w-16 h-16 mx-auto object-contain">
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Motor de Regras</h3>
-                <p class="text-gray-600">Regras parametrizáveis por operação. Classificação automática e evolução contínua.</p>
-            </div>
-
-            <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
-                <div class="text-center mb-4">
-                    <img src="{{ asset('binary_files/icone-gif/secure-payment.gif') }}" alt="Compliance e Situação Fiscal" class="w-16 h-16 mx-auto object-contain">
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Compliance e Situação Fiscal</h3>
-                <p class="text-gray-600">Painel de situação por CNPJ, alertas de vencimento e relatório de risco.</p>
-            </div>
-
-            <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
-                <div class="text-center mb-4">
-                    <img src="{{ asset('binary_files/icone-gif/customer-service.gif') }}" alt="Automação de Comunicação" class="w-16 h-16 mx-auto object-contain">
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Automação de Comunicação</h3>
-                <p class="text-gray-600">Cobrança automática via WhatsApp e portal. Mensagens com contexto e registro completo.</p>
-            </div>
-
-            <div class="feature-card bg-white rounded-lg p-6 text-center shadow-sm">
-                <div class="text-center mb-4">
-                    <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Portal do Cliente" class="w-16 h-16 mx-auto object-contain">
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Portal do Cliente</h3>
-                <p class="text-gray-600">Checklist do mês, pendências, prazos e histórico. Permissões por perfil.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Seção 4: Soluções Detalhadas com Accordion -->
-<section id="solucoes-detalhadas" class="bg-gray-50 py-20 section-fade-in">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-            <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Soluções <span class="bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">Detalhadas</span>
-            </h2>
-            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                Conheça em detalhes as soluções que automatizam e otimizam processos fiscais e contábeis
-            </p>
-        </div>
-
-        <div class="space-y-4">
-            <!-- Item Inteligência Tributária -->
-            <div id="inteligencia-tributaria" class="solution-accordion-item bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-                <button class="solution-accordion-header w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition-colors cursor-pointer">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                            <img src="{{ asset('binary_files/icone-gif/accounting.gif') }}" alt="Inteligência Tributária" class="w-8 h-8 object-contain">
+            <!-- Illustration -->
+            <div class="flex justify-center">
+                <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-8 w-full max-w-sm border border-indigo-200">
+                    <div class="bg-white rounded-xl p-6 shadow-sm space-y-3">
+                        <div class="flex items-center gap-3 mb-4">
+                            <svg class="w-8 h-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            <span class="font-semibold text-gray-700">Consulta em Lote</span>
                         </div>
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-900">Inteligência Tributária: Apuração de Impostos no Piloto Automático</h3>
-                            <p class="text-sm text-gray-500 mt-1">Do Simples Nacional ao Lucro Presumido: troque planilhas complexas por precisão absoluta</p>
-                        </div>
-                    </div>
-                    <svg class="w-5 h-5 text-gray-500 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </button>
-                <div class="solution-accordion-content overflow-hidden transition-all duration-300" style="max-height: 0; opacity: 0;">
-                    <div class="p-6 pt-0">
-                        <!-- Subtítulo -->
-                        <p class="text-lg font-semibold text-gray-900 mb-4">
-                            Automatize o cálculo e a geração de guias de impostos com precisão absoluta e zero erro humano
-                        </p>
-                        
-                        <!-- Descrição Principal -->
-                        <p class="text-gray-600 leading-relaxed mb-6">
-                            O Rubi analisa o faturamento e as notas de entrada/saída, aplica as regras do regime tributário (incluindo anexos do Simples e retenções) e calcula o imposto devido em segundos. Elimine planilhas complexas e reduza o tempo de apuração de horas para minutos.
-                        </p>
-                        
-                        <!-- Três Pilares -->
-                        <div class="space-y-4 mb-6">
-                            <div class="flex items-start gap-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                                <div class="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h4 class="text-lg font-bold text-gray-900 mb-2">Cálculo à Prova de Falhas</h4>
-                                    <p class="text-gray-700 leading-relaxed">
-                                        Eliminação completa do erro humano. O sistema aplica automaticamente todas as regras tributárias, considerando anexos do Simples Nacional, retenções, alíquotas progressivas e todas as nuances da legislação vigente. Cada cálculo é auditável e rastreável.
-                                    </p>
-                                </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-gray-500 font-mono">12.345.678/0001-90</span>
+                                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                             </div>
-                            
-                            <div class="flex items-start gap-4 p-4 bg-yellow-50 rounded-lg border border-yellow-100">
-                                <div class="flex-shrink-0 w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h4 class="text-lg font-bold text-gray-900 mb-2">Geração Instantânea</h4>
-                                    <p class="text-gray-700 leading-relaxed">
-                                        Emissão de guias de impostos com um único clique. Todas as guias necessárias são geradas automaticamente no formato correto, prontas para pagamento. Economize horas de trabalho manual e reduza drasticamente o tempo de processamento.
-                                    </p>
-                                </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-gray-500 font-mono">98.765.432/0001-10</span>
+                                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                             </div>
-                            
-                            <div class="flex items-start gap-4 p-4 bg-green-50 rounded-lg border border-green-100">
-                                <div class="flex-shrink-0 w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h4 class="text-lg font-bold text-gray-900 mb-2">Entrega Direta</h4>
-                                    <p class="text-gray-700 leading-relaxed">
-                                        Envio automático das guias geradas diretamente para o cliente através do portal. O cliente recebe tudo organizado, com explicações claras e pode acompanhar o histórico completo. Menos retrabalho e mais transparência.
-                                    </p>
-                                </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-gray-500 font-mono">11.222.333/0001-44</span>
+                                <div class="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
                             </div>
                         </div>
-                        
-                        <!-- Comparativo Visual de Tempo -->
-                        <div class="bg-gray-50 rounded-lg p-6 mb-6 border border-gray-200">
-                            <h4 class="text-lg font-bold text-gray-900 mb-4 text-center">Redução de Tempo: De Horas para Minutos</h4>
-                            <div class="space-y-4">
-                                <div>
-                                    <div class="flex justify-between items-center mb-2">
-                                        <span class="text-sm font-semibold text-gray-700">Processo Manual</span>
-                                        <span class="text-sm font-bold text-red-600">4 horas</span>
-                                    </div>
-                                    <div class="w-full bg-gray-200 rounded-full h-4">
-                                        <div class="bg-red-500 h-4 rounded-full" style="width: 100%"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="flex justify-between items-center mb-2">
-                                        <span class="text-sm font-semibold text-gray-700">Com Rubi</span>
-                                        <span class="text-sm font-bold text-green-600">2 minutos</span>
-                                    </div>
-                                    <div class="w-full bg-gray-200 rounded-full h-4">
-                                        <div class="bg-green-500 h-4 rounded-full" style="width: 0.83%"></div>
-                                    </div>
-                                </div>
+                        <div class="pt-3 border-t border-gray-100">
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-500 h-2 rounded-full" style="width: 66%"></div>
                             </div>
-                            <p class="text-center text-sm text-gray-600 mt-4">
-                                <span class="font-bold text-green-600">99,2% de redução</span> no tempo de processamento
-                            </p>
-                        </div>
-                        
-                        <!-- Selo de Atualização Legislativa -->
-                        <div class="bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg p-6 text-center mb-6 shadow-lg">
-                            <div class="flex items-center justify-center gap-3 mb-2">
-                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                                </svg>
-                                <p class="text-2xl font-bold text-white">
-                                    100% Atualizado com a Legislação
-                                </p>
-                            </div>
-                            <p class="text-green-100 mt-2 text-sm">
-                                Nossas regras são atualizadas automaticamente conforme mudanças na legislação tributária
-                            </p>
-                        </div>
-                        
-                        <!-- Funcionalidades Técnicas -->
-                        <div class="border-t border-gray-200 pt-6">
-                            <h4 class="text-lg font-bold text-gray-900 mb-4">Como Funciona</h4>
-                            <ul class="space-y-2 text-gray-600">
-                                <li class="flex items-start gap-2">
-                                    <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span>Análise automática do faturamento e notas fiscais de entrada e saída</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span>Aplicação automática das regras do regime tributário (Simples Nacional, Lucro Presumido, etc.)</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span>Cálculo preciso considerando anexos do Simples, retenções e alíquotas progressivas</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span>Geração automática de todas as guias de impostos no formato correto</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span>Envio automático das guias para o cliente através do portal</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span>Auditoria completa e rastreabilidade de todos os cálculos realizados</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span>Atualização automática conforme mudanças na legislação tributária</span>
-                                </li>
-                            </ul>
+                            <div class="text-xs text-gray-400 mt-1 text-right">2 de 3 concluídas</div>
                         </div>
                     </div>
                 </div>
@@ -505,57 +186,199 @@
     </div>
 </section>
 
-<!-- Seção 5: Call to Action -->
-<section class="hero-gradient py-12 md:py-20 text-white">
+<!-- Solução 4: Dashboard Analítico -->
+<section class="py-16 md:py-24 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center fade-in-up">
-            <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 md:mb-6">
-                Pronto para Transformar seu Escritório?
-            </h2>
-            <p class="text-lg sm:text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto mb-6 md:mb-8 px-4">
-                Descubra como nossas soluções podem automatizar e otimizar seus processos fiscais e contábeis
-            </p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="#solucoes-detalhadas" class="bg-white text-blue-600 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-50 transition-colors">
-                    Conheça Nossas Soluções
-                </a>
-                <a href="/contato" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors border-2 border-white">
-                    Fale Conosco
-                </a>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <!-- Illustration (left on desktop) -->
+            <div class="flex justify-center order-2 md:order-1">
+                <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-8 w-full max-w-sm border border-emerald-200">
+                    <div class="bg-white rounded-xl p-6 shadow-sm space-y-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                            <span class="font-semibold text-gray-700">Dashboard</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-emerald-50 rounded-lg p-3 text-center">
+                                <div class="text-lg font-bold text-emerald-700">R$ 1,2M</div>
+                                <div class="text-xs text-gray-500">Entradas</div>
+                            </div>
+                            <div class="bg-blue-50 rounded-lg p-3 text-center">
+                                <div class="text-lg font-bold text-blue-700">R$ 890K</div>
+                                <div class="text-xs text-gray-500">Saídas</div>
+                            </div>
+                        </div>
+                        <div class="flex items-end gap-1 h-16">
+                            <div class="bg-emerald-300 rounded-t w-full" style="height: 40%"></div>
+                            <div class="bg-emerald-400 rounded-t w-full" style="height: 60%"></div>
+                            <div class="bg-emerald-500 rounded-t w-full" style="height: 80%"></div>
+                            <div class="bg-emerald-400 rounded-t w-full" style="height: 55%"></div>
+                            <div class="bg-emerald-500 rounded-t w-full" style="height: 100%"></div>
+                            <div class="bg-emerald-300 rounded-t w-full" style="height: 45%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Text -->
+            <div class="order-1 md:order-2">
+                <span class="inline-block text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">Dashboard Analítico</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Transforme dados fiscais em decisões inteligentes</h2>
+                <ul class="space-y-4">
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Visão geral de faturamento e compras</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Análise por CFOP e participante</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Indicadores tributários e de compliance</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Filtros avançados por período, cliente e tipo EFD</span>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
 </section>
 
-<script>
-    // Setup scroll animations
-    function setupScrollAnimations() {
-        const sections = document.querySelectorAll('.section-fade-in');
-        
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
-            });
-        }, {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        });
+<!-- Solução 5: Central de Alertas -->
+<section class="py-16 md:py-24 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <!-- Text -->
+            <div>
+                <span class="inline-block text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">Central de Alertas</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Nunca mais seja pego de surpresa pela fiscalização</h2>
+                <ul class="space-y-4">
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Alertas automáticos baseados em regras fiscais</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Priorização por gravidade (alto, médio, baixo)</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Ações rápidas para cada alerta</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Evolução temporal dos alertas</span>
+                    </li>
+                </ul>
+            </div>
+            <!-- Illustration -->
+            <div class="flex justify-center">
+                <div class="bg-gradient-to-br from-red-50 to-orange-100 rounded-2xl p-8 w-full max-w-sm border border-red-200">
+                    <div class="bg-white rounded-xl p-6 shadow-sm space-y-3">
+                        <div class="flex items-center gap-3 mb-4">
+                            <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                            <span class="font-semibold text-gray-700">Alertas</span>
+                        </div>
+                        <div class="flex items-center gap-3 bg-red-50 rounded-lg px-4 py-2">
+                            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                            <span class="text-sm text-gray-700 flex-1">CNPJ baixado - Fornecedor X</span>
+                            <span class="text-xs text-red-600 font-medium">Alto</span>
+                        </div>
+                        <div class="flex items-center gap-3 bg-yellow-50 rounded-lg px-4 py-2">
+                            <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                            <span class="text-sm text-gray-700 flex-1">IE suspensa - Fornecedor Y</span>
+                            <span class="text-xs text-yellow-600 font-medium">Médio</span>
+                        </div>
+                        <div class="flex items-center gap-3 bg-blue-50 rounded-lg px-4 py-2">
+                            <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                            <span class="text-sm text-gray-700 flex-1">Simples Nacional - Forn. Z</span>
+                            <span class="text-xs text-blue-600 font-medium">Baixo</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
-        sections.forEach(section => {
-            observer.observe(section);
-        });
-    }
+<!-- Solução 6: BI Fiscal -->
+<section class="py-16 md:py-24 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <!-- Illustration (left on desktop) -->
+            <div class="flex justify-center order-2 md:order-1">
+                <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-8 w-full max-w-sm border border-purple-200">
+                    <div class="bg-white rounded-xl p-6 shadow-sm space-y-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <svg class="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                            <span class="font-semibold text-gray-700">BI Fiscal</span>
+                        </div>
+                        <div class="bg-purple-50 rounded-lg p-3">
+                            <div class="text-xs text-gray-500 mb-2">Ranking de participantes</div>
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-gray-600 w-6">1.</span>
+                                    <div class="flex-1 bg-purple-300 rounded-full h-2"></div>
+                                    <span class="text-xs text-gray-500">R$ 450K</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-gray-600 w-6">2.</span>
+                                    <div class="flex-1 bg-purple-200 rounded-full h-2" style="width: 70%"></div>
+                                    <span class="text-xs text-gray-500">R$ 312K</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-gray-600 w-6">3.</span>
+                                    <div class="flex-1 bg-purple-100 rounded-full h-2" style="width: 45%"></div>
+                                    <span class="text-xs text-gray-500">R$ 198K</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 pt-2">
+                            <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                            <span class="text-xs text-gray-500">12 sem risco</span>
+                            <div class="w-3 h-3 rounded-full bg-red-400 ml-2"></div>
+                            <span class="text-xs text-gray-500">3 com alerta</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Text -->
+            <div class="order-1 md:order-2">
+                <span class="inline-block text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">BI Fiscal</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Inteligência que vai além dos números</h2>
+                <ul class="space-y-4">
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Ranking de participantes por volume</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Análise de riscos tributários</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Ficha completa do participante</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span class="text-gray-600">Cruzamento entre EFD e consultas</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
 
-    // Inicializar quando DOM estiver pronto
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            setupScrollAnimations();
-        });
-    } else {
-        setupScrollAnimations();
-    }
-</script>
-
-<!-- Scripts carregados no layout -->
+<!-- CTA Final -->
+<section class="py-16 md:py-24 bg-gradient-to-br from-[#0b1f3a] to-[#1e4fa0]">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">Pronto para simplificar seu compliance fiscal?</h2>
+        <p class="text-lg text-blue-200 mb-8">Comece a usar o FiscalDock gratuitamente e veja os resultados na primeira importação.</p>
+        <a href="/agendar" data-link class="btn-cta text-lg px-8 py-4">
+            Testar Gratuitamente
+            <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+        </a>
+    </div>
+</section>
