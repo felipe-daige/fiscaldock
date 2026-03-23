@@ -378,4 +378,67 @@
         scrollbar-width: thin;
         scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
     }
+
+    /* ── Analytics Mobile ────────────────────────────── */
+
+    /* Esconder scrollbar nativa mantendo funcionalidade */
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Scroll snap para tabs */
+    .tab-scroll-snap {
+        scroll-snap-type: x mandatory;
+    }
+    .tab-scroll-snap > * {
+        scroll-snap-align: start;
+    }
+
+    /* Gradiente fade indicando mais conteúdo à direita (bg-gray-50) */
+    .scroll-fade-right {
+        position: relative;
+    }
+    .scroll-fade-right::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 2rem;
+        background: linear-gradient(to right, transparent, rgb(249 250 251));
+        pointer-events: none;
+        z-index: 5;
+    }
+    .scroll-fade-right.scrolled-end::after {
+        display: none;
+    }
+
+    /* Variante para tabelas dentro de cards brancos */
+    .scroll-fade-right-white {
+        position: relative;
+    }
+    .scroll-fade-right-white::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 2rem;
+        background: linear-gradient(to right, transparent, rgb(255 255 255));
+        pointer-events: none;
+        z-index: 5;
+    }
+    .scroll-fade-right-white.scrolled-end::after {
+        display: none;
+    }
+}
+
+/* === Landing: Homepage === */
+
+.hero-gradient {
+    background: linear-gradient(135deg, #0b1f3a 0%, #1e4fa0 100%);
 }
