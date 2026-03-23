@@ -13,85 +13,86 @@ class LandingPageController extends Controller
      */
     protected string $themeClass = 'theme-default';
 
-    public function inicio(Request $request){
-        return $this->renderLanding($request, 'paginas.inicio');
+    public function inicio(Request $request)
+    {
+        return $this->renderLanding($request, 'paginas.inicio', [
+            'title' => 'FiscalDock | Inteligência Fiscal para Contadores',
+            'description' => 'Importe seus arquivos SPED, monitore participantes e detecte riscos fiscais antes da auditoria. Plataforma completa para contadores e escritórios contábeis.',
+        ]);
     }
 
-    public function solucoes(Request $request){
-        return $this->renderLanding($request, 'solucoes.index');
+    public function solucoes(Request $request)
+    {
+        return $this->renderLanding($request, 'solucoes.index', [
+            'title' => 'Soluções — FiscalDock | Compliance Fiscal Automatizado',
+            'description' => 'Importação de SPED, monitoramento de fornecedores, consultas tributárias e dashboards analíticos. Tudo que seu escritório precisa.',
+        ]);
     }
 
-    public function sobre(Request $request){
-        return $this->renderLanding($request, 'paginas.sobre');
+    public function faq(Request $request)
+    {
+        return $this->renderLanding($request, 'paginas.faq', [
+            'title' => 'Perguntas Frequentes — FiscalDock',
+            'description' => 'Tire suas dúvidas sobre importação de SPED, monitoramento fiscal, créditos e segurança dos dados.',
+        ]);
     }
 
-    public function beneficios(Request $request){
-        return $this->renderLanding($request, 'paginas.beneficios');
+    public function precos(Request $request)
+    {
+        return $this->renderLanding($request, 'paginas.precos', [
+            'title' => 'Preços — FiscalDock | Planos para Contadores',
+            'description' => 'Planos acessíveis para escritórios contábeis de todos os tamanhos. Comece gratuitamente.',
+        ]);
     }
 
-    public function impactos(Request $request){
-        return $this->renderLanding($request, 'paginas.impactos');
+    public function blog(Request $request)
+    {
+        return $this->renderLanding($request, 'paginas.blog', [
+            'title' => 'Blog — FiscalDock | Conteúdo para Contadores',
+            'description' => 'Artigos sobre compliance fiscal, SPED, riscos tributários e boas práticas para escritórios contábeis.',
+        ]);
     }
 
-    public function faq(Request $request){
-        return $this->renderLanding($request, 'paginas.faq');
-    }
-
-    public function precos(Request $request){
-        return $this->renderLanding($request, 'paginas.precos');
-    }
-
-    public function questionario(Request $request){
-        return $this->renderLanding($request, 'paginas.questionario');
-    }
-
-    public function importacaoXml(Request $request){
-        return $this->renderLanding($request, 'solucoes.importacao_xml');
-    }
-
-    public function conciliacaoBancaria(Request $request){
-        return $this->renderLanding($request, 'solucoes.conciliacao_bancaria');
-    }
-
-    public function gestaoCnds(Request $request){
-        return $this->renderLanding($request, 'solucoes.gestao_cnds');
-    }
-
-    public function inteligenciaTributaria(Request $request){
-        return $this->renderLanding($request, 'solucoes.inteligencia_tributaria');
+    public function blogPost(Request $request, string $slug)
+    {
+        return $this->renderLanding($request, 'paginas.blog-post', [
+            'title' => 'Blog — FiscalDock | Conteúdo para Contadores',
+            'description' => 'Artigos sobre compliance fiscal, SPED, riscos tributários e boas práticas para escritórios contábeis.',
+        ]);
     }
 
     /**
      * Renderiza uma view da landing page aplicando o tema padrão e redirecionando
      * usuários autenticados para o dashboard.
      */
-    private function renderLanding(Request $request, string $viewName){
+    private function renderLanding(Request $request, string $viewName, array $seo = [])
+    {
         $fullViewName = "landing_page.$viewName";
 
-        if(!view()->exists($fullViewName)){
+        if (!view()->exists($fullViewName)) {
             abort(404);
         }
 
-        if(Auth::check()){
-            if($request->ajax()){
+        if (Auth::check()) {
+            if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Você já está logado',
-                    'redirect' => '/dashboard'
+                    'redirect' => '/app/dashboard',
                 ]);
             }
 
-            return redirect('/dashboard');
+            return redirect('/app/dashboard');
         }
 
-        if($request->ajax()){
+        if ($request->ajax()) {
             return view($fullViewName);
         }
 
-        return view("landing_page.layouts.public", [
+        return view('landing_page.layouts.public', [
             'initialView' => $viewName,
-            'themeClass' => $this->themeClass
+            'themeClass' => $this->themeClass,
+            'seo' => $seo,
         ]);
     }
 }
-

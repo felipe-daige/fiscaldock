@@ -4,22 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>FiscalDock | Transforme SPED em Ações e Relatórios</title>
-    <meta name="description" content="O FiscalDock que transforma SPED e documentos em ações, relatórios e previsibilidade. Centralize arquivos fiscais, identifique pendências e automatize cobranças.">
+    <title>{{ $seo['title'] ?? 'FiscalDock | Inteligência Fiscal para Contadores' }}</title>
+    <meta name="description" content="{{ $seo['description'] ?? 'Importe seus arquivos SPED, monitore participantes e detecte riscos fiscais antes da auditoria. Plataforma completa para contadores e escritórios contábeis.' }}">
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('binary_files/logo/Logo FiscalDock.png') }}">
 
     <!-- Open Graph (WhatsApp, Facebook) -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="FiscalDock | Transforme SPED em Ações e Relatórios">
-    <meta property="og:description" content="Centralize arquivos fiscais, identifique pendências e automatize cobranças.">
+    <meta property="og:title" content="{{ $seo['og_title'] ?? $seo['title'] ?? 'FiscalDock | Inteligência Fiscal para Contadores' }}">
+    <meta property="og:description" content="{{ $seo['og_description'] ?? $seo['description'] ?? 'Importe seus arquivos SPED, monitore participantes e detecte riscos fiscais antes da auditoria. Plataforma completa para contadores e escritórios contábeis.' }}">
     <meta property="og:image" content="{{ asset('binary_files/logo/Logo FiscalDock.png') }}">
 
     <!-- Twitter Card (X) -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="FiscalDock | Transforme SPED em Ações e Relatórios">
-    <meta name="twitter:description" content="Centralize arquivos fiscais, identifique pendências e automatize cobranças.">
+    <meta name="twitter:title" content="{{ $seo['og_title'] ?? $seo['title'] ?? 'FiscalDock | Inteligência Fiscal para Contadores' }}">
+    <meta name="twitter:description" content="{{ $seo['og_description'] ?? $seo['description'] ?? 'Importe seus arquivos SPED, monitore participantes e detecte riscos fiscais antes da auditoria. Plataforma completa para contadores e escritórios contábeis.' }}">
     <meta name="twitter:image" content="{{ asset('binary_files/logo/Logo FiscalDock.png') }}">
 
     <!-- Fallback crítico do CTA (caso o CSS do Vite não carregue) -->
@@ -32,70 +32,44 @@
         .btn-cta--block{width:100%;justify-content:center}
         @media (prefers-reduced-motion:reduce){.btn-cta{transition:none}}
     </style>
-    
+
     @vite(['resources/css/app.css', 'resources/js/spa.js'])
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
-    
+
     <!-- JavaScript Files -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" defer></script>
-    <script src="{{ asset('js/layout.js') }}"></script>
-    <script src="{{ asset('js/faq.js') }}"></script>
-    <script src="{{ asset('js/impactos.js') }}"></script>
-    <script src="{{ asset('js/solucoes.js') }}"></script>
-    <script src="{{ asset('js/beneficios.js') }}"></script>
-    <script src="{{ asset('js/precos.js') }}"></script>
-    <script src="{{ asset('js/login.js') }}"></script>
-    <script src="{{ asset('js/agendar.js') }}"></script>
-    <script src="{{ asset('js/toast.js') }}"></script>
+    <script src="{{ asset('js/layout.js') }}?v={{ filemtime(public_path('js/layout.js')) }}"></script>
+    <script src="{{ asset('js/faq.js') }}?v={{ filemtime(public_path('js/faq.js')) }}"></script>
+    <script src="{{ asset('js/impactos.js') }}?v={{ filemtime(public_path('js/impactos.js')) }}"></script>
+    <script src="{{ asset('js/solucoes.js') }}?v={{ filemtime(public_path('js/solucoes.js')) }}"></script>
+    <script src="{{ asset('js/beneficios.js') }}?v={{ filemtime(public_path('js/beneficios.js')) }}"></script>
+    <script src="{{ asset('js/precos.js') }}?v={{ filemtime(public_path('js/precos.js')) }}"></script>
+    <script src="{{ asset('js/login.js') }}?v={{ filemtime(public_path('js/login.js')) }}"></script>
+    <script src="{{ asset('js/agendar.js') }}?v={{ filemtime(public_path('js/agendar.js')) }}"></script>
+    <script src="{{ asset('js/toast.js') }}?v={{ filemtime(public_path('js/toast.js')) }}"></script>
 </head>
 <body class="{{ $themeClass ?? 'bg-surface text-slate-900 font-sans antialiased' }}">
     <!-- Header -->
     <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <nav class="flex justify-between items-center py-6">
-                <a href="/inicio" class="flex items-center gap-3" data-link data-no-active>
+                <a href="/inicio" class="flex items-center gap-3">
                     <img src="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}" alt="FiscalDock" class="h-8 md:h-10 object-contain">
                     <span class="text-xl font-bold text-brand">FiscalDock</span>
                 </a>
 
                 <!-- Desktop Navigation -->
                 <ul class="hidden md:flex items-center gap-8">
-                    <li class="relative group nav-dropdown-buffer flex items-center">
-                        <a href="/solucoes" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium inline-flex items-center gap-1" style="min-height: 40px; line-height: 1.2;">
-                            Soluções
-                            <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </a>
-                        <div class="nav-dropdown-panel pointer-events-none absolute top-full left-0 mt-0 pt-3 w-48 rounded-lg border border-gray-200 bg-white shadow-lg opacity-0 invisible group-hover:translate-y-0 group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 ease-out transform translate-y-2">
-                            <a href="/solucoes/importacao-xml" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-t-lg">Importação de XMLs</a>
-                            <a href="/solucoes/conciliacao-bancaria" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Conciliação Bancária</a>
-                            <a href="/solucoes/gestao-cnds" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Gestão de CNDs</a>
-                            <a href="/solucoes/inteligencia-tributaria" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Inteligência Tributária</a>
-                            <a href="/solucoes" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-b-lg">Ver Todas as Soluções</a>
-                        </div>
-                    </li>
-                    <li class="relative group nav-dropdown-buffer flex items-center">
-                        <a href="/sobre" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium inline-flex items-center gap-1" style="min-height: 40px; line-height: 1.2;">
-                            Conhecer
-                            <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </a>
-                        <div class="nav-dropdown-panel pointer-events-none absolute top-full left-0 mt-0 pt-3 w-48 rounded-lg border border-gray-200 bg-white shadow-lg opacity-0 invisible group-hover:translate-y-0 group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 ease-out transform translate-y-2">
-                            <a href="/sobre" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-t-lg">Sobre</a>
-                            <a href="/beneficios" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Benefícios</a>
-                            <a href="/impactos" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium">Impactos</a>
-                            <a href="/faq" data-link class="block px-4 py-3 text-gray-600 hover:text-blue-500 hover:bg-gray-50 transition-colors font-medium rounded-b-lg">Perguntas</a>
-                        </div>
-                    </li>
-                    <li class="flex items-center"><a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium inline-flex items-center" style="min-height: 40px; line-height: 1.2;">Preços</a></li>
-                    <li class="flex items-center"><a href="/login" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium inline-flex items-center" style="min-height: 40px; line-height: 1.2;">Login</a></li>
+                    <li class="flex items-center"><a href="/solucoes" class="text-gray-600 hover:text-blue-500 transition-colors font-medium inline-flex items-center" style="min-height: 40px; line-height: 1.2;">Soluções</a></li>
+                    <li class="flex items-center"><a href="/precos" class="text-gray-600 hover:text-blue-500 transition-colors font-medium inline-flex items-center" style="min-height: 40px; line-height: 1.2;">Preços</a></li>
+                    <li class="flex items-center"><a href="/faq" class="text-gray-600 hover:text-blue-500 transition-colors font-medium inline-flex items-center" style="min-height: 40px; line-height: 1.2;">FAQ</a></li>
+                    <li class="flex items-center"><a href="/blog" class="text-gray-600 hover:text-blue-500 transition-colors font-medium inline-flex items-center" style="min-height: 40px; line-height: 1.2;">Blog</a></li>
+                    <li class="flex items-center"><a href="/login" class="text-gray-600 hover:text-blue-500 transition-colors font-medium inline-flex items-center" style="min-height: 40px; line-height: 1.2;">Login</a></li>
                     <li class="flex items-center">
-                        <a href="/agendar" data-link data-button="cta" class="btn-cta btn-cta--nav inline-flex items-center" style="min-height: 40px;">
+                        <a href="/agendar" class="btn-cta btn-cta--nav inline-flex items-center" style="min-height: 40px;">
                             Testar Agora
                         </a>
                     </li>
@@ -111,14 +85,12 @@
 
             <!-- Mobile Menu -->
             <div id="mobile-menu" class="hidden md:hidden flex-col gap-4 py-4 border-t border-gray-200">
-                <a href="/solucoes" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Soluções</a>
-                <a href="/sobre" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Conhecer</a>
-                <a href="/beneficios" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Benefícios</a>
-                <a href="/impactos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Impactos</a>
-                <a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Preços</a>
-                <a href="/faq" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Perguntas</a>
-                <a href="/login" data-link class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Login</a>
-                <a href="/agendar" data-link data-button="cta" class="btn-cta btn-cta--block w-full">Testar Agora</a>
+                <a href="/solucoes" class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Soluções</a>
+                <a href="/precos" class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Preços</a>
+                <a href="/faq" class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">FAQ</a>
+                <a href="/blog" class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Blog</a>
+                <a href="/login" class="text-gray-600 hover:text-blue-500 transition-colors font-medium py-2">Login</a>
+                <a href="/agendar" class="btn-cta btn-cta--block w-full">Testar Agora</a>
             </div>
         </div>
     </header>
@@ -154,12 +126,11 @@
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Links Rápidos</h3>
                     <ul class="space-y-3">
-                        <li><a href="/inicio" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Início</a></li>
-                        <li><a href="/sobre" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Conhecer</a></li>
-                        <li><a href="/beneficios" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Benefícios</a></li>
-                        <li><a href="/impactos" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Impactos</a></li>
-                        <li><a href="/precos" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Preços</a></li>
-                        <li><a href="/faq" data-link class="text-gray-600 hover:text-blue-500 transition-colors">Perguntas</a></li>
+                        <li><a href="/inicio" class="text-gray-600 hover:text-blue-500 transition-colors">Home</a></li>
+                        <li><a href="/solucoes" class="text-gray-600 hover:text-blue-500 transition-colors">Soluções</a></li>
+                        <li><a href="/precos" class="text-gray-600 hover:text-blue-500 transition-colors">Preços</a></li>
+                        <li><a href="/faq" class="text-gray-600 hover:text-blue-500 transition-colors">FAQ</a></li>
+                        <li><a href="/blog" class="text-gray-600 hover:text-blue-500 transition-colors">Blog</a></li>
                     </ul>
                 </div>
 

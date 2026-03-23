@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Configuração de mapeamento para páginas com nomes de arquivo diferentes
     const _spaScriptOverrides = {
         monitoramento: null, // Código inline na view
-        importacaoSped: null, // Código inline na view
+        importacaoEfd: null, // Código inline na view
         importacao: null, // Código inline na view (importação XML)
         monitoramentoAvulso: null, // Código inline na view
         consultasAvulso: null, // Código inline na view (mesma view do monitoramentoAvulso)
@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
         consultaLote: '/js/consulta-lote.js',
         bi: null, // Script carregado como tag externa na view — nao tentar recarregar no SPA
         notasFiscais: null, // Código inline na view
+        alertas: null, // Código inline na view
     };
 
     // Converte slug (com hífen/underscore) para camelCase
@@ -96,8 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
         '/login': 'initLogin',
         '/agendar': 'initAgendar',
         '/solucoes': 'initSolucoes',
-        '/app/monitoramento': 'initMonitoramento',
-        '/app/importacao/efd': 'initImportacaoSped',
+        '/app/importacao/efd': 'initImportacaoEfd',
         '/app/monitoramento/avulso': 'initMonitoramentoAvulso',
         '/app/consultas/avulso': 'initMonitoramentoAvulso',
         '/app/novo-participante': 'initNovoParticipante',
@@ -107,14 +107,11 @@ document.addEventListener('DOMContentLoaded', () => {
         '/app/importacao/xml': 'initMonitoramentoXml',
         '/app/consultas/nova': 'initConsultaLote',
         '/app/perfil': 'initPerfil',
-        '/app/bi': 'initBi',
-        '/dashboard': 'initDashboard',
-        '/sobre': 'initSobre',
-        '/beneficios': 'initBeneficios',
-        '/faq': 'initFaq',
-        '/impactos': 'initImpactos',
-        '/precos': 'initPrecos',
+        '/app/bi/dashboard': 'initBi',
+        '/app/dashboard': 'initDashboard',
         '/app/notas-fiscais': null, // IIFE inline na view, sem init function
+        '/app/notas-fiscais/dashboard': null, // IIFE inline na view
+        '/app/alertas': null, // IIFE inline na view
     };
     
     // 0. LIMPAR RECURSOS ANTES DE NAVEGAR
@@ -228,6 +225,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.addEventListener('click', async (e) => {
         const link = e.target.closest('[data-link]');
         if (link) {
+            // Ignorar navegação SPA para rotas que NÃO começam com /app/
+            const linkPath = new URL(link.href, window.location.origin).pathname;
+            if (!linkPath.startsWith('/app/')) {
+                return; // Deixar o browser fazer navegação normal (full page reload)
+            }
+
             e.preventDefault(); // Não recarregar página
             e.stopPropagation(); // Evitar propagação
             console.log('[SPA] Link clicado:', link.href, 'Target:', e.target);
@@ -281,6 +284,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. FUNÇÃO PRINCIPAL DE NAVEGAÇÃO
     async function navegar(url) {
         try {
+            // Fechar sidebar drawer no mobile antes de navegar
+            if (window.closeSidebarDrawer) {
+                window.closeSidebarDrawer();
+            }
+
             // Verificar se há mudança de contexto (autenticado <-> não autenticado)
             // URLs autenticadas: /dashboard, /app/*
             // URLs não autenticadas: /inicio, /login, etc.
@@ -288,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentPath = window.location.pathname;
             
             // Detectar se estamos navegando para/da área autenticada
-            const isDashboardArea = (path) => path === '/dashboard' || path.startsWith('/dashboard') || path.startsWith('/app/');
+            const isDashboardArea = (path) => path.startsWith('/app/');
             
             const currentIsDashboard = isDashboardArea(currentPath);
             const targetIsDashboard = isDashboardArea(urlPath);
@@ -332,7 +340,16 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (!resposta.ok) {
                 console.error('[SPA] Resposta não OK:', resposta.status, resposta.statusText);
-                throw new Error(`Erro ao carregar: ${resposta.status} ${resposta.statusText}`);
+                app.innerHTML = `
+                    <div class="flex flex-col items-center justify-center min-h-[60vh] text-gray-500">
+                        <div class="text-6xl font-bold text-gray-300 mb-4">${resposta.status}</div>
+                        <p class="text-lg mb-6">${resposta.status === 404 ? 'Página não encontrada' : 'Erro ao carregar a página'}</p>
+                        <button onclick="history.back()" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+                            ← Voltar
+                        </button>
+                    </div>`;
+                esconderLoading();
+                return;
             }
             
             // Verificar se é JSON (erro de autenticação, etc.)
@@ -466,7 +483,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Script externo com src - carregar dinamicamente
                 if (script.src) {
                     const scriptSrc = script.getAttribute('src');
-                    const existente = document.querySelector('script[src="' + scriptSrc + '"]');
+                    const existente = document.head.querySelector('script[src="' + scriptSrc + '"]');
                     if (!existente) {
                         const novoScript = document.createElement('script');
                         novoScript.src = scriptSrc;
@@ -491,15 +508,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     novoScript.onerror = function(error) {
                         console.error('Erro ao executar script:', error);
                     };
-
-                    // Capturar erros de sintaxe antes de appendChild
-                    try {
-                        // Validar sintaxe básica do script
-                        new Function(script.textContent);
-                    } catch (syntaxError) {
-                        console.error('Erro de sintaxe no script:', syntaxError);
-                        throw syntaxError;
-                    }
 
                     // Adicionar ao head para executar
                     document.head.appendChild(novoScript);
@@ -669,13 +677,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Script externo com src - carregar dinamicamente
                 if (script.src) {
                     const scriptSrc = script.getAttribute('src');
-                    const existente = document.querySelector('script[src="' + scriptSrc + '"]');
+                    const existente = document.head.querySelector('script[src="' + scriptSrc + '"]');
                     if (!existente) {
-                        const novoScript = document.createElement('script');
-                        novoScript.src = scriptSrc;
-                        document.head.appendChild(novoScript);
+                        // Mover tag para <head> como referência para navegações SPA futuras.
+                        // Script já foi executado pelo parser — mover NÃO re-executa (HTML spec: "already started" flag).
+                        document.head.appendChild(script);
+                    } else {
+                        script.parentNode.removeChild(script);
                     }
-                    script.parentNode.removeChild(script);
                     return;
                 }
 
@@ -689,18 +698,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.error('Erro ao executar script inline:', error);
                     };
                     
-                    // Capturar erros de sintaxe antes de appendChild
-                    try {
-                        // Validar sintaxe básica do script
-                        new Function(script.textContent);
-                    } catch (syntaxError) {
-                        console.error('Erro de sintaxe no script inline:', syntaxError);
-                        throw syntaxError;
-                    }
-                    
                     // Adicionar ao head para executar
                     document.head.appendChild(novoScript);
-                    
+
                     // Remover script original do app
                     script.parentNode.removeChild(script);
                 } else {
