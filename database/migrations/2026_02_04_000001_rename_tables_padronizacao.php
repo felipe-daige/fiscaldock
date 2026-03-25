@@ -18,7 +18,7 @@ return new class extends Migration
     {
         Schema::rename('importacoes_xml', 'xml_importacoes');
         Schema::rename('notas_fiscais', 'xml_notas');
-        Schema::rename('importacoes_sped', 'efd_importacoes');
+        // efd_importacoes já renomeado na migration 000001
 
         Schema::table('participantes', function ($table) {
             $table->renameColumn('importacao_sped_id', 'importacao_efd_id');
@@ -33,6 +33,6 @@ return new class extends Migration
 
         Schema::rename('xml_importacoes', 'importacoes_xml');
         Schema::rename('xml_notas', 'notas_fiscais');
-        Schema::rename('efd_importacoes', 'importacoes_sped');
+        // efd_importacoes revert handled by migration 000001
     }
 };

@@ -579,6 +579,7 @@ class BiService
         $notasSemItens = (clone $query)
             ->leftJoin('efd_notas_itens as i', 'i.efd_nota_id', '=', 'efd_notas.id')
             ->whereNull('i.id')
+            ->where('efd_notas.modelo', '!=', '57') // CT-e não possui itens no SPED
             ->count();
 
         return [
@@ -643,7 +644,7 @@ class BiService
 
     public function getVolumePorBlocoEfd(int $userId, ?string $dataInicio, ?string $dataFim): array
     {
-        $blocoExpr = "CASE WHEN imp.tipo_efd = 'EFD PIS/COFINS' THEN 'A' WHEN n.modelo = '57' THEN 'D' ELSE 'C' END";
+        $blocoExpr = "CASE WHEN imp.tipo_efd = 'EFD PIS/COFINS' THEN 'notas_servicos' WHEN n.modelo = '57' THEN 'notas_transportes' ELSE 'notas_mercadorias' END";
 
         $rows = DB::table('efd_notas as n')
             ->join('efd_importacoes as imp', 'imp.id', '=', 'n.importacao_id')
@@ -660,9 +661,9 @@ class BiService
             ->keyBy('bloco');
 
         return [
-            'A' => ['valor' => (float) ($rows->get('A')->valor ?? 0), 'notas' => (int) ($rows->get('A')->notas ?? 0)],
-            'C' => ['valor' => (float) ($rows->get('C')->valor ?? 0), 'notas' => (int) ($rows->get('C')->notas ?? 0)],
-            'D' => ['valor' => (float) ($rows->get('D')->valor ?? 0), 'notas' => (int) ($rows->get('D')->notas ?? 0)],
+            'notas_servicos'     => ['valor' => (float) ($rows->get('notas_servicos')->valor ?? 0), 'notas' => (int) ($rows->get('notas_servicos')->notas ?? 0)],
+            'notas_mercadorias'  => ['valor' => (float) ($rows->get('notas_mercadorias')->valor ?? 0), 'notas' => (int) ($rows->get('notas_mercadorias')->notas ?? 0)],
+            'notas_transportes'  => ['valor' => (float) ($rows->get('notas_transportes')->valor ?? 0), 'notas' => (int) ($rows->get('notas_transportes')->notas ?? 0)],
         ];
     }
 

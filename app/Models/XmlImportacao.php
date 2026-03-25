@@ -32,6 +32,7 @@ class XmlImportacao extends Model
         'erros_detalhados',
         'iniciado_em',
         'concluido_em',
+        'tempo_processamento_segundos',
     ];
 
     protected function casts(): array
@@ -52,6 +53,7 @@ class XmlImportacao extends Model
             'erros_detalhados' => 'array',
             'iniciado_em' => 'datetime',
             'concluido_em' => 'datetime',
+            'tempo_processamento_segundos' => 'integer',
         ];
     }
 
@@ -96,18 +98,27 @@ class XmlImportacao extends Model
      */
     public function getTempoProcessamentoAttribute(): string
     {
-        if (! $this->iniciado_em || ! $this->concluido_em) {
-            return '—';
+        $seconds = $this->tempo_processamento_segundos;
+
+        if ($seconds === null) {
+            if (! $this->iniciado_em || ! $this->concluido_em) {
+                return '—';
+            }
+            $seconds = (int) $this->iniciado_em->diffInSeconds($this->concluido_em);
         }
-        $diff = $this->iniciado_em->diff($this->concluido_em);
-        if ($diff->h > 0) {
-            return $diff->h.'h '.$diff->i.'m';
+
+        $h = intdiv($seconds, 3600);
+        $m = intdiv($seconds % 3600, 60);
+        $s = $seconds % 60;
+
+        if ($h > 0) {
+            return $h.'h '.$m.'m';
         }
-        if ($diff->i > 0) {
-            return $diff->i.'m '.$diff->s.'s';
+        if ($m > 0) {
+            return $m.'m '.$s.'s';
         }
-        if ($diff->s > 0) {
-            return $diff->s.'s';
+        if ($s > 0) {
+            return $s.'s';
         }
 
         return '< 1s';

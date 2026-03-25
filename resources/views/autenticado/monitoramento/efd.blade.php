@@ -123,6 +123,35 @@
                             </label>
                         </div>
 
+                        {{-- Opção Extrair Catálogo de Produtos e Serviços --}}
+                        <div class="relative mb-4 group">
+                            <label class="flex items-start p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-amber-400 has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50 transition">
+                                <input type="checkbox"
+                                       id="extrair-catalogo"
+                                       name="extrair_catalogo"
+                                       class="mt-1 mr-3 w-4 h-4 text-amber-600 rounded focus:ring-amber-500">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                                        </svg>
+                                        <span class="font-semibold text-gray-800 text-sm">Extrair Catálogo de Produtos e Serviços</span>
+                                    </div>
+                                    <div class="text-xs text-gray-600 mt-0.5">
+                                        Importa o cadastro de itens (Reg. 0200) com NCM, tipo e classificação fiscal
+                                    </div>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="inline-flex items-center gap-1 text-xs text-green-600">
+                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                            </svg>
+                                            Gratuito
+                                        </span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
                         {{-- Instruções --}}
                         <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                             <div class="flex items-start gap-2 mb-3">
@@ -638,6 +667,12 @@
                         <p id="progresso-documento" class="text-sm text-gray-500 hidden">
                             {{-- Tipo EFD • Período --}}
                         </p>
+                        <p id="progresso-timer" class="text-xs font-mono text-gray-400 mt-0.5 hidden">
+                            <svg class="w-3 h-3 inline-block mr-0.5 -mt-px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span id="timer-display">0:00</span>
+                        </p>
                     </div>
                 </div>
 
@@ -689,19 +724,39 @@
                     <span>Participantes</span>
                 </div>
                 <svg class="etapa-sep w-3 h-3 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                <div class="etapa-item inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="A">
+                <div class="etapa-item inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="notas_servicos">
                     <span class="etapa-icon flex items-center justify-center w-3.5 h-3.5"></span>
-                    <span>Bloco A</span>
+                    <span>Notas Serviço</span>
                 </div>
                 <svg class="etapa-sep w-3 h-3 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                <div class="etapa-item inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="C">
+                <div class="etapa-item inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="notas_mercadorias">
                     <span class="etapa-icon flex items-center justify-center w-3.5 h-3.5"></span>
-                    <span>Bloco C</span>
+                    <span>NF-e Mercadorias</span>
                 </div>
                 <svg class="etapa-sep w-3 h-3 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                <div class="etapa-item inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="D">
+                <div class="etapa-item inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="notas_transportes">
                     <span class="etapa-icon flex items-center justify-center w-3.5 h-3.5"></span>
-                    <span>Bloco D</span>
+                    <span>CT-e</span>
+                </div>
+                <svg class="etapa-sep etapa-sep-catalogo hidden w-3 h-3 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                <div class="etapa-item etapa-catalogo hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="catalogo">
+                    <span class="etapa-icon flex items-center justify-center w-3.5 h-3.5"></span>
+                    <span>Catálogo</span>
+                </div>
+                <svg class="etapa-sep hidden w-3 h-3 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                <div class="etapa-item hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="apuracao_icms">
+                    <span class="etapa-icon flex items-center justify-center w-3.5 h-3.5"></span>
+                    <span>Apuração ICMS</span>
+                </div>
+                <svg class="etapa-sep hidden w-3 h-3 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                <div class="etapa-item hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="retencoes_fonte">
+                    <span class="etapa-icon flex items-center justify-center w-3.5 h-3.5"></span>
+                    <span>Retenções</span>
+                </div>
+                <svg class="etapa-sep hidden w-3 h-3 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                <div class="etapa-item hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="apuracao_pis_cofins">
+                    <span class="etapa-icon flex items-center justify-center w-3.5 h-3.5"></span>
+                    <span>Apuração PIS/COFINS</span>
                 </div>
             </div>
 
@@ -1274,10 +1329,44 @@
             });
         }
 
+        // Timer de processamento
+        let timerInterval = null;
+        let timerStartTime = null;
+
+        function iniciarTimer() {
+            pararTimer();
+            timerStartTime = Date.now();
+            const timerEl = document.getElementById('progresso-timer');
+            const displayEl = document.getElementById('timer-display');
+            if (timerEl) timerEl.classList.remove('hidden');
+            timerInterval = setInterval(function() {
+                if (!timerStartTime || !displayEl) return;
+                const elapsed = Math.floor((Date.now() - timerStartTime) / 1000);
+                const m = Math.floor(elapsed / 60);
+                const s = elapsed % 60;
+                displayEl.textContent = m + ':' + String(s).padStart(2, '0');
+            }, 1000);
+        }
+
+        function pararTimer() {
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+        }
+
+        function formatarTempoFinal(segundos) {
+            const h = Math.floor(segundos / 3600);
+            const m = Math.floor((segundos % 3600) / 60);
+            const s = segundos % 60;
+            if (h > 0) return h + 'h ' + m + 'm';
+            if (m > 0) return m + 'm ' + s + 's';
+            if (s > 0) return s + 's';
+            return '< 1s';
+        }
+
         // Variáveis para controle de importação
         let eventSourceTxt = null;
         let importacaoEmAndamento = false;
         let importandoComNotas = false;
+        let importandoComCatalogo = false;
         let reconnectTimer = null;
         let reconnectAttempts = 0;
         let toastConcluidoMostrado = false; // evita toast duplicado quando SSE mantido aberto
@@ -1429,24 +1518,48 @@
             const blocos = Object.assign({}, payload.notas_blocos || {});
 
             // Inferência de skip: bloco posterior iniciou mas anterior não tem dados
-            if ((blocos.C || blocos.D) && !blocos.A) blocos.A = { status: 'skip' };
-            if (blocos.D && !blocos.C)               blocos.C = { status: 'skip' };
+            if ((blocos.notas_mercadorias || blocos.notas_transportes) && !blocos.notas_servicos) blocos.notas_servicos = { status: 'skip' };
+            if (blocos.notas_transportes && !blocos.notas_mercadorias)                            blocos.notas_mercadorias = { status: 'skip' };
 
-            // Participantes (bloco 0): usar status real se presente, senão inferir
+            // Retrocompatibilidade: aceitar chaves antigas (0, 0200, A, C, D) de resumo_final existentes
+            if (blocos['0'] && !blocos.participantes)          blocos.participantes = blocos['0'];
+            if (blocos['0200'] && !blocos.catalogo)            blocos.catalogo = blocos['0200'];
+            if (blocos['A'] && !blocos.notas_servicos)         blocos.notas_servicos = blocos['A'];
+            if (blocos['C'] && !blocos.notas_mercadorias)      blocos.notas_mercadorias = blocos['C'];
+            if (blocos['D'] && !blocos.notas_transportes)      blocos.notas_transportes = blocos['D'];
+
             const isFinalConcluido = payload.status === 'concluido';
-            const bloco0 = blocos['0'];
-            if (bloco0) {
-                const p0Status = (bloco0.status === 'concluido' || bloco0.progresso === 100 || isFinalConcluido)
-                    ? 'concluido' : bloco0.status;
+
+            // Participantes
+            const blocoParticipantes = blocos.participantes;
+            if (blocoParticipantes) {
+                const p0Status = (blocoParticipantes.status === 'concluido' || blocoParticipantes.progresso === 100 || isFinalConcluido)
+                    ? 'concluido' : blocoParticipantes.status;
                 renderEtapa('participantes', p0Status, null);
             } else {
-                // Retrocompatibilidade: se não há bloco 0 mas outros blocos existem, participantes já terminou
-                const temOutroBloco = Object.keys(blocos).some(function(k) { return k !== '0'; });
+                const temOutroBloco = Object.keys(blocos).some(function(k) { return k !== 'participantes'; });
                 renderEtapa('participantes', temOutroBloco ? 'concluido' : 'processando', null);
             }
 
-            const ordemBlocos = ['A', 'C', 'D'];
-            ordemBlocos.forEach(function(b) {
+            // Catálogo (Produtos e Serviços): mostrar apenas se importando com catálogo ou se SSE trouxe dados
+            if (blocos.catalogo || importandoComCatalogo) {
+                document.querySelectorAll('.etapa-catalogo, .etapa-sep-catalogo').forEach(function(el) {
+                    el.classList.remove('hidden');
+                });
+                const blocoCatalogo = blocos.catalogo;
+                if (blocoCatalogo) {
+                    const s0200 = (blocoCatalogo.status !== 'skip' && (isFinalConcluido || blocoCatalogo.status === 'concluido' || blocoCatalogo.progresso === 100))
+                        ? 'concluido' : blocoCatalogo.status;
+                    renderEtapa('catalogo', s0200, null);
+                } else {
+                    const blocosPosteriores = blocos.notas_servicos || blocos.notas_mercadorias || blocos.notas_transportes;
+                    renderEtapa('catalogo', blocosPosteriores ? 'concluido' : 'pendente', null);
+                }
+            }
+
+            // Blocos de notas
+            const ordemNotas = ['notas_servicos', 'notas_mercadorias', 'notas_transportes'];
+            ordemNotas.forEach(function(b) {
                 if (blocos[b]) {
                     const statusEfetivo = (blocos[b].status !== 'skip' && (isFinalConcluido || blocos[b].status === 'concluido' || blocos[b].progresso === 100))
                         ? 'concluido'
@@ -1454,6 +1567,19 @@
                     renderEtapa(b, statusEfetivo, null);
                 } else {
                     renderEtapa(b, 'pendente', null);
+                }
+            });
+
+            // Blocos de apuração (novos)
+            const ordemApuracoes = ['apuracao_icms', 'retencoes_fonte', 'apuracao_pis_cofins'];
+            ordemApuracoes.forEach(function(b) {
+                if (blocos[b]) {
+                    const el = document.querySelector('.etapa-item[data-etapa="' + b + '"]');
+                    if (el) el.closest('.etapa-wrapper, div')?.classList?.remove('hidden');
+                    const statusEfetivo = (blocos[b].status !== 'skip' && (isFinalConcluido || blocos[b].status === 'concluido' || blocos[b].progresso === 100))
+                        ? 'concluido'
+                        : blocos[b].status;
+                    renderEtapa(b, statusEfetivo, null);
                 }
             });
         }
@@ -1501,6 +1627,12 @@
 
         // Função para resetar UI de progresso
         function resetarProgresso() {
+            // Resetar timer
+            pararTimer();
+            timerStartTime = null;
+            const timerEl = document.getElementById('progresso-timer');
+            if (timerEl) timerEl.classList.add('hidden');
+
             // Cancelar animação em andamento e resetar estado
             if (animFrameId !== null) { cancelAnimationFrame(animFrameId); animFrameId = null; }
             currentProgress = 0;
@@ -1539,6 +1671,11 @@
                 if (iconEl) iconEl.innerHTML = '';
             });
             importandoComNotas = false;
+            importandoComCatalogo = false;
+            // Ocultar etapa 0200 e seu separador
+            document.querySelectorAll('.etapa-0200, .etapa-sep-0200').forEach(function(el) {
+                el.classList.add('hidden');
+            });
             blocoAtualProgresso = null;
         }
 
@@ -1834,9 +1971,14 @@
         // Helper: renderiza o mini-painel resumo_final
         function renderResumoFinal(rf) {
             if (!rf) return '';
-            const blocos = rf.blocos || {};
-            const ordemBlocos = ['A', 'C', 'D'];
-            const nomeBloco = { A: 'Bloco A (PIS/COFINS)', C: 'Bloco C (ICMS/IPI — NF-e)', D: 'Bloco D (CT-e)' };
+            const blocosRaw = rf.blocos || {};
+            // Retrocompatibilidade: aceitar chaves antigas
+            const blocos = {};
+            blocos.notas_servicos     = blocosRaw.notas_servicos     || blocosRaw.A || null;
+            blocos.notas_mercadorias  = blocosRaw.notas_mercadorias  || blocosRaw.C || null;
+            blocos.notas_transportes  = blocosRaw.notas_transportes  || blocosRaw.D || null;
+            const ordemBlocos = ['notas_servicos', 'notas_mercadorias', 'notas_transportes'];
+            const nomeBloco = { notas_servicos: 'Notas de Serviço (PIS/COFINS)', notas_mercadorias: 'NF-e Mercadorias (ICMS/IPI)', notas_transportes: 'CT-e Transportes' };
 
             let html = '<div class="space-y-1">';
 
@@ -1853,6 +1995,17 @@
                 <span class="text-gray-900 font-medium">${part.total || 0} registros</span>
                 <span class="text-gray-400 text-xs ml-2">${part.novos || 0} novos · ${part.duplicados || 0} já existentes</span>
             </div>`;
+
+            // Produtos e Serviços (catálogo 0200)
+            if (rf.produtos_servicos) {
+                const ps = rf.produtos_servicos;
+                html += `<div class="flex items-center gap-2 py-1">
+                    <span class="text-green-600 font-bold w-4">✓</span>
+                    <span class="w-44 whitespace-nowrap text-gray-700">Produtos e Serviços</span>
+                    <span class="text-gray-900 font-medium">${ps.total || 0} itens</span>
+                    <span class="text-gray-400 text-xs ml-2">${ps.novos || 0} novos · ${ps.existentes || 0} já existentes</span>
+                </div>`;
+            }
 
             // Blocos
             ordemBlocos.forEach(b => {
@@ -2164,6 +2317,14 @@
                         statusConcluido = true;
                         importacaoEmAndamento = false;
 
+                        // Parar timer e exibir tempo final formatado
+                        pararTimer();
+                        const timerDisplayEl = document.getElementById('timer-display');
+                        if (timerDisplayEl && timerStartTime) {
+                            const totalSec = Math.floor((Date.now() - timerStartTime) / 1000);
+                            timerDisplayEl.textContent = formatarTempoFinal(totalSec);
+                        }
+
                         // Popular campos flat de stats a partir de resumo_final.estatisticas
                         // quando os campos diretos estão ausentes (fase 2 é a fonte de verdade)
                         if (dadosN8n.resumo_final?.estatisticas) {
@@ -2236,6 +2397,7 @@
                             eventSourceTxt = null;
                         }
                         importacaoEmAndamento = false;
+                        pararTimer();
 
                         // Erro/timeout é tratado pelo atualizarProgresso que mostra a seção de erro
                         // Não redireciona automaticamente - usuário decide via botão "Tentar Novamente"
@@ -2337,6 +2499,16 @@
                         formData.append('extrair_notas', '1');
                     }
 
+                    const extrairCatalogoCheckbox = document.getElementById('extrair-catalogo');
+                    importandoComCatalogo = extrairCatalogoCheckbox?.checked === true;
+                    if (importandoComCatalogo) {
+                        formData.append('extrair_catalogo', '1');
+                        // Mostrar etapa 0200 e seu separador
+                        document.querySelectorAll('.etapa-0200, .etapa-sep-0200').forEach(function(el) {
+                            el.classList.remove('hidden');
+                        });
+                    }
+
                     const response = await fetch('/app/importacao/efd/importar-txt', {
                         method: 'POST',
                         headers: {
@@ -2368,6 +2540,7 @@
                     // Mostrar UI de progresso
                     resetarProgresso();
                     mostrarProgresso();
+                    iniciarTimer();
 
                     // Conectar ao SSE para receber atualizações (usa tabId do escopo)
                     conectarSSE();
@@ -2391,6 +2564,7 @@
         // Cleanup ao sair da página (para SPA)
         window._cleanupFunctions = window._cleanupFunctions || {};
         window._cleanupFunctions.initImportacaoEfd = function() {
+            pararTimer();
             if (reconnectTimer !== null) {
                 clearTimeout(reconnectTimer);
                 reconnectTimer = null;

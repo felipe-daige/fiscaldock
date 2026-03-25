@@ -85,7 +85,7 @@ class EfdImportacaoController extends Controller
 
         $importacao = EfdImportacao::where('id', $id)
             ->where('user_id', $userId)
-            ->with('cliente')
+            ->with(['cliente', 'apuracaoContribuicao', 'apuracaoIcms', 'retencoesFonte'])
             ->firstOrFail();
 
         // Dual-path: participante_ids (n8n v2) ou importacao_efd_id (legado)
@@ -105,8 +105,20 @@ class EfdImportacaoController extends Controller
                 ->paginate(15);
         }
 
-        $data = compact('importacao', 'participantes');
+        // Catálogo de itens (0200) — paginação separada para não conflitar com participantes
+        $catalogoItens = $importacao->extrair_catalogo
+            ? \App\Models\EfdCatalogoItem::where('importacao_id', $importacao->id)
+                ->where('user_id', $userId)
+                ->orderBy('cod_item')
+                ->paginate(50, ['*'], 'catalogo_page')
+                ->withQueryString()
+            : collect();
+
+        $data = compact('importacao', 'participantes', 'catalogoItens');
         $data['resumoFinal'] = $importacao->resumo_final;
+        $data['apuracaoContribuicao'] = $importacao->apuracaoContribuicao;
+        $data['apuracaoIcms'] = $importacao->apuracaoIcms;
+        $data['retencoesFonte'] = $importacao->retencoesFonte ?? collect();
 
         if ($this->isAjaxRequest($request)) {
             return response(view($view, $data)->render())->header('Content-Type', 'text/html');
@@ -234,17 +246,27 @@ class EfdImportacaoController extends Controller
         $arquivo = $request->file('arquivo');
         $tipoEfd = $request->tipo_efd;
         $extrairNotas = $request->has('extrair_notas');
+        $extrairCatalogo = $request->has('extrair_catalogo');
 
-        // Selecionar webhook baseado no tipo de EFD
-        $webhookUrl = $tipoEfd === 'EFD ICMS/IPI'
-            ? config('services.webhook.efd_fiscal_url')
-            : config('services.webhook.efd_contribuicoes_url');
+        // Selecionar webhook baseado no tipo de EFD + opções de extração
+        $isFiscal = $tipoEfd === 'EFD ICMS/IPI';
 
-        // Usuários com permissão de extrair notas usam webhook alternativo
-        if ($extrairNotas) {
-            $webhookUrl = $tipoEfd === 'EFD ICMS/IPI'
+        if ($extrairNotas && $extrairCatalogo) {
+            $webhookUrl = $isFiscal
+                ? config('services.webhook.efd_fiscal_completo_url')
+                : config('services.webhook.efd_contribuicoes_completo_url');
+        } elseif ($extrairNotas) {
+            $webhookUrl = $isFiscal
                 ? config('services.webhook.efd_fiscal_notas_url')
                 : config('services.webhook.efd_contribuicoes_notas_url');
+        } elseif ($extrairCatalogo) {
+            $webhookUrl = $isFiscal
+                ? config('services.webhook.efd_fiscal_catalogo_url')
+                : config('services.webhook.efd_contribuicoes_catalogo_url');
+        } else {
+            $webhookUrl = $isFiscal
+                ? config('services.webhook.efd_fiscal_url')
+                : config('services.webhook.efd_contribuicoes_url');
         }
 
         // Validar que o cliente pertence ao usuário (se fornecido)
@@ -277,12 +299,14 @@ class EfdImportacaoController extends Controller
 
         // Criar registro de importação antes de enviar ao n8n
         $importacao = EfdImportacao::create([
-            'user_id'       => $user->id,
-            'cliente_id'    => $clienteId,
-            'tipo_efd'      => $tipoEfd,
-            'arquivo'       => $arquivo->getClientOriginalName(),
-            'status'        => 'processando',
+            'user_id' => $user->id,
+            'cliente_id' => $clienteId,
+            'tipo_efd' => $tipoEfd,
+            'arquivo' => $arquivo->getClientOriginalName(),
+            'status' => 'processando',
             'extrair_notas' => $extrairNotas,
+            'extrair_catalogo' => $extrairCatalogo,
+            'iniciado_em' => now(),
         ]);
 
         try {
@@ -290,12 +314,15 @@ class EfdImportacaoController extends Controller
             $response = Http::timeout(30)
                 ->attach('file', file_get_contents($arquivo->path()), $arquivo->getClientOriginalName())
                 ->post($webhookUrl, [
-                    'user_id'       => $user->id,
+                    'user_id' => $user->id,
                     'importacao_id' => $importacao->id,
-                    'tipo_efd'      => $tipoEfd,
-                    'filename'      => $arquivo->getClientOriginalName(),
-                    'progress_url'  => url('/api/importacao/efd/progresso'),
-                    'tab_id'        => $request->input('tab_id'),
+                    'cliente_id' => $clienteId,
+                    'tipo_efd' => $tipoEfd,
+                    'filename' => $arquivo->getClientOriginalName(),
+                    'extrair_notas' => $extrairNotas,
+                    'extrair_catalogo' => $extrairCatalogo,
+                    'progress_url' => url('/api/importacao/efd/progresso'),
+                    'tab_id' => $request->input('tab_id'),
                 ]);
 
             if (! $response->successful()) {
@@ -464,7 +491,7 @@ class EfdImportacaoController extends Controller
                         // e status enviados pelo payload final do n8n), depois sobrescreve
                         // com entradas individuais por bloco (atualizações intermediárias).
                         $notasBlocos = $data['notas_blocos'] ?? [];
-                        foreach (['0', 'A', 'C', 'D'] as $bloco) {
+                        foreach (['participantes', 'notas_servicos', 'notas_mercadorias', 'notas_transportes', 'catalogo', 'apuracao_icms', 'retencoes_fonte', 'apuracao_pis_cofins'] as $bloco) {
                             $blocoKey = "efd_notas_progress:{$userId}:{$tabId}:{$bloco}";
                             $blocoData = Cache::get($blocoKey);
                             if ($blocoData !== null) {

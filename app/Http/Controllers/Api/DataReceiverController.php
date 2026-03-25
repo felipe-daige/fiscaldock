@@ -209,7 +209,7 @@ class DataReceiverController extends Controller
             'user_id'              => 'required|integer',
             'tab_id'               => 'required|string|max:36',
             'status'               => 'required|in:inicio,processando,concluido,skip,erro',
-            'bloco'                => 'nullable|in:0,A,C,D',
+            'bloco'                => 'nullable|in:participantes,notas_servicos,notas_mercadorias,notas_transportes,catalogo,apuracao_icms,retencoes_fonte,apuracao_pis_cofins',
             'progresso'            => 'nullable|integer|min:0|max:100',
             'mensagem'             => 'nullable|string|max:255',
             'importacao_id'        => 'nullable|integer',
@@ -283,6 +283,11 @@ class DataReceiverController extends Controller
             if ($data['status'] === 'concluido') {
                 $rfUpdate['status']       = 'concluido';
                 $rfUpdate['concluido_em'] = now();
+
+                $imp = EfdImportacao::find($importacaoId);
+                if ($imp && $imp->iniciado_em) {
+                    $rfUpdate['tempo_processamento_segundos'] = (int) $imp->iniciado_em->diffInSeconds(now());
+                }
             }
 
             $est = $data['resumo_final']['estatisticas'] ?? [];
@@ -360,7 +365,7 @@ class DataReceiverController extends Controller
 
             // Marcar blocos anteriores como concluídos se ainda estiverem processando
             if (in_array($data['status'], ['inicio', 'processando'])) {
-                $ordemBlocos = ['0', 'A', 'C', 'D'];
+                $ordemBlocos = ['participantes', 'notas_servicos', 'notas_mercadorias', 'notas_transportes', 'catalogo', 'apuracao_icms', 'retencoes_fonte', 'apuracao_pis_cofins'];
                 $currentIdx = array_search($data['bloco'], $ordemBlocos);
 
                 for ($i = 0; $i < $currentIdx; $i++) {
@@ -863,6 +868,10 @@ class DataReceiverController extends Controller
                 'concluido_em' => now(),
             ];
 
+            if ($importacao->iniciado_em) {
+                $updateData['tempo_processamento_segundos'] = (int) $importacao->iniciado_em->diffInSeconds(now());
+            }
+
             if (!empty($dados['total_processados'])) {
                 $updateData['total_participantes'] = (int) $dados['total_processados'];
             }
@@ -968,6 +977,10 @@ class DataReceiverController extends Controller
                 'status' => $validated['status'],
                 'concluido_em' => now(),
             ];
+
+            if ($importacao->iniciado_em) {
+                $updateData['tempo_processamento_segundos'] = (int) $importacao->iniciado_em->diffInSeconds(now());
+            }
 
             // Estatísticas de XMLs
             if (isset($dados['xmls_processados'])) {

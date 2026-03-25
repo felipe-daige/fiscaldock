@@ -5,8 +5,10 @@ namespace App\Services;
 use App\Models\Alerta;
 use App\Models\Participante;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class AlertaCentralService
 {
@@ -99,7 +101,90 @@ class AlertaCentralService
             }
         }
 
-        // 3. Auto-resolver alertas que não foram mais detectados
+        // 3. Alertas de risco BI (fornecedores irregulares com notas, gap de importações)
+        $fornecedoresIrregulares = $this->detectarFornecedoresIrregularesComNotas($userId);
+        foreach ($fornecedoresIrregulares as $f) {
+            $hash = hash('sha256', "$userId:fornecedor_irregular:{$f->participante_id}");
+            $allHashes[] = $hash;
+
+            $valorFormatado = number_format((float) $f->valor_em_risco, 2, ',', '.');
+
+            $data = [
+                'tipo' => 'fornecedor_irregular',
+                'categoria' => 'compliance',
+                'severidade' => 'alta',
+                'participante_id' => $f->participante_id,
+                'titulo' => "Fornecedor irregular com {$f->total_notas} nota(s) — R$ {$valorFormatado} em risco",
+                'descricao' => "{$f->razao_social} ({$f->cnpj}) esta com situacao {$f->situacao_cadastral} e possui {$f->total_notas} nota(s) fiscal(is) vinculadas totalizando R$ {$valorFormatado}.",
+                'total_afetados' => (int) $f->total_notas,
+                'detalhes' => [
+                    'participante_id' => $f->participante_id,
+                    'razao_social' => $f->razao_social,
+                    'cnpj' => $f->cnpj,
+                    'situacao_cadastral' => $f->situacao_cadastral,
+                    'total_notas' => (int) $f->total_notas,
+                    'valor_em_risco' => (float) $f->valor_em_risco,
+                ],
+            ];
+
+            $existing = Alerta::where('user_id', $userId)->where('hash', $hash)->first();
+
+            if ($existing) {
+                $updateData = $data;
+                if (! in_array($existing->status, ['resolvido', 'ignorado'])) {
+                    $updateData['status'] = 'ativo';
+                }
+                $existing->update($updateData);
+                $atualizados++;
+            } else {
+                Alerta::create(array_merge($data, [
+                    'user_id' => $userId,
+                    'hash' => $hash,
+                    'status' => 'ativo',
+                ]));
+                $novos++;
+            }
+        }
+
+        $gapImportacoes = $this->detectarGapImportacoes($userId);
+        if ($gapImportacoes) {
+            $hash = hash('sha256', "$userId:gap_importacao");
+            $allHashes[] = $hash;
+
+            $totalMeses = count($gapImportacoes);
+            $data = [
+                'tipo' => 'gap_importacao',
+                'categoria' => 'importacao',
+                'severidade' => 'media',
+                'titulo' => "{$totalMeses} mes(es) sem importacao EFD nos ultimos 12 meses",
+                'descricao' => "Foram detectados {$totalMeses} meses sem nenhuma importacao EFD (Fiscal ou Contribuicoes). Meses faltantes podem indicar obrigacoes acessorias nao entregues.",
+                'total_afetados' => $totalMeses,
+                'detalhes' => [
+                    'meses_faltantes' => $gapImportacoes,
+                    'total_meses' => $totalMeses,
+                ],
+            ];
+
+            $existing = Alerta::where('user_id', $userId)->where('hash', $hash)->first();
+
+            if ($existing) {
+                $updateData = $data;
+                if (! in_array($existing->status, ['resolvido', 'ignorado'])) {
+                    $updateData['status'] = 'ativo';
+                }
+                $existing->update($updateData);
+                $atualizados++;
+            } else {
+                Alerta::create(array_merge($data, [
+                    'user_id' => $userId,
+                    'hash' => $hash,
+                    'status' => 'ativo',
+                ]));
+                $novos++;
+            }
+        }
+
+        // 4. Auto-resolver alertas que não foram mais detectados
         $resolvidos = Alerta::where('user_id', $userId)
             ->where('status', 'ativo')
             ->whereNotIn('hash', $allHashes)
@@ -189,6 +274,7 @@ class AlertaCentralService
             'por_categoria' => [
                 'notas_fiscais' => $porCategoria['notas_fiscais'] ?? 0,
                 'compliance' => $porCategoria['compliance'] ?? 0,
+                'importacao' => $porCategoria['importacao'] ?? 0,
             ],
             'novos_hoje' => $novosHoje,
             'ultima_atualizacao' => $ultimaAtualizacao,
@@ -369,5 +455,56 @@ class AlertaCentralService
                 ],
             ]),
         };
+    }
+
+    // -------------------------------------------------------
+    // BI risk detectors (private)
+    // -------------------------------------------------------
+
+    /**
+     * Fornecedores com situação irregular que possuem notas EFD vinculadas.
+     */
+    private function detectarFornecedoresIrregularesComNotas(int $userId): Collection
+    {
+        return DB::table('efd_notas as n')
+            ->join('participantes as p', 'p.id', '=', 'n.participante_id')
+            ->where('n.user_id', $userId)
+            ->whereNotNull('p.situacao_cadastral')
+            ->whereRaw("UPPER(p.situacao_cadastral) NOT IN ('02', 'ATIVA')")
+            ->select([
+                'p.id as participante_id',
+                'p.cnpj',
+                'p.razao_social',
+                'p.situacao_cadastral',
+                DB::raw('COUNT(n.id) as total_notas'),
+                DB::raw('SUM(n.valor_total) as valor_em_risco'),
+            ])
+            ->groupBy('p.id', 'p.cnpj', 'p.razao_social', 'p.situacao_cadastral')
+            ->get();
+    }
+
+    /**
+     * Meses sem importação EFD nos últimos 12 meses.
+     * Retorna array de labels (ex: ["jan/26", "fev/26"]) ou null se não houver gaps.
+     */
+    private function detectarGapImportacoes(int $userId): ?array
+    {
+        $inicio = Carbon::now()->subMonths(11)->startOfMonth();
+        $fim = Carbon::now()->startOfMonth();
+        $mesesFaltantes = [];
+
+        foreach (CarbonPeriod::create($inicio, '1 month', $fim) as $mes) {
+            $temImportacao = DB::table('efd_importacoes')
+                ->where('user_id', $userId)
+                ->where('status', 'concluido')
+                ->whereRaw("DATE_TRUNC('month', created_at) = ?", [$mes->startOfMonth()->toDateString()])
+                ->exists();
+
+            if (! $temImportacao) {
+                $mesesFaltantes[] = $mes->locale('pt_BR')->isoFormat('MMM/YY');
+            }
+        }
+
+        return count($mesesFaltantes) > 0 ? $mesesFaltantes : null;
     }
 }

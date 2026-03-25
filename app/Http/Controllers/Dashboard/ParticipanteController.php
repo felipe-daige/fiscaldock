@@ -898,7 +898,10 @@ class ParticipanteController extends Controller
                     ->where('importacao_id', $importacaoId)
             );
         } else {
-            $query->orderBy('created_at', 'desc');
+            $query->orderByDesc(
+                EfdNota::selectRaw('count(*)')
+                    ->whereColumn('participante_id', 'participantes.id')
+            )->orderBy('created_at', 'desc');
         }
 
         $participantes = $query->paginate($perPage);

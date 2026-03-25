@@ -521,7 +521,10 @@
 
         // Volume por Bloco
         const blocos = data.volume_blocos || {};
-        const totalBlocos = (blocos.A ? blocos.A.notas : 0) + (blocos.C ? blocos.C.notas : 0) + (blocos.D ? blocos.D.notas : 0);
+        const ns = blocos.notas_servicos || blocos.A || { notas: 0, valor: 0 };
+        const nm = blocos.notas_mercadorias || blocos.C || { notas: 0, valor: 0 };
+        const nt = blocos.notas_transportes || blocos.D || { notas: 0, valor: 0 };
+        const totalBlocos = (ns.notas || 0) + (nm.notas || 0) + (nt.notas || 0);
         const blcoEl = document.getElementById('chart-efd-blocos');
         if (blcoEl) {
             if (totalBlocos === 0) {
@@ -529,8 +532,8 @@
             } else {
                 renderChart('chart-efd-blocos', {
                     chart: { type: 'donut', height: 320 },
-                    series: [blocos.A.valor, blocos.C.valor, blocos.D.valor],
-                    labels: ['Bloco A', 'Bloco C', 'Bloco D'],
+                    series: [ns.valor, nm.valor, nt.valor],
+                    labels: ['Serviços', 'Mercadorias', 'Transportes'],
                     legend: { position: 'bottom' },
                     tooltip: {
                         y: { formatter: (val) => formatCurrency(val) }
@@ -840,7 +843,7 @@
                     return `<tr class="hover:bg-gray-50">
                         <td class="px-3 py-2 text-gray-600">${n.data_emissao}</td>
                         <td class="px-3 py-2"><span class="px-1.5 py-0.5 rounded text-xs font-medium ${corTipo}">${n.tipo_nota}</span></td>
-                        <td class="px-3 py-2 text-gray-500">${n.bloco}</td>
+                        <td class="px-3 py-2 text-gray-500">${{notas_servicos:'Serviços',notas_mercadorias:'Mercadorias',notas_transportes:'Transportes'}[n.bloco] || n.bloco}</td>
                         <td class="px-3 py-2 text-right font-medium text-gray-800">${formatCurrency(n.vl_doc)}</td>
                     </tr>`;
                 }).join('');
@@ -1010,7 +1013,7 @@
                 <td class="px-2 sm:px-4 py-2 sm:py-3 text-center">
                     <span class="px-2 py-0.5 rounded text-xs bg-red-100 text-red-700">${n.situacao || '—'}</span>
                 </td>
-                <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs text-gray-500">${n.bloco}</td>
+                <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs text-gray-500">${{notas_servicos:'Serviços',notas_mercadorias:'Mercadorias',notas_transportes:'Transportes'}[n.bloco] || n.bloco}</td>
                 <td class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-gray-900">${formatCurrency(n.vl_doc)}</td>
             </tr>`;
         }).join('');

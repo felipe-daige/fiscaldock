@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('importacoes_sped', function (Blueprint $table) {
+        Schema::table('efd_importacoes', function (Blueprint $table) {
             $table->text('arquivo_base64')->nullable()->after('filename');
         });
     }
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('importacoes_sped', function (Blueprint $table) {
+        Schema::table('efd_importacoes', function (Blueprint $table) {
             $table->dropColumn('arquivo_base64');
         });
     }

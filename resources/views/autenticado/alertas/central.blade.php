@@ -139,6 +139,7 @@
                         <option value="">Todas</option>
                         <option value="notas_fiscais">Notas Fiscais</option>
                         <option value="compliance">Compliance</option>
+                        <option value="importacao">Importação</option>
                     </select>
                 </div>
 
@@ -269,7 +270,7 @@
     }
 
     function categoriaBadge(cat) {
-        var labels = { notas_fiscais: 'Notas Fiscais', compliance: 'Compliance' };
+        var labels = { notas_fiscais: 'Notas Fiscais', compliance: 'Compliance', importacao: 'Importação' };
         return '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">' + escapeHtml(labels[cat] || cat) + '</span>';
     }
 
@@ -647,6 +648,10 @@
             html += renderTabelaNotas(detalhes);
         } else if (tipo === 'participante_inativo' || tipo === 'participante_sem_ie' || tipo === 'cnpj_situacao_irregular' || tipo === 'situacao_irregular' || tipo === 'consulta_vencida' || tipo === 'nunca_consultado') {
             html += renderTabelaCompliance(detalhes);
+        } else if (tipo === 'fornecedor_irregular') {
+            html += renderFornecedorIrregular(detalhes);
+        } else if (tipo === 'gap_importacao') {
+            html += renderGapTemporal(detalhes);
         } else if (tipo === 'gap_temporal') {
             html += renderGapTemporal(detalhes);
         } else if (tipo === 'pis_cofins_incompleto') {
@@ -755,6 +760,24 @@
         if (detalhes.mensagem) {
             html += '<p class="text-xs text-gray-500 mt-2">' + escapeHtml(detalhes.mensagem) + '</p>';
         }
+        return html;
+    }
+
+    function renderFornecedorIrregular(detalhes) {
+        var html = '<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">';
+        var items = [
+            { label: 'CNPJ', value: detalhes.cnpj || '-' },
+            { label: 'Situação', value: detalhes.situacao_cadastral || '-' },
+            { label: 'Notas vinculadas', value: detalhes.total_notas || 0 },
+            { label: 'Valor em risco', value: formatarMoeda(detalhes.valor_em_risco) }
+        ];
+        items.forEach(function(item) {
+            html += '<div class="bg-white rounded-lg border border-gray-200 p-3 text-center">';
+            html += '<p class="text-sm font-semibold text-gray-900">' + escapeHtml(String(item.value)) + '</p>';
+            html += '<p class="text-xs text-gray-500">' + escapeHtml(item.label) + '</p>';
+            html += '</div>';
+        });
+        html += '</div>';
         return html;
     }
 

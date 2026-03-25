@@ -11,7 +11,7 @@ afterEach(function () {
     $this->user->forceDelete();
 });
 
-it('retorna estrutura com blocos A, C, D', function () {
+it('retorna estrutura com blocos notas_servicos, notas_mercadorias, notas_transportes', function () {
     $filtros = [
         'user_id' => $this->user->id,
         'data_inicio_iso' => now()->startOfMonth()->format('Y-m-d'),
@@ -20,10 +20,10 @@ it('retorna estrutura com blocos A, C, D', function () {
 
     $resultado = (new VolumePorBlocoQuery($filtros))->execute();
 
-    expect($resultado)->toHaveKeys(['A', 'C', 'D']);
-    expect($resultado['A'])->toHaveKeys(['valor', 'notas']);
-    expect($resultado['C'])->toHaveKeys(['valor', 'notas']);
-    expect($resultado['D'])->toHaveKeys(['valor', 'notas']);
+    expect($resultado)->toHaveKeys(['notas_servicos', 'notas_mercadorias', 'notas_transportes']);
+    expect($resultado['notas_servicos'])->toHaveKeys(['valor', 'notas']);
+    expect($resultado['notas_mercadorias'])->toHaveKeys(['valor', 'notas']);
+    expect($resultado['notas_transportes'])->toHaveKeys(['valor', 'notas']);
 });
 
 it('retorna zeros quando não há notas', function () {
@@ -35,8 +35,8 @@ it('retorna zeros quando não há notas', function () {
 
     $resultado = (new VolumePorBlocoQuery($filtros))->execute();
 
-    expect((float) $resultado['A']['valor'])->toBe(0.0);
-    expect((int) $resultado['A']['notas'])->toBe(0);
-    expect((float) $resultado['C']['valor'])->toBe(0.0);
-    expect((float) $resultado['D']['valor'])->toBe(0.0);
+    expect((float) $resultado['notas_servicos']['valor'])->toBe(0.0);
+    expect((int) $resultado['notas_servicos']['notas'])->toBe(0);
+    expect((float) $resultado['notas_mercadorias']['valor'])->toBe(0.0);
+    expect((float) $resultado['notas_transportes']['valor'])->toBe(0.0);
 });

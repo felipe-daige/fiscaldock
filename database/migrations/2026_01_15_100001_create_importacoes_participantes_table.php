@@ -25,6 +25,7 @@ return new class extends Migration
             $table->jsonb('participante_ids')->nullable(); // Array de IDs dos participantes criados
             $table->timestamp('iniciado_em')->nullable();
             $table->timestamp('concluido_em')->nullable();
+            $table->integer('tempo_processamento_segundos')->nullable();
             $table->timestamps();
 
             $table->index(['user_id', 'status']);

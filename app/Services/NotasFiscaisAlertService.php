@@ -286,7 +286,8 @@ class NotasFiscaisAlertService
 
     private function detectarSemItens($base): ?array
     {
-        $totalAfetados = (clone $base)->whereDoesntHave('itens')->count();
+        // CT-e (modelo 57) não possui itens detalhados no SPED (usa D190 totalizador, não D170)
+        $totalAfetados = (clone $base)->whereDoesntHave('itens')->where('modelo', '!=', '57')->count();
 
         if ($totalAfetados === 0) {
             return null;
@@ -294,6 +295,7 @@ class NotasFiscaisAlertService
 
         $notas = (clone $base)
             ->whereDoesntHave('itens')
+            ->where('modelo', '!=', '57')
             ->select('id', 'numero', 'serie', 'modelo', 'data_emissao', 'valor_total', 'participante_id')
             ->orderByDesc('data_emissao')
             ->limit(50)

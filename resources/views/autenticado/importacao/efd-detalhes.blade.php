@@ -51,6 +51,30 @@
             </div>
         </div>
 
+        {{-- Barra de navegação ancorada (sticky) --}}
+        @if($importacao->status === 'concluido')
+        <nav class="efd-animate sticky top-0 z-20 bg-white/95 backdrop-blur border border-gray-200 rounded-xl shadow-sm mb-6 px-4 py-2 flex items-center gap-1 overflow-x-auto" id="efd-sticky-nav" style="animation-delay: 0.02s">
+            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide mr-2 flex-shrink-0">Ir para:</span>
+            <a href="#info-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">Info</a>
+            <a href="#participantes-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">Participantes</a>
+            @if(!empty($resumoFinal))
+            <a href="#resumo-final-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">Notas</a>
+            @endif
+            @if(isset($catalogoItens) && ($catalogoItens instanceof \Illuminate\Pagination\LengthAwarePaginator ? $catalogoItens->total() > 0 : $catalogoItens->count() > 0))
+            <a href="#catalogo-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">Catálogo</a>
+            @endif
+            @if($apuracaoIcms)
+            <a href="#apuracao-icms-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">ICMS/IPI</a>
+            @endif
+            @if(isset($retencoesFonte) && $retencoesFonte->isNotEmpty())
+            <a href="#retencoes-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">Retenções</a>
+            @endif
+            @if($apuracaoContribuicao)
+            <a href="#apuracao-pis-cofins-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">PIS/COFINS</a>
+            @endif
+        </nav>
+        @endif
+
         {{-- Banner de erro --}}
         @if($importacao->status === 'erro')
         <div class="efd-animate mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
@@ -65,7 +89,7 @@
         @endif
 
         {{-- Info Card --}}
-        <div class="efd-animate bg-white rounded-xl border border-gray-200 shadow-sm mb-6" style="animation-delay: 0.05s">
+        <div class="efd-animate bg-white rounded-xl border border-gray-200 shadow-sm mb-6" id="info-section" style="animation-delay: 0.05s">
             <div class="px-6 py-4 border-b border-gray-200">
                 <h2 class="text-base font-semibold text-gray-900">Informações da Importação</h2>
             </div>
@@ -123,6 +147,64 @@
             @endforeach
         </div>
 
+        {{-- Resumo Executivo Tributário --}}
+        @if($apuracaoIcms || $apuracaoContribuicao || (isset($retencoesFonte) && $retencoesFonte->isNotEmpty()))
+        @php
+            $tribIcms     = $apuracaoIcms ? (float) $apuracaoIcms->icms_a_recolher : 0;
+            $tribIcmsSt   = $apuracaoIcms && $apuracaoIcms->tem_st ? (float) $apuracaoIcms->st_icms_recolher : 0;
+            $tribPis      = $apuracaoContribuicao ? (float) $apuracaoContribuicao->pis_total_recolher : 0;
+            $tribCofins   = $apuracaoContribuicao ? (float) $apuracaoContribuicao->cofins_total_recolher : 0;
+            $tribRetPis   = isset($retencoesFonte) ? (float) $retencoesFonte->sum('valor_pis') : 0;
+            $tribRetCof   = isset($retencoesFonte) ? (float) $retencoesFonte->sum('valor_cofins') : 0;
+            $tribRetTotal = $tribRetPis + $tribRetCof;
+            $tribTotal    = $tribIcms + $tribIcmsSt + $tribPis + $tribCofins;
+        @endphp
+        <div class="efd-animate bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl border border-indigo-200 shadow-sm mb-6" style="animation-delay: 0.12s">
+            <div class="px-6 py-4 border-b border-indigo-200">
+                <h2 class="text-base font-semibold text-indigo-900">Resumo Tributário</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
+                    @if($apuracaoIcms)
+                    <div class="text-center">
+                        <p class="text-xs font-medium text-gray-500">ICMS</p>
+                        <p class="text-lg font-bold text-blue-700 mt-0.5">R$ {{ number_format($tribIcms, 2, ',', '.') }}</p>
+                    </div>
+                    @if($apuracaoIcms->tem_st)
+                    <div class="text-center">
+                        <p class="text-xs font-medium text-gray-500">ICMS-ST</p>
+                        <p class="text-lg font-bold text-amber-700 mt-0.5">R$ {{ number_format($tribIcmsSt, 2, ',', '.') }}</p>
+                    </div>
+                    @endif
+                    @endif
+                    @if($apuracaoContribuicao)
+                    <div class="text-center">
+                        <p class="text-xs font-medium text-gray-500">PIS</p>
+                        <p class="text-lg font-bold text-blue-600 mt-0.5">R$ {{ number_format($tribPis, 2, ',', '.') }}</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs font-medium text-gray-500">COFINS</p>
+                        <p class="text-lg font-bold text-purple-700 mt-0.5">R$ {{ number_format($tribCofins, 2, ',', '.') }}</p>
+                    </div>
+                    @endif
+                    @if($tribRetTotal > 0)
+                    <div class="text-center">
+                        <p class="text-xs font-medium text-gray-500">Retenções</p>
+                        <p class="text-lg font-bold text-emerald-700 mt-0.5">R$ {{ number_format($tribRetTotal, 2, ',', '.') }}</p>
+                    </div>
+                    @endif
+                </div>
+                <div class="pt-3 border-t border-indigo-200 flex justify-between items-center">
+                    <span class="text-sm font-bold text-indigo-900">Total Tributos a Recolher</span>
+                    <span class="text-xl font-bold text-indigo-700">R$ {{ number_format($tribTotal, 2, ',', '.') }}</span>
+                </div>
+                @if($tribRetTotal > 0)
+                <p class="text-xs text-gray-500 mt-1">Retenções na fonte (PIS R$ {{ number_format($tribRetPis, 2, ',', '.') }} + COFINS R$ {{ number_format($tribRetCof, 2, ',', '.') }}) podem ser compensadas na apuração.</p>
+                @endif
+            </div>
+        </div>
+        @endif
+
         {{-- Card Cliente --}}
         <div class="efd-animate bg-white rounded-xl border border-gray-200 shadow-sm mb-6" style="animation-delay: 0.15s">
             <div class="px-6 py-4 border-b border-gray-200">
@@ -168,7 +250,7 @@
         </div>
 
         {{-- Participantes --}}
-        <div class="efd-animate bg-white rounded-xl border border-gray-200 shadow-sm" style="animation-delay: 0.2s">
+        <div class="efd-animate bg-white rounded-xl border border-gray-200 shadow-sm" id="participantes-section" style="animation-delay: 0.2s">
             <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-4 flex-wrap">
                 <h2 class="text-base font-semibold text-gray-900">
                     Participantes
@@ -311,7 +393,15 @@
                 <div class="font-mono text-sm bg-gray-50 rounded-lg p-3 border border-gray-200 space-y-1" id="resumo-final-detalhes-content">
                     @php
                         $rf = $resumoFinal;
-                        $nomesBloco = ['A' => 'Bloco A (PIS/COFINS)', 'C' => 'Bloco C (ICMS/IPI — NF-e)', 'D' => 'Bloco D (CT-e)'];
+                        $nomesBloco = [
+                            'notas_servicos' => 'Notas de Serviço (PIS/COFINS)',
+                            'notas_mercadorias' => 'NF-e Mercadorias (ICMS/IPI)',
+                            'notas_transportes' => 'CT-e Transportes',
+                            // Retrocompatibilidade com dados antigos
+                            'A' => 'Notas de Serviço (PIS/COFINS)',
+                            'C' => 'NF-e Mercadorias (ICMS/IPI)',
+                            'D' => 'CT-e Transportes',
+                        ];
                     @endphp
 
                     {{-- Participantes — normaliza tanto rf.participantes (spec) quanto rf.estatisticas (n8n atual) --}}
@@ -335,8 +425,19 @@
                     </div>
                     @endif
 
+                    {{-- Produtos e Serviços (catálogo 0200) --}}
+                    @if(!empty($rf['produtos_servicos']))
+                    @php $ps = $rf['produtos_servicos']; @endphp
+                    <div class="flex items-center gap-2 py-1">
+                        <span class="text-green-600 font-bold w-4">✓</span>
+                        <span class="w-52 text-gray-700">Produtos e Serviços</span>
+                        <span class="text-gray-900 font-medium">{{ $ps['total'] ?? 0 }} itens</span>
+                        <span class="text-gray-400 text-xs ml-2">{{ $ps['novos'] ?? 0 }} novos · {{ $ps['existentes'] ?? 0 }} já existentes</span>
+                    </div>
+                    @endif
+
                     {{-- Blocos --}}
-                    @foreach(['A', 'C', 'D'] as $bloco)
+                    @foreach(['notas_servicos', 'notas_mercadorias', 'notas_transportes', 'A', 'C', 'D'] as $bloco)
                         @if(isset($rf['blocos'][$bloco]))
                             @php
                                 $bd = $rf['blocos'][$bloco];
@@ -471,6 +572,745 @@
         </div>
         @endif
 
+        {{-- ══════════════════════════════════════════════════════════════════ --}}
+        {{-- Catálogo de Itens — Registro 0200                               --}}
+        {{-- ══════════════════════════════════════════════════════════════════ --}}
+        @if(isset($catalogoItens) && ($catalogoItens instanceof \Illuminate\Pagination\LengthAwarePaginator ? $catalogoItens->total() > 0 : $catalogoItens->count() > 0))
+        @php $totalCatalogo = $catalogoItens instanceof \Illuminate\Pagination\LengthAwarePaginator ? $catalogoItens->total() : $catalogoItens->count(); @endphp
+        <div class="efd-animate bg-white rounded-xl border border-gray-200 shadow-sm mt-6" id="catalogo-section" style="animation-delay: 0.3s">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-4 flex-wrap">
+                <h2 class="text-base font-semibold text-gray-900">
+                    Catálogo de Produtos/Serviços
+                    <span class="ml-1.5 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">{{ $totalCatalogo }}</span>
+                </h2>
+                <div class="relative">
+                    <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input type="text" id="busca-catalogo" placeholder="Buscar por código, descrição ou NCM..." class="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-72">
+                </div>
+            </div>
+
+            <div class="hidden md:block overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 text-sm" id="tabela-catalogo">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">NCM</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Unidade</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Alíq. ICMS</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="tbody-catalogo">
+                        @foreach($catalogoItens as $item)
+                        <tr class="hover:bg-gray-50 transition-colors" data-cod="{{ strtolower($item->cod_item ?? '') }}" data-desc="{{ strtolower($item->descr_item ?? '') }}" data-ncm="{{ $item->cod_ncm ?? '' }}">
+                            <td class="px-4 py-2.5 text-xs font-mono text-gray-900 whitespace-nowrap">{{ $item->cod_item ?? '—' }}</td>
+                            <td class="px-4 py-2.5 text-sm text-gray-900 max-w-[320px] truncate" title="{{ $item->descr_item ?? '' }}">{{ $item->descr_item ?? '—' }}</td>
+                            <td class="px-4 py-2.5 text-xs font-mono text-gray-700">{{ $item->cod_ncm ?? '—' }}</td>
+                            <td class="px-4 py-2.5 text-xs text-gray-600">{{ $item->tipo_item ?? '—' }}</td>
+                            <td class="px-4 py-2.5 text-xs text-gray-600">{{ $item->unid_inv ?? '—' }}</td>
+                            <td class="px-4 py-2.5 text-xs text-right font-mono text-gray-700">{{ $item->aliq_icms ? number_format($item->aliq_icms, 2, ',', '.') . '%' : '—' }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            {{-- Mobile cards --}}
+            <div class="md:hidden divide-y divide-gray-200" id="mobile-catalogo">
+                @foreach($catalogoItens as $item)
+                <div class="px-4 py-3" data-cod="{{ strtolower($item->cod_item ?? '') }}" data-desc="{{ strtolower($item->descr_item ?? '') }}" data-ncm="{{ $item->cod_ncm ?? '' }}">
+                    <p class="text-sm font-medium text-gray-900">{{ $item->descr_item ?? '—' }}</p>
+                    <div class="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                        <span class="font-mono">{{ $item->cod_item ?? '—' }}</span>
+                        @if($item->cod_ncm)<span>&middot;</span><span>NCM: {{ $item->cod_ncm }}</span>@endif
+                        @if($item->aliq_icms)<span>&middot;</span><span>ICMS: {{ number_format($item->aliq_icms, 2, ',', '.') }}%</span>@endif
+                    </div>
+                </div>
+                @endforeach
+            </div>
+
+            {{-- Paginação --}}
+            @if($catalogoItens instanceof \Illuminate\Pagination\LengthAwarePaginator && $catalogoItens->hasPages())
+            <div class="px-6 py-4 flex items-center justify-between gap-4 text-sm border-t border-gray-100">
+                <span class="text-gray-500 text-xs">Mostrando {{ $catalogoItens->firstItem() }}–{{ $catalogoItens->lastItem() }} de {{ $catalogoItens->total() }} itens</span>
+                <div class="flex items-center gap-1">
+                    @if($catalogoItens->onFirstPage())
+                        <span class="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-300 text-xs cursor-not-allowed">Anterior</span>
+                    @else
+                        <a href="{{ $catalogoItens->previousPageUrl() }}" data-link class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50 transition">Anterior</a>
+                    @endif
+                    <span class="px-3 py-1.5 text-xs text-gray-500">{{ $catalogoItens->currentPage() }} / {{ $catalogoItens->lastPage() }}</span>
+                    @if($catalogoItens->hasMorePages())
+                        <a href="{{ $catalogoItens->nextPageUrl() }}" data-link class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50 transition">Próxima</a>
+                    @else
+                        <span class="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-300 text-xs cursor-not-allowed">Próxima</span>
+                    @endif
+                </div>
+            </div>
+            @endif
+
+            {{-- Zero-state busca --}}
+            <div id="zero-state-catalogo" class="hidden px-6 py-8 text-center">
+                <p class="text-sm text-gray-500">Nenhum item encontrado para esta busca.</p>
+            </div>
+        </div>
+        @endif
+
+        {{-- ══════════════════════════════════════════════════════════════════ --}}
+        {{-- Apuração ICMS/IPI — Bloco E (só EFD ICMS/IPI)                   --}}
+        {{-- ══════════════════════════════════════════════════════════════════ --}}
+        @if($apuracaoIcms)
+        @php $ai = $apuracaoIcms; @endphp
+        <div class="efd-animate bg-white rounded-xl border border-gray-200 shadow-sm mt-6" id="apuracao-icms-section" style="animation-delay: 0.35s">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <div>
+                    <h2 class="text-base font-semibold text-gray-900">Apuração ICMS/IPI — Bloco E</h2>
+                    @if($ai->periodo_inicio && $ai->periodo_fim)
+                    <p class="text-xs text-gray-500 mt-0.5">Período: {{ $ai->periodo_inicio->format('d/m/Y') }} a {{ $ai->periodo_fim->format('d/m/Y') }}</p>
+                    @endif
+                </div>
+                <div class="flex items-center gap-2">
+                    @if($ai->tem_st)<span class="px-2 py-0.5 text-xs font-medium rounded-full bg-amber-100 text-amber-700">ICMS-ST</span>@endif
+                    @if($ai->tem_difal)<span class="px-2 py-0.5 text-xs font-medium rounded-full bg-cyan-100 text-cyan-700">DIFAL/FCP</span>@endif
+                    @if($ai->tem_ipi)<span class="px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700">IPI</span>@endif
+                </div>
+            </div>
+            <div class="p-6">
+                {{-- ICMS Próprio (E110) --}}
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-blue-500"></span> ICMS Próprio
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-2 text-sm">
+                        @php
+                            $icmsCampos = [
+                                ['Total de Débitos', $ai->icms_tot_debitos],
+                                ['Ajustes a Débito', $ai->icms_aj_debitos],
+                                ['Total Ajustes Débito', $ai->icms_tot_aj_debitos],
+                                ['Estornos de Crédito', $ai->icms_estornos_credito],
+                                ['Total de Créditos', $ai->icms_tot_creditos],
+                                ['Ajustes a Crédito', $ai->icms_aj_creditos],
+                                ['Total Ajustes Crédito', $ai->icms_tot_aj_creditos],
+                                ['Estornos de Débito', $ai->icms_estornos_debito],
+                                ['Saldo Credor Anterior', $ai->icms_sld_credor_ant],
+                                ['Saldo Apurado', $ai->icms_sld_apurado],
+                                ['Total Deduções', $ai->icms_tot_deducoes],
+                                ['Débitos Especiais', $ai->icms_deb_especiais],
+                            ];
+                        @endphp
+                        @foreach($icmsCampos as $campo)
+                            <div class="flex justify-between items-center py-1">
+                                <span class="text-gray-600">{{ $campo[0] }}</span>
+                                <span class="text-gray-700 font-mono text-xs">R$ {{ number_format($campo[1] ?? 0, 2, ',', '.') }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex justify-between items-center bg-blue-50 rounded-lg px-4 py-2">
+                            <span class="text-sm font-semibold text-blue-900">ICMS a Recolher</span>
+                            <span class="text-sm font-bold text-blue-700">R$ {{ number_format($ai->icms_a_recolher ?? 0, 2, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-gray-50 rounded-lg px-4 py-2">
+                            <span class="text-sm font-medium text-gray-700">Saldo Credor a Transportar</span>
+                            <span class="text-sm font-bold text-gray-900">R$ {{ number_format($ai->icms_sld_credor_transportar ?? 0, 2, ',', '.') }}</span>
+                        </div>
+                    </div>
+
+                    {{-- Obrigações ICMS (E116) --}}
+                    @if(!empty($ai->icms_obrigacoes['items']))
+                    <div class="mt-3">
+                        <button type="button" class="efd-collapse-toggle text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1" data-target="obrigacoes-icms">
+                            <svg class="w-3.5 h-3.5 transition-transform efd-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            Obrigações a Recolher ({{ count($ai->icms_obrigacoes['items']) }})
+                        </button>
+                        <div id="obrigacoes-icms" class="hidden mt-2 overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 text-xs">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-3 py-1.5 text-left text-xs font-medium text-gray-500 uppercase">Cód. Obrigação</th>
+                                        <th class="px-3 py-1.5 text-right text-xs font-medium text-gray-500 uppercase">Valor</th>
+                                        <th class="px-3 py-1.5 text-left text-xs font-medium text-gray-500 uppercase">Vencimento</th>
+                                        <th class="px-3 py-1.5 text-left text-xs font-medium text-gray-500 uppercase">Cód. Receita</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    @foreach($ai->icms_obrigacoes['items'] as $obr)
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-3 py-1.5 font-mono">{{ $obr['cod_obrigacao'] ?? $obr['COD_OR'] ?? '—' }}</td>
+                                        <td class="px-3 py-1.5 text-right font-mono">R$ {{ number_format((float)($obr['valor'] ?? $obr['VL_OR'] ?? 0), 2, ',', '.') }}</td>
+                                        <td class="px-3 py-1.5">{{ $obr['data_vencimento'] ?? $obr['DT_VCTO'] ?? '—' }}</td>
+                                        <td class="px-3 py-1.5 font-mono">{{ $obr['cod_receita'] ?? $obr['COD_REC'] ?? '—' }}</td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+
+                {{-- ICMS-ST (E210) — condicional --}}
+                @if($ai->tem_st)
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span> ICMS Substituição Tributária
+                        @if($ai->st_uf)<span class="text-xs text-gray-500 font-normal ml-1">UF: {{ $ai->st_uf }}</span>@endif
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-2 text-sm">
+                        @php
+                            $stCampos = [
+                                ['Saldo Credor Anterior', $ai->st_sld_credor_ant],
+                                ['Devoluções', $ai->st_devolucoes],
+                                ['Ressarcimentos', $ai->st_ressarcimentos],
+                                ['Outros Créditos', $ai->st_outros_creditos],
+                                ['Ajustes a Crédito', $ai->st_aj_creditos],
+                                ['Retenção', $ai->st_retencao],
+                                ['Outros Débitos', $ai->st_outros_debitos],
+                                ['Ajustes a Débito', $ai->st_aj_debitos],
+                                ['Saldo Devedor Anterior', $ai->st_sld_devedor_ant],
+                                ['Deduções', $ai->st_deducoes],
+                                ['Débitos Especiais', $ai->st_deb_especiais],
+                            ];
+                        @endphp
+                        @foreach($stCampos as $campo)
+                            <div class="flex justify-between items-center py-1">
+                                <span class="text-gray-600">{{ $campo[0] }}</span>
+                                <span class="text-gray-700 font-mono text-xs">R$ {{ number_format($campo[1] ?? 0, 2, ',', '.') }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex justify-between items-center bg-amber-50 rounded-lg px-4 py-2">
+                            <span class="text-sm font-semibold text-amber-900">ICMS-ST a Recolher</span>
+                            <span class="text-sm font-bold text-amber-700">R$ {{ number_format($ai->st_icms_recolher ?? 0, 2, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-gray-50 rounded-lg px-4 py-2">
+                            <span class="text-sm font-medium text-gray-700">Saldo Credor a Transportar</span>
+                            <span class="text-sm font-bold text-gray-900">R$ {{ number_format($ai->st_sld_credor_transportar ?? 0, 2, ',', '.') }}</span>
+                        </div>
+                    </div>
+
+                    {{-- Obrigações ICMS-ST (E250) --}}
+                    @if(!empty($ai->st_obrigacoes['items']))
+                    <div class="mt-3">
+                        <button type="button" class="efd-collapse-toggle text-xs font-medium text-amber-600 hover:text-amber-800 flex items-center gap-1" data-target="obrigacoes-st">
+                            <svg class="w-3.5 h-3.5 transition-transform efd-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            Obrigações ST a Recolher ({{ count($ai->st_obrigacoes['items']) }})
+                        </button>
+                        <div id="obrigacoes-st" class="hidden mt-2 overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 text-xs">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-3 py-1.5 text-left text-xs font-medium text-gray-500 uppercase">Cód. Obrigação</th>
+                                        <th class="px-3 py-1.5 text-right text-xs font-medium text-gray-500 uppercase">Valor</th>
+                                        <th class="px-3 py-1.5 text-left text-xs font-medium text-gray-500 uppercase">Vencimento</th>
+                                        <th class="px-3 py-1.5 text-left text-xs font-medium text-gray-500 uppercase">Cód. Receita</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    @foreach($ai->st_obrigacoes['items'] as $obr)
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-3 py-1.5 font-mono">{{ $obr['cod_obrigacao'] ?? $obr['COD_OR'] ?? '—' }}</td>
+                                        <td class="px-3 py-1.5 text-right font-mono">R$ {{ number_format((float)($obr['valor'] ?? $obr['VL_OR'] ?? 0), 2, ',', '.') }}</td>
+                                        <td class="px-3 py-1.5">{{ $obr['data_vencimento'] ?? $obr['DT_VCTO'] ?? '—' }}</td>
+                                        <td class="px-3 py-1.5 font-mono">{{ $obr['cod_receita'] ?? $obr['COD_REC'] ?? '—' }}</td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+                @endif
+
+                {{-- DIFAL/FCP (E300/E310) — condicional --}}
+                @if($ai->tem_difal && !empty($ai->difal_fcp))
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-cyan-500"></span> DIFAL/FCP — Diferencial de Alíquota
+                    </h3>
+                    @php $difal = $ai->difal_fcp; @endphp
+                    @if(!empty($difal['items']))
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-3 py-1.5 text-left text-xs font-medium text-gray-500 uppercase">UF</th>
+                                    <th class="px-3 py-1.5 text-right text-xs font-medium text-gray-500 uppercase">DIFAL Origem</th>
+                                    <th class="px-3 py-1.5 text-right text-xs font-medium text-gray-500 uppercase">DIFAL Destino</th>
+                                    <th class="px-3 py-1.5 text-right text-xs font-medium text-gray-500 uppercase">FCP</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                @foreach($difal['items'] as $d)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-3 py-1.5 text-xs font-medium">{{ $d['UF'] ?? $d['uf'] ?? '—' }}</td>
+                                    <td class="px-3 py-1.5 text-xs text-right font-mono">R$ {{ number_format((float)($d['VL_SLD_DEV_ANT_DIFAL'] ?? $d['difal_origem'] ?? 0), 2, ',', '.') }}</td>
+                                    <td class="px-3 py-1.5 text-xs text-right font-mono">R$ {{ number_format((float)($d['VL_ICMS_RECOLHER_DIFAL'] ?? $d['difal_destino'] ?? $d['icms_recolher'] ?? 0), 2, ',', '.') }}</td>
+                                    <td class="px-3 py-1.5 text-xs text-right font-mono">R$ {{ number_format((float)($d['VL_FCP_RECOLHER'] ?? $d['fcp'] ?? 0), 2, ',', '.') }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @else
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-gray-600">UF</span>
+                            <span class="text-gray-700">{{ $difal['UF'] ?? $difal['uf'] ?? '—' }}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-gray-600">DIFAL a Recolher</span>
+                            <span class="text-gray-700 font-mono">R$ {{ number_format((float)($difal['VL_ICMS_RECOLHER_DIFAL'] ?? $difal['icms_recolher'] ?? 0), 2, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-gray-600">FCP a Recolher</span>
+                            <span class="text-gray-700 font-mono">R$ {{ number_format((float)($difal['VL_FCP_RECOLHER'] ?? $difal['fcp'] ?? 0), 2, ',', '.') }}</span>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+                @endif
+
+                {{-- IPI (E500/E520) — condicional --}}
+                @if($ai->tem_ipi && !empty($ai->ipi))
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> IPI — Imposto sobre Produtos Industrializados
+                    </h3>
+                    @php $ipiData = $ai->ipi; @endphp
+                    @if(!empty($ipiData['items']))
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-3 py-1.5 text-left text-xs font-medium text-gray-500 uppercase">Período</th>
+                                    <th class="px-3 py-1.5 text-right text-xs font-medium text-gray-500 uppercase">Débitos</th>
+                                    <th class="px-3 py-1.5 text-right text-xs font-medium text-gray-500 uppercase">Créditos</th>
+                                    <th class="px-3 py-1.5 text-right text-xs font-medium text-gray-500 uppercase">Saldo</th>
+                                    <th class="px-3 py-1.5 text-right text-xs font-medium text-gray-500 uppercase">A Recolher</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                @foreach($ipiData['items'] as $ip)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-3 py-1.5 text-xs">{{ ($ip['DT_INI'] ?? $ip['periodo_inicio'] ?? '—') }} a {{ ($ip['DT_FIN'] ?? $ip['periodo_fim'] ?? '') }}</td>
+                                    <td class="px-3 py-1.5 text-xs text-right font-mono">R$ {{ number_format((float)($ip['VL_TOT_DEBITOS'] ?? $ip['debitos'] ?? 0), 2, ',', '.') }}</td>
+                                    <td class="px-3 py-1.5 text-xs text-right font-mono">R$ {{ number_format((float)($ip['VL_TOT_CREDITOS'] ?? $ip['creditos'] ?? 0), 2, ',', '.') }}</td>
+                                    <td class="px-3 py-1.5 text-xs text-right font-mono">R$ {{ number_format((float)($ip['VL_SLD_APURADO'] ?? $ip['saldo'] ?? 0), 2, ',', '.') }}</td>
+                                    <td class="px-3 py-1.5 text-xs text-right font-mono font-semibold">R$ {{ number_format((float)($ip['VL_IPI_RECOLHER'] ?? $ip['a_recolher'] ?? 0), 2, ',', '.') }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @else
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-gray-600">Débitos</span>
+                            <span class="text-gray-700 font-mono">R$ {{ number_format((float)($ipiData['VL_TOT_DEBITOS'] ?? $ipiData['debitos'] ?? 0), 2, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-gray-600">Créditos</span>
+                            <span class="text-gray-700 font-mono">R$ {{ number_format((float)($ipiData['VL_TOT_CREDITOS'] ?? $ipiData['creditos'] ?? 0), 2, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-gray-600">Saldo Apurado</span>
+                            <span class="text-gray-700 font-mono">R$ {{ number_format((float)($ipiData['VL_SLD_APURADO'] ?? $ipiData['saldo'] ?? 0), 2, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-1 font-semibold">
+                            <span class="text-gray-900">IPI a Recolher</span>
+                            <span class="text-emerald-700 font-mono">R$ {{ number_format((float)($ipiData['VL_IPI_RECOLHER'] ?? $ipiData['a_recolher'] ?? 0), 2, ',', '.') }}</span>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+                @endif
+
+                {{-- Total Geral --}}
+                <div class="mt-6 pt-4 border-t-2 border-gray-300 flex justify-between items-center">
+                    <span class="text-base font-bold text-gray-900">Total a Recolher (ICMS + ST)</span>
+                    <span class="text-lg font-bold text-blue-700">R$ {{ number_format($ai->total_recolher ?? 0, 2, ',', '.') }}</span>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        {{-- ══════════════════════════════════════════════════════════════════ --}}
+        {{-- Retenções na Fonte PIS/COFINS — F600                             --}}
+        {{-- ══════════════════════════════════════════════════════════════════ --}}
+        @if(isset($retencoesFonte) && $retencoesFonte->isNotEmpty())
+        <div class="efd-animate bg-white rounded-xl border border-gray-200 shadow-sm mt-6" id="retencoes-section" style="animation-delay: 0.4s">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-base font-semibold text-gray-900">Retenções na Fonte PIS/COFINS — F600</h2>
+                <p class="text-xs text-gray-500 mt-0.5">{{ $retencoesFonte->count() }} retenções encontradas</p>
+            </div>
+            <div class="p-6">
+                {{-- Resumo --}}
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-center">
+                        <p class="text-xs text-gray-500">Total Retenções</p>
+                        <p class="text-lg font-bold text-gray-900">{{ $retencoesFonte->count() }}</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-center">
+                        <p class="text-xs text-gray-500">Base de Cálculo</p>
+                        <p class="text-sm font-bold text-gray-900">R$ {{ number_format($retencoesFonte->sum('base_calculo'), 2, ',', '.') }}</p>
+                    </div>
+                    <div class="bg-blue-50 rounded-lg px-4 py-3 text-center">
+                        <p class="text-xs text-blue-600">PIS Retido</p>
+                        <p class="text-sm font-bold text-blue-700">R$ {{ number_format($retencoesFonte->sum('valor_pis'), 2, ',', '.') }}</p>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg px-4 py-3 text-center">
+                        <p class="text-xs text-purple-600">COFINS Retido</p>
+                        <p class="text-sm font-bold text-purple-700">R$ {{ number_format($retencoesFonte->sum('valor_cofins'), 2, ',', '.') }}</p>
+                    </div>
+                </div>
+
+                {{-- Tabela Desktop --}}
+                <div class="hidden sm:block overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">CNPJ</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Natureza</th>
+                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Base Cálculo</th>
+                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">PIS</th>
+                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">COFINS</th>
+                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach($retencoesFonte as $ret)
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-4 py-2.5 text-xs font-mono text-gray-900 whitespace-nowrap">{{ $ret->cnpj_formatado }}</td>
+                                <td class="px-4 py-2.5 text-xs text-gray-700">{{ $ret->data_retencao?->format('d/m/Y') ?? '—' }}</td>
+                                <td class="px-4 py-2.5 text-xs text-gray-700">{{ $ret->natureza_formatada }}</td>
+                                <td class="px-4 py-2.5 text-xs text-right text-gray-700 font-mono">R$ {{ number_format($ret->base_calculo ?? 0, 2, ',', '.') }}</td>
+                                <td class="px-4 py-2.5 text-xs text-right text-blue-700 font-mono">R$ {{ number_format($ret->valor_pis ?? 0, 2, ',', '.') }}</td>
+                                <td class="px-4 py-2.5 text-xs text-right text-purple-700 font-mono">R$ {{ number_format($ret->valor_cofins ?? 0, 2, ',', '.') }}</td>
+                                <td class="px-4 py-2.5 text-xs text-right text-gray-900 font-semibold font-mono">R$ {{ number_format($ret->valor_total ?? 0, 2, ',', '.') }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- Cards Mobile --}}
+                <div class="sm:hidden space-y-3">
+                    @foreach($retencoesFonte as $ret)
+                    <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs font-mono text-gray-900">{{ $ret->cnpj_formatado }}</span>
+                            <span class="text-xs text-gray-500">{{ $ret->data_retencao?->format('d/m/Y') ?? '—' }}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-gray-600">{{ $ret->natureza_formatada }}</span>
+                            <span class="font-semibold text-gray-900">R$ {{ number_format($ret->valor_total ?? 0, 2, ',', '.') }}</span>
+                        </div>
+                        <div class="flex gap-4 text-xs">
+                            <span class="text-blue-700">PIS: R$ {{ number_format($ret->valor_pis ?? 0, 2, ',', '.') }}</span>
+                            <span class="text-purple-700">COFINS: R$ {{ number_format($ret->valor_cofins ?? 0, 2, ',', '.') }}</span>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        @endif
+
+        {{-- ══════════════════════════════════════════════════════════════════ --}}
+        {{-- Apuração PIS/COFINS — Bloco M (só EFD Contribuições)            --}}
+        {{-- ══════════════════════════════════════════════════════════════════ --}}
+        @if($apuracaoContribuicao)
+        @php
+            $ac = $apuracaoContribuicao;
+            $regimeBadge = match($ac->regime) {
+                'nao_cumulativo' => ['bg-blue-100 text-blue-700', 'Não Cumulativo (Lucro Real)'],
+                'misto'          => ['bg-amber-100 text-amber-700', 'Misto'],
+                default          => ['bg-gray-100 text-gray-700', 'Cumulativo (Lucro Presumido)'],
+            };
+        @endphp
+        <div class="efd-animate bg-white rounded-xl border border-gray-200 shadow-sm mt-6" id="apuracao-pis-cofins-section" style="animation-delay: 0.45s">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h2 class="text-base font-semibold text-gray-900">Apuração PIS/COFINS — Bloco M</h2>
+                <span class="px-2.5 py-1 text-xs font-semibold rounded-full {{ $regimeBadge[0] }}">{{ $regimeBadge[1] }}</span>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {{-- PIS --}}
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span> PIS
+                        </h3>
+                        <div class="space-y-2 text-sm">
+                            @php
+                                $pisCampos = [
+                                    ['Contribuição Não Cumulativa', $ac->pis_nao_cumulativo],
+                                    ['(-) Crédito Descontado', $ac->pis_credito_descontado],
+                                    ['(-) Crédito Descontado Anterior', $ac->pis_credito_desc_ant],
+                                    ['(=) Devida NC', $ac->pis_nc_devida],
+                                    ['(-) Retenção NC', $ac->pis_retencao_nc],
+                                    ['(-) Outras Deduções NC', $ac->pis_outras_deducoes_nc],
+                                    ['(=) PIS NC a Recolher', $ac->pis_nc_recolher, true],
+                                    ['Contribuição Cumulativa', $ac->pis_cumulativo],
+                                    ['(-) Retenção Cumulativa', $ac->pis_retencao_cum],
+                                    ['(-) Outras Deduções Cum.', $ac->pis_outras_deducoes_cum],
+                                    ['(=) PIS Cum. a Recolher', $ac->pis_cum_recolher, true],
+                                ];
+                            @endphp
+                            @foreach($pisCampos as $campo)
+                                <div class="flex justify-between items-center {{ ($campo[2] ?? false) ? 'pt-2 border-t border-gray-200 font-semibold' : '' }}">
+                                    <span class="text-gray-600">{{ $campo[0] }}</span>
+                                    <span class="{{ ($campo[2] ?? false) ? 'text-gray-900' : 'text-gray-700' }}">R$ {{ number_format($campo[1] ?? 0, 2, ',', '.') }}</span>
+                                </div>
+                            @endforeach
+                            <div class="flex justify-between items-center pt-2 border-t-2 border-gray-300 font-bold text-gray-900">
+                                <span>Total PIS a Recolher</span>
+                                <span>R$ {{ number_format($ac->pis_total_recolher ?? 0, 2, ',', '.') }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- COFINS --}}
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-purple-500"></span> COFINS
+                        </h3>
+                        <div class="space-y-2 text-sm">
+                            @php
+                                $cofinsCampos = [
+                                    ['Contribuição Não Cumulativa', $ac->cofins_nao_cumulativo],
+                                    ['(-) Crédito Descontado', $ac->cofins_credito_descontado],
+                                    ['(-) Crédito Descontado Anterior', $ac->cofins_credito_desc_ant],
+                                    ['(=) Devida NC', $ac->cofins_nc_devida],
+                                    ['(-) Retenção NC', $ac->cofins_retencao_nc],
+                                    ['(-) Outras Deduções NC', $ac->cofins_outras_deducoes_nc],
+                                    ['(=) COFINS NC a Recolher', $ac->cofins_nc_recolher, true],
+                                    ['Contribuição Cumulativa', $ac->cofins_cumulativo],
+                                    ['(-) Retenção Cumulativa', $ac->cofins_retencao_cum],
+                                    ['(-) Outras Deduções Cum.', $ac->cofins_outras_deducoes_cum],
+                                    ['(=) COFINS Cum. a Recolher', $ac->cofins_cum_recolher, true],
+                                ];
+                            @endphp
+                            @foreach($cofinsCampos as $campo)
+                                <div class="flex justify-between items-center {{ ($campo[2] ?? false) ? 'pt-2 border-t border-gray-200 font-semibold' : '' }}">
+                                    <span class="text-gray-600">{{ $campo[0] }}</span>
+                                    <span class="{{ ($campo[2] ?? false) ? 'text-gray-900' : 'text-gray-700' }}">R$ {{ number_format($campo[1] ?? 0, 2, ',', '.') }}</span>
+                                </div>
+                            @endforeach
+                            <div class="flex justify-between items-center pt-2 border-t-2 border-gray-300 font-bold text-gray-900">
+                                <span>Total COFINS a Recolher</span>
+                                <span>R$ {{ number_format($ac->cofins_total_recolher ?? 0, 2, ',', '.') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Total Geral --}}
+                <div class="mt-6 pt-4 border-t-2 border-gray-300 flex justify-between items-center">
+                    <span class="text-base font-bold text-gray-900">Total PIS + COFINS a Recolher</span>
+                    <span class="text-lg font-bold text-indigo-700">R$ {{ number_format($ac->total_recolher ?? 0, 2, ',', '.') }}</span>
+                </div>
+
+                {{-- Indicadores de créditos NC --}}
+                @if($ac->tem_creditos_nc)
+                <div class="mt-3">
+                    <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Créditos Não Cumulativos Apurados</span>
+                </div>
+                @endif
+
+                {{-- ── Detalhes por CST — M210 (PIS) e M610 (COFINS) ── --}}
+                @if(!empty($ac->pis_detalhes['items']) || !empty($ac->cofins_detalhes['items']))
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <button type="button" class="efd-collapse-toggle text-sm font-semibold text-gray-700 flex items-center gap-2 mb-3" data-target="detalhes-cst">
+                        <svg class="w-4 h-4 transition-transform efd-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        Detalhes por CST
+                    </button>
+                    <div id="detalhes-cst" class="hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {{-- PIS por CST (M210) --}}
+                            @if(!empty($ac->pis_detalhes['items']))
+                            <div>
+                                <h4 class="text-xs font-semibold text-blue-700 mb-2 flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> PIS por CST (M210)
+                                </h4>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 text-xs">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-3 py-1.5 text-left font-medium text-gray-500">CST</th>
+                                                <th class="px-3 py-1.5 text-right font-medium text-gray-500">Base Cálc.</th>
+                                                <th class="px-3 py-1.5 text-right font-medium text-gray-500">Alíquota</th>
+                                                <th class="px-3 py-1.5 text-right font-medium text-gray-500">Contribuição</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200">
+                                            @foreach($ac->pis_detalhes['items'] as $cst)
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="px-3 py-1.5 font-mono font-medium">{{ $cst['COD_CONT'] ?? $cst['cst'] ?? '—' }}</td>
+                                                <td class="px-3 py-1.5 text-right font-mono">R$ {{ number_format((float)($cst['VL_BC_CONT'] ?? $cst['base_calculo'] ?? 0), 2, ',', '.') }}</td>
+                                                <td class="px-3 py-1.5 text-right font-mono">{{ number_format((float)($cst['ALIQ_PIS'] ?? $cst['aliquota'] ?? 0), 4, ',', '.') }}%</td>
+                                                <td class="px-3 py-1.5 text-right font-mono font-semibold">R$ {{ number_format((float)($cst['VL_CONT_APUR'] ?? $cst['valor_contribuicao'] ?? $cst['VL_CONT'] ?? 0), 2, ',', '.') }}</td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            @endif
+
+                            {{-- COFINS por CST (M610) --}}
+                            @if(!empty($ac->cofins_detalhes['items']))
+                            <div>
+                                <h4 class="text-xs font-semibold text-purple-700 mb-2 flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span> COFINS por CST (M610)
+                                </h4>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 text-xs">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-3 py-1.5 text-left font-medium text-gray-500">CST</th>
+                                                <th class="px-3 py-1.5 text-right font-medium text-gray-500">Base Cálc.</th>
+                                                <th class="px-3 py-1.5 text-right font-medium text-gray-500">Alíquota</th>
+                                                <th class="px-3 py-1.5 text-right font-medium text-gray-500">Contribuição</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200">
+                                            @foreach($ac->cofins_detalhes['items'] as $cst)
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="px-3 py-1.5 font-mono font-medium">{{ $cst['COD_CONT'] ?? $cst['cst'] ?? '—' }}</td>
+                                                <td class="px-3 py-1.5 text-right font-mono">R$ {{ number_format((float)($cst['VL_BC_CONT'] ?? $cst['base_calculo'] ?? 0), 2, ',', '.') }}</td>
+                                                <td class="px-3 py-1.5 text-right font-mono">{{ number_format((float)($cst['ALIQ_COFINS'] ?? $cst['aliquota'] ?? 0), 4, ',', '.') }}%</td>
+                                                <td class="px-3 py-1.5 text-right font-mono font-semibold">R$ {{ number_format((float)($cst['VL_CONT_APUR'] ?? $cst['valor_contribuicao'] ?? $cst['VL_CONT'] ?? 0), 2, ',', '.') }}</td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                {{-- ── Receitas Não Tributadas — M400/M410 ── --}}
+                @if(!empty($ac->pis_nao_tributado['items']))
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <button type="button" class="efd-collapse-toggle text-sm font-semibold text-gray-700 flex items-center gap-2 mb-3" data-target="receitas-nao-tributadas">
+                        <svg class="w-4 h-4 transition-transform efd-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        Receitas Não Tributadas / Isentas ({{ count($ac->pis_nao_tributado['items']) }})
+                    </button>
+                    <div id="receitas-nao-tributadas" class="hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 text-xs">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-3 py-1.5 text-left font-medium text-gray-500">CST</th>
+                                        <th class="px-3 py-1.5 text-left font-medium text-gray-500">Nat. Receita</th>
+                                        <th class="px-3 py-1.5 text-right font-medium text-gray-500">Valor PIS</th>
+                                        <th class="px-3 py-1.5 text-right font-medium text-gray-500">Valor COFINS</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    @foreach($ac->pis_nao_tributado['items'] as $nt)
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-3 py-1.5 font-mono font-medium">{{ $nt['CST_PIS'] ?? $nt['cst'] ?? '—' }}</td>
+                                        <td class="px-3 py-1.5">{{ $nt['NAT_REC'] ?? $nt['natureza_receita'] ?? '—' }}</td>
+                                        <td class="px-3 py-1.5 text-right font-mono">R$ {{ number_format((float)($nt['VL_REC'] ?? $nt['valor'] ?? 0), 2, ',', '.') }}</td>
+                                        <td class="px-3 py-1.5 text-right font-mono">R$ {{ number_format((float)($nt['VL_REC_COFINS'] ?? $nt['valor_cofins'] ?? 0), 2, ',', '.') }}</td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                {{-- ── Créditos Não Cumulativos — M100/M110 (PIS) e M500/M510 (COFINS) ── --}}
+                @if($ac->tem_creditos_nc)
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <button type="button" class="efd-collapse-toggle text-sm font-semibold text-gray-700 flex items-center gap-2 mb-3" data-target="creditos-nc">
+                        <svg class="w-4 h-4 transition-transform efd-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        Créditos Não Cumulativos (Lucro Real)
+                    </button>
+                    <div id="creditos-nc" class="hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {{-- PIS NC (M100/M105/M110) --}}
+                            @if(!empty($ac->pis_creditos_nc['items']))
+                            <div>
+                                <h4 class="text-xs font-semibold text-blue-700 mb-2 flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Créditos PIS (M100/M110)
+                                </h4>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 text-xs">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-3 py-1.5 text-left font-medium text-gray-500">Tipo</th>
+                                                <th class="px-3 py-1.5 text-right font-medium text-gray-500">Base Cálc.</th>
+                                                <th class="px-3 py-1.5 text-right font-medium text-gray-500">Alíquota</th>
+                                                <th class="px-3 py-1.5 text-right font-medium text-gray-500">Crédito</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200">
+                                            @foreach($ac->pis_creditos_nc['items'] as $cr)
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="px-3 py-1.5 font-mono">{{ $cr['COD_CRED'] ?? $cr['tipo'] ?? '—' }}</td>
+                                                <td class="px-3 py-1.5 text-right font-mono">R$ {{ number_format((float)($cr['VL_BC_PIS'] ?? $cr['base_calculo'] ?? 0), 2, ',', '.') }}</td>
+                                                <td class="px-3 py-1.5 text-right font-mono">{{ number_format((float)($cr['ALIQ_PIS'] ?? $cr['aliquota'] ?? 0), 4, ',', '.') }}%</td>
+                                                <td class="px-3 py-1.5 text-right font-mono font-semibold">R$ {{ number_format((float)($cr['VL_CRED'] ?? $cr['valor'] ?? 0), 2, ',', '.') }}</td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            @endif
+
+                            {{-- COFINS NC (M500/M505/M510) --}}
+                            @if(!empty($ac->cofins_creditos_nc['items']))
+                            <div>
+                                <h4 class="text-xs font-semibold text-purple-700 mb-2 flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span> Créditos COFINS (M500/M510)
+                                </h4>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 text-xs">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-3 py-1.5 text-left font-medium text-gray-500">Tipo</th>
+                                                <th class="px-3 py-1.5 text-right font-medium text-gray-500">Base Cálc.</th>
+                                                <th class="px-3 py-1.5 text-right font-medium text-gray-500">Alíquota</th>
+                                                <th class="px-3 py-1.5 text-right font-medium text-gray-500">Crédito</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200">
+                                            @foreach($ac->cofins_creditos_nc['items'] as $cr)
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="px-3 py-1.5 font-mono">{{ $cr['COD_CRED'] ?? $cr['tipo'] ?? '—' }}</td>
+                                                <td class="px-3 py-1.5 text-right font-mono">R$ {{ number_format((float)($cr['VL_BC_COFINS'] ?? $cr['base_calculo'] ?? 0), 2, ',', '.') }}</td>
+                                                <td class="px-3 py-1.5 text-right font-mono">{{ number_format((float)($cr['ALIQ_COFINS'] ?? $cr['aliquota'] ?? 0), 4, ',', '.') }}%</td>
+                                                <td class="px-3 py-1.5 text-right font-mono font-semibold">R$ {{ number_format((float)($cr['VL_CRED'] ?? $cr['valor'] ?? 0), 2, ',', '.') }}</td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endif
+            </div>
+        </div>
+        @endif
+
     </div>
 </div>
 
@@ -519,6 +1359,87 @@ function _efdRenderNotas(contentDiv, notas, biHtml, cache, pid) {
         notasHtml = '<p class="text-xs text-gray-400 mt-2">Nenhuma nota disponivel.</p>';
     }
     contentDiv.innerHTML = biHtml + notasHtml;
+}
+
+// ── Collapse toggles ──
+function _efdInitCollapseToggles() {
+    document.querySelectorAll('.efd-collapse-toggle').forEach(function(btn) {
+        if (btn._efdBound) return;
+        btn._efdBound = true;
+        btn.addEventListener('click', function() {
+            var targetId = this.getAttribute('data-target');
+            var target = document.getElementById(targetId);
+            if (!target) return;
+            var isHidden = target.classList.contains('hidden');
+            target.classList.toggle('hidden');
+            var chevron = this.querySelector('.efd-chevron');
+            if (chevron) {
+                chevron.style.transform = isHidden ? 'rotate(90deg)' : '';
+            }
+        });
+    });
+}
+
+// ── Scroll-spy for sticky nav ──
+function _efdInitScrollSpy() {
+    var nav = document.getElementById('efd-sticky-nav');
+    if (!nav) return;
+    var links = nav.querySelectorAll('.efd-nav-link');
+    if (!links.length) return;
+
+    var sections = [];
+    links.forEach(function(link) {
+        var id = link.getAttribute('href');
+        if (id && id.startsWith('#')) {
+            var el = document.getElementById(id.substring(1));
+            if (el) sections.push({ link: link, el: el });
+        }
+    });
+
+    function updateActive() {
+        var scrollY = window.scrollY + 120;
+        var active = null;
+        for (var i = sections.length - 1; i >= 0; i--) {
+            if (sections[i].el.offsetTop <= scrollY) {
+                active = sections[i].link;
+                break;
+            }
+        }
+        links.forEach(function(l) {
+            l.classList.remove('bg-blue-100', 'text-blue-700');
+        });
+        if (active) {
+            active.classList.add('bg-blue-100', 'text-blue-700');
+        }
+    }
+
+    window.addEventListener('scroll', updateActive, { passive: true });
+    updateActive();
+}
+
+// ── Catálogo search ──
+function _efdInitCatalogoSearch() {
+    var input = document.getElementById('busca-catalogo');
+    if (!input || input._efdBound) return;
+    input._efdBound = true;
+    input.addEventListener('input', function() {
+        var q = this.value.toLowerCase().trim();
+        var rows  = document.querySelectorAll('#tbody-catalogo tr');
+        var cards = document.querySelectorAll('#mobile-catalogo > div');
+        var zero  = document.getElementById('zero-state-catalogo');
+        var visible = 0;
+        function filterEl(el) {
+            var cod  = el.getAttribute('data-cod')  || '';
+            var desc = el.getAttribute('data-desc') || '';
+            var ncm  = el.getAttribute('data-ncm')  || '';
+            var match = !q || cod.includes(q) || desc.includes(q) || ncm.includes(q);
+            el.style.display = match ? '' : 'none';
+            if (match) visible++;
+        }
+        rows.forEach(filterEl);
+        cards.forEach(filterEl);
+        if (zero) zero.classList.toggle('hidden', visible > 0 || !q);
+    });
 }
 
 window.initImportacao = function() {
@@ -595,6 +1516,11 @@ window.initImportacao = function() {
         });
     }
     // ── fim expansão inline ────────────────────────────────────────────
+
+    // Init collapse toggles, scroll-spy, catálogo search
+    _efdInitCollapseToggles();
+    _efdInitScrollSpy();
+    _efdInitCatalogoSearch();
 
     // Client-side search filter
     var input = document.getElementById('busca-participantes-efd');

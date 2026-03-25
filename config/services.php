@@ -41,6 +41,10 @@ return [
         'efd_contribuicoes_notas_url' => env('WEBHOOK_EFD_CONTRIBUICOES_NOTAS_URL'),
         'efd_fiscal_url' => env('WEBHOOK_EFD_FISCAL_URL'),
         'efd_fiscal_notas_url' => env('WEBHOOK_EFD_FISCAL_NOTAS_URL'),
+        'efd_contribuicoes_catalogo_url' => env('WEBHOOK_EFD_CONTRIBUICOES_CATALOGO_URL'),
+        'efd_contribuicoes_completo_url' => env('WEBHOOK_EFD_CONTRIBUICOES_COMPLETO_URL'),
+        'efd_fiscal_catalogo_url' => env('WEBHOOK_EFD_FISCAL_CATALOGO_URL'),
+        'efd_fiscal_completo_url' => env('WEBHOOK_EFD_FISCAL_COMPLETO_URL'),
         // Webhook Importação de XMLs (NF-e, NFS-e, CT-e)
         'importacao_xml_url' => env('WEBHOOK_IMPORTACAO_XML_URL'),
         // Webhook Consultas - endpoint unificado (avulsa e lote)

@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Rename table importacoes_participantes -> importacoes_sped
-        Schema::rename('importacoes_participantes', 'importacoes_sped');
+        // Rename table importacoes_participantes -> efd_importacoes
+        Schema::rename('importacoes_participantes', 'efd_importacoes');
 
         // Update FK column name in participantes
         Schema::table('participantes', function (Blueprint $table) {
@@ -20,8 +20,9 @@ return new class extends Migration
         });
 
         // Add columns for nota extraction (future feature)
-        Schema::table('importacoes_sped', function (Blueprint $table) {
+        Schema::table('efd_importacoes', function (Blueprint $table) {
             $table->boolean('extrair_notas')->default(false)->after('status');
+            $table->boolean('extrair_catalogo')->default(false)->after('extrair_notas');
             $table->integer('total_notas')->default(0)->after('duplicados');
             $table->integer('notas_extraidas')->default(0)->after('total_notas');
             $table->integer('creditos_cobrados')->default(0)->after('notas_extraidas');
@@ -34,8 +35,8 @@ return new class extends Migration
     public function down(): void
     {
         // Remove new columns first
-        Schema::table('importacoes_sped', function (Blueprint $table) {
-            $table->dropColumn(['extrair_notas', 'total_notas', 'notas_extraidas', 'creditos_cobrados']);
+        Schema::table('efd_importacoes', function (Blueprint $table) {
+            $table->dropColumn(['extrair_notas', 'extrair_catalogo', 'total_notas', 'notas_extraidas', 'creditos_cobrados']);
         });
 
         // Rename FK column back in participantes
@@ -44,6 +45,6 @@ return new class extends Migration
         });
 
         // Rename table back
-        Schema::rename('importacoes_sped', 'importacoes_participantes');
+        Schema::rename('efd_importacoes', 'importacoes_participantes');
     }
 };

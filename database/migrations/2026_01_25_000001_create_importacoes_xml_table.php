@@ -34,6 +34,7 @@ return new class extends Migration
             $table->jsonb('erros_detalhados')->nullable();
             $table->timestamp('iniciado_em')->nullable();
             $table->timestamp('concluido_em')->nullable();
+            $table->integer('tempo_processamento_segundos')->nullable();
             $table->timestamps();
 
             $table->index(['user_id', 'status']);
