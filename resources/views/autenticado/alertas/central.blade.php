@@ -104,7 +104,7 @@
         </div>
 
         {{-- Evolution Chart --}}
-        <div class="bg-white rounded-lg border border-gray-200 p-5 sm:p-6 mb-6 sm:mb-8 dash-animate" style="animation-delay: 0.3s">
+        <div id="alertas-evolucao-wrapper" class="bg-white rounded-lg border border-gray-200 p-5 sm:p-6 mb-6 sm:mb-8 dash-animate" style="animation-delay: 0.3s">
             <h3 class="text-sm font-medium text-gray-700 mb-1">Evolução de Alertas</h3>
             <p class="text-xs text-gray-400 mb-4">Últimas 12 semanas</p>
             <div id="alertas-evolucao-chart" class="h-64">
@@ -335,6 +335,20 @@
         var container = document.getElementById('alertas-evolucao-chart');
         if (!container) return;
 
+        // Aguardar a animação dash-animate do wrapper terminar antes de renderizar
+        var wrapper = document.getElementById('alertas-evolucao-wrapper');
+        if (wrapper) {
+            await new Promise(function(resolve) {
+                // Se a animação já terminou (elemento visível e sem animação pendente), seguir
+                var animations = wrapper.getAnimations ? wrapper.getAnimations() : [];
+                if (animations.length === 0) {
+                    resolve();
+                } else {
+                    Promise.all(animations.map(function(a) { return a.finished; })).then(resolve).catch(resolve);
+                }
+            });
+        }
+
         // Aguardar ApexCharts carregar (SPA carrega scripts externos de forma assíncrona)
         var tentativas = 0;
         while (typeof ApexCharts === 'undefined' && tentativas < 50) {
@@ -373,7 +387,8 @@
                     height: 256,
                     stacked: true,
                     toolbar: { show: false },
-                    fontFamily: 'inherit'
+                    fontFamily: 'inherit',
+                    animations: { enabled: true, easing: 'easeinout', speed: 600 }
                 },
                 plotOptions: {
                     bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 }
@@ -418,7 +433,12 @@
             };
 
             evolucaoChart = new ApexCharts(container, options);
-            evolucaoChart.render();
+            evolucaoChart.render().then(function() {
+                // Forçar recalculo de dimensões após render completo
+                requestAnimationFrame(function() {
+                    window.dispatchEvent(new Event('resize'));
+                });
+            });
         } catch (e) {
             container.innerHTML = '<div class="flex items-center justify-center h-full text-red-400 text-sm">Erro ao carregar gráfico</div>';
         }
