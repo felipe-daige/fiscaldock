@@ -9,34 +9,10 @@ let _sidebarOverlayHandler = null;
 let _sidebarLinkClickHandler = null;
 let _sidebarGroupHandlers = [];
 let _sidebarUserHandler = null;
-let _sidebarToggleHandler = null;
 let _mobileMenuLinkHandler = null;
 const _dropdownOpenTimers = new WeakMap();
 const _dropdownCloseTimers = new WeakMap();
 const DROPDOWN_DELAY_MS = 100;
-
-function applySidebarState(isCollapsed) {
-    const sidebar = document.getElementById('sidebar');
-    const layoutShell = document.getElementById('layout-shell');
-
-    if (!sidebar) return;
-
-    if (isCollapsed) {
-        sidebar.classList.add('sidebar--collapsed');
-        if (layoutShell) {
-            layoutShell.classList.add('layout-sidebar-collapsed');
-            layoutShell.classList.remove('layout-sidebar-expanded');
-        }
-        localStorage.setItem('sidebar-collapsed', 'true');
-    } else {
-        sidebar.classList.remove('sidebar--collapsed');
-        if (layoutShell) {
-            layoutShell.classList.remove('layout-sidebar-collapsed');
-            layoutShell.classList.add('layout-sidebar-expanded');
-        }
-        localStorage.setItem('sidebar-collapsed', 'false');
-    }
-}
 
 function initLayout() {
     // Mobile menu toggle
@@ -244,213 +220,7 @@ function initLayout() {
     // Active link
     updateActiveLink();
 
-    // Sidebar groups (collapsible menus) — BEM selectors
-    _sidebarGroupHandlers.forEach(({ element, handler }) => {
-        if (element && handler) {
-            element.removeEventListener('click', handler);
-        }
-    });
-    _sidebarGroupHandlers = [];
-
-    const currentPath = window.location.pathname;
-
-    const sidebarGroups = document.querySelectorAll('.sidebar__group');
-
-    sidebarGroups.forEach((group) => {
-        const trigger = group.querySelector('.sidebar__group-trigger');
-        const menu = group.querySelector('.sidebar__group-menu');
-        const arrow = group.querySelector('.sidebar__group-arrow');
-
-        if (!trigger || !menu) return;
-
-        // Check if any submenu link matches current route
-        const submenuLinks = menu.querySelectorAll('[data-link]');
-        let shouldExpand = false;
-
-        submenuLinks.forEach((link) => {
-            const linkHref = link.getAttribute('href');
-            if (linkHref && currentPath.startsWith(linkHref)) {
-                shouldExpand = true;
-            }
-        });
-
-        // Initialize expanded/collapsed state
-        requestAnimationFrame(() => {
-            if (shouldExpand || group.classList.contains('sidebar__group--expanded')) {
-                group.classList.remove('sidebar__group--collapsed');
-                group.classList.add('sidebar__group--expanded');
-                const height = menu.scrollHeight;
-                menu.style.maxHeight = height + 'px';
-                menu.style.opacity = '1';
-                menu.style.visibility = 'visible';
-                if (arrow) {
-                    arrow.style.transform = 'rotate(180deg)';
-                }
-            } else {
-                group.classList.remove('sidebar__group--expanded');
-                group.classList.add('sidebar__group--collapsed');
-                menu.style.maxHeight = '0';
-                menu.style.opacity = '0';
-                menu.style.visibility = 'hidden';
-                if (arrow) {
-                    arrow.style.transform = 'rotate(0deg)';
-                }
-            }
-        });
-
-        // Click handler
-        const handler = function(e) {
-            // If click was on a link, allow normal navigation (SPA processes)
-            if (e.target.closest('[data-link]')) {
-                return;
-            }
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            const isExpanded = group.classList.contains('sidebar__group--expanded');
-
-            if (isExpanded) {
-                group.classList.remove('sidebar__group--expanded');
-                group.classList.add('sidebar__group--collapsed');
-                menu.style.maxHeight = '0';
-                menu.style.opacity = '0';
-                menu.style.visibility = 'hidden';
-                if (arrow) {
-                    arrow.style.transform = 'rotate(0deg)';
-                }
-            } else {
-                group.classList.remove('sidebar__group--collapsed');
-                group.classList.add('sidebar__group--expanded');
-                const height = menu.scrollHeight;
-                menu.style.maxHeight = height + 'px';
-                menu.style.opacity = '1';
-                menu.style.visibility = 'visible';
-                if (arrow) {
-                    arrow.style.transform = 'rotate(180deg)';
-                }
-            }
-        };
-
-        trigger.addEventListener('click', handler);
-        _sidebarGroupHandlers.push({ element: trigger, handler });
-    });
-
-    // User menu (collapsible) — BEM selectors
-    const userWrapper = document.querySelector('.sidebar__user--collapsed, .sidebar__user--expanded');
-    if (userWrapper) {
-        const userTrigger = userWrapper.querySelector('.sidebar__user-trigger');
-        const userMenu = userWrapper.querySelector('.sidebar__user-menu');
-        const userArrow = userWrapper.querySelector('.sidebar__group-arrow');
-
-        if (_sidebarUserHandler && userTrigger) {
-            userTrigger.removeEventListener('click', _sidebarUserHandler);
-            _sidebarUserHandler = null;
-        }
-
-        if (userTrigger && userMenu) {
-            // Check if any user menu link matches current route
-            const userLinks = userMenu.querySelectorAll('[data-link]');
-            let shouldExpandUser = false;
-
-            userLinks.forEach((link) => {
-                const linkHref = link.getAttribute('href');
-                if (linkHref && currentPath.startsWith(linkHref)) {
-                    shouldExpandUser = true;
-                }
-            });
-
-            // Initialize state
-            requestAnimationFrame(() => {
-                if (shouldExpandUser || userWrapper.classList.contains('sidebar__user--expanded')) {
-                    userWrapper.classList.remove('sidebar__user--collapsed');
-                    userWrapper.classList.add('sidebar__user--expanded');
-                    const height = userMenu.scrollHeight;
-                    userMenu.style.maxHeight = height + 'px';
-                    userMenu.style.opacity = '1';
-                    userMenu.style.visibility = 'visible';
-                    if (userArrow) {
-                        userArrow.style.transform = 'rotate(180deg)';
-                    }
-                } else {
-                    userWrapper.classList.remove('sidebar__user--expanded');
-                    userWrapper.classList.add('sidebar__user--collapsed');
-                    userMenu.style.maxHeight = '0';
-                    userMenu.style.opacity = '0';
-                    userMenu.style.visibility = 'hidden';
-                    if (userArrow) {
-                        userArrow.style.transform = 'rotate(0deg)';
-                    }
-                }
-            });
-
-            _sidebarUserHandler = function(e) {
-                if (e.target.closest('[data-link]')) {
-                    return;
-                }
-
-                e.preventDefault();
-                e.stopPropagation();
-
-                const isExpanded = userWrapper.classList.contains('sidebar__user--expanded');
-
-                if (isExpanded) {
-                    userWrapper.classList.remove('sidebar__user--expanded');
-                    userWrapper.classList.add('sidebar__user--collapsed');
-                    userMenu.style.maxHeight = '0';
-                    userMenu.style.opacity = '0';
-                    userMenu.style.visibility = 'hidden';
-                    if (userArrow) {
-                        userArrow.style.transform = 'rotate(0deg)';
-                    }
-                } else {
-                    userWrapper.classList.remove('sidebar__user--collapsed');
-                    userWrapper.classList.add('sidebar__user--expanded');
-                    const height = userMenu.scrollHeight;
-                    userMenu.style.maxHeight = height + 'px';
-                    userMenu.style.opacity = '1';
-                    userMenu.style.visibility = 'visible';
-                    if (userArrow) {
-                        userArrow.style.transform = 'rotate(180deg)';
-                    }
-                }
-            };
-
-            userTrigger.addEventListener('click', _sidebarUserHandler);
-        }
-    }
-
-    // Sidebar toggle (desktop) - collapse/expand
-    const sidebarToggleBtn = document.getElementById('sidebar-collapse-btn');
-
-    // Restore state from localStorage
-    const restoreSidebarState = () => {
-        if (!sidebar) return;
-        const savedState = localStorage.getItem('sidebar-collapsed');
-        const shouldCollapse = savedState === 'true';
-        applySidebarState(shouldCollapse);
-    };
-
-    restoreSidebarState();
-
-    // Toggle handler
-    if (sidebarToggleBtn && sidebar) {
-        if (_sidebarToggleHandler) {
-            sidebarToggleBtn.removeEventListener('click', _sidebarToggleHandler);
-            _sidebarToggleHandler = null;
-        }
-
-        _sidebarToggleHandler = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            if (window.toggleSidebar && typeof window.toggleSidebar === 'function') {
-                window.toggleSidebar();
-            }
-        };
-
-        sidebarToggleBtn.addEventListener('click', _sidebarToggleHandler);
-    }
+    // Native HTML5 <details> handles sidebar groups and user menu interactively.
 
     _layoutInitialized = true;
 }
@@ -564,90 +334,8 @@ function resetLayout() {
         }
         _sidebarUserHandler = null;
     }
-    if (_sidebarToggleHandler) {
-        const sidebarToggleBtn = document.getElementById('sidebar-collapse-btn');
-        if (sidebarToggleBtn) {
-            sidebarToggleBtn.removeEventListener('click', _sidebarToggleHandler);
-        }
-        _sidebarToggleHandler = null;
-    }
     _layoutInitialized = false;
 }
-
-// Global sidebar toggle function
-window.toggleSidebar = function() {
-    const sidebar = document.getElementById('sidebar');
-    const sidebarOverlay = document.getElementById('sidebar-overlay');
-    const isDesktop = window.matchMedia('(min-width: 768px)').matches;
-
-    if (!sidebar) {
-        console.warn('Sidebar not found');
-        return;
-    }
-
-    // Mobile: toggle drawer
-    if (!isDesktop) {
-        const isOpen = sidebar.classList.contains('sidebar--open');
-
-        if (isOpen) {
-            sidebar.classList.remove('sidebar--open');
-            if (sidebarOverlay) {
-                sidebarOverlay.classList.remove('sidebar__overlay--visible');
-                sidebarOverlay.classList.add('hidden');
-            }
-            document.body.classList.remove('overflow-hidden');
-        } else {
-            sidebar.classList.add('sidebar--open');
-            if (sidebarOverlay) {
-                sidebarOverlay.classList.add('sidebar__overlay--visible');
-                sidebarOverlay.classList.remove('hidden');
-            }
-            document.body.classList.add('overflow-hidden');
-        }
-        return;
-    }
-
-    // Desktop: reset mobile drawer state and toggle collapse/expand
-    sidebar.classList.remove('sidebar--open');
-    if (sidebarOverlay) {
-        sidebarOverlay.classList.remove('sidebar__overlay--visible');
-        sidebarOverlay.classList.add('hidden');
-    }
-    document.body.classList.remove('overflow-hidden');
-
-    const isCollapsed = sidebar.classList.contains('sidebar--collapsed');
-
-    applySidebarState(!isCollapsed);
-};
-
-// Initialize toggle immediately when DOM is ready (fallback)
-(function initSidebarToggle() {
-    function attachToggleListener() {
-        const sidebarToggleBtn = document.getElementById('sidebar-collapse-btn');
-
-        if (sidebarToggleBtn && !sidebarToggleBtn.hasAttribute('data-toggle-attached')) {
-            sidebarToggleBtn.setAttribute('data-toggle-attached', 'true');
-
-            sidebarToggleBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                if (window.toggleSidebar && typeof window.toggleSidebar === 'function') {
-                    window.toggleSidebar();
-                }
-            });
-        }
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', attachToggleListener);
-    } else {
-        attachToggleListener();
-    }
-
-    setTimeout(attachToggleListener, 100);
-    setTimeout(attachToggleListener, 500);
-})();
 
 // Expose globally
 window.resetLayout = resetLayout;
@@ -728,37 +416,17 @@ function setActiveLink(path) {
             const groupMenu = link.closest('.sidebar__group-menu');
             if (groupMenu) {
                 const group = groupMenu.closest('.sidebar__group');
-                if (group && group.classList.contains('sidebar__group--collapsed')) {
-                    const arrow = group.querySelector('.sidebar__group-arrow');
-
-                    group.classList.remove('sidebar__group--collapsed');
-                    group.classList.add('sidebar__group--expanded');
-                    const height = groupMenu.scrollHeight;
-                    groupMenu.style.maxHeight = height + 'px';
-                    groupMenu.style.opacity = '1';
-                    groupMenu.style.visibility = 'visible';
-                    if (arrow) {
-                        arrow.style.transform = 'rotate(180deg)';
-                    }
+                if (group && group.tagName === 'DETAILS' && !group.open) {
+                    group.open = true;
                 }
             }
 
             // If link is inside user menu, expand it
             const userMenu = link.closest('.sidebar__user-menu');
             if (userMenu) {
-                const userWrapper = userMenu.closest('.sidebar__user--collapsed');
-                if (userWrapper) {
-                    const arrow = userWrapper.querySelector('.sidebar__group-arrow');
-
-                    userWrapper.classList.remove('sidebar__user--collapsed');
-                    userWrapper.classList.add('sidebar__user--expanded');
-                    const height = userMenu.scrollHeight;
-                    userMenu.style.maxHeight = height + 'px';
-                    userMenu.style.opacity = '1';
-                    userMenu.style.visibility = 'visible';
-                    if (arrow) {
-                        arrow.style.transform = 'rotate(180deg)';
-                    }
+                const userDetails = userMenu.closest('details');
+                if (userDetails && !userDetails.open) {
+                    userDetails.open = true;
                 }
             }
         }
