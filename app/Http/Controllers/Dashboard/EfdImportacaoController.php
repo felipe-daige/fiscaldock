@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\EfdImportacao;
 use App\Models\EfdNota;
-use App\Models\MonitoramentoPlano;
+
 use App\Models\Participante;
 use App\Services\CreditService;
 use Illuminate\Http\JsonResponse;
@@ -53,9 +53,9 @@ class EfdImportacaoController extends Controller
 
         $data = [
             'credits' => $this->creditService->getBalance($user),
-            'planos' => MonitoramentoPlano::ativos(),
-            'extrairNotasEnabled' => true,
             'importacoes' => $importacoes,
+            'totalParticipantes' => Participante::where('user_id', $userId)->count(),
+            'totalNotas' => EfdNota::where('user_id', $userId)->count(),
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -88,6 +88,11 @@ class EfdImportacaoController extends Controller
             ->with(['cliente', 'apuracaoContribuicao', 'apuracaoIcms', 'retencoesFonte'])
             ->firstOrFail();
 
+        // Pagination limits
+        $allowedPerPages = [10, 25, 50, 100];
+        $perPageParticipantes = in_array((int) $request->input('per_page_participantes'), $allowedPerPages) ? (int) $request->input('per_page_participantes') : 10;
+        $perPageCatalogo = in_array((int) $request->input('per_page_catalogo'), $allowedPerPages) ? (int) $request->input('per_page_catalogo') : 10;
+
         // Dual-path: participante_ids (n8n v2) ou importacao_efd_id (legado)
         $notaCountSubquery = EfdNota::selectRaw('count(*)')
             ->whereColumn('participante_id', 'participantes.id')
@@ -97,12 +102,16 @@ class EfdImportacaoController extends Controller
             $participantes = Participante::whereIn('id', $importacao->participante_ids)
                 ->where('user_id', $userId)
                 ->orderByDesc($notaCountSubquery)
-                ->paginate(15);
+                ->orderBy('razao_social')
+                ->paginate($perPageParticipantes, ['*'], 'page')
+                ->withQueryString();
         } else {
             $participantes = Participante::where('importacao_efd_id', $id)
                 ->where('user_id', $userId)
                 ->orderByDesc($notaCountSubquery)
-                ->paginate(15);
+                ->orderBy('razao_social')
+                ->paginate($perPageParticipantes, ['*'], 'page')
+                ->withQueryString();
         }
 
         // Catálogo de itens (0200) — paginação separada para não conflitar com participantes
@@ -110,7 +119,7 @@ class EfdImportacaoController extends Controller
             ? \App\Models\EfdCatalogoItem::where('importacao_id', $importacao->id)
                 ->where('user_id', $userId)
                 ->orderBy('cod_item')
-                ->paginate(50, ['*'], 'catalogo_page')
+                ->paginate($perPageCatalogo, ['*'], 'catalogo_page')
                 ->withQueryString()
             : collect();
 
@@ -245,29 +254,11 @@ class EfdImportacaoController extends Controller
         $user = Auth::user();
         $arquivo = $request->file('arquivo');
         $tipoEfd = $request->tipo_efd;
-        $extrairNotas = $request->has('extrair_notas');
-        $extrairCatalogo = $request->has('extrair_catalogo');
 
-        // Selecionar webhook baseado no tipo de EFD + opções de extração
-        $isFiscal = $tipoEfd === 'EFD ICMS/IPI';
-
-        if ($extrairNotas && $extrairCatalogo) {
-            $webhookUrl = $isFiscal
-                ? config('services.webhook.efd_fiscal_completo_url')
-                : config('services.webhook.efd_contribuicoes_completo_url');
-        } elseif ($extrairNotas) {
-            $webhookUrl = $isFiscal
-                ? config('services.webhook.efd_fiscal_notas_url')
-                : config('services.webhook.efd_contribuicoes_notas_url');
-        } elseif ($extrairCatalogo) {
-            $webhookUrl = $isFiscal
-                ? config('services.webhook.efd_fiscal_catalogo_url')
-                : config('services.webhook.efd_contribuicoes_catalogo_url');
-        } else {
-            $webhookUrl = $isFiscal
-                ? config('services.webhook.efd_fiscal_url')
-                : config('services.webhook.efd_contribuicoes_url');
-        }
+        // Selecionar webhook baseado no tipo de EFD (extração completa sempre)
+        $webhookUrl = $tipoEfd === 'EFD ICMS/IPI'
+            ? config('services.webhook.efd_fiscal_url')
+            : config('services.webhook.efd_contribuicoes_url');
 
         // Validar que o cliente pertence ao usuário (se fornecido)
         $clienteId = $request->input('cliente_id');
@@ -304,8 +295,6 @@ class EfdImportacaoController extends Controller
             'tipo_efd' => $tipoEfd,
             'arquivo' => $arquivo->getClientOriginalName(),
             'status' => 'processando',
-            'extrair_notas' => $extrairNotas,
-            'extrair_catalogo' => $extrairCatalogo,
             'iniciado_em' => now(),
         ]);
 
@@ -319,8 +308,6 @@ class EfdImportacaoController extends Controller
                     'cliente_id' => $clienteId,
                     'tipo_efd' => $tipoEfd,
                     'filename' => $arquivo->getClientOriginalName(),
-                    'extrair_notas' => $extrairNotas,
-                    'extrair_catalogo' => $extrairCatalogo,
                     'progress_url' => url('/api/importacao/efd/progresso'),
                     'tab_id' => $request->input('tab_id'),
                 ]);

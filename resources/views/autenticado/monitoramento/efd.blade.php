@@ -20,8 +20,8 @@
         <div class="mb-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Importar Participantes</h1>
-                    <p class="mt-1 text-sm text-gray-600">Adicione CNPJs à sua lista de monitoramento a partir de arquivos EFD ou relatórios RAF.</p>
+                    <h1 class="text-2xl font-bold text-gray-900">Importar EFD</h1>
+                    <p class="mt-1 text-sm text-gray-600">Faça upload do seu arquivo EFD para extrair participantes, notas fiscais, apurações e muito mais.</p>
                 </div>
                 <a
                     href="/app/dashboard"
@@ -36,24 +36,9 @@
             </div>
         </div>
 
-        {{-- Info Box --}}
-        <div class="efd-animate bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-            <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <div>
-                    <h3 class="text-sm font-semibold text-blue-900">Como funciona?</h3>
-                    <p class="text-sm text-blue-800 mt-1">
-                        Faça upload do seu arquivo EFD (.txt) e o sistema extrairá automaticamente todos os CNPJs de fornecedores e clientes registrados no bloco de participantes (registro 0150). Os CNPJs extraídos são adicionados à sua base de participantes, ficando disponíveis para consultas, monitoramento e análises de compliance.
-                    </p>
-                </div>
-            </div>
-        </div>
-
         {{-- Seção Importar de Arquivo .txt --}}
         <div class="mb-6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                 {{-- Card Upload (Esquerdo) --}}
                 <div class="efd-animate bg-white rounded-xl border border-gray-200 shadow-sm" style="animation-delay: 0.1s">
                     <div class="px-6 py-4 border-b border-gray-200">
@@ -64,7 +49,7 @@
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de EFD:</label>
                             <div class="space-y-2">
-                                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition tipo-efd-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-tipo="efd-fiscal">
+                                <label class="flex items-center gap-3 px-3 py-2 border rounded-lg cursor-pointer transition tipo-efd-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-tipo="efd-fiscal">
                                     <input type="radio" name="tipo-efd" value="efd-fiscal" class="w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
                                     <div class="flex-shrink-0 w-7 h-7 rounded-md bg-blue-100 flex items-center justify-center">
                                         <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,7 +64,7 @@
                                         <p class="text-xs text-gray-500 mt-0.5 truncate">ICMS/IPI - Escrituração Fiscal Digital</p>
                                     </div>
                                 </label>
-                                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition tipo-efd-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-tipo="efd-contrib">
+                                <label class="flex items-center gap-3 px-3 py-2 border rounded-lg cursor-pointer transition tipo-efd-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-tipo="efd-contrib">
                                     <input type="radio" name="tipo-efd" value="efd-contrib" class="w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
                                     <div class="flex-shrink-0 w-7 h-7 rounded-md bg-purple-100 flex items-center justify-center">
                                         <svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,86 +82,67 @@
                             </div>
                         </div>
 
-                        {{-- Opção Extrair Notas Fiscais --}}
-                        <div class="relative mb-4 group">
-                            <label class="flex items-start p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition">
-                                <input type="checkbox"
-                                       id="extrair-notas"
-                                       name="extrair_notas"
-                                       class="mt-1 mr-3 w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-semibold text-gray-800 text-sm">Extrair Notas Fiscais</span>
-                                    </div>
-                                    <div class="text-xs text-gray-600 mt-0.5">
-                                        Importa também as notas fiscais para análise de BI Fiscal
-                                    </div>
-                                    <div class="flex items-center gap-2 mt-1">
-                                        <span class="inline-flex items-center gap-1 text-xs text-green-600">
-                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                            </svg>
-                                            Gratuito
-                                        </span>
-                                    </div>
+                        {{-- Painel informativo: o que será extraído --}}
+                        <div id="efd-extraction-info" class="mb-3 hidden">
+                            <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                <h4 class="text-xs font-semibold text-gray-800 mb-2">O que será extraído:</h4>
+                                {{-- EFD Fiscal (ICMS/IPI) --}}
+                                <div id="info-efd-fiscal" class="hidden flex flex-wrap gap-1.5">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded-md text-[11px] text-gray-700">
+                                        <svg class="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Participantes
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded-md text-[11px] text-gray-700">
+                                        <svg class="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Catálogo
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded-md text-[11px] text-gray-700">
+                                        <svg class="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Notas Mercadorias
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded-md text-[11px] text-gray-700">
+                                        <svg class="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Notas Transportes
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded-md text-[11px] text-gray-700">
+                                        <svg class="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Apuração ICMS
+                                    </span>
                                 </div>
-                            </label>
-                        </div>
-
-                        {{-- Opção Extrair Catálogo de Produtos e Serviços --}}
-                        <div class="relative mb-4 group">
-                            <label class="flex items-start p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-amber-400 has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50 transition">
-                                <input type="checkbox"
-                                       id="extrair-catalogo"
-                                       name="extrair_catalogo"
-                                       class="mt-1 mr-3 w-4 h-4 text-amber-600 rounded focus:ring-amber-500">
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-                                        </svg>
-                                        <span class="font-semibold text-gray-800 text-sm">Extrair Catálogo de Produtos e Serviços</span>
-                                    </div>
-                                    <div class="text-xs text-gray-600 mt-0.5">
-                                        Importa o cadastro de itens (Reg. 0200) com NCM, tipo e classificação fiscal
-                                    </div>
-                                    <div class="flex items-center gap-2 mt-1">
-                                        <span class="inline-flex items-center gap-1 text-xs text-green-600">
-                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                            </svg>
-                                            Gratuito
-                                        </span>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
-
-                        {{-- Instruções --}}
-                        <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                            <div class="flex items-start gap-2 mb-3">
-                                <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <h4 class="text-sm font-semibold text-blue-900">Instruções</h4>
-                            </div>
-                            <div class="space-y-2 text-xs text-blue-800">
-                                <div>
-                                    <strong class="text-blue-900">1. Selecione o tipo:</strong> Escolha entre EFD Fiscal ou EFD Contribuições.
-                                </div>
-                                <div>
-                                    <strong class="text-blue-900">2. Faça upload:</strong> Envie o arquivo .txt exportado do seu sistema contábil (EFD válido).
-                                </div>
-                                <div>
-                                    <strong class="text-blue-900">3. Aguarde o processamento:</strong> O progresso será exibido em tempo real. Ao finalizar, você verá o resumo com participantes novos e duplicados.
+                                {{-- EFD Contribuições (PIS/COFINS) --}}
+                                <div id="info-efd-contrib" class="hidden flex flex-wrap gap-1.5">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded-md text-[11px] text-gray-700">
+                                        <svg class="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Participantes
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded-md text-[11px] text-gray-700">
+                                        <svg class="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Catálogo
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded-md text-[11px] text-gray-700">
+                                        <svg class="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Notas Serviços
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded-md text-[11px] text-gray-700">
+                                        <svg class="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Notas Mercadorias
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded-md text-[11px] text-gray-700">
+                                        <svg class="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Apuração PIS/COFINS
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded-md text-[11px] text-gray-700">
+                                        <svg class="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Retenções na Fonte
+                                    </span>
                                 </div>
                             </div>
                         </div>
 
                         <div class="mb-4">
-                            <div id="txt-dropzone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 min-h-[180px] flex flex-col items-center justify-center transition-colors cursor-not-allowed bg-gray-100 opacity-60 pointer-events-none" role="button" tabindex="0" aria-disabled="true">
+                            <div id="txt-dropzone" class="border-2 border-dashed border-gray-300 rounded-lg p-5 min-h-[130px] flex flex-col items-center justify-center transition-colors cursor-not-allowed bg-gray-100 opacity-60 pointer-events-none" role="button" tabindex="0" aria-disabled="true">
                                 <div class="mb-4">
-                                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                                     </svg>
                                 </div>
@@ -198,12 +164,12 @@
 
                         <div id="txt-file-meta" class="mb-4 hidden">
                             <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200">
-                                <div class="flex items-center gap-2">
-                                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                     </svg>
-                                    <div>
-                                        <div class="text-xs font-medium text-gray-800" id="txt-file-name">arquivo.txt</div>
+                                    <div class="min-w-0">
+                                        <div class="text-xs font-medium text-gray-800 truncate max-w-[250px]" id="txt-file-name">arquivo.txt</div>
                                         <div class="text-xs text-gray-500" id="txt-file-size">0 MB</div>
                                     </div>
                                 </div>
@@ -245,180 +211,119 @@
                     </div>
                 </div>
 
-                {{-- Card Informações (Direito) --}}
-                <div class="efd-animate bg-white rounded-xl border border-gray-200 shadow-sm" style="animation-delay: 0.2s">
+                {{-- Card Contextual (Direito) --}}
+                <div class="efd-animate bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col" style="animation-delay: 0.2s">
+                    @if($importacoes->isEmpty())
+                    {{-- Estado: Onboarding (sem importações) --}}
                     <div class="px-6 py-4 border-b border-gray-200">
                         <div class="flex items-center gap-2">
                             <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
                             </svg>
-                            <h3 class="text-base font-semibold text-gray-900">Como Funciona</h3>
+                            <h3 class="text-base font-semibold text-gray-900">Ao importar seu EFD</h3>
                         </div>
                     </div>
-                <div class="p-6 space-y-6">
-                    {{-- Seção Como Funciona --}}
-                    <div>
-                        <h4 class="text-sm font-semibold text-gray-900 mb-3">Como Funciona</h4>
-                        <div class="space-y-4">
-                            <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">1</div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-900">Importação</p>
-                                    <p class="text-xs text-gray-500">Adicione CNPJs via arquivo EFD .txt ou a partir de relatórios RAF já processados.</p>
-                                </div>
+                    <div class="p-6 flex flex-col gap-6">
+                        <div class="space-y-8">
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0 w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                             </div>
-                            <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">2</div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-900">Consultas</p>
-                                    <p class="text-xs text-gray-500">Execute consultas avulsas ou configure frequência automática (semanal, mensal ou trimestral).</p>
-                                </div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">Painel Fiscal</p>
+                                <p class="text-xs text-gray-500 mt-0.5">Visualize notas, apurações e cruzamentos em um dashboard interativo.</p>
                             </div>
-                            <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">3</div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-900">Alertas</p>
-                                    <p class="text-xs text-gray-500">Receba notificações sobre alterações na situação cadastral ou fiscal dos CNPJs.</p>
-                                </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0 w-9 h-9 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             </div>
-                            <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold">4</div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-900">Histórico</p>
-                                    <p class="text-xs text-gray-500">Consulte o histórico completo de cada CNPJ monitorado.</p>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">Consultas de Participantes</p>
+                                <p class="text-xs text-gray-500 mt-0.5">Consulte situação cadastral, regime tributário e compliance dos CNPJs extraídos.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0 w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">Monitoramento Automático</p>
+                                <p class="text-xs text-gray-500 mt-0.5">Receba alertas quando houver mudanças na situação cadastral dos seus participantes.</p>
+                            </div>
+                        </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-gray-100">
+                            <p class="text-xs font-semibold text-gray-700 mb-3">Sua base</p>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p class="text-lg font-bold text-gray-900">{{ number_format($totalParticipantes, 0, ',', '.') }}</p>
+                                    <p class="text-[10px] text-gray-500 mt-0.5">participantes</p>
+                                </div>
+                                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p class="text-lg font-bold text-gray-900">{{ number_format($totalNotas, 0, ',', '.') }}</p>
+                                    <p class="text-[10px] text-gray-500 mt-0.5">notas fiscais</p>
+                                </div>
+                                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p class="text-lg font-bold text-blue-600">{{ number_format($credits, 0, ',', '.') }}</p>
+                                    <p class="text-[10px] text-gray-500 mt-0.5">créditos</p>
                                 </div>
                             </div>
                         </div>
+
+                        <div class="pt-4 border-t border-gray-100">
+                            <div class="flex items-start gap-2">
+                                <svg class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                                <p class="text-xs text-gray-500"><strong class="text-gray-700">Dica:</strong> Comece importando o EFD do período mais recente para ter dados atualizados.</p>
+                            </div>
+                        </div>
                     </div>
-
-                    {{-- Planos disponíveis - Badges dinâmicos --}}
-                    @php
-                        $planoMeta = [
-                            'gratuito' => [
-                                'cor' => 'green',
-                                'icone' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-                                'consultas_display' => ['Situação Cadastral (Ativa, Inapta, Baixada)', 'Dados Cadastrais Completos', 'CNAEs Principal e Secundários', 'Quadro Societário (QSA)', 'Simples Nacional e MEI'],
-                                'casos_uso' => ['Checar se CNPJ está ativo', 'Conferir regime para emitir NF', 'Consultar sócios e QSA'],
-                            ],
-                            'validacao' => [
-                                'cor' => 'blue',
-                                'icone' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
-                                'consultas_display' => ['Situação Cadastral (Ativa, Inapta, Baixada)', 'Dados Completos, CNAEs e QSA', 'Simples Nacional e MEI', 'SINTEGRA — IE ativa em todos os estados', 'TCU Consolidada (CEIS, CNEP, Inidôneos)'],
-                                'casos_uso' => ['Conferir IE interestadual', 'Checar listas restritivas do TCU', 'Qualificar novos fornecedores'],
-                            ],
-                            'licitacao' => [
-                                'cor' => 'blue',
-                                'icone' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-                                'consultas_display' => ['Tudo do Validação', 'CND Federal (PGFN/RFB)', 'CRF FGTS (Regularidade)', 'CND Estadual (ICMS)', 'CNDT Trabalhista (TST)'],
-                                'casos_uso' => ['Documentação para editais', 'Homologar com CNDs exigidas', 'Renovar contratos públicos'],
-                                'promo' => true,
-                            ],
-                            'compliance' => [
-                                'cor' => 'purple',
-                                'icone' => 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
-                                'consultas_display' => ['Situação Cadastral e Dados Completos', 'SINTEGRA e TCU Consolidada', 'CND Federal, Estadual, CRF e CNDT', 'Protestos em Cartório (IEPTB Nacional)', 'Devedores da Dívida Ativa (PGFN)', 'Análise completa de risco financeiro'],
-                                'casos_uso' => ['Gestão de risco de terceiros', 'Atender Lei Anticorrupção', 'Monitorar protestos e dívidas'],
-                            ],
-                            'due_diligence' => [
-                                'cor' => 'amber',
-                                'icone' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7',
-                                'consultas_display' => ['Todas as CNDs (Federal, Estadual, FGTS, Trabalhista)', 'Protestos e Devedores PGFN', 'SINTEGRA e TCU Consolidada', 'Trabalho Escravo (Lista Suja — MTE)', 'IBAMA — Autuações Ambientais', 'Compliance trabalhista e ambiental (ESG)'],
-                                'casos_uso' => ['Análise pré-aquisição (M&A)', 'Atender requisitos ESG', 'Riscos trabalhistas e ambientais'],
-                            ],
-                            'enterprise' => [
-                                'cor' => 'slate',
-                                'icone' => 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
-                                'consultas_display' => ['Todas as CNDs e Certidões', 'Protestos, Dívida Ativa e TCU', 'Trabalho Escravo e IBAMA (ESG)', 'Processos Judiciais (CNJ/SEEU)', 'SINTEGRA — Inscrição Estadual', 'Raio-X completo — 18 consultas por CNPJ'],
-                                'casos_uso' => ['Due diligence jurídico completo', 'Mapear litígios antes de contratar', 'Relatório para comitês internos'],
-                            ],
-                        ];
-
-                        $planosDetalhados = [];
-                        foreach ($planos as $p) {
-                            $meta = $planoMeta[$p->codigo] ?? ['cor' => 'gray', 'icone' => 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'consultas_display' => [], 'casos_uso' => []];
-                            $planosDetalhados[] = [
-                                'codigo' => $p->codigo,
-                                'nome' => $p->nome,
-                                'creditos' => $p->custo_creditos,
-                                'creditos_original' => null,
-                                'promo' => $meta['promo'] ?? false,
-                                'gratuito' => $p->is_gratuito,
-                                'descricao' => $p->descricao,
-                                'cor' => $meta['cor'],
-                                'icone' => $meta['icone'],
-                                'consultas' => $meta['consultas_display'],
-                                'casos_uso' => $meta['casos_uso'],
-                            ];
-                        }
-
-                        $corClasses = [
-                            'green' => ['bg' => 'bg-green-100', 'text' => 'text-green-700', 'icon' => 'text-green-600', 'badge' => 'bg-green-100 text-green-700', 'border' => 'border-green-200', 'btn' => 'bg-green-600 hover:bg-green-700'],
-                            'blue' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-700', 'icon' => 'text-blue-600', 'badge' => 'bg-blue-100 text-blue-700', 'border' => 'border-blue-200', 'btn' => 'bg-blue-600 hover:bg-blue-700'],
-                            'purple' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-700', 'icon' => 'text-purple-600', 'badge' => 'bg-purple-100 text-purple-700', 'border' => 'border-purple-200', 'btn' => 'bg-purple-600 hover:bg-purple-700'],
-                            'amber' => ['bg' => 'bg-amber-100', 'text' => 'text-amber-700', 'icon' => 'text-amber-600', 'badge' => 'bg-amber-100 text-amber-700', 'border' => 'border-amber-200', 'btn' => 'bg-amber-600 hover:bg-amber-700'],
-                            'slate' => ['bg' => 'bg-slate-100', 'text' => 'text-slate-700', 'icon' => 'text-slate-600', 'badge' => 'bg-slate-100 text-slate-700', 'border' => 'border-slate-200', 'btn' => 'bg-slate-700 hover:bg-slate-800'],
-                        ];
-                    @endphp
-
-                    <div class="border-t border-gray-200 pt-4 mt-4">
-                        <div class="flex items-center justify-between mb-3">
-                            <h4 class="text-sm font-semibold text-gray-900">Planos disponíveis</h4>
-                            <button type="button" id="btn-ver-detalhes-planos" class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors inline-flex items-center gap-1">
-                                Ver detalhes
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    @else
+                    {{-- Estado: Usuário recorrente (últimas importações) --}}
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                            </button>
+                                <h3 class="text-base font-semibold text-gray-900">Últimas Importações</h3>
+                            </div>
+                            <a href="#historico-importacoes" class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors inline-flex items-center gap-1">
+                                Ver tudo
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </a>
                         </div>
-                        <div class="flex flex-col gap-2 w-full">
-                            @foreach($planosDetalhados as $idx => $pd)
-                                @php
-                                    $badgeCor = match($pd['cor']) {
-                                        'green' => 'bg-green-100 text-green-700',
-                                        'blue' => 'bg-blue-100 text-blue-700',
-                                        'purple' => 'bg-purple-100 text-purple-700',
-                                        'amber' => 'bg-amber-100 text-amber-700',
-                                        'slate' => 'bg-slate-100 text-slate-700',
-                                        default => 'bg-gray-100 text-gray-600',
-                                    };
-                                @endphp
-                                @if($pd['promo'] ?? false)
-                                    <button
-                                        type="button"
-                                        class="badge-plano group w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg
-                                               border border-amber-200 bg-amber-50 hover:bg-amber-100 hover:border-amber-300
-                                               transition-colors cursor-pointer text-left"
-                                        data-slide-index="{{ $idx }}"
-                                    >
-                                        <div class="flex-1 min-w-0">
-                                            <span class="text-xs font-semibold text-gray-800 group-hover:text-gray-900 transition-colors">{{ $pd['nome'] }}</span>
-                                            <p class="text-xs text-gray-400 group-hover:text-gray-500 transition-colors truncate">{{ $pd['descricao'] }}</p>
-                                        </div>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-100 text-orange-700 whitespace-nowrap flex-shrink-0">
-                                            {{ $pd['creditos'] }} cred.
-                                        </span>
-                                    </button>
-                                @else
-                                    <button
-                                        type="button"
-                                        class="badge-plano group w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer text-left"
-                                        data-slide-index="{{ $idx }}"
-                                    >
-                                        <div class="flex-1 min-w-0">
-                                            <span class="text-xs font-semibold text-gray-800 group-hover:text-gray-900 transition-colors">{{ $pd['nome'] }}</span>
-                                            <p class="text-xs text-gray-400 group-hover:text-gray-500 transition-colors truncate">{{ $pd['descricao'] }}</p>
-                                        </div>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $badgeCor }} transition-colors whitespace-nowrap flex-shrink-0">
-                                            {{ $pd['gratuito'] ? 'Grátis' : $pd['creditos'] . ' cred.' }}
-                                        </span>
-                                    </button>
-                                @endif
-                            @endforeach
-                        </div>
-                        <p class="text-xs text-gray-400 mt-2">Clique para ver detalhes.</p>
                     </div>
+                    <div class="divide-y divide-gray-50">
+                        @foreach($importacoes->take(5) as $recentImp)
+                        @php
+                            [$recentStatusClass, $recentStatusLabel] = match($recentImp->status) {
+                                'concluido'   => ['bg-green-100 text-green-700', 'Concluído'],
+                                'processando' => ['bg-blue-100 text-blue-700', 'Processando'],
+                                'erro'        => ['bg-red-100 text-red-700', 'Erro'],
+                                default       => ['bg-gray-100 text-gray-700', 'Pendente'],
+                            };
+                            $recentTipoLabel = $recentImp->tipo_efd === 'EFD PIS/COFINS' ? 'PIS/COFINS' : 'ICMS/IPI';
+                        @endphp
+                        <a href="/app/importacao/efd/{{ $recentImp->id }}" data-link class="flex items-center gap-3 px-6 py-3 hover:bg-gray-50 transition-colors">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-lg {{ $recentImp->tipo_efd === 'EFD PIS/COFINS' ? 'bg-purple-50 text-purple-500' : 'bg-blue-50 text-blue-500' }} flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-medium text-gray-900 truncate">{{ $recentImp->arquivo ?? 'Arquivo EFD' }}</p>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="text-[10px] text-gray-400">{{ $recentTipoLabel }}</span>
+                                    <span class="text-gray-300">·</span>
+                                    <span class="text-[10px] text-gray-400">{{ $recentImp->created_at->diffForHumans() }}</span>
+                                </div>
+                            </div>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $recentStatusClass }} flex-shrink-0">{{ $recentStatusLabel }}</span>
+                        </a>
+                        @endforeach
+                    </div>
+                    @endif
                 </div>
-            </div>
         </div>
 
         {{-- Card Histórico de Importações EFD --}}
@@ -529,126 +434,6 @@
             @endif
         </div>
 
-        {{-- Modal: Carousel de Planos --}}
-        <div id="modal-planos-carousel" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-            <div class="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] flex flex-col relative overflow-visible">
-                {{-- Modal Header --}}
-                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
-                    <div class="flex items-center gap-2">
-                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                        </svg>
-                        <h3 class="text-base font-semibold text-gray-900">Detalhes dos Planos</h3>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <span id="carousel-counter" class="text-xs text-gray-400">1 / {{ count($planosDetalhados) }}</span>
-                        <button type="button" id="btn-fechar-carousel" class="p-1 text-gray-400 hover:text-gray-600 transition-colors">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                {{-- Navigation arrows (overlay) --}}
-                <button type="button" id="swiper-planos-prev" class="absolute -left-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:bg-white hover:text-gray-700 hover:shadow-lg transition-all cursor-pointer">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                    </svg>
-                </button>
-                <button type="button" id="swiper-planos-next" class="absolute -right-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:bg-white hover:text-gray-700 hover:shadow-lg transition-all cursor-pointer">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                </button>
-
-                {{-- Swiper Carousel --}}
-                <div class="flex-1 overflow-hidden relative">
-                    <div class="swiper h-full" id="swiper-planos">
-                        <div class="swiper-wrapper">
-                            @foreach($planosDetalhados as $idx => $pd)
-                                @php $cores = $corClasses[$pd['cor']]; @endphp
-                                <div class="swiper-slide">
-                                    <div class="p-5 overflow-y-auto" style="max-height: calc(90vh - 200px);">
-                                        {{-- Plan header --}}
-                                        <div class="flex items-center gap-3 mb-3">
-                                            <div class="flex-shrink-0 w-9 h-9 rounded-lg {{ $cores['bg'] }} flex items-center justify-center">
-                                                <svg class="w-[18px] h-[18px] {{ $cores['icon'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $pd['icone'] }}"></path>
-                                                </svg>
-                                            </div>
-                                            <div class="flex-1">
-                                                <h4 class="text-base font-bold text-gray-900">{{ $pd['nome'] }}</h4>
-                                                @if($pd['promo'] ?? false)
-                                                    <span class="text-sm text-amber-700 font-semibold">{{ $pd['creditos'] }} cred./CNPJ</span>
-                                                @else
-                                                    <span class="text-sm {{ $pd['gratuito'] ? 'text-green-600 font-medium' : 'text-gray-500' }}">
-                                                        {{ $pd['gratuito'] ? 'Gratuito' : $pd['creditos'] . ' créditos/CNPJ' }}
-                                                    </span>
-                                                @endif
-                                            </div>
-                                            @if($pd['promo'] ?? false)
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">{{ $pd['creditos'] }} cred.</span>
-                                            @elseif($pd['gratuito'])
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Grátis</span>
-                                            @else
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $cores['badge'] }}">{{ $pd['creditos'] }} cred.</span>
-                                            @endif
-                                        </div>
-
-                                        {{-- Description --}}
-                                        <p class="text-sm text-gray-600 mb-3">{{ $pd['descricao'] }}</p>
-
-                                        @if($pd['promo'] ?? false)
-                                            <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-lg mb-3">
-                                                <p class="text-xs font-semibold text-amber-800">&#x1f3f7;&#xfe0e; Oferta por tempo limitado</p>
-                                                <p class="text-xs text-amber-700 mt-0.5">Todas as CNDs por {{ $pd['creditos'] }} créd./CNPJ — aproveite antes do reajuste.</p>
-                                            </div>
-                                        @endif
-
-                                        {{-- Consultas incluidas --}}
-                                        <div class="mb-3">
-                                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Consultas incluídas</p>
-                                            <ul class="space-y-1">
-                                                @foreach($pd['consultas'] as $consulta)
-                                                    <li class="flex items-start gap-2 text-sm text-gray-700">
-                                                        <svg class="w-4 h-4 {{ $cores['icon'] }} mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                        </svg>
-                                                        <span>{{ $consulta }}</span>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        </div>
-
-                                        {{-- Quando usar --}}
-                                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-100 mb-4">
-                                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Quando usar</p>
-                                            <ul class="space-y-1">
-                                                @foreach($pd['casos_uso'] as $caso)
-                                                    <li class="flex items-start gap-2 text-xs text-gray-600">
-                                                        <svg class="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                                        </svg>
-                                                        <span>{{ $caso }}</span>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Pagination dots --}}
-                <div class="px-6 py-3 border-t border-gray-100 flex-shrink-0">
-                    <div id="swiper-planos-pagination" class="flex justify-center"></div>
-                </div>
-            </div>
-        </div>
-
         {{-- Seção de Progresso de Importação (inicialmente oculta) --}}
         <div id="importacao-progresso" class="hidden">
             <div id="progresso-card" class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
@@ -723,18 +508,18 @@
                     <span class="etapa-icon flex items-center justify-center w-3.5 h-3.5"></span>
                     <span>Participantes</span>
                 </div>
-                <svg class="etapa-sep w-3 h-3 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                <div class="etapa-item inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="notas_servicos">
+                <svg class="etapa-sep hidden w-3 h-3 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                <div class="etapa-item hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="notas_servicos">
                     <span class="etapa-icon flex items-center justify-center w-3.5 h-3.5"></span>
                     <span>Notas Serviço</span>
                 </div>
-                <svg class="etapa-sep w-3 h-3 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                <div class="etapa-item inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="notas_mercadorias">
+                <svg class="etapa-sep hidden w-3 h-3 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                <div class="etapa-item hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="notas_mercadorias">
                     <span class="etapa-icon flex items-center justify-center w-3.5 h-3.5"></span>
                     <span>NF-e Mercadorias</span>
                 </div>
-                <svg class="etapa-sep w-3 h-3 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                <div class="etapa-item inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="notas_transportes">
+                <svg class="etapa-sep hidden w-3 h-3 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                <div class="etapa-item hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400" data-etapa="notas_transportes">
                     <span class="etapa-icon flex items-center justify-center w-3.5 h-3.5"></span>
                     <span>CT-e</span>
                 </div>
@@ -1035,20 +820,6 @@
 <input type="hidden" id="modal-monitorar-participante-id-efd" value="">
 
 <style>
-    #swiper-planos-pagination .swiper-pagination-bullet {
-        width: 8px;
-        height: 8px;
-        background: #d1d5db;
-        opacity: 1;
-        margin: 0 4px;
-        border-radius: 50%;
-        transition: all 0.2s;
-    }
-    #swiper-planos-pagination .swiper-pagination-bullet-active {
-        background: #3b82f6;
-        width: 20px;
-        border-radius: 4px;
-    }
     .etapa-item {
         transition: opacity 300ms ease;
     }
@@ -1117,6 +888,20 @@
                     label.classList.add('border-gray-200', 'hover:border-gray-300', 'hover:bg-gray-500/8');
                 }
             });
+
+            // Mostrar painel informativo conforme tipo selecionado
+            const infoPanel = document.getElementById('efd-extraction-info');
+            const infoFiscal = document.getElementById('info-efd-fiscal');
+            const infoContrib = document.getElementById('info-efd-contrib');
+            if (infoPanel && infoFiscal && infoContrib) {
+                if (selectedValue) {
+                    infoPanel.classList.remove('hidden');
+                    infoFiscal.classList.toggle('hidden', selectedValue !== 'efd-fiscal');
+                    infoContrib.classList.toggle('hidden', selectedValue !== 'efd-contrib');
+                } else {
+                    infoPanel.classList.add('hidden');
+                }
+            }
         }
 
         // Função para atualizar estado do dropzone
@@ -1365,8 +1150,8 @@
         // Variáveis para controle de importação
         let eventSourceTxt = null;
         let importacaoEmAndamento = false;
-        let importandoComNotas = false;
-        let importandoComCatalogo = false;
+        let importandoComNotas = true;
+        let importandoComCatalogo = true;
         let reconnectTimer = null;
         let reconnectAttempts = 0;
         let toastConcluidoMostrado = false; // evita toast duplicado quando SSE mantido aberto
@@ -1533,7 +1318,7 @@
             // Participantes
             const blocoParticipantes = blocos.participantes;
             if (blocoParticipantes) {
-                const p0Status = (blocoParticipantes.status === 'concluido' || blocoParticipantes.progresso === 100 || isFinalConcluido)
+                const p0Status = (blocoParticipantes.status === 'concluido' || parseInt(blocoParticipantes.progresso) === 100 || isFinalConcluido)
                     ? 'concluido' : blocoParticipantes.status;
                 renderEtapa('participantes', p0Status, null);
             } else {
@@ -1548,7 +1333,7 @@
                 });
                 const blocoCatalogo = blocos.catalogo;
                 if (blocoCatalogo) {
-                    const s0200 = (blocoCatalogo.status !== 'skip' && (isFinalConcluido || blocoCatalogo.status === 'concluido' || blocoCatalogo.progresso === 100))
+                    const s0200 = (blocoCatalogo.status !== 'skip' && (isFinalConcluido || blocoCatalogo.status === 'concluido' || parseInt(blocoCatalogo.progresso) === 100))
                         ? 'concluido' : blocoCatalogo.status;
                     renderEtapa('catalogo', s0200, null);
                 } else {
@@ -1561,12 +1346,16 @@
             const ordemNotas = ['notas_servicos', 'notas_mercadorias', 'notas_transportes'];
             ordemNotas.forEach(function(b) {
                 if (blocos[b]) {
-                    const statusEfetivo = (blocos[b].status !== 'skip' && (isFinalConcluido || blocos[b].status === 'concluido' || blocos[b].progresso === 100))
+                    const el = document.querySelector('.etapa-item[data-etapa="' + b + '"]');
+                    if (el) {
+                        el.classList.remove('hidden');
+                        const prevSep = el.previousElementSibling;
+                        if (prevSep && prevSep.classList.contains('etapa-sep')) prevSep.classList.remove('hidden');
+                    }
+                    const statusEfetivo = (blocos[b].status !== 'skip' && (isFinalConcluido || blocos[b].status === 'concluido' || parseInt(blocos[b].progresso) === 100))
                         ? 'concluido'
                         : blocos[b].status;
                     renderEtapa(b, statusEfetivo, null);
-                } else {
-                    renderEtapa(b, 'pendente', null);
                 }
             });
 
@@ -1576,7 +1365,7 @@
                 if (blocos[b]) {
                     const el = document.querySelector('.etapa-item[data-etapa="' + b + '"]');
                     if (el) el.closest('.etapa-wrapper, div')?.classList?.remove('hidden');
-                    const statusEfetivo = (blocos[b].status !== 'skip' && (isFinalConcluido || blocos[b].status === 'concluido' || blocos[b].progresso === 100))
+                    const statusEfetivo = (blocos[b].status !== 'skip' && (isFinalConcluido || blocos[b].status === 'concluido' || parseInt(blocos[b].progresso) === 100))
                         ? 'concluido'
                         : blocos[b].status;
                     renderEtapa(b, statusEfetivo, null);
@@ -1670,8 +1459,8 @@
                 const iconEl = item.querySelector('.etapa-icon');
                 if (iconEl) iconEl.innerHTML = '';
             });
-            importandoComNotas = false;
-            importandoComCatalogo = false;
+            importandoComNotas = true;
+            importandoComCatalogo = true;
             // Ocultar etapa 0200 e seu separador
             document.querySelectorAll('.etapa-0200, .etapa-sep-0200').forEach(function(el) {
                 el.classList.add('hidden');
@@ -1977,8 +1766,21 @@
             blocos.notas_servicos     = blocosRaw.notas_servicos     || blocosRaw.A || null;
             blocos.notas_mercadorias  = blocosRaw.notas_mercadorias  || blocosRaw.C || null;
             blocos.notas_transportes  = blocosRaw.notas_transportes  || blocosRaw.D || null;
-            const ordemBlocos = ['notas_servicos', 'notas_mercadorias', 'notas_transportes'];
-            const nomeBloco = { notas_servicos: 'Notas de Serviço (PIS/COFINS)', notas_mercadorias: 'NF-e Mercadorias (ICMS/IPI)', notas_transportes: 'CT-e Transportes' };
+            blocos.apuracao_icms      = blocosRaw.apuracao_icms      || null;
+            blocos.apuracao_pis_cofins= blocosRaw.apuracao_pis_cofins|| null;
+            blocos.retencoes_fonte    = blocosRaw.retencoes_fonte    || null;
+            const ordemBlocos = ['notas_servicos', 'notas_mercadorias', 'notas_transportes', 'apuracao_icms', 'apuracao_pis_cofins', 'retencoes_fonte', 'A', 'C', 'D'];
+            const nomeBloco = { 
+                notas_servicos: 'Notas de Serviço (PIS/COFINS)', 
+                notas_mercadorias: 'NF-e Mercadorias (ICMS/IPI)', 
+                notas_transportes: 'CT-e Transportes',
+                apuracao_icms: 'Apuração ICMS/IPI',
+                apuracao_pis_cofins: 'Apuração PIS/COFINS',
+                retencoes_fonte: 'Retenções na Fonte',
+                A: 'Notas de Serviço (PIS/COFINS)',
+                C: 'NF-e Mercadorias (ICMS/IPI)',
+                D: 'CT-e Transportes'
+            };
 
             let html = '<div class="space-y-1">';
 
@@ -1989,21 +1791,29 @@
                 novos:      partRaw.novos      ?? (partRaw.participantes_novos      ?? 0),
                 duplicados: partRaw.duplicados ?? (partRaw.participantes_repetidos  ?? 0),
             };
-            html += `<div class="flex items-center gap-2 py-1">
-                <span class="text-green-600 font-bold w-4">✓</span>
-                <span class="w-44 whitespace-nowrap text-gray-700">Participantes</span>
-                <span class="text-gray-900 font-medium">${part.total || 0} registros</span>
-                <span class="text-gray-400 text-xs ml-2">${part.novos || 0} novos · ${part.duplicados || 0} já existentes</span>
+            html += `<div class="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-green-600 font-bold w-4 text-center">✓</span>
+                    <span class="text-gray-700">Participantes</span>
+                </div>
+                <div class="text-right flex items-center justify-end flex-wrap gap-1 sm:gap-2">
+                    <span class="text-gray-900 font-medium">${part.total || 0} registros</span>
+                    <span class="text-gray-500 text-xs bg-gray-200/50 px-2 py-0.5 rounded-full">${part.novos || 0} novos · ${part.duplicados || 0} exist.</span>
+                </div>
             </div>`;
 
             // Produtos e Serviços (catálogo 0200)
             if (rf.produtos_servicos) {
                 const ps = rf.produtos_servicos;
-                html += `<div class="flex items-center gap-2 py-1">
-                    <span class="text-green-600 font-bold w-4">✓</span>
-                    <span class="w-44 whitespace-nowrap text-gray-700">Produtos e Serviços</span>
-                    <span class="text-gray-900 font-medium">${ps.total || 0} itens</span>
-                    <span class="text-gray-400 text-xs ml-2">${ps.novos || 0} novos · ${ps.existentes || 0} já existentes</span>
+                html += `<div class="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
+                    <div class="flex items-center gap-2">
+                        <span class="text-green-600 font-bold w-4 text-center">✓</span>
+                        <span class="text-gray-700">Produtos e Serviços</span>
+                    </div>
+                    <div class="text-right flex items-center justify-end flex-wrap gap-1 sm:gap-2">
+                        <span class="text-gray-900 font-medium">${ps.total || 0} itens</span>
+                        <span class="text-gray-500 text-xs bg-gray-200/50 px-2 py-0.5 rounded-full">${ps.novos || 0} novos · ${ps.existentes || 0} exist.</span>
+                    </div>
                 </div>`;
             }
 
@@ -2012,22 +1822,31 @@
                 const bd = blocos[b];
                 if (!bd) return;
                 const isSkip = bd.total_notas === 0 && bd.valor_total === 0;
-                const icon = isSkip ? '<span class="text-gray-400 w-4">—</span>' : '<span class="text-green-600 font-bold w-4">✓</span>';
-                const valor = isSkip ? '<span class="text-gray-400 text-xs">Vazio</span>' : `<span class="text-gray-900 font-medium">${(bd.total_notas || 0)} notas</span><span class="text-gray-500 text-xs ml-2">${formatBRL(bd.valor_total)}</span>`;
-                html += `<div class="flex items-center gap-2 py-1">
-                    ${icon}
-                    <span class="w-44 whitespace-nowrap text-gray-700">${nomeBloco[b] || 'Bloco ' + b}</span>
-                    ${valor}
+                const icon = isSkip ? '<span class="text-gray-400 w-4 text-center">—</span>' : '<span class="text-green-600 font-bold w-4 text-center">✓</span>';
+                const labelCount = bd.label_count || 'notas';
+                const valor = isSkip ? '<span class="text-gray-400 text-xs">Vazio</span>' : `<span class="text-gray-900 font-medium text-right sm:text-left">${(bd.total_notas || 0)} ${labelCount}</span><span class="text-gray-600 font-mono text-xs sm:ml-2 text-right">R$ ${Number(bd.valor_total||0).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>`;
+                html += `<div class="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
+                    <div class="flex items-center gap-2">
+                        ${icon}
+                        <span class="text-gray-700 truncate">${nomeBloco[b] || 'Bloco ' + b}</span>
+                    </div>
+                    <div class="text-right flex flex-col sm:flex-row sm:items-center justify-end sm:gap-2 min-w-[120px]">
+                        ${valor}
+                    </div>
                 </div>`;
             });
 
             // Separador + Totais
             const tot = rf.totais || {};
-            html += `<div class="border-t border-gray-300 pt-1 mt-1 flex items-center gap-2 py-1">
-                <span class="w-4"></span>
-                <span class="w-44 whitespace-nowrap text-gray-700 font-semibold">Total</span>
-                <span class="text-gray-900 font-bold">${(tot.notas || 0)} notas</span>
-                <span class="text-gray-500 text-xs ml-2">${formatBRL(tot.valor)}</span>
+            html += `<div class="flex items-center justify-between py-2 border-t border-gray-300 mt-1">
+                <div class="flex items-center gap-2">
+                    <span class="w-4"></span>
+                    <span class="text-gray-800 font-bold">Total</span>
+                </div>
+                <div class="text-right flex flex-col sm:flex-row sm:items-center justify-end sm:gap-2">
+                    <span class="text-gray-900 font-bold text-right sm:text-left">${(tot.notas || 0)} notas</span>
+                    <span class="text-gray-800 font-mono text-xs sm:ml-2 text-right border-t sm:border-0 border-gray-200 pt-0.5 sm:pt-0 mt-0.5 sm:mt-0">R$ ${Number(tot.valor||0).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>
+                </div>
             </div>`;
 
             html += '</div>';
@@ -2492,22 +2311,12 @@
                     formData.append('tipo_efd', tipoEfd === 'efd-fiscal' ? 'EFD ICMS/IPI' : 'EFD PIS/COFINS');
                     formData.append('tab_id', tabId);
 
-                    // Opção de extração de notas fiscais
-                    const extrairNotasCheckbox = document.getElementById('extrair-notas');
-                    importandoComNotas = extrairNotasCheckbox?.checked === true;
-                    if (importandoComNotas) {
-                        formData.append('extrair_notas', '1');
-                    }
-
-                    const extrairCatalogoCheckbox = document.getElementById('extrair-catalogo');
-                    importandoComCatalogo = extrairCatalogoCheckbox?.checked === true;
-                    if (importandoComCatalogo) {
-                        formData.append('extrair_catalogo', '1');
-                        // Mostrar etapa 0200 e seu separador
-                        document.querySelectorAll('.etapa-0200, .etapa-sep-0200').forEach(function(el) {
-                            el.classList.remove('hidden');
-                        });
-                    }
+                    // Extração completa sempre — mostrar etapa catálogo
+                    importandoComNotas = true;
+                    importandoComCatalogo = true;
+                    document.querySelectorAll('.etapa-0200, .etapa-sep-0200').forEach(function(el) {
+                        el.classList.remove('hidden');
+                    });
 
                     const response = await fetch('/app/importacao/efd/importar-txt', {
                         method: 'POST',
@@ -2751,118 +2560,18 @@
         console.log('[Monitoramento EFD] Inicializacao concluida');
     }
 
-    // ==========================================
-    // Modal Carousel de Planos (funcao separada)
-    // ==========================================
-    function initCarouselPlanos() {
-        var totalPlanos = {{ count($planosDetalhados) }};
-        var swiperPlanos = null;
-        var modalPlanos = document.getElementById('modal-planos-carousel');
-
-        function showPlanosModal(startIndex) {
-            if (!modalPlanos) return;
-            modalPlanos.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-
-            setTimeout(function() {
-                if (swiperPlanos && !swiperPlanos.destroyed) {
-                    swiperPlanos.slideToLoop(startIndex || 0, 0);
-                    swiperPlanos.update();
-                    updateCarouselCounter(startIndex || 0);
-                    return;
-                }
-
-                swiperPlanos = new Swiper('#swiper-planos', {
-                    slidesPerView: 1,
-                    spaceBetween: 0,
-                    loop: true,
-                    initialSlide: startIndex || 0,
-                    navigation: {
-                        prevEl: '#swiper-planos-prev',
-                        nextEl: '#swiper-planos-next',
-                    },
-                    pagination: {
-                        el: '#swiper-planos-pagination',
-                        clickable: true,
-                    },
-                    on: {
-                        slideChange: function() {
-                            updateCarouselCounter(this.realIndex);
-                        },
-                    },
-                });
-
-                updateCarouselCounter(startIndex || 0);
-            }, 50);
-        }
-
-        function hidePlanosModal() {
-            if (!modalPlanos) return;
-            modalPlanos.classList.add('hidden');
-            document.body.style.overflow = '';
-        }
-
-        function updateCarouselCounter(index) {
-            var counter = document.getElementById('carousel-counter');
-            if (counter) {
-                counter.textContent = (index + 1) + ' / ' + totalPlanos;
-            }
-        }
-
-        // Close modal: overlay click
-        if (modalPlanos) {
-            modalPlanos.addEventListener('click', function(e) {
-                if (e.target === modalPlanos) {
-                    hidePlanosModal();
-                }
-            });
-        }
-
-        // Close modal: ESC key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && modalPlanos && !modalPlanos.classList.contains('hidden')) {
-                hidePlanosModal();
-            }
-        });
-
-        // Close modal: X button
-        document.getElementById('btn-fechar-carousel')?.addEventListener('click', hidePlanosModal);
-
-        // "Ver detalhes" button -> open modal at slide 0
-        var btnVerDetalhes = document.getElementById('btn-ver-detalhes-planos');
-        if (btnVerDetalhes) {
-            btnVerDetalhes.addEventListener('click', function() {
-                showPlanosModal(0);
-            });
-        }
-
-        // Badge clicks -> open modal at specific slide
-        document.querySelectorAll('.badge-plano').forEach(function(badge) {
-            badge.addEventListener('click', function() {
-                var idx = parseInt(this.dataset.slideIndex) || 0;
-                showPlanosModal(idx);
-            });
-        });
-
-        console.log('[Monitoramento EFD] Carousel de planos inicializado');
-    }
-
-    // Auto-inicializar (funcoes independentes com try-catch)
-    function _initAll() {
-        try { initImportacaoEfd(); } catch(e) { console.error('[EFD] Erro init:', e); }
-        try { initCarouselPlanos(); } catch(e) { console.error('[EFD] Erro carousel:', e); }
-    }
-
+    // Auto-inicializar
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', _initAll, { once: true });
+        document.addEventListener('DOMContentLoaded', function() {
+            try { initImportacaoEfd(); } catch(e) { console.error('[EFD] Erro init:', e); }
+        }, { once: true });
     } else {
-        _initAll();
+        try { initImportacaoEfd(); } catch(e) { console.error('[EFD] Erro init:', e); }
     }
 
-    // Expor globalmente para SPA (chama ambas as funcoes)
+    // Expor globalmente para SPA
     window.initImportacaoEfd = function() {
         try { initImportacaoEfd(); } catch(e) { console.error('[EFD] Erro init:', e); }
-        try { initCarouselPlanos(); } catch(e) { console.error('[EFD] Erro carousel:', e); }
     };
 })();
 </script>

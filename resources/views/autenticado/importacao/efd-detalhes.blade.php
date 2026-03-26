@@ -30,48 +30,106 @@
 
         {{-- Header --}}
         <div class="mb-6 efd-animate">
-            <div class="flex items-start justify-between gap-4">
-                <div class="min-w-0">
-                    <div class="flex items-center gap-3 flex-wrap">
-                        <h1 class="text-2xl font-bold text-gray-900 truncate">{{ $importacao->filename ?? 'Importação #' . $importacao->id }}</h1>
-                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full {{ $badgeClass }}">{{ $badgeLabel }}</span>
-                    </div>
-                    <p class="mt-1 text-sm text-gray-500">Detalhes da importação EFD</p>
-                </div>
+            <div class="flex items-center gap-4">
                 <a
                     href="/app/importacao/efd"
                     data-link
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50 flex-shrink-0"
+                    id="btn-voltar-topo"
+                    class="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-gray-300 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50 hover:text-gray-900 flex-shrink-0"
+                    title="Voltar"
                 >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                     </svg>
-                    Voltar
                 </a>
+                <div class="min-w-0 flex-1">
+                    @php
+                        $isSped = false;
+                        $spedPeriodo = '';
+                        $spedHash = '';
+                        if ($importacao->filename && str_contains($importacao->filename, '|')) {
+                            $parts = explode('|', $importacao->filename);
+                            if (count($parts) >= 3) {
+                                $isSped = true;
+                                $spedPeriodo = trim($parts[1]);
+                                $rawHash = trim($parts[2]);
+                                $spedHash = str_replace('.txt', '', $rawHash);
+                            }
+                        }
+                        
+                        $isPisCofins = $importacao->tipo_efd === 'efd-contrib' || str_contains(strtolower($importacao->tipo_efd ?? ''), 'pis');
+                        $tipoLabel = $isPisCofins ? 'EFD PIS/COFINS' : 'EFD ICMS/IPI';
+                    @endphp
+
+                    <div class="flex items-center gap-2.5 flex-wrap mb-1.5">
+                        <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">
+                            {{ $isSped ? 'SPED ' . $tipoLabel : 'Importação ' . $tipoLabel }}
+                        </h1>
+                        <span class="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-gray-500 bg-gray-100 rounded-md border border-gray-200">
+                            ID: {{ $importacao->id }}
+                        </span>
+                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full {{ $badgeClass }}">{{ $badgeLabel }}</span>
+                        
+                        @if($isSped)
+                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center gap-1.5 shadow-sm">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            {{ $spedPeriodo }}
+                        </span>
+                        @endif
+                    </div>
+                    
+                    @if($importacao->filename)
+                    <div class="flex items-center mt-2 max-w-full">
+                        <div class="inline-flex items-center gap-2 px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm w-full sm:w-auto overflow-hidden">
+                            <svg class="w-4 h-4 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <span class="font-mono text-xs text-gray-500 truncate" title="{{ $importacao->filename }}">
+                                @if($isSped)
+                                    <span class="text-gray-400 font-medium whitespace-nowrap">SPED-FISCAL <span class="mx-0.5">|</span> {{ $spedPeriodo }} <span class="mx-0.5">|</span></span><span class="text-gray-700">{{ $spedHash }}</span><span class="text-gray-400">.txt</span>
+                                @else
+                                    {{ $importacao->filename }}
+                                @endif
+                            </span>
+                        </div>
+                    </div>
+                    @else
+                    <p class="mt-1 text-sm text-gray-500">Detalhes da importação EFD</p>
+                    @endif
+                </div>
             </div>
         </div>
 
         {{-- Barra de navegação ancorada (sticky) --}}
         @if($importacao->status === 'concluido')
-        <nav class="efd-animate sticky top-0 z-20 bg-white/95 backdrop-blur border border-gray-200 rounded-xl shadow-sm mb-6 px-4 py-2 flex items-center gap-1 overflow-x-auto" id="efd-sticky-nav" style="animation-delay: 0.02s">
-            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide mr-2 flex-shrink-0">Ir para:</span>
-            <a href="#info-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">Info</a>
-            <a href="#participantes-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">Participantes</a>
-            @if(!empty($resumoFinal))
-            <a href="#resumo-final-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">Notas</a>
-            @endif
-            @if(isset($catalogoItens) && ($catalogoItens instanceof \Illuminate\Pagination\LengthAwarePaginator ? $catalogoItens->total() > 0 : $catalogoItens->count() > 0))
-            <a href="#catalogo-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">Catálogo</a>
-            @endif
-            @if($apuracaoIcms)
-            <a href="#apuracao-icms-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">ICMS/IPI</a>
-            @endif
-            @if(isset($retencoesFonte) && $retencoesFonte->isNotEmpty())
-            <a href="#retencoes-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">Retenções</a>
-            @endif
-            @if($apuracaoContribuicao)
-            <a href="#apuracao-pis-cofins-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">PIS/COFINS</a>
-            @endif
+        <nav class="efd-animate sticky top-0 z-20 bg-white/95 backdrop-blur border border-gray-200 rounded-xl shadow-sm mb-6 px-4 py-2 flex items-center justify-between gap-4" id="efd-sticky-nav" style="animation-delay: 0.02s">
+            <div class="flex items-center gap-1 overflow-x-auto" style="scrollbar-width: thin;">
+                <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide mr-2 flex-shrink-0">Ir para:</span>
+                <a href="#info-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">Info</a>
+                <a href="#participantes-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">Participantes</a>
+                @if(!empty($resumoFinal))
+                <a href="#resumo-final-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">Notas</a>
+                @endif
+                @if(isset($catalogoItens) && ($catalogoItens instanceof \Illuminate\Pagination\LengthAwarePaginator ? $catalogoItens->total() > 0 : $catalogoItens->count() > 0))
+                <a href="#catalogo-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">Catálogo</a>
+                @endif
+                @if($apuracaoIcms)
+                <a href="#apuracao-icms-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">ICMS/IPI</a>
+                @endif
+                @if(isset($retencoesFonte) && $retencoesFonte->isNotEmpty())
+                <a href="#retencoes-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">Retenções</a>
+                @endif
+                @if($apuracaoContribuicao)
+                <a href="#apuracao-pis-cofins-section" class="efd-nav-link px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">PIS/COFINS</a>
+                @endif
+            </div>
+
+            <a href="/app/importacao/efd" id="btn-voltar-sticky" data-link class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-xs font-semibold shadow-sm transition-all duration-300 hover:bg-gray-50 flex-shrink-0 opacity-0 pointer-events-none translate-x-4">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Voltar
+            </a>
         </nav>
         @endif
 
@@ -125,26 +183,159 @@
             </div>
         </div>
 
-        {{-- Stats Bar --}}
-        <div class="efd-animate grid grid-cols-2 sm:grid-cols-3 {{ $importacao->extrair_notas ? 'lg:grid-cols-6' : 'lg:grid-cols-5' }} gap-4 mb-6" style="animation-delay: 0.1s">
-            @php
-                $stats = [
-                    ['label' => 'Total Participantes', 'value' => ($importacao->novos ?? 0) + ($importacao->duplicados ?? 0), 'color' => 'text-gray-900'],
-                    ['label' => 'Novos',               'value' => $importacao->novos ?? 0,              'color' => 'text-green-600'],
-                    ['label' => 'Duplicados',           'value' => $importacao->duplicados ?? 0,         'color' => 'text-yellow-600'],
-                    ['label' => 'CNPJs únicos',         'value' => $importacao->total_cnpjs_unicos ?? 0, 'color' => 'text-blue-600'],
-                    ['label' => 'CPFs únicos',          'value' => $importacao->total_cpfs_unicos ?? 0,  'color' => 'text-purple-600'],
-                ];
-                if ($importacao->extrair_notas) {
-                    $stats[] = ['label' => 'Notas Extraídas', 'value' => $importacao->notas_extraidas ?? 0, 'color' => 'text-indigo-600'];
+        {{-- Premium Dash KPIs --}}
+        <div class="efd-animate grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6" style="animation-delay: 0.1s">
+            
+            {{-- KPI 1: Participantes (Novos vs Duplicados) --}}
+            @php 
+                $kpiPartNovos = $importacao->novos ?? ($resumoFinal['participantes']['novos'] ?? ($resumoFinal['estatisticas']['participantes_novos'] ?? 0));
+                $kpiPartDupl = $importacao->duplicados ?? ($resumoFinal['participantes']['duplicados'] ?? ($resumoFinal['estatisticas']['participantes_repetidos'] ?? 0));
+                $totalPart = $kpiPartNovos + $kpiPartDupl; 
+                if ($totalPart === 0 && isset($participantes) && $participantes->total() > 0) {
+                    $totalPart = $participantes->total();
+                    $kpiPartNovos = $totalPart;
                 }
+                $pctNovos = $totalPart > 0 ? round(($kpiPartNovos / $totalPart) * 100) : 0;
             @endphp
-            @foreach($stats as $stat)
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm px-4 py-4">
-                <p class="text-xs font-medium text-gray-500">{{ $stat['label'] }}</p>
-                <p class="text-2xl font-bold {{ $stat['color'] }} mt-1">{{ number_format($stat['value']) }}</p>
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 relative overflow-hidden group">
+                <!-- Icon background decorative -->
+                <div class="absolute -right-4 -top-4 text-blue-50 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity transform group-hover:scale-110 duration-500 pointer-events-none">
+                    <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </div>
+                
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-inner">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </div>
+                    <p class="text-sm font-semibold text-gray-700">Total Participantes</p>
+                </div>
+                <p class="text-3xl font-extrabold text-gray-900 tracking-tight">{{ number_format($totalPart) }}</p>
+                
+                <div class="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="flex items-baseline gap-1.5 mb-1">
+                            <p class="text-base font-bold text-emerald-600">{{ number_format($kpiPartNovos) }}</p>
+                            <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Novos</p>
+                        </div>
+                    </div>
+                    <div class="w-px h-8 bg-gray-200"></div>
+                    <div class="flex-1 text-right">
+                        <div class="flex items-baseline justify-end gap-1.5 mb-1">
+                            <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Dupl.</p>
+                            <p class="text-base font-bold text-amber-500">{{ number_format($kpiPartDupl) }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="w-full h-1.5 bg-amber-100 rounded-full mt-2 overflow-hidden flex">
+                    <div class="h-full bg-emerald-500" style="width: {{ $pctNovos }}%" title="{{ $pctNovos }}% Novos"></div>
+                </div>
             </div>
-            @endforeach
+
+            {{-- KPI 2: Tipo de Pessoa (CNPJ vs CPF) --}}
+            @php
+                $totalDocs = ($importacao->total_cnpjs_unicos ?? 0) + ($importacao->total_cpfs_unicos ?? 0);
+                $pctCnpj = $totalDocs > 0 ? round((($importacao->total_cnpjs_unicos ?? 0) / $totalDocs) * 100) : 0;
+            @endphp
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 relative overflow-hidden group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-inner">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
+                    </div>
+                    <p class="text-sm font-semibold text-gray-700">Documentos Únicos</p>
+                </div>
+                <p class="text-3xl font-extrabold text-gray-900 tracking-tight">{{ number_format($totalDocs) }}</p>
+                
+                <div class="mt-5 pt-4 border-t border-gray-100 flex justify-between gap-4">
+                    <div class="flex-1">
+                        <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider mb-0.5">CNPJs</p>
+                        <p class="text-lg font-bold text-indigo-600">{{ number_format($importacao->total_cnpjs_unicos ?? 0) }}</p>
+                    </div>
+                    <div class="w-px h-8 bg-gray-200"></div>
+                    <div class="flex-1 text-right">
+                        <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider mb-0.5">CPFs</p>
+                        <p class="text-lg font-bold text-fuchsia-600">{{ number_format($importacao->total_cpfs_unicos ?? 0) }}</p>
+                    </div>
+                </div>
+                
+                <div class="w-full h-1.5 bg-fuchsia-100 rounded-full mt-2 overflow-hidden flex">
+                    <div class="h-full bg-indigo-500" style="width: {{ $pctCnpj }}%" title="{{ $pctCnpj }}% CNPJs"></div>
+                </div>
+            </div>
+
+            {{-- KPI 3: Notas Extraídas --}}
+            @php
+                $notasTotal = $resumoFinal['totais']['notas'] ?? $importacao->notas_extraidas ?? 0;
+                $notasValor = $resumoFinal['totais']['valor'] ?? null;
+                $valorEntrada = \App\Models\EfdNota::where('importacao_id', $importacao->id)->entradas()->sum('valor_total');
+                $valorSaida = \App\Models\EfdNota::where('importacao_id', $importacao->id)->saidas()->sum('valor_total');
+                $balanco = $valorSaida - $valorEntrada;
+                $balancoClass = $balanco >= 0 ? 'text-emerald-600' : 'text-red-500';
+            @endphp
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 relative overflow-hidden group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center shadow-inner">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </div>
+                    <p class="text-sm font-semibold text-gray-700">Notas Fiscais</p>
+                </div>
+                <div class="flex items-baseline gap-2 mt-1">
+                    <p class="text-3xl font-extrabold text-gray-900 tracking-tight">{{ number_format($notasTotal) }}</p>
+                    @if($notasTotal > 0)
+                    <span class="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-100 text-green-700 uppercase tracking-widest">
+                        <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        OK
+                    </span>
+                    @endif
+                </div>
+                
+                <div class="mt-5 pt-4 border-t border-gray-100 flex justify-between gap-4">
+                    <div class="flex-1">
+                        <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider mb-0.5">Entradas</p>
+                        <p class="text-lg font-bold text-green-600 truncate" title="R$ {{ number_format($valorEntrada, 2, ',', '.') }}">{{ number_format($valorEntrada, 0, ',', '.') }}</p>
+                    </div>
+                    <div class="w-px h-8 bg-gray-200 mt-0.5"></div>
+                    <div class="flex-1 text-right">
+                        <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider mb-0.5">Saídas</p>
+                        <p class="text-lg font-bold text-amber-500 truncate" title="R$ {{ number_format($valorSaida, 2, ',', '.') }}">{{ number_format($valorSaida, 0, ',', '.') }}</p>
+                    </div>
+                </div>
+                
+                <div class="mt-2 flex flex-row items-center justify-between">
+                    <p class="text-[9px] text-gray-400 font-medium uppercase tracking-widest">Balanço</p>
+                    <p class="text-[11px] font-bold {{ $balancoClass }}" title="Saldo final">R$ {{ number_format($balanco, 2, ',', '.') }}</p>
+                </div>
+            </div>
+            
+            {{-- KPI 4: Performance & Custos (Dark Card) --}}
+            <div class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-5 text-white flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute -right-4 -bottom-4 opacity-10">
+                    <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 mb-2 text-gray-400">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <p class="text-[10px] font-bold uppercase tracking-wider">Performance</p>
+                    </div>
+                    <p class="text-2xl font-bold text-white tracking-tight">{{ $importacao->tempo_processamento ?? '0s' }}</p>
+                    <p class="text-[11px] text-gray-400 mt-0.5">Tempo total de extração do TXT</p>
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-gray-700/50 flex gap-3">
+                    <div class="w-1/2">
+                        <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">Tamanho</p>
+                        <p class="text-sm font-semibold text-gray-100">{{ $importacao->tamanho_formatado ?? '0 MB' }}</p>
+                    </div>
+                    <div class="w-1/2 border-l border-gray-700/50 pl-3">
+                        <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">Créditos</p>
+                        <div class="flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <p class="text-sm font-bold text-amber-400">{{ $importacao->creditos_cobrados ?? 0 }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         {{-- Resumo Executivo Tributário --}}
@@ -159,47 +350,58 @@
             $tribRetTotal = $tribRetPis + $tribRetCof;
             $tribTotal    = $tribIcms + $tribIcmsSt + $tribPis + $tribCofins;
         @endphp
-        <div class="efd-animate bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl border border-indigo-200 shadow-sm mb-6" style="animation-delay: 0.12s">
-            <div class="px-6 py-4 border-b border-indigo-200">
-                <h2 class="text-base font-semibold text-indigo-900">Resumo Tributário</h2>
+        <div class="efd-animate bg-white rounded-xl border border-gray-200 shadow-sm mb-6" style="animation-delay: 0.12s">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between rounded-t-xl">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <h2 class="text-base font-semibold text-gray-900">Resumo Tributário</h2>
+                </div>
             </div>
+            
             <div class="p-6">
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-6">
                     @if($apuracaoIcms)
-                    <div class="text-center">
-                        <p class="text-xs font-medium text-gray-500">ICMS</p>
-                        <p class="text-lg font-bold text-blue-700 mt-0.5">R$ {{ number_format($tribIcms, 2, ',', '.') }}</p>
+                    <div class="flex flex-col">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">ICMS</p>
+                        <p class="text-xl font-semibold text-gray-900">R$ {{ number_format($tribIcms, 2, ',', '.') }}</p>
                     </div>
                     @if($apuracaoIcms->tem_st)
-                    <div class="text-center">
-                        <p class="text-xs font-medium text-gray-500">ICMS-ST</p>
-                        <p class="text-lg font-bold text-amber-700 mt-0.5">R$ {{ number_format($tribIcmsSt, 2, ',', '.') }}</p>
+                    <div class="flex flex-col">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">ICMS-ST</p>
+                        <p class="text-xl font-semibold text-gray-900">R$ {{ number_format($tribIcmsSt, 2, ',', '.') }}</p>
                     </div>
                     @endif
                     @endif
                     @if($apuracaoContribuicao)
-                    <div class="text-center">
-                        <p class="text-xs font-medium text-gray-500">PIS</p>
-                        <p class="text-lg font-bold text-blue-600 mt-0.5">R$ {{ number_format($tribPis, 2, ',', '.') }}</p>
+                    <div class="flex flex-col">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">PIS</p>
+                        <p class="text-xl font-semibold text-gray-900">R$ {{ number_format($tribPis, 2, ',', '.') }}</p>
                     </div>
-                    <div class="text-center">
-                        <p class="text-xs font-medium text-gray-500">COFINS</p>
-                        <p class="text-lg font-bold text-purple-700 mt-0.5">R$ {{ number_format($tribCofins, 2, ',', '.') }}</p>
+                    <div class="flex flex-col">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">COFINS</p>
+                        <p class="text-xl font-semibold text-gray-900">R$ {{ number_format($tribCofins, 2, ',', '.') }}</p>
                     </div>
                     @endif
                     @if($tribRetTotal > 0)
-                    <div class="text-center">
-                        <p class="text-xs font-medium text-gray-500">Retenções</p>
-                        <p class="text-lg font-bold text-emerald-700 mt-0.5">R$ {{ number_format($tribRetTotal, 2, ',', '.') }}</p>
+                    <div class="flex flex-col">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Retenções</p>
+                        <p class="text-xl font-semibold text-gray-900">R$ {{ number_format($tribRetTotal, 2, ',', '.') }}</p>
                     </div>
                     @endif
                 </div>
-                <div class="pt-3 border-t border-indigo-200 flex justify-between items-center">
-                    <span class="text-sm font-bold text-indigo-900">Total Tributos a Recolher</span>
-                    <span class="text-xl font-bold text-indigo-700">R$ {{ number_format($tribTotal, 2, ',', '.') }}</span>
+                
+                <div class="pt-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center">
+                    <span class="text-sm font-semibold text-gray-700 uppercase tracking-wider">Total a Recolher</span>
+                    <span class="text-2xl font-bold text-gray-900 mt-2 sm:mt-0">R$ {{ number_format($tribTotal, 2, ',', '.') }}</span>
                 </div>
+                
                 @if($tribRetTotal > 0)
-                <p class="text-xs text-gray-500 mt-1">Retenções na fonte (PIS R$ {{ number_format($tribRetPis, 2, ',', '.') }} + COFINS R$ {{ number_format($tribRetCof, 2, ',', '.') }}) podem ser compensadas na apuração.</p>
+                <div class="mt-4 pt-4 border-t border-gray-100 flex items-start gap-2 text-gray-600 text-xs">
+                    <svg class="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <p class="leading-relaxed">As retenções na fonte (PIS R$ {{ number_format($tribRetPis, 2, ',', '.') }} + COFINS R$ {{ number_format($tribRetCof, 2, ',', '.') }}) constam no resumo e podem ser compensadas na apuração.</p>
+                </div>
                 @endif
             </div>
         </div>
@@ -259,16 +461,26 @@
                     @endif
                 </h2>
                 @if($participantes->total() > 0)
-                <div class="relative">
-                    <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    <input
-                        type="text"
-                        id="busca-participantes-efd"
-                        placeholder="Buscar participante..."
-                        class="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
-                    >
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <select class="pl-3 pr-8 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white" onchange="let u = new URL(window.location.href); u.searchParams.set('per_page_participantes', this.value); u.searchParams.delete('page'); window.asyncLoadEFD(u.toString(), ['participantes-section', 'resumo-final-section']);">
+                            <option value="10" {{ request('per_page_participantes', 10) == 10 ? 'selected' : '' }}>10 por pág.</option>
+                            <option value="25" {{ request('per_page_participantes') == 25 ? 'selected' : '' }}>25 por pág.</option>
+                            <option value="50" {{ request('per_page_participantes') == 50 ? 'selected' : '' }}>50 por pág.</option>
+                            <option value="100" {{ request('per_page_participantes') == 100 ? 'selected' : '' }}>100 por pág.</option>
+                        </select>
+                    </div>
+                    <div class="relative">
+                        <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input
+                            type="text"
+                            id="busca-participantes-efd"
+                            placeholder="Buscar participante..."
+                            class="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
+                        >
+                    </div>
                 </div>
                 @endif
             </div>
@@ -291,14 +503,14 @@
                         <tr
                             class="hover:bg-gray-50 cursor-pointer transition-colors"
                             data-href="/app/participante/{{ $part->id }}"
-                            data-razao="{{ strtolower($part->razao_social ?? '') }}"
-                            data-doc="{{ $part->cnpj ?? $part->cpf ?? '' }}"
+                            data-razao="{{ strtolower($part->razao_social ?: '') }}"
+                            data-doc="{{ $part->cnpj_formatado ?: $part->cpf ?: '' }}"
                         >
-                            <td class="px-6 py-4 text-sm font-mono text-gray-900 whitespace-nowrap">{{ $part->cnpj ?? $part->cpf ?? '—' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-900 max-w-[280px] truncate">{{ $part->razao_social ?? '—' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->uf ?? '—' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->endereco ?? '—' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->inscricao_estadual ?? '—' }}</td>
+                            <td class="px-6 py-4 text-sm font-mono text-gray-900 whitespace-nowrap">{{ $part->cnpj_formatado ?: $part->cpf ?: '—' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900 max-w-[280px] truncate" title="{{ $part->razao_social ?: 'Razão social não informada' }}">{{ $part->razao_social ?: '—' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->uf ?: '—' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->endereco ?: '—' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->inscricao_estadual ?: '—' }}</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -311,11 +523,11 @@
                 <div
                     class="px-4 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
                     data-href="/app/participante/{{ $part->id }}"
-                    data-razao="{{ strtolower($part->razao_social ?? '') }}"
-                    data-doc="{{ $part->cnpj ?? $part->cpf ?? '' }}"
+                    data-razao="{{ strtolower($part->razao_social ?: '') }}"
+                    data-doc="{{ $part->cnpj_formatado ?: $part->cpf ?: '' }}"
                 >
-                    <p class="text-sm font-medium text-gray-900">{{ $part->razao_social ?? '—' }}</p>
-                    <p class="text-xs font-mono text-gray-500 mt-0.5">{{ $part->cnpj ?? $part->cpf ?? '—' }}</p>
+                    <p class="text-sm font-medium text-gray-900">{{ $part->razao_social ?: '—' }}</p>
+                    <p class="text-xs font-mono text-gray-500 mt-0.5">{{ $part->cnpj_formatado ?: $part->cpf ?: '—' }}</p>
                     <div class="flex items-center gap-3 mt-1 text-xs text-gray-400">
                         @if($part->uf) <span>{{ $part->uf }}</span> @endif
                         @if($part->endereco) <span>&middot;</span><span>{{ $part->endereco }}</span> @endif
@@ -397,6 +609,9 @@
                             'notas_servicos' => 'Notas de Serviço (PIS/COFINS)',
                             'notas_mercadorias' => 'NF-e Mercadorias (ICMS/IPI)',
                             'notas_transportes' => 'CT-e Transportes',
+                            'apuracao_icms' => 'Apuração ICMS/IPI',
+                            'apuracao_pis_cofins' => 'Apuração PIS/COFINS',
+                            'retencoes_fonte' => 'Retenções na Fonte',
                             // Retrocompatibilidade com dados antigos
                             'A' => 'Notas de Serviço (PIS/COFINS)',
                             'C' => 'NF-e Mercadorias (ICMS/IPI)',
@@ -417,56 +632,72 @@
                         }
                     @endphp
                     @if(!empty($rfParticipantes))
-                    <div class="flex items-center gap-2 py-1">
-                        <span class="text-green-600 font-bold w-4">✓</span>
-                        <span class="w-52 text-gray-700">Participantes</span>
-                        <span class="text-gray-900 font-medium">{{ $rfParticipantes['total'] ?? 0 }} registros</span>
-                        <span class="text-gray-400 text-xs ml-2">{{ $rfParticipantes['novos'] ?? 0 }} novos · {{ $rfParticipantes['duplicados'] ?? 0 }} já existentes</span>
+                    <div class="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
+                        <div class="flex items-center gap-2">
+                            <span class="text-green-600 font-bold w-4 text-center">✓</span>
+                            <span class="text-gray-700">Participantes</span>
+                        </div>
+                        <div class="text-right flex items-center justify-end flex-wrap gap-1 sm:gap-2">
+                            <span class="text-gray-900 font-medium">{{ $rfParticipantes['total'] ?? 0 }} registros</span>
+                            <span class="text-gray-500 text-xs bg-gray-200/50 px-2 py-0.5 rounded-full">{{ $rfParticipantes['novos'] ?? 0 }} novos · {{ $rfParticipantes['duplicados'] ?? 0 }} exist.</span>
+                        </div>
                     </div>
                     @endif
 
                     {{-- Produtos e Serviços (catálogo 0200) --}}
                     @if(!empty($rf['produtos_servicos']))
                     @php $ps = $rf['produtos_servicos']; @endphp
-                    <div class="flex items-center gap-2 py-1">
-                        <span class="text-green-600 font-bold w-4">✓</span>
-                        <span class="w-52 text-gray-700">Produtos e Serviços</span>
-                        <span class="text-gray-900 font-medium">{{ $ps['total'] ?? 0 }} itens</span>
-                        <span class="text-gray-400 text-xs ml-2">{{ $ps['novos'] ?? 0 }} novos · {{ $ps['existentes'] ?? 0 }} já existentes</span>
+                    <div class="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
+                        <div class="flex items-center gap-2">
+                            <span class="text-green-600 font-bold w-4 text-center">✓</span>
+                            <span class="text-gray-700">Produtos e Serviços</span>
+                        </div>
+                        <div class="text-right flex items-center justify-end flex-wrap gap-1 sm:gap-2">
+                            <span class="text-gray-900 font-medium">{{ $ps['total'] ?? 0 }} itens</span>
+                            <span class="text-gray-500 text-xs bg-gray-200/50 px-2 py-0.5 rounded-full">{{ $ps['novos'] ?? 0 }} novos · {{ $ps['existentes'] ?? 0 }} exist.</span>
+                        </div>
                     </div>
                     @endif
 
                     {{-- Blocos --}}
-                    @foreach(['notas_servicos', 'notas_mercadorias', 'notas_transportes', 'A', 'C', 'D'] as $bloco)
+                    @foreach(['notas_servicos', 'notas_mercadorias', 'notas_transportes', 'apuracao_icms', 'apuracao_pis_cofins', 'retencoes_fonte', 'A', 'C', 'D'] as $bloco)
                         @if(isset($rf['blocos'][$bloco]))
                             @php
                                 $bd = $rf['blocos'][$bloco];
                                 $isSkip = ($bd['total_notas'] ?? 0) == 0 && ($bd['valor_total'] ?? 0) == 0;
                             @endphp
-                            <div class="flex items-center gap-2 py-1">
-                                @if($isSkip)
-                                    <span class="text-gray-400 w-4">—</span>
-                                @else
-                                    <span class="text-green-600 font-bold w-4">✓</span>
-                                @endif
-                                <span class="w-52 text-gray-700">{{ $nomesBloco[$bloco] ?? 'Bloco '.$bloco }}</span>
-                                @if($isSkip)
-                                    <span class="text-gray-400 text-xs">Vazio</span>
-                                @else
-                                    <span class="text-gray-900 font-medium">{{ $bd['total_notas'] ?? 0 }} notas</span>
-                                    <span class="text-gray-500 text-xs ml-2">R$ {{ number_format($bd['valor_total'] ?? 0, 2, ',', '.') }}</span>
-                                @endif
+                            <div class="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
+                                <div class="flex items-center gap-2">
+                                    @if($isSkip)
+                                        <span class="text-gray-400 w-4 text-center">—</span>
+                                    @else
+                                        <span class="text-green-600 font-bold w-4 text-center">✓</span>
+                                    @endif
+                                    <span class="text-gray-700 truncate">{{ $nomesBloco[$bloco] ?? 'Bloco '.$bloco }}</span>
+                                </div>
+                                <div class="text-right flex flex-col sm:flex-row sm:items-center justify-end sm:gap-2 min-w-[120px]">
+                                    @if($isSkip)
+                                        <span class="text-gray-400 text-xs">Vazio</span>
+                                    @else
+                                        <span class="text-gray-900 font-medium text-right sm:text-left">{{ $bd['total_notas'] ?? 0 }} {{ $bd['label_count'] ?? 'notas' }}</span>
+                                        <span class="text-gray-600 font-mono text-xs sm:ml-2 text-right">R$ {{ number_format($bd['valor_total'] ?? 0, 2, ',', '.') }}</span>
+                                    @endif
+                                </div>
                             </div>
                         @endif
                     @endforeach
 
                     {{-- Total --}}
                     @if(!empty($rf['totais']))
-                    <div class="border-t border-gray-300 pt-1 mt-1 flex items-center gap-2 py-1">
-                        <span class="w-4"></span>
-                        <span class="w-52 text-gray-700 font-semibold">Total</span>
-                        <span class="text-gray-900 font-bold">{{ $rf['totais']['notas'] ?? 0 }} notas</span>
-                        <span class="text-gray-500 text-xs ml-2">R$ {{ number_format($rf['totais']['valor'] ?? 0, 2, ',', '.') }}</span>
+                    <div class="flex items-center justify-between py-2 border-t border-gray-300 mt-1">
+                        <div class="flex items-center gap-2">
+                            <span class="w-4"></span>
+                            <span class="text-gray-800 font-bold">Total</span>
+                        </div>
+                        <div class="text-right flex flex-col sm:flex-row sm:items-center justify-end sm:gap-2">
+                            <span class="text-gray-900 font-bold text-right sm:text-left">{{ $rf['totais']['notas'] ?? 0 }} notas</span>
+                            <span class="text-gray-800 font-mono text-xs sm:ml-2 text-right border-t sm:border-0 border-gray-200 pt-0.5 sm:pt-0 mt-0.5 sm:mt-0">R$ {{ number_format($rf['totais']['valor'] ?? 0, 2, ',', '.') }}</span>
+                        </div>
                     </div>
                     @endif
                 </div>
@@ -477,8 +708,20 @@
             @php
                 $resumoIndexado = collect($rf['participantes_resumo'])->keyBy('participante_id');
             @endphp
-            <div class="px-6 py-4">
-                <h3 class="text-sm font-semibold text-gray-900 mb-3">Participantes — Detalhes de Notas</h3>
+            <div class="px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
+                <h3 class="text-sm font-semibold text-gray-900">Participantes — Detalhes de Notas</h3>
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <select class="pl-3 pr-8 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white" onchange="let u = new URL(window.location.href); u.searchParams.set('per_page_participantes', this.value); u.searchParams.delete('page'); window.asyncLoadEFD(u.toString(), ['participantes-section', 'resumo-final-section']);">
+                            <option value="10" {{ request('per_page_participantes', 10) == 10 ? 'selected' : '' }}>10 por pág.</option>
+                            <option value="25" {{ request('per_page_participantes') == 25 ? 'selected' : '' }}>25 por pág.</option>
+                            <option value="50" {{ request('per_page_participantes') == 50 ? 'selected' : '' }}>50 por pág.</option>
+                            <option value="100" {{ request('per_page_participantes') == 100 ? 'selected' : '' }}>100 por pág.</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 pb-4">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 text-sm" id="tabela-notas-participantes-detalhes">
                         <thead class="bg-gray-50">
@@ -498,8 +741,8 @@
                                 $temNotas = $pr && !empty($pr['nota_ids']);
                             @endphp
                             <tr class="hover:bg-gray-50 transition-colors" data-participante-id="{{ $part->id }}">
-                                <td class="px-4 py-3 text-xs font-mono text-gray-900 whitespace-nowrap">{{ $part->cnpj ?? $part->cpf ?? '—' }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-900 max-w-[240px] truncate" title="{{ $part->razao_social ?? '' }}">{{ $part->razao_social ?? '—' }}</td>
+                                <td class="px-4 py-3 text-xs font-mono text-gray-900 whitespace-nowrap">{{ $part->cnpj_formatado ?: '—' }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-900 max-w-[240px] truncate" title="{{ $part->razao_social ?: 'Razão social não informada' }}">{{ $part->razao_social ?: '—' }}</td>
                                 <td class="px-4 py-3 text-right text-xs">
                                     @if($pr)
                                         <span class="font-medium text-gray-900">{{ $pr['total_notas'] ?? 0 }}</span>
@@ -583,11 +826,21 @@
                     Catálogo de Produtos/Serviços
                     <span class="ml-1.5 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">{{ $totalCatalogo }}</span>
                 </h2>
-                <div class="relative">
-                    <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    <input type="text" id="busca-catalogo" placeholder="Buscar por código, descrição ou NCM..." class="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-72">
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <select class="pl-3 pr-8 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white" onchange="let u = new URL(window.location.href); u.searchParams.set('per_page_catalogo', this.value); u.searchParams.delete('catalogo_page'); window.asyncLoadEFD(u.toString(), ['catalogo-section']);">
+                            <option value="10" {{ request('per_page_catalogo', 10) == 10 ? 'selected' : '' }}>10 por pág.</option>
+                            <option value="25" {{ request('per_page_catalogo') == 25 ? 'selected' : '' }}>25 por pág.</option>
+                            <option value="50" {{ request('per_page_catalogo') == 50 ? 'selected' : '' }}>50 por pág.</option>
+                            <option value="100" {{ request('per_page_catalogo') == 100 ? 'selected' : '' }}>100 por pág.</option>
+                        </select>
+                    </div>
+                    <div class="relative">
+                        <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input type="text" id="busca-catalogo" placeholder="Buscar por código, descrição ou NCM..." class="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-72">
+                    </div>
                 </div>
             </div>
 
@@ -1392,7 +1645,27 @@ function _efdInitScrollSpy() {
         var id = link.getAttribute('href');
         if (id && id.startsWith('#')) {
             var el = document.getElementById(id.substring(1));
-            if (el) sections.push({ link: link, el: el });
+            if (el) {
+                sections.push({ link: link, el: el });
+                
+                // Impede o redirecionamento/recarga e faz scroll suave
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var headerOffset = 100; // Compensação para o header e nav sticky
+                    var elementPosition = el.getBoundingClientRect().top;
+                    var offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                    
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
+                    
+                    // Atualiza a URL sem saltar
+                    if (history.pushState) {
+                        history.pushState(null, null, id);
+                    }
+                });
+            }
         }
     });
 
@@ -1410,6 +1683,19 @@ function _efdInitScrollSpy() {
         });
         if (active) {
             active.classList.add('bg-blue-100', 'text-blue-700');
+        }
+
+        var btnTopo = document.getElementById('btn-voltar-topo');
+        var btnSticky = document.getElementById('btn-voltar-sticky');
+        if (btnTopo && btnSticky) {
+            var topoRect = btnTopo.getBoundingClientRect();
+            if (topoRect.bottom < 0) {
+                btnSticky.classList.remove('opacity-0', 'pointer-events-none', 'translate-x-4');
+                btnSticky.classList.add('opacity-100', 'translate-x-0');
+            } else {
+                btnSticky.classList.remove('opacity-100', 'translate-x-0');
+                btnSticky.classList.add('opacity-0', 'pointer-events-none', 'translate-x-4');
+            }
         }
     }
 
@@ -1442,6 +1728,46 @@ function _efdInitCatalogoSearch() {
     });
 }
 
+// ── Async Navigation ──
+window.asyncLoadEFD = function(url, sections) {
+    sections.forEach(function(id) {
+        var sec = document.getElementById(id);
+        if (sec) {
+            sec.style.opacity = '0.5';
+            sec.style.pointerEvents = 'none';
+        }
+    });
+
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' } })
+        .then(function(res) { return res.text(); })
+        .then(function(html) {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            var updatedOne = false;
+            
+            sections.forEach(function(id) {
+                var oldSec = document.getElementById(id);
+                var newSec = doc.getElementById(id);
+                if (oldSec && newSec) {
+                    oldSec.innerHTML = newSec.innerHTML;
+                    oldSec.style.opacity = '';
+                    oldSec.style.pointerEvents = '';
+                    updatedOne = true;
+                }
+            });
+            
+            if (updatedOne) {
+                if (window.initImportacao) window.initImportacao();
+                if (history.pushState) history.pushState(null, '', url);
+            } else {
+                window.location.href = url;
+            }
+        })
+        .catch(function() {
+            window.location.href = url;
+        });
+}
+
 window.initImportacao = function() {
     // Row-click navigation (SPA-aware)
     function navigateToHref(el) {
@@ -1457,6 +1783,27 @@ window.initImportacao = function() {
     document.querySelectorAll('[data-href]').forEach(function(row) {
         row.addEventListener('click', function() { navigateToHref(this); });
     });
+
+    // ── Pagination Interception ──
+    function bindAsyncPagination(sectionId, targetSections) {
+        var section = document.getElementById(sectionId);
+        if (!section || section._efdAsyncBound) return;
+        section._efdAsyncBound = true;
+        
+        section.addEventListener('click', function(e) {
+            var a = e.target.closest('a[data-link]');
+            if (a && section.contains(a) && (a.textContent.trim() === 'Anterior' || a.textContent.trim() === 'Próxima')) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.asyncLoadEFD(a.href, targetSections);
+            }
+        });
+    }
+
+    bindAsyncPagination('participantes-section', ['participantes-section', 'resumo-final-section']);
+    // Wait, '#resumo-final-section' only appears if $resumoFinal is set. That's fine, if not found, it's bypassed.
+    bindAsyncPagination('resumo-final-section', ['participantes-section', 'resumo-final-section']);
+    bindAsyncPagination('catalogo-section', ['catalogo-section']);
 
     // ── Expansão inline de notas ──────────────────────────────────────────
     var notasCache = {};
@@ -1523,9 +1870,9 @@ window.initImportacao = function() {
     _efdInitCatalogoSearch();
 
     // Client-side search filter
-    var input = document.getElementById('busca-participantes-efd');
-    if (!input) return;
-    input.addEventListener('input', function() {
+    var inputSearch = document.getElementById('busca-participantes-efd');
+    if (!inputSearch) return;
+    inputSearch.addEventListener('input', function() {
         var q = this.value.toLowerCase().trim();
         var rows  = document.querySelectorAll('#tbody-participantes-efd tr');
         var cards = document.querySelectorAll('#mobile-participantes-efd > div');
