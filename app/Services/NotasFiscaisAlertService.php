@@ -228,7 +228,7 @@ class NotasFiscaisAlertService
             ->join('efd_notas as n', 'n.id', '=', 'i.efd_nota_id')
             ->whereIn('i.efd_nota_id', $notaIdsSub)
             ->whereNotNull('i.cfop')
-            ->where('i.cfop', '!=', '')
+            ->where('i.cfop', '!=', 0)
             ->where(function ($q) {
                 $q->where(function ($qq) {
                     $qq->where('n.tipo_operacao', 'entrada')
@@ -251,7 +251,7 @@ class NotasFiscaisAlertService
             ->join('efd_notas as n', 'n.id', '=', 'i.efd_nota_id')
             ->whereIn('i.efd_nota_id', $notaIdsSub)
             ->whereNotNull('i.cfop')
-            ->where('i.cfop', '!=', '')
+            ->where('i.cfop', '!=', 0)
             ->where(function ($q) {
                 $q->where(function ($qq) {
                     $qq->where('n.tipo_operacao', 'entrada')

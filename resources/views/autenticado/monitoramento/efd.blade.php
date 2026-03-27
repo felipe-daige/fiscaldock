@@ -1152,6 +1152,7 @@
         let importacaoEmAndamento = false;
         let importandoComNotas = true;
         let importandoComCatalogo = true;
+        let tipoEfdAtual = null; // 'efd-fiscal' ou 'efd-contrib'
         let reconnectTimer = null;
         let reconnectAttempts = 0;
         let toastConcluidoMostrado = false; // evita toast duplicado quando SSE mantido aberto
@@ -1294,19 +1295,23 @@
             atualizarEtapasNotas(payload);
         }
 
+        // Blocos permitidos por tipo de EFD (mesma ordem do n8n)
+        function getBlocosPermitidos() {
+            if (tipoEfdAtual === 'efd-fiscal')  return ['participantes', 'notas_mercadorias', 'notas_transportes', 'catalogo', 'apuracao_icms'];
+            if (tipoEfdAtual === 'efd-contrib') return ['participantes', 'notas_servicos', 'notas_mercadorias', 'catalogo', 'apuracao_pis_cofins', 'retencoes_fonte'];
+            // Fallback: todos (retrocompatibilidade com importações sem tipo definido)
+            return ['participantes', 'notas_servicos', 'notas_mercadorias', 'notas_transportes', 'catalogo', 'apuracao_icms', 'retencoes_fonte', 'apuracao_pis_cofins'];
+        }
+
         function atualizarEtapasNotas(payload) {
             const card = document.getElementById('etapas-notas-card');
             if (!card) return;
 
-            card.classList.remove('hidden'); // sempre visível durante importação
+            card.classList.remove('hidden');
 
             const blocos = Object.assign({}, payload.notas_blocos || {});
 
-            // Inferência de skip: bloco posterior iniciou mas anterior não tem dados
-            if ((blocos.notas_mercadorias || blocos.notas_transportes) && !blocos.notas_servicos) blocos.notas_servicos = { status: 'skip' };
-            if (blocos.notas_transportes && !blocos.notas_mercadorias)                            blocos.notas_mercadorias = { status: 'skip' };
-
-            // Retrocompatibilidade: aceitar chaves antigas (0, 0200, A, C, D) de resumo_final existentes
+            // Retrocompatibilidade: aceitar chaves antigas (0, 0200, A, C, D)
             if (blocos['0'] && !blocos.participantes)          blocos.participantes = blocos['0'];
             if (blocos['0200'] && !blocos.catalogo)            blocos.catalogo = blocos['0200'];
             if (blocos['A'] && !blocos.notas_servicos)         blocos.notas_servicos = blocos['A'];
@@ -1314,61 +1319,33 @@
             if (blocos['D'] && !blocos.notas_transportes)      blocos.notas_transportes = blocos['D'];
 
             const isFinalConcluido = payload.status === 'concluido';
+            const permitidos = getBlocosPermitidos();
 
-            // Participantes
-            const blocoParticipantes = blocos.participantes;
-            if (blocoParticipantes) {
-                const p0Status = (blocoParticipantes.status === 'concluido' || parseInt(blocoParticipantes.progresso) === 100 || isFinalConcluido)
-                    ? 'concluido' : blocoParticipantes.status;
-                renderEtapa('participantes', p0Status, null);
-            } else {
-                const temOutroBloco = Object.keys(blocos).some(function(k) { return k !== 'participantes'; });
-                renderEtapa('participantes', temOutroBloco ? 'concluido' : 'processando', null);
-            }
-
-            // Catálogo (Produtos e Serviços): mostrar apenas se importando com catálogo ou se SSE trouxe dados
-            if (blocos.catalogo || importandoComCatalogo) {
-                document.querySelectorAll('.etapa-catalogo, .etapa-sep-catalogo').forEach(function(el) {
-                    el.classList.remove('hidden');
-                });
-                const blocoCatalogo = blocos.catalogo;
-                if (blocoCatalogo) {
-                    const s0200 = (blocoCatalogo.status !== 'skip' && (isFinalConcluido || blocoCatalogo.status === 'concluido' || parseInt(blocoCatalogo.progresso) === 100))
-                        ? 'concluido' : blocoCatalogo.status;
-                    renderEtapa('catalogo', s0200, null);
-                } else {
-                    const blocosPosteriores = blocos.notas_servicos || blocos.notas_mercadorias || blocos.notas_transportes;
-                    renderEtapa('catalogo', blocosPosteriores ? 'concluido' : 'pendente', null);
-                }
-            }
-
-            // Blocos de notas
-            const ordemNotas = ['notas_servicos', 'notas_mercadorias', 'notas_transportes'];
-            ordemNotas.forEach(function(b) {
-                if (blocos[b]) {
-                    const el = document.querySelector('.etapa-item[data-etapa="' + b + '"]');
-                    if (el) {
-                        el.classList.remove('hidden');
-                        const prevSep = el.previousElementSibling;
-                        if (prevSep && prevSep.classList.contains('etapa-sep')) prevSep.classList.remove('hidden');
+            // Atualizar apenas blocos permitidos para o tipo de EFD atual
+            permitidos.forEach(function(b) {
+                if (b === 'participantes') {
+                    // Participantes: inferir concluido se outro bloco já está ativo
+                    const bp = blocos.participantes;
+                    if (bp) {
+                        const s = (bp.status === 'concluido' || parseInt(bp.progresso) === 100 || isFinalConcluido)
+                            ? 'concluido' : bp.status;
+                        renderEtapa('participantes', s, null);
+                    } else {
+                        const temOutro = Object.keys(blocos).some(function(k) { return k !== 'participantes' && permitidos.indexOf(k) !== -1; });
+                        renderEtapa('participantes', temOutro ? 'concluido' : 'processando', null);
                     }
-                    const statusEfetivo = (blocos[b].status !== 'skip' && (isFinalConcluido || blocos[b].status === 'concluido' || parseInt(blocos[b].progresso) === 100))
-                        ? 'concluido'
-                        : blocos[b].status;
-                    renderEtapa(b, statusEfetivo, null);
+                    return;
                 }
-            });
 
-            // Blocos de apuração (novos)
-            const ordemApuracoes = ['apuracao_icms', 'retencoes_fonte', 'apuracao_pis_cofins'];
-            ordemApuracoes.forEach(function(b) {
+                // Demais blocos: atualizar status se SSE trouxe dados
                 if (blocos[b]) {
-                    const el = document.querySelector('.etapa-item[data-etapa="' + b + '"]');
-                    if (el) el.closest('.etapa-wrapper, div')?.classList?.remove('hidden');
                     const statusEfetivo = (blocos[b].status !== 'skip' && (isFinalConcluido || blocos[b].status === 'concluido' || parseInt(blocos[b].progresso) === 100))
                         ? 'concluido'
                         : blocos[b].status;
                     renderEtapa(b, statusEfetivo, null);
+                } else if (isFinalConcluido) {
+                    // Importação concluída mas bloco sem dados no SSE (chegou após o payload final)
+                    renderEtapa(b, 'concluido', null);
                 }
             });
         }
@@ -1466,6 +1443,42 @@
                 el.classList.add('hidden');
             });
             blocoAtualProgresso = null;
+        }
+
+        // Template SVG separador (reutilizado ao reordenar)
+        const sepSvgTemplate = '<svg class="etapa-sep w-3 h-3 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
+
+        // Mostra apenas os badges de etapa relevantes para o tipo de EFD selecionado,
+        // reordenando no DOM para que a sequência visual siga a ordem do n8n.
+        function mostrarEtapasPorTipoEfd(tipo) {
+            const blocosFiscal  = ['participantes', 'notas_mercadorias', 'notas_transportes', 'catalogo', 'apuracao_icms'];
+            const blocosContrib = ['participantes', 'notas_servicos', 'notas_mercadorias', 'catalogo', 'apuracao_pis_cofins', 'retencoes_fonte'];
+            const blocosAtivos = tipo === 'efd-fiscal' ? blocosFiscal : blocosContrib;
+
+            const card = document.getElementById('etapas-notas-card');
+            if (!card) return;
+
+            // Guardar todos os badge elements e limpar o card
+            const allBadges = {};
+            card.querySelectorAll('.etapa-item').forEach(function(item) {
+                allBadges[item.dataset.etapa] = item;
+                item.classList.add('hidden');
+            });
+            // Limpar card completamente (remove separadores e badges do DOM)
+            card.innerHTML = '';
+
+            // Reinserir apenas os ativos na ordem correta
+            blocosAtivos.forEach(function(b, idx) {
+                var el = allBadges[b];
+                if (!el) return;
+                if (idx > 0) {
+                    card.insertAdjacentHTML('beforeend', sepSvgTemplate);
+                }
+                card.appendChild(el);
+                el.classList.remove('hidden');
+            });
+
+            card.classList.remove('hidden');
         }
 
         // Elementos da seção de resultados
@@ -2311,12 +2324,10 @@
                     formData.append('tipo_efd', tipoEfd === 'efd-fiscal' ? 'EFD ICMS/IPI' : 'EFD PIS/COFINS');
                     formData.append('tab_id', tabId);
 
-                    // Extração completa sempre — mostrar etapa catálogo
+                    // Extração completa sempre
                     importandoComNotas = true;
                     importandoComCatalogo = true;
-                    document.querySelectorAll('.etapa-0200, .etapa-sep-0200').forEach(function(el) {
-                        el.classList.remove('hidden');
-                    });
+                    tipoEfdAtual = tipoEfd;
 
                     const response = await fetch('/app/importacao/efd/importar-txt', {
                         method: 'POST',
@@ -2348,6 +2359,8 @@
 
                     // Mostrar UI de progresso
                     resetarProgresso();
+                    // Mostrar badges filtrados por tipo EFD (DEPOIS do reset que oculta tudo)
+                    mostrarEtapasPorTipoEfd(tipoEfdAtual);
                     mostrarProgresso();
                     iniciarTimer();
 

@@ -319,13 +319,21 @@ class DataReceiverController extends Controller
             })->afterResponse();
         }
 
-        // Atualiza cache principal (lido pelo SSE) com o progresso atual
+        // Atualiza cache principal (lido pelo SSE) com o progresso atual.
+        // Não rebaixar status de 'concluido' para 'processando' — blocos extras
+        // (catálogo, apuração) podem chegar após o payload final do n8n.
+        $existingStatus = $existing['status'] ?? null;
+        $incomingStatus = $data['status'];
+        $statusFinal = ($existingStatus === 'concluido' && $incomingStatus === 'processando')
+            ? 'concluido'
+            : $incomingStatus;
+
         $cachePayload = array_merge($existing, [
             'user_id'    => $data['user_id'],
             'tab_id'     => $data['tab_id'],
-            'status'     => $data['status'],
-            'progresso'  => $data['progresso'],
-            'mensagem'   => $data['mensagem'] ?? null,
+            'status'     => $statusFinal,
+            'progresso'  => $existingStatus === 'concluido' ? ($existing['progresso'] ?? 100) : $data['progresso'],
+            'mensagem'   => $existingStatus === 'concluido' ? ($existing['mensagem'] ?? $data['mensagem']) : ($data['mensagem'] ?? null),
             'bloco'      => $data['bloco'] ?? null,
             'updated_at' => now()->toIso8601String(),
         ]);
@@ -456,7 +464,50 @@ class DataReceiverController extends Controller
 
         // Propagar resumo_final e notas_blocos ao cache
         if (!empty($validated['resumo_final'])) {
-            $cacheData['resumo_final'] = $validated['resumo_final'];
+            $resumoFinal = $validated['resumo_final'];
+            
+            // Enriquecer resumo_final com apurações do DB para os Resumos Inteligentes
+            $importacaoId = $validated['importacao_id'] ?? ($existing['importacao_id'] ?? null);
+            if ($importacaoId) {
+                // Buscamos a importacao e as obrigações que foram extraídas na fase anterior do workflow
+                $importacao = \App\Models\EfdImportacao::with(['apuracaoIcms', 'apuracaoContribuicao', 'retencoesFonte'])
+                    ->find($importacaoId);
+                    
+                if ($importacao) {
+                    if (!isset($resumoFinal['blocos'])) {
+                        $resumoFinal['blocos'] = [];
+                    }
+                    
+                    if ($importacao->apuracaoIcms) {
+                        $resumoFinal['blocos']['apuracao_icms'] = [
+                            'total_notas' => 1,
+                            'valor_total' => $importacao->apuracaoIcms->icms_a_recolher + ($importacao->apuracaoIcms->tem_st ? $importacao->apuracaoIcms->st_icms_recolher : 0),
+                            'label_count' => 'apuração',
+                        ];
+                    }
+                    if ($importacao->apuracaoContribuicao) {
+                        $resumoFinal['blocos']['apuracao_pis_cofins'] = [
+                            'total_notas' => 1,
+                            'valor_total' => $importacao->apuracaoContribuicao->pis_total_recolher + $importacao->apuracaoContribuicao->cofins_total_recolher,
+                            'label_count' => 'apuração',
+                        ];
+                    }
+                    if ($importacao->retencoesFonte && $importacao->retencoesFonte->isNotEmpty()) {
+                        $totalRet = $importacao->retencoesFonte->count();
+                        $valorRet = $importacao->retencoesFonte->sum('valor_pis') + $importacao->retencoesFonte->sum('valor_cofins');
+                        $resumoFinal['blocos']['retencoes_fonte'] = [
+                            'total_notas' => $totalRet,
+                            'valor_total' => $valorRet,
+                            'label_count' => $totalRet > 1 ? 'retenções' : 'retenção',
+                        ];
+                    }
+                    
+                    // Atualiza o registro no BD caso ele não propague de outra forma
+                    $importacao->update(['resumo_final' => $resumoFinal]);
+                }
+            }
+            
+            $cacheData['resumo_final'] = $resumoFinal;
         }
         if (!empty($validated['notas_blocos'])) {
             $cacheData['notas_blocos'] = $validated['notas_blocos'];

@@ -69,17 +69,23 @@ class XmlImportacaoController extends Controller
             ->with('cliente')
             ->firstOrFail();
 
+        // Pagination limits
+        $allowedPerPages = [10, 25, 50, 100];
+        $perPageParticipantes = in_array((int) $request->input('per_page_participantes'), $allowedPerPages) ? (int) $request->input('per_page_participantes') : 10;
+
         // Dual-path: participante_ids (n8n v2) ou importacao_xml_id (legado)
         if (!empty($importacao->participante_ids)) {
             $participantes = Participante::whereIn('id', $importacao->participante_ids)
                 ->where('user_id', $userId)
                 ->orderBy('razao_social')
-                ->get();
+                ->paginate($perPageParticipantes, ['*'], 'page')
+                ->withQueryString();
         } else {
             $participantes = Participante::where('importacao_xml_id', $id)
                 ->where('user_id', $userId)
                 ->orderBy('razao_social')
-                ->get();
+                ->paginate($perPageParticipantes, ['*'], 'page')
+                ->withQueryString();
         }
 
         $data = compact('importacao', 'participantes');

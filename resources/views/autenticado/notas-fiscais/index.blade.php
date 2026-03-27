@@ -36,7 +36,6 @@
         @php
             $ops = $kpis['operacoes'];
             $trib = $kpis['tributos'];
-            $topCfops = $kpis['top_cfops'];
         @endphp
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-3 sm:mb-4">
             {{-- Entradas --}}
@@ -143,65 +142,6 @@
                 </div>
             </div>
 
-        </div>
-
-        {{-- Top CFOPs — Card especial full-width --}}
-        <div class="bg-white rounded-lg border border-gray-200 mb-6 sm:mb-10 dash-animate" style="animation-delay: 0.55s">
-            <div class="px-4 sm:px-5 py-3 sm:py-4 border-b border-gray-100">
-                <h2 class="text-sm font-semibold text-gray-900">Top CFOPs</h2>
-            </div>
-            <div class="p-4 sm:p-5">
-                @if(count($topCfops) > 0)
-                @php $maxQtd = max(array_column($topCfops, 'quantidade')); @endphp
-                <div class="space-y-3 sm:space-y-2">
-                    @foreach($topCfops as $i => $cfop)
-                    @php
-                        $isEntrada = $cfop['tipo'] === 'entrada';
-                        $badgeClass = $isEntrada ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600';
-                        $barColor = $isEntrada ? 'bg-green-500' : 'bg-red-400';
-                        $badgeLabel = $isEntrada ? 'E' : 'S';
-                        $barWidth = $maxQtd > 0 ? round(($cfop['quantidade'] / $maxQtd) * 100) : 0;
-                    @endphp
-                    {{-- Desktop --}}
-                    <div class="hidden sm:flex items-center gap-3 py-1.5">
-                        <span class="text-xs font-bold text-gray-400 w-6 shrink-0">#{{ $i + 1 }}</span>
-                        <span class="font-mono text-sm font-semibold text-gray-800 w-12 shrink-0">{{ $cfop['cfop'] }}</span>
-                        <span class="inline-flex items-center justify-center w-5 h-5 rounded text-xs font-bold {{ $badgeClass }} shrink-0">{{ $badgeLabel }}</span>
-                        <span class="text-sm text-gray-600 truncate flex-1 min-w-0">{{ $cfop['descricao'] }}</span>
-                        <div class="w-32 lg:w-48 shrink-0">
-                            <div class="bg-gray-100 rounded-full h-2">
-                                <div class="{{ $barColor }} rounded-full h-2" style="width: {{ $barWidth }}%"></div>
-                            </div>
-                        </div>
-                        <span class="text-sm font-semibold text-gray-800 w-14 text-right shrink-0 whitespace-nowrap">{{ number_format($cfop['quantidade'], 0, ',', '.') }}</span>
-                        <span class="text-xs text-gray-400 w-12 text-right shrink-0 whitespace-nowrap">({{ $cfop['percentual'] }}%)</span>
-                        <span class="text-sm font-semibold text-gray-700 w-36 text-right shrink-0 whitespace-nowrap">R$ {{ number_format($cfop['valor_total'], 2, ',', '.') }}</span>
-                    </div>
-                    {{-- Mobile --}}
-                    <div class="sm:hidden">
-                        <div class="flex items-center gap-2 mb-1.5">
-                            <span class="text-xs font-bold text-gray-400">#{{ $i + 1 }}</span>
-                            <span class="font-mono text-sm font-semibold text-gray-800">{{ $cfop['cfop'] }}</span>
-                            <span class="inline-flex items-center justify-center w-5 h-5 rounded text-xs font-bold {{ $badgeClass }}">{{ $badgeLabel }}</span>
-                            <span class="text-xs text-gray-600 truncate flex-1 min-w-0">{{ $cfop['descricao'] }}</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="flex-1">
-                                <div class="bg-gray-100 rounded-full h-1.5">
-                                    <div class="{{ $barColor }} rounded-full h-1.5" style="width: {{ $barWidth }}%"></div>
-                                </div>
-                            </div>
-                            <span class="text-xs font-semibold text-gray-800 shrink-0 whitespace-nowrap">{{ number_format($cfop['quantidade'], 0, ',', '.') }}</span>
-                            <span class="text-xs text-gray-400 shrink-0 whitespace-nowrap">({{ $cfop['percentual'] }}%)</span>
-                            <span class="text-xs font-semibold text-gray-700 shrink-0 whitespace-nowrap">R$ {{ number_format($cfop['valor_total'], 2, ',', '.') }}</span>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-                @else
-                <p class="text-sm text-gray-400 text-center py-4">Nenhum CFOP encontrado</p>
-                @endif
-            </div>
         </div>
 
         {{-- Filtros --}}

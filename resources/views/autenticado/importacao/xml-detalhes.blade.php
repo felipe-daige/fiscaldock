@@ -187,26 +187,36 @@
             <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-4 flex-wrap">
                 <h2 class="text-base font-semibold text-gray-900">
                     Participantes
-                    @if($participantes->count() > 0)
-                        <span class="ml-1.5 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">{{ $participantes->count() }}</span>
+                    @if($participantes->total() > 0)
+                        <span class="ml-1.5 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">{{ $participantes->total() }}</span>
                     @endif
                 </h2>
-                @if($participantes->count() > 0)
-                <div class="relative">
-                    <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    <input
-                        type="text"
-                        id="busca-participantes-xml"
-                        placeholder="Buscar participante..."
-                        class="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
-                    >
+                @if($participantes->total() > 0)
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <select class="pl-3 pr-8 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white" onchange="let u = new URL(window.location.href); u.searchParams.set('per_page_participantes', this.value); u.searchParams.delete('page'); const a = document.createElement('a'); a.href = u.toString(); a.setAttribute('data-link', ''); document.body.appendChild(a); a.click(); a.remove();">
+                            <option value="10" {{ request('per_page_participantes', 10) == 10 ? 'selected' : '' }}>10 por pág.</option>
+                            <option value="25" {{ request('per_page_participantes') == 25 ? 'selected' : '' }}>25 por pág.</option>
+                            <option value="50" {{ request('per_page_participantes') == 50 ? 'selected' : '' }}>50 por pág.</option>
+                            <option value="100" {{ request('per_page_participantes') == 100 ? 'selected' : '' }}>100 por pág.</option>
+                        </select>
+                    </div>
+                    <div class="relative">
+                        <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input
+                            type="text"
+                            id="busca-participantes-xml"
+                            placeholder="Buscar participante..."
+                            class="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
+                        >
+                    </div>
                 </div>
                 @endif
             </div>
 
-            @if($participantes->count() > 0)
+            @if($participantes->total() > 0)
             {{-- Desktop: Table --}}
             <div class="hidden md:block overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200" id="tabela-participantes-xml">
@@ -225,15 +235,15 @@
                         <tr
                             class="hover:bg-gray-50 cursor-pointer transition-colors"
                             data-href="/app/participante/{{ $part->id }}"
-                            data-razao="{{ strtolower($part->razao_social ?? '') }}"
-                            data-doc="{{ $part->cnpj ?? $part->cpf ?? '' }}"
+                            data-razao="{{ strtolower($part->razao_social ?: '') }}"
+                            data-doc="{{ $part->cnpj_formatado ?: $part->cpf ?: '' }}"
                         >
-                            <td class="px-6 py-4 text-sm font-mono text-gray-900 whitespace-nowrap">{{ $part->cnpj ?? $part->cpf ?? '—' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-900 max-w-[280px] truncate">{{ $part->razao_social ?? '—' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->uf ?? '—' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->situacao_cadastral ?? '—' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->crt ?? '—' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->tipo ?? '—' }}</td>
+                            <td class="px-6 py-4 text-sm font-mono text-gray-900 whitespace-nowrap">{{ $part->cnpj_formatado ?: $part->cpf ?: '—' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900 max-w-[280px] truncate" title="{{ $part->razao_social ?: 'Razão social não informada' }}">{{ $part->razao_social ?: '—' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->uf ?: '—' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->situacao_cadastral ?: '—' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->crt ?: '—' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->tipo_pessoa ?: ($part->cnpj && strlen(preg_replace('/[^0-9]/', '', $part->cnpj)) === 11 ? 'PF' : 'PJ') }}</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -246,11 +256,11 @@
                 <div
                     class="px-4 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
                     data-href="/app/participante/{{ $part->id }}"
-                    data-razao="{{ strtolower($part->razao_social ?? '') }}"
-                    data-doc="{{ $part->cnpj ?? $part->cpf ?? '' }}"
+                    data-razao="{{ strtolower($part->razao_social ?: '') }}"
+                    data-doc="{{ $part->cnpj_formatado ?: $part->cpf ?: '' }}"
                 >
-                    <p class="text-sm font-medium text-gray-900">{{ $part->razao_social ?? '—' }}</p>
-                    <p class="text-xs font-mono text-gray-500 mt-0.5">{{ $part->cnpj ?? $part->cpf ?? '—' }}</p>
+                    <p class="text-sm font-medium text-gray-900">{{ $part->razao_social ?: '—' }}</p>
+                    <p class="text-xs font-mono text-gray-500 mt-0.5">{{ $part->cnpj_formatado ?: $part->cpf ?: '—' }}</p>
                     <div class="flex items-center gap-3 mt-1 text-xs text-gray-400">
                         @if($part->uf) <span>{{ $part->uf }}</span> @endif
                         @if($part->situacao_cadastral) <span>&middot;</span><span>{{ $part->situacao_cadastral }}</span> @endif
@@ -258,6 +268,30 @@
                 </div>
                 @endforeach
             </div>
+
+            {{-- Paginação --}}
+            @if($participantes->hasPages())
+            <div class="px-6 py-4 flex items-center justify-between gap-4 text-sm border-t border-gray-100">
+                <span class="text-gray-500 text-xs">
+                    Mostrando {{ $participantes->firstItem() }}–{{ $participantes->lastItem() }} de {{ $participantes->total() }} participantes
+                </span>
+                <div class="flex items-center gap-1">
+                    @if($participantes->onFirstPage())
+                        <span class="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-300 text-xs cursor-not-allowed">Anterior</span>
+                    @else
+                        <a href="{{ $participantes->previousPageUrl() }}" data-link class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50 transition">Anterior</a>
+                    @endif
+
+                    <span class="px-3 py-1.5 text-xs text-gray-500">{{ $participantes->currentPage() }} / {{ $participantes->lastPage() }}</span>
+
+                    @if($participantes->hasMorePages())
+                        <a href="{{ $participantes->nextPageUrl() }}" data-link class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50 transition">Próxima</a>
+                    @else
+                        <span class="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-300 text-xs cursor-not-allowed">Próxima</span>
+                    @endif
+                </div>
+            </div>
+            @endif
 
             {{-- Zero-state de busca --}}
             <div id="zero-state-busca-xml" class="hidden px-6 py-12 text-center">

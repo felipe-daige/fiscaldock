@@ -149,4 +149,13 @@ class EfdApuracaoContribuicao extends Model
     {
         return $query->where('cliente_id', $clienteId);
     }
+
+    public function scopePeriodo($query, $dataInicio, $dataFim)
+    {
+        $importacaoIds = EfdNota::whereBetween('data_emissao', [$dataInicio, $dataFim])
+            ->distinct()
+            ->pluck('importacao_id');
+
+        return $query->whereIn('importacao_id', $importacaoIds);
+    }
 }
