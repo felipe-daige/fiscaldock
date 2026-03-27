@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\Alerta;
 use App\Models\Cliente;
 use App\Models\ConsultaLote;
 use App\Models\CreditTransaction;
@@ -459,6 +460,34 @@ class DashboardController extends Controller
             'resultado' => $resultado,
             'resumo' => $resumo,
         ]);
+    }
+
+    public function alertaDetalhes(Request $request, int $id)
+    {
+        if (! Auth::check()) {
+            if ($this->isAjaxRequest($request)) {
+                return response()->json(['success' => false, 'redirect' => '/login']);
+            }
+            return redirect('/login');
+        }
+
+        $userId = Auth::id();
+        
+        $alerta = Alerta::where('id', $id)
+            ->where('user_id', $userId)
+            ->with(['cliente', 'participante'])
+            ->firstOrFail();
+
+        $data = ['alerta' => $alerta];
+        $viewName = self::AUTH_VIEW_PREFIX . 'alertas.show';
+
+        if ($this->isAjaxRequest($request)) {
+            return view($viewName, $data);
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, array_merge([
+            'initialView' => $viewName,
+        ], $data));
     }
 
     // ==================== USUÁRIO ====================

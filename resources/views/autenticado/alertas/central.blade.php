@@ -896,10 +896,10 @@
     function renderActionButtons(alerta) {
         var html = '';
         if (alerta.status !== 'resolvido') {
-            html += '<button class="alerta-action-btn inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100 transition-colors" data-alerta-id="' + alerta.id + '" data-action="resolvido" title="Marcar como resolvido">';
-            html += '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
-            html += '<span class="hidden sm:inline">Resolver</span>';
-            html += '</button>';
+            html += '<a href="/app/alertas/' + alerta.id + '" data-link class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors" title="Ver detalhes e resolver">';
+            html += '<span class="hidden sm:inline">Saiba Mais</span>';
+            html += '<svg class="w-3.5 h-3.5 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
+            html += '</a>';
         }
         if (alerta.status !== 'ignorado') {
             html += '<button class="alerta-action-btn inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" data-alerta-id="' + alerta.id + '" data-action="ignorado" title="Ignorar alerta">';

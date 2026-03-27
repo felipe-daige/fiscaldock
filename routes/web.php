@@ -7,6 +7,7 @@ use App\Http\Controllers\Dashboard\ClienteController;
 use App\Http\Controllers\Dashboard\ConsultaController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\DashboardNotasFiscaisController;
+use App\Http\Controllers\Dashboard\ResumoFiscalController;
 use App\Http\Controllers\Dashboard\MinhaEmpresaController;
 use App\Http\Controllers\Dashboard\EfdImportacaoController;
 use App\Http\Controllers\Dashboard\MonitoramentoController;
@@ -51,6 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/app/alertas/evolucao', [DashboardController::class, 'alertasEvolucao'])->name('app.alertas.evolucao');
     Route::post('/app/alertas/{id}/status', [DashboardController::class, 'alertasMarcarStatus'])->name('app.alertas.status');
     Route::post('/app/alertas/recalcular', [DashboardController::class, 'alertasRecalcular'])->name('app.alertas.recalcular');
+    Route::get('/app/alertas/{id}', [DashboardController::class, 'alertaDetalhes'])->name('app.alertas.show');
 
     // Usuário (Placeholder)
     Route::get('/app/configuracoes', [DashboardController::class, 'configuracoes'])->name('app.configuracoes');
@@ -164,6 +166,15 @@ Route::middleware('auth')->group(function () {
     Route::get('app/notas-fiscais/dashboard/tributario', [DashboardNotasFiscaisController::class, 'tributario'])->name('app.notas-fiscais.dashboard.tributario');
     Route::get('app/notas-fiscais/dashboard/alertas', [DashboardNotasFiscaisController::class, 'alertas'])->name('app.notas-fiscais.dashboard.alertas');
     Route::get('app/notas-fiscais/dashboard/compliance', [DashboardNotasFiscaisController::class, 'compliance'])->name('app.notas-fiscais.dashboard.compliance');
+
+    // Painel Fiscal por Competência
+    Route::get('app/resumo-fiscal', [ResumoFiscalController::class, 'index'])->name('app.resumo-fiscal');
+    Route::get('app/resumo-fiscal/resumo-executivo', [ResumoFiscalController::class, 'resumoExecutivo'])->name('app.resumo-fiscal.resumo-executivo');
+    Route::get('app/resumo-fiscal/apuracao-icms', [ResumoFiscalController::class, 'apuracaoIcms'])->name('app.resumo-fiscal.apuracao-icms');
+    Route::get('app/resumo-fiscal/apuracao-pis-cofins', [ResumoFiscalController::class, 'apuracaoPisCofins'])->name('app.resumo-fiscal.apuracao-pis-cofins');
+    Route::get('app/resumo-fiscal/retencoes', [ResumoFiscalController::class, 'retencoesFonte'])->name('app.resumo-fiscal.retencoes');
+    Route::get('app/resumo-fiscal/cruzamentos', [ResumoFiscalController::class, 'cruzamentos'])->name('app.resumo-fiscal.cruzamentos');
+    Route::get('app/resumo-fiscal/alertas', [ResumoFiscalController::class, 'alertasFiscais'])->name('app.resumo-fiscal.alertas');
 
     // BI Fiscal
     Route::get('app/bi/dashboard', [BiController::class, 'index'])->name('app.bi.index');
