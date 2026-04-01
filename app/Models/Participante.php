@@ -20,7 +20,7 @@ class Participante extends Model
         'cliente_id',
         'importacao_efd_id',
         'importacao_xml_id',
-        'cnpj',
+        'documento',
         'tipo_documento',
         'razao_social',
         'nome_fantasia',
@@ -173,7 +173,7 @@ class Participante extends Model
 
         $userCnpj = auth()->user()?->cnpj;
         if ($userCnpj) {
-            $query->where('cnpj', '!=', $userCnpj);
+            $query->where('documento', '!=', $userCnpj);
         }
 
         return $query;
@@ -189,7 +189,7 @@ class Participante extends Model
      */
     public function getCnpjFormatadoAttribute(): string
     {
-        $doc = preg_replace('/[^0-9]/', '', $this->cnpj);
+        $doc = preg_replace('/[^0-9]/', '', $this->documento);
         if (strlen($doc) === 14) {
             return preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $doc);
         }
@@ -197,7 +197,7 @@ class Participante extends Model
             return preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $doc);
         }
 
-        return $this->cnpj;
+        return $this->documento;
     }
 
     /**

@@ -225,8 +225,8 @@
             renderCharts(tabName, data);
             hideEmptyState(tabName);
         } catch (error) {
-            console.error('Erro:', error);
-            showEmptyState();
+            console.error('Erro ao carregar tab ' + tabName + ':', error);
+            showTabError(tabName);
         }
     }
 
@@ -836,15 +836,30 @@
         if (tbody) {
             const notas = data.ultimas_notas || [];
             if (notas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="px-3 py-4 text-center text-gray-400">Nenhuma nota</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="px-3 py-4 text-center text-gray-400">Nenhuma nota</td></tr>';
             } else {
                 tbody.innerHTML = notas.map(n => {
                     const corTipo = n.tipo_nota === 'E' ? 'text-green-700 bg-green-50' : 'text-red-700 bg-red-50';
+                    const numSerie = (n.numero || '—') + (n.serie ? ' / ' + n.serie : '');
+                    const sefazUrl = n.chave_acesso
+                        ? `https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=completa&tipoConteudo=XbSeqxE8pl8=&nfe=${n.chave_acesso}`
+                        : null;
+                    const acaoBtn = sefazUrl
+                        ? `<a href="${sefazUrl}" target="_blank" rel="noopener noreferrer"
+                              class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+                              title="Consultar NF-e na SEFAZ">
+                              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                              SEFAZ
+                           </a>`
+                        : '<span class="text-gray-300">—</span>';
                     return `<tr class="hover:bg-gray-50">
-                        <td class="px-3 py-2 text-gray-600">${n.data_emissao}</td>
+                        <td class="px-3 py-2 text-gray-900 font-medium whitespace-nowrap">${numSerie}</td>
+                        <td class="px-3 py-2 text-gray-600 whitespace-nowrap">${n.data_emissao}</td>
                         <td class="px-3 py-2"><span class="px-1.5 py-0.5 rounded text-xs font-medium ${corTipo}">${n.tipo_nota}</span></td>
-                        <td class="px-3 py-2 text-gray-500">${{notas_servicos:'Serviços',notas_mercadorias:'Mercadorias',notas_transportes:'Transportes'}[n.bloco] || n.bloco}</td>
-                        <td class="px-3 py-2 text-right font-medium text-gray-800">${formatCurrency(n.vl_doc)}</td>
+                        <td class="px-3 py-2 text-gray-500 whitespace-nowrap">${n.modelo || '—'}</td>
+                        <td class="px-3 py-2 text-gray-500">${n.cfop || '—'}</td>
+                        <td class="px-3 py-2 text-right font-medium text-gray-800 whitespace-nowrap">${formatCurrency(n.vl_doc)}</td>
+                        <td class="px-3 py-2 text-center">${acaoBtn}</td>
                     </tr>`;
                 }).join('');
             }
@@ -1236,6 +1251,19 @@
         const el = document.getElementById(elementId);
         if (el) {
             el.innerHTML = '<div class="flex items-center justify-center h-full text-gray-400 text-sm">' + message + '</div>';
+        }
+    }
+
+    function showTabError(tabName) {
+        const tabEl = document.getElementById('tab-' + tabName);
+        if (tabEl) {
+            tabEl.innerHTML = `<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 sm:p-12 text-center">
+                <svg class="mx-auto h-10 w-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+                <p class="mt-3 text-sm text-gray-500">Erro ao carregar dados desta seção.</p>
+                <button onclick="document.querySelector('[data-tab=&quot;${tabName}&quot;]')?.click()" class="mt-3 px-4 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-xs font-medium hover:bg-gray-200 transition">Tentar novamente</button>
+            </div>`;
         }
     }
 

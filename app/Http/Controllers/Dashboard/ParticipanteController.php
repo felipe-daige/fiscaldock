@@ -120,7 +120,7 @@ class ParticipanteController extends Controller
 
         // Verificar unicidade (user_id, cnpj)
         $existente = Participante::where('user_id', $user->id)
-            ->where('cnpj', $doc)
+            ->where('documento', $doc)
             ->first();
 
         if ($existente) {

@@ -404,7 +404,63 @@
         if (data.tem_difal && data.difal_fcp) {
             html += '<div class="bg-white rounded-xl border border-gray-200 overflow-hidden mb-4">';
             html += '<div class="px-4 py-3 bg-teal-50 border-b border-teal-200"><h3 class="font-semibold text-teal-800 text-sm">DIFAL/FCP (E310)</h3></div>';
-            html += '<div class="p-4 text-sm text-gray-600"><pre class="whitespace-pre-wrap text-xs bg-gray-50 rounded p-3">' + JSON.stringify(data.difal_fcp, null, 2) + '</pre></div>';
+            html += '<div class="p-4">';
+            var df = data.difal_fcp;
+            var dfItems = Array.isArray(df) ? df : (df.items && Array.isArray(df.items) ? df.items : null);
+            if (dfItems && dfItems.length > 0) {
+                // Múltiplos registros por UF
+                html += '<div class="overflow-x-auto"><table class="w-full text-sm">';
+                html += '<thead><tr class="bg-gray-50 text-xs text-gray-500 uppercase">';
+                html += '<th class="px-4 py-2 text-left">UF</th>';
+                html += '<th class="px-4 py-2 text-right">DIFAL Origem</th>';
+                html += '<th class="px-4 py-2 text-right">DIFAL Destino</th>';
+                html += '<th class="px-4 py-2 text-right">FCP a Recolher</th>';
+                html += '</tr></thead><tbody>';
+                var totDifalOri = 0, totDifalDst = 0, totFcp = 0;
+                dfItems.forEach(function(d) {
+                    var vlOri = parseFloat(d.VL_SLD_DEV_ANT_DIFAL ?? d.difal_origem ?? 0);
+                    var vlDst = parseFloat(d.VL_ICMS_RECOLHER_DIFAL ?? d.difal_destino ?? d.icms_recolher ?? 0);
+                    var vlFcp = parseFloat(d.VL_FCP_RECOLHER ?? d.fcp ?? 0);
+                    totDifalOri += vlOri; totDifalDst += vlDst; totFcp += vlFcp;
+                    html += '<tr class="border-t hover:bg-gray-50">';
+                    html += '<td class="px-4 py-2 font-medium text-xs">' + (d.UF ?? d.uf ?? '—') + '</td>';
+                    html += '<td class="px-4 py-2 text-right font-mono text-xs">' + fBrl(vlOri) + '</td>';
+                    html += '<td class="px-4 py-2 text-right font-mono text-xs">' + fBrl(vlDst) + '</td>';
+                    html += '<td class="px-4 py-2 text-right font-mono text-xs">' + fBrl(vlFcp) + '</td>';
+                    html += '</tr>';
+                });
+                if (dfItems.length > 1) {
+                    html += '<tr class="border-t-2 border-gray-300 bg-gray-50 font-bold text-sm">';
+                    html += '<td class="px-4 py-2">Total</td>';
+                    html += '<td class="px-4 py-2 text-right font-mono">' + fBrl(totDifalOri) + '</td>';
+                    html += '<td class="px-4 py-2 text-right font-mono">' + fBrl(totDifalDst) + '</td>';
+                    html += '<td class="px-4 py-2 text-right font-mono">' + fBrl(totFcp) + '</td>';
+                    html += '</tr>';
+                }
+                html += '</tbody></table></div>';
+                html += '<div class="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center">';
+                html += '<span class="text-sm font-semibold text-teal-800">DIFAL + FCP a Recolher</span>';
+                html += '<span class="text-base font-bold text-red-700 font-mono">' + fBrl(totDifalDst + totFcp) + '</span>';
+                html += '</div>';
+            } else {
+                // Objeto único
+                var vlDifalOri = parseFloat(df.VL_SLD_DEV_ANT_DIFAL ?? df.difal_origem ?? 0);
+                var vlDifalDst = parseFloat(df.VL_ICMS_RECOLHER_DIFAL ?? df.difal_destino ?? df.icms_recolher ?? 0);
+                var vlFcp2     = parseFloat(df.VL_FCP_RECOLHER ?? df.fcp ?? 0);
+                html += '<div class="space-y-2">';
+                if (df.UF || df.uf) {
+                    html += '<div class="flex justify-between items-center py-1 text-sm"><span class="text-gray-600">UF Destino</span><span class="text-gray-700 font-medium">' + (df.UF ?? df.uf) + '</span></div>';
+                }
+                html += fluxoRow('DIFAL Origem (Saldo Dev. Ant.)', vlDifalOri);
+                html += fluxoRow('DIFAL Destino (ICMS a Recolher)', vlDifalDst, 'red', true);
+                html += fluxoRow('FCP a Recolher', vlFcp2, 'red');
+                html += '</div>';
+                html += '<div class="mt-3 pt-3 border-t border-teal-200 flex justify-between items-center">';
+                html += '<span class="text-sm font-semibold text-teal-800">DIFAL + FCP a Recolher</span>';
+                html += '<span class="text-base font-bold text-red-700 font-mono">' + fBrl(vlDifalDst + vlFcp2) + '</span>';
+                html += '</div>';
+            }
+            html += '</div>';
             html += '</div>';
         }
 

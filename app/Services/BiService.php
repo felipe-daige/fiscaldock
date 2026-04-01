@@ -111,12 +111,12 @@ class BiService
             ->when($dataInicio, fn ($q) => $q->where('n.data_emissao', '>=', $dataInicio))
             ->when($dataFim, fn ($q) => $q->where('n.data_emissao', '<=', $dataFim))
             ->select([
-                'p.cnpj as dest_cnpj',
+                'p.documento as dest_cnpj',
                 'p.razao_social as dest_razao_social',
                 DB::raw('SUM(n.valor_total) as total'),
                 DB::raw('COUNT(n.id) as qtd_notas'),
             ])
-            ->groupBy('p.cnpj', 'p.razao_social')
+            ->groupBy('p.documento', 'p.razao_social')
             ->get()
             ->keyBy('dest_cnpj');
 
@@ -179,12 +179,12 @@ class BiService
             ->when($dataInicio, fn ($q) => $q->where('n.data_emissao', '>=', $dataInicio))
             ->when($dataFim, fn ($q) => $q->where('n.data_emissao', '<=', $dataFim))
             ->select([
-                'p.cnpj as emit_cnpj',
+                'p.documento as emit_cnpj',
                 'p.razao_social as emit_razao_social',
                 DB::raw('SUM(n.valor_total) as total'),
                 DB::raw('COUNT(n.id) as qtd_notas'),
             ])
-            ->groupBy('p.cnpj', 'p.razao_social')
+            ->groupBy('p.documento', 'p.razao_social')
             ->get()
             ->keyBy('emit_cnpj');
 
@@ -677,14 +677,14 @@ class BiService
             ->when($dataFim, fn ($q) => $q->where('n.data_emissao', '<=', $dataFim))
             ->select([
                 'n.participante_id',
-                'p.cnpj as cnpj_cpf',
+                'p.documento as cnpj_cpf',
                 'p.razao_social',
                 'p.regime_tributario as regime',
                 'p.situacao_cadastral as situacao',
                 DB::raw('SUM(n.valor_total) as total_valor'),
                 DB::raw('COUNT(n.id) as total_notas'),
             ])
-            ->groupBy('n.participante_id', 'p.cnpj', 'p.razao_social', 'p.regime_tributario', 'p.situacao_cadastral')
+            ->groupBy('n.participante_id', 'p.documento', 'p.razao_social', 'p.regime_tributario', 'p.situacao_cadastral')
             ->orderByDesc('total_valor')
             ->limit($limit)
             ->get()
@@ -750,7 +750,7 @@ class BiService
             ->when($dataFim, fn ($q) => $q->where('n.data_emissao', '<=', $dataFim))
             ->select([
                 'n.participante_id',
-                'p.cnpj as cnpj_cpf',
+                'p.documento as cnpj_cpf',
                 'p.razao_social',
                 'p.regime_tributario as regime',
                 'p.situacao_cadastral as situacao',
@@ -759,7 +759,7 @@ class BiService
                 DB::raw("SUM(CASE WHEN n.tipo_operacao = 'entrada' THEN n.valor_total ELSE 0 END) as total_entradas"),
                 DB::raw("SUM(CASE WHEN n.tipo_operacao = 'saida' THEN n.valor_total ELSE 0 END) as total_saidas"),
             ])
-            ->groupBy('n.participante_id', 'p.cnpj', 'p.razao_social', 'p.regime_tributario', 'p.situacao_cadastral')
+            ->groupBy('n.participante_id', 'p.documento', 'p.razao_social', 'p.regime_tributario', 'p.situacao_cadastral')
             ->orderByDesc('total_valor')
             ->limit($limit)
             ->get();
@@ -802,7 +802,7 @@ class BiService
             ->select([
                 'n.id as nota_id',
                 'n.participante_id',
-                'p.cnpj as cnpj_cpf',
+                'p.documento as cnpj_cpf',
                 'p.razao_social',
                 'p.situacao_cadastral as situacao',
                 'p.regime_tributario as regime',
@@ -841,7 +841,7 @@ class BiService
             ->when($dataFim, fn ($q) => $q->where('n.data_emissao', '<=', $dataFim))
             ->select([
                 'n.participante_id',
-                'p.cnpj as cnpj_cpf',
+                'p.documento as cnpj_cpf',
                 'p.razao_social',
                 'p.situacao_cadastral as situacao',
                 'p.regime_tributario as regime',
@@ -849,7 +849,7 @@ class BiService
                 DB::raw('SUM(n.valor_total) as valor_em_risco'),
                 DB::raw('MAX(n.data_emissao) as ultima_nota_raw'),
             ])
-            ->groupBy('n.participante_id', 'p.cnpj', 'p.razao_social', 'p.situacao_cadastral', 'p.regime_tributario')
+            ->groupBy('n.participante_id', 'p.documento', 'p.razao_social', 'p.situacao_cadastral', 'p.regime_tributario')
             ->orderByDesc('valor_em_risco')
             ->get()
             ->map(fn ($row) => [
@@ -875,7 +875,7 @@ class BiService
             ->whereRaw("p.updated_at >= NOW() - INTERVAL '{$dias} days'")
             ->select([
                 'p.id as participante_id',
-                'p.cnpj as cnpj_cpf',
+                'p.documento as cnpj_cpf',
                 'p.razao_social',
                 'p.regime_tributario as regime_atual',
                 'p.situacao_cadastral as situacao_atual',
@@ -883,7 +883,7 @@ class BiService
                 DB::raw('COUNT(n.id) as total_notas'),
                 DB::raw('SUM(n.valor_total) as valor_total'),
             ])
-            ->groupBy('p.id', 'p.cnpj', 'p.razao_social', 'p.regime_tributario', 'p.situacao_cadastral', 'p.updated_at')
+            ->groupBy('p.id', 'p.documento', 'p.razao_social', 'p.regime_tributario', 'p.situacao_cadastral', 'p.updated_at')
             ->orderByDesc('p.updated_at')
             ->limit(20)
             ->get()
@@ -1222,13 +1222,14 @@ class BiService
             ];
         }
 
-        $ultimasNotas = DB::table('efd_notas')
-            ->where('user_id', $userId)
-            ->where('participante_id', $participanteId)
-            ->when($dataInicio, fn ($q) => $q->where('data_emissao', '>=', $dataInicio))
-            ->when($dataFim, fn ($q) => $q->where('data_emissao', '<=', $dataFim))
-            ->select('id', 'tipo_operacao', 'valor_total', 'data_emissao')
-            ->orderByDesc('data_emissao')
+        $ultimasNotas = DB::table('efd_notas as n')
+            ->leftJoin(DB::raw("(SELECT efd_nota_id, STRING_AGG(DISTINCT cfop::text, ', ' ORDER BY cfop::text) as cfops FROM efd_notas_itens GROUP BY efd_nota_id) as ci"), 'ci.efd_nota_id', '=', 'n.id')
+            ->where('n.user_id', $userId)
+            ->where('n.participante_id', $participanteId)
+            ->when($dataInicio, fn ($q) => $q->where('n.data_emissao', '>=', $dataInicio))
+            ->when($dataFim, fn ($q) => $q->where('n.data_emissao', '<=', $dataFim))
+            ->select('n.id', 'n.tipo_operacao', 'n.valor_total', 'n.data_emissao', 'n.numero', 'n.serie', 'n.chave_acesso', 'n.modelo', 'ci.cfops')
+            ->orderByDesc('n.data_emissao')
             ->limit(10)
             ->get()
             ->map(fn ($n) => [
@@ -1236,14 +1237,22 @@ class BiService
                 'tipo_nota' => $n->tipo_operacao === 'entrada' ? 'E' : 'S',
                 'vl_doc' => (float) $n->valor_total,
                 'data_emissao' => Carbon::parse($n->data_emissao)->format('d/m/Y'),
-                'bloco' => '—',
+                'numero' => $n->numero,
+                'serie' => $n->serie,
+                'chave_acesso' => $n->chave_acesso,
+                'modelo' => match ($n->modelo) {
+                    '00' => 'NFS-e', '01' => 'NF', '1B' => 'NF Avulsa', '04' => 'NF Produtor',
+                    '55' => 'NF-e', '57' => 'CT-e', '65' => 'NFC-e', '67' => 'CT-e OS',
+                    default => $n->modelo ?? '—',
+                },
+                'cfop' => $n->cfops ?? '—',
             ])
             ->toArray();
 
         return [
             'participante' => [
                 'id' => $participante->id,
-                'cnpj_cpf' => $participante->cnpj,
+                'cnpj_cpf' => $participante->documento,
                 'razao_social' => $participante->razao_social,
                 'regime' => $participante->regime_tributario,
                 'situacao' => $participante->situacao_cadastral,

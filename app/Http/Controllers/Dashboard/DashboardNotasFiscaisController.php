@@ -50,7 +50,7 @@ class DashboardNotasFiscaisController extends Controller
 
         $participantes = Participante::where('user_id', $userId)
             ->whereHas('efdNotas')
-            ->select('id', 'razao_social', 'cnpj')
+            ->select('id', 'razao_social', 'documento as cnpj')
             ->orderBy('razao_social')
             ->get();
 
@@ -149,7 +149,7 @@ class DashboardNotasFiscaisController extends Controller
 
         $partIds = $topParticipantes->pluck('participante_id');
         $participantes = Participante::whereIn('id', $partIds)
-            ->get(['id', 'razao_social', 'cnpj'])
+            ->get(['id', 'razao_social', 'documento as cnpj'])
             ->keyBy('id');
 
         $topPart = $topParticipantes->map(fn ($r) => [
@@ -267,7 +267,7 @@ class DashboardNotasFiscaisController extends Controller
             $subQuery->join('participantes', 'participantes.id', '=', 'agg.participante_id')
                 ->where(function ($q) use ($buscaTerm) {
                     $q->whereRaw('LOWER(participantes.razao_social) LIKE LOWER(?)', [$buscaTerm])
-                      ->orWhere('participantes.cnpj', 'like', $buscaTerm);
+                      ->orWhere('participantes.documento', 'like', $buscaTerm);
                 });
         }
 
@@ -290,7 +290,7 @@ class DashboardNotasFiscaisController extends Controller
 
         $partIds = $paginados->pluck('participante_id');
         $participantesMap = Participante::whereIn('id', $partIds)
-            ->get(['id', 'razao_social', 'cnpj', 'uf', 'situacao_cadastral', 'regime_tributario', 'ultima_consulta_em'])
+            ->get(['id', 'razao_social', 'documento as cnpj', 'uf', 'situacao_cadastral', 'regime_tributario', 'ultima_consulta_em'])
             ->keyBy('id');
 
         $data = $paginados->map(function ($r) use ($participantesMap) {
@@ -483,7 +483,7 @@ class DashboardNotasFiscaisController extends Controller
             ->keyBy('participante_id');
 
         $participantes = Participante::whereIn('id', $participanteIds)
-            ->select('id', 'cnpj', 'razao_social', 'situacao_cadastral', 'regime_tributario', 'uf', 'ultima_consulta_em')
+            ->select('id', 'documento as cnpj', 'razao_social', 'situacao_cadastral', 'regime_tributario', 'uf', 'ultima_consulta_em')
             ->get()
             ->map(function ($p) use ($volumes) {
                 $vol = $volumes->get($p->id);

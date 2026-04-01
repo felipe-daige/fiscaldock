@@ -1013,7 +1013,7 @@ class XmlImportacaoController extends Controller
 
                 $participantes[] = [
                     'id' => $p->id,
-                    'cnpj' => $p->cnpj,
+                    'cnpj' => $p->documento,
                     'cnpj_formatado' => $p->cnpj_formatado,
                     'razao_social' => $p->razao_social,
                     'nome_fantasia' => $p->nome_fantasia,

@@ -377,7 +377,7 @@ class AlertaCentralService
             ->where('situacao_cadastral', '!=', '')
             ->where('situacao_cadastral', '!=', 'ATIVA')
             ->whereHas('efdNotas')
-            ->get(['id', 'razao_social', 'cnpj', 'situacao_cadastral', 'cliente_id']);
+            ->get(['id', 'razao_social', 'documento as cnpj', 'situacao_cadastral', 'cliente_id']);
     }
 
     /**
@@ -389,7 +389,7 @@ class AlertaCentralService
             ->whereNotNull('ultima_consulta_em')
             ->where('ultima_consulta_em', '<', now()->subDays(90))
             ->whereHas('efdNotas')
-            ->get(['id', 'razao_social', 'cnpj', 'ultima_consulta_em', 'cliente_id']);
+            ->get(['id', 'razao_social', 'documento as cnpj', 'ultima_consulta_em', 'cliente_id']);
     }
 
     /**
@@ -401,7 +401,7 @@ class AlertaCentralService
             ->whereNull('ultima_consulta_em')
             ->whereHas('efdNotas')
             ->excludingEmpresaPropria()
-            ->get(['id', 'razao_social', 'cnpj', 'cliente_id']);
+            ->get(['id', 'razao_social', 'documento as cnpj', 'cliente_id']);
     }
 
     /**
