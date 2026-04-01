@@ -144,7 +144,7 @@ class DashboardDataService
                 $cnpjLimpo = preg_replace('/[^0-9]/', '', $busca);
 
                 $q->where(function ($q) use ($busca, $cnpjLimpo) {
-                    $q->where('participantes.cnpj', 'like', "%{$cnpjLimpo}%")
+                    $q->where('participantes.documento', 'like', "%{$cnpjLimpo}%")
                         ->orWhere('participantes.razao_social', 'ilike', "%{$busca}%")
                         ->orWhere('participantes.nome_fantasia', 'ilike', "%{$busca}%");
                 });

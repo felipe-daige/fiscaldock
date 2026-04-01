@@ -93,7 +93,7 @@ class ConsultaReportService
 
             return [
                 'participante_id' => $participante->id,
-                'cnpj' => $this->formatarCnpj($participante->cnpj),
+                'documento' => $this->formatarCnpj($participante->documento),
                 'razao_social' => $dados['razao_social'] ?? $participante->razao_social,
                 'nome_fantasia' => $dados['nome_fantasia'] ?? $participante->nome_fantasia,
                 'uf' => $dados['uf'] ?? $participante->uf,
@@ -289,7 +289,7 @@ class ConsultaReportService
 
         foreach ($colunas as $coluna) {
             $linha[] = match ($coluna) {
-                'CNPJ' => $resultado['cnpj'],
+                'CNPJ' => $resultado['documento'],
                 'Razao Social' => $resultado['razao_social'],
                 'Situacao Cadastral' => $resultado['situacao_cadastral'],
                 'Regime Tributario' => $resultado['regime_tributario'],
@@ -324,25 +324,25 @@ class ConsultaReportService
     /**
      * Formata CNPJ com máscara.
      */
-    private function formatarCnpj(?string $cnpj): string
+    private function formatarCnpj(?string $documento): string
     {
-        if (empty($cnpj)) {
+        if (empty($documento)) {
             return '';
         }
 
-        $cnpj = preg_replace('/[^0-9]/', '', $cnpj);
+        $documento = preg_replace('/[^0-9]/', '', $documento);
 
-        if (strlen($cnpj) !== 14) {
-            return $cnpj;
+        if (strlen($documento) !== 14) {
+            return $documento;
         }
 
         return sprintf(
             '%s.%s.%s/%s-%s',
-            substr($cnpj, 0, 2),
-            substr($cnpj, 2, 3),
-            substr($cnpj, 5, 3),
-            substr($cnpj, 8, 4),
-            substr($cnpj, 12, 2)
+            substr($documento, 0, 2),
+            substr($documento, 2, 3),
+            substr($documento, 5, 3),
+            substr($documento, 8, 4),
+            substr($documento, 12, 2)
         );
     }
 

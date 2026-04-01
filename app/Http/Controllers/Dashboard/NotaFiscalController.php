@@ -44,7 +44,7 @@ class NotaFiscalController extends Controller
 
         $participantes = Participante::where('user_id', $userId)
             ->orderBy('razao_social')
-            ->get(['id', 'razao_social', 'cnpj']);
+            ->get(['id', 'razao_social', 'documento']);
 
         $data = [
             'notas' => $notas,

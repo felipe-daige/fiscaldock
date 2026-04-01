@@ -156,7 +156,7 @@ class ParticipanteController extends Controller
         try {
             $participante = Participante::create([
                 'user_id' => $user->id,
-                'cnpj' => $doc,
+                'documento' => $doc,
                 'tipo_documento' => $tipDoc,
                 'razao_social' => $razaoSocial,
                 'nome_fantasia' => $validated['nome_fantasia'] ?? null,
@@ -377,7 +377,7 @@ class ParticipanteController extends Controller
             ->when($origemTipo, fn ($q) => $q->where('origem_tipo', $origemTipo))
             ->when($busca, function ($q) use ($busca) {
                 $q->where(function ($sub) use ($busca) {
-                    $sub->where('cnpj', 'like', "%{$busca}%")
+                    $sub->where('documento', 'like', "%{$busca}%")
                         ->orWhere('razao_social', 'ilike', "%{$busca}%");
                 });
             })
@@ -467,7 +467,7 @@ class ParticipanteController extends Controller
             ->when($request->cliente, fn ($q, $v) => $q->where('cliente_id', $v))
             ->when($request->origem, fn ($q, $v) => $q->where('origem_tipo', $v))
             ->when($request->busca, fn ($q, $v) => $q->where(function ($sub) use ($v) {
-                $sub->where('cnpj', 'like', "%{$v}%")
+                $sub->where('documento', 'like', "%{$v}%")
                     ->orWhere('razao_social', 'ilike', "%{$v}%");
             }))
             ->pluck('id');
@@ -770,7 +770,7 @@ class ParticipanteController extends Controller
 
         try {
             $razaoSocial = $participante->razao_social;
-            $cnpj = $participante->cnpj;
+            $cnpj = $participante->documento;
 
             // DB cascades handle: assinaturas, consultas, scores, pivot grupos, consulta_lote_resultados
             // xml_notas/efd_notas: SET NULL on participante_id
@@ -911,7 +911,7 @@ class ParticipanteController extends Controller
             'participantes' => $participantes->map(function ($p) {
                 return [
                     'id' => $p->id,
-                    'cnpj' => $p->cnpj,
+                    'cnpj' => $p->documento,
                     'razao_social' => $p->razao_social,
                     'situacao_cadastral' => $p->situacao_cadastral,
                     'regime_tributario' => $p->regime_tributario,
@@ -985,7 +985,7 @@ class ParticipanteController extends Controller
             'participantes' => $participantes->map(function ($p) {
                 return [
                     'id' => $p->id,
-                    'cnpj' => $p->cnpj,
+                    'cnpj' => $p->documento,
                     'razao_social' => $p->razao_social,
                     'situacao_cadastral' => $p->situacao_cadastral,
                     'regime_tributario' => $p->regime_tributario,

@@ -1188,7 +1188,7 @@ class XmlImportacaoController extends Controller
                     $participante = Participante::updateOrCreate(
                         [
                             'user_id' => $userId,
-                            'cnpj' => $cnpj,
+                            'documento' => $cnpj,
                         ],
                         [
                             'razao_social' => $cnpjData['razao_social'] ?? null,

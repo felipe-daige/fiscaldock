@@ -237,8 +237,8 @@ class ResumoFiscalService
 
         $items = $retencoes->map(fn ($r) => [
             'data' => $r->data_retencao->format('d/m/Y'),
-            'cnpj' => $r->cnpj_formatado,
-            'cnpj_raw' => $r->cnpj,
+            'documento' => $r->documento_formatado,
+            'cnpj_raw' => $r->documento,
             'natureza' => $r->natureza_formatada,
             'natureza_raw' => $r->natureza,
             'base_calculo' => (float) $r->base_calculo,
@@ -261,7 +261,7 @@ class ResumoFiscalService
             'kpis' => [
                 'total_retido' => $totalRetido,
                 'qtd_retencoes' => $retencoes->count(),
-                'cnpjs_unicos' => $retencoes->pluck('cnpj')->unique()->count(),
+                'cnpjs_unicos' => $retencoes->pluck('documento')->unique()->count(),
             ],
             'retencoes' => $items->values()->toArray(),
             'por_natureza' => $porNatureza->toArray(),

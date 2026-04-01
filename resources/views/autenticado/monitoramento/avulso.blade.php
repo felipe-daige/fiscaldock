@@ -667,9 +667,9 @@
                     </thead>
                     <tbody class="divide-y divide-gray-200 bg-white" id="participantes-tbody">
                         @forelse($participantes ?? [] as $participante)
-                            <tr class="hover:bg-gray-50 participante-row" data-cnpj="{{ $participante->cnpj }}" data-razao="{{ $participante->razao_social ?? '' }}">
+                            <tr class="hover:bg-gray-50 participante-row" data-cnpj="{{ $participante->documento }}" data-razao="{{ $participante->razao_social ?? '' }}">
                                 <td class="px-4 py-3 text-sm font-mono text-gray-900 whitespace-nowrap tabular-nums">
-                                    {{ preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $participante->cnpj) }}
+                                    {{ preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $participante->documento) }}
                                 </td>
                                 <td class="px-4 py-3 text-sm text-gray-900">{{ $participante->razao_social ?? '-' }}</td>
                                 <td class="px-4 py-3">
@@ -691,7 +691,7 @@
                                     <button
                                         type="button"
                                         class="btn-reconsultar inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium"
-                                        data-cnpj="{{ $participante->cnpj }}"
+                                        data-cnpj="{{ $participante->documento }}"
                                         data-razao="{{ $participante->razao_social ?? '' }}"
                                         data-id="{{ $participante->id }}"
                                     >
@@ -782,7 +782,7 @@
         var participantesData = {!! json_encode(
             ($participantes ?? collect())->map(fn($p) => [
                 'id' => $p->id,
-                'cnpj' => $p->cnpj,
+                'cnpj' => $p->documento,
                 'razao' => $p->razao_social ?? '',
                 'clienteId' => $p->cliente_id,
             ])->values()

@@ -88,7 +88,7 @@ class NotasFiscaisAlertService
         // Resolver nomes dos participantes
         $partIds = $grupos->pluck('participante_id')->filter()->unique()->values();
         $participantes = Participante::whereIn('id', $partIds)
-            ->select('id', 'razao_social', 'documento as cnpj')
+            ->select('id', 'razao_social', 'documento as documento')
             ->get()
             ->keyBy('id');
 
@@ -193,7 +193,7 @@ class NotasFiscaisAlertService
 
         $partIds = $grupos->pluck('participante_id')->filter()->unique();
         $participantes = Participante::whereIn('id', $partIds)
-            ->select('id', 'razao_social', 'documento as cnpj')
+            ->select('id', 'razao_social', 'documento as documento')
             ->get()
             ->keyBy('id');
 
@@ -203,7 +203,7 @@ class NotasFiscaisAlertService
             return [
                 'participante_id' => $g->participante_id,
                 'razao_social' => $part ? $part->razao_social : 'N/A',
-                'cnpj' => $part ? ($part->cnpj ?: 'Vazio') : 'N/A',
+                'documento' => $part ? ($part->documento ?: 'Vazio') : 'N/A',
                 'total_notas' => (int) $g->total_notas,
             ];
         })->values()->all();
@@ -413,7 +413,7 @@ class NotasFiscaisAlertService
             ->whereNotNull('situacao_cadastral')
             ->where('situacao_cadastral', '!=', '')
             ->where('situacao_cadastral', '!=', 'ATIVA')
-            ->select('id', 'razao_social', 'documento as cnpj', 'situacao_cadastral')
+            ->select('id', 'razao_social', 'documento as documento', 'situacao_cadastral')
             ->limit(50)
             ->get();
 

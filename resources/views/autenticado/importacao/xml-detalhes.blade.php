@@ -243,7 +243,7 @@
                             <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->uf ?: '—' }}</td>
                             <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->situacao_cadastral ?: '—' }}</td>
                             <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->crt ?: '—' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->tipo_pessoa ?: ($part->cnpj && strlen(preg_replace('/[^0-9]/', '', $part->cnpj)) === 11 ? 'PF' : 'PJ') }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->tipo_pessoa ?: ($part->documento && strlen(preg_replace('/[^0-9]/', '', $part->documento)) === 11 ? 'PF' : 'PJ') }}</td>
                         </tr>
                         @endforeach
                     </tbody>

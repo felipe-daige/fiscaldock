@@ -149,7 +149,7 @@ class ConsultaController extends Controller
                     ->orWhere('nome_fantasia', 'ILIKE', "%{$busca}%");
 
                 if (strlen($buscaLimpa) >= 3) {
-                    $q->orWhere('cnpj', 'LIKE', "%{$buscaLimpa}%");
+                    $q->orWhere('documento', 'LIKE', "%{$buscaLimpa}%");
                 }
             });
         }
@@ -293,7 +293,7 @@ class ConsultaController extends Controller
         // Verificar que os participantes pertencem ao usuário
         $participantes = Participante::where('user_id', $user->id)
             ->whereIn('id', $validated['participante_ids'])
-            ->get(['id', 'cnpj', 'razao_social', 'uf', 'crt']);
+            ->get(['id', 'documento', 'razao_social', 'uf', 'crt']);
 
         if ($participantes->count() !== count($validated['participante_ids'])) {
             return response()->json([
@@ -380,7 +380,7 @@ class ConsultaController extends Controller
                 'participantes' => $participantes->map(function ($p) {
                     return [
                         'id' => $p->id,
-                        'cnpj' => preg_replace('/[^0-9]/', '', $p->cnpj),
+                        'cnpj' => preg_replace('/[^0-9]/', '', $p->documento),
                         'razao_social' => $p->razao_social,
                         'uf' => $p->uf,
                         'crt' => $p->crt,
@@ -694,7 +694,7 @@ class ConsultaController extends Controller
         }
 
         $participante = Participante::firstOrCreate(
-            ['user_id' => $user->id, 'cnpj' => $cnpj],
+            ['user_id' => $user->id, 'documento' => $cnpj],
             [
                 'origem_tipo' => 'MANUAL',
                 'tipo_documento' => 'PJ',
@@ -725,7 +725,7 @@ class ConsultaController extends Controller
             'is_new' => $isNew,
             'participante' => [
                 'id' => $participante->id,
-                'cnpj' => $participante->cnpj,
+                'cnpj' => $participante->documento,
                 'razao_social' => $participante->razao_social,
                 'uf' => $participante->uf,
                 'cliente' => $participante->cliente ? [
@@ -930,7 +930,7 @@ class ConsultaController extends Controller
             'total' => $resultados->count(),
             'resultados' => $resultados->map(fn ($r) => [
                 'participante' => [
-                    'cnpj'         => $r->participante?->cnpj,
+                    'cnpj'         => $r->participante?->documento,
                     'razao_social' => $r->participante?->razao_social,
                     'uf'           => $r->participante?->uf,
                 ],

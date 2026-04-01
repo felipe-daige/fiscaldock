@@ -494,7 +494,7 @@ class DashboardNotasFiscaisController extends Controller
 
                 return [
                     'id' => $p->id,
-                    'cnpj' => $p->cnpj,
+                    'cnpj' => $p->documento,
                     'razao_social' => $p->razao_social ?? 'Não informado',
                     'situacao_cadastral' => $situacao,
                     'regime_tributario' => $p->regime_tributario,

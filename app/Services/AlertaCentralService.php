@@ -115,12 +115,12 @@ class AlertaCentralService
                 'severidade' => 'alta',
                 'participante_id' => $f->participante_id,
                 'titulo' => "Fornecedor irregular com {$f->total_notas} nota(s) — R$ {$valorFormatado} em risco",
-                'descricao' => "{$f->razao_social} ({$f->cnpj}) esta com situacao {$f->situacao_cadastral} e possui {$f->total_notas} nota(s) fiscal(is) vinculadas totalizando R$ {$valorFormatado}.",
+                'descricao' => "{$f->razao_social} ({$f->documento}) esta com situacao {$f->situacao_cadastral} e possui {$f->total_notas} nota(s) fiscal(is) vinculadas totalizando R$ {$valorFormatado}.",
                 'total_afetados' => (int) $f->total_notas,
                 'detalhes' => [
                     'participante_id' => $f->participante_id,
                     'razao_social' => $f->razao_social,
-                    'cnpj' => $f->cnpj,
+                    'documento' => $f->documento,
                     'situacao_cadastral' => $f->situacao_cadastral,
                     'total_notas' => (int) $f->total_notas,
                     'valor_em_risco' => (float) $f->valor_em_risco,
@@ -224,7 +224,7 @@ class AlertaCentralService
         }
 
         $query->with([
-            'participante:id,razao_social,cnpj',
+            'participante:id,razao_social,documento',
             'cliente:id,razao_social',
         ]);
 
@@ -377,7 +377,7 @@ class AlertaCentralService
             ->where('situacao_cadastral', '!=', '')
             ->where('situacao_cadastral', '!=', 'ATIVA')
             ->whereHas('efdNotas')
-            ->get(['id', 'razao_social', 'documento as cnpj', 'situacao_cadastral', 'cliente_id']);
+            ->get(['id', 'razao_social', 'documento as documento', 'situacao_cadastral', 'cliente_id']);
     }
 
     /**
@@ -389,7 +389,7 @@ class AlertaCentralService
             ->whereNotNull('ultima_consulta_em')
             ->where('ultima_consulta_em', '<', now()->subDays(90))
             ->whereHas('efdNotas')
-            ->get(['id', 'razao_social', 'documento as cnpj', 'ultima_consulta_em', 'cliente_id']);
+            ->get(['id', 'razao_social', 'documento as documento', 'ultima_consulta_em', 'cliente_id']);
     }
 
     /**
@@ -401,7 +401,7 @@ class AlertaCentralService
             ->whereNull('ultima_consulta_em')
             ->whereHas('efdNotas')
             ->excludingEmpresaPropria()
-            ->get(['id', 'razao_social', 'documento as cnpj', 'cliente_id']);
+            ->get(['id', 'razao_social', 'documento as documento', 'cliente_id']);
     }
 
     /**
@@ -420,12 +420,12 @@ class AlertaCentralService
                 'tipo' => 'situacao_irregular',
                 'severidade' => 'alta',
                 'titulo' => "Participante com situacao cadastral {$p->situacao_cadastral}",
-                'descricao' => "{$p->razao_social} ({$p->cnpj_formatado}) esta com situacao cadastral {$p->situacao_cadastral} na Receita Federal.",
+                'descricao' => "{$p->razao_social} ({$p->documento_formatado}) esta com situacao cadastral {$p->situacao_cadastral} na Receita Federal.",
                 'total_afetados' => 1,
                 'detalhes' => [
                     'participante_id' => $p->id,
                     'razao_social' => $p->razao_social,
-                    'cnpj' => $p->cnpj,
+                    'documento' => $p->documento,
                     'situacao_cadastral' => $p->situacao_cadastral,
                 ],
             ]),
@@ -438,7 +438,7 @@ class AlertaCentralService
                 'detalhes' => [
                     'participante_id' => $p->id,
                     'razao_social' => $p->razao_social,
-                    'cnpj' => $p->cnpj,
+                    'documento' => $p->documento,
                     'ultima_consulta_em' => $p->ultima_consulta_em->toIso8601String(),
                 ],
             ]),
@@ -446,12 +446,12 @@ class AlertaCentralService
                 'tipo' => 'nunca_consultado',
                 'severidade' => 'baixa',
                 'titulo' => "Participante nunca consultado — {$p->razao_social}",
-                'descricao' => "{$p->razao_social} ({$p->cnpj}) possui notas fiscais mas nunca teve seus dados cadastrais verificados.",
+                'descricao' => "{$p->razao_social} ({$p->documento}) possui notas fiscais mas nunca teve seus dados cadastrais verificados.",
                 'total_afetados' => 1,
                 'detalhes' => [
                     'participante_id' => $p->id,
                     'razao_social' => $p->razao_social,
-                    'cnpj' => $p->cnpj,
+                    'documento' => $p->documento,
                 ],
             ]),
         };
@@ -473,13 +473,13 @@ class AlertaCentralService
             ->whereRaw("UPPER(p.situacao_cadastral) NOT IN ('02', 'ATIVA')")
             ->select([
                 'p.id as participante_id',
-                'p.cnpj',
+                'p.documento',
                 'p.razao_social',
                 'p.situacao_cadastral',
                 DB::raw('COUNT(n.id) as total_notas'),
                 DB::raw('SUM(n.valor_total) as valor_em_risco'),
             ])
-            ->groupBy('p.id', 'p.cnpj', 'p.razao_social', 'p.situacao_cadastral')
+            ->groupBy('p.id', 'p.documento', 'p.razao_social', 'p.situacao_cadastral')
             ->get();
     }
 

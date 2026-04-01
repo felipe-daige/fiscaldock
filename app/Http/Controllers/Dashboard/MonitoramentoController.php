@@ -170,7 +170,7 @@ class MonitoramentoController extends Controller
                 'codigo' => $consulta->plano->codigo,
             ] : null,
             'resultado' => $consulta->resultado ?? [
-                'cnpj' => $consulta->participante?->cnpj,
+                'cnpj' => $consulta->participante?->documento,
                 'razao_social' => $consulta->participante?->razao_social,
                 'situacao_cadastral' => $consulta->participante?->situacao_cadastral,
                 'regime_tributario' => $consulta->participante?->regime_tributario,
@@ -224,7 +224,7 @@ class MonitoramentoController extends Controller
             foreach ($cnpjs as $cnpj) {
                 // Verificar se já existe
                 $existente = Participante::where('user_id', $user->id)
-                    ->where('cnpj', $cnpj)
+                    ->where('documento', $cnpj)
                     ->first();
 
                 if ($existente) {
@@ -235,7 +235,7 @@ class MonitoramentoController extends Controller
 
                 Participante::create([
                     'user_id' => $user->id,
-                    'cnpj' => $cnpj,
+                    'documento' => $cnpj,
                     'origem_tipo' => 'MANUAL',
                 ]);
 

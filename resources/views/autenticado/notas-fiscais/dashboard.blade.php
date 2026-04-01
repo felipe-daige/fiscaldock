@@ -83,7 +83,7 @@
                             class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Todos os Participantes</option>
                         @foreach($participantes ?? [] as $part)
-                            <option value="{{ $part->id }}">{{ $part->razao_social }} ({{ $part->cnpj }})</option>
+                            <option value="{{ $part->id }}">{{ $part->razao_social }} ({{ $part->documento }})</option>
                         @endforeach
                     </select>
                 </div>

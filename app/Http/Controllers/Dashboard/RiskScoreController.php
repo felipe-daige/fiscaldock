@@ -49,7 +49,7 @@ class RiskScoreController extends Controller
             $busca = $request->busca;
             $participantesQuery->where(function ($q) use ($busca) {
                 $q->where('razao_social', 'ilike', "%{$busca}%")
-                  ->orWhere('cnpj', 'like', "%{$busca}%");
+                  ->orWhere('documento', 'like', "%{$busca}%");
             });
         }
 
@@ -168,7 +168,7 @@ class RiskScoreController extends Controller
             ->map(function ($score) {
                 return [
                     'id' => $score->participante_id,
-                    'cnpj' => $score->participante->cnpj ?? '',
+                    'cnpj' => $score->participante->documento ?? '',
                     'razao_social' => $score->participante->razao_social ?? '',
                     'score' => $score->score_total,
                     'classificacao' => $score->classificacao,

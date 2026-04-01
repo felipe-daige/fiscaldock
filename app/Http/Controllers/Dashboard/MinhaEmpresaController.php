@@ -41,7 +41,7 @@ class MinhaEmpresaController extends Controller
         // Buscar ou criar participante correspondente ao CNPJ da empresa
         $cnpjLimpo = preg_replace('/\D/', '', $empresa->documento);
         $participante = Participante::firstOrCreate(
-            ['user_id' => $user->id, 'cnpj' => $cnpjLimpo],
+            ['user_id' => $user->id, 'documento' => $cnpjLimpo],
             [
                 'razao_social' => $empresa->razao_social ?? $empresa->nome,
                 'origem_tipo' => 'PROPRIO',
@@ -143,7 +143,7 @@ class MinhaEmpresaController extends Controller
         // Criar participante se nao existir
         $cnpjLimpo = preg_replace('/\D/', '', $cliente->documento);
         Participante::firstOrCreate(
-            ['user_id' => $user->id, 'cnpj' => $cnpjLimpo],
+            ['user_id' => $user->id, 'documento' => $cnpjLimpo],
             [
                 'razao_social' => $cliente->razao_social ?? $cliente->nome,
                 'origem_tipo' => 'PROPRIO',
@@ -175,7 +175,7 @@ class MinhaEmpresaController extends Controller
 
         $cnpjLimpo = preg_replace('/\D/', '', $empresa->documento);
         $participante = Participante::where('user_id', $user->id)
-            ->where('cnpj', $cnpjLimpo)
+            ->where('documento', $cnpjLimpo)
             ->first();
 
         $consultas = collect();
