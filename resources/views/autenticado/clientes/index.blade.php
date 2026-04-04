@@ -1,386 +1,428 @@
 {{-- Clientes - Autenticado --}}
-<div class="min-h-screen bg-gray-50" id="clientes-container">
+<div class="bg-gray-100 min-h-screen" id="clientes-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <style>
+            .view-toggle-btn.active-view {
+                background-color: #1f2937;
+                color: #ffffff;
+            }
+        </style>
         <div class="space-y-6">
-            {{-- Page Header --}}
-            <div class="mb-4 sm:mb-8">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-                    <div>
-                        <h1 class="text-xl sm:text-2xl font-semibold text-gray-900">Clientes</h1>
-                        <p class="mt-1 text-sm text-gray-500">Gerencie seus clientes e monitore alertas e analises</p>
-                    </div>
-                    <a href="/app/novo-cliente" data-link class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2 self-start sm:self-auto">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Novo Cliente
-                    </a>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Clientes</h1>
+                    <p class="mt-1 text-xs text-gray-500">Cadastros operacionais, vínculos com participantes e ações da base de clientes.</p>
                 </div>
+                <a href="/app/cliente/novo" data-link class="inline-flex items-center gap-2 px-4 py-2 rounded bg-gray-800 text-white text-sm font-medium transition hover:bg-gray-700">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Novo Cliente
+                </a>
             </div>
 
-            <style>
-                @keyframes card-slide-in {
-                    from { opacity: 0; transform: translateY(60px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                .cli-animate {
-                    opacity: 0;
-                    animation: card-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-                }
-                @media (prefers-reduced-motion: reduce) {
-                    .cli-animate { opacity: 1; animation: none; }
-                }
-            </style>
-
-            {{-- Cards de Resumo --}}
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-                {{-- Card: Clientes Ativos --}}
-                <div id="card-total-clientes" class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 cursor-pointer hover:border-blue-300 transition-colors cli-animate">
-                    <div class="flex items-center justify-between">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Clientes Ativos</p>
-                            <p class="text-xl sm:text-3xl font-semibold text-gray-900">{{ $totalAtivos ?? 0 }}</p>
-                            <p class="text-xs text-gray-400 mt-1 sm:mt-2">Cadastros ativos</p>
-                        </div>
-                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-blue-50 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
-                            <svg class="w-4 h-4 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                            </svg>
-                        </div>
-                    </div>
+            <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo Operacional</span>
                 </div>
-
-                {{-- Card: Clientes Inativos --}}
-                <div id="card-inativos" class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 cursor-pointer hover:border-gray-400 transition-colors cli-animate" style="animation-delay: 0.1s">
-                    <div class="flex items-center justify-between">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Clientes Inativos</p>
-                            <p class="text-xl sm:text-3xl font-semibold text-gray-900">{{ $totalInativos ?? 0 }}</p>
-                            <p class="text-xs text-gray-400 mt-1 sm:mt-2">Cadastros inativos</p>
-                        </div>
-                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
-                            <svg class="w-4 h-4 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
-                            </svg>
-                        </div>
+                <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-gray-200">
+                    <div class="px-4 py-4">
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Ativos</p>
+                        <p class="text-lg font-bold text-gray-900">{{ number_format($totalAtivos ?? 0, 0, ',', '.') }}</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Cadastros ativos</p>
                     </div>
-                </div>
-
-                {{-- Card: Pessoa Juridica --}}
-                <div id="card-pj" class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 cursor-pointer hover:border-amber-300 transition-colors cli-animate" style="animation-delay: 0.2s">
-                    <div class="flex items-center justify-between">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Pessoa Juridica</p>
-                            <p class="text-xl sm:text-3xl font-semibold text-gray-900">{{ $totalPJ ?? 0 }}</p>
-                            <p class="text-xs text-gray-400 mt-1 sm:mt-2">CNPJ cadastrados</p>
-                        </div>
-                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-amber-50 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
-                            <svg class="w-4 h-4 sm:w-6 sm:h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                            </svg>
-                        </div>
+                    <div class="px-4 py-4">
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Inativos</p>
+                        <p class="text-lg font-bold text-gray-900">{{ number_format($totalInativos ?? 0, 0, ',', '.') }}</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Cadastros inativos</p>
                     </div>
-                </div>
-
-                {{-- Card: Pessoa Fisica --}}
-                <div id="card-pf" class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 cursor-pointer hover:border-green-300 transition-colors cli-animate" style="animation-delay: 0.3s">
-                    <div class="flex items-center justify-between">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Pessoa Fisica</p>
-                            <p class="text-xl sm:text-3xl font-semibold text-gray-900">{{ $totalPF ?? 0 }}</p>
-                            <p class="text-xs text-gray-400 mt-1 sm:mt-2">CPF cadastrados</p>
-                        </div>
-                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-green-50 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
-                            <svg class="w-4 h-4 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
-                        </div>
+                    <div class="px-4 py-4">
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Pessoa Jurídica</p>
+                        <p class="text-lg font-bold text-gray-900">{{ number_format($totalPJ ?? 0, 0, ',', '.') }}</p>
+                        <p class="text-[11px] text-gray-500 mt-1">CNPJs cadastrados</p>
+                    </div>
+                    <div class="px-4 py-4">
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Pessoa Física</p>
+                        <p class="text-lg font-bold text-gray-900">{{ number_format($totalPF ?? 0, 0, ',', '.') }}</p>
+                        <p class="text-[11px] text-gray-500 mt-1">CPFs cadastrados</p>
                     </div>
                 </div>
             </div>
 
-            {{-- Barra de Busca e Filtros --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 cli-animate" style="animation-delay: 0.4s">
-                <div class="flex flex-col lg:flex-row lg:items-end gap-4">
-                    {{-- Filtro Status --}}
-                    <div class="min-w-0 sm:min-w-[150px]">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                        <select id="filtro-status" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="todos">Todos</option>
-                            <option value="ativos">Ativos</option>
-                            <option value="inativos">Inativos</option>
-                        </select>
+            <form method="GET" action="/app/clientes" class="bg-white rounded border border-gray-300 overflow-hidden">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
+                </div>
+                <div class="p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                        <div>
+                            <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Status</label>
+                            <select name="status" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                                <option value="">Todos</option>
+                                <option value="ativos" {{ ($filtros['status'] ?? '') === 'ativos' ? 'selected' : '' }}>Ativos</option>
+                                <option value="inativos" {{ ($filtros['status'] ?? '') === 'inativos' ? 'selected' : '' }}>Inativos</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Tipo</label>
+                            <select name="tipo" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                                <option value="">Todos</option>
+                                <option value="PJ" {{ ($filtros['tipo'] ?? '') === 'PJ' ? 'selected' : '' }}>Pessoa Jurídica</option>
+                                <option value="PF" {{ ($filtros['tipo'] ?? '') === 'PF' ? 'selected' : '' }}>Pessoa Física</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Regime</label>
+                            <select name="regime" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                                <option value="">Todos</option>
+                                <option value="simples nacional" {{ ($filtros['regime'] ?? '') === 'simples nacional' ? 'selected' : '' }}>Simples Nacional</option>
+                                <option value="lucro presumido" {{ ($filtros['regime'] ?? '') === 'lucro presumido' ? 'selected' : '' }}>Lucro Presumido</option>
+                                <option value="lucro real" {{ ($filtros['regime'] ?? '') === 'lucro real' ? 'selected' : '' }}>Lucro Real</option>
+                                <option value="mei" {{ ($filtros['regime'] ?? '') === 'mei' ? 'selected' : '' }}>MEI</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Situação</label>
+                            <select name="situacao" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                                <option value="">Todos</option>
+                                <option value="ATIVA" {{ ($filtros['situacao'] ?? '') === 'ATIVA' ? 'selected' : '' }}>Ativa</option>
+                                <option value="BAIXADA" {{ ($filtros['situacao'] ?? '') === 'BAIXADA' ? 'selected' : '' }}>Baixada</option>
+                                <option value="SUSPENSA" {{ ($filtros['situacao'] ?? '') === 'SUSPENSA' ? 'selected' : '' }}>Suspensa</option>
+                                <option value="INAPTA" {{ ($filtros['situacao'] ?? '') === 'INAPTA' ? 'selected' : '' }}>Inapta</option>
+                            </select>
+                        </div>
                     </div>
-
-                    {{-- Filtro Tipo --}}
-                    <div class="min-w-0 sm:min-w-[150px]">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-                        <select id="filtro-tipo" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="todos">Todos</option>
-                            <option value="pj">Pessoa Juridica (CNPJ)</option>
-                            <option value="pf">Pessoa Fisica (CPF)</option>
-                        </select>
-                    </div>
-
-                    {{-- Busca --}}
-                    <div class="flex-1 min-w-0 sm:min-w-[250px]">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
-                        <div class="relative">
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
+                        <div>
+                            <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">UF</label>
+                            <select name="uf" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                                <option value="">Todas</option>
+                                @foreach($ufs ?? [] as $uf)
+                                    <option value="{{ $uf }}" {{ ($filtros['uf'] ?? '') === $uf ? 'selected' : '' }}>{{ $uf }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Buscar</label>
                             <input
                                 type="text"
-                                id="buscar-cliente"
+                                name="busca"
+                                value="{{ $filtros['busca'] ?? '' }}"
                                 placeholder="Nome, CNPJ ou CPF..."
-                                class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                             >
-                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
                         </div>
                     </div>
-
-                    {{-- Botoes --}}
-                    <div class="flex gap-2 items-center">
-                        <button type="button" id="btn-filtrar-clientes" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
-                            Filtrar
-                        </button>
-                        <button type="button" id="btn-limpar-filtros-clientes" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
-                            Limpar
-                        </button>
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4 pt-4 border-t border-gray-200">
+                        <div class="flex items-center gap-2">
+                            <button type="submit" class="bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium px-4 py-2">Filtrar</button>
+                            <a href="/app/clientes" data-link class="bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded text-sm font-medium px-4 py-2">Limpar</a>
+                        </div>
+                        <div class="flex items-center gap-1 self-start sm:self-auto">
+                            <button id="btn-view-list-clientes"
+                                class="p-2 rounded border border-gray-300 text-gray-500 hover:bg-gray-50 transition-colors view-toggle-btn active-view"
+                                title="Visualização em lista" type="button">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+                                </svg>
+                            </button>
+                            <button id="btn-view-cards-clientes"
+                                class="p-2 rounded border border-gray-300 text-gray-500 hover:bg-gray-50 transition-colors view-toggle-btn"
+                                title="Visualização em cards" type="button">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                                    <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="flex flex-wrap gap-3 mt-3 pt-3 border-t border-gray-100">
-                    <select id="filtro-regime" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="todos">Regime: Todos</option>
-                        <option value="simples nacional">Simples Nacional</option>
-                        <option value="lucro presumido">Lucro Presumido</option>
-                        <option value="lucro real">Lucro Real</option>
-                        <option value="mei">MEI</option>
-                    </select>
-                    <select id="filtro-situacao" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="todos">Situacao: Todos</option>
-                        <option value="ativa">Ativa</option>
-                        <option value="baixada">Baixada</option>
-                        <option value="suspensa">Suspensa</option>
-                        <option value="inapta">Inapta</option>
-                    </select>
-                    <select id="filtro-uf" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="todos">UF: Todos</option>
-                    </select>
-                </div>
+            </form>
 
-                {{-- Barra de selecao global --}}
-                <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                    <div class="flex items-center gap-4 text-sm">
-                        <button type="button" id="btn-selecionar-todos-clientes" class="text-blue-600 hover:text-blue-800 font-medium">
-                            Selecionar todos
-                        </button>
-                        <button type="button" id="btn-limpar-selecao-clientes" class="text-gray-500 hover:text-gray-700 hidden">
-                            Limpar selecao
-                        </button>
-                    </div>
-                    <span id="total-selecionados-clientes-info" class="text-xs text-gray-500 hidden">
-                        <span id="total-selecionados-clientes">0</span> selecionados
-                    </span>
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4 text-sm">
+                    <button type="button" id="btn-selecionar-todos-clientes" class="text-gray-700 hover:text-gray-900 font-medium underline">Selecionar todos desta página</button>
+                    <button type="button" id="btn-limpar-selecao-clientes" class="text-gray-500 hover:text-gray-700 hidden">Limpar seleção</button>
                 </div>
+                <span id="total-selecionados-clientes-info" class="text-xs text-gray-500 hidden">
+                    <span id="total-selecionados-clientes">0</span> selecionados
+                </span>
             </div>
 
-            {{-- Acoes em lote (aparece quando ha selecao) --}}
-            <div id="acoes-lote" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <div id="acoes-lote" class="hidden bg-white border border-gray-300 rounded p-4">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white text-sm font-bold" id="clientes-selecionados-count">0</span>
-                        <span class="text-sm font-medium text-blue-900"><span id="clientes-selecionados-label">clientes selecionados</span></span>
+                        <span class="inline-flex items-center justify-center w-8 h-8 rounded text-white text-sm font-bold" id="clientes-selecionados-count" style="background-color: #374151">0</span>
+                        <span class="text-sm font-medium text-gray-900"><span id="clientes-selecionados-label">clientes selecionados</span></span>
                     </div>
                     <div class="flex gap-2">
-                        <button type="button" id="btn-exportar" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-blue-300 bg-white text-blue-700 text-sm font-semibold shadow-sm transition hover:bg-blue-50">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            Exportar
-                        </button>
-                        <button type="button" id="btn-consultar-selecionados" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                            </svg>
-                            Consultar
-                        </button>
-                        <button type="button" id="btn-bulk-delete" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm transition hover:bg-red-700">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                            </svg>
-                            Deletar
-                        </button>
-                        <button type="button" id="btn-limpar-selecao" class="px-4 py-2 rounded-lg border border-blue-300 bg-white text-blue-700 text-sm font-semibold shadow-sm transition hover:bg-blue-50">
-                            Limpar
-                        </button>
+                        <button type="button" id="btn-exportar" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">Exportar</button>
+                        <button type="button" id="btn-consultar-selecionados" class="px-4 py-2 rounded bg-gray-800 text-white text-sm font-medium transition hover:bg-gray-700">Consultar</button>
+                        <button type="button" id="btn-bulk-delete" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm transition hover:bg-red-700">Deletar</button>
+                        <button type="button" id="btn-limpar-selecao" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">Limpar</button>
                     </div>
                 </div>
             </div>
 
-            {{-- Tabela de Clientes --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm cli-animate" style="animation-delay: 0.5s">
+            <div id="clientes-list-view" class="bg-white rounded border border-gray-300 overflow-hidden">
                 @if(isset($clientes) && $clientes->count() > 0)
-                <div class="overflow-x-auto">
-                    <table class="w-full" id="tabela-clientes">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left">
-                                    <input type="checkbox" id="select-all" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                </th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                    Cliente
-                                </th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                    CNPJ/CPF
-                                </th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                    E-mail
-                                </th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                    Telefone
-                                </th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                    UF
-                                </th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                    Status
-                                </th>
-                                <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                    Acoes
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200" id="clientes-tbody">
-                            @foreach($clientes as $cliente)
-                            <tr class="hover:bg-gray-50 transition-colors cliente-row"
-                                data-cliente-id="{{ $cliente->id }}"
-                                data-nome="{{ strtolower($cliente->tipo_pessoa === 'PJ' ? ($cliente->razao_social ?? $cliente->nome ?? '') : ($cliente->nome ?? '')) }}"
-                                data-documento="{{ $cliente->documento }}"
-                                data-tipo="{{ $cliente->tipo_pessoa }}"
-                                data-status="{{ $cliente->ativo ? 'ativos' : 'inativos' }}"
-                                data-regime="{{ strtolower($cliente->regime_tributario ?? '') }}"
-                                data-situacao="{{ strtolower($cliente->situacao_cadastral ?? '') }}"
-                                data-uf="{{ strtolower($cliente->uf ?? '') }}">
-                                <td class="px-4 py-4 whitespace-nowrap">
-                                    <input type="checkbox" class="cliente-checkbox w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" data-id="{{ $cliente->id }}">
-                                </td>
-                                <td class="px-4 py-4 whitespace-nowrap">
-                                    <div class="flex items-center gap-2">
-                                        @if($cliente->tipo_pessoa === 'PJ')
-                                            <div class="text-sm font-medium text-gray-900 truncate" style="max-width:200px" title="{{ $cliente->razao_social ?? '-' }}">{{ $cliente->razao_social ?? '-' }}</div>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-700">PJ</span>
-                                        @else
-                                            <div class="text-sm font-medium text-gray-900 truncate" style="max-width:200px" title="{{ $cliente->nome ?? '-' }}">{{ $cliente->nome ?? '-' }}</div>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-purple-100 text-purple-700">PF</span>
-                                        @endif
-                                        @if($cliente->is_empresa_propria)
-                                            <span class="px-1.5 py-0.5 bg-green-50 text-green-600 text-[10px] font-medium rounded">Empresa propria</span>
-                                        @endif
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-300">
+                                    <th class="w-10 px-3 py-2.5 text-left bg-gray-50">
+                                        <input type="checkbox" id="select-all-clientes" class="w-4 h-4 rounded border-gray-300 text-gray-700 focus:ring-gray-400">
+                                    </th>
+                                    <th class="w-12 px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50"></th>
+                                    <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Cliente</th>
+                                    <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Documento</th>
+                                    <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Contato</th>
+                                    <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participantes</th>
+                                    <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Status</th>
+                                    <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @foreach($clientes as $cliente)
+                                    <tr class="hover:bg-gray-50/50 transition-colors cliente-row" data-cliente-id="{{ $cliente->id }}">
+                                        <td class="px-3 py-3">
+                                            <input type="checkbox" class="cliente-checkbox w-4 h-4 rounded border-gray-300 text-gray-700 focus:ring-gray-400" data-id="{{ $cliente->id }}">
+                                        </td>
+                                        <td class="px-3 py-3">
+                                            <button
+                                                type="button"
+                                                class="cliente-expand-btn text-gray-400 hover:text-gray-700 transition-colors"
+                                                data-cliente-id="{{ $cliente->id }}"
+                                                data-expand-url="/app/cliente/{{ $cliente->id }}/participantes"
+                                                title="Ver participantes vinculados"
+                                            >
+                                                <svg class="w-4 h-4 cliente-expand-icon transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                        <td class="px-3 py-3">
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <a
+                                                    href="/app/cliente/{{ $cliente->id }}"
+                                                    data-link
+                                                    class="text-sm text-gray-900 hover:text-gray-600 hover:underline"
+                                                >
+                                                    {{ $cliente->razao_social ?? $cliente->nome ?? '-' }}
+                                                </a>
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cliente->tipo_pessoa === 'PJ' ? '#374151' : '#9ca3af' }}">
+                                                    {{ $cliente->tipo_pessoa }}
+                                                </span>
+                                                @if($cliente->is_empresa_propria)
+                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Empresa Própria</span>
+                                                @endif
+                                            </div>
+                                            @if($cliente->nome_fantasia)
+                                                <div class="text-[11px] text-gray-500 mt-1">
+                                                    <a
+                                                        href="/app/cliente/{{ $cliente->id }}"
+                                                        data-link
+                                                        class="text-gray-600 hover:text-gray-900 hover:underline"
+                                                    >
+                                                        {{ $cliente->nome_fantasia }}
+                                                    </a>
+                                                </div>
+                                            @elseif($cliente->tipo_pessoa === 'PJ' && $cliente->nome)
+                                                <div class="text-[11px] text-gray-500 mt-1">
+                                                    <a
+                                                        href="/app/cliente/{{ $cliente->id }}"
+                                                        data-link
+                                                        class="text-gray-600 hover:text-gray-900 hover:underline"
+                                                    >
+                                                        {{ $cliente->nome }}
+                                                    </a>
+                                                </div>
+                                            @endif
+                                        </td>
+                                        <td class="px-3 py-3 text-sm text-gray-700 font-mono">{{ $cliente->documento_formatado }}</td>
+                                        <td class="px-3 py-3">
+                                            <div class="text-sm text-gray-700">{{ $cliente->email ?: '-' }}</div>
+                                            <div class="text-[11px] text-gray-500 mt-1">
+                                                {{ $cliente->telefone ?: 'Sem telefone' }}
+                                                @if($cliente->uf)
+                                                    <span class="mx-1">·</span>{{ $cliente->uf }}
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td class="px-3 py-3 text-sm text-gray-700">
+                                            {{ number_format($cliente->participantes_count ?? 0, 0, ',', '.') }}
+                                        </td>
+                                        <td class="px-3 py-3">
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cliente->ativo ? '#047857' : '#9ca3af' }}">
+                                                {{ $cliente->ativo ? 'Ativo' : 'Inativo' }}
+                                            </span>
+                                        </td>
+                                        <td class="px-3 py-3 text-right">
+                                            <button
+                                                type="button"
+                                                class="acoes-btn p-2 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                                                data-id="{{ $cliente->id }}"
+                                                data-nome="{{ $cliente->razao_social ?? $cliente->nome ?? '' }}"
+                                                data-documento="{{ $cliente->documento_formatado }}"
+                                            >
+                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if($clientes->hasPages())
+                        <div class="border-t border-gray-300 px-4 py-3">
+                            <div class="flex items-center justify-between gap-3">
+                                <p class="text-[10px] text-gray-500 uppercase tracking-wide">
+                                    Mostrando {{ $clientes->firstItem() }}-{{ $clientes->lastItem() }} de {{ $clientes->total() }}
+                                </p>
+                                <div>
+                                    {{ $clientes->links() }}
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                @else
+                    <div class="text-center py-12 px-6">
+                        <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Nenhum cliente encontrado</h3>
+                        <p class="text-sm text-gray-600 mb-4">Ajuste os filtros ou cadastre um novo cliente.</p>
+                        <a href="/app/cliente/novo" data-link class="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded text-sm font-medium hover:bg-gray-700 transition-colors gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Cadastrar Cliente
+                        </a>
+                    </div>
+                @endif
+            </div>
+
+            @if(isset($clientes) && $clientes->count() > 0)
+                <div id="clientes-cards-view" class="hidden grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                    @foreach($clientes as $cliente)
+                        <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                            <div class="px-4 py-3 border-b border-gray-200 bg-gray-50/60">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="flex items-start gap-3 min-w-0">
+                                        <input type="checkbox" class="cliente-checkbox mt-0.5 w-4 h-4 rounded border-gray-300 text-gray-700 focus:ring-gray-400" data-id="{{ $cliente->id }}">
+                                        <div class="min-w-0">
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <a href="/app/cliente/{{ $cliente->id }}" data-link class="text-sm text-gray-900 hover:text-gray-600 hover:underline truncate">
+                                                    {{ $cliente->razao_social ?? $cliente->nome ?? '-' }}
+                                                </a>
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cliente->tipo_pessoa === 'PJ' ? '#374151' : '#9ca3af' }}">
+                                                    {{ $cliente->tipo_pessoa }}
+                                                </span>
+                                                @if($cliente->is_empresa_propria)
+                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Empresa Própria</span>
+                                                @endif
+                                            </div>
+                                            @if($cliente->nome_fantasia)
+                                                <div class="text-[11px] text-gray-500 mt-1">
+                                                    <a href="/app/cliente/{{ $cliente->id }}" data-link class="text-gray-600 hover:text-gray-900 hover:underline">
+                                                        {{ $cliente->nome_fantasia }}
+                                                    </a>
+                                                </div>
+                                            @elseif($cliente->tipo_pessoa === 'PJ' && $cliente->nome)
+                                                <div class="text-[11px] text-gray-500 mt-1">
+                                                    <a href="/app/cliente/{{ $cliente->id }}" data-link class="text-gray-600 hover:text-gray-900 hover:underline">
+                                                        {{ $cliente->nome }}
+                                                    </a>
+                                                </div>
+                                            @endif
+                                        </div>
                                     </div>
-                                    @if($cliente->tipo_pessoa === 'PJ' && $cliente->nome)
-                                        <div class="text-xs text-gray-500 truncate" style="max-width:200px" title="{{ $cliente->nome }}">{{ $cliente->nome }}</div>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm font-mono text-gray-700">
-                                    {{ $cliente->documento_formatado }}
-                                </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
-                                    {{ $cliente->email ?? '-' }}
-                                </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
-                                    {{ $cliente->telefone ?? '-' }}
-                                </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
-                                    @if($cliente->uf)
-                                        {{ $cliente->uf }}
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                                <td class="px-4 py-4 whitespace-nowrap">
-                                    @if($cliente->ativo)
-                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
-                                            Ativo
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-100 text-red-700">
-                                            Inativo
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-right">
-                                    <button type="button" class="acoes-btn p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                                    <button
+                                        type="button"
+                                        class="acoes-btn p-2 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors flex-shrink-0"
                                         data-id="{{ $cliente->id }}"
-                                        data-nome="{{ $cliente->tipo_pessoa === 'PJ' ? ($cliente->razao_social ?? $cliente->nome ?? '') : ($cliente->nome ?? '') }}"
-                                        data-documento="{{ $cliente->documento_formatado }}">
+                                        data-nome="{{ $cliente->razao_social ?? $cliente->nome ?? '' }}"
+                                        data-documento="{{ $cliente->documento_formatado }}"
+                                    >
                                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                             <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
                                         </svg>
                                     </button>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-
-                {{-- Paginacao --}}
-                <div class="px-4 py-4 border-t border-gray-200">
-                    <div class="flex items-center justify-between">
-                        <div class="text-sm text-gray-600">
-                            Mostrando <span id="pagina-inicio">1</span>-<span id="pagina-fim">{{ min(10, $clientes->count()) }}</span> de <span id="total-clientes">{{ $clientes->count() }}</span> clientes
+                                </div>
+                            </div>
+                            <div class="divide-y divide-gray-100">
+                                <div class="px-4 py-3">
+                                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Documento</p>
+                                    <p class="text-sm font-mono text-gray-700 mt-1">{{ $cliente->documento_formatado }}</p>
+                                </div>
+                                <div class="px-4 py-3">
+                                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Contato</p>
+                                    <p class="text-sm text-gray-700 mt-1">{{ $cliente->email ?: '-' }}</p>
+                                    <p class="text-[11px] text-gray-500 mt-1">
+                                        {{ $cliente->telefone ?: 'Sem telefone' }}
+                                        @if($cliente->uf)
+                                            <span class="mx-1">·</span>{{ $cliente->uf }}
+                                        @endif
+                                    </p>
+                                </div>
+                                <div class="px-4 py-3 grid grid-cols-2 gap-3">
+                                    <div>
+                                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participantes</p>
+                                        <p class="text-sm text-gray-700 mt-1">{{ number_format($cliente->participantes_count ?? 0, 0, ',', '.') }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Status</p>
+                                        <div class="mt-1">
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cliente->ativo ? '#047857' : '#9ca3af' }}">
+                                                {{ $cliente->ativo ? 'Ativo' : 'Inativo' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="px-4 py-3">
+                                    <button
+                                        type="button"
+                                        class="cliente-expand-btn cliente-card-expand-btn inline-flex items-center gap-2 text-xs text-gray-600 hover:text-gray-900 hover:underline transition-colors"
+                                        data-cliente-id="{{ $cliente->id }}"
+                                        data-expand-url="/app/cliente/{{ $cliente->id }}/participantes"
+                                    >
+                                        <svg class="w-4 h-4 cliente-expand-icon transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                        </svg>
+                                        Ver participantes vinculados
+                                    </button>
+                                </div>
+                                <div class="cliente-card-expand hidden px-4 py-4 bg-gray-50" data-cliente-id="{{ $cliente->id }}"></div>
+                            </div>
                         </div>
-                    </div>
+                    @endforeach
                 </div>
-                @else
-                {{-- Estado Vazio --}}
-                <div class="text-center py-12 px-6">
-                    <div class="flex flex-col items-center">
-                        <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Nenhum cliente cadastrado</h3>
-                        <p class="text-sm text-gray-600 mb-4">Comece cadastrando seu primeiro cliente para gerencia-lo aqui.</p>
-                        <a href="/app/novo-cliente" data-link class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                            </svg>
-                            Cadastrar Primeiro Cliente
-                        </a>
-                    </div>
-                </div>
-                @endif
-            </div>
+            @endif
         </div>
     </div>
 </div>
 
-{{-- Modais (fora do container para overlay correto) --}}
-
-{{-- Dropdown de acoes do cliente (menu kebab) --}}
 <div id="dropdown-acoes" class="hidden fixed z-[9999] bg-white rounded-xl shadow-lg ring-1 ring-gray-200 w-56 py-1">
     <div class="px-3 py-2 border-b border-gray-100">
         <p class="text-sm font-semibold text-gray-900 truncate" id="dropdown-acoes-nome"></p>
         <p class="text-xs text-gray-500 font-mono whitespace-nowrap tabular-nums" id="dropdown-acoes-documento"></p>
     </div>
-    <button type="button" id="dropdown-acoes-ver"
-       class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+    <button type="button" id="dropdown-acoes-expandir" class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
         </svg>
-        Ver detalhes
+        Ver participantes
     </button>
-    <a id="dropdown-acoes-editar" href="#"
-       class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-       data-link>
+    <a id="dropdown-acoes-editar" href="#" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors" data-link>
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
         </svg>
         Editar
     </a>
-    <button type="button" id="dropdown-acoes-excluir"
-        class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+    <button type="button" id="dropdown-acoes-excluir" class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
         </svg>
@@ -388,110 +430,6 @@
     </button>
 </div>
 
-{{-- Modal de detalhes do cliente --}}
-<div id="modal-detalhes" class="hidden fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4 py-8">
-        <div class="fixed inset-0 bg-black/50 transition-opacity" id="modal-detalhes-overlay"></div>
-        <div class="relative bg-white rounded-xl shadow-xl max-w-2xl w-full z-10">
-            {{-- Loading state --}}
-            <div id="modal-detalhes-loading" class="p-8 text-center">
-                <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <p class="text-sm text-gray-500">Carregando dados...</p>
-            </div>
-
-            {{-- Content (hidden until loaded) --}}
-            <div id="modal-detalhes-content" class="hidden">
-                {{-- Header --}}
-                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                    <div>
-                        <div class="flex items-center gap-2 mb-1">
-                            <h3 class="text-lg font-semibold text-gray-900" id="det-nome"></h3>
-                            <span id="det-badge-tipo" class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium"></span>
-                            <span id="det-badge-status" class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium"></span>
-                        </div>
-                        <p class="text-sm text-gray-500 font-mono" id="det-documento"></p>
-                    </div>
-                    <button type="button" id="btn-fechar-detalhes" class="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-
-                {{-- Body --}}
-                <div class="px-6 py-4 space-y-5 max-h-[60vh] overflow-y-auto">
-                    {{-- Dados Cadastrais --}}
-                    <div>
-                        <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            Dados Cadastrais
-                        </h4>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <p class="text-xs text-gray-500">Tipo Pessoa</p>
-                                <p class="text-sm text-gray-900" id="det-tipo-pessoa">-</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500">E-mail</p>
-                                <p class="text-sm text-gray-900" id="det-email">-</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500">Telefone</p>
-                                <p class="text-sm text-gray-900" id="det-telefone">-</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500">Localizacao</p>
-                                <p class="text-sm text-gray-900" id="det-localizacao">-</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500">Empresa Propria</p>
-                                <p class="text-sm" id="det-empresa-propria">-</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500">Cadastrado em</p>
-                                <p class="text-sm text-gray-900" id="det-created-at">-</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Estatisticas --}}
-                    <div>
-                        <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                            </svg>
-                            Estatisticas
-                        </h4>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="bg-gray-50 rounded-lg p-3 text-center">
-                                <p class="text-xs text-gray-500">Participantes vinculados</p>
-                                <p class="text-xl font-bold text-gray-900" id="det-total-participantes">0</p>
-                            </div>
-                            <div class="bg-gray-50 rounded-lg p-3 text-center">
-                                <p class="text-xs text-gray-500">Notas fiscais</p>
-                                <p class="text-xl font-bold text-gray-900" id="det-total-notas">0</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Footer --}}
-                <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
-                    <button type="button" id="btn-fechar-detalhes-footer" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
-                        Fechar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- Modal de confirmacao de exclusao --}}
 <div id="modal-excluir" class="hidden fixed inset-0 z-50 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
         <div class="fixed inset-0 bg-black/50 transition-opacity" id="modal-excluir-overlay"></div>
@@ -505,29 +443,18 @@
                 <h3 class="text-lg font-semibold text-gray-900">Excluir cliente?</h3>
             </div>
             <div class="mb-4">
-                <p class="text-sm text-gray-700 mb-2">
-                    <span class="font-medium" id="modal-excluir-documento"></span> - <span id="modal-excluir-nome"></span>
-                </p>
-                <p class="text-sm text-gray-500">
-                    O cliente sera removido permanentemente. Os participantes vinculados serao mantidos.
-                </p>
-                <p class="text-sm text-red-600 font-medium mt-2">
-                    Esta ação não pode ser desfeita.
-                </p>
+                <p class="text-sm text-gray-700 mb-2"><span class="font-medium" id="modal-excluir-documento"></span> - <span id="modal-excluir-nome"></span></p>
+                <p class="text-sm text-gray-500">O cliente será removido permanentemente. Os participantes vinculados serão mantidos.</p>
+                <p class="text-sm text-red-600 font-medium mt-2">Esta ação não pode ser desfeita.</p>
             </div>
             <div class="flex justify-end gap-3">
-                <button type="button" id="btn-cancelar-exclusao" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
-                    Cancelar
-                </button>
-                <button type="button" id="btn-confirmar-exclusao" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm transition hover:bg-red-700">
-                    Excluir
-                </button>
+                <button type="button" id="btn-cancelar-exclusao" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">Cancelar</button>
+                <button type="button" id="btn-confirmar-exclusao" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm transition hover:bg-red-700">Excluir</button>
             </div>
         </div>
     </div>
 </div>
 
-{{-- Modal de confirmacao de exclusao em lote --}}
 <div id="modal-bulk-delete" class="hidden fixed inset-0 z-50 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
         <div class="fixed inset-0 bg-black/50 transition-opacity" id="modal-bulk-delete-overlay"></div>
@@ -541,20 +468,12 @@
                 <h3 class="text-lg font-semibold text-gray-900">Excluir <span id="modal-bulk-delete-count">0</span> <span id="modal-bulk-delete-label">clientes</span>?</h3>
             </div>
             <div class="mb-4">
-                <p class="text-sm text-gray-500 mb-2">
-                    O cliente sera removido permanentemente. Os participantes vinculados serao mantidos.
-                </p>
-                <p class="text-sm text-red-600 font-medium">
-                    Esta ação não pode ser desfeita.
-                </p>
+                <p class="text-sm text-gray-500 mb-2">Os clientes serão removidos permanentemente. Os participantes vinculados serão mantidos.</p>
+                <p class="text-sm text-red-600 font-medium">Esta ação não pode ser desfeita.</p>
             </div>
             <div class="flex justify-end gap-3">
-                <button type="button" id="btn-cancelar-bulk-delete" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
-                    Cancelar
-                </button>
-                <button type="button" id="btn-confirmar-bulk-delete" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm transition hover:bg-red-700">
-                    Excluir
-                </button>
+                <button type="button" id="btn-cancelar-bulk-delete" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">Cancelar</button>
+                <button type="button" id="btn-confirmar-bulk-delete" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm transition hover:bg-red-700">Excluir</button>
             </div>
         </div>
     </div>
@@ -566,410 +485,151 @@
 
     function initClientes() {
         var container = document.getElementById('clientes-container');
-        if (!container) return;
-
-        if (container.dataset.initialized === '1') return;
+        if (!container || container.dataset.initialized === '1') return;
         container.dataset.initialized = '1';
 
         var clientesSelecionados = new Set();
-
-        function escHtml(str) {
-            var div = document.createElement('div');
-            div.textContent = str || '';
-            return div.innerHTML;
-        }
-
-        // === Filtros ===
-        var buscarInput = document.getElementById('buscar-cliente');
-        var filtroStatus = document.getElementById('filtro-status');
-        var filtroTipo = document.getElementById('filtro-tipo');
-        var filtroRegime = document.getElementById('filtro-regime');
-        var filtroSituacao = document.getElementById('filtro-situacao');
-        var filtroUf = document.getElementById('filtro-uf');
-
-        // Popular filtro UF com valores únicos
-        if (filtroUf) {
-            var ufs = new Set();
-            container.querySelectorAll('.cliente-row').forEach(function(row) {
-                var uf = (row.dataset.uf || '').toUpperCase();
-                if (uf) ufs.add(uf);
-            });
-            Array.from(ufs).sort().forEach(function(uf) {
-                var opt = document.createElement('option');
-                opt.value = uf.toLowerCase();
-                opt.textContent = uf;
-                filtroUf.appendChild(opt);
-            });
-        }
-
-        function aplicarFiltros() {
-            var busca = (buscarInput ? buscarInput.value : '').toLowerCase();
-            var status = filtroStatus ? filtroStatus.value : 'todos';
-            var tipo = filtroTipo ? filtroTipo.value : 'todos';
-            var regime = filtroRegime ? filtroRegime.value : 'todos';
-            var situacao = filtroSituacao ? filtroSituacao.value : 'todos';
-            var uf = filtroUf ? filtroUf.value : 'todos';
-
-            var rows = container.querySelectorAll('.cliente-row');
-            var visibleCount = 0;
-
-            rows.forEach(function(row) {
-                var nome = row.dataset.nome || '';
-                var documento = row.dataset.documento || '';
-                var tipoCliente = row.dataset.tipo;
-                var statusCliente = row.dataset.status;
-
-                var show = true;
-
-                if (busca && nome.indexOf(busca) === -1 && documento.indexOf(busca) === -1) {
-                    show = false;
-                }
-                if (status !== 'todos' && statusCliente !== status) {
-                    show = false;
-                }
-                if (tipo !== 'todos') {
-                    var tipoFiltro = tipo === 'pj' ? 'PJ' : 'PF';
-                    if (tipoCliente !== tipoFiltro) show = false;
-                }
-                if (regime !== 'todos') {
-                    var regimeCliente = row.dataset.regime || '';
-                    if (regimeCliente.indexOf(regime) === -1) show = false;
-                }
-                if (situacao !== 'todos' && (row.dataset.situacao || '') !== situacao) {
-                    show = false;
-                }
-                if (uf !== 'todos' && (row.dataset.uf || '') !== uf) {
-                    show = false;
-                }
-
-                row.style.display = show ? '' : 'none';
-                if (show) visibleCount++;
-            });
-
-            var elInicio = document.getElementById('pagina-inicio');
-            var elFim = document.getElementById('pagina-fim');
-            var elTotal = document.getElementById('total-clientes');
-            if (elInicio) elInicio.textContent = visibleCount > 0 ? 1 : 0;
-            if (elFim) elFim.textContent = visibleCount;
-            if (elTotal) elTotal.textContent = visibleCount;
-        }
-
-        if (buscarInput) buscarInput.addEventListener('input', aplicarFiltros);
-        if (filtroStatus) filtroStatus.addEventListener('change', aplicarFiltros);
-        if (filtroTipo) filtroTipo.addEventListener('change', aplicarFiltros);
-        if (filtroRegime) filtroRegime.addEventListener('change', aplicarFiltros);
-        if (filtroSituacao) filtroSituacao.addEventListener('change', aplicarFiltros);
-        if (filtroUf) filtroUf.addEventListener('change', aplicarFiltros);
-
-        // Botao Filtrar
-        var btnFiltrar = document.getElementById('btn-filtrar-clientes');
-        if (btnFiltrar) btnFiltrar.addEventListener('click', aplicarFiltros);
-
-        // Botao Limpar
-        var btnLimpar = document.getElementById('btn-limpar-filtros-clientes');
-        if (btnLimpar) {
-            btnLimpar.addEventListener('click', function() {
-                if (buscarInput) buscarInput.value = '';
-                [filtroStatus, filtroTipo, filtroRegime, filtroSituacao, filtroUf].forEach(function(el) {
-                    if (el) el.value = el.options[0].value;
-                });
-                aplicarFiltros();
-            });
-        }
-
-        // Aplicar filtro de busca via query param (?search=...)
-        var urlParams = new URLSearchParams(window.location.search);
-        var searchParam = urlParams.get('search');
-        if (searchParam && buscarInput) {
-            buscarInput.value = searchParam;
-            aplicarFiltros();
-        }
-
-        // === Selecao ===
-        var selectAll = document.getElementById('select-all');
-
-        function atualizarBarraAcoes() {
-            var acoesLote = document.getElementById('acoes-lote');
-            var countEl = document.getElementById('clientes-selecionados-count');
-            var count = clientesSelecionados.size;
-
-            if (countEl) countEl.textContent = count;
-            var labelSelecionados = document.getElementById('clientes-selecionados-label');
-            if (labelSelecionados) labelSelecionados.textContent = count === 1 ? 'cliente selecionado' : 'clientes selecionados';
-            if (acoesLote) {
-                if (count > 0) {
-                    acoesLote.classList.remove('hidden');
-                } else {
-                    acoesLote.classList.add('hidden');
-                }
-            }
-
-            var checkboxes = container.querySelectorAll('.cliente-checkbox');
-            var visibleChecked = 0;
-            var visibleTotal = 0;
-            checkboxes.forEach(function(cb) {
-                var row = cb.closest('.cliente-row');
-                if (row && row.style.display !== 'none') {
-                    visibleTotal++;
-                    if (cb.checked) visibleChecked++;
-                }
-            });
-            if (selectAll) {
-                selectAll.checked = visibleChecked === visibleTotal && visibleTotal > 0;
-                selectAll.indeterminate = visibleChecked > 0 && visibleChecked < visibleTotal;
-            }
-
-            // Atualizar info de selecao global
-            var infoEl = document.getElementById('total-selecionados-clientes');
-            if (infoEl) infoEl.textContent = count;
-            var infoContainer = document.getElementById('total-selecionados-clientes-info');
-            if (infoContainer) {
-                if (count > 0) { infoContainer.classList.remove('hidden'); } else { infoContainer.classList.add('hidden'); }
-            }
-            var btnLimparGlobal = document.getElementById('btn-limpar-selecao-clientes');
-            if (btnLimparGlobal) {
-                if (count > 0) { btnLimparGlobal.classList.remove('hidden'); } else { btnLimparGlobal.classList.add('hidden'); }
-            }
-        }
-
-        if (selectAll) {
-            selectAll.addEventListener('change', function() {
-                var checked = selectAll.checked;
-                container.querySelectorAll('.cliente-checkbox').forEach(function(cb) {
-                    var row = cb.closest('.cliente-row');
-                    if (row && row.style.display !== 'none') {
-                        cb.checked = checked;
-                        var id = parseInt(cb.dataset.id);
-                        if (checked) {
-                            clientesSelecionados.add(id);
-                        } else {
-                            clientesSelecionados.delete(id);
-                        }
-                    }
-                });
-                atualizarBarraAcoes();
-            });
-        }
-
-        container.addEventListener('change', function(e) {
-            if (e.target.classList.contains('cliente-checkbox')) {
-                var id = parseInt(e.target.dataset.id);
-                if (e.target.checked) {
-                    clientesSelecionados.add(id);
-                } else {
-                    clientesSelecionados.delete(id);
-                }
-                atualizarBarraAcoes();
-            }
-        });
-
-        // Botao limpar selecao (barra de acoes)
-        var btnLimpar = document.getElementById('btn-limpar-selecao');
-        if (btnLimpar) {
-            btnLimpar.addEventListener('click', function() {
-                clientesSelecionados.clear();
-                container.querySelectorAll('.cliente-checkbox').forEach(function(cb) { cb.checked = false; });
-                if (selectAll) selectAll.checked = false;
-                atualizarBarraAcoes();
-                atualizarInfoSelecaoClientes();
-            });
-        }
-
-        // === Botoes "Selecionar todos" / "Limpar" globais ===
-        var btnSelecionarTodosClientes = document.getElementById('btn-selecionar-todos-clientes');
-        var btnLimparSelecaoClientes = document.getElementById('btn-limpar-selecao-clientes');
-        var totalSelecionadosClientesInfo = document.getElementById('total-selecionados-clientes-info');
-        var totalSelecionadosClientes = document.getElementById('total-selecionados-clientes');
-
-        function atualizarInfoSelecaoClientes() {
-            var count = clientesSelecionados.size;
-            if (totalSelecionadosClientes) totalSelecionadosClientes.textContent = count;
-            if (totalSelecionadosClientesInfo) {
-                if (count > 0) {
-                    totalSelecionadosClientesInfo.classList.remove('hidden');
-                } else {
-                    totalSelecionadosClientesInfo.classList.add('hidden');
-                }
-            }
-            if (btnLimparSelecaoClientes) {
-                if (count > 0) {
-                    btnLimparSelecaoClientes.classList.remove('hidden');
-                } else {
-                    btnLimparSelecaoClientes.classList.add('hidden');
-                }
-            }
-        }
-
-        if (btnSelecionarTodosClientes) {
-            btnSelecionarTodosClientes.addEventListener('click', function() {
-                container.querySelectorAll('.cliente-checkbox').forEach(function(cb) {
-                    var row = cb.closest('.cliente-row');
-                    if (row && row.style.display !== 'none') {
-                        cb.checked = true;
-                        clientesSelecionados.add(parseInt(cb.dataset.id));
-                    }
-                });
-                if (selectAll) selectAll.checked = true;
-                atualizarBarraAcoes();
-                atualizarInfoSelecaoClientes();
-            });
-        }
-
-        if (btnLimparSelecaoClientes) {
-            btnLimparSelecaoClientes.addEventListener('click', function() {
-                clientesSelecionados.clear();
-                container.querySelectorAll('.cliente-checkbox').forEach(function(cb) { cb.checked = false; });
-                if (selectAll) selectAll.checked = false;
-                atualizarBarraAcoes();
-                atualizarInfoSelecaoClientes();
-            });
-        }
-
-        // Botao exportar (placeholder)
-        var btnExportar = document.getElementById('btn-exportar');
-        if (btnExportar) {
-            btnExportar.addEventListener('click', function() {
-                if (window.showToast) {
-                    window.showToast('Funcionalidade de exportacao em desenvolvimento', 'info');
-                }
-            });
-        }
-
-        // Botao consultar selecionados
-        var btnConsultar = document.getElementById('btn-consultar-selecionados');
-        if (btnConsultar) {
-            btnConsultar.addEventListener('click', function() {
-                if (clientesSelecionados.size === 0) return;
-                // Clientes nao tem participante_id direto, placeholder
-                if (window.showToast) {
-                    window.showToast('Funcionalidade de consulta em desenvolvimento', 'info');
-                }
-            });
-        }
-
-        // Botao bulk delete -> abre modal
-        var btnBulkDelete = document.getElementById('btn-bulk-delete');
-        var modalBulkDelete = document.getElementById('modal-bulk-delete');
-        var modalBulkDeleteOverlay = document.getElementById('modal-bulk-delete-overlay');
-        var modalBulkDeleteCount = document.getElementById('modal-bulk-delete-count');
-        var modalBulkDeleteLabel = document.getElementById('modal-bulk-delete-label');
-        var btnCancelarBulkDelete = document.getElementById('btn-cancelar-bulk-delete');
-        var btnConfirmarBulkDelete = document.getElementById('btn-confirmar-bulk-delete');
-
-        function abrirModalBulkDelete() {
-            if (clientesSelecionados.size === 0) return;
-            if (modalBulkDeleteCount) modalBulkDeleteCount.textContent = clientesSelecionados.size;
-            if (modalBulkDeleteLabel) modalBulkDeleteLabel.textContent = clientesSelecionados.size === 1 ? 'cliente' : 'clientes';
-            if (modalBulkDelete) modalBulkDelete.classList.remove('hidden');
-        }
-
-        function fecharModalBulkDelete() {
-            if (modalBulkDelete) modalBulkDelete.classList.add('hidden');
-        }
-
-        if (btnBulkDelete) btnBulkDelete.addEventListener('click', abrirModalBulkDelete);
-        if (btnCancelarBulkDelete) btnCancelarBulkDelete.addEventListener('click', fecharModalBulkDelete);
-        if (modalBulkDeleteOverlay) modalBulkDeleteOverlay.addEventListener('click', fecharModalBulkDelete);
-
-        if (btnConfirmarBulkDelete) {
-            btnConfirmarBulkDelete.addEventListener('click', function() {
-                if (clientesSelecionados.size === 0) return;
-
-                btnConfirmarBulkDelete.disabled = true;
-                btnConfirmarBulkDelete.innerHTML = '<svg class="animate-spin w-4 h-4 inline mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Excluindo...';
-
-                var ids = Array.from(clientesSelecionados);
-                var tokenMeta = document.querySelector('meta[name="csrf-token"]');
-
-                fetch('/app/clientes/bulk-delete', {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': tokenMeta ? tokenMeta.content : '',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify({ ids: ids }),
-                })
-                .then(function(res) { return res.json(); })
-                .then(function(data) {
-                    if (!data.success) {
-                        throw new Error(data.message || 'Erro ao excluir clientes');
-                    }
-                    if (window.showToast) window.showToast(data.message || 'Clientes excluídos com sucesso!', 'success');
-
-                    // Remover linhas da tabela
-                    ids.forEach(function(id) {
-                        var row = container.querySelector('tr[data-cliente-id="' + id + '"]');
-                        if (row) row.remove();
-                    });
-
-                    clientesSelecionados.clear();
-                    container.querySelectorAll('.cliente-checkbox').forEach(function(cb) { cb.checked = false; });
-                    if (selectAll) selectAll.checked = false;
-                    atualizarBarraAcoes();
-                    fecharModalBulkDelete();
-                })
-                .catch(function(err) {
-                    console.error('[Clientes] Erro ao excluir em lote:', err);
-                    if (window.showToast) window.showToast(err.message || 'Erro ao excluir clientes', 'error');
-                    fecharModalBulkDelete();
-                })
-                .finally(function() {
-                    btnConfirmarBulkDelete.disabled = false;
-                    btnConfirmarBulkDelete.textContent = 'Excluir';
-                });
-            });
-        }
-
-        // === Cards clicaveis ===
-        var cardTotal = document.getElementById('card-total-clientes');
-        if (cardTotal) {
-            cardTotal.addEventListener('click', function() {
-                if (filtroStatus) { filtroStatus.value = 'ativos'; }
-                aplicarFiltros();
-            });
-        }
-
-        var cardInativos = document.getElementById('card-inativos');
-        if (cardInativos) {
-            cardInativos.addEventListener('click', function() {
-                if (filtroStatus) { filtroStatus.value = 'inativos'; }
-                aplicarFiltros();
-            });
-        }
-
-        var cardPJ = document.getElementById('card-pj');
-        if (cardPJ) {
-            cardPJ.addEventListener('click', function() {
-                if (filtroTipo) { filtroTipo.value = 'pj'; }
-                aplicarFiltros();
-            });
-        }
-
-        var cardPF = document.getElementById('card-pf');
-        if (cardPF) {
-            cardPF.addEventListener('click', function() {
-                if (filtroTipo) { filtroTipo.value = 'pf'; }
-                aplicarFiltros();
-            });
-        }
-
-        // === Dropdown de acoes (kebab) ===
+        var selectAll = document.getElementById('select-all-clientes');
         var dropdownAcoes = document.getElementById('dropdown-acoes');
         var dropdownAcoesNome = document.getElementById('dropdown-acoes-nome');
         var dropdownAcoesDocumento = document.getElementById('dropdown-acoes-documento');
-        var dropdownAcoesVer = document.getElementById('dropdown-acoes-ver');
+        var dropdownAcoesExpandir = document.getElementById('dropdown-acoes-expandir');
         var dropdownAcoesEditar = document.getElementById('dropdown-acoes-editar');
         var dropdownAcoesExcluir = document.getElementById('dropdown-acoes-excluir');
         var acaoClienteId = null;
         var acaoClienteNome = null;
         var acaoClienteDocumento = null;
         var dropdownBtnAtual = null;
+        var btnViewList = document.getElementById('btn-view-list-clientes');
+        var btnViewCards = document.getElementById('btn-view-cards-clientes');
+        var listView = document.getElementById('clientes-list-view');
+        var cardsView = document.getElementById('clientes-cards-view');
+
+        function ativarModoVisualizacao(mode) {
+            var isCards = mode === 'cards';
+            if (listView) listView.classList.toggle('hidden', isCards);
+            if (cardsView) cardsView.classList.toggle('hidden', !isCards);
+            if (btnViewList) btnViewList.classList.toggle('active-view', !isCards);
+            if (btnViewCards) btnViewCards.classList.toggle('active-view', isCards);
+        }
+
+        if (btnViewList) {
+            btnViewList.addEventListener('click', function() {
+                ativarModoVisualizacao('list');
+            });
+        }
+
+        if (btnViewCards) {
+            btnViewCards.addEventListener('click', function() {
+                ativarModoVisualizacao('cards');
+            });
+        }
+
+        function atualizarBarraAcoes() {
+            var total = clientesSelecionados.size;
+            var acoesLote = document.getElementById('acoes-lote');
+            var totalInfo = document.getElementById('total-selecionados-clientes-info');
+            var totalSelecionados = document.getElementById('total-selecionados-clientes');
+            var countBadge = document.getElementById('clientes-selecionados-count');
+            var label = document.getElementById('clientes-selecionados-label');
+            var btnLimparGlobal = document.getElementById('btn-limpar-selecao-clientes');
+
+            if (acoesLote) acoesLote.classList.toggle('hidden', total === 0);
+            if (totalInfo) totalInfo.classList.toggle('hidden', total === 0);
+            if (btnLimparGlobal) btnLimparGlobal.classList.toggle('hidden', total === 0);
+            if (totalSelecionados) totalSelecionados.textContent = total;
+            if (countBadge) countBadge.textContent = total;
+            if (label) label.textContent = total === 1 ? 'cliente selecionado' : 'clientes selecionados';
+
+            if (!selectAll) return;
+            var checkboxes = container.querySelectorAll('.cliente-checkbox');
+            var checked = 0;
+            checkboxes.forEach(function(cb) {
+                if (cb.checked) checked++;
+            });
+            selectAll.checked = checked > 0 && checked === checkboxes.length;
+            selectAll.indeterminate = checked > 0 && checked < checkboxes.length;
+        }
+
+        ativarModoVisualizacao('list');
+
+        function sincronizarCheckboxesCliente(id, checked) {
+            container.querySelectorAll('.cliente-checkbox[data-id="' + id + '"]').forEach(function(cb) {
+                cb.checked = checked;
+            });
+        }
+
+        function removerClienteDaTela(id) {
+            container.querySelectorAll('tr[data-cliente-id="' + id + '"]').forEach(function(row) {
+                var nextRow = row.nextElementSibling;
+                row.remove();
+                if (nextRow && nextRow.classList.contains('cliente-expand-row')) nextRow.remove();
+            });
+
+            container.querySelectorAll('.cliente-card-expand[data-cliente-id="' + id + '"]').forEach(function(expand) {
+                var card = expand.closest('.bg-white.rounded.border.border-gray-300.overflow-hidden');
+                if (card) card.remove();
+            });
+        }
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                container.querySelectorAll('.cliente-checkbox').forEach(function(cb) {
+                    cb.checked = selectAll.checked;
+                    var id = parseInt(cb.dataset.id, 10);
+                    if (selectAll.checked) {
+                        clientesSelecionados.add(id);
+                    } else {
+                        clientesSelecionados.delete(id);
+                    }
+                });
+                atualizarBarraAcoes();
+            });
+        }
+
+        container.addEventListener('change', function(event) {
+            if (!event.target.classList.contains('cliente-checkbox')) return;
+            var id = parseInt(event.target.dataset.id, 10);
+            sincronizarCheckboxesCliente(id, event.target.checked);
+            if (event.target.checked) {
+                clientesSelecionados.add(id);
+            } else {
+                clientesSelecionados.delete(id);
+            }
+            atualizarBarraAcoes();
+        });
+
+        var btnSelecionarTodos = document.getElementById('btn-selecionar-todos-clientes');
+        if (btnSelecionarTodos) {
+            btnSelecionarTodos.addEventListener('click', function() {
+                container.querySelectorAll('.cliente-checkbox').forEach(function(cb) {
+                    cb.checked = true;
+                    clientesSelecionados.add(parseInt(cb.dataset.id, 10));
+                });
+                atualizarBarraAcoes();
+            });
+        }
+
+        function limparSelecao() {
+            clientesSelecionados.clear();
+            container.querySelectorAll('.cliente-checkbox').forEach(function(cb) {
+                cb.checked = false;
+            });
+            atualizarBarraAcoes();
+        }
+
+        var btnLimparSelecao = document.getElementById('btn-limpar-selecao');
+        if (btnLimparSelecao) btnLimparSelecao.addEventListener('click', limparSelecao);
+        var btnLimparSelecaoGlobal = document.getElementById('btn-limpar-selecao-clientes');
+        if (btnLimparSelecaoGlobal) btnLimparSelecaoGlobal.addEventListener('click', limparSelecao);
+
+        function fecharDropdownAcoes() {
+            if (dropdownAcoes) dropdownAcoes.classList.add('hidden');
+            dropdownBtnAtual = null;
+        }
 
         function posicionarDropdown(btnElement) {
             if (!dropdownAcoes || !btnElement) return;
-            // Temporarily show to measure height
             dropdownAcoes.style.visibility = 'hidden';
             dropdownAcoes.classList.remove('hidden');
             var dropdownHeight = dropdownAcoes.offsetHeight;
@@ -978,218 +638,168 @@
             dropdownAcoes.style.visibility = '';
 
             var rect = btnElement.getBoundingClientRect();
-            var spaceBelow = window.innerHeight - rect.bottom;
-            var spaceAbove = rect.top;
-
-            // Horizontal: align right edge of dropdown with right edge of button
-            var left = rect.right - dropdownWidth;
-            if (left < 8) left = 8;
-
-            // Vertical: prefer below, fall back to above
-            var top;
-            if (spaceBelow >= dropdownHeight + 4) {
-                top = rect.bottom + 4;
-            } else if (spaceAbove >= dropdownHeight + 4) {
-                top = rect.top - dropdownHeight - 4;
-            } else {
-                top = rect.bottom + 4;
-            }
-
+            var left = Math.max(8, rect.right - dropdownWidth);
+            var top = (window.innerHeight - rect.bottom >= dropdownHeight + 4) ? rect.bottom + 4 : rect.top - dropdownHeight - 4;
             dropdownAcoes.style.top = top + 'px';
             dropdownAcoes.style.left = left + 'px';
         }
 
-        function abrirDropdownAcoes(btnElement, id, nome, documento) {
-            // Toggle: if clicking the same button, close
+        function abrirDropdownAcoes(btnElement) {
+            if (!dropdownAcoes) return;
             if (!dropdownAcoes.classList.contains('hidden') && dropdownBtnAtual === btnElement) {
                 fecharDropdownAcoes();
                 return;
             }
-            acaoClienteId = id;
-            acaoClienteNome = nome;
-            acaoClienteDocumento = documento;
+
+            acaoClienteId = btnElement.dataset.id;
+            acaoClienteNome = btnElement.dataset.nome;
+            acaoClienteDocumento = btnElement.dataset.documento;
             dropdownBtnAtual = btnElement;
-            if (dropdownAcoesNome) dropdownAcoesNome.textContent = nome || 'Sem nome';
-            if (dropdownAcoesDocumento) dropdownAcoesDocumento.textContent = documento || '';
-            if (dropdownAcoesEditar) dropdownAcoesEditar.href = '/app/cliente/' + id + '/editar';
+
+            if (dropdownAcoesNome) dropdownAcoesNome.textContent = acaoClienteNome || 'Sem nome';
+            if (dropdownAcoesDocumento) dropdownAcoesDocumento.textContent = acaoClienteDocumento || '';
+            if (dropdownAcoesEditar) dropdownAcoesEditar.href = '/app/cliente/' + acaoClienteId + '/editar';
+
             posicionarDropdown(btnElement);
             dropdownAcoes.classList.remove('hidden');
         }
 
-        function fecharDropdownAcoes() {
-            if (dropdownAcoes) dropdownAcoes.classList.add('hidden');
-            dropdownBtnAtual = null;
-        }
+        function toggleExpandCliente(clienteId, url, preferCard) {
+            var row = container.querySelector('tr[data-cliente-id="' + clienteId + '"]');
+            if (row && !preferCard) {
+                var nextRow = row.nextElementSibling;
+                if (nextRow && nextRow.classList.contains('cliente-expand-row')) {
+                    nextRow.remove();
+                    var iconOpen = row.querySelector('.cliente-expand-icon');
+                    if (iconOpen) iconOpen.classList.remove('rotate-90');
+                    return;
+                }
 
-        container.addEventListener('click', function(e) {
-            var acaoBtn = e.target.closest('.acoes-btn');
-            if (acaoBtn) {
-                e.stopPropagation();
-                abrirDropdownAcoes(acaoBtn, acaoBtn.dataset.id, acaoBtn.dataset.nome, acaoBtn.dataset.documento);
+                var expandRow = document.createElement('tr');
+                expandRow.className = 'cliente-expand-row bg-gray-50';
+                expandRow.innerHTML = '<td colspan="8" class="px-4 py-4"><div class="text-sm text-gray-500">Carregando participantes...</div></td>';
+                row.after(expandRow);
+
+                var icon = row.querySelector('.cliente-expand-icon');
+                if (icon) icon.classList.add('rotate-90');
+
+                fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html',
+                    },
+                })
+                    .then(function(res) { return res.text(); })
+                    .then(function(html) {
+                        var contentCell = expandRow.querySelector('td');
+                        if (contentCell) contentCell.innerHTML = html;
+                    })
+                    .catch(function() {
+                        var contentCell = expandRow.querySelector('td');
+                        if (contentCell) contentCell.innerHTML = '<div class="text-sm text-red-600">Erro ao carregar participantes vinculados.</div>';
+                    });
+                return;
             }
-        });
 
-        // Close on click outside
-        document.addEventListener('click', function(e) {
-            if (dropdownAcoes && !dropdownAcoes.classList.contains('hidden') && !dropdownAcoes.contains(e.target)) {
-                fecharDropdownAcoes();
+            var cardExpand = container.querySelector('.cliente-card-expand[data-cliente-id="' + clienteId + '"]');
+            if (!cardExpand) return;
+
+            var cardButton = container.querySelector('.cliente-card-expand-btn[data-cliente-id="' + clienteId + '"]');
+            var cardIcon = cardButton ? cardButton.querySelector('.cliente-expand-icon') : null;
+
+            if (!cardExpand.classList.contains('hidden')) {
+                cardExpand.classList.add('hidden');
+                cardExpand.innerHTML = '';
+                if (cardIcon) cardIcon.classList.remove('rotate-90');
+                return;
             }
-        });
 
-        // Close on Escape
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && dropdownAcoes && !dropdownAcoes.classList.contains('hidden')) {
-                fecharDropdownAcoes();
-            }
-        });
+            cardExpand.classList.remove('hidden');
+            cardExpand.innerHTML = '<div class="text-sm text-gray-500">Carregando participantes...</div>';
+            if (cardIcon) cardIcon.classList.add('rotate-90');
 
-        // Close on scroll (capture mode to catch scrolling in any container)
-        window.addEventListener('scroll', function() {
-            if (dropdownAcoes && !dropdownAcoes.classList.contains('hidden')) {
-                fecharDropdownAcoes();
-            }
-        }, true);
-
-        // "Ver detalhes" -> abre modal de detalhes
-        if (dropdownAcoesVer) {
-            dropdownAcoesVer.addEventListener('click', function() {
-                var id = acaoClienteId;
-                fecharDropdownAcoes();
-                abrirModalDetalhes(id);
-            });
-        }
-
-        // "Editar" -> fechar dropdown (SPA navega via data-link)
-        if (dropdownAcoesEditar) {
-            dropdownAcoesEditar.addEventListener('click', fecharDropdownAcoes);
-        }
-
-        // "Excluir" -> fechar dropdown, abrir modal de exclusao
-        if (dropdownAcoesExcluir) {
-            dropdownAcoesExcluir.addEventListener('click', function() {
-                var id = acaoClienteId;
-                var nome = acaoClienteNome;
-                var documento = acaoClienteDocumento;
-                fecharDropdownAcoes();
-                abrirModalExclusao(id, nome, documento);
-            });
-        }
-
-        // === Modal de detalhes ===
-        var modalDetalhes = document.getElementById('modal-detalhes');
-        var modalDetalhesOverlay = document.getElementById('modal-detalhes-overlay');
-        var modalDetalhesLoading = document.getElementById('modal-detalhes-loading');
-        var modalDetalhesContent = document.getElementById('modal-detalhes-content');
-        var btnFecharDetalhes = document.getElementById('btn-fechar-detalhes');
-        var btnFecharDetalhesFooter = document.getElementById('btn-fechar-detalhes-footer');
-
-        function abrirModalDetalhes(id) {
-            if (!modalDetalhes) return;
-
-            // Show modal with loading
-            modalDetalhes.classList.remove('hidden');
-            if (modalDetalhesLoading) modalDetalhesLoading.classList.remove('hidden');
-            if (modalDetalhesContent) modalDetalhesContent.classList.add('hidden');
-
-            fetch('/app/cliente/' + id, {
+            fetch(url, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
+                    'Accept': 'text/html',
                 },
             })
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-                if (!data.success) {
-                    throw new Error(data.message || 'Erro ao carregar dados');
+                .then(function(res) { return res.text(); })
+                .then(function(html) {
+                    cardExpand.innerHTML = html;
+                })
+                .catch(function() {
+                    cardExpand.innerHTML = '<div class="text-sm text-red-600">Erro ao carregar participantes vinculados.</div>';
+                });
+        }
+
+        container.addEventListener('click', function(event) {
+            var expandBtn = event.target.closest('.cliente-expand-btn');
+            if (expandBtn) {
+                event.preventDefault();
+                event.stopPropagation();
+                toggleExpandCliente(expandBtn.dataset.clienteId, expandBtn.dataset.expandUrl, expandBtn.classList.contains('cliente-card-expand-btn'));
+                return;
+            }
+
+            var acaoBtn = event.target.closest('.acoes-btn');
+            if (acaoBtn) {
+                event.preventDefault();
+                event.stopPropagation();
+                abrirDropdownAcoes(acaoBtn);
+                return;
+            }
+
+            var pageBtn = event.target.closest('.js-related-page');
+            if (pageBtn) {
+                event.preventDefault();
+                if (pageBtn.disabled) return;
+                var url = pageBtn.dataset.url;
+                var row = pageBtn.closest('.cliente-expand-row');
+                var cardExpand = pageBtn.closest('.cliente-card-expand');
+                var cell = row ? row.querySelector('td') : null;
+                if (cell) {
+                    cell.innerHTML = '<div class="text-sm text-gray-500">Carregando participantes...</div>';
                 }
-
-                var c = data.cliente;
-                var stats = data.stats || {};
-
-                // Header
-                var elNome = document.getElementById('det-nome');
-                if (elNome) elNome.textContent = c.razao_social || c.nome || '-';
-
-                var elDoc = document.getElementById('det-documento');
-                if (elDoc) elDoc.textContent = c.documento_formatado || '-';
-
-                var badgeTipo = document.getElementById('det-badge-tipo');
-                if (badgeTipo) {
-                    if (c.tipo_pessoa === 'PJ') {
-                        badgeTipo.textContent = 'PJ';
-                        badgeTipo.className = 'inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-700';
-                    } else {
-                        badgeTipo.textContent = 'PF';
-                        badgeTipo.className = 'inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-purple-100 text-purple-700';
-                    }
+                if (cardExpand) {
+                    cardExpand.innerHTML = '<div class="text-sm text-gray-500">Carregando participantes...</div>';
                 }
+                fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html',
+                    },
+                })
+                    .then(function(res) { return res.text(); })
+                    .then(function(html) {
+                        if (cell) cell.innerHTML = html;
+                        if (cardExpand) cardExpand.innerHTML = html;
+                    })
+                    .catch(function() {
+                        if (cell) cell.innerHTML = '<div class="text-sm text-red-600">Erro ao carregar participantes vinculados.</div>';
+                        if (cardExpand) cardExpand.innerHTML = '<div class="text-sm text-red-600">Erro ao carregar participantes vinculados.</div>';
+                    });
+            }
+        });
 
-                var badgeStatus = document.getElementById('det-badge-status');
-                if (badgeStatus) {
-                    if (c.ativo) {
-                        badgeStatus.textContent = 'Ativo';
-                        badgeStatus.className = 'inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-green-100 text-green-700';
-                    } else {
-                        badgeStatus.textContent = 'Inativo';
-                        badgeStatus.className = 'inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-red-100 text-red-700';
-                    }
-                }
-
-                // Dados cadastrais
-                var elTipoPessoa = document.getElementById('det-tipo-pessoa');
-                if (elTipoPessoa) elTipoPessoa.textContent = c.tipo_pessoa === 'PJ' ? 'Pessoa Juridica' : 'Pessoa Fisica';
-
-                var elEmail = document.getElementById('det-email');
-                if (elEmail) elEmail.textContent = c.email || '-';
-
-                var elTel = document.getElementById('det-telefone');
-                if (elTel) elTel.textContent = c.telefone || '-';
-
-                var elLocal = document.getElementById('det-localizacao');
-                if (elLocal) {
-                    var parts = [c.municipio, c.uf].filter(Boolean);
-                    elLocal.textContent = parts.length ? parts.join(' - ') : '-';
-                }
-
-                var elEmpresa = document.getElementById('det-empresa-propria');
-                if (elEmpresa) {
-                    if (c.is_empresa_propria) {
-                        elEmpresa.innerHTML = '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-green-100 text-green-700">Sim</span>';
-                    } else {
-                        elEmpresa.innerHTML = '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700">Nao</span>';
-                    }
-                }
-
-                var elCreated = document.getElementById('det-created-at');
-                if (elCreated) elCreated.textContent = c.created_at || '-';
-
-                // Estatisticas
-                var elParticipantes = document.getElementById('det-total-participantes');
-                if (elParticipantes) elParticipantes.textContent = stats.total_participantes || 0;
-
-                var elNotas = document.getElementById('det-total-notas');
-                if (elNotas) elNotas.textContent = stats.total_notas || 0;
-
-                // Show content, hide loading
-                if (modalDetalhesLoading) modalDetalhesLoading.classList.add('hidden');
-                if (modalDetalhesContent) modalDetalhesContent.classList.remove('hidden');
-            })
-            .catch(function(err) {
-                console.error('[Clientes] Erro ao carregar detalhes:', err);
-                if (window.showToast) window.showToast(err.message || 'Erro ao carregar detalhes', 'error');
-                fecharModalDetalhes();
+        if (dropdownAcoesExpandir) {
+            dropdownAcoesExpandir.addEventListener('click', function() {
+                if (!acaoClienteId) return;
+                fecharDropdownAcoes();
+                toggleExpandCliente(acaoClienteId, '/app/cliente/' + acaoClienteId + '/participantes', cardsView && !cardsView.classList.contains('hidden'));
             });
         }
 
-        function fecharModalDetalhes() {
-            if (modalDetalhes) modalDetalhes.classList.add('hidden');
-        }
+        document.addEventListener('click', function(event) {
+            if (dropdownAcoes && !dropdownAcoes.classList.contains('hidden') && !dropdownAcoes.contains(event.target)) {
+                fecharDropdownAcoes();
+            }
+        });
 
-        if (modalDetalhesOverlay) modalDetalhesOverlay.addEventListener('click', fecharModalDetalhes);
-        if (btnFecharDetalhes) btnFecharDetalhes.addEventListener('click', fecharModalDetalhes);
-        if (btnFecharDetalhesFooter) btnFecharDetalhesFooter.addEventListener('click', fecharModalDetalhes);
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') fecharDropdownAcoes();
+        });
 
-        // === Modal de exclusao ===
         var modalExcluir = document.getElementById('modal-excluir');
         var modalExcluirOverlay = document.getElementById('modal-excluir-overlay');
         var modalExcluirNome = document.getElementById('modal-excluir-nome');
@@ -1206,8 +816,15 @@
         }
 
         function fecharModalExclusao() {
-            if (modalExcluir) modalExcluir.classList.add('hidden');
             clienteIdParaExcluir = null;
+            if (modalExcluir) modalExcluir.classList.add('hidden');
+        }
+
+        if (dropdownAcoesExcluir) {
+            dropdownAcoesExcluir.addEventListener('click', function() {
+                abrirModalExclusao(acaoClienteId, acaoClienteNome, acaoClienteDocumento);
+                fecharDropdownAcoes();
+            });
         }
 
         if (btnCancelarExclusao) btnCancelarExclusao.addEventListener('click', fecharModalExclusao);
@@ -1216,11 +833,10 @@
         if (btnConfirmarExclusao) {
             btnConfirmarExclusao.addEventListener('click', function() {
                 if (!clienteIdParaExcluir) return;
-
+                var tokenMeta = document.querySelector('meta[name="csrf-token"]');
                 btnConfirmarExclusao.disabled = true;
                 btnConfirmarExclusao.textContent = 'Excluindo...';
 
-                var tokenMeta = document.querySelector('meta[name="csrf-token"]');
                 fetch('/app/cliente/' + clienteIdParaExcluir, {
                     method: 'DELETE',
                     headers: {
@@ -1229,37 +845,103 @@
                         'Accept': 'application/json',
                     },
                 })
-                .then(function(res) { return res.json(); })
-                .then(function(data) {
-                    if (!data.success) {
-                        throw new Error(data.message || 'Erro ao excluir cliente');
-                    }
-                    if (window.showToast) window.showToast(data.message || 'Cliente excluído com sucesso!', 'success');
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        if (!data.success) throw new Error(data.message || 'Erro ao excluir cliente');
+                        removerClienteDaTela(clienteIdParaExcluir);
+                        clientesSelecionados.delete(parseInt(clienteIdParaExcluir, 10));
+                        atualizarBarraAcoes();
+                        fecharModalExclusao();
+                        if (window.showToast) window.showToast(data.message || 'Cliente excluído com sucesso.', 'success');
+                    })
+                    .catch(function(err) {
+                        if (window.showToast) window.showToast(err.message || 'Erro ao excluir cliente', 'error');
+                    })
+                    .finally(function() {
+                        btnConfirmarExclusao.disabled = false;
+                        btnConfirmarExclusao.textContent = 'Excluir';
+                    });
+            });
+        }
 
-                    // Remover linha da tabela
-                    var row = container.querySelector('tr[data-cliente-id="' + clienteIdParaExcluir + '"]');
-                    if (row) row.remove();
+        var modalBulkDelete = document.getElementById('modal-bulk-delete');
+        var modalBulkDeleteOverlay = document.getElementById('modal-bulk-delete-overlay');
+        var btnBulkDelete = document.getElementById('btn-bulk-delete');
+        var btnCancelarBulkDelete = document.getElementById('btn-cancelar-bulk-delete');
+        var btnConfirmarBulkDelete = document.getElementById('btn-confirmar-bulk-delete');
+        var modalBulkDeleteCount = document.getElementById('modal-bulk-delete-count');
+        var modalBulkDeleteLabel = document.getElementById('modal-bulk-delete-label');
 
-                    fecharModalExclusao();
-                    atualizarBarraAcoes();
+        function abrirModalBulkDelete() {
+            if (clientesSelecionados.size === 0 || !modalBulkDelete) return;
+            if (modalBulkDeleteCount) modalBulkDeleteCount.textContent = clientesSelecionados.size;
+            if (modalBulkDeleteLabel) modalBulkDeleteLabel.textContent = clientesSelecionados.size === 1 ? 'cliente' : 'clientes';
+            modalBulkDelete.classList.remove('hidden');
+        }
+
+        function fecharModalBulkDelete() {
+            if (modalBulkDelete) modalBulkDelete.classList.add('hidden');
+        }
+
+        if (btnBulkDelete) btnBulkDelete.addEventListener('click', abrirModalBulkDelete);
+        if (btnCancelarBulkDelete) btnCancelarBulkDelete.addEventListener('click', fecharModalBulkDelete);
+        if (modalBulkDeleteOverlay) modalBulkDeleteOverlay.addEventListener('click', fecharModalBulkDelete);
+
+        if (btnConfirmarBulkDelete) {
+            btnConfirmarBulkDelete.addEventListener('click', function() {
+                if (clientesSelecionados.size === 0) return;
+                var tokenMeta = document.querySelector('meta[name="csrf-token"]');
+                var ids = Array.from(clientesSelecionados);
+                btnConfirmarBulkDelete.disabled = true;
+                btnConfirmarBulkDelete.textContent = 'Excluindo...';
+
+                fetch('/app/clientes/bulk-delete', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': tokenMeta ? tokenMeta.content : '',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ ids: ids }),
                 })
-                .catch(function(err) {
-                    console.error('[Clientes] Erro ao excluir:', err);
-                    if (window.showToast) window.showToast(err.message || 'Erro ao excluir cliente', 'error');
-                    fecharModalExclusao();
-                })
-                .finally(function() {
-                    btnConfirmarExclusao.disabled = false;
-                    btnConfirmarExclusao.textContent = 'Excluir';
-                });
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        if (!data.success) throw new Error(data.message || 'Erro ao excluir clientes');
+                        ids.forEach(function(id) {
+                            removerClienteDaTela(id);
+                        });
+                        limparSelecao();
+                        fecharModalBulkDelete();
+                        if (window.showToast) window.showToast(data.message || 'Clientes excluídos com sucesso.', 'success');
+                    })
+                    .catch(function(err) {
+                        if (window.showToast) window.showToast(err.message || 'Erro ao excluir clientes', 'error');
+                    })
+                    .finally(function() {
+                        btnConfirmarBulkDelete.disabled = false;
+                        btnConfirmarBulkDelete.textContent = 'Excluir';
+                    });
+            });
+        }
+
+        var btnExportar = document.getElementById('btn-exportar');
+        if (btnExportar) {
+            btnExportar.addEventListener('click', function() {
+                if (window.showToast) window.showToast('Exportação desta grade será implementada em etapa separada.', 'info');
+            });
+        }
+
+        var btnConsultarSelecionados = document.getElementById('btn-consultar-selecionados');
+        if (btnConsultarSelecionados) {
+            btnConsultarSelecionados.addEventListener('click', function() {
+                if (window.showToast) window.showToast('Consulta em lote por cliente permanece indisponível nesta tela.', 'info');
             });
         }
     }
 
-    // Expor globalmente para SPA
     window.initClientes = initClientes;
 
-    // Auto-inicializar
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initClientes, { once: true });
     } else {

@@ -1,21 +1,10 @@
 {{-- Monitoramento - Lista de Participantes Importados --}}
-<div class="min-h-screen bg-gray-50" id="monitoramento-participantes-importados-container">
+<div class="bg-gray-100 min-h-screen" id="monitoramento-participantes-importados-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <style>
-            @keyframes card-slide-in {
-                from { opacity: 0; transform: translateY(60px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            .part-animate {
-                opacity: 0;
-                animation: card-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-            @media (prefers-reduced-motion: reduce) {
-                .part-animate { opacity: 1; animation: none; }
-            }
             .view-toggle-btn.active-view {
-                background-color: rgb(239 246 255);
-                color: rgb(37 99 235);
+                background-color: #1f2937;
+                color: #ffffff;
             }
         </style>
 
@@ -23,13 +12,23 @@
         <div class="mb-4 sm:mb-8">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-semibold text-gray-900">Participantes Importados</h1>
-                    <p class="mt-1 text-sm text-gray-500">Gerencie os CNPJs importados de arquivos SPED.</p>
+                    <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Participantes</h1>
+                    <p class="mt-1 text-xs text-gray-500">Base operacional de participantes vinculados às importações e consultas.</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <a
+                        href="/app/participante/novo"
+                        class="inline-flex items-center gap-2 px-4 py-2 rounded bg-gray-800 text-white text-sm font-medium transition hover:bg-gray-700"
+                        data-link
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Novo Participante
+                    </a>
+                    <a
                         href="/app/dashboard"
-                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
+                        class="inline-flex items-center gap-2 px-4 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium transition hover:bg-gray-50"
                         data-link
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,79 +41,44 @@
         </div>
 
         {{-- Estatísticas --}}
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6">
-            {{-- Card: Total --}}
-            <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 part-animate" style="animation-delay: 0s">
-                <div class="flex items-center justify-between">
-                    <div class="flex-1 min-w-0">
-                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Total</p>
-                        <p class="text-xl sm:text-3xl font-semibold text-gray-900">{{ $totalParticipantes ?? 0 }}</p>
-                        <p class="text-xs text-gray-400 mt-1 sm:mt-2">Participantes importados</p>
-                    </div>
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 bg-blue-50 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
-                        <svg class="w-4 h-4 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
-                    </div>
-                </div>
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo Operacional</span>
             </div>
-
-            {{-- Card: Situação Ativa --}}
-            <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 part-animate" style="animation-delay: 0.1s">
-                <div class="flex items-center justify-between">
-                    <div class="flex-1 min-w-0">
-                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Situação Ativa</p>
-                        <p class="text-xl sm:text-3xl font-semibold text-gray-900">{{ $totalAtiva ?? 0 }}</p>
-                        <p class="text-xs text-gray-400 mt-1 sm:mt-2">Cadastro regular</p>
-                    </div>
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 bg-green-50 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
-                        <svg class="w-4 h-4 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-gray-200">
+                <div class="px-4 py-4">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Total</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($totalParticipantes ?? 0, 0, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Participantes importados</p>
                 </div>
-            </div>
-
-            {{-- Card: Irregular --}}
-            <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 part-animate" style="animation-delay: 0.2s">
-                <div class="flex items-center justify-between">
-                    <div class="flex-1 min-w-0">
-                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Irregular</p>
-                        <p class="text-xl sm:text-3xl font-semibold text-gray-900">{{ $totalIrregular ?? 0 }}</p>
-                        <p class="text-xs text-gray-400 mt-1 sm:mt-2">Requer atenção</p>
-                    </div>
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 bg-amber-50 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
-                        <svg class="w-4 h-4 sm:w-6 sm:h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                        </svg>
-                    </div>
+                <div class="px-4 py-4">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação Ativa</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($totalAtiva ?? 0, 0, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Cadastro regular</p>
                 </div>
-            </div>
-
-            {{-- Card: Sem Consulta --}}
-            <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 part-animate" style="animation-delay: 0.3s">
-                <div class="flex items-center justify-between">
-                    <div class="flex-1 min-w-0">
-                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Sem Consulta</p>
-                        <p class="text-xl sm:text-3xl font-semibold text-gray-900">{{ $totalSemConsulta ?? 0 }}</p>
-                        <p class="text-xs text-gray-400 mt-1 sm:mt-2">Aguardando consulta</p>
-                    </div>
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
-                        <svg class="w-4 h-4 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </div>
+                <div class="px-4 py-4">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Irregular</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($totalIrregular ?? 0, 0, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Requer atenção</p>
+                </div>
+                <div class="px-4 py-4">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Sem Consulta</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($totalSemConsulta ?? 0, 0, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Aguardando consulta</p>
                 </div>
             </div>
         </div>
 
         {{-- Filtros --}}
-        <form id="form-filtros" method="GET" action="/app/participantes" class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-6 part-animate" style="animation-delay: 0.4s">
-            <div class="flex flex-col lg:flex-row lg:items-end gap-4">
-                {{-- Filtro por importacao --}}
-                <div class="flex-1 min-w-0 sm:min-w-[200px]">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Importação</label>
-                    <select name="importacao" id="filtro-importacao" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <form id="form-filtros" method="GET" action="/app/participantes" class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
+            </div>
+            <div class="p-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
+                <div>
+                    <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Importação</label>
+                    <select name="importacao" id="filtro-importacao" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         <option value="">Todas as importações</option>
                         @foreach($importacoes ?? [] as $imp)
                             <option value="{{ $imp->id }}" {{ ($filtros['importacao'] ?? '') == $imp->id ? 'selected' : '' }}>
@@ -124,10 +88,9 @@
                     </select>
                 </div>
 
-                {{-- Filtro por cliente --}}
-                <div class="flex-1 min-w-0 sm:min-w-[200px]">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
-                    <select name="cliente" id="filtro-cliente" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <div>
+                    <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Cliente</label>
+                    <select name="cliente" id="filtro-cliente" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         <option value="">Todos os clientes</option>
                         @foreach($clientes ?? [] as $cli)
                             <option value="{{ $cli->id }}" {{ ($filtros['cliente'] ?? '') == $cli->id ? 'selected' : '' }}>
@@ -137,10 +100,9 @@
                     </select>
                 </div>
 
-                {{-- Filtro por origem --}}
-                <div class="flex-1 min-w-0 sm:min-w-[180px]">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Origem</label>
-                    <select name="origem" id="filtro-origem" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <div>
+                    <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Origem</label>
+                    <select name="origem" id="filtro-origem" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         <option value="">Todas as origens</option>
                         @foreach($origens ?? [] as $ori)
                             <option value="{{ $ori }}" {{ ($filtros['origem'] ?? '') == $ori ? 'selected' : '' }}>
@@ -150,9 +112,8 @@
                     </select>
                 </div>
 
-                {{-- Busca --}}
-                <div class="flex-1 min-w-0 sm:min-w-[250px]">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+                <div>
+                    <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Buscar</label>
                     <div class="relative">
                         <input
                             type="text"
@@ -160,7 +121,7 @@
                             id="busca-participantes"
                             placeholder="CNPJ ou Razão Social..."
                             value="{{ $filtros['busca'] ?? '' }}"
-                            class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full border border-gray-300 rounded text-[13px] py-2.5 pl-10 pr-4 focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                         >
                         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -168,63 +129,72 @@
                     </div>
                 </div>
 
-                {{-- Botoes --}}
-                <div class="flex gap-2 items-center">
-                    <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
-                        Filtrar
-                    </button>
-                    <a href="/app/participantes" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50" data-link>
-                        Limpar
-                    </a>
-                    <div class="w-px h-8 bg-gray-200 mx-1"></div>
-                    {{-- Toggle de visualização --}}
-                    <div class="flex items-center gap-1">
-                        <button id="btn-view-list"
-                            class="p-2 rounded-md text-gray-500 hover:bg-gray-100 transition-colors view-toggle-btn active-view"
-                            title="Visualização em lista" type="button">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-                            </svg>
-                        </button>
-                        <button id="btn-view-cards"
-                            class="p-2 rounded-md text-gray-500 hover:bg-gray-100 transition-colors view-toggle-btn"
-                            title="Visualização em cards" type="button">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-                                <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
             </div>
-            <div class="flex flex-wrap gap-3 mt-3 pt-3 border-t border-gray-100">
-                <select name="regime" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-200">
+                <div>
+                <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Regime</label>
+                <select name="regime" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                     <option value="">Regime: Todos</option>
                     <option value="simples nacional" {{ ($filtros['regime'] ?? '') == 'simples nacional' ? 'selected' : '' }}>Simples Nacional</option>
                     <option value="lucro presumido" {{ ($filtros['regime'] ?? '') == 'lucro presumido' ? 'selected' : '' }}>Lucro Presumido</option>
                     <option value="lucro real" {{ ($filtros['regime'] ?? '') == 'lucro real' ? 'selected' : '' }}>Lucro Real</option>
                     <option value="mei" {{ ($filtros['regime'] ?? '') == 'mei' ? 'selected' : '' }}>MEI</option>
                 </select>
-                <select name="situacao" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Situação</label>
+                <select name="situacao" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                     <option value="">Situação: Todos</option>
                     <option value="ATIVA" {{ ($filtros['situacao'] ?? '') == 'ATIVA' ? 'selected' : '' }}>Ativa</option>
                     <option value="BAIXADA" {{ ($filtros['situacao'] ?? '') == 'BAIXADA' ? 'selected' : '' }}>Baixada</option>
                     <option value="SUSPENSA" {{ ($filtros['situacao'] ?? '') == 'SUSPENSA' ? 'selected' : '' }}>Suspensa</option>
                     <option value="INAPTA" {{ ($filtros['situacao'] ?? '') == 'INAPTA' ? 'selected' : '' }}>Inapta</option>
                 </select>
-                <select name="uf" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">UF</label>
+                <select name="uf" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                     <option value="">UF: Todos</option>
                     @foreach($ufs ?? [] as $ufOpt)
                         <option value="{{ $ufOpt }}" {{ ($filtros['uf'] ?? '') == $ufOpt ? 'selected' : '' }}>{{ $ufOpt }}</option>
                     @endforeach
                 </select>
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4 pt-4 border-t border-gray-200">
+                <div class="flex items-center gap-2">
+                    <button type="submit" class="bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium px-4 py-2">
+                        Filtrar
+                    </button>
+                    <a href="/app/participantes" class="bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded text-sm font-medium px-4 py-2" data-link>
+                        Limpar
+                    </a>
+                </div>
+                <div class="flex items-center gap-1 self-start sm:self-auto">
+                    <button id="btn-view-list"
+                        class="p-2 rounded border border-gray-300 text-gray-500 hover:bg-gray-50 transition-colors view-toggle-btn active-view"
+                        title="Visualização em lista" type="button">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                    <button id="btn-view-cards"
+                        class="p-2 rounded border border-gray-300 text-gray-500 hover:bg-gray-50 transition-colors view-toggle-btn"
+                        title="Visualização em cards" type="button">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                            <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
             </div>
         </form>
 
         {{-- Barra de selecao global --}}
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-4 text-sm">
-                <button type="button" id="btn-selecionar-todos-filtro" class="text-blue-600 hover:text-blue-800 font-medium">
+                <button type="button" id="btn-selecionar-todos-filtro" class="text-gray-700 hover:text-gray-900 font-medium underline">
                     Selecionar todos (<span id="total-filtrado">{{ $participantes->total() }}</span>)
                 </button>
                 <button type="button" id="btn-limpar-selecao-geral" class="text-gray-500 hover:text-gray-700 hidden">
@@ -237,32 +207,32 @@
         </div>
 
         {{-- Acoes em lote (aparece quando ha selecao) --}}
-        <div id="acoes-lote" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+        <div id="acoes-lote" class="hidden bg-white border border-gray-300 rounded p-4 mb-6">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white text-sm font-bold" id="count-selecionados">0</span>
-                    <span class="text-sm font-medium text-blue-900"><span id="participantes-selecionados-label">participantes selecionados</span></span>
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded text-white text-sm font-bold" id="count-selecionados" style="background-color: #374151">0</span>
+                    <span class="text-sm font-medium text-gray-900"><span id="participantes-selecionados-label">participantes selecionados</span></span>
                 </div>
                 <div class="flex gap-2">
-                    <button type="button" id="btn-exportar" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-blue-300 bg-white text-blue-700 text-sm font-semibold shadow-sm transition hover:bg-blue-50">
+                    <button type="button" id="btn-exportar" class="inline-flex items-center gap-2 px-4 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium transition hover:bg-gray-50">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
                         Exportar
                     </button>
-                    <button type="button" id="btn-monitorar-selecionados" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
+                    <button type="button" id="btn-monitorar-selecionados" class="inline-flex items-center gap-2 px-4 py-2 rounded bg-gray-800 text-white text-sm font-medium transition hover:bg-gray-700">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
                         Consultar
                     </button>
-                    <button type="button" id="btn-bulk-delete" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm transition hover:bg-red-700">
+                    <button type="button" id="btn-bulk-delete" class="inline-flex items-center gap-2 px-4 py-2 rounded border text-white text-sm font-medium transition hover:opacity-90" style="background-color: #b91c1c; border-color: #b91c1c">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
                         Deletar
                     </button>
-                    <button type="button" id="btn-limpar-selecao" class="px-4 py-2 rounded-lg border border-blue-300 bg-white text-blue-700 text-sm font-semibold shadow-sm transition hover:bg-blue-50">
+                    <button type="button" id="btn-limpar-selecao" class="px-4 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium transition hover:bg-gray-50">
                         Limpar
                     </button>
                 </div>
@@ -270,44 +240,61 @@
         </div>
 
         {{-- Lista de Participantes --}}
-        <div id="participantes-list-view" class="bg-white rounded-xl border border-gray-200 shadow-sm part-animate" style="animation-delay: 0.5s">
+        <div id="participantes-list-view" class="bg-white rounded border border-gray-300 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full table-fixed">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="w-10 px-2 py-3 text-left">
-                                <input type="checkbox" id="select-all" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <thead>
+                        <tr class="border-b border-gray-300">
+                            <th class="w-10 px-3 py-2.5 text-left bg-gray-50">
+                                <input type="checkbox" id="select-all" class="w-4 h-4 rounded border-gray-300 text-gray-700 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                             </th>
-                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Razão Social</th>
-                            <th class="w-[140px] px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">CNPJ</th>
-                            <th class="w-[100px] px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Situação</th>
-                            <th class="w-16 px-2 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Notas</th>
-                            <th class="w-[160px] px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Cliente</th>
-                            <th class="w-[110px] px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Origem</th>
-                            <th class="w-[90px] px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Data</th>
-                            <th class="w-14 px-2 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Ações</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participante</th>
+                            <th class="w-[140px] px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Documento</th>
+                            <th class="w-[110px] px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Situação</th>
+                            <th class="w-16 px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Notas</th>
+                            <th class="w-[180px] px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Cliente</th>
+                            <th class="w-[128px] px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Origem</th>
+                            <th class="w-[90px] px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Data</th>
+                            <th class="w-14 px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ações</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200" id="participantes-tbody">
+                    <tbody class="divide-y divide-gray-100" id="participantes-tbody">
                         @forelse($participantes ?? [] as $part)
-                            <tr class="hover:bg-gray-50 transition-colors cursor-pointer" data-participante-id="{{ $part->id }}" data-href="/app/participante/{{ $part->id }}">
-                                <td class="px-2 py-4">
-                                    <input type="checkbox" class="checkbox-participante w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" value="{{ $part->id }}">
+                            @php
+                                $isCpf = $part->is_cpf;
+                            @endphp
+                            <tr class="hover:bg-gray-50/50 transition-colors cursor-pointer" data-participante-id="{{ $part->id }}" data-href="/app/participante/{{ $part->id }}">
+                                <td class="px-3 py-3">
+                                    <input
+                                        type="checkbox"
+                                        class="checkbox-participante w-4 h-4 rounded border-gray-300 text-gray-700 focus:ring-1 focus:ring-gray-400 focus:border-gray-400 disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-100"
+                                        value="{{ $part->id }}"
+                                        data-bloqueado="{{ $isCpf ? '1' : '0' }}"
+                                        {{ $isCpf ? 'disabled' : '' }}
+                                    >
                                 </td>
-                                <td class="px-3 py-4 text-sm text-gray-900">
-                                    <div class="truncate" title="{{ $part->razao_social }}">{{ $part->razao_social ?? '-' }}</div>
+                                <td class="px-3 py-3">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <div class="truncate text-sm text-gray-900" title="{{ $part->razao_social }}">{{ $part->razao_social ?? '-' }}</div>
+                                        @if($isCpf)
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">CPF</span>
+                                        @endif
+                                    </div>
+                                    @if($isCpf)
+                                        <div class="text-[11px] text-gray-500 mt-1">Cadastro bloqueado para seleção em lote</div>
+                                    @endif
                                 </td>
-                                <td class="px-3 py-4 text-sm font-mono text-gray-900 truncate" title="{{ $part->cnpj_formatado }}">
+                                <td class="px-3 py-3 text-sm font-mono text-gray-700 truncate" title="{{ $part->cnpj_formatado }}">
                                     {{ $part->cnpj_formatado }}
                                 </td>
-                                <td class="px-2 py-4">
+                                <td class="px-3 py-3">
                                     <div class="truncate" title="{{ $part->situacao_cadastral ?? '' }}">
                                     @if($part->situacao_cadastral === 'ATIVA')
-                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">
                                             Ativa
                                         </span>
                                     @elseif($part->situacao_cadastral)
-                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-amber-100 text-amber-700">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">
                                             {{ $part->situacao_cadastral }}
                                         </span>
                                     @else
@@ -315,41 +302,41 @@
                                     @endif
                                     </div>
                                 </td>
-                                <td class="px-2 py-4 text-center text-sm text-gray-700">
+                                <td class="px-3 py-3 text-center text-sm text-gray-700">
                                     {{ $part->efd_notas_count ?? 0 }}
                                 </td>
-                                <td class="px-3 py-4 text-sm text-gray-600">
+                                <td class="px-3 py-3">
                                     <div class="truncate" title="{{ $part->cliente?->razao_social }}">
                                     @if($part->cliente)
-                                        {{ $part->cliente->razao_social ?? '-' }}
+                                        <span class="text-sm text-gray-700">{{ $part->cliente->razao_social ?? '-' }}</span>
                                         @if($part->cliente->is_empresa_propria)
-                                            <span class="px-1.5 py-0.5 bg-green-50 text-green-600 text-[10px] font-medium rounded">Empresa propria</span>
+                                            <span class="ml-2 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Empresa Própria</span>
                                         @endif
                                     @else
                                         -
                                     @endif
                                     </div>
                                 </td>
-                                <td class="px-2 py-4">
+                                <td class="px-3 py-3">
                                     @php
                                         $origemLabel = match($part->origem_tipo) {
-                                            'SPED_EFD_FISCAL' => ['label' => 'EFD Fiscal', 'class' => 'bg-indigo-100 text-indigo-700'],
-                                            'SPED_EFD_CONTRIB' => ['label' => 'EFD Contrib', 'class' => 'bg-purple-100 text-purple-700'],
-                                            'NFE' => ['label' => 'NF-e', 'class' => 'bg-blue-100 text-blue-700'],
-                                            'NFSE' => ['label' => 'NFS-e', 'class' => 'bg-cyan-100 text-cyan-700'],
-                                            'MANUAL' => ['label' => 'Manual', 'class' => 'bg-gray-100 text-gray-700'],
-                                            default => ['label' => $part->origem_tipo, 'class' => 'bg-gray-100 text-gray-700'],
+                                            'SPED_EFD_FISCAL' => ['label' => 'EFD Fiscal', 'color' => '#4338ca'],
+                                            'SPED_EFD_CONTRIB' => ['label' => 'EFD Contrib', 'color' => '#7c3aed'],
+                                            'NFE' => ['label' => 'NF-e', 'color' => '#0f766e'],
+                                            'NFSE' => ['label' => 'NFS-e', 'color' => '#0891b2'],
+                                            'MANUAL' => ['label' => 'Manual', 'color' => '#6b7280'],
+                                            default => ['label' => $part->origem_tipo, 'color' => '#6b7280'],
                                         };
                                     @endphp
-                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium {{ $origemLabel['class'] }}">
+                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemLabel['color'] }}">
                                         {{ $origemLabel['label'] }}
                                     </span>
                                 </td>
-                                <td class="px-2 py-4 text-sm text-gray-500">
+                                <td class="px-3 py-3 text-[11px] text-gray-500">
                                     {{ $part->created_at?->format('d/m/Y') ?? '-' }}
                                 </td>
-                                <td class="px-2 py-4 text-right">
-                                    <button type="button" class="acoes-btn p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                                <td class="px-3 py-3 text-right">
+                                    <button type="button" class="acoes-btn p-2 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                                         data-id="{{ $part->id }}"
                                         data-nome="{{ $part->razao_social }}"
                                         data-cnpj="{{ $part->cnpj_formatado }}">
@@ -366,7 +353,7 @@
                                         <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                         </svg>
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Nenhum participante encontrado</h3>
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-2 uppercase tracking-wide">Nenhum participante encontrado</h3>
                                         <p class="text-sm text-gray-600 mb-4">
                                             @if(($filtros['importacao'] ?? null) || ($filtros['cliente'] ?? null) || ($filtros['origem'] ?? null) || ($filtros['busca'] ?? null))
                                                 Nenhum participante corresponde aos filtros aplicados.
@@ -376,7 +363,7 @@
                                         </p>
                                         <a
                                             href="/app/importacao/efd"
-                                            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700"
+                                            class="inline-flex items-center gap-2 px-4 py-2 rounded bg-gray-800 text-white text-sm font-medium transition hover:bg-gray-700"
                                             data-link
                                         >
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -394,7 +381,7 @@
 
             {{-- Pagination --}}
             @if(isset($participantes) && $participantes->hasPages())
-                <div class="px-6 py-4 border-t border-gray-200">
+                <div class="border-t border-gray-300 px-4 py-3">
                     {{ $participantes->links() }}
                 </div>
             @endif
@@ -405,42 +392,42 @@
             @forelse($participantes ?? [] as $part)
                 @php
                     $cardOrigemLabel = match($part->origem_tipo) {
-                        'SPED_EFD_FISCAL'  => ['label' => 'EFD Fiscal',  'class' => 'bg-indigo-100 text-indigo-700'],
-                        'SPED_EFD_CONTRIB' => ['label' => 'EFD Contrib', 'class' => 'bg-purple-100 text-purple-700'],
-                        'NFE'              => ['label' => 'NF-e',          'class' => 'bg-blue-100 text-blue-700'],
-                        'NFSE'             => ['label' => 'NFS-e',         'class' => 'bg-cyan-100 text-cyan-700'],
-                        'MANUAL'           => ['label' => 'Manual',        'class' => 'bg-gray-100 text-gray-700'],
-                        default            => ['label' => $part->origem_tipo ?? 'Manual', 'class' => 'bg-gray-100 text-gray-700'],
+                        'SPED_EFD_FISCAL'  => ['label' => 'EFD Fiscal', 'color' => '#4338ca'],
+                        'SPED_EFD_CONTRIB' => ['label' => 'EFD Contrib', 'color' => '#7c3aed'],
+                        'NFE'              => ['label' => 'NF-e', 'color' => '#0f766e'],
+                        'NFSE'             => ['label' => 'NFS-e', 'color' => '#0891b2'],
+                        'MANUAL'           => ['label' => 'Manual', 'color' => '#6b7280'],
+                        default            => ['label' => $part->origem_tipo ?? 'Manual', 'color' => '#6b7280'],
                     };
                 @endphp
-                <div class="participante-card bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md hover:border-blue-200 transition-all cursor-pointer flex flex-col gap-3"
+                <div class="participante-card bg-white border border-gray-300 rounded p-4 hover:bg-gray-50/50 transition-colors cursor-pointer flex flex-col gap-3"
                      data-href="/app/participante/{{ $part->id }}">
                     <div class="flex items-start justify-between gap-2">
                         <div class="flex-1 min-w-0">
                             <div class="text-sm font-semibold text-gray-900 truncate">{{ $part->razao_social ?? '-' }}</div>
-                            <div class="text-xs font-mono text-gray-400 mt-0.5">{{ $part->cnpj_formatado }}</div>
+                            <div class="text-[11px] font-mono text-gray-500 mt-1">{{ $part->cnpj_formatado }}</div>
                         </div>
-                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium {{ $cardOrigemLabel['class'] }} flex-shrink-0">
+                        <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white flex-shrink-0" style="background-color: {{ $cardOrigemLabel['color'] }}">
                             {{ $cardOrigemLabel['label'] }}
                         </span>
                     </div>
                     <div class="border-t border-gray-100 pt-3 flex flex-col gap-2">
                         <div>
-                            <p class="text-[10px] text-gray-400 uppercase tracking-wide">Situação</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação</p>
                             @if($part->situacao_cadastral === 'ATIVA')
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700">ATIVA</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Ativa</span>
                             @elseif($part->situacao_cadastral)
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-700">{{ $part->situacao_cadastral }}</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">{{ $part->situacao_cadastral }}</span>
                             @else
                                 <p class="text-xs text-gray-400">-</p>
                             @endif
                         </div>
                         <div>
-                            <p class="text-[10px] text-gray-400 uppercase tracking-wide">Cliente</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Cliente</p>
                             <p class="text-xs text-gray-700 truncate">{{ $part->cliente?->razao_social ?? '-' }}</p>
                         </div>
                         <div>
-                            <p class="text-[10px] text-gray-400 uppercase tracking-wide">Importado em</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Importado em</p>
                             <p class="text-xs text-gray-500">{{ $part->created_at?->format('d/m/Y') ?? '-' }}</p>
                         </div>
                     </div>
@@ -458,7 +445,7 @@
 {{-- Modais (fora do container para overlay correto) --}}
 
 {{-- Dropdown de acoes do participante (menu kebab) --}}
-<div id="dropdown-acoes" class="hidden fixed z-[9999] bg-white rounded-xl shadow-lg ring-1 ring-gray-200 w-56 py-1">
+<div id="dropdown-acoes" class="hidden fixed z-[9999] bg-white rounded border border-gray-300 shadow-sm w-56 py-1">
     <div class="px-3 py-2 border-b border-gray-100">
         <p class="text-sm font-semibold text-gray-900 truncate" id="dropdown-acoes-nome"></p>
         <p class="text-xs text-gray-500 font-mono whitespace-nowrap tabular-nums" id="dropdown-acoes-cnpj"></p>
@@ -493,10 +480,10 @@
 <div id="modal-excluir-participante" class="hidden fixed inset-0 z-50 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
         <div class="fixed inset-0 bg-black/50 transition-opacity" id="modal-excluir-overlay"></div>
-        <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6 z-10">
+        <div class="relative bg-white rounded border border-gray-300 max-w-md w-full p-6 z-10">
             <div class="flex items-center gap-3 mb-4">
-                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="flex-shrink-0 w-10 h-10 rounded border border-gray-300 flex items-center justify-center">
+                    <svg class="w-5 h-5" style="color: #b91c1c" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                     </svg>
                 </div>
@@ -514,10 +501,10 @@
                 </p>
             </div>
             <div class="flex justify-end gap-3">
-                <button type="button" id="btn-cancelar-exclusao" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
+                <button type="button" id="btn-cancelar-exclusao" class="px-4 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium transition hover:bg-gray-50">
                     Cancelar
                 </button>
-                <button type="button" id="btn-confirmar-exclusao" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm transition hover:bg-red-700">
+                <button type="button" id="btn-confirmar-exclusao" class="px-4 py-2 rounded text-white text-sm font-medium transition hover:opacity-90" style="background-color: #b91c1c">
                     Excluir
                 </button>
             </div>
@@ -529,10 +516,10 @@
 <div id="modal-bulk-delete" class="hidden fixed inset-0 z-50 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
         <div class="fixed inset-0 bg-black/50 transition-opacity" id="modal-bulk-delete-overlay"></div>
-        <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6 z-10">
+        <div class="relative bg-white rounded border border-gray-300 max-w-md w-full p-6 z-10">
             <div class="flex items-center gap-3 mb-4">
-                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="flex-shrink-0 w-10 h-10 rounded border border-gray-300 flex items-center justify-center">
+                    <svg class="w-5 h-5" style="color: #b91c1c" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                     </svg>
                 </div>
@@ -547,10 +534,10 @@
                 </p>
             </div>
             <div class="flex justify-end gap-3">
-                <button type="button" id="btn-cancelar-bulk-delete" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
+                <button type="button" id="btn-cancelar-bulk-delete" class="px-4 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium transition hover:bg-gray-50">
                     Cancelar
                 </button>
-                <button type="button" id="btn-confirmar-bulk-delete" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm transition hover:bg-red-700">
+                <button type="button" id="btn-confirmar-bulk-delete" class="px-4 py-2 rounded text-white text-sm font-medium transition hover:opacity-90" style="background-color: #b91c1c">
                     Excluir
                 </button>
             </div>
@@ -612,6 +599,10 @@
             return Array.from(selectedIds);
         }
 
+        function checkboxBloqueado(cb) {
+            return cb.disabled || cb.dataset.bloqueado === '1';
+        }
+
         // Funcao para atualizar contagem e visibilidade das acoes em lote
         function atualizarAcoesLote() {
             var count = selectedIds.size;
@@ -648,14 +639,18 @@
             }
 
             // Atualizar estado do checkbox "selecionar todos" da pagina
-            var checkboxesAtual = document.querySelectorAll('.checkbox-participante');
+            var checkboxesAtual = Array.from(document.querySelectorAll('.checkbox-participante'));
+            var checkboxesElegiveis = checkboxesAtual.filter(function(cb) {
+                return !checkboxBloqueado(cb);
+            });
             var checkedCount = 0;
-            checkboxesAtual.forEach(function(cb) {
+            checkboxesElegiveis.forEach(function(cb) {
                 if (cb.checked) checkedCount++;
             });
             if (selectAll) {
-                selectAll.checked = checkedCount === checkboxesAtual.length && checkedCount > 0;
-                selectAll.indeterminate = checkedCount > 0 && checkedCount < checkboxesAtual.length;
+                selectAll.checked = checkedCount === checkboxesElegiveis.length && checkedCount > 0;
+                selectAll.indeterminate = checkedCount > 0 && checkedCount < checkboxesElegiveis.length;
+                selectAll.disabled = checkboxesElegiveis.length === 0;
             }
 
             salvarSelecao(selectedIds);
@@ -665,6 +660,11 @@
         function sincronizarCheckboxes() {
             checkboxes.forEach(function(cb) {
                 var id = Number(cb.value);
+                if (checkboxBloqueado(cb)) {
+                    cb.checked = false;
+                    selectedIds.delete(id);
+                    return;
+                }
                 cb.checked = selectedIds.has(id);
             });
         }
@@ -677,6 +677,10 @@
         if (selectAll) {
             selectAll.addEventListener('change', function() {
                 checkboxes.forEach(function(cb) {
+                    if (checkboxBloqueado(cb)) {
+                        cb.checked = false;
+                        return;
+                    }
                     var id = Number(cb.value);
                     cb.checked = selectAll.checked;
                     if (selectAll.checked) {
@@ -692,6 +696,12 @@
         // Event listeners para checkboxes individuais
         checkboxes.forEach(function(cb) {
             cb.addEventListener('change', function() {
+                if (checkboxBloqueado(cb)) {
+                    cb.checked = false;
+                    selectedIds.delete(Number(cb.value));
+                    atualizarAcoesLote();
+                    return;
+                }
                 var id = Number(cb.value);
                 if (cb.checked) {
                     selectedIds.add(id);
@@ -792,7 +802,7 @@
                 // Limpar selecao ao navegar
                 limparSelecaoStorage();
                 // Redirecionar para nova consulta com IDs pre-selecionados
-                window.location.href = '/app/consultas/nova?participantes=' + selecionados.join(',');
+                window.location.href = '/app/consulta/nova?participantes=' + selecionados.join(',');
             });
         }
 
@@ -1110,8 +1120,8 @@
             });
         }
 
-        // Restaurar preferencia (padrao: cards)
-        setView(localStorage.getItem(VIEW_KEY) || 'cards');
+        // Restaurar preferencia (padrao: lista)
+        setView(localStorage.getItem(VIEW_KEY) || 'list');
 
         console.log('[Monitoramento Participantes Importados] Inicializacao concluida');
     }
