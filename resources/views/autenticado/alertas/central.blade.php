@@ -1,19 +1,8 @@
 {{-- Central de Alertas --}}
-<div class="min-h-screen bg-gray-50" id="alertas-central-container">
+<div class="min-h-screen bg-gray-100" id="alertas-central-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
         <style>
-            @keyframes card-slide-in {
-                from { opacity: 0; transform: translateY(60px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            .dash-animate {
-                opacity: 0;
-                animation: card-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-            @media (prefers-reduced-motion: reduce) {
-                .dash-animate { opacity: 1; animation: none; }
-            }
             .alerta-skeleton {
                 background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
                 background-size: 200% 100%;
@@ -27,22 +16,15 @@
         </style>
 
         {{-- Page Header --}}
-        <div class="mb-4 sm:mb-8 dash-animate">
+        <div class="mb-4 sm:mb-8">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h1 class="text-xl sm:text-2xl font-semibold text-gray-900">Central de Alertas</h1>
-                        <p class="mt-0.5 text-sm text-gray-500">Monitore alertas fiscais e de compliance dos seus clientes</p>
-                    </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Central de Alertas</h1>
+                    <p class="mt-1 text-xs text-gray-500">Monitoramento fiscal e cadastral consolidado por cliente e participante.</p>
                 </div>
-                <div class="flex items-center gap-3">
-                    <span id="alerta-ultima-atualizacao" class="text-xs text-gray-400 hidden sm:inline"></span>
-                    <button id="btn-recalcular" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+                    <span id="alerta-ultima-atualizacao" class="text-[10px] text-gray-500 uppercase tracking-wide hidden sm:inline"></span>
+                    <button id="btn-recalcular" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium transition-colors">
                         <svg id="recalcular-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
@@ -57,57 +39,62 @@
         </div>
 
         {{-- KPI Cards --}}
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
-            {{-- Total Alertas --}}
-            <div id="kpi-total" class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 dash-animate min-h-[88px] sm:min-h-[112px] cursor-pointer hover:border-blue-400 transition-colors" style="animation-delay: 0.1s" data-filtro-severidade="">
-                <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2 whitespace-nowrap">Total Alertas</p>
-                <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-blue-600 whitespace-nowrap" id="kpi-total-valor">
-                    <span class="alerta-skeleton inline-block w-12 h-7 sm:h-9">&nbsp;</span>
-                </p>
-                <div class="mt-1 sm:mt-2">
-                    <span id="kpi-novos-hoje" class="hidden text-xs font-medium bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full"></span>
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6 sm:mb-8">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <div class="flex items-center justify-between gap-3">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo de Alertas</span>
+                    <span id="kpi-novos-hoje" class="hidden px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151"></span>
                 </div>
             </div>
-
-            {{-- Alta Severidade --}}
-            <div id="kpi-alta" class="bg-red-50 rounded-lg border border-red-200 p-3 sm:p-6 dash-animate min-h-[88px] sm:min-h-[112px] cursor-pointer hover:border-red-400 transition-colors" style="animation-delay: 0.15s" data-filtro-severidade="alta">
-                <div class="flex items-center gap-1.5 mb-1 sm:mb-2">
-                    <span class="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></span>
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap">Alta Severidade</p>
+            <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-200">
+                <div id="kpi-total" class="p-4 sm:p-6 cursor-pointer hover:bg-gray-50/50 transition-colors" data-filtro-severidade="">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Total de Alertas</p>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900" id="kpi-total-valor">
+                        <span class="alerta-skeleton inline-block w-12 h-7 sm:h-9">&nbsp;</span>
+                    </p>
+                    <p class="text-[11px] text-gray-500 mt-1">Todos os alertas ativos no monitoramento.</p>
                 </div>
-                <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-red-600 whitespace-nowrap" id="kpi-alta-valor">
-                    <span class="alerta-skeleton inline-block w-12 h-7 sm:h-9">&nbsp;</span>
-                </p>
-            </div>
-
-            {{-- Media Severidade --}}
-            <div id="kpi-media" class="bg-yellow-50 rounded-lg border border-yellow-200 p-3 sm:p-6 dash-animate min-h-[88px] sm:min-h-[112px] cursor-pointer hover:border-yellow-400 transition-colors" style="animation-delay: 0.2s" data-filtro-severidade="media">
-                <div class="flex items-center gap-1.5 mb-1 sm:mb-2">
-                    <span class="w-2 h-2 bg-yellow-500 rounded-full flex-shrink-0"></span>
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap">Média</p>
+                <div id="kpi-alta" class="p-4 sm:p-6 cursor-pointer hover:bg-gray-50/50 transition-colors" data-filtro-severidade="alta">
+                    <div class="flex items-center gap-2 mb-1 sm:mb-2">
+                        <span class="w-2 h-2 rounded-full" style="background-color: #dc2626"></span>
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Alta Severidade</p>
+                    </div>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900" id="kpi-alta-valor">
+                        <span class="alerta-skeleton inline-block w-12 h-7 sm:h-9">&nbsp;</span>
+                    </p>
+                    <p class="text-[11px] text-gray-500 mt-1">Pendências com maior risco operacional.</p>
                 </div>
-                <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-yellow-600 whitespace-nowrap" id="kpi-media-valor">
-                    <span class="alerta-skeleton inline-block w-12 h-7 sm:h-9">&nbsp;</span>
-                </p>
-            </div>
-
-            {{-- Baixa Severidade --}}
-            <div id="kpi-baixa" class="bg-gray-50 rounded-lg border border-gray-200 p-3 sm:p-6 dash-animate min-h-[88px] sm:min-h-[112px] cursor-pointer hover:border-gray-400 transition-colors" style="animation-delay: 0.25s" data-filtro-severidade="baixa">
-                <div class="flex items-center gap-1.5 mb-1 sm:mb-2">
-                    <span class="w-2 h-2 bg-gray-400 rounded-full flex-shrink-0"></span>
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap">Baixa Severidade</p>
+                <div id="kpi-media" class="p-4 sm:p-6 cursor-pointer hover:bg-gray-50/50 transition-colors" data-filtro-severidade="media">
+                    <div class="flex items-center gap-2 mb-1 sm:mb-2">
+                        <span class="w-2 h-2 rounded-full" style="background-color: #d97706"></span>
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Média Severidade</p>
+                    </div>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900" id="kpi-media-valor">
+                        <span class="alerta-skeleton inline-block w-12 h-7 sm:h-9">&nbsp;</span>
+                    </p>
+                    <p class="text-[11px] text-gray-500 mt-1">Exigem revisão e acompanhamento fiscal.</p>
                 </div>
-                <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-500 whitespace-nowrap" id="kpi-baixa-valor">
-                    <span class="alerta-skeleton inline-block w-12 h-7 sm:h-9">&nbsp;</span>
-                </p>
+                <div id="kpi-baixa" class="p-4 sm:p-6 cursor-pointer hover:bg-gray-50/50 transition-colors" data-filtro-severidade="baixa">
+                    <div class="flex items-center gap-2 mb-1 sm:mb-2">
+                        <span class="w-2 h-2 rounded-full" style="background-color: #9ca3af"></span>
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Baixa Severidade</p>
+                    </div>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900" id="kpi-baixa-valor">
+                        <span class="alerta-skeleton inline-block w-12 h-7 sm:h-9">&nbsp;</span>
+                    </p>
+                    <p class="text-[11px] text-gray-500 mt-1">Ocorrências informativas ou preventivas.</p>
+                </div>
             </div>
         </div>
 
         {{-- Evolution Chart --}}
-        <div id="alertas-evolucao-wrapper" class="bg-white rounded-lg border border-gray-200 p-5 sm:p-6 mb-6 sm:mb-8 dash-animate" style="animation-delay: 0.3s">
-            <h3 class="text-sm font-medium text-gray-700 mb-1">Evolução de Alertas</h3>
-            <p class="text-xs text-gray-400 mb-4">Últimas 12 semanas</p>
-            <div id="alertas-evolucao-chart" class="h-64">
+        <div id="alertas-evolucao-wrapper" class="bg-white rounded border border-gray-300 overflow-hidden mb-6 sm:mb-8">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <h3 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Evolução de Alertas</h3>
+                <p class="text-[11px] text-gray-400 mt-1">Últimas 12 semanas</p>
+            </div>
+            <div class="p-4 sm:p-5">
+                <div id="alertas-evolucao-chart" class="h-64">
                 <div class="flex items-center justify-center h-full text-gray-400">
                     <svg class="animate-spin h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -115,48 +102,53 @@
                     </svg>
                     Carregando...
                 </div>
+                </div>
             </div>
         </div>
 
         {{-- Category Tabs --}}
-        <div class="mb-4 sm:mb-6 dash-animate" style="animation-delay: 0.35s">
+        <div class="mb-4 sm:mb-6">
             <div class="border-b border-gray-200">
                 <nav class="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide" aria-label="Categorias de Alertas" id="alertas-tabs-nav">
-                    <button data-alerta-tab="todos" class="alerta-tab active border-amber-500 text-amber-600 whitespace-nowrap py-3 sm:py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
+                    <button data-alerta-tab="todos" class="alerta-tab active border-gray-800 text-gray-900 whitespace-nowrap py-3 sm:py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
                         Todos
-                        <span id="tab-badge-todos" class="hidden inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700"></span>
+                        <span id="tab-badge-todos" class="hidden inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151"></span>
                     </button>
                     <button data-alerta-tab="notas_fiscais" class="alerta-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 sm:py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
                         Notas Fiscais
-                        <span id="tab-badge-notas_fiscais" class="hidden inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold"></span>
+                        <span id="tab-badge-notas_fiscais" class="hidden inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"></span>
                     </button>
                     <button data-alerta-tab="pis_cofins" class="alerta-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 sm:py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
                         PIS/COFINS
-                        <span id="tab-badge-pis_cofins" class="hidden inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold"></span>
+                        <span id="tab-badge-pis_cofins" class="hidden inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"></span>
                     </button>
                     <button data-alerta-tab="compliance" class="alerta-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 sm:py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
                         Compliance
-                        <span id="tab-badge-compliance" class="hidden inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold"></span>
+                        <span id="tab-badge-compliance" class="hidden inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"></span>
                     </button>
                     <button data-alerta-tab="fornecedores" class="alerta-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 sm:py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
                         Fornecedores
-                        <span id="tab-badge-fornecedores" class="hidden inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold"></span>
+                        <span id="tab-badge-fornecedores" class="hidden inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"></span>
                     </button>
                     <button data-alerta-tab="importacao" class="alerta-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 sm:py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
                         Importação
-                        <span id="tab-badge-importacao" class="hidden inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold"></span>
+                        <span id="tab-badge-importacao" class="hidden inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"></span>
                     </button>
                 </nav>
             </div>
         </div>
 
         {{-- Filters (simplified) --}}
-        <div class="bg-white rounded-lg border border-gray-200 p-4 sm:p-5 mb-6 sm:mb-8 dash-animate" style="animation-delay: 0.38s">
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6 sm:mb-8">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
+            </div>
+            <div class="p-4 sm:p-5">
             <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-end gap-3">
                 {{-- Severidade --}}
                 <div class="flex-1 min-w-[120px]">
-                    <label for="alerta-filtro-severidade" class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Severidade</label>
-                    <select id="alerta-filtro-severidade" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <label for="alerta-filtro-severidade" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Severidade</label>
+                    <select id="alerta-filtro-severidade" class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         <option value="">Todas</option>
                         <option value="alta">Alta</option>
                         <option value="media">Média</option>
@@ -166,8 +158,8 @@
 
                 {{-- Cliente --}}
                 <div class="flex-1 min-w-[160px]">
-                    <label for="alerta-filtro-cliente" class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Cliente</label>
-                    <select id="alerta-filtro-cliente" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <label for="alerta-filtro-cliente" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Cliente</label>
+                    <select id="alerta-filtro-cliente" class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         <option value="">Todos os Clientes</option>
                         @foreach($clientes ?? [] as $cliente)
                             <option value="{{ $cliente->id }}">{{ $cliente->razao_social }}</option>
@@ -177,8 +169,8 @@
 
                 {{-- Status --}}
                 <div class="flex-1 min-w-[120px]">
-                    <label for="alerta-filtro-status" class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Status</label>
-                    <select id="alerta-filtro-status" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <label for="alerta-filtro-status" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Status</label>
+                    <select id="alerta-filtro-status" class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         <option value="ativo">Ativos</option>
                         <option value="visto">Vistos</option>
                         <option value="resolvido">Resolvidos</option>
@@ -189,19 +181,20 @@
 
                 {{-- Botao Filtrar --}}
                 <div class="flex-shrink-0">
-                    <button id="btn-filtrar-alertas" class="w-full sm:w-auto px-5 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors">
+                    <button id="btn-filtrar-alertas" class="w-full sm:w-auto px-5 py-2 bg-gray-800 text-white text-sm font-medium rounded hover:bg-gray-700 transition-colors">
                         Filtrar
                     </button>
                 </div>
             </div>
+            </div>
         </div>
 
         {{-- Alert List --}}
-        <div id="alertas-lista" class="dash-animate" style="animation-delay: 0.4s">
+        <div id="alertas-lista" class="">
             {{-- Skeleton loading --}}
             <div class="space-y-2" id="alertas-skeleton">
                 @for($i = 0; $i < 5; $i++)
-                <div class="bg-white rounded-lg border border-gray-200 px-4 py-3">
+                <div class="bg-white rounded border border-gray-300 px-4 py-3">
                     <div class="flex items-center gap-2">
                         <div class="alerta-skeleton w-2.5 h-2.5 rounded-full">&nbsp;</div>
                         <div class="alerta-skeleton h-4 w-48">&nbsp;</div>
@@ -213,7 +206,7 @@
         </div>
 
         {{-- Pagination --}}
-        <div id="alertas-paginacao" class="mt-4 sm:mt-6 hidden"></div>
+        <div id="alertas-paginacao" class="mt-4 sm:mt-6 hidden border-t border-gray-300 px-4 py-3"></div>
 
     </div>
 </div>
@@ -279,7 +272,7 @@
     function profileLink(type, id, label) {
         if (!id) return escapeHtml(label || '-');
         var url = type === 'cliente' ? '/app/cliente/' + id : '/app/participante/' + id;
-        return '<a href="' + url + '" data-link class="text-amber-600 hover:text-amber-700 hover:underline font-medium">' + escapeHtml(label || 'Ver perfil') + '</a>';
+        return '<a href="' + url + '" data-link class="text-gray-900 hover:text-gray-600 hover:underline font-medium">' + escapeHtml(label || 'Ver perfil') + '</a>';
     }
 
     function formatarDataHora(dateStr) {
@@ -290,26 +283,28 @@
     }
 
     function severidadeBadge(sev) {
-        var classes = {
-            alta: 'bg-red-100 text-red-800',
-            media: 'bg-yellow-100 text-yellow-800',
-            baixa: 'bg-gray-100 text-gray-600'
+        var colors = {
+            alta: '#dc2626',
+            media: '#d97706',
+            baixa: '#9ca3af'
         };
         var label = { alta: 'Alta', media: 'Média', baixa: 'Baixa' };
-        var cls = classes[sev] || 'bg-gray-100 text-gray-600';
+        var color = colors[sev] || '#9ca3af';
         var lbl = label[sev] || escapeHtml(sev);
-        return '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ' + cls + '">' + escapeHtml(lbl) + '</span>';
+        return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + color + '">' + escapeHtml(lbl) + '</span>';
     }
 
     function severidadeDot(sev) {
-        var colors = { alta: 'bg-red-500', media: 'bg-yellow-500', baixa: 'bg-gray-400' };
-        var cls = colors[sev] || 'bg-gray-400';
-        return '<span class="w-2.5 h-2.5 ' + cls + ' rounded-full flex-shrink-0"></span>';
+        var colors = { alta: '#dc2626', media: '#d97706', baixa: '#9ca3af' };
+        var color = colors[sev] || '#9ca3af';
+        return '<span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ' + color + '"></span>';
     }
 
     function categoriaBadge(cat) {
         var labels = { notas_fiscais: 'Notas Fiscais', compliance: 'Compliance', importacao: 'Importação' };
-        return '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">' + escapeHtml(labels[cat] || cat) + '</span>';
+        var colors = { notas_fiscais: '#374151', compliance: '#4338ca', importacao: '#0f766e' };
+        var color = colors[cat] || '#374151';
+        return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + color + '">' + escapeHtml(labels[cat] || cat) + '</span>';
     }
 
     async function fetchJson(url, options) {
@@ -362,7 +357,7 @@
         }
 
         if (atualizacaoEl && resumo.ultima_atualizacao) {
-            atualizacaoEl.textContent = 'Última atualização: ' + formatarDataHora(resumo.ultima_atualizacao);
+            atualizacaoEl.textContent = 'Última atualização ' + formatarDataHora(resumo.ultima_atualizacao);
             atualizacaoEl.classList.remove('hidden');
         }
     }
@@ -373,7 +368,7 @@
         var container = document.getElementById('alertas-evolucao-chart');
         if (!container) return;
 
-        // Aguardar a animação dash-animate do wrapper terminar antes de renderizar
+        // Aguardar a animação do wrapper terminar antes de renderizar
         var wrapper = document.getElementById('alertas-evolucao-wrapper');
         if (wrapper) {
             await new Promise(function(resolve) {
@@ -394,7 +389,7 @@
             tentativas++;
         }
         if (typeof ApexCharts === 'undefined') {
-            container.innerHTML = '<div class="flex items-center justify-center h-full text-red-400 text-sm">Erro ao carregar gráfico</div>';
+            container.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500 text-sm">Erro ao carregar gráfico</div>';
             return;
         }
 
@@ -444,7 +439,7 @@
                 tooltip: {
                     y: { formatter: function(val) { return val + ' alertas'; } }
                 },
-                colors: data.series.map(function(s) { return s.color || '#6b7280'; }),
+                colors: data.series.map(function(s) { return s.color || '#374151'; }),
                 series: data.series.map(function(s) {
                     return { name: s.name, data: s.data };
                 }),
@@ -457,7 +452,7 @@
                     itemMargin: { horizontal: 12, vertical: 8 }
                 },
                 grid: {
-                    borderColor: '#f3f4f6',
+                    borderColor: '#e5e7eb',
                     strokeDashArray: 4
                 },
                 responsive: [{
@@ -478,7 +473,7 @@
                 });
             });
         } catch (e) {
-            container.innerHTML = '<div class="flex items-center justify-center h-full text-red-400 text-sm">Erro ao carregar gráfico</div>';
+            container.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500 text-sm">Erro ao carregar gráfico</div>';
         }
     }
 
@@ -528,7 +523,7 @@
             setupAlertaActions();
             setupExpandToggle();
         } catch (e) {
-            listaEl.innerHTML = '<div class="bg-white rounded-lg border border-red-200 p-6 text-center text-red-500 text-sm">Erro ao carregar alertas. Tente novamente.</div>';
+            listaEl.innerHTML = '<div class="bg-white rounded border border-gray-300 p-6 text-center text-sm text-gray-500">Erro ao carregar alertas. Tente novamente.</div>';
         }
     }
 
@@ -566,20 +561,20 @@
                 badge.textContent = count;
                 badge.classList.remove('hidden');
                 // Cor do badge baseada na tab
-                badge.className = 'inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold';
+                badge.className = 'inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded text-[10px] font-bold uppercase tracking-wide text-white';
                 if (tab === 'todos') {
-                    badge.classList.add('bg-amber-100', 'text-amber-700');
+                    badge.style.backgroundColor = '#374151';
                 } else if (count > 0) {
                     // Verificar severidade máxima dos alertas desta tab
                     var tabAlertas = tab === 'todos' ? alertas : alertas.filter(function(a) { return tabTipos[tab].indexOf(a.tipo) !== -1; });
                     var temAlta = tabAlertas.some(function(a) { return a.severidade === 'alta'; });
                     var temMedia = tabAlertas.some(function(a) { return a.severidade === 'media'; });
                     if (temAlta) {
-                        badge.classList.add('bg-red-100', 'text-red-700');
+                        badge.style.backgroundColor = '#dc2626';
                     } else if (temMedia) {
-                        badge.classList.add('bg-yellow-100', 'text-yellow-700');
+                        badge.style.backgroundColor = '#d97706';
                     } else {
-                        badge.classList.add('bg-gray-100', 'text-gray-600');
+                        badge.style.backgroundColor = '#9ca3af';
                     }
                 }
             } else {
@@ -601,15 +596,15 @@
             grouped[tipo].push(a);
         });
 
-        var html = '<div class="space-y-2">';
+        var html = '<div class="bg-white rounded border border-gray-300 overflow-hidden">';
         groupOrder.forEach(function(tipo) {
             var items = grouped[tipo];
             var primeiro = items[0];
             var maxSev = getMaxSeveridade(items);
             var totalAfetados = items.reduce(function(sum, a) { return sum + (a.total_afetados || 0); }, 0);
 
-            html += '<div class="bg-white rounded-lg border border-gray-200 overflow-hidden">';
-            html += '<div class="px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors alerta-grupo-header" data-tipo="' + escapeHtml(tipo) + '">';
+            html += '<div class="border-b border-gray-100 last:border-b-0">';
+            html += '<div class="px-4 py-3 cursor-pointer hover:bg-gray-50/50 transition-colors alerta-grupo-header" data-tipo="' + escapeHtml(tipo) + '">';
             html += '<div class="flex items-center justify-between">';
             html += '<div class="flex items-center gap-2 min-w-0">';
             html += severidadeDot(maxSev);
@@ -621,7 +616,7 @@
             html += '</div>';
             html += '<div class="flex items-center gap-2 flex-shrink-0">';
             if (items.length > 1) {
-                html += '<span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">' + items.length + '</span>';
+                html += '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">' + items.length + '</span>';
             }
             if (totalAfetados) {
                 html += '<span class="text-xs text-gray-500">' + totalAfetados + ' afetados</span>';
@@ -653,10 +648,10 @@
             importacao: 'Importação EFD'
         };
         var label = tabLabels[tabAtual] || tabAtual;
-        var html = '<div class="bg-white rounded-lg border border-gray-200">';
+        var html = '<div class="bg-white rounded border border-gray-300">';
         html += '<div class="flex flex-col items-center justify-center py-16 text-gray-400">';
-        html += '<div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center mb-3">';
-        html += '<svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+        html += '<div class="w-12 h-12 bg-gray-100 rounded flex items-center justify-center mb-3">';
+        html += '<svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
         html += '</div>';
         html += '<p class="text-sm font-medium text-gray-500 mb-1">Nenhum alerta em ' + escapeHtml(label) + '</p>';
         html += '<p class="text-xs text-gray-400">Tudo certo nesta categoria.</p>';
@@ -729,7 +724,7 @@
             var totalAfetados = items.reduce(function(sum, a) { return sum + (a.total_afetados || 0); }, 0);
             var maxSev = temAlertas ? getMaxSeveridade(items) : null;
 
-            html += '<div class="bg-white rounded-lg border border-gray-200 overflow-hidden">';
+            html += '<div class="bg-white rounded border border-gray-300 overflow-hidden">';
 
             if (temAlertas) {
                 // Wrapper COM alertas — expansível
@@ -759,13 +754,13 @@
                 html += '<div class="px-4 py-3">';
                 html += '<div class="flex items-center justify-between">';
                 html += '<div class="flex items-center gap-2 min-w-0">';
-                html += '<span class="w-2.5 h-2.5 bg-emerald-400 rounded-full flex-shrink-0"></span>';
+                html += '<span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: #047857"></span>';
                 html += '<span class="text-gray-400">' + cat.icon + '</span>';
                 html += '<h3 class="text-sm font-medium text-gray-500">' + escapeHtml(cat.label) + '</h3>';
                 html += '</div>';
                 html += '<div class="flex items-center gap-1.5 flex-shrink-0">';
-                html += '<svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
-                html += '<span class="text-xs text-emerald-600 font-medium">Sem alertas</span>';
+                html += '<svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+                html += '<span class="text-xs text-gray-600 font-medium">Sem alertas</span>';
                 html += '</div>';
                 html += '</div>';
                 html += '</div>';
@@ -800,7 +795,7 @@
             var items = grupo.alertas;
             var contagem = contarSeveridades(items);
 
-            html += '<div class="bg-white rounded-lg border border-gray-200 overflow-hidden">';
+            html += '<div class="bg-white rounded border border-gray-300 overflow-hidden">';
             html += '<div class="px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors alerta-grupo-header" data-cliente="' + escapeHtml(key) + '">';
             html += '<div class="flex items-center justify-between gap-2">';
             html += '<div class="flex items-center gap-2 min-w-0">';
@@ -852,7 +847,7 @@
     // ─── Render: Alert Card ───────────────────────────────────
 
     function renderAlertaCard(alerta) {
-        var html = '<div class="px-5 sm:px-6 py-4 bg-gray-50/50 border-b border-gray-100 last:border-b-0">';
+        var html = '<div class="px-4 sm:px-5 py-4 border-b border-gray-100 last:border-b-0">';
         html += '<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">';
         html += '<div class="min-w-0">';
         html += '<div class="flex items-center gap-2 mb-1">';
@@ -873,6 +868,10 @@
         if (alerta.participante_id) {
             var pNome = (alerta.participante && alerta.participante.razao_social) || (alerta.detalhes && alerta.detalhes.razao_social) || 'Ver participante';
             links.push('<span class="inline-flex items-center gap-1"><svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>' + profileLink('participante', alerta.participante_id, pNome) + '</span>');
+        }
+        var notaId = (alerta.detalhes && alerta.detalhes.nota_id) || alerta.nota_id || null;
+        if (notaId) {
+            links.push('<span class="inline-flex items-center gap-1"><svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><a href="' + getNotaUrl(notaId) + '" data-link class="text-gray-600 hover:text-gray-900 hover:underline">Abrir nota</a></span>');
         }
         if (links.length > 0) {
             html += '<div class="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-gray-500">' + links.join('') + '</div>';
@@ -896,22 +895,44 @@
     function renderActionButtons(alerta) {
         var html = '';
         if (alerta.status !== 'resolvido') {
-            html += '<a href="/app/alertas/' + alerta.id + '" data-link class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors" title="Ver detalhes e resolver">';
+        html += '<a href="/app/alertas/' + alerta.id + '" data-link class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors" title="Ver detalhes e resolver">';
             html += '<span class="hidden sm:inline">Saiba Mais</span>';
             html += '<svg class="w-3.5 h-3.5 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
             html += '</a>';
         }
         if (alerta.status !== 'ignorado') {
-            html += '<button class="alerta-action-btn inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" data-alerta-id="' + alerta.id + '" data-action="ignorado" title="Ignorar alerta">';
+            html += '<button class="alerta-action-btn inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors" data-alerta-id="' + alerta.id + '" data-action="ignorado" title="Ignorar alerta">';
             html += '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
             html += '<span class="hidden sm:inline">Ignorar</span>';
             html += '</button>';
         }
-        html += '<button class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 rounded-lg cursor-not-allowed opacity-60" disabled title="Em breve — integracao WhatsApp">';
+        html += '<button class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-400 bg-gray-100 rounded cursor-not-allowed opacity-60" disabled title="Em breve — integracao WhatsApp">';
         html += '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>';
         html += '<svg class="w-3 h-3 -ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>';
         html += '</button>';
         return html;
+    }
+
+    function getNotaUrl(notaId) {
+        if (!notaId) return null;
+        return '/app/notas-fiscais/efd/' + notaId;
+    }
+
+    function renderNotaAction(notaId, label, compact) {
+        var url = getNotaUrl(notaId);
+        if (!url) return '';
+
+        if (compact) {
+            return '<a href="' + url + '" data-link class="inline-flex items-center gap-1 text-xs text-gray-700 hover:text-gray-900 hover:underline font-medium">' +
+                '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>' +
+                escapeHtml(label || 'Abrir Nota') +
+                '</a>';
+        }
+
+        return '<a href="' + url + '" data-link class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors flex-shrink-0">' +
+            '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>' +
+            escapeHtml(label || 'Abrir Nota') +
+            '</a>';
     }
 
     // ─── Render: Detail Tables ────────────────────────────────
@@ -949,35 +970,41 @@
             return renderDetalhesGenerico(detalhes);
         }
 
-        var html = '<div class="overflow-x-auto">';
-        html += '<table class="min-w-full text-xs">';
-        html += '<thead><tr class="border-b border-gray-200">';
-        html += '<th class="text-left py-2 px-3 font-medium text-gray-500">Número</th>';
-        html += '<th class="text-left py-2 px-3 font-medium text-gray-500">Série</th>';
-        html += '<th class="text-left py-2 px-3 font-medium text-gray-500">Modelo</th>';
-        html += '<th class="text-left py-2 px-3 font-medium text-gray-500">Participante</th>';
-        html += '<th class="text-left py-2 px-3 font-medium text-gray-500">Data</th>';
-        html += '<th class="text-right py-2 px-3 font-medium text-gray-500">Valor</th>';
-        html += '<th class="text-center py-2 px-3 font-medium text-gray-500">Perfil</th>';
+        var html = '<div class="overflow-x-auto border border-gray-200">';
+        html += '<table class="min-w-full">';
+        html += '<thead><tr class="border-b border-gray-300">';
+        html += '<th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Número</th>';
+        html += '<th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Série</th>';
+        html += '<th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Modelo</th>';
+        html += '<th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participante</th>';
+        html += '<th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Data</th>';
+        html += '<th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Valor</th>';
+        html += '<th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ações</th>';
         html += '</tr></thead><tbody>';
 
         itens.forEach(function(item) {
             var pId = item.participante_id || item.cod_part;
-            html += '<tr class="border-b border-gray-50">';
-            html += '<td class="py-1.5 px-3 text-gray-700">' + escapeHtml(item.numero || item.num_doc || '-') + '</td>';
-            html += '<td class="py-1.5 px-3 text-gray-700">' + escapeHtml(item.serie || '-') + '</td>';
-            html += '<td class="py-1.5 px-3 text-gray-700">' + escapeHtml(item.modelo || item.cod_mod || '-') + '</td>';
-            html += '<td class="py-1.5 px-3 text-gray-700 max-w-[150px] truncate">' + escapeHtml(item.participante || item.participante_nome || '-') + '</td>';
-            html += '<td class="py-1.5 px-3 text-gray-700">' + formatarData(item.data || item.dt_doc) + '</td>';
-            html += '<td class="py-1.5 px-3 text-gray-700 text-right">' + formatarMoeda(item.valor || item.vl_doc) + '</td>';
-            html += '<td class="py-1.5 px-3 text-center">';
+            html += '<tr class="hover:bg-gray-50/50 transition-colors">';
+            html += '<td class="px-3 py-3 text-sm text-gray-700">' + escapeHtml(item.numero || item.num_doc || '-') + '</td>';
+            html += '<td class="px-3 py-3 text-sm text-gray-700">' + escapeHtml(item.serie || '-') + '</td>';
+            html += '<td class="px-3 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">' + escapeHtml(item.modelo || item.cod_mod || '-') + '</span></td>';
+            html += '<td class="px-3 py-3 text-sm text-gray-700 max-w-[150px] truncate">' + escapeHtml(item.participante || item.participante_nome || '-') + '</td>';
+            html += '<td class="px-3 py-3 text-sm text-gray-700">' + formatarData(item.data || item.dt_doc) + '</td>';
+            html += '<td class="px-3 py-3 text-sm font-semibold text-gray-900 text-right font-mono">' + formatarMoeda(item.valor || item.vl_doc) + '</td>';
+            html += '<td class="px-3 py-3 text-center">';
+            html += '<div class="flex items-center justify-center gap-3">';
+            if (item.nota_id) {
+                html += renderNotaAction(item.nota_id, 'Abrir Nota', true);
+            }
             if (pId) {
-                html += '<a href="/app/participante/' + pId + '" data-link class="inline-flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 hover:underline font-medium">';
+                html += '<a href="/app/participante/' + pId + '" data-link class="inline-flex items-center gap-1 text-xs text-gray-700 hover:text-gray-900 hover:underline font-medium">';
                 html += '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
-                html += 'Ver</a>';
-            } else {
+                html += 'Ver Participante</a>';
+            }
+            if (!item.nota_id && !pId) {
                 html += '-';
             }
+            html += '</div>';
             html += '</td>';
             html += '</tr>';
         });
@@ -996,24 +1023,24 @@
             return renderDetalhesGenerico(detalhes);
         }
 
-        var html = '<div class="overflow-x-auto">';
-        html += '<table class="min-w-full text-xs">';
-        html += '<thead><tr class="border-b border-gray-200">';
-        html += '<th class="text-left py-2 px-3 font-medium text-gray-500">Participante</th>';
-        html += '<th class="text-left py-2 px-3 font-medium text-gray-500">CNPJ</th>';
-        html += '<th class="text-left py-2 px-3 font-medium text-gray-500">Status / Info</th>';
-        html += '<th class="text-center py-2 px-3 font-medium text-gray-500">Perfil</th>';
+        var html = '<div class="overflow-x-auto border border-gray-200">';
+        html += '<table class="min-w-full">';
+        html += '<thead><tr class="border-b border-gray-300">';
+        html += '<th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participante</th>';
+        html += '<th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">CNPJ</th>';
+        html += '<th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Status / Info</th>';
+        html += '<th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Perfil</th>';
         html += '</tr></thead><tbody>';
 
         itens.forEach(function(item) {
             var pId = item.participante_id || item.id;
-            html += '<tr class="border-b border-gray-50">';
-            html += '<td class="py-1.5 px-3 text-gray-700 max-w-[200px] truncate">' + escapeHtml(item.razao_social || item.nome || item.participante || '-') + '</td>';
-            html += '<td class="py-1.5 px-3 text-gray-700">' + formatCnpj(item.cnpj) + '</td>';
-            html += '<td class="py-1.5 px-3 text-gray-700">' + escapeHtml(item.status || item.situacao || item.info || '-') + '</td>';
-            html += '<td class="py-1.5 px-3 text-center">';
+            html += '<tr class="hover:bg-gray-50/50 transition-colors">';
+            html += '<td class="px-3 py-3 text-sm text-gray-700 max-w-[200px] truncate">' + escapeHtml(item.razao_social || item.nome || item.participante || '-') + '</td>';
+            html += '<td class="px-3 py-3 text-sm text-gray-700 font-mono">' + formatCnpj(item.cnpj) + '</td>';
+            html += '<td class="px-3 py-3 text-sm text-gray-700">' + escapeHtml(item.status || item.situacao || item.info || '-') + '</td>';
+            html += '<td class="px-3 py-3 text-center">';
             if (pId) {
-                html += '<a href="/app/participante/' + pId + '" data-link class="inline-flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 hover:underline font-medium">';
+                html += '<a href="/app/participante/' + pId + '" data-link class="inline-flex items-center gap-1 text-xs text-gray-700 hover:text-gray-900 hover:underline font-medium">';
                 html += '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
                 html += 'Ver</a>';
             } else {
@@ -1029,7 +1056,7 @@
 
     function renderParticipanteCard(detalhes) {
         var pId = detalhes.participante_id || detalhes.id;
-        var html = '<div class="bg-white rounded-lg border border-gray-200 p-4">';
+        var html = '<div class="bg-white rounded border border-gray-300 p-4">';
         html += '<div class="flex items-start justify-between gap-3">';
         html += '<div class="min-w-0">';
         if (detalhes.razao_social) {
@@ -1039,18 +1066,23 @@
             html += '<p class="text-xs text-gray-500 mt-0.5">CNPJ: ' + formatCnpj(detalhes.cnpj) + '</p>';
         }
         if (detalhes.situacao_cadastral) {
-            var sitClass = detalhes.situacao_cadastral === 'ATIVA' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700';
-            html += '<p class="mt-1.5"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ' + sitClass + '">' + escapeHtml(detalhes.situacao_cadastral) + '</span></p>';
+            var sitStyle = detalhes.situacao_cadastral === 'ATIVA' ? '#047857' : '#dc2626';
+            html += '<p class="mt-1.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + sitStyle + '">' + escapeHtml(detalhes.situacao_cadastral) + '</span></p>';
         }
         if (detalhes.ultima_consulta_em) {
             html += '<p class="text-xs text-gray-400 mt-1">Última consulta: ' + formatarData(detalhes.ultima_consulta_em) + '</p>';
         }
         html += '</div>';
+        html += '<div class="flex items-center gap-2 flex-shrink-0">';
+        if (detalhes.nota_id) {
+            html += renderNotaAction(detalhes.nota_id, 'Abrir Nota');
+        }
         if (pId) {
-            html += '<a href="/app/participante/' + pId + '" data-link class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors flex-shrink-0">';
+            html += '<a href="/app/participante/' + pId + '" data-link class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors flex-shrink-0">';
             html += '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
             html += 'Ver Participante</a>';
         }
+        html += '</div>';
         html += '</div>';
         html += '</div>';
         return html;
@@ -1064,7 +1096,7 @@
 
         var html = '<div class="flex flex-wrap gap-2">';
         meses.forEach(function(mes) {
-            html += '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">' + escapeHtml(mes) + '</span>';
+            html += '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">' + escapeHtml(mes) + '</span>';
         });
         html += '</div>';
         if (detalhes.mensagem) {
@@ -1084,7 +1116,7 @@
         ];
 
         items.forEach(function(item) {
-            html += '<div class="bg-white rounded-lg border border-gray-200 p-3 text-center">';
+            html += '<div class="bg-white rounded border border-gray-300 p-3 text-center">';
             html += '<p class="text-lg font-semibold text-gray-900">' + escapeHtml(String(item.value)) + '</p>';
             html += '<p class="text-xs text-gray-500">' + escapeHtml(item.label) + '</p>';
             html += '</div>';
@@ -1099,7 +1131,7 @@
 
     function renderFornecedorIrregular(detalhes) {
         var pId = detalhes.participante_id;
-        var html = '<div class="bg-white rounded-lg border border-gray-200 p-4">';
+        var html = '<div class="bg-white rounded border border-gray-300 p-4">';
         html += '<div class="flex items-start justify-between gap-3 mb-3">';
         html += '<div class="min-w-0">';
         if (detalhes.razao_social) {
@@ -1109,11 +1141,16 @@
             html += '<p class="text-xs text-gray-500 mt-0.5">CNPJ: ' + formatCnpj(detalhes.cnpj) + '</p>';
         }
         html += '</div>';
+        html += '<div class="flex items-center gap-2 flex-shrink-0">';
+        if (detalhes.nota_id) {
+            html += renderNotaAction(detalhes.nota_id, 'Abrir Nota');
+        }
         if (pId) {
-            html += '<a href="/app/participante/' + pId + '" data-link class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors flex-shrink-0">';
+            html += '<a href="/app/participante/' + pId + '" data-link class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors flex-shrink-0">';
             html += '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
             html += 'Ver Participante</a>';
         }
+        html += '</div>';
         html += '</div>';
 
         html += '<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">';
@@ -1124,7 +1161,7 @@
             { label: 'Valor em risco', value: formatarMoeda(detalhes.valor_em_risco), cls: 'text-red-600' }
         ];
         items.forEach(function(item) {
-            html += '<div class="bg-gray-50 rounded-lg p-3 text-center">';
+            html += '<div class="bg-gray-50 rounded border border-gray-200 p-3 text-center">';
             html += '<p class="text-sm font-semibold ' + item.cls + '">' + escapeHtml(String(item.value)) + '</p>';
             html += '<p class="text-xs text-gray-500 mt-0.5">' + escapeHtml(item.label) + '</p>';
             html += '</div>';
@@ -1179,7 +1216,7 @@
 
         if (entries.length === 0) return '';
 
-        var html = '<div class="bg-white rounded-lg border border-gray-200 overflow-hidden">';
+        var html = '<div class="bg-white rounded border border-gray-300 overflow-hidden">';
         html += '<table class="min-w-full text-xs">';
         entries.forEach(function(entry, i) {
             var bgClass = i % 2 === 0 ? 'bg-gray-50/50' : 'bg-white';
@@ -1193,9 +1230,17 @@
         // Link para participante se disponível
         if (detalhes.participante_id) {
             html += '<div class="px-3 py-2 border-t border-gray-100 bg-gray-50/50">';
-            html += '<a href="/app/participante/' + detalhes.participante_id + '" data-link class="inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 hover:text-amber-700 hover:underline">';
+            if (detalhes.nota_id) {
+                html += renderNotaAction(detalhes.nota_id, 'Abrir Nota', true);
+                html += '<span class="mx-2 text-gray-300">|</span>';
+            }
+            html += '<a href="/app/participante/' + detalhes.participante_id + '" data-link class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-700 hover:text-gray-900 hover:underline">';
             html += '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
             html += 'Ver perfil do participante</a>';
+            html += '</div>';
+        } else if (detalhes.nota_id) {
+            html += '<div class="px-3 py-2 border-t border-gray-100 bg-gray-50/50">';
+            html += renderNotaAction(detalhes.nota_id, 'Abrir Nota', true);
             html += '</div>';
         }
 
@@ -1206,9 +1251,9 @@
     // ─── Render: Empty State ──────────────────────────────────
 
     function renderEmptyState() {
-        var html = '<div class="bg-white rounded-lg border border-gray-200">';
+        var html = '<div class="bg-white rounded border border-gray-300">';
         html += '<div class="flex flex-col items-center justify-center py-20 sm:py-28 text-gray-400">';
-        html += '<div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">';
+        html += '<div class="w-16 h-16 bg-gray-100 rounded flex items-center justify-center mb-4">';
         html += '<svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
         html += '</div>';
         html += '<p class="text-base font-medium text-gray-500 mb-1">Nenhum alerta encontrado</p>';
@@ -1222,7 +1267,7 @@
     function renderSkeleton() {
         var html = '<div class="space-y-2">';
         for (var i = 0; i < 5; i++) {
-            html += '<div class="bg-white rounded-lg border border-gray-200 px-4 py-3">';
+            html += '<div class="bg-white rounded border border-gray-300 px-4 py-3">';
             html += '<div class="flex items-center gap-2">';
             html += '<div class="alerta-skeleton w-2.5 h-2.5 rounded-full">&nbsp;</div>';
             html += '<div class="alerta-skeleton h-4 w-48">&nbsp;</div>';
@@ -1250,10 +1295,12 @@
         }
 
         pagEl.classList.remove('hidden');
-        var html = '<div class="flex items-center justify-center gap-1">';
+        var html = '<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">';
+        html += '<span class="text-[10px] text-gray-500 uppercase tracking-wide">Página ' + currentPage + ' de ' + lastPage + '</span>';
+        html += '<div class="flex items-center justify-center gap-1">';
 
         // Previous
-        html += '<button class="alerta-page-btn px-3 py-1.5 text-sm rounded-lg border ' + (currentPage <= 1 ? 'border-gray-200 text-gray-300 cursor-not-allowed' : 'border-gray-300 text-gray-700 hover:bg-gray-50') + '" data-page="' + (currentPage - 1) + '" ' + (currentPage <= 1 ? 'disabled' : '') + '>';
+        html += '<button class="alerta-page-btn px-3 py-1.5 text-[10px] border rounded ' + (currentPage <= 1 ? 'border-gray-200 text-gray-300 cursor-not-allowed' : 'border-gray-300 text-gray-700 hover:bg-gray-50') + '" data-page="' + (currentPage - 1) + '" ' + (currentPage <= 1 ? 'disabled' : '') + '>';
         html += '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>';
         html += '</button>';
 
@@ -1262,7 +1309,7 @@
         var end = Math.min(lastPage, currentPage + 2);
 
         if (start > 1) {
-            html += '<button class="alerta-page-btn px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50" data-page="1">1</button>';
+            html += '<button class="alerta-page-btn px-3 py-1.5 text-[10px] border border-gray-300 text-gray-700 rounded hover:bg-gray-50" data-page="1">1</button>';
             if (start > 2) {
                 html += '<span class="px-2 text-gray-400">...</span>';
             }
@@ -1270,9 +1317,9 @@
 
         for (var p = start; p <= end; p++) {
             if (p === currentPage) {
-                html += '<button class="px-3 py-1.5 text-sm rounded-lg bg-amber-600 text-white font-medium" disabled>' + p + '</button>';
+                html += '<button class="px-3 py-1.5 text-[10px] font-bold text-white rounded" style="background-color: #1f2937" disabled>' + p + '</button>';
             } else {
-                html += '<button class="alerta-page-btn px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50" data-page="' + p + '">' + p + '</button>';
+                html += '<button class="alerta-page-btn px-3 py-1.5 text-[10px] border border-gray-300 text-gray-700 rounded hover:bg-gray-50" data-page="' + p + '">' + p + '</button>';
             }
         }
 
@@ -1280,14 +1327,15 @@
             if (end < lastPage - 1) {
                 html += '<span class="px-2 text-gray-400">...</span>';
             }
-            html += '<button class="alerta-page-btn px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50" data-page="' + lastPage + '">' + lastPage + '</button>';
+            html += '<button class="alerta-page-btn px-3 py-1.5 text-[10px] border border-gray-300 text-gray-700 rounded hover:bg-gray-50" data-page="' + lastPage + '">' + lastPage + '</button>';
         }
 
         // Next
-        html += '<button class="alerta-page-btn px-3 py-1.5 text-sm rounded-lg border ' + (currentPage >= lastPage ? 'border-gray-200 text-gray-300 cursor-not-allowed' : 'border-gray-300 text-gray-700 hover:bg-gray-50') + '" data-page="' + (currentPage + 1) + '" ' + (currentPage >= lastPage ? 'disabled' : '') + '>';
+        html += '<button class="alerta-page-btn px-3 py-1.5 text-[10px] border rounded ' + (currentPage >= lastPage ? 'border-gray-200 text-gray-300 cursor-not-allowed' : 'border-gray-300 text-gray-700 hover:bg-gray-50') + '" data-page="' + (currentPage + 1) + '" ' + (currentPage >= lastPage ? 'disabled' : '') + '>';
         html += '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
         html += '</button>';
 
+        html += '</div>';
         html += '</div>';
         pagEl.innerHTML = html;
 
@@ -1463,11 +1511,11 @@
 
                 // Update active tab styles
                 tabs.forEach(function(t) {
-                    t.classList.remove('active', 'border-amber-500', 'text-amber-600');
+                    t.classList.remove('active', 'border-gray-800', 'text-gray-900');
                     t.classList.add('border-transparent', 'text-gray-500');
                 });
                 this.classList.remove('border-transparent', 'text-gray-500');
-                this.classList.add('active', 'border-amber-500', 'text-amber-600');
+                this.classList.add('active', 'border-gray-800', 'text-gray-900');
 
                 // Re-render with current data (no new fetch needed)
                 if (alertasData && alertasData.data) {
@@ -1495,8 +1543,8 @@
                 if (selectEl) selectEl.value = sev;
 
                 // Visual feedback
-                kpiCards.forEach(function(c) { c.classList.remove('ring-2', 'ring-amber-400'); });
-                this.classList.add('ring-2', 'ring-amber-400');
+                kpiCards.forEach(function(c) { c.classList.remove('ring-2', 'ring-gray-400'); });
+                this.classList.add('ring-2', 'ring-gray-400');
 
                 loadAlertas(1);
             });

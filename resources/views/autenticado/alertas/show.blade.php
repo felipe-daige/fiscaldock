@@ -1,25 +1,29 @@
 {{-- Detalhes do Alerta --}}
-<div class="min-h-screen bg-gray-50 pb-12" id="alerta-detalhes-container">
+<div class="min-h-screen bg-gray-100 pb-12" id="alerta-detalhes-container">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         
         {{-- Breadcrumb / Voltar --}}
-        <div class="mb-4 sm:mb-6 dash-animate">
-            <a href="/app/alertas" data-link class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-amber-600 transition-colors">
+        <div class="mb-4 sm:mb-6">
+            <a href="/app/alertas" data-link class="inline-flex items-center text-sm font-medium text-gray-600 hover:text-gray-900 hover:underline transition-colors">
                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 Voltar para Central de Alertas
             </a>
         </div>
 
         {{-- Cabeçalho do Alerta --}}
-        <div class="bg-white rounded-t-xl border border-gray-200 p-5 sm:p-8 dash-animate shadow-sm" style="animation-delay: 0.1s">
+        <div class="bg-white rounded border border-gray-300 overflow-hidden">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Alerta Fiscal</span>
+            </div>
+            <div class="p-5 sm:p-8">
             <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div>
                     <div class="flex flex-wrap items-center gap-2 mb-3">
                         @php
                             $sevColors = [
-                                'alta' => 'bg-red-100 text-red-800',
-                                'media' => 'bg-yellow-100 text-yellow-800',
-                                'baixa' => 'bg-gray-100 text-gray-600'
+                                'alta' => '#dc2626',
+                                'media' => '#d97706',
+                                'baixa' => '#9ca3af'
                             ];
                             $sevLabels = ['alta' => 'Alta', 'media' => 'Média', 'baixa' => 'Baixa'];
                             $sevClass = $sevColors[$alerta->severidade ?? 'baixa'] ?? $sevColors['baixa'];
@@ -33,13 +37,13 @@
                             $catLabel = $catLabels[$alerta->categoria ?? ''] ?? \Str::title(str_replace('_', ' ', $alerta->categoria));
                         @endphp
                         
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold tracking-wide uppercase {{ $sevClass }}">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $sevClass }}">
                             Severidade {{ $sevLabel }}
                         </span>
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
                             {{ $catLabel }}
                         </span>
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">
                             {{ $alerta->created_at->format('d/m/Y H:i') }}
                         </span>
                     </div>
@@ -50,14 +54,14 @@
                 
                 @if($alerta->status === 'ativo')
                 <div class="flex-shrink-0">
-                    <button onclick="document.getElementById('modal-resolver-alerta').classList.remove('hidden')" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 shadow-sm transition-colors">
+                    <button onclick="document.getElementById('modal-resolver-alerta').classList.remove('hidden')" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gray-800 text-white text-sm font-semibold rounded hover:bg-gray-700 transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                         Resolver Alerta
                     </button>
                 </div>
                 @else
                 <div class="flex-shrink-0">
-                    <span class="inline-flex items-center gap-1.5 px-4 py-2 bg-green-50 text-green-700 border border-green-200 rounded-lg text-sm font-semibold">
+                    <span class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white rounded" style="background-color: #047857">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                         Resolvido em {{ $alerta->resolvido_em ? $alerta->resolvido_em->format('d/m/Y H:i') : '-' }}
                     </span>
@@ -65,14 +69,29 @@
                 @endif
             </div>
             
-            {{-- Entidades Relacionadas --}}
-            @if($alerta->cliente_id || $alerta->participante_id)
+        {{-- Entidades Relacionadas --}}
+        @php
+            $detalhesAlerta = is_string($alerta->detalhes) ? json_decode($alerta->detalhes, true) : $alerta->detalhes;
+            $detalhesAlerta = is_array($detalhesAlerta) ? $detalhesAlerta : [];
+            $notaPrincipalId = null;
+
+            if (!empty($detalhesAlerta['nota_id'])) {
+                $notaPrincipalId = $detalhesAlerta['nota_id'];
+            } elseif (array_is_list($detalhesAlerta) && count($detalhesAlerta) === 1 && !empty($detalhesAlerta[0]['nota_id'])) {
+                $notaPrincipalId = $detalhesAlerta[0]['nota_id'];
+            } elseif (!empty($detalhesAlerta['itens']) && is_array($detalhesAlerta['itens']) && count($detalhesAlerta['itens']) === 1 && !empty($detalhesAlerta['itens'][0]['nota_id'])) {
+                $notaPrincipalId = $detalhesAlerta['itens'][0]['nota_id'];
+            } elseif (!empty($detalhesAlerta['notas']) && is_array($detalhesAlerta['notas']) && count($detalhesAlerta['notas']) === 1 && !empty($detalhesAlerta['notas'][0]['nota_id'])) {
+                $notaPrincipalId = $detalhesAlerta['notas'][0]['nota_id'];
+            }
+        @endphp
+        @if($alerta->cliente_id || $alerta->participante_id || $notaPrincipalId)
             <div class="mt-6 pt-5 border-t border-gray-100 flex flex-wrap gap-6">
                 @if($alerta->cliente)
                 <div>
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Cliente Vinculado</p>
-                    <a href="/app/cliente/{{ $alerta->cliente_id }}" data-link class="inline-flex items-center gap-2 text-sm text-gray-900 hover:text-amber-600 font-medium group transition-colors">
-                        <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-amber-100 group-hover:text-amber-600 transition-colors">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Cliente Vinculado</p>
+                    <a href="/app/cliente/{{ $alerta->cliente_id }}" data-link class="inline-flex items-center gap-2 text-sm text-gray-900 hover:text-gray-600 font-medium group transition-colors">
+                        <div class="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-gray-500 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                         </div>
                         {{ $alerta->cliente->razao_social }}
@@ -82,17 +101,30 @@
                 
                 @if($alerta->participante)
                 <div>
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Participante / Fornecedor</p>
-                    <a href="/app/participante/{{ $alerta->participante_id }}" data-link class="inline-flex items-center gap-2 text-sm text-gray-900 hover:text-amber-600 font-medium group transition-colors">
-                        <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-amber-100 group-hover:text-amber-600 transition-colors">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Participante / Fornecedor</p>
+                    <a href="/app/participante/{{ $alerta->participante_id }}" data-link class="inline-flex items-center gap-2 text-sm text-gray-900 hover:text-gray-600 font-medium group transition-colors">
+                        <div class="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-gray-500 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                         </div>
                         {{ $alerta->participante->razao_social }}
                     </a>
                 </div>
                 @endif
+
+                @if($notaPrincipalId)
+                <div>
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Nota Fiscal Referida</p>
+                    <a href="/app/notas-fiscais/efd/{{ $notaPrincipalId }}" data-link class="inline-flex items-center gap-2 text-sm text-gray-900 hover:text-gray-600 font-medium group transition-colors">
+                        <div class="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-gray-500 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        </div>
+                        Ir para Nota Fiscal
+                    </a>
+                </div>
+                @endif
             </div>
             @endif
+            </div>
         </div>
 
         {{-- Guia de Resolução Didático --}}
@@ -138,29 +170,34 @@
             }
         @endphp
 
-        <div class="bg-blue-50/50 border-x border-b border-gray-200 rounded-b-xl px-5 sm:px-8 py-5 dash-animate" style="animation-delay: 0.15s">
+        <div class="mt-6 bg-white rounded border border-gray-300 overflow-hidden">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Orientação de Tratativa</span>
+            </div>
+            <div class="px-5 sm:px-8 py-5">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         {{ $guia['titulo_o_que_e'] }}
                     </h3>
                     <p class="text-sm text-gray-700 leading-relaxed">{{ $guia['texto_o_que_e'] }}</p>
                 </div>
                 <div>
                     <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">{!! $guia['icone_acao'] !!}</svg>
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">{!! $guia['icone_acao'] !!}</svg>
                         {{ $guia['titulo_acao'] }}
                     </h3>
                     <p class="text-sm text-gray-700 leading-relaxed mb-3">{{ $guia['texto_acao'] }}</p>
                     
                     @if($guia['cta_url'])
-                    <a href="{{ $guia['cta_url'] }}" data-link class="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 hover:text-amber-600 transition-colors shadow-sm">
+                    <a href="{{ $guia['cta_url'] }}" data-link class="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded hover:bg-gray-50 hover:text-gray-900 transition-colors">
                         {{ $guia['cta_text'] }}
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                     </a>
                     @endif
                 </div>
+            </div>
             </div>
         </div>
 
@@ -205,7 +242,7 @@
                     }
                     return '<div class="flex items-center gap-1.5 group">' . 
                            '<span>' . $formatado . '</span>' .
-                           '<a href="https://www.google.com/search?q=consulta+cnpj+' . $limpo . '" target="_blank" rel="noopener noreferrer" class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-600 transition-all flex-shrink-0" title="Consultar Documento">' .
+                           '<a href="https://www.google.com/search?q=consulta+cnpj+' . $limpo . '" target="_blank" rel="noopener noreferrer" class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-900 transition-all flex-shrink-0" title="Consultar Documento">' .
                            '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>' .
                            '</a>' .
                            '</div>';
@@ -227,7 +264,7 @@
                         '5949' => 'Outra saída de mercadoria',
                     ];
                     $desc = $cfopDict[$cfopStr] ?? 'Código Fiscal de Operações';
-                    return '<span class="cursor-help border-b border-dashed border-gray-400 text-amber-700 font-medium" title="' . $desc . '">' . $valor . '</span>';
+                    return '<span class="cursor-help border-b border-dashed border-gray-400 text-gray-700 font-medium" title="' . $desc . '">' . $valor . '</span>';
                 }
                 
                 // Formatar NCM
@@ -235,9 +272,9 @@
                     $valStr = (string)$valor;
                     if(strlen($valStr) == 8) {
                         $formatado = preg_replace('/(\d{4})(\d{2})(\d{2})/', '$1.$2.$3', $valStr);
-                        return '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200" title="Nomenclatura Comum do Mercosul">' . $formatado . '</span>';
+                        return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca" title="Nomenclatura Comum do Mercosul">' . $formatado . '</span>';
                     }
-                    return '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">' . $valor . '</span>';
+                    return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">' . $valor . '</span>';
                 }
 
                 // Destaque para descrição de Produto
@@ -360,19 +397,19 @@
         @endphp
 
         @if(!empty($dados))
-        <div class="mt-6 sm:mt-8 bg-white rounded-xl border border-gray-200 overflow-hidden dash-animate shadow-sm" style="animation-delay: 0.2s">
-            <div class="px-5 py-4 border-b border-gray-200 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="mt-6 sm:mt-8 bg-white rounded border border-gray-300 overflow-hidden">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
-                    <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+                    <h3 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-2">
                         <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
                         Registros Afetados
                     </h3>
                     <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center justify-center h-6 px-2.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
                             {{ $alerta->total_afetados ?? count($isList ? $dados : [$dados]) }} registro(s)
                         </span>
                         @if($hasImpact)
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200" title="Impacto Financeiro Estimado (somatório)">
+                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857" title="Impacto Financeiro Estimado (somatório)">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             R$ {{ number_format($impactoFinanceiro, 2, ',', '.') }}
                         </span>
@@ -381,7 +418,7 @@
                 </div>
                 
                 @if($isList && !empty($dados))
-                <button onclick="exportarTabelaParaCSV()" class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-50 hover:text-green-600 transition-colors shadow-sm">
+                <button onclick="exportarTabelaParaCSV()" class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-xs font-semibold rounded hover:bg-gray-50 transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     Exportar CSV
                 </button>
@@ -390,32 +427,35 @@
             
             <div class="overflow-x-auto border-b border-gray-100 pb-1">
                 @if($isList)
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-white">
-                        <tr>
+                <table class="min-w-full">
+                    <thead>
+                        <tr class="border-b border-gray-300">
                             @foreach($headers as $header)
-                            <th scope="col" class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap bg-gray-50">
+                            <th scope="col" class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap bg-gray-50">
                                 {{ $formatarChave($header) }}
                             </th>
                             @endforeach
+                            <th scope="col" class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap bg-gray-50">
+                                Ação
+                            </th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-100">
+                    <tbody class="divide-y divide-gray-100">
                         @foreach($dados as $item)
-                        <tr class="hover:bg-blue-50/30 transition-colors">
+                        <tr class="hover:bg-gray-50/50 transition-colors">
                             @foreach($headers as $header)
                             @php
                                 $val = $item[$header] ?? null;
                                 $isChave = strtolower($header) === 'chnfe' || strtolower($header) === 'chave';
                             @endphp
-                            <td class="px-5 py-4 whitespace-nowrap text-sm text-gray-700">
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-700">
                                 @if($isChave && $val)
                                 <div class="flex items-center gap-2 group">
                                     <span class="font-mono text-xs text-gray-800">{{ $val }}</span>
-                                    <button onclick="copiarTexto(this, '{{ $val }}')" class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-amber-600 transition-all flex-shrink-0 focus:opacity-100" title="Copiar Chave">
+                                    <button onclick="copiarTexto(this, '{{ $val }}')" class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-900 transition-all flex-shrink-0 focus:opacity-100" title="Copiar Chave">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                                     </button>
-                                    <a href="https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=7PhJ+gAVw2g=&chave={{ $val }}" target="_blank" rel="noopener noreferrer" class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-600 transition-all flex-shrink-0 focus:opacity-100" title="Consultar na SEFAZ">
+                                    <a href="https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=7PhJ+gAVw2g=&chave={{ $val }}" target="_blank" rel="noopener noreferrer" class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-900 transition-all flex-shrink-0 focus:opacity-100" title="Consultar na SEFAZ">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                     </a>
                                 </div>
@@ -424,6 +464,16 @@
                                 @endif
                             </td>
                             @endforeach
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-700">
+                                @if(!empty($item['nota_id']))
+                                    <a href="/app/notas-fiscais/efd/{{ $item['nota_id'] }}" data-link class="inline-flex items-center gap-1 text-xs text-gray-700 hover:text-gray-900 hover:underline font-medium">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        Abrir Nota
+                                    </a>
+                                @else
+                                    -
+                                @endif
+                            </td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -434,16 +484,16 @@
                     @php
                         $isChave = strtolower($key) === 'chnfe' || strtolower($key) === 'chave';
                     @endphp
-                    <div class="bg-gray-50 rounded-lg p-3.5 border border-gray-100 hover:border-gray-200 transition-colors">
+                    <div class="bg-gray-50 rounded border border-gray-200 p-3.5 transition-colors">
                         <dt class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">{{ $formatarChave($key) }}</dt>
                         <dd class="text-sm font-medium text-gray-900 break-words">
                             @if($isChave && $val)
                             <div class="flex items-center gap-2 flex-wrap group">
                                 <span class="font-mono text-xs">{{ $val }}</span>
-                                <button onclick="copiarTexto(this, '{{ $val }}')" class="text-gray-400 hover:text-amber-600 transition-colors inline-block" title="Copiar Chave">
+                                <button onclick="copiarTexto(this, '{{ $val }}')" class="text-gray-400 hover:text-gray-900 transition-colors inline-block" title="Copiar Chave">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                                 </button>
-                                <a href="https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=7PhJ+gAVw2g=&chave={{ $val }}" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-blue-600 transition-colors inline-block" title="Consultar na SEFAZ">
+                                <a href="https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=7PhJ+gAVw2g=&chave={{ $val }}" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-gray-900 transition-colors inline-block" title="Consultar na SEFAZ">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                 </a>
                             </div>
@@ -454,6 +504,14 @@
                     </div>
                     @endforeach
                 </div>
+                @if(!empty($dados['nota_id']))
+                <div class="px-5 pb-5">
+                    <a href="/app/notas-fiscais/efd/{{ $dados['nota_id'] }}" data-link class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-xs font-semibold rounded hover:bg-gray-50 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Ir para Nota Fiscal
+                    </a>
+                </div>
+                @endif
                 @endif
             </div>
         </div>
@@ -546,11 +604,11 @@
     <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm"></div>
     <div class="fixed inset-0 z-10 overflow-y-auto">
         <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+            <div class="relative transform overflow-hidden rounded bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-gray-300">
                 <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4 border-b border-gray-100">
                     <div class="sm:flex sm:items-start">
-                        <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 sm:mx-0 sm:h-10 sm:w-10">
-                            <svg class="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                        <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded bg-gray-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
@@ -560,15 +618,15 @@
                                 <p class="text-sm text-gray-600">Ao confirmar, este alerta será marcado como <strong>Resolvido</strong> e sairá da fila de acompanhamento. Recomendamos que você tenha certeza de que a questão original (ex: notas corrigidas ou consulta conferida) foi resolvida adequadamente.</p>
                             </div>
                             <div class="mt-4">
-                                <label for="alerta-nota-resolucao" class="block text-xs font-medium text-gray-700">Notas de resolução (opcional)</label>
-                                <textarea id="alerta-nota-resolucao" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm" placeholder="Ex: Feito no ERP do cliente dia 25..."></textarea>
+                                <label for="alerta-nota-resolucao" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas de resolução (opcional)</label>
+                                <textarea id="alerta-nota-resolucao" rows="2" class="mt-1 block w-full rounded border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-gray-400 sm:text-sm" placeholder="Ex: Feito no ERP do cliente dia 25..."></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                    <button type="button" id="btn-confirmar-resolucao" class="inline-flex w-full justify-center rounded-lg bg-amber-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 sm:ml-3 sm:w-auto transition-colors">Confirmar e Resolver</button>
-                    <button type="button" onclick="document.getElementById('modal-resolver-alerta').classList.remove('hidden'); document.getElementById('modal-resolver-alerta').classList.add('hidden')" class="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 sm:mt-0 sm:w-auto transition-colors">Cancelar</button>
+                    <button type="button" id="btn-confirmar-resolucao" class="inline-flex w-full justify-center rounded bg-gray-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-700 focus:outline-none sm:ml-3 sm:w-auto transition-colors">Confirmar e Resolver</button>
+                    <button type="button" onclick="document.getElementById('modal-resolver-alerta').classList.remove('hidden'); document.getElementById('modal-resolver-alerta').classList.add('hidden')" class="mt-3 inline-flex w-full justify-center rounded bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto transition-colors">Cancelar</button>
                 </div>
             </div>
         </div>
