@@ -1,7 +1,7 @@
 @props(['title', 'icon' => null])
 
-<details class="sidebar__group group/details" {{ $attributes }}>
-    <summary class="sidebar__group-trigger marker:content-none [&::-webkit-details-marker]:hidden">
+<details class="sidebar__group group/details" data-sidebar-group {{ $attributes }}>
+    <summary class="sidebar__group-trigger marker:content-none [&::-webkit-details-marker]:hidden" data-sidebar-group-trigger>
         <div class="flex items-center gap-3 min-w-0">
             @if($icon)
                 {{ $icon }}

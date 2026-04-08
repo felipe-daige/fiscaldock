@@ -15,6 +15,7 @@ use App\Models\Participante;
 use App\Models\XmlNota;
 use App\Services\CreditService;
 use App\Services\NotaFiscalService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -366,12 +367,19 @@ class ParticipanteController extends Controller
         $regimeTributario = $request->get('regime');
         $situacaoCadastral = $request->get('situacao');
         $uf = $request->get('uf');
+        $tipoDocumento = strtoupper((string) $request->get('tipo_documento', ''));
 
         // Query de participantes com filtros
         $participantesQuery = Participante::where('user_id', $userId)
             ->excludingEmpresaPropria()
-            ->with(['cliente', 'importacaoEfd'])
-            ->withCount('efdNotas')
+            ->with([
+                'cliente',
+                'importacaoEfd',
+                'assinaturas' => fn ($q) => $q
+                    ->whereIn('status', ['ativo', 'pausado'])
+                    ->orderByRaw("CASE WHEN status = 'ativo' THEN 0 ELSE 1 END")
+                    ->orderBy('updated_at', 'desc'),
+            ])
             ->when($importacaoId, fn ($q) => $q->where('importacao_efd_id', $importacaoId))
             ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
             ->when($origemTipo, fn ($q) => $q->where('origem_tipo', $origemTipo))
@@ -384,9 +392,109 @@ class ParticipanteController extends Controller
             ->when($regimeTributario, fn ($q) => $q->where('regime_tributario', 'ilike', $regimeTributario))
             ->when($situacaoCadastral, fn ($q) => $q->where('situacao_cadastral', $situacaoCadastral))
             ->when($uf, fn ($q) => $q->where('uf', $uf))
+            ->when($tipoDocumento === 'CPF', fn ($q) => $q->somenteCpf())
+            ->when($tipoDocumento === 'CNPJ', fn ($q) => $q->somenteCnpj())
             ->orderBy('created_at', 'desc');
 
         $participantes = $participantesQuery->paginate(20)->withQueryString();
+        $agora = Carbon::now();
+        $participanteIds = $participantes->getCollection()->pluck('id')->all();
+        $ultimosResultados = ConsultaResultado::query()
+            ->whereIn('participante_id', $participanteIds)
+            ->where('status', ConsultaResultado::STATUS_SUCESSO)
+            ->orderBy('consultado_em', 'desc')
+            ->get()
+            ->unique('participante_id')
+            ->keyBy('participante_id');
+
+        $participantes->getCollection()->transform(function (Participante $participante) use ($agora, $ultimosResultados) {
+            $assinatura = $participante->assinaturas->first();
+            $ultimaConsulta = $participante->ultima_consulta_em;
+            $ultimoResultado = $ultimosResultados->get($participante->id);
+            $cndFederal = $ultimoResultado?->getCndFederal() ?? [];
+
+            $consultaStatus = 'nunca_consultado';
+            $consultaStatusLabel = 'Nunca consultado';
+            $consultaStatusHex = '#9ca3af';
+            $consultaStatusMeta = 'Sem consulta realizada';
+
+            if ($ultimaConsulta) {
+                $diasSemConsulta = $ultimaConsulta->diffInDays($agora);
+
+                if ($diasSemConsulta > 30) {
+                    $consultaStatus = 'desatualizada';
+                    $consultaStatusLabel = 'Consulta desatualizada';
+                    $consultaStatusHex = '#d97706';
+                    $consultaStatusMeta = 'Última atualização em '.$ultimaConsulta->format('d/m/Y H:i');
+                } else {
+                    $consultaStatus = 'consultado_recente';
+                    $consultaStatusLabel = 'Consultado recentemente';
+                    $consultaStatusHex = '#047857';
+                    $consultaStatusMeta = 'Última atualização em '.$ultimaConsulta->format('d/m/Y H:i');
+                }
+            }
+
+            $cndStatusLabel = 'Não consultada';
+            $cndStatusHex = '#9ca3af';
+            $cndMeta = 'Sem CND consultada';
+            $cndStatus = strtoupper((string) ($cndFederal['status'] ?? ''));
+            $cndValidade = $cndFederal['data_validade'] ?? null;
+
+            if ($cndStatus !== '') {
+                if (in_array($cndStatus, ['NEGATIVA', 'REGULAR', 'REGULARIDADE'])) {
+                    $cndStatusLabel = 'Negativa';
+                    $cndStatusHex = '#047857';
+                } elseif (str_contains($cndStatus, 'POSITIVA COM EFEITO') || str_contains($cndStatus, 'EFEITO DE NEGATIVA')) {
+                    $cndStatusLabel = 'Positiva c/ efeito';
+                    $cndStatusHex = '#d97706';
+                } elseif (in_array($cndStatus, ['POSITIVA', 'IRREGULAR', 'IRREGULARIDADE'])) {
+                    $cndStatusLabel = 'Positiva';
+                    $cndStatusHex = '#dc2626';
+                } else {
+                    $cndStatusLabel = $cndStatus;
+                    $cndStatusHex = '#374151';
+                }
+
+                $cndMeta = 'Validade não informada';
+
+                if ($cndValidade) {
+                    try {
+                        $dataValidade = Carbon::parse($cndValidade);
+                        $diasRestantes = $agora->diffInDays($dataValidade, false);
+
+                        if ($diasRestantes <= 0) {
+                            $cndMeta = 'Vencida em '.$dataValidade->format('d/m/Y');
+                        } elseif ($diasRestantes <= 7) {
+                            $cndMeta = 'Vence em '.(int) $diasRestantes.' dias';
+                        } else {
+                            $cndMeta = 'Validade: '.$dataValidade->format('d/m/Y');
+                        }
+                    } catch (\Exception $e) {
+                        $cndMeta = 'Validade: '.(string) $cndValidade;
+                    }
+                }
+            }
+
+            $assinaturaLabel = null;
+            $assinaturaHex = null;
+
+            if ($assinatura) {
+                $assinaturaLabel = $assinatura->status === 'ativo' ? 'Monitoramento ativo' : 'Monitoramento pausado';
+                $assinaturaHex = $assinatura->status === 'ativo' ? '#1f2937' : '#6b7280';
+            }
+
+            $participante->setAttribute('consulta_status', $consultaStatus);
+            $participante->setAttribute('consulta_status_label', $consultaStatusLabel);
+            $participante->setAttribute('consulta_status_hex', $consultaStatusHex);
+            $participante->setAttribute('consulta_status_meta', $consultaStatusMeta);
+            $participante->setAttribute('cnd_federal_status_label', $cndStatusLabel);
+            $participante->setAttribute('cnd_federal_status_hex', $cndStatusHex);
+            $participante->setAttribute('cnd_federal_meta', $cndMeta);
+            $participante->setAttribute('assinatura_label', $assinaturaLabel);
+            $participante->setAttribute('assinatura_hex', $assinaturaHex);
+
+            return $participante;
+        });
 
         // Contagens para KPI cards
         $baseQuery = Participante::where('user_id', $userId)->excludingEmpresaPropria();
@@ -438,6 +546,7 @@ class ParticipanteController extends Controller
                 'regime' => $regimeTributario,
                 'situacao' => $situacaoCadastral,
                 'uf' => $uf,
+                'tipo_documento' => $tipoDocumento,
             ],
             'credits' => $this->creditService->getBalance($user),
         ];
@@ -463,6 +572,7 @@ class ParticipanteController extends Controller
 
         $ids = Participante::where('user_id', $userId)
             ->excludingEmpresaPropria()
+            ->somenteCnpj()
             ->when($request->importacao, fn ($q, $v) => $q->where('importacao_efd_id', $v))
             ->when($request->cliente, fn ($q, $v) => $q->where('cliente_id', $v))
             ->when($request->origem, fn ($q, $v) => $q->where('origem_tipo', $v))
@@ -470,6 +580,11 @@ class ParticipanteController extends Controller
                 $sub->where('documento', 'like', "%{$v}%")
                     ->orWhere('razao_social', 'ilike', "%{$v}%");
             }))
+            ->when($request->regime, fn ($q, $v) => $q->where('regime_tributario', 'ilike', $v))
+            ->when($request->situacao, fn ($q, $v) => $q->where('situacao_cadastral', $v))
+            ->when($request->uf, fn ($q, $v) => $q->where('uf', $v))
+            ->when(strtoupper((string) $request->tipo_documento) === 'CPF', fn ($q) => $q->somenteCpf())
+            ->when(strtoupper((string) $request->tipo_documento) === 'CNPJ', fn ($q) => $q->somenteCnpj())
             ->pluck('id');
 
         return response()->json(['success' => true, 'ids' => $ids, 'total' => $ids->count()]);
@@ -829,6 +944,18 @@ class ParticipanteController extends Controller
             'ids' => 'required|array|min:1|max:500',
             'ids.*' => 'integer',
         ]);
+
+        $cpfSelecionados = Participante::where('user_id', $userId)
+            ->whereIn('id', $validated['ids'])
+            ->somenteCpf()
+            ->count();
+
+        if ($cpfSelecionados > 0) {
+            return response()->json([
+                'success' => false,
+                'error' => 'CPFs não podem ser selecionados para ações em lote.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
 
         try {
             $count = Participante::where('user_id', $userId)

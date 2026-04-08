@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Alerta;
 use App\Models\Cliente;
+use App\Models\ConsultaResultado;
 use App\Models\ConsultaLote;
 use App\Models\CreditTransaction;
 use App\Models\Participante;
 use App\Services\AlertaCentralService;
 use App\Services\Dashboard\DashboardDataService;
 use App\Services\NotaFiscalService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -140,16 +142,150 @@ class DashboardController extends Controller
             return redirect('/login');
         }
 
-        // Buscar clientes do usuario logado
-        $clientes = Cliente::where('user_id', Auth::id())
-            ->orderBy('nome')
-            ->get();
+        $userId = (int) Auth::id();
+        $status = $request->string('status')->toString();
+        $tipo = $request->string('tipo')->toString();
+        $busca = trim($request->string('busca')->toString());
+        $regime = trim($request->string('regime')->toString());
+        $situacao = trim($request->string('situacao')->toString());
+        $uf = trim($request->string('uf')->toString());
+
+        $baseQuery = Cliente::where('user_id', $userId);
+
+        $clientes = (clone $baseQuery)
+            ->withCount('participantes')
+            ->when($status !== '', function ($query) use ($status) {
+                if ($status === 'ativos') {
+                    $query->where('ativo', true);
+                } elseif ($status === 'inativos') {
+                    $query->where('ativo', false);
+                }
+            })
+            ->when($tipo !== '', fn ($query) => $query->where('tipo_pessoa', strtoupper($tipo)))
+            ->when($busca !== '', function ($query) use ($busca) {
+                $query->where(function ($sub) use ($busca) {
+                    $sub->where('documento', 'like', '%'.preg_replace('/\D/', '', $busca).'%')
+                        ->orWhere('razao_social', 'ilike', "%{$busca}%")
+                        ->orWhere('nome', 'ilike', "%{$busca}%");
+                });
+            })
+            ->when($regime !== '', fn ($query) => $query->where('regime_tributario', 'ilike', $regime))
+            ->when($situacao !== '', fn ($query) => $query->where('situacao_cadastral', 'ilike', $situacao))
+            ->when($uf !== '', fn ($query) => $query->where('uf', strtoupper($uf)))
+            ->orderByRaw("COALESCE(razao_social, nome, '') asc")
+            ->paginate(20)
+            ->withQueryString();
+
+        $agora = Carbon::now();
+        $documentosClientes = $clientes->getCollection()
+            ->pluck('documento')
+            ->filter()
+            ->map(fn ($documento) => preg_replace('/\D/', '', (string) $documento))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $participantesPorDocumento = Participante::query()
+            ->where('user_id', $userId)
+            ->whereIn('documento', $documentosClientes)
+            ->get(['id', 'documento'])
+            ->keyBy('documento');
+
+        $ultimosResultadosClientes = ConsultaResultado::query()
+            ->whereIn('participante_id', $participantesPorDocumento->pluck('id'))
+            ->where('status', ConsultaResultado::STATUS_SUCESSO)
+            ->orderBy('consultado_em', 'desc')
+            ->get()
+            ->unique('participante_id')
+            ->keyBy('participante_id');
+
+        $clientes->getCollection()->transform(function (Cliente $cliente) use ($agora, $participantesPorDocumento, $ultimosResultadosClientes) {
+            $documento = preg_replace('/\D/', '', (string) $cliente->documento);
+            $participante = $participantesPorDocumento->get($documento);
+            $ultimoResultado = $participante ? $ultimosResultadosClientes->get($participante->id) : null;
+            $ultimaConsulta = $ultimoResultado?->consultado_em;
+            $cndFederal = $ultimoResultado?->getCndFederal() ?? [];
+
+            $consultaStatusLabel = 'Não Consultado';
+            $consultaStatusHex = '#9ca3af';
+            $consultaStatusMeta = 'Sem consulta realizada';
+
+            if ($ultimaConsulta) {
+                $diasSemConsulta = $ultimaConsulta->diffInDays($agora);
+
+                if ($diasSemConsulta > 30) {
+                    $consultaStatusLabel = 'Consulta desatualizada';
+                    $consultaStatusHex = '#d97706';
+                } else {
+                    $consultaStatusLabel = 'Consultado recentemente';
+                    $consultaStatusHex = '#047857';
+                }
+
+                $consultaStatusMeta = 'Última atualização em '.$ultimaConsulta->format('d/m/Y H:i');
+            }
+
+            $cndStatusLabel = 'Não Consultado';
+            $cndStatusHex = '#9ca3af';
+            $cndMeta = 'Sem CND consultada';
+            $cndStatus = strtoupper((string) ($cndFederal['status'] ?? ''));
+            $cndValidade = $cndFederal['data_validade'] ?? null;
+
+            if ($cndStatus !== '') {
+                if (in_array($cndStatus, ['NEGATIVA', 'REGULAR', 'REGULARIDADE'])) {
+                    $cndStatusLabel = 'Negativa';
+                    $cndStatusHex = '#047857';
+                } elseif (str_contains($cndStatus, 'POSITIVA COM EFEITO') || str_contains($cndStatus, 'EFEITO DE NEGATIVA')) {
+                    $cndStatusLabel = 'Positiva c/ efeito';
+                    $cndStatusHex = '#d97706';
+                } elseif (in_array($cndStatus, ['POSITIVA', 'IRREGULAR', 'IRREGULARIDADE'])) {
+                    $cndStatusLabel = 'Positiva';
+                    $cndStatusHex = '#dc2626';
+                } else {
+                    $cndStatusLabel = $cndStatus;
+                    $cndStatusHex = '#374151';
+                }
+
+                $cndMeta = 'Validade não informada';
+
+                if ($cndValidade) {
+                    try {
+                        $dataValidade = Carbon::parse($cndValidade);
+                        $diasRestantes = $agora->diffInDays($dataValidade, false);
+
+                        if ($diasRestantes <= 0) {
+                            $cndMeta = 'Vencida em '.$dataValidade->format('d/m/Y');
+                        } elseif ($diasRestantes <= 7) {
+                            $cndMeta = 'Vence em '.(int) $diasRestantes.' dias';
+                        } else {
+                            $cndMeta = 'Validade: '.$dataValidade->format('d/m/Y');
+                        }
+                    } catch (\Exception $e) {
+                        $cndMeta = 'Validade: '.(string) $cndValidade;
+                    }
+                }
+            }
+
+            $cliente->setAttribute('consulta_status_label', $consultaStatusLabel);
+            $cliente->setAttribute('consulta_status_hex', $consultaStatusHex);
+            $cliente->setAttribute('consulta_status_meta', $consultaStatusMeta);
+            $cliente->setAttribute('cnd_federal_status_label', $cndStatusLabel);
+            $cliente->setAttribute('cnd_federal_status_hex', $cndStatusHex);
+            $cliente->setAttribute('cnd_federal_meta', $cndMeta);
+
+            return $cliente;
+        });
 
         // Estatísticas
-        $totalAtivos = $clientes->where('ativo', true)->count();
-        $totalInativos = $clientes->where('ativo', false)->count();
-        $totalPJ = $clientes->where('tipo_pessoa', 'PJ')->count();
-        $totalPF = $clientes->where('tipo_pessoa', 'PF')->count();
+        $totalAtivos = (clone $baseQuery)->where('ativo', true)->count();
+        $totalInativos = (clone $baseQuery)->where('ativo', false)->count();
+        $totalPJ = (clone $baseQuery)->where('tipo_pessoa', 'PJ')->count();
+        $totalPF = (clone $baseQuery)->where('tipo_pessoa', 'PF')->count();
+        $ufs = (clone $baseQuery)
+            ->whereNotNull('uf')
+            ->where('uf', '!=', '')
+            ->distinct()
+            ->orderBy('uf')
+            ->pluck('uf');
 
         $data = [
             'clientes' => $clientes,
@@ -157,6 +293,15 @@ class DashboardController extends Controller
             'totalInativos' => $totalInativos,
             'totalPJ' => $totalPJ,
             'totalPF' => $totalPF,
+            'ufs' => $ufs,
+            'filtros' => [
+                'status' => $status,
+                'tipo' => strtoupper($tipo),
+                'busca' => $busca,
+                'regime' => $regime,
+                'situacao' => $situacao,
+                'uf' => strtoupper($uf),
+            ],
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -166,6 +311,40 @@ class DashboardController extends Controller
         return view(self::AUTH_LAYOUT_VIEW, array_merge([
             'initialView' => $autenticadoView,
         ], $data));
+    }
+
+    public function clienteParticipantes(Request $request, int $id)
+    {
+        if (! Auth::check()) {
+            return response('Nao autenticado', 401);
+        }
+
+        $userId = (int) Auth::id();
+        $tipoDocumento = strtoupper(trim($request->string('tipo_documento')->toString()));
+        $cliente = Cliente::where('id', $id)
+            ->where('user_id', $userId)
+            ->firstOrFail();
+
+        $participantes = Participante::where('user_id', $userId)
+            ->where('cliente_id', $cliente->id)
+            ->when($tipoDocumento === 'CPF', fn ($query) => $query->somenteCpf())
+            ->when($tipoDocumento === 'CNPJ', fn ($query) => $query->somenteCnpj())
+            ->withCount('efdNotas')
+            ->orderByRaw("COALESCE(razao_social, nome_fantasia, documento, '') asc")
+            ->paginate(5)
+            ->withQueryString();
+
+        return view('autenticado.partials.relacionados-participantes', [
+            'participantes' => $participantes,
+            'titulo' => 'Participantes vinculados',
+            'emptyMessage' => 'Nenhum participante vinculado a este cliente.',
+            'scope' => 'cliente',
+            'entityId' => $cliente->id,
+            'ajaxBaseUrl' => "/app/cliente/{$cliente->id}/participantes",
+            'filtros' => [
+                'tipo_documento' => $tipoDocumento,
+            ],
+        ]);
     }
 
     public function clienteDetalhes(Request $request, int $id)

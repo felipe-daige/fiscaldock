@@ -13,6 +13,7 @@
     let participantesData = null;
     let tipoAtivo = 'fornecedores';
     let participanteAberto = null;
+    let menuUltimaNotaAberto = null;
     let _initRetries = 0;
 
     /**
@@ -106,10 +107,10 @@
         // Atualiza tabs
         document.querySelectorAll('.bi-tab').forEach(tab => {
             if (tab.dataset.tab === tabName) {
-                tab.classList.add('active', 'border-blue-500', 'text-blue-600');
+                tab.classList.add('active', 'border-gray-800', 'text-gray-900');
                 tab.classList.remove('border-transparent', 'text-gray-500');
             } else {
-                tab.classList.remove('active', 'border-blue-500', 'text-blue-600');
+                tab.classList.remove('active', 'border-gray-800', 'text-gray-900');
                 tab.classList.add('border-transparent', 'text-gray-500');
             }
         });
@@ -278,7 +279,7 @@
                 dataLabels: { enabled: false },
                 stroke: { curve: 'smooth', width: 2 },
                 fill: { type: 'gradient', gradient: { opacityFrom: 0.4, opacityTo: 0.1 } },
-                colors: ['#3b82f6'],
+                colors: ['#374151'],
                 tooltip: {
                     y: { formatter: (val) => formatCurrency(val) }
                 }
@@ -302,7 +303,7 @@
                 },
                 plotOptions: { bar: { horizontal: false, columnWidth: '60%' } },
                 dataLabels: { enabled: false },
-                colors: ['#22c55e'],
+                colors: ['#047857'],
                 tooltip: {
                     y: { formatter: (val) => formatCurrency(val) }
                 }
@@ -341,7 +342,7 @@
                 },
                 plotOptions: { bar: { horizontal: false, columnWidth: '50%' } },
                 dataLabels: { enabled: false },
-                colors: ['#ef4444', '#22c55e'],
+                colors: ['#047857', '#d97706'],
                 tooltip: {
                     y: { formatter: (val) => formatCurrency(val) }
                 }
@@ -365,7 +366,7 @@
                 },
                 plotOptions: { bar: { horizontal: false, columnWidth: '60%' } },
                 dataLabels: { enabled: false },
-                colors: ['#f97316'],
+                colors: ['#d97706'],
                 tooltip: {
                     y: { formatter: (val) => formatCurrency(val) }
                 }
@@ -388,7 +389,7 @@
                 },
                 stroke: { curve: 'smooth', width: 2 },
                 markers: { size: 4 },
-                colors: ['#8b5cf6'],
+                colors: ['#dc2626'],
                 tooltip: {
                     y: { formatter: (val) => formatCurrency(val) }
                 }
@@ -414,7 +415,7 @@
                 },
                 plotOptions: { bar: { columnWidth: '50%' } },
                 dataLabels: { enabled: false },
-                colors: ['#3b82f6', '#ef4444'],
+                colors: ['#374151', '#dc2626'],
                 tooltip: {
                     y: { formatter: (val) => formatCurrency(val) }
                 }
@@ -430,7 +431,7 @@
                     series: tributosFiltrados.map(d => d.valor),
                     labels: tributosFiltrados.map(d => d.tipo),
                     legend: { position: 'bottom' },
-                    colors: ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6'],
+                    colors: ['#374151', '#047857', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#ea580c', '#65a30d', '#db2777', '#4f46e5'],
                     tooltip: {
                         y: { formatter: (val) => formatCurrency(val) }
                     }
@@ -457,7 +458,7 @@
                 dataLabels: { enabled: false },
                 stroke: { curve: 'smooth', width: 2 },
                 fill: { type: 'gradient', gradient: { opacityFrom: 0.4, opacityTo: 0.1 } },
-                colors: ['#8b5cf6'],
+                colors: ['#374151'],
                 tooltip: {
                     y: { formatter: (val) => val.toFixed(2) + '%' }
                 }
@@ -512,7 +513,7 @@
                 },
                 plotOptions: { bar: { horizontal: false, columnWidth: '50%' } },
                 dataLabels: { enabled: false },
-                colors: ['#22c55e', '#ef4444'],
+                colors: ['#047857', '#d97706'],
                 tooltip: {
                     y: { formatter: (val) => formatCurrency(val) }
                 }
@@ -551,7 +552,7 @@
                     series: tributosEfd.map(d => d.valor),
                     labels: tributosEfd.map(d => d.tipo),
                     legend: { position: 'bottom' },
-                    colors: ['#3b82f6', '#f59e0b', '#ef4444'],
+                    colors: ['#374151', '#d97706', '#dc2626'],
                     tooltip: {
                         y: { formatter: (val) => formatCurrency(val) }
                     }
@@ -581,7 +582,7 @@
                 },
                 plotOptions: { bar: { horizontal: false, columnWidth: '60%' } },
                 dataLabels: { enabled: false },
-                colors: ['#f97316'],
+                colors: ['#d97706'],
                 tooltip: {
                     custom: function({ series, seriesIndex, dataPointIndex }) {
                         const d = data.top_fornecedores[dataPointIndex];
@@ -612,7 +613,7 @@
                 },
                 plotOptions: { bar: { horizontal: false, columnWidth: '60%' } },
                 dataLabels: { enabled: false },
-                colors: ['#22c55e'],
+                colors: ['#047857'],
                 tooltip: {
                     custom: function({ series, seriesIndex, dataPointIndex }) {
                         const d = data.top_clientes[dataPointIndex];
@@ -652,27 +653,108 @@
                 const btn = e.target.closest('.btn-ficha');
                 if (!btn) return;
                 const row = btn.closest('.participante-row');
-                if (row) abrirFicha(parseInt(row.dataset.id));
+                if (row) abrirFicha(parseInt(row.dataset.id, 10));
             };
+        }
+
+        const fichaTbody = document.getElementById('ficha-ultimas-notas');
+        if (fichaTbody) {
+            fichaTbody.onclick = (e) => {
+                const menuBtn = e.target.closest('.btn-acoes-nota');
+                if (menuBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    alternarMenuUltimaNota(menuBtn);
+                    return;
+                }
+
+                const actionLink = e.target.closest('.nota-acao-link');
+                if (!actionLink) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const action = actionLink.dataset.action;
+                const participanteId = parseInt(actionLink.dataset.participanteId, 10);
+                const sefazUrl = actionLink.dataset.sefazUrl;
+
+                fecharMenuUltimaNota();
+
+                const notaId = parseInt(actionLink.dataset.notaId, 10);
+
+                if (action === 'nota' && notaId) {
+                    window.location.href = `/app/notas-fiscais/efd/${notaId}`;
+                    return;
+                }
+
+                if (action === 'sefaz' && sefazUrl) {
+                    window.open(sefazUrl, '_blank', 'noopener,noreferrer');
+                }
+            };
+        }
+
+        if (!document.body.dataset.biNotaMenuBound) {
+            document.body.dataset.biNotaMenuBound = '1';
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.nota-acoes-menu')) {
+                    fecharMenuUltimaNota();
+                }
+            });
         }
     }
 
     function setTipoParticipante(tipo) {
         tipoAtivo = tipo;
+        fecharMenuUltimaNota();
         const btnF = document.getElementById('btn-fornecedores');
         const btnC = document.getElementById('btn-clientes');
         if (btnF && btnC) {
             if (tipo === 'fornecedores') {
-                btnF.className = 'px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white shadow-sm';
-                btnC.className = 'px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50';
+                btnF.className = 'px-4 py-2 rounded text-sm font-medium bg-gray-800 text-white hover:bg-gray-700';
+                btnC.className = 'px-4 py-2 rounded text-sm font-medium bg-white border border-gray-300 text-gray-600 hover:bg-gray-50';
             } else {
-                btnC.className = 'px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white shadow-sm';
-                btnF.className = 'px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50';
+                btnC.className = 'px-4 py-2 rounded text-sm font-medium bg-gray-800 text-white hover:bg-gray-700';
+                btnF.className = 'px-4 py-2 rounded text-sm font-medium bg-white border border-gray-300 text-gray-600 hover:bg-gray-50';
             }
         }
         fecharFicha();
         const lista = participantesData ? (participantesData[tipo] || []) : [];
         renderTabelaParticipantes(lista);
+    }
+
+    function alternarMenuUltimaNota(button) {
+        const menu = button.closest('.nota-acoes-menu');
+        if (!menu) return;
+
+        if (menuUltimaNotaAberto && menuUltimaNotaAberto !== menu) {
+            menuUltimaNotaAberto.classList.remove('is-open');
+            const previousPanel = menuUltimaNotaAberto.querySelector('.nota-acoes-panel');
+            if (previousPanel) previousPanel.classList.add('hidden');
+        }
+
+        const panel = menu.querySelector('.nota-acoes-panel');
+        if (!panel) return;
+
+        const isOpen = menu.classList.contains('is-open');
+        if (isOpen) {
+            menu.classList.remove('is-open');
+            panel.classList.add('hidden');
+            menuUltimaNotaAberto = null;
+            return;
+        }
+
+        menu.classList.add('is-open');
+        panel.classList.remove('hidden');
+        menuUltimaNotaAberto = menu;
+    }
+
+    function fecharMenuUltimaNota() {
+        if (!menuUltimaNotaAberto) return;
+
+        menuUltimaNotaAberto.classList.remove('is-open');
+        const panel = menuUltimaNotaAberto.querySelector('.nota-acoes-panel');
+        if (panel) panel.classList.add('hidden');
+        menuUltimaNotaAberto = null;
     }
 
     function renderConcentracaoAlertas(concentracao) {
@@ -687,20 +769,20 @@
         container.innerHTML = tipos.map(({ key, label }) => {
             const c = concentracao[key] || { top5_percentual: 0, top5_valor: 0, total_valor: 0 };
             const pct = c.top5_percentual || 0;
-            let corClasse = 'bg-green-50 border-green-200 text-green-800';
+            let corClasse = 'bg-white border border-gray-300 border-l-4 border-l-green-500 text-gray-700';
             let corBarra = 'bg-green-500';
             if (pct >= 80) {
-                corClasse = 'bg-red-50 border-red-200 text-red-800';
+                corClasse = 'bg-white border border-gray-300 border-l-4 border-l-red-500 text-gray-700';
                 corBarra = 'bg-red-500';
             } else if (pct >= 50) {
-                corClasse = 'bg-amber-50 border-amber-200 text-amber-800';
+                corClasse = 'bg-white border border-gray-300 border-l-4 border-l-amber-500 text-gray-700';
                 corBarra = 'bg-amber-500';
             }
 
-            return `<div class="rounded-xl border p-4 ${corClasse}">
-                <p class="text-xs font-semibold uppercase tracking-wide mb-1">Concentração ${label}</p>
-                <p class="text-2xl font-bold mb-1">${pct}%</p>
-                <p class="text-xs mb-2">Top 5 respondem por ${pct}% do total (${formatCurrency(c.top5_valor)} de ${formatCurrency(c.total_valor)})</p>
+            return `<div class="rounded p-4 ${corClasse}">
+                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Concentração ${label}</p>
+                <p class="text-lg font-bold text-gray-900 mb-1">${pct}%</p>
+                <p class="text-xs text-gray-500 mb-2">Top 5 respondem por ${pct}% do total (${formatCurrency(c.top5_valor)} de ${formatCurrency(c.total_valor)})</p>
                 <div class="h-2 rounded-full bg-gray-200">
                     <div class="h-2 rounded-full ${corBarra}" style="width:${Math.min(pct, 100)}%"></div>
                 </div>
@@ -725,10 +807,10 @@
         tbody.innerHTML = lista.map((p, i) => {
             const pctBarra = maxValor > 0 ? Math.round((p.total_valor / maxValor) * 100) : 0;
             const irregularBadge = p.irregular
-                ? '<span class="ml-1 px-1.5 py-0.5 rounded text-xs bg-red-100 text-red-700">Irregular</span>'
+                ? '<span class="ml-1 px-1.5 py-0.5 rounded text-xs text-white" style="background-color: #dc2626">Irregular</span>'
                 : '';
             const regimeBadge = p.regime
-                ? `<span class="ml-1 px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-600">${p.regime}</span>`
+                ? `<span class="ml-1 px-1.5 py-0.5 rounded text-xs text-white" style="background-color: #374151">${p.regime}</span>`
                 : '';
 
             return `<tr class="hover:bg-gray-50 transition-colors participante-row" data-id="${p.participante_id}">
@@ -737,7 +819,7 @@
                     <div class="font-medium text-gray-900">${p.razao_social || p.cnpj_cpf || '—'}${irregularBadge}${regimeBadge}</div>
                     <div class="text-xs text-gray-400 mt-0.5">${p.cnpj_cpf || ''}</div>
                     <div class="mt-1 h-1.5 rounded-full bg-gray-100 w-full max-w-xs">
-                        <div class="h-1.5 rounded-full bg-blue-400" style="width:${pctBarra}%"></div>
+                        <div class="h-1.5 rounded-full bg-gray-400" style="width:${pctBarra}%"></div>
                     </div>
                 </td>
                 <td class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-gray-900">${formatCurrency(p.total_valor)}</td>
@@ -745,7 +827,7 @@
                 <td class="px-2 sm:px-4 py-2 sm:py-3 text-right text-gray-600">${formatCurrency(p.ticket_medio)}</td>
                 <td class="px-2 sm:px-4 py-2 sm:py-3 text-right text-gray-600">${p.percentual}%</td>
                 <td class="px-2 sm:px-4 py-2 sm:py-3 text-center sticky right-0 bg-white">
-                    <button class="btn-ficha px-2 py-1 rounded text-xs bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100">
+                    <button class="btn-ficha px-2 py-1 rounded text-xs text-white" style="background-color: #374151">
                         Ver ficha &#9658;
                     </button>
                 </td>
@@ -767,9 +849,9 @@
         participanteAberto = participanteId;
 
         // Destaca linha
-        document.querySelectorAll('.participante-row').forEach(r => r.classList.remove('bg-blue-50'));
+        document.querySelectorAll('.participante-row').forEach(r => r.classList.remove('bg-gray-50'));
         const linha = document.querySelector(`.participante-row[data-id="${participanteId}"]`);
-        if (linha) linha.classList.add('bg-blue-50');
+        if (linha) linha.classList.add('bg-gray-50');
 
         painel.classList.remove('hidden');
         if (loading) loading.classList.remove('hidden');
@@ -795,9 +877,10 @@
 
     function fecharFicha() {
         participanteAberto = null;
+        fecharMenuUltimaNota();
         const painel = document.getElementById('ficha-participante');
         if (painel) painel.classList.add('hidden');
-        document.querySelectorAll('.participante-row').forEach(r => r.classList.remove('bg-blue-50'));
+        document.querySelectorAll('.participante-row').forEach(r => r.classList.remove('bg-gray-50'));
     }
 
     function renderFichaParticipante(data) {
@@ -826,7 +909,7 @@
                 yaxis: { labels: { formatter: (val) => formatCurrency(val) } },
                 plotOptions: { bar: { horizontal: false, columnWidth: '50%' } },
                 dataLabels: { enabled: false },
-                colors: ['#22c55e', '#ef4444'],
+                colors: ['#047857', '#d97706'],
                 tooltip: { y: { formatter: (val) => formatCurrency(val) } },
             });
         }
@@ -834,28 +917,55 @@
         // Tabela últimas notas
         const tbody = document.getElementById('ficha-ultimas-notas');
         if (tbody) {
+            fecharMenuUltimaNota();
             const notas = data.ultimas_notas || [];
             if (notas.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" class="px-3 py-4 text-center text-gray-400">Nenhuma nota</td></tr>';
             } else {
                 tbody.innerHTML = notas.map(n => {
-                    const corTipo = n.tipo_nota === 'E' ? 'text-green-700 bg-green-50' : 'text-red-700 bg-red-50';
+                    const corTipoStyle = n.tipo_nota === 'E' ? 'background-color: #047857' : 'background-color: #d97706';
+                    const corTipo = 'text-white';
                     const numSerie = (n.numero || '—') + (n.serie ? ' / ' + n.serie : '');
                     const sefazUrl = n.chave_acesso
                         ? `https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=completa&tipoConteudo=XbSeqxE8pl8=&nfe=${n.chave_acesso}`
                         : null;
-                    const acaoBtn = sefazUrl
-                        ? `<a href="${sefazUrl}" target="_blank" rel="noopener noreferrer"
-                              class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
-                              title="Consultar NF-e na SEFAZ">
-                              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                              SEFAZ
+                    const sefazItem = sefazUrl
+                        ? `<a href="${sefazUrl}"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="nota-acao-link block px-3 py-2 text-xs text-gray-900 hover:bg-gray-50 hover:text-gray-600 hover:underline text-left"
+                               data-action="sefaz"
+                               data-participante-id="${n.participante_id}"
+                               data-sefaz-url="${sefazUrl}">
+                                SEFAZ
                            </a>`
-                        : '<span class="text-gray-300">—</span>';
+                        : `<span class="block px-3 py-2 text-xs text-gray-300 text-left cursor-not-allowed">SEFAZ</span>`;
+                    const acaoBtn = `<div class="nota-acoes-menu relative inline-block text-left">
+                        <button type="button"
+                            class="btn-acoes-nota inline-flex items-center justify-center w-8 h-8 text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 hover:text-gray-900"
+                            title="Ações"
+                            aria-label="Abrir ações da nota">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <circle cx="5" cy="12" r="1.75"></circle>
+                                <circle cx="12" cy="12" r="1.75"></circle>
+                                <circle cx="19" cy="12" r="1.75"></circle>
+                            </svg>
+                        </button>
+                        <div class="nota-acoes-panel hidden absolute right-0 z-20 mt-1 min-w-[160px] bg-white border border-gray-300 rounded shadow-sm overflow-hidden">
+                            <a href="/app/participante/${n.participante_id}#notas-fiscais"
+                               class="nota-acao-link block px-3 py-2 text-xs text-gray-900 hover:bg-gray-50 hover:text-gray-600 hover:underline text-left"
+                               data-action="nota"
+                               data-participante-id="${n.participante_id}"
+                               data-nota-id="${n.id}">
+                                Ver Nota
+                            </a>
+                            ${sefazItem}
+                        </div>
+                    </div>`;
                     return `<tr class="hover:bg-gray-50">
                         <td class="px-3 py-2 text-gray-900 font-medium whitespace-nowrap">${numSerie}</td>
                         <td class="px-3 py-2 text-gray-600 whitespace-nowrap">${n.data_emissao}</td>
-                        <td class="px-3 py-2"><span class="px-1.5 py-0.5 rounded text-xs font-medium ${corTipo}">${n.tipo_nota}</span></td>
+                        <td class="px-3 py-2"><span class="px-1.5 py-0.5 rounded text-xs font-medium ${corTipo}" style="${corTipoStyle}">${n.tipo_nota}</span></td>
                         <td class="px-3 py-2 text-gray-500 whitespace-nowrap">${n.modelo || '—'}</td>
                         <td class="px-3 py-2 text-gray-500">${n.cfop || '—'}</td>
                         <td class="px-3 py-2 text-right font-medium text-gray-800 whitespace-nowrap">${formatCurrency(n.vl_doc)}</td>
@@ -906,13 +1016,13 @@
 
         const linhas = gaps.map(g => {
             const fiscal = g.tem_fiscal
-                ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">&#10003; Fiscal</span>'
-                : '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-400">&mdash;</span>';
+                ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs text-white" style="background-color: #047857">&#10003; Fiscal</span>'
+                : '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs text-white" style="background-color: #9ca3af">&mdash;</span>';
             const contrib = g.tem_contrib
-                ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">&#10003; Contrib.</span>'
-                : '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-400">&mdash;</span>';
+                ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs text-white" style="background-color: #047857">&#10003; Contrib.</span>'
+                : '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs text-white" style="background-color: #9ca3af">&mdash;</span>';
             const gapBadge = g.gap
-                ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-red-100 text-red-700">GAP</span>'
+                ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs text-white" style="background-color: #dc2626">GAP</span>'
                 : '';
             return `<td class="px-3 py-2 text-center align-top">
                 <p class="text-xs font-medium text-gray-600 mb-1">${g.label}</p>
@@ -929,7 +1039,7 @@
         if (!el) return;
 
         if (!lista.length) {
-            el.innerHTML = '<p class="text-sm text-green-600 py-4">Nenhum participante irregular encontrado no período.</p>';
+            el.innerHTML = '<p class="text-sm text-gray-500 py-4">Nenhum participante irregular encontrado no período.</p>';
             return;
         }
 
@@ -939,7 +1049,7 @@
                 <div class="text-xs text-gray-400">${p.cnpj_cpf || ''}</div>
             </td>
             <td class="px-2 sm:px-4 py-2 sm:py-3 text-center">
-                <span class="px-2 py-0.5 rounded text-xs bg-red-100 text-red-700">${p.situacao || '—'}</span>
+                <span class="px-2 py-0.5 rounded text-xs text-white" style="background-color: #dc2626">${p.situacao || '—'}</span>
             </td>
             <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs text-gray-500">${p.regime || '—'}</td>
             <td class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-red-700">${formatCurrency(p.valor_em_risco)}</td>
@@ -950,12 +1060,12 @@
         el.innerHTML = `<table class="min-w-[650px] w-full divide-y divide-gray-200 text-xs sm:text-sm">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-gray-600">Participante</th>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-center font-semibold text-gray-600">Situação</th>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-gray-600">Regime</th>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-gray-600">Valor em Risco</th>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-gray-600">Notas</th>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-gray-600">Última Nota</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participante</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Regime</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Valor em Risco</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Última Nota</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">${linhas}</tbody>
@@ -976,7 +1086,7 @@
             const situacaoUpper = (p.situacao_atual || '').toUpperCase();
             const irregular = p.situacao_atual && !['02', 'ATIVA'].includes(situacaoUpper);
             const badge = irregular
-                ? `<span class="ml-1 px-1.5 py-0.5 rounded text-xs bg-red-100 text-red-700">Irregular</span>`
+                ? `<span class="ml-1 px-1.5 py-0.5 rounded text-xs text-white" style="background-color: #dc2626">Irregular</span>`
                 : '';
             return `<tr class="hover:bg-gray-50">
                 <td class="px-2 sm:px-4 py-2 sm:py-3">
@@ -993,11 +1103,11 @@
         el.innerHTML = `<table class="min-w-[600px] w-full divide-y divide-gray-200 text-xs sm:text-sm">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-gray-600">Participante</th>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-gray-600">Regime</th>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-gray-600">Situação</th>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-gray-600">Atualizado em</th>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-gray-600">Notas</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participante</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Regime</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Atualizado em</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">${linhas}</tbody>
@@ -1010,23 +1120,21 @@
         if (!el) return;
 
         if (!lista.length) {
-            el.innerHTML = '<p class="text-sm text-green-600 py-4">Nenhuma nota com participante irregular no período.</p>';
+            el.innerHTML = '<p class="text-sm text-gray-500 py-4">Nenhuma nota com participante irregular no período.</p>';
             return;
         }
 
         const linhas = lista.map(n => {
-            const corTipo = n.tipo_nota === 'E'
-                ? 'bg-green-100 text-green-700'
-                : 'bg-red-100 text-red-700';
-            return `<tr class="hover:bg-gray-50">
+            const corTipoStyle = n.tipo_nota === 'E' ? 'background-color: #047857' : 'background-color: #d97706';
+            return `<tr class="hover:bg-gray-50/50 transition-colors">
                 <td class="px-2 sm:px-4 py-2 sm:py-3 text-gray-400 text-xs">${n.data_emissao || '—'}</td>
-                <td class="px-2 sm:px-4 py-2 sm:py-3"><span class="px-1.5 py-0.5 rounded text-xs font-medium ${corTipo}">${n.tipo_nota}</span></td>
+                <td class="px-2 sm:px-4 py-2 sm:py-3"><span class="px-1.5 py-0.5 rounded text-xs font-medium text-white" style="${corTipoStyle}">${n.tipo_nota}</span></td>
                 <td class="px-2 sm:px-4 py-2 sm:py-3">
                     <div class="font-medium text-gray-900 text-sm">${n.razao_social || n.cnpj_cpf || '—'}</div>
                     <div class="text-xs text-gray-400">${n.cnpj_cpf || ''}</div>
                 </td>
                 <td class="px-2 sm:px-4 py-2 sm:py-3 text-center">
-                    <span class="px-2 py-0.5 rounded text-xs bg-red-100 text-red-700">${n.situacao || '—'}</span>
+                    <span class="px-2 py-0.5 rounded text-xs text-white" style="background-color: #dc2626">${n.situacao || '—'}</span>
                 </td>
                 <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs text-gray-500">${{notas_servicos:'Serviços',notas_mercadorias:'Mercadorias',notas_transportes:'Transportes'}[n.bloco] || n.bloco}</td>
                 <td class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-gray-900">${formatCurrency(n.vl_doc)}</td>
@@ -1036,12 +1144,12 @@
         el.innerHTML = `<table class="min-w-[650px] w-full divide-y divide-gray-200 text-xs sm:text-sm">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-gray-600">Data</th>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-gray-600">Tipo</th>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-gray-600">Participante</th>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-center font-semibold text-gray-600">Situação</th>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-gray-600">Bloco</th>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-gray-600">Valor</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Data</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Tipo</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participante</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Bloco</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Valor</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">${linhas}</tbody>
@@ -1086,10 +1194,10 @@
         el.innerHTML = `<table class="min-w-[600px] w-full divide-y divide-gray-200 text-xs sm:text-sm">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-gray-600">Tributo</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Tributo</th>
                         <th class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-green-600">Crédito (Entradas)</th>
                         <th class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-red-600">Débito (Saídas)</th>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-gray-600">Saldo</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saldo</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">${linhas}</tbody>
@@ -1117,7 +1225,7 @@
             yaxis: { labels: { formatter: (val) => formatCurrency(val) } },
             plotOptions: { bar: { horizontal: false, columnWidth: '60%' } },
             dataLabels: { enabled: false },
-            colors: ['#3b82f6', '#f59e0b', '#ef4444'],
+            colors: ['#374151', '#d97706', '#dc2626'],
             tooltip: { y: { formatter: (val) => formatCurrency(val) } },
         });
     }
@@ -1139,7 +1247,7 @@
             dataLabels: { enabled: false },
             stroke: { curve: 'smooth', width: 2 },
             fill: { type: 'gradient', gradient: { opacityFrom: 0.4, opacityTo: 0.1 } },
-            colors: ['#8b5cf6'],
+            colors: ['#374151'],
             tooltip: { y: { formatter: (val) => val.toFixed(2) + '%' } },
         });
     }
@@ -1166,13 +1274,13 @@
         el.innerHTML = `<table class="min-w-[650px] w-full divide-y divide-gray-200 text-xs sm:text-sm">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-gray-600">Regime</th>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-gray-600">Notas</th>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-gray-600">Valor Total</th>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-blue-600">ICMS</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Regime</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Valor Total</th>
+                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-gray-900">ICMS</th>
                         <th class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-amber-600">PIS</th>
                         <th class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-red-600">COFINS</th>
-                        <th class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-gray-600">Alíquota Média</th>
+                        <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Alíquota Média</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">${linhas}</tbody>
@@ -1257,12 +1365,12 @@
     function showTabError(tabName) {
         const tabEl = document.getElementById('tab-' + tabName);
         if (tabEl) {
-            tabEl.innerHTML = `<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 sm:p-12 text-center">
+            tabEl.innerHTML = `<div class="bg-white rounded border border-gray-300 p-6 sm:p-12 text-center">
                 <svg class="mx-auto h-10 w-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
                 </svg>
                 <p class="mt-3 text-sm text-gray-500">Erro ao carregar dados desta seção.</p>
-                <button onclick="document.querySelector('[data-tab=&quot;${tabName}&quot;]')?.click()" class="mt-3 px-4 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-xs font-medium hover:bg-gray-200 transition">Tentar novamente</button>
+                <button onclick="document.querySelector('[data-tab=&quot;${tabName}&quot;]')?.click()" class="mt-3 px-4 py-1.5 rounded bg-gray-800 text-white text-xs font-medium hover:bg-gray-700 transition">Tentar novamente</button>
             </div>`;
         }
     }
@@ -1297,6 +1405,7 @@
         tipoAtivo = 'fornecedores';
         participantesData = null;
         participanteAberto = null;
+        menuUltimaNotaAberto = null;
         _initRetries = 0;
     }
 

@@ -35,18 +35,17 @@
         @include('autenticado.partials.sidebar')
 
         <div class="layout-shell flex-1 min-w-0 flex flex-col">
-            <!-- Mobile Topbar (abre a sidebar como drawer) -->
-            <div class="md:hidden sticky top-0 z-30 bg-white border-b border-gray-200">
-                <div class="flex items-center gap-3 px-4 py-3">
-                    <button id="sidebar-open-btn" type="button" class="p-2 text-gray-600 hover:text-blue-500 transition-colors" aria-label="Abrir menu">
+            <div class="mobile-auth-topbar">
+                <div class="mobile-auth-topbar__inner">
+                    <button id="sidebar-open-btn" type="button" class="mobile-auth-topbar__button" aria-label="Abrir menu">
                         <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
                     </button>
 
-                    <a href="/app/dashboard" class="flex items-center gap-2" data-link data-no-active>
-                        <img src="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}" alt="FiscalDock" class="h-7 object-contain">
-                        <span class="text-base font-bold text-brand">FiscalDock</span>
+                    <a href="/app/dashboard" class="mobile-auth-topbar__brand" data-link data-no-active>
+                        <img src="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}" alt="FiscalDock" class="mobile-auth-topbar__brand-logo">
+                        <span class="mobile-auth-topbar__brand-text">FiscalDock</span>
                     </a>
                 </div>
             </div>
@@ -65,5 +64,4 @@
     </div>
 </body>
 </html>
-
 

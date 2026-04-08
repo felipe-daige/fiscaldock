@@ -21,231 +21,6 @@
 @endpush
 
 <style>
-/* Solutions Carousel Styles */
-.solutions-carousel-container {
-    min-height: 600px;
-    position: relative;
-    width: 100vw;
-    left: 50%;
-    right: 50%;
-    margin-left: -50vw;
-    margin-right: -50vw;
-}
-
-.solutions-cards-wrapper {
-    position: relative;
-    overflow: hidden;
-    overflow-x: hidden;
-    padding-bottom: 2.5rem; /* espaço extra para a sombra do card ativo */
-    margin: 0;
-    width: 100%;
-    z-index: 1;
-}
-
-.solutions-cards-track {
-    display: flex;
-    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    will-change: transform;
-    align-items: stretch;
-    padding: 0;
-    position: relative;
-}
-
-.solution-card {
-    flex-shrink: 0;
-    width: 75%;
-    padding: 0 1%;
-    transition: opacity 0.3s, transform 0.3s;
-    position: relative;
-    height: 600px; /* Altura fixa uniforme com folga para sombra */
-    z-index: 1;
-}
-
-.solution-card > div {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.solution-card-inner {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    background: linear-gradient(180deg, var(--color-surface-muted) 0%, var(--color-surface-muted) 40%, var(--color-surface-alt) 100%); /* Fundo claro alinhado ao tema */
-}
-
-.solution-card-inner .grid {
-    height: 100%;
-}
-
-/* Coluna esquerda - descrição */
-.solution-card-inner > .grid > div:first-child {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    background: var(--color-surface);
-}
-
-/* Coluna direita - mockup */
-.solution-card-inner > .grid > div:last-child {
-    background: linear-gradient(135deg, var(--color-primary-700) 0%, var(--color-primary-500) 100%);
-    position: relative;
-}
-
-/* Efeito de brilho no mockup */
-.solution-card-inner > .grid > div:last-child::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, color-mix(in srgb, var(--color-accent) 25%, transparent) 0%, transparent 70%);
-    pointer-events: none;
-}
-
-/* Coluna direita: ícone + métrica */
-.solution-card-inner > .grid > div:last-child {
-    min-height: 280px;
-}
-
-.solution-card.active {
-    opacity: 1 !important;
-    transform: scale(1) !important;
-    z-index: 10;
-}
-
-
-.solution-card:not(.active) {
-    opacity: 0.6;
-    transform: scale(0.96);
-    z-index: 1;
-}
-
-/* Garantir que o primeiro card seja visível mesmo sem classe active inicialmente */
-.solution-card[data-index="0"],
-.solution-card.active[data-index="0"] {
-    opacity: 1 !important;
-}
-
-/* Garantir que cards com classe active sempre sejam visíveis */
-.solutions-cards-track .solution-card.active {
-    opacity: 1 !important;
-    transform: scale(1) !important;
-}
-
-/* Responsividade */
-@media (max-width: 1024px) {
-    .solutions-cards-track {
-        padding: 0;
-    }
-    
-    .solution-card {
-        width: 85%;
-        padding: 0 1%;
-    }
-    
-    /* Em tablets, colunas podem empilhar */
-    .solution-card-inner .grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .solution-card-inner > .grid > div:first-child {
-        min-height: 300px;
-    }
-}
-
-@media (max-width: 768px) {
-    .solutions-cards-track {
-        padding: 0 2%;
-    }
-    
-    .solution-card {
-        width: 96%;
-        padding: 0 2%;
-    }
-    
-    .solution-card:not(.active) {
-        opacity: 0;
-    }
-    
-    /* Garantir que o primeiro card seja sempre visível em mobile */
-    .solution-card[data-index="0"],
-    .solution-card.active {
-        opacity: 1 !important;
-    }
-    
-    .carousel-arrow {
-        width: 40px;
-        height: 40px;
-    }
-    
-    .carousel-arrow svg {
-        width: 20px;
-        height: 20px;
-    }
-    
-    .solutions-carousel-container {
-        min-height: 600px;
-    }
-    
-    /* Em mobile, colunas empilhadas - ícone/métrica primeiro, texto depois */
-    .solution-card-inner .grid {
-        grid-template-columns: 1fr;
-    }
-
-    .solution-card-inner > .grid > div:first-child {
-        min-height: auto;
-        order: 2;
-        padding: 1.25rem;
-    }
-
-    .solution-card-inner > .grid > div:last-child {
-        order: 1;
-        padding: 1.5rem;
-        min-height: 200px;
-    }
-}
-
-/* Setas de navegação */
-.carousel-arrow {
-    z-index: 20;
-    cursor: pointer;
-}
-
-/* Navegação em pills - faixa leve e sutil */
-.solution-pill-group {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 999px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
-}
-
-.solution-pill {
-    cursor: pointer;
-    border: 1px solid transparent;
-    transition: all 0.25s ease;
-    color: var(--color-text-muted);
-    background-color: transparent;
-    border-radius: 999px;
-}
-
-.solution-pill.active {
-    background-color: #ffffff !important;
-    color: #0f3d8e !important;
-    border-color: #0f3d8e !important;
-    box-shadow: 0 6px 18px rgba(15, 61, 142, 0.12);
-}
-
-.solution-pill:not(.active) {
-    color: var(--color-text-muted);
-}
-
-.solution-pill:hover:not(.active) {
-    background-color: #edf2f7;
-    color: var(--color-text);
-}
-
 /* Estilos para cards de depoimentos */
 
 /* Estilos criativos para cards de depoimentos */
@@ -400,11 +175,32 @@
     background: linear-gradient(135deg, #0b1f3a 0%, #1e4fa0 100%) !important;
     color: #fff;
 }
+
+/* ── Como Funciona ── */
+.cf-step {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cf-step.cf-visible { opacity: 1; transform: translateY(0); }
+.cf-step:nth-child(1) { transition-delay: 0s; }
+.cf-step:nth-child(2) { transition-delay: 0.12s; }
+.cf-step:nth-child(3) { transition-delay: 0.24s; }
+.cf-step:nth-child(4) { transition-delay: 0.36s; }
+
+.cf-step .cf-icon-box {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.cf-step:hover .cf-icon-box {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px -8px rgba(11, 31, 58, 0.15);
+}
 </style>
 
 <!-- Hero Section (refeito) -->
-<section id="hero" class="relative bg-gradient-to-br from-primary-700 to-primary-500 text-white" style="background: linear-gradient(135deg, #0b1f3a 0%, #1e4fa0 100%);">
-    <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+<section id="hero" class="relative overflow-hidden bg-gradient-to-br from-primary-700 to-primary-500 text-white" style="background: linear-gradient(135deg, #0b1f3a 0%, #1e4fa0 100%);">
+    <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20 sm:pb-24 lg:pt-12 lg:pb-28">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center justify-center">
             <!-- Coluna Esquerda: Texto -->
             <div class="lg:col-span-5 xl:col-span-6">
@@ -497,454 +293,357 @@
             </div>
         </div>
     </div>
-    <!-- Curva inferior (côncava) -->
-    <div class="pointer-events-none absolute inset-x-0 bottom-[-1px] leading-none">
-        <!-- O preenchimento branco cria a sensação de que o azul termina com curvatura -->
-        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[60px] sm:h-[80px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
-        </svg>
+</section>
+
+<!-- Integrações Oficiais Banner -->
+<section class="relative bg-gray-100 border-y border-gray-200 py-5 sm:py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <p class="text-center text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-4">
+            Dados extraídos e cruzados de fontes oficiais
+        </p>
+        <div class="flex flex-wrap justify-center items-center gap-x-6 gap-y-3 sm:gap-x-10 md:gap-x-14 opacity-60">
+            <div class="flex items-center gap-2 text-gray-600 font-bold text-lg sm:text-xl tracking-tight transition hover:text-gray-900 cursor-default">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14v7"></path>
+                </svg>
+                Receita Federal
+            </div>
+            
+            <div class="flex items-center gap-2 text-gray-600 font-bold text-lg sm:text-xl tracking-tight transition hover:text-gray-900 cursor-default">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+                SEFAZ
+            </div>
+            
+            <div class="flex items-center gap-2 text-gray-600 font-bold text-lg sm:text-xl tracking-tight transition hover:text-gray-900 cursor-default">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+                </svg>
+                Portal da Transparência
+            </div>
+            
+            <div class="flex items-center gap-2 text-gray-600 font-bold text-lg sm:text-xl tracking-tight transition hover:text-gray-900 cursor-default">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+                SINTEGRA
+            </div>
+            
+            <div class="flex items-center gap-2 text-gray-600 font-bold text-lg sm:text-xl tracking-tight transition hover:text-gray-900 cursor-default">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
+                </svg>
+                PGFN
+            </div>
+        </div>
     </div>
+</section>
+
+<!-- Como Funciona Section -->
+<section id="como-funciona" class="bg-gray-50 py-20 sm:py-24 lg:py-28">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="text-center mb-16 sm:mb-20">
+            <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-400 mb-3">Passo a passo</p>
+            <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight mb-4">Como Funciona na Prática</h2>
+            <p class="text-base text-gray-500 max-w-2xl mx-auto">
+                Do upload do arquivo ao monitoramento contínuo — tudo automatizado para o seu escritório.
+            </p>
+        </div>
+
+        <!-- Steps -->
+        <div class="relative" id="cf-grid">
+
+            <!-- Trilha horizontal desktop -->
+            <div class="hidden md:block absolute top-[52px] left-[12.5%] right-[12.5%] h-0" style="border-top: 2px dashed #d1d5db;"></div>
+
+            <div class="grid grid-cols-1 gap-14 md:grid-cols-4 md:gap-8 lg:gap-12">
+
+                <!-- 1 — Importe -->
+                <div class="cf-step text-center">
+                    <div class="relative z-10 mx-auto mb-6">
+                        <div class="cf-icon-box w-[104px] h-[104px] rounded-2xl mx-auto flex items-center justify-center" style="background-color: #eef2f7; border: 1px solid #dce3ed; box-shadow: 0 2px 8px -2px rgba(11,31,58,0.06);">
+                            <svg class="w-10 h-10" style="color: #1e4fa0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                            </svg>
+                        </div>
+                        <div class="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white" style="background-color: #0b1f3a;">1</div>
+                    </div>
+                    <h3 class="text-base font-bold text-gray-900 mb-2">Importe</h3>
+                    <p class="text-sm text-gray-500 leading-relaxed mb-3">Faça upload do arquivo fiscal e a plataforma extrai automaticamente notas, participantes e catálogo.</p>
+                    <span class="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide text-gray-500 bg-white border border-gray-200">SPED, EFD ou XML</span>
+                </div>
+
+                <!-- 2 — Cruze -->
+                <div class="cf-step text-center">
+                    <div class="relative z-10 mx-auto mb-6">
+                        <div class="cf-icon-box w-[104px] h-[104px] rounded-2xl mx-auto flex items-center justify-center" style="background-color: #eef2f7; border: 1px solid #dce3ed; box-shadow: 0 2px 8px -2px rgba(11,31,58,0.06);">
+                            <svg class="w-10 h-10" style="color: #1e4fa0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white" style="background-color: #0b1f3a;">2</div>
+                    </div>
+                    <h3 class="text-base font-bold text-gray-900 mb-2">Cruze</h3>
+                    <p class="text-sm text-gray-500 leading-relaxed mb-3">Cada CNPJ é verificado em tempo real nas bases oficiais — situação cadastral, inscrição estadual e impedimentos.</p>
+                    <span class="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide text-gray-500 bg-white border border-gray-200">Receita, SEFAZ, CEIS</span>
+                </div>
+
+                <!-- 3 — Identifique -->
+                <div class="cf-step text-center">
+                    <div class="relative z-10 mx-auto mb-6">
+                        <div class="cf-icon-box w-[104px] h-[104px] rounded-2xl mx-auto flex items-center justify-center" style="background-color: #fef8ee; border: 1px solid #f5e6c8; box-shadow: 0 2px 8px -2px rgba(11,31,58,0.06);">
+                            <svg class="w-10 h-10" style="color: #b45309;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                        </div>
+                        <div class="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white" style="background-color: #0b1f3a;">3</div>
+                    </div>
+                    <h3 class="text-base font-bold text-gray-900 mb-2">Identifique</h3>
+                    <p class="text-sm text-gray-500 leading-relaxed mb-3">Fornecedores inaptos, IE suspensa, empresas no CEIS — tudo sinalizado antes que vire problema.</p>
+                    <span class="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide text-gray-500 bg-white border border-gray-200">Alertas automáticos</span>
+                </div>
+
+                <!-- 4 — Monitore -->
+                <div class="cf-step text-center">
+                    <div class="relative z-10 mx-auto mb-6">
+                        <div class="cf-icon-box w-[104px] h-[104px] rounded-2xl mx-auto flex items-center justify-center" style="background-color: #eefbf5; border: 1px solid #c6eed8; box-shadow: 0 2px 8px -2px rgba(11,31,58,0.06);">
+                            <svg class="w-10 h-10" style="color: #047857;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </div>
+                        <div class="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white" style="background-color: #0b1f3a;">4</div>
+                    </div>
+                    <h3 class="text-base font-bold text-gray-900 mb-2">Monitore</h3>
+                    <p class="text-sm text-gray-500 leading-relaxed mb-3">Acompanhe mudanças de situação cadastral dos seus participantes sem consultar um por um.</p>
+                    <span class="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide text-gray-500 bg-white border border-gray-200">Atualização contínua</span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var grid = document.getElementById('cf-grid');
+        if (!grid) return;
+        new IntersectionObserver(function(entries, obs) {
+            entries.forEach(function(e) {
+                if (e.isIntersecting) {
+                    grid.querySelectorAll('.cf-step').forEach(function(s) { s.classList.add('cf-visible'); });
+                    obs.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.15 }).observe(grid);
+    });
+    </script>
 </section>
 
 <!-- Soluções Section -->
-<section id="funcionalidades" class="bg-gray-50 pt-4 pb-0 overflow-x-hidden">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-            <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Soluções que <span class="text-brand">protegem</span> seu escritório
+<section id="funcionalidades" class="bg-white py-20 sm:py-24 lg:py-28">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="text-center mb-16 sm:mb-20">
+            <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-400 mb-3">Funcionalidades</p>
+            <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight mb-4">
+                Tudo que o seu escritório precisa
             </h2>
-            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                Ferramentas integradas para importação, monitoramento e compliance fiscal
+            <p class="text-base text-gray-500 max-w-2xl mx-auto">
+                Um ecossistema completo para compliance fiscal, monitoramento contínuo e decisões mais seguras.
             </p>
         </div>
 
-        <!-- Carrossel de Soluções -->
-        <div class="solutions-carousel-container relative">
-            <!-- Setas de Navegação -->
-            <button class="carousel-arrow carousel-arrow-left absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors" data-direction="prev">
-                <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                </svg>
-            </button>
-            <button class="carousel-arrow carousel-arrow-right absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors" data-direction="next">
-                <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-            </button>
+        <!-- Grid — 3 colunas top + 3 bottom -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
 
-            <!-- Cards de Soluções -->
-            <div class="solutions-cards-wrapper relative overflow-hidden mx-12">
-                <div class="solutions-cards-track flex transition-transform duration-500 ease-in-out" style="transform: translateX(0px);">
-
-                    <!-- Card Duplicado: Importação XML (para loop infinito - início) -->
-                    <div class="solution-card solution-card-duplicate flex-shrink-0 w-full px-4" data-index="duplicate" data-solution="xml">
-                        <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
-                            <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
-                                <div class="flex flex-col justify-between p-8 lg:p-10 bg-white">
-                                    <div>
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 mb-4">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                                            Importação
-                                        </span>
-                                        <h3 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">Notas fiscais organizadas automaticamente</h3>
-                                        <p class="text-base text-gray-600 mb-6 leading-relaxed">Importe XMLs de NFe e o FiscalDock extrai chave de acesso, valores, CFOP e dados do emitente/destinatário.</p>
-                                        <ul class="space-y-3 text-gray-600">
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Upload de XMLs com validacao automatica</span></li>
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Chave de acesso e valores extraidos por nota</span></li>
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Organizado por emitente, destinatario e CFOP</span></li>
-                                        </ul>
-                                    </div>
-                                    <div class="mt-6">
-                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors">
-                                            Saiba mais
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="relative bg-gradient-to-br from-primary-700 to-primary-500 p-8 lg:p-12 flex flex-col items-center justify-center overflow-hidden">
-                                    <div class="w-24 h-24 lg:w-32 lg:h-32 mb-8 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                                        <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Importacao de XML" class="w-16 h-16 lg:w-20 lg:h-20 object-contain" loading="lazy">
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="text-4xl lg:text-5xl font-bold text-white mb-2">Automatico</div>
-                                        <p class="text-base text-white/80">extracao inteligente de dados fiscais</p>
-                                    </div>
-                                    <div class="mt-6 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
-                                        <p class="text-sm text-white/90 font-medium">Sem digitacao manual</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card 1: Importação de SPED -->
-                    <div class="solution-card active flex-shrink-0 w-full px-4" data-index="0" data-solution="sped" style="opacity: 1 !important;">
-                        <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
-                            <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
-                                <div class="flex flex-col justify-between p-8 lg:p-10 bg-white">
-                                    <div>
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 mb-4">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                            SPED/EFD
-                                        </span>
-                                        <h3 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">Importe SPED em segundos, nao em horas</h3>
-                                        <p class="text-base text-gray-600 mb-6 leading-relaxed">Upload de EFD ICMS/IPI e PIS/COFINS com extracao automatica de participantes, notas e valores por bloco.</p>
-                                        <ul class="space-y-3 text-gray-600">
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Arraste e importe arquivos .txt direto na plataforma</span></li>
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Extracao automatica por bloco (A, C, D)</span></li>
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Participantes identificados instantaneamente</span></li>
-                                        </ul>
-                                    </div>
-                                    <div class="mt-6">
-                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors">
-                                            Saiba mais
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="relative bg-gradient-to-br from-primary-700 to-primary-500 p-8 lg:p-12 flex flex-col items-center justify-center overflow-hidden">
-                                    <div class="w-24 h-24 lg:w-32 lg:h-32 mb-8 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                                        <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Importacao de SPED" class="w-16 h-16 lg:w-20 lg:h-20 object-contain" loading="lazy">
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="text-4xl lg:text-5xl font-bold text-white mb-2">Segundos</div>
-                                        <p class="text-base text-white/80">o que levava horas de trabalho manual</p>
-                                    </div>
-                                    <div class="mt-6 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
-                                        <p class="text-sm text-white/90 font-medium">Extracao 100% automatica</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card 2: Monitoramento de Participantes -->
-                    <div class="solution-card flex-shrink-0 w-full px-4" data-index="1" data-solution="monitoramento">
-                        <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
-                            <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
-                                <div class="flex flex-col justify-between p-8 lg:p-10 bg-white">
-                                    <div>
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 mb-4">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                                            Monitoramento
-                                        </span>
-                                        <h3 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">Saiba antes da fiscalizacao quando algo muda</h3>
-                                        <p class="text-base text-gray-600 mb-6 leading-relaxed">Acompanhe fornecedores e clientes em tempo real. Alertas automaticos de CNPJ irregular, IE suspensa e mudancas na Receita Federal.</p>
-                                        <ul class="space-y-3 text-gray-600">
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Consulta automatica de situacao cadastral</span></li>
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Alertas de CNPJ baixado, IE suspensa ou CEIS</span></li>
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Agrupamento por categoria e prioridade</span></li>
-                                        </ul>
-                                    </div>
-                                    <div class="mt-6">
-                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors">
-                                            Saiba mais
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="relative bg-gradient-to-br from-primary-700 to-primary-500 p-8 lg:p-12 flex flex-col items-center justify-center overflow-hidden">
-                                    <div class="w-24 h-24 lg:w-32 lg:h-32 mb-8 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                                        <img src="{{ asset('binary_files/icone-gif/checklist.gif') }}" alt="Monitoramento de Participantes" class="w-16 h-16 lg:w-20 lg:h-20 object-contain" loading="lazy">
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="text-4xl lg:text-5xl font-bold text-white mb-2">450+</div>
-                                        <p class="text-base text-white/80">empresas monitoradas</p>
-                                    </div>
-                                    <div class="mt-6 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
-                                        <p class="text-sm text-white/90 font-medium">Alertas antes da fiscalizacao</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card 3: Consultas Tributárias em Lote -->
-                    <div class="solution-card flex-shrink-0 w-full px-4" data-index="2" data-solution="consultas">
-                        <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
-                            <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
-                                <div class="flex flex-col justify-between p-8 lg:p-10 bg-white">
-                                    <div>
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 mb-4">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                                            Consultas
-                                        </span>
-                                        <h3 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">Centenas de CNPJs consultados de uma vez</h3>
-                                        <p class="text-base text-gray-600 mb-6 leading-relaxed">Situacao cadastral, regime tributario, Simples Nacional e IE — com resultados em tempo real.</p>
-                                        <ul class="space-y-3 text-gray-600">
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Upload de planilha ou selecao de participantes</span></li>
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Progresso por CNPJ em tempo real</span></li>
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Resultados exportaveis com alertas automaticos</span></li>
-                                        </ul>
-                                    </div>
-                                    <div class="mt-6">
-                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors">
-                                            Saiba mais
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="relative bg-gradient-to-br from-primary-700 to-primary-500 p-8 lg:p-12 flex flex-col items-center justify-center overflow-hidden">
-                                    <div class="w-24 h-24 lg:w-32 lg:h-32 mb-8 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                                        <img src="{{ asset('binary_files/icone-gif/analyse.gif') }}" alt="Consultas em Lote" class="w-16 h-16 lg:w-20 lg:h-20 object-contain" loading="lazy">
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="text-4xl lg:text-5xl font-bold text-white mb-2">Tempo real</div>
-                                        <p class="text-base text-white/80">resultados via Server-Sent Events</p>
-                                    </div>
-                                    <div class="mt-6 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
-                                        <p class="text-sm text-white/90 font-medium">Consulte centenas de CNPJs de uma vez</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card 4: Dashboard e BI Fiscal -->
-                    <div class="solution-card flex-shrink-0 w-full px-4" data-index="3" data-solution="dashboard">
-                        <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
-                            <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
-                                <div class="flex flex-col justify-between p-8 lg:p-10 bg-white">
-                                    <div>
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 mb-4">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                                            BI Fiscal
-                                        </span>
-                                        <h3 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">Visualize riscos e oportunidades em um clique</h3>
-                                        <p class="text-base text-gray-600 mb-6 leading-relaxed">Dashboards interativos com faturamento, compras, tributos e analise inteligente por CFOP e participante.</p>
-                                        <ul class="space-y-3 text-gray-600">
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Graficos interativos com filtros avancados</span></li>
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Analise por CFOP, participante e tipo de EFD</span></li>
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Visao consolidada de entradas, saidas e tributos</span></li>
-                                        </ul>
-                                    </div>
-                                    <div class="mt-6">
-                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors">
-                                            Saiba mais
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="relative bg-gradient-to-br from-primary-700 to-primary-500 p-8 lg:p-12 flex flex-col items-center justify-center overflow-hidden">
-                                    <div class="w-24 h-24 lg:w-32 lg:h-32 mb-8 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                                        <img src="{{ asset('binary_files/icone-gif/clipboard-gear.gif') }}" alt="Dashboard e BI Fiscal" class="w-16 h-16 lg:w-20 lg:h-20 object-contain" loading="lazy">
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="text-4xl lg:text-5xl font-bold text-white mb-2">6 abas</div>
-                                        <p class="text-base text-white/80">de analise fiscal integrada</p>
-                                    </div>
-                                    <div class="mt-6 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
-                                        <p class="text-sm text-white/90 font-medium">Dados atualizados automaticamente</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card 5: Importação de XML -->
-                    <div class="solution-card flex-shrink-0 w-full px-4" data-index="4" data-solution="xml">
-                        <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
-                            <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
-                                <div class="flex flex-col justify-between p-8 lg:p-10 bg-white">
-                                    <div>
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 mb-4">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                                            Importacao
-                                        </span>
-                                        <h3 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">Notas fiscais organizadas automaticamente</h3>
-                                        <p class="text-base text-gray-600 mb-6 leading-relaxed">Importe XMLs de NFe e o FiscalDock extrai chave de acesso, valores, CFOP e dados do emitente/destinatario.</p>
-                                        <ul class="space-y-3 text-gray-600">
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Upload de XMLs com validacao automatica</span></li>
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Chave de acesso e valores extraidos por nota</span></li>
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Organizado por emitente, destinatario e CFOP</span></li>
-                                        </ul>
-                                    </div>
-                                    <div class="mt-6">
-                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors">
-                                            Saiba mais
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="relative bg-gradient-to-br from-primary-700 to-primary-500 p-8 lg:p-12 flex flex-col items-center justify-center overflow-hidden">
-                                    <div class="w-24 h-24 lg:w-32 lg:h-32 mb-8 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                                        <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Importacao de XML" class="w-16 h-16 lg:w-20 lg:h-20 object-contain" loading="lazy">
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="text-4xl lg:text-5xl font-bold text-white mb-2">Automatico</div>
-                                        <p class="text-base text-white/80">extracao inteligente de dados fiscais</p>
-                                    </div>
-                                    <div class="mt-6 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
-                                        <p class="text-sm text-white/90 font-medium">Sem digitacao manual</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card Duplicado: Importação SPED (para loop infinito - fim) -->
-                    <div class="solution-card solution-card-duplicate flex-shrink-0 w-full px-4" data-index="duplicate-end" data-solution="sped">
-                        <div class="rounded-2xl shadow-xl overflow-hidden solution-card-inner">
-                            <div class="grid grid-cols-1 lg:grid-cols-2 h-full">
-                                <div class="flex flex-col justify-between p-8 lg:p-10 bg-white">
-                                    <div>
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 mb-4">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                            SPED/EFD
-                                        </span>
-                                        <h3 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">Importe SPED em segundos, nao em horas</h3>
-                                        <p class="text-base text-gray-600 mb-6 leading-relaxed">Upload de EFD ICMS/IPI e PIS/COFINS com extracao automatica de participantes, notas e valores por bloco.</p>
-                                        <ul class="space-y-3 text-gray-600">
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Arraste e importe arquivos .txt direto na plataforma</span></li>
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Extracao automatica por bloco (A, C, D)</span></li>
-                                            <li class="flex items-start gap-3"><div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><span class="text-sm">Participantes identificados instantaneamente</span></li>
-                                        </ul>
-                                    </div>
-                                    <div class="mt-6">
-                                        <a href="#solucoes-detalhadas" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors">
-                                            Saiba mais
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="relative bg-gradient-to-br from-primary-700 to-primary-500 p-8 lg:p-12 flex flex-col items-center justify-center overflow-hidden">
-                                    <div class="w-24 h-24 lg:w-32 lg:h-32 mb-8 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                                        <img src="{{ asset('binary_files/icone-gif/page-optimization.gif') }}" alt="Importacao de SPED" class="w-16 h-16 lg:w-20 lg:h-20 object-contain" loading="lazy">
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="text-4xl lg:text-5xl font-bold text-white mb-2">Segundos</div>
-                                        <p class="text-base text-white/80">o que levava horas de trabalho manual</p>
-                                    </div>
-                                    <div class="mt-6 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
-                                        <p class="text-sm text-white/90 font-medium">Extracao 100% automatica</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <!-- 1. SPED / EFD -->
+            <div class="group">
+                <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-5" style="background-color: #eef2f7; border: 1px solid #dce3ed;">
+                    <svg class="w-7 h-7" style="color: #1e4fa0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
                 </div>
+                <h3 class="text-base font-bold text-gray-900 mb-2">Auditoria e Compliance</h3>
+                <p class="text-sm text-gray-500 leading-relaxed mb-4">
+                    Transforme os TXTs dos seus clientes em insights. Cruzamento automático de CFOPs, alíquotas e inconsistências antes do envio ao Fisco.
+                </p>
+                <ul class="space-y-2">
+                    <li class="flex items-start text-xs text-gray-600">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" style="color: #1e4fa0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Validação de blocos C e D linha a linha
+                    </li>
+                    <li class="flex items-start text-xs text-gray-600">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" style="color: #1e4fa0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Cruzamento exato com malha fina
+                    </li>
+                </ul>
+                <span class="inline-block mt-4 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide text-gray-500 bg-gray-100 border border-gray-200">SPED / EFD</span>
             </div>
 
-            <!-- Navegação por Pills -->
-            <div class="w-full flex justify-center mt-6 overflow-x-auto">
-                <div class="solution-pill-group inline-flex flex-nowrap items-center justify-center whitespace-nowrap gap-1.5 sm:gap-[0.625rem] px-3.5 sm:px-5 py-2.5 rounded-full bg-gray-50 shadow-sm min-w-fit">
-                    <button class="solution-pill active px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="sped">
-                        Importacao SPED
-                    </button>
-                    <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="monitoramento">
-                        Monitoramento
-                    </button>
-                    <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="consultas">
-                        Consultas em Lote
-                    </button>
-                    <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="dashboard">
-                        Dashboard e BI
-                    </button>
-                    <button class="solution-pill px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-target="xml">
-                        Importacao XML
-                    </button>
+            <!-- 2. XML -->
+            <div class="group">
+                <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-5" style="background-color: #eef2f7; border: 1px solid #dce3ed;">
+                    <svg class="w-7 h-7" style="color: #1e4fa0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                    </svg>
                 </div>
+                <h3 class="text-base font-bold text-gray-900 mb-2">Extração de XMLs</h3>
+                <p class="text-sm text-gray-500 leading-relaxed mb-4">
+                    Importe lotes de arquivos XML. A plataforma varre tags fiscais e recria consolidações de faturamento em milissegundos.
+                </p>
+                <ul class="space-y-2">
+                    <li class="flex items-start text-xs text-gray-600">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" style="color: #1e4fa0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        NFC-e, NF-e, CT-e e DF-e mapeados
+                    </li>
+                    <li class="flex items-start text-xs text-gray-600">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" style="color: #1e4fa0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Consolidação imediata de CSOSN
+                    </li>
+                </ul>
+                <span class="inline-block mt-4 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide text-gray-500 bg-gray-100 border border-gray-200">XMLs / NF-e</span>
             </div>
+
+            <!-- 3. Monitoramento -->
+            <div class="group relative">
+                <div class="absolute -top-1 -left-1 flex h-2.5 w-2.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style="background-color: #f87171;"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5" style="background-color: #dc2626;"></span>
+                </div>
+                <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-5" style="background-color: #fef8ee; border: 1px solid #f5e6c8;">
+                    <svg class="w-7 h-7" style="color: #b45309;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                    </svg>
+                </div>
+                <h3 class="text-base font-bold text-gray-900 mb-2">Monitoramento 24/7</h3>
+                <p class="text-sm text-gray-500 leading-relaxed mb-4">
+                    Acabe com notas canceladas por IE inapta. Monitoramento automático e massivo via SEFAZ Nacional com alertas em tempo real.
+                </p>
+                <ul class="space-y-2">
+                    <li class="flex items-start text-xs text-gray-600">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" style="color: #b45309;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Alertas via WhatsApp e Email
+                    </li>
+                    <li class="flex items-start text-xs text-gray-600">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" style="color: #b45309;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Bloqueie envios para inidôneos
+                    </li>
+                </ul>
+                <span class="inline-block mt-4 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide text-gray-500 bg-gray-100 border border-gray-200">Participantes</span>
+            </div>
+
+            <!-- 4. BI -->
+            <div class="group">
+                <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-5" style="background-color: #eefbf5; border: 1px solid #c6eed8;">
+                    <svg class="w-7 h-7" style="color: #047857;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-base font-bold text-gray-900 mb-2">Business Intelligence</h3>
+                <p class="text-sm text-gray-500 leading-relaxed mb-4">
+                    Transforme obrigações fiscais no melhor produto do seu escritório. Relatórios interativos com evolução de CMV e margens.
+                </p>
+                <ul class="space-y-2">
+                    <li class="flex items-start text-xs text-gray-600">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" style="color: #047857;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Gráficos prontos para o empresário
+                    </li>
+                    <li class="flex items-start text-xs text-gray-600">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" style="color: #047857;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Contabilidade de alto valor sem esforço
+                    </li>
+                </ul>
+                <span class="inline-block mt-4 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide text-gray-500 bg-gray-100 border border-gray-200">B.I. Fiscal</span>
+            </div>
+
+            <!-- 5. Créditos & API -->
+            <div class="group">
+                <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-5" style="background-color: #eef2f7; border: 1px solid #dce3ed;">
+                    <svg class="w-7 h-7" style="color: #1e4fa0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-base font-bold text-gray-900 mb-2">Créditos Sob Demanda</h3>
+                <p class="text-sm text-gray-500 leading-relaxed mb-4">
+                    Sem mensalidades abusivas. Pague pelo uso ou conecte via API aberta ao seu ERP para consultas automatizadas.
+                </p>
+                <ul class="space-y-2">
+                    <li class="flex items-start text-xs text-gray-600">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" style="color: #1e4fa0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Créditos que não expiram
+                    </li>
+                    <li class="flex items-start text-xs text-gray-600">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" style="color: #1e4fa0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Integração nativa com automações
+                    </li>
+                </ul>
+                <span class="inline-block mt-4 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide text-gray-500 bg-gray-100 border border-gray-200">Créditos & API</span>
+            </div>
+
+            <!-- 6. BPO Premium — card destaque -->
+            <div class="group rounded-xl p-6 lg:p-8 relative" style="background-color: #0b1f3a;">
+                <div class="absolute top-4 right-4">
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide" style="background-color: #facc15; color: #0b1f3a;">Premium</span>
+                </div>
+                <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-5" style="background-color: rgba(250,204,21,0.12); border: 1px solid rgba(250,204,21,0.2);">
+                    <svg class="w-7 h-7" style="color: #facc15;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-base font-bold text-white mb-2">Terceirização Fiscal</h3>
+                <p class="text-sm leading-relaxed mb-4" style="color: rgba(255,255,255,0.55);">
+                    Sem braço operacional? Nosso time comanda o compliance como uma extensão em nuvem do seu escritório.
+                </p>
+                <ul class="space-y-2">
+                    <li class="flex items-start text-xs" style="color: rgba(255,255,255,0.5);">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" style="color: #facc15;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Auditoria humana + tecnológica
+                    </li>
+                    <li class="flex items-start text-xs" style="color: rgba(255,255,255,0.5);">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" style="color: #facc15;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Suporte tributário exclusivo
+                    </li>
+                </ul>
+            </div>
+
         </div>
-    </div>
-    <!-- Divisor ondulado: transição do cinza (#f9fafb) para o branco -->
-    <div class="pointer-events-none leading-none mt-4 sm:mt-6">
-        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
-        </svg>
     </div>
 </section>
 
-<!-- Benefícios Section -->
-<section id="beneficios" class="bg-white pt-4 pb-0">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-            <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                Por que contadores escolhem o <span class="text-brand">FiscalDock</span>
-            </h2>
-            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                Automatize horas de trabalho manual e proteja seus clientes contra riscos fiscais
-            </p>
-        </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500 text-center">
-                <div class="mb-4">
-                    <img src="{{ asset('binary_files/icone-gif/financial-decline.gif') }}" alt="Financial Decline" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
-                </div>
-                <p class="text-gray-600 font-medium">Importe SPED e identifique riscos em minutos — o que levava dias agora é automático</p>
-            </div>
 
-            <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500 text-center">
-                <div class="mb-4">
-                    <img src="{{ asset('binary_files/icone-gif/contract.gif') }}" alt="Contract" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
-                </div>
-                <p class="text-gray-600 font-medium">Fornecedores irregulares, notas com problemas e créditos indevidos no radar antes da auditoria</p>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500 text-center">
-                <div class="mb-4">
-                    <img src="{{ asset('binary_files/icone-gif/process.gif') }}" alt="Process" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
-                </div>
-                <p class="text-gray-600 font-medium">Consulte centenas de CNPJs de uma vez com resultados em tempo real</p>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500 text-center">
-                <div class="mb-4">
-                    <img src="{{ asset('binary_files/icone-gif/budgeting.gif') }}" alt="Budgeting" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
-                </div>
-                <p class="text-gray-600 font-medium">Dashboards interativos com faturamento, compras, tributos e análise por CFOP</p>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500 text-center">
-                <div class="mb-4">
-                    <img src="{{ asset('binary_files/icone-gif/customer-service.gif') }}" alt="Customer Service" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
-                </div>
-                <p class="text-gray-600 font-medium">Alertas automáticos quando a situação cadastral de um participante muda</p>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-200 hover:border-blue-500 text-center">
-                <div class="mb-4">
-                    <img src="{{ asset('binary_files/icone-gif/investment.gif') }}" alt="Investment" class="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" width="64" height="64">
-                </div>
-                <p class="text-gray-600 font-medium">Dados de SPED, participantes e notas fiscais centralizados em um único lugar</p>
-            </div>
-        </div>
-    </div>
-    <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
-    <div class="pointer-events-none leading-none">
-        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
-        </svg>
-    </div>
-</section>
-
-<!-- Métricas Section -->
-<section id="metricas" class="bg-gray-50 pt-8 pb-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<!-- Métricas Banner -->
+<section id="metricas" class="relative py-8 sm:py-10" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(255,255,255,0.05);">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
-                <div class="text-3xl sm:text-4xl font-bold text-blue-600">R$ 2,3M+</div>
-                <p class="text-gray-600 mt-2 text-sm">em riscos detectados</p>
+                <div class="text-3xl sm:text-4xl font-extrabold" style="color: #ffffff;">R$ 47M+</div>
+                <p class="mt-2 text-xs sm:text-sm font-medium" style="color: rgba(255,255,255,0.55);">em notas fiscais importadas</p>
             </div>
             <div>
-                <div class="text-3xl sm:text-4xl font-bold text-blue-600">450+</div>
-                <p class="text-gray-600 mt-2 text-sm">empresas monitoradas</p>
+                <div class="text-3xl sm:text-4xl font-extrabold" style="color: #ffffff;">1.200+</div>
+                <p class="mt-2 text-xs sm:text-sm font-medium" style="color: rgba(255,255,255,0.55);">CNPJs monitorados</p>
             </div>
             <div>
-                <div class="text-3xl sm:text-4xl font-bold text-blue-600">12.000+</div>
-                <p class="text-gray-600 mt-2 text-sm">notas analisadas</p>
+                <div class="text-3xl sm:text-4xl font-extrabold" style="color: #ffffff;">18.000+</div>
+                <p class="mt-2 text-xs sm:text-sm font-medium" style="color: rgba(255,255,255,0.55);">documentos fiscais analisados</p>
             </div>
             <div>
-                <div class="text-3xl sm:text-4xl font-bold text-blue-600">99,8%</div>
-                <p class="text-gray-600 mt-2 text-sm">uptime da plataforma</p>
+                <div class="text-3xl sm:text-4xl font-extrabold" style="color: #ffffff;">R$ 2,3M+</div>
+                <p class="mt-2 text-xs sm:text-sm font-medium" style="color: rgba(255,255,255,0.55);">em riscos fiscais detectados</p>
             </div>
         </div>
     </div>
 </section>
 
 <!-- IA Financeira Section -->
-<section id="notebook" class="bg-gray-50 pt-4 pb-0">
+<section id="notebook" class="bg-gray-50 pt-20 pb-0 sm:pt-24 lg:pt-28">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div class="space-y-6">
@@ -977,16 +676,10 @@
             </div>
         </div>
     </div>
-    <!-- Divisor ondulado: transição do cinza (#f9fafb) para o branco -->
-    <div class="pointer-events-none leading-none">
-        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
-        </svg>
-    </div>
 </section>
 
 <!-- Para Quem É Section -->
-<section id="para-quem-e" class="bg-white pt-4 pb-0">
+<section id="para-quem-e" class="bg-white pt-20 pb-20 sm:pt-24 sm:pb-24 lg:pt-28 lg:pb-28">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1068,16 +761,10 @@
             </div>
         </div>
     </div>
-    <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
-    <div class="pointer-events-none leading-none mt-6 sm:mt-8">
-        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
-        </svg>
-    </div>
 </section>
 
 <!-- Diferenciais Section -->
-<section id="diferenciais" class="bg-gray-50 pt-4 pb-0">
+<section id="diferenciais" class="bg-gray-50 pt-20 pb-20 sm:pt-24 sm:pb-24 lg:pt-28 lg:pb-28">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1154,16 +841,10 @@
             </div>
         </div>
     </div>
-    <!-- Divisor ondulado: transição do cinza (#f9fafb) para o branco -->
-    <div class="pointer-events-none leading-none mt-6 sm:mt-8">
-        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
-        </svg>
-    </div>
 </section>
 
 <!-- Segurança e LGPD Section -->
-<section id="seguranca-lgpd" class="bg-white pt-4 pb-0">
+<section id="seguranca-lgpd" class="bg-white pt-20 pb-20 sm:pt-24 sm:pb-24 lg:pt-28 lg:pb-28">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1216,17 +897,11 @@
             </div>
         </div>
     </div>
-    <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
-    <div class="pointer-events-none leading-none mt-6 sm:mt-8">
-        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
-        </svg>
-    </div>
 </section>
 
 {{-- Estatísticas Section removida a pedido do cliente --}}
 <!-- Depoimentos Section -->
-<section id="depoimentos" class="bg-gray-50 pt-4 pb-0">
+<section id="depoimentos" class="bg-gray-50 pt-20 pb-20 sm:pt-24 sm:pb-24 lg:pt-28 lg:pb-28">
     <div class="w-full">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
             <div class="text-center mb-16">
@@ -1319,16 +994,10 @@
             </div>
         </div>
     </div>
-    <!-- Divisor ondulado: transição do cinza (#f9fafb) para o branco -->
-    <div class="pointer-events-none leading-none mt-6 sm:mt-8">
-        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
-        </svg>
-    </div>
 </section>
 
 <!-- FAQ Section -->
-<section id="faq" class="bg-white pt-4 pb-0">
+<section id="faq" class="bg-white pt-20 pb-0 sm:pt-24 lg:pt-28">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1411,16 +1080,10 @@
             </div>
         </div>
     </div>
-    <!-- Divisor ondulado: transição do branco para o cinza (#f9fafb) -->
-    <div class="pointer-events-none leading-none mt-6 sm:mt-8">
-        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" class="block w-full h-[80px] sm:h-[100px]">
-            <path d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z" fill="#f9fafb"></path>
-        </svg>
-    </div>
 </section>
 
 <!-- Contato Section -->
-<section id="contato" class="bg-gray-50 pt-4 pb-20">
+<section id="contato" class="bg-gray-50 pt-20 pb-20 sm:pt-24 lg:pt-28">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -1433,7 +1096,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div>
-                <form id="space-y-6" class="space-y-6">
+                <form id="contact-form" class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <input type="text" name="name" placeholder="Nome completo" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <input type="email" name="email" placeholder="Email corporativo" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -1501,407 +1164,5 @@
 </section>
 
 
-<script>
-// Armazenar referências aos handlers do carrossel para limpeza
-window._solucoesCarouselHandlers = {
-    prevArrowHandler: null,
-    nextArrowHandler: null,
-    pillHandlers: [],
-    resizeHandler: null,
-    resizeTimer: null,
-    resizeObserver: null,
-    prevArrow: null,
-    nextArrow: null,
-    pills: []
-};
-
-// Função de cleanup do carrossel
-window.cleanupSolucoesCarousel = function() {
-    try {
-        // Verificar se os elementos ainda existem no DOM antes de limpar
-        // Remover handlers das setas apenas se os elementos ainda existirem
-        if (window._solucoesCarouselHandlers.prevArrow) {
-            // Verificar se o elemento ainda está no DOM
-            if (document.contains(window._solucoesCarouselHandlers.prevArrow) && window._solucoesCarouselHandlers.prevArrowHandler) {
-                window._solucoesCarouselHandlers.prevArrow.onclick = null;
-            }
-        }
-        if (window._solucoesCarouselHandlers.nextArrow) {
-            // Verificar se o elemento ainda está no DOM
-            if (document.contains(window._solucoesCarouselHandlers.nextArrow) && window._solucoesCarouselHandlers.nextArrowHandler) {
-                window._solucoesCarouselHandlers.nextArrow.onclick = null;
-            }
-        }
-        
-        // Remover handlers dos pills apenas se ainda existirem no DOM
-        window._solucoesCarouselHandlers.pills.forEach((pill, index) => {
-            if (pill && document.contains(pill) && window._solucoesCarouselHandlers.pillHandlers[index]) {
-                pill.onclick = null;
-            }
-        });
-        
-        // Remover resize handler
-        if (window._solucoesCarouselHandlers.resizeHandler) {
-            window.removeEventListener('resize', window._solucoesCarouselHandlers.resizeHandler);
-        }
-        
-        // Limpar timer de resize
-        if (window._solucoesCarouselHandlers.resizeTimer) {
-            clearTimeout(window._solucoesCarouselHandlers.resizeTimer);
-        }
-        // Desconectar ResizeObserver
-        if (window._solucoesCarouselHandlers.resizeObserver) {
-            try {
-                window._solucoesCarouselHandlers.resizeObserver.disconnect();
-            } catch (error) {
-                console.error('Erro ao desconectar ResizeObserver do carrossel:', error);
-            }
-        }
-        
-        // Resetar referências
-        window._solucoesCarouselHandlers = {
-            prevArrowHandler: null,
-            nextArrowHandler: null,
-            pillHandlers: [],
-            resizeHandler: null,
-            resizeTimer: null,
-            resizeObserver: null,
-            prevArrow: null,
-            nextArrow: null,
-            pills: []
-        };
-        
-        // Resetar flag
-        window._solucoesCarouselInitialized = false;
-    } catch (error) {
-        console.error('Erro ao limpar carrossel:', error);
-    }
-};
-
-// Inicializador reutilizável para o carrossel da seção "Soluções que transformam a rotina"
-window.initSolucoesCarousel = function() {
-    // Limpar carrossel anterior se existir
-    if (window._solucoesCarouselInitialized) {
-        window.cleanupSolucoesCarousel();
-    }
-    
-    try {
-        let retryCount = 0;
-        const maxRetries = 20;
-        
-        function initCarousel() {
-            try {
-                const track = document.querySelector('.solutions-cards-track');
-                const cards = document.querySelectorAll('.solution-card:not(.solution-card-duplicate)');
-                const pills = document.querySelectorAll('.solution-pill');
-                const prevArrow = document.querySelector('.carousel-arrow-left');
-                const nextArrow = document.querySelector('.carousel-arrow-right');
-                const wrapper = document.querySelector('.solutions-cards-wrapper');
-
-                if (!track || !cards.length || !wrapper) {
-                    if (retryCount < maxRetries) {
-                        retryCount++;
-                        setTimeout(initCarousel, 150);
-                    } else {
-                        console.error('[Carrossel] Elementos não encontrados após', maxRetries, 'tentativas');
-                    }
-                    return;
-                }
-
-                // Marcar como inicializado
-                window._solucoesCarouselInitialized = true;
-                
-                // Armazenar referências aos elementos
-                window._solucoesCarouselHandlers.prevArrow = prevArrow;
-                window._solucoesCarouselHandlers.nextArrow = nextArrow;
-                window._solucoesCarouselHandlers.pills = Array.from(pills);
-                
-                const totalCards = cards.length;
-                let currentIndex = 0;
-                let cardWidth = 0;
-                let cardSpacing = 0;
-                let firstCardLeftInTrack = 0;
-                let measureRetries = 0;
-                const maxMeasureRetries = 8;
-
-                // Garantir que o primeiro card esteja ativo desde o início
-                cards.forEach((card, i) => {
-                    if (i === 0) {
-                        card.classList.add('active');
-                        // Forçar opacidade via estilo inline para garantir visibilidade
-                        card.style.opacity = '1';
-                        card.style.transform = 'scale(1)';
-                    } else {
-                        card.classList.remove('active');
-                        card.style.opacity = '';
-                        card.style.transform = '';
-                    }
-                });
-
-                // Garantir que o primeiro pill esteja ativo
-                pills.forEach((pill, i) => {
-                    if (i === 0) {
-                        pill.classList.add('active');
-                    } else {
-                        pill.classList.remove('active');
-                    }
-                });
-
-                function updateReferenceValues() {
-                    try {
-                        track.style.transform = 'translateX(0px)';
-
-                        requestAnimationFrame(() => {
-                            requestAnimationFrame(() => {
-                                try {
-                                    if (cards.length < 2) {
-                                        if (cards.length === 1) {
-                                            const firstCard = cards[0];
-                                            const firstCardRect = firstCard.getBoundingClientRect();
-                                            const wrapperRect = wrapper.getBoundingClientRect();
-                                            const wrapperCenter = wrapperRect.width / 2;
-                                            const cardCenter = firstCardRect.width / 2;
-                                            const translateX = wrapperCenter - cardCenter - (firstCardRect.left - wrapperRect.left);
-                                            track.style.transform = `translateX(${translateX}px)`;
-                                        }
-                                        return;
-                                    }
-
-                                    const firstCard = cards[0];
-                                    const secondCard = cards[1];
-                                    if (!firstCard || !secondCard) return;
-
-                                    const firstCardRect = firstCard.getBoundingClientRect();
-                                    const secondCardRect = secondCard.getBoundingClientRect();
-                                    const trackRect = track.getBoundingClientRect();
-
-                                    cardWidth = firstCardRect.width;
-                                    firstCardLeftInTrack = firstCardRect.left - trackRect.left;
-                                    cardSpacing = secondCardRect.left - firstCardRect.left;
-
-                                    if (cardWidth <= 0 || cardSpacing <= 0 || isNaN(cardSpacing) || isNaN(firstCardLeftInTrack)) {
-                                        if (measureRetries < maxMeasureRetries) {
-                                            measureRetries++;
-                                            setTimeout(updateReferenceValues, 120);
-                                        } else {
-                                            console.warn('[Carrossel] Medidas inválidas após', maxMeasureRetries, 'tentativas');
-                                        }
-                                        return;
-                                    }
-
-                                    measureRetries = 0;
-                                    updateCarousel(currentIndex);
-                                } catch (error) {
-                                    console.error('Erro em updateReferenceValues:', error);
-                                }
-                            });
-                        });
-                    } catch (error) {
-                        console.error('Erro ao atualizar valores de referência:', error);
-                    }
-                }
-
-                // Observer para mudanças de layout que afetem medidas
-                if (typeof ResizeObserver !== 'undefined') {
-                    try {
-                        if (window._solucoesCarouselHandlers.resizeObserver) {
-                            window._solucoesCarouselHandlers.resizeObserver.disconnect();
-                        }
-                        const resizeObserver = new ResizeObserver(() => {
-                            updateReferenceValues();
-                        });
-                        resizeObserver.observe(wrapper);
-                        window._solucoesCarouselHandlers.resizeObserver = resizeObserver;
-                    } catch (error) {
-                        console.error('Erro ao observar redimensionamento do carrossel:', error);
-                    }
-                }
-
-                function updateCarousel(index) {
-                    try {
-                        if (cardWidth === 0 || cardSpacing === 0) {
-                            setTimeout(() => updateReferenceValues(), 50);
-                            return;
-                        }
-
-                        const wrapperRect = wrapper.getBoundingClientRect();
-                        const activeCardLeftInTrack = firstCardLeftInTrack + (index * cardSpacing);
-                        const wrapperCenter = wrapperRect.width / 2;
-                        const desiredCardLeft = wrapperCenter - (cardWidth / 2);
-                        const translateX = desiredCardLeft - activeCardLeftInTrack;
-
-                        track.style.transform = `translateX(${translateX}px)`;
-
-                        cards.forEach((card, i) => {
-                            if (i === index) {
-                                card.classList.add('active');
-                                // Forçar opacidade via estilo inline
-                                card.style.opacity = '1';
-                                card.style.transform = 'scale(1)';
-                            } else {
-                                card.classList.remove('active');
-                                card.style.opacity = '';
-                                card.style.transform = '';
-                            }
-                        });
-
-                        pills.forEach((pill, i) => {
-                            if (i === index) {
-                                pill.classList.add('active');
-                            } else {
-                                pill.classList.remove('active');
-                            }
-                        });
-                    } catch (error) {
-                        console.error('Erro ao atualizar carrossel:', error);
-                    }
-                }
-
-                // Função para navegar para o próximo
-                function goNext() {
-                    try {
-                        currentIndex = (currentIndex + 1) % totalCards;
-                        updateCarousel(currentIndex);
-                    } catch (error) {
-                        console.error('Erro ao navegar para próximo:', error);
-                    }
-                }
-
-                // Função para navegar para o anterior
-                function goPrev() {
-                    try {
-                        currentIndex = (currentIndex - 1 + totalCards) % totalCards;
-                        updateCarousel(currentIndex);
-                    } catch (error) {
-                        console.error('Erro ao navegar para anterior:', error);
-                    }
-                }
-
-                // Configurar setas de navegação
-                // Primeiro, remover handlers antigos se existirem
-                if (prevArrow) {
-                    // Limpar handler anterior se existir
-                    if (window._solucoesCarouselHandlers.prevArrowHandler) {
-                        prevArrow.onclick = null;
-                    }
-                    // Criar novo handler
-                    window._solucoesCarouselHandlers.prevArrowHandler = function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        goPrev();
-                    };
-                    prevArrow.onclick = window._solucoesCarouselHandlers.prevArrowHandler;
-                }
-
-                if (nextArrow) {
-                    // Limpar handler anterior se existir
-                    if (window._solucoesCarouselHandlers.nextArrowHandler) {
-                        nextArrow.onclick = null;
-                    }
-                    // Criar novo handler
-                    window._solucoesCarouselHandlers.nextArrowHandler = function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        goNext();
-                    };
-                    nextArrow.onclick = window._solucoesCarouselHandlers.nextArrowHandler;
-                }
-
-                // Configurar pills
-                // Limpar handlers antigos dos pills primeiro
-                window._solucoesCarouselHandlers.pillHandlers = [];
-                pills.forEach((pill, index) => {
-                    // Limpar handler anterior se existir
-                    pill.onclick = null;
-                    // Criar novo handler
-                    const pillHandler = function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        currentIndex = index;
-                        updateCarousel(currentIndex);
-                    };
-                    window._solucoesCarouselHandlers.pillHandlers[index] = pillHandler;
-                    pill.onclick = pillHandler;
-                });
-
-                // Inicializar posicionamento
-                updateReferenceValues();
-
-                // Resize handler
-                window._solucoesCarouselHandlers.resizeHandler = function() {
-                    if (window._solucoesCarouselHandlers.resizeTimer) {
-                        clearTimeout(window._solucoesCarouselHandlers.resizeTimer);
-                    }
-                    window._solucoesCarouselHandlers.resizeTimer = setTimeout(() => {
-                        updateReferenceValues();
-                    }, 250);
-                };
-                
-                // Remover handler anterior se existir
-                window.removeEventListener('resize', window._solucoesCarouselHandlers.resizeHandler);
-                window.addEventListener('resize', window._solucoesCarouselHandlers.resizeHandler);
-            } catch (error) {
-                console.error('Erro ao inicializar carrossel:', error);
-            }
-        }
-
-        // Executar inicialização imediatamente e com fallback
-        initCarousel();
-        setTimeout(function() {
-            if (!window._solucoesCarouselInitialized) {
-                initCarousel();
-            }
-        }, 300);
-        setTimeout(function() {
-            if (!window._solucoesCarouselInitialized) {
-                initCarousel();
-            }
-        }, 800);
-        setTimeout(function() {
-            if (!window._solucoesCarouselInitialized) {
-                initCarousel();
-            }
-        }, 1500);
-    } catch (error) {
-        console.error('[Carrossel] Erro crítico ao inicializar carrossel de soluções:', error);
-    }
-};
-
-// Garantir inicialização também na carga completa (hard refresh)
-(function garantirInitSolucoesAposLoad() {
-    let attempts = 0;
-    const maxAttempts = 12;
-    
-    function tentar() {
-        const hasInitFn = typeof window.initSolucoesCarousel === 'function';
-        const track = document.querySelector('.solutions-cards-track');
-        const wrapper = document.querySelector('.solutions-cards-wrapper');
-        
-        if (hasInitFn && track && wrapper) {
-            window.initSolucoesCarousel();
-            return;
-        }
-        
-        if (attempts < maxAttempts) {
-            attempts++;
-            setTimeout(tentar, 150 + (attempts * 40));
-        }
-    }
-    
-    if (document.readyState === 'complete') {
-        tentar();
-    } else {
-        window.addEventListener('load', tentar, { once: true });
-    }
-})();
-
-// Registrar função de cleanup no sistema global
-if (!window._cleanupFunctions) {
-    window._cleanupFunctions = {};
-}
-window._cleanupFunctions.initSolucoesCarousel = window.cleanupSolucoesCarousel;
-
-// A inicialização será feita através do sistema de funções específicas do SPA (initInicio)
-</script>
 
 <!-- Scripts carregados no layout -->

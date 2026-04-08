@@ -1,235 +1,139 @@
-{{-- Comprar Creditos --}}
-<div class="min-h-screen bg-gray-50" id="creditos-container">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+@php
+    $tipoBadgeMap = [
+        'purchase' => ['label' => 'Compra', 'hex' => '#047857'],
+        'refund' => ['label' => 'Reembolso', 'hex' => '#d97706'],
+        'manual_add' => ['label' => 'Ajuste', 'hex' => '#4338ca'],
+    ];
+@endphp
 
-        <style>
-            @keyframes cr-slide-in {
-                from { opacity: 0; transform: translateY(60px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            .cr-animate {
-                opacity: 0;
-                animation: cr-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-            @media (prefers-reduced-motion: reduce) {
-                .cr-animate { opacity: 1; animation: none; }
-            }
-        </style>
+<div class="min-h-screen bg-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6">
 
-        {{-- Header --}}
-        <div class="mb-8">
-            <h1 class="text-2xl font-bold text-gray-900">Comprar Creditos</h1>
-            <p class="mt-1 text-sm text-gray-600">Adquira pacotes de creditos e acompanhe suas compras.</p>
+        <div>
+            <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Comprar créditos</h1>
+            <p class="text-xs text-gray-500 mt-1">Pacotes disponíveis e histórico de compras.</p>
         </div>
 
-        {{-- KPI Strip --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {{-- Saldo Atual --}}
-            <div class="cr-animate bg-white rounded-lg border border-gray-100 border-t-2 border-t-emerald-500 p-6" style="animation-delay: 0.1s">
-                <span class="text-xs uppercase tracking-wide text-gray-400 font-semibold">Saldo Atual</span>
-                <div class="mt-2">
-                    <span class="text-3xl font-bold {{ $saldoAtual > 0 ? 'text-emerald-600' : 'text-gray-400' }}">{{ number_format($saldoAtual, 0, ',', '.') }}</span>
-                    <p class="text-sm text-gray-400 mt-0.5">creditos</p>
+        <div class="bg-white rounded border border-gray-300 overflow-hidden">
+            <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-200">
+                <div class="p-4 sm:p-6">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Saldo atual</p>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900">{{ number_format($saldoAtual, 0, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">créditos</p>
                 </div>
-            </div>
-
-            {{-- Total Comprado --}}
-            <div class="cr-animate bg-white rounded-lg border border-gray-100 border-t-2 border-t-blue-500 p-6" style="animation-delay: 0.15s">
-                <span class="text-xs uppercase tracking-wide text-gray-400 font-semibold">Total Comprado</span>
-                <div class="mt-2">
-                    <span class="text-3xl font-bold text-blue-600">{{ number_format($totalComprado, 0, ',', '.') }}</span>
-                    <p class="text-sm text-gray-400 mt-0.5">creditos</p>
+                <div class="p-4 sm:p-6">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Total comprado</p>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900">{{ number_format($totalComprado, 0, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">créditos</p>
                 </div>
-            </div>
-
-            {{-- Total Consumido --}}
-            <div class="cr-animate bg-white rounded-lg border border-gray-100 border-t-2 border-t-orange-500 p-6" style="animation-delay: 0.2s">
-                <span class="text-xs uppercase tracking-wide text-gray-400 font-semibold">Total Consumido</span>
-                <div class="mt-2">
-                    <span class="text-3xl font-bold text-orange-600">{{ number_format($totalConsumido, 0, ',', '.') }}</span>
-                    <p class="text-sm text-gray-400 mt-0.5">creditos</p>
+                <div class="p-4 sm:p-6">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Total consumido</p>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900">{{ number_format($totalConsumido, 0, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">créditos</p>
                 </div>
-            </div>
-
-            {{-- Ultima Compra --}}
-            <div class="cr-animate bg-white rounded-lg border border-gray-100 border-t-2 border-t-gray-300 p-6" style="animation-delay: 0.25s">
-                <span class="text-xs uppercase tracking-wide text-gray-400 font-semibold">Ultima Compra</span>
-                <div class="mt-2">
+                <div class="p-4 sm:p-6">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Última compra</p>
                     @if($ultimaCompra)
-                        <span class="text-3xl font-bold text-gray-700">+{{ number_format($ultimaCompra->amount, 0, ',', '.') }}</span>
-                        <p class="text-sm text-gray-400 mt-0.5">creditos</p>
-                        <p class="text-xs text-gray-400 mt-1">{{ $ultimaCompra->created_at->format('d/m/Y') }}</p>
+                        <p class="text-lg sm:text-xl font-bold text-gray-900">+{{ number_format($ultimaCompra->amount, 0, ',', '.') }}</p>
+                        <p class="text-[11px] text-gray-500 mt-1">{{ $ultimaCompra->created_at->format('d/m/Y') }}</p>
                     @else
-                        <span class="text-3xl font-bold text-gray-300">--</span>
-                        <p class="text-sm text-gray-400 mt-0.5">nenhuma compra</p>
+                        <p class="text-lg sm:text-xl font-bold text-gray-900">--</p>
+                        <p class="text-[11px] text-gray-500 mt-1">nenhuma compra</p>
                     @endif
                 </div>
             </div>
         </div>
 
-        {{-- Pacotes Disponiveis --}}
-        <div class="cr-animate mb-8" style="animation-delay: 0.3s">
-            <h2 class="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-4">Pacotes Disponiveis</h2>
-
+        <div>
+            <div class="flex items-center justify-between mb-2">
+                <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Pacotes disponíveis</h2>
+                <a href="/app/plano" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Gerenciar plano</a>
+            </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 @foreach($pacotes as $pacote)
-                <a href="/app/checkout/{{ $pacote['slug'] }}" data-link
-                   class="bg-white rounded-lg border {{ $pacote['slug'] === 'business' ? 'border-2 border-blue-500' : 'border-gray-200 hover:border-blue-300' }} p-6 flex flex-col relative transition-colors group">
-
-                    @if($pacote['slug'] === 'business')
-                        <span class="absolute top-3 right-3 px-2 py-0.5 bg-blue-600 text-white text-[10px] uppercase font-bold rounded">Popular</span>
-                    @endif
-
-                    <h3 class="text-lg font-bold text-gray-900">{{ $pacote['nome'] }}</h3>
-                    <p class="text-sm text-gray-500 mt-1">{{ number_format($pacote['creditos'], 0, ',', '.') }} creditos</p>
-
-                    <div class="mt-4 flex-1">
-                        <span class="text-2xl font-bold text-gray-900">R$ {{ number_format($pacote['preco'], 0, ',', '.') }}</span>
-                        @if($pacote['desconto'])
-                            <span class="ml-2 text-sm font-semibold text-emerald-600">-{{ $pacote['desconto'] }}%</span>
-                        @endif
+                    <div class="bg-white border border-gray-200 rounded overflow-hidden flex flex-col h-full">
+                        <div class="px-4 py-5 space-y-2 flex-1">
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm font-semibold text-gray-900">{{ $pacote['nome'] }}</p>
+                                @if($pacote['slug'] === 'business')
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #0f766e">Popular</span>
+                                @endif
+                            </div>
+                            <p class="text-[11px] text-gray-400">{{ number_format($pacote['creditos'], 0, ',', '.') }} créditos</p>
+                            <p class="text-2xl font-bold text-gray-900">R$ {{ number_format($pacote['preco'], 0, ',', '.') }}</p>
+                            @if(! empty($pacote['desconto']))
+                                <p class="text-[11px] font-semibold" style="color: #047857">-{{ $pacote['desconto'] }}%</p>
+                            @endif
+                        </div>
+                        <div class="px-4 py-4 border-t border-gray-100 mt-auto">
+                            <a href="/app/checkout/{{ $pacote['slug'] }}" data-link class="w-full inline-flex items-center justify-center px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-white rounded" style="background-color: #1f2937">Comprar</a>
+                        </div>
                     </div>
-
-                    <p class="text-xs text-gray-400 mt-2">R$ {{ number_format($pacote['preco'] / $pacote['creditos'], 2, ',', '.') }} / credito</p>
-
-                    <div class="mt-4 pt-4 border-t border-gray-100">
-                        <span class="inline-flex items-center justify-center w-full px-4 py-2 text-sm font-medium rounded-lg
-                            {{ $pacote['slug'] === 'business' ? 'bg-blue-600 text-white group-hover:bg-blue-700' : 'bg-gray-100 text-gray-700 group-hover:bg-blue-50 group-hover:text-blue-600' }}
-                            transition-colors">
-                            Comprar
-                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </span>
-                    </div>
-                </a>
                 @endforeach
             </div>
         </div>
 
-        {{-- Historico de Compras --}}
-        <div class="cr-animate bg-white rounded-lg border border-gray-100 p-6 mb-8" style="animation-delay: 0.4s">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-xs uppercase tracking-wide text-gray-400 font-semibold">Historico de Compras</h3>
-                <a href="/app/plano" data-link class="text-xs text-blue-600 hover:text-blue-700 font-medium">
-                    Ver consumo detalhado
-                    <svg class="w-3 h-3 inline ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                </a>
+        <div class="bg-white rounded border border-gray-300 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Histórico de compras</span>
+                <a href="/app/plano" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Ver consumo detalhado</a>
             </div>
-
             @if($historicoCompras->count() > 0)
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Data</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Tipo</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Descricao</th>
-                            <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Creditos</th>
-                            <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Saldo Apos</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @foreach($historicoCompras as $tx)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-3 py-2.5 text-sm text-gray-700 whitespace-nowrap">
-                                {{ $tx->created_at->format('d/m/Y H:i') }}
-                            </td>
-                            <td class="px-3 py-2.5 text-sm">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="border-b border-gray-300">
+                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Data</th>
+                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Tipo</th>
+                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Descrição</th>
+                                <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Créditos</th>
+                                <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Saldo após</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach($historicoCompras as $tx)
                                 @php
-                                    $tipoBadge = match($tx->type) {
-                                        'purchase' => ['Compra', 'blue'],
-                                        'refund' => ['Reembolso', 'amber'],
-                                        'manual_add' => ['Ajuste', 'purple'],
-                                        default => [ucfirst($tx->type ?? 'Outro'), 'gray'],
-                                    };
+                                    $badge = $tipoBadgeMap[$tx->type] ?? ['label' => ucfirst($tx->type ?? 'Outro'), 'hex' => '#9ca3af'];
                                 @endphp
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-{{ $tipoBadge[1] }}-100 text-{{ $tipoBadge[1] }}-700">
-                                    {{ $tipoBadge[0] }}
-                                </span>
-                            </td>
-                            <td class="px-3 py-2.5 text-sm text-gray-600">
-                                {{ $tx->description ?? '-' }}
-                            </td>
-                            <td class="px-3 py-2.5 text-sm font-semibold text-right text-emerald-600">
-                                +{{ number_format($tx->amount, 0, ',', '.') }}
-                            </td>
-                            <td class="px-3 py-2.5 text-sm text-gray-500 text-right">
-                                {{ $tx->balance_after !== null ? number_format($tx->balance_after, 0, ',', '.') : '-' }}
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                                <tr class="hover:bg-gray-50/50 transition-colors">
+                                    <td class="px-3 py-2.5 text-sm text-gray-700 whitespace-nowrap">{{ $tx->created_at->format('d/m/Y H:i') }}</td>
+                                    <td class="px-3 py-2.5 text-sm">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badge['hex'] }}">{{ $badge['label'] }}</span>
+                                    </td>
+                                    <td class="px-3 py-2.5 text-sm text-gray-600">{{ $tx->description ?? '-' }}</td>
+                                    <td class="px-3 py-2.5 text-sm text-right font-semibold text-emerald-600">+{{ number_format($tx->amount, 0, ',', '.') }}</td>
+                                    <td class="px-3 py-2.5 text-sm text-right text-gray-500">{{ $tx->balance_after !== null ? number_format($tx->balance_after, 0, ',', '.') : '-' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             @else
-            <div class="text-center py-8">
-                <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"></path>
-                </svg>
-                <p class="text-sm text-gray-400">Nenhuma compra realizada ainda</p>
-                <p class="text-xs text-gray-400 mt-1">Escolha um pacote acima para comecar</p>
-            </div>
+                <div class="p-6 text-center text-sm text-gray-500 space-y-2">
+                    <p>Nenhuma compra realizada ainda.</p>
+                    <p class="text-xs text-gray-400">Escolha um pacote acima para começar.</p>
+                </div>
             @endif
         </div>
 
-        {{-- Como Funciona --}}
-        <div class="cr-animate" style="animation-delay: 0.5s">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-white rounded-lg border border-gray-100 p-5 text-center">
-                    <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-3">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <p class="text-sm font-medium text-gray-800">Pre-pago</p>
-                    <p class="text-xs text-gray-400 mt-1">Compre e use quando precisar</p>
-                </div>
-
-                <div class="bg-white rounded-lg border border-gray-100 p-5 text-center">
-                    <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-                        </svg>
-                    </div>
-                    <p class="text-sm font-medium text-gray-800">Consultas por CNPJ</p>
-                    <p class="text-xs text-gray-400 mt-1">Custo varia por plano</p>
-                </div>
-
-                <div class="bg-white rounded-lg border border-gray-100 p-5 text-center">
-                    <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto mb-3">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <p class="text-sm font-medium text-gray-800">Plano Gratuito</p>
-                    <p class="text-xs text-gray-400 mt-1">Consultas basicas sem custo extra</p>
-                </div>
-
-                <div class="bg-white rounded-lg border border-gray-100 p-5 text-center">
-                    <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mx-auto mb-3">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <p class="text-sm font-medium text-gray-800">Nao expiram</p>
-                    <p class="text-xs text-gray-400 mt-1">Use no seu ritmo</p>
-                </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white rounded border border-gray-300 p-4 text-center space-y-2">
+                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Pre-pago</p>
+                <p class="text-sm font-semibold text-gray-900">Compre e use quando precisar.</p>
+            </div>
+            <div class="bg-white rounded border border-gray-300 p-4 text-center space-y-2">
+                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Consultas por CNPJ</p>
+                <p class="text-sm font-semibold text-gray-900">Custo varia por plano.</p>
+            </div>
+            <div class="bg-white rounded border border-gray-300 p-4 text-center space-y-2">
+                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Sem expiração</p>
+                <p class="text-sm font-semibold text-gray-900">Use os créditos no seu ritmo.</p>
+            </div>
+            <div class="bg-white rounded border border-gray-300 p-4 text-center space-y-2">
+                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Transparência</p>
+                <p class="text-sm font-semibold text-gray-900">Histórico completo em tabela.</p>
             </div>
         </div>
+
     </div>
 </div>
-
-<script>
-window.initCreditos = function() {
-    // Page is static, no special init needed
-};
-
-if (document.readyState !== 'loading') {
-    window.initCreditos();
-} else {
-    document.addEventListener('DOMContentLoaded', window.initCreditos);
-}
-</script>

@@ -18,22 +18,8 @@
 <div class="min-h-screen bg-gray-50" id="xml-detalhes-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        <style>
-            @keyframes xml-slide-in {
-                from { opacity: 0; transform: translateY(60px); }
-                to   { opacity: 1; transform: translateY(0); }
-            }
-            .xml-animate {
-                opacity: 0;
-                animation: xml-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-            @media (prefers-reduced-motion: reduce) {
-                .xml-animate { opacity: 1; animation: none; }
-            }
-        </style>
-
         {{-- Header --}}
-        <div class="mb-6 xml-animate">
+        <div class="mb-6">
             <div class="flex items-start justify-between gap-4">
                 <div class="min-w-0">
                     <div class="flex items-center gap-3 flex-wrap">
@@ -58,7 +44,7 @@
 
         {{-- Banner de erro --}}
         @if($importacao->status === 'erro')
-        <div class="xml-animate mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+        <div class="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
             <svg class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
@@ -74,7 +60,7 @@
         @endif
 
         {{-- Info Card --}}
-        <div class="xml-animate bg-white rounded-xl border border-gray-200 shadow-sm mb-6" style="animation-delay: 0.05s">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-6">
             <div class="px-6 py-4 border-b border-gray-200">
                 <h2 class="text-base font-semibold text-gray-900">Informações da Importação</h2>
             </div>
@@ -109,7 +95,7 @@
         </div>
 
         {{-- Stats Bar --}}
-        <div class="xml-animate grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6" style="animation-delay: 0.1s">
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
             @php
                 $valorTotal = $importacao->valor_total ?? 0;
                 $stats = [
@@ -139,7 +125,7 @@
         </div>
 
         {{-- Card Cliente --}}
-        <div class="xml-animate bg-white rounded-xl border border-gray-200 shadow-sm mb-6" style="animation-delay: 0.15s">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-6">
             <div class="px-6 py-4 border-b border-gray-200">
                 <h2 class="text-base font-semibold text-gray-900">Cliente Associado</h2>
             </div>
@@ -183,7 +169,7 @@
         </div>
 
         {{-- Participantes --}}
-        <div class="xml-animate bg-white rounded-xl border border-gray-200 shadow-sm" style="animation-delay: 0.2s">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
             <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-4 flex-wrap">
                 <h2 class="text-base font-semibold text-gray-900">
                     Participantes

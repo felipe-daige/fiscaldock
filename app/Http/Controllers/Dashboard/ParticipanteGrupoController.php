@@ -35,16 +35,32 @@ class ParticipanteGrupoController extends Controller
         $user = Auth::user();
         $userId = (int) $user->id;
 
+        $busca = trim($request->string('busca')->toString());
+        $tipo = trim($request->string('tipo')->toString());
+
         // Buscar grupos do usuário com contagem de participantes
         $grupos = ParticipanteGrupo::where('user_id', $userId)
+            ->when($busca !== '', fn ($query) => $query->where('nome', 'ilike', "%{$busca}%"))
+            ->when($tipo !== '', function ($query) use ($tipo) {
+                if ($tipo === 'manual') {
+                    $query->where('is_auto', false);
+                } elseif ($tipo === 'auto') {
+                    $query->where('is_auto', true);
+                }
+            })
             ->withCount('participantes')
             ->orderBy('nome')
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
 
         $data = [
             'grupos' => $grupos,
             'coresPredefinidas' => ParticipanteGrupo::CORES_PREDEFINIDAS,
             'credits' => $this->creditService->getBalance($user),
+            'filtros' => [
+                'busca' => $busca,
+                'tipo' => $tipo,
+            ],
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -56,6 +72,34 @@ class ParticipanteGrupoController extends Controller
         return view(self::AUTH_LAYOUT_VIEW, array_merge([
             'initialView' => $gruposView,
         ], $data));
+    }
+
+    public function participantes(Request $request, $id)
+    {
+        if (! Auth::check()) {
+            return response('Nao autenticado', 401);
+        }
+
+        $userId = (int) Auth::id();
+        $grupo = ParticipanteGrupo::where('id', $id)
+            ->where('user_id', $userId)
+            ->firstOrFail();
+
+        $participantes = $grupo->participantes()
+            ->where('participantes.user_id', $userId)
+            ->withCount('efdNotas')
+            ->orderByRaw("COALESCE(participantes.razao_social, participantes.nome_fantasia, participantes.documento, '') asc")
+            ->paginate(5)
+            ->withQueryString();
+
+        return view('autenticado.partials.relacionados-participantes', [
+            'participantes' => $participantes,
+            'titulo' => 'Participantes do grupo',
+            'emptyMessage' => 'Nenhum participante associado a este grupo.',
+            'scope' => 'grupo',
+            'entityId' => $grupo->id,
+            'ajaxBaseUrl' => "/app/monitoramento/grupos/{$grupo->id}/participantes",
+        ]);
     }
 
     /**

@@ -75,7 +75,7 @@
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
             </div>
             <div class="p-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
                 <div>
                     <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Importação</label>
                     <select name="importacao" id="filtro-importacao" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
@@ -113,13 +113,22 @@
                 </div>
 
                 <div>
+                    <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Tipo de Documento</label>
+                    <select name="tipo_documento" id="filtro-tipo-documento" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        <option value="">Todos</option>
+                        <option value="CNPJ" {{ ($filtros['tipo_documento'] ?? '') === 'CNPJ' ? 'selected' : '' }}>CNPJ</option>
+                        <option value="CPF" {{ ($filtros['tipo_documento'] ?? '') === 'CPF' ? 'selected' : '' }}>CPF</option>
+                    </select>
+                </div>
+
+                <div>
                     <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Buscar</label>
                     <div class="relative">
                         <input
                             type="text"
                             name="busca"
                             id="busca-participantes"
-                            placeholder="CNPJ ou Razão Social..."
+                            placeholder="Documento ou nome..."
                             value="{{ $filtros['busca'] ?? '' }}"
                             class="w-full border border-gray-300 rounded text-[13px] py-2.5 pl-10 pr-4 focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                         >
@@ -249,19 +258,24 @@
                                 <input type="checkbox" id="select-all" class="w-4 h-4 rounded border-gray-300 text-gray-700 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                             </th>
                             <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participante</th>
-                            <th class="w-[140px] px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Documento</th>
-                            <th class="w-[110px] px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Situação</th>
-                            <th class="w-16 px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Notas</th>
-                            <th class="w-[180px] px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Cliente</th>
-                            <th class="w-[128px] px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Origem</th>
-                            <th class="w-[90px] px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Data</th>
-                            <th class="w-14 px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ações</th>
+                            <th class="w-[260px] px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Situação / CND</th>
+                            <th class="w-[220px] px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Status de Consulta</th>
+                            <th class="w-[120px] px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Origem</th>
+                            <th class="w-20 px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ações</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100" id="participantes-tbody">
                         @forelse($participantes ?? [] as $part)
                             @php
                                 $isCpf = $part->is_cpf;
+                                $origemLabel = match($part->origem_tipo) {
+                                    'SPED_EFD_FISCAL' => ['label' => 'EFD Fiscal', 'color' => '#4338ca'],
+                                    'SPED_EFD_CONTRIB' => ['label' => 'EFD Contrib', 'color' => '#7c3aed'],
+                                    'NFE' => ['label' => 'NF-e', 'color' => '#0f766e'],
+                                    'NFSE' => ['label' => 'NFS-e', 'color' => '#0891b2'],
+                                    'MANUAL' => ['label' => 'Manual', 'color' => '#6b7280'],
+                                    default => ['label' => $part->origem_tipo, 'color' => '#6b7280'],
+                                };
                             @endphp
                             <tr class="hover:bg-gray-50/50 transition-colors cursor-pointer" data-participante-id="{{ $part->id }}" data-href="/app/participante/{{ $part->id }}">
                                 <td class="px-3 py-3">
@@ -274,68 +288,82 @@
                                     >
                                 </td>
                                 <td class="px-3 py-3">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <div class="truncate text-sm text-gray-900" title="{{ $part->razao_social }}">{{ $part->razao_social ?? '-' }}</div>
-                                        @if($isCpf)
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">CPF</span>
-                                        @endif
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            <div class="truncate text-sm text-gray-900" title="{{ $part->razao_social }}">{{ $part->razao_social ?? '-' }}</div>
+                                            @if($isCpf)
+                                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white flex-shrink-0" style="background-color: #9ca3af">CPF</span>
+                                            @endif
+                                        </div>
+                                        <div class="text-[11px] font-mono text-gray-500 mt-1">{{ $part->cnpj_formatado }}</div>
+                                        <div class="mt-1 flex items-center gap-2 flex-wrap">
+                                            <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $part->consulta_status_hex }}">
+                                                {{ $part->consulta_status_label }}
+                                            </span>
+                                            @if($part->assinatura_label)
+                                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $part->assinatura_hex }}">
+                                                    {{ $part->assinatura_label }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <div class="text-[11px] text-gray-500 mt-1">
+                                            {{ $part->consulta_status_meta }}
+                                        </div>
+                                        <div class="text-[11px] text-gray-500 mt-1 truncate">
+                                            @if($part->cliente)
+                                                Cliente: {{ $part->cliente->razao_social ?? '-' }}
+                                            @else
+                                                Sem vínculo com cliente
+                                            @endif
+                                        </div>
                                     </div>
                                     @if($isCpf)
                                         <div class="text-[11px] text-gray-500 mt-1">Cadastro bloqueado para seleção em lote</div>
                                     @endif
                                 </td>
-                                <td class="px-3 py-3 text-sm font-mono text-gray-700 truncate" title="{{ $part->cnpj_formatado }}">
-                                    {{ $part->cnpj_formatado }}
-                                </td>
-                                <td class="px-3 py-3">
-                                    <div class="truncate" title="{{ $part->situacao_cadastral ?? '' }}">
-                                    @if($part->situacao_cadastral === 'ATIVA')
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">
-                                            Ativa
-                                        </span>
-                                    @elseif($part->situacao_cadastral)
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">
-                                            {{ $part->situacao_cadastral }}
-                                        </span>
-                                    @else
-                                        <span class="text-sm text-gray-400">-</span>
-                                    @endif
+                                <td class="px-3 py-3 text-center">
+                                    <div class="flex flex-col items-center gap-1" title="{{ $part->situacao_cadastral ?? '' }}">
+                                        <div class="flex items-center justify-center gap-2 flex-wrap">
+                                            @if($part->situacao_cadastral === 'ATIVA')
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857">
+                                                    Ativa
+                                                </span>
+                                            @elseif($part->situacao_cadastral)
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #d97706">
+                                                    {{ $part->situacao_cadastral }}
+                                                </span>
+                                            @else
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #9ca3af">
+                                                    Sem Mov.
+                                                </span>
+                                            @endif
+                                            <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $part->cnd_federal_status_hex }}">
+                                                {{ $part->cnd_federal_status_label }}
+                                            </span>
+                                        </div>
+                                        <div class="text-[11px] text-gray-500 leading-tight text-center">
+                                            {{ $part->cnd_federal_meta }}
+                                        </div>
                                     </div>
                                 </td>
-                                <td class="px-3 py-3 text-center text-sm text-gray-700">
-                                    {{ $part->efd_notas_count ?? 0 }}
-                                </td>
-                                <td class="px-3 py-3">
-                                    <div class="truncate" title="{{ $part->cliente?->razao_social }}">
-                                    @if($part->cliente)
-                                        <span class="text-sm text-gray-700">{{ $part->cliente->razao_social ?? '-' }}</span>
-                                        @if($part->cliente->is_empresa_propria)
-                                            <span class="ml-2 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Empresa Própria</span>
-                                        @endif
-                                    @else
-                                        -
-                                    @endif
+                                <td class="px-3 py-3 text-center">
+                                    <div class="flex flex-col items-center">
+                                        <div class="text-[11px] text-gray-500 leading-tight text-center">
+                                            {{ $part->consulta_status_meta }}
+                                        </div>
                                     </div>
                                 </td>
-                                <td class="px-3 py-3">
-                                    @php
-                                        $origemLabel = match($part->origem_tipo) {
-                                            'SPED_EFD_FISCAL' => ['label' => 'EFD Fiscal', 'color' => '#4338ca'],
-                                            'SPED_EFD_CONTRIB' => ['label' => 'EFD Contrib', 'color' => '#7c3aed'],
-                                            'NFE' => ['label' => 'NF-e', 'color' => '#0f766e'],
-                                            'NFSE' => ['label' => 'NFS-e', 'color' => '#0891b2'],
-                                            'MANUAL' => ['label' => 'Manual', 'color' => '#6b7280'],
-                                            default => ['label' => $part->origem_tipo, 'color' => '#6b7280'],
-                                        };
-                                    @endphp
-                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemLabel['color'] }}">
-                                        {{ $origemLabel['label'] }}
-                                    </span>
+                                <td class="px-3 py-3 text-center">
+                                    <div class="min-w-0 flex flex-col items-center">
+                                        <span class="inline-flex max-w-full items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemLabel['color'] }}">
+                                            {{ $origemLabel['label'] }}
+                                        </span>
+                                        <div class="text-[11px] text-gray-500 mt-1 leading-tight text-center" title="Base: {{ $part->created_at?->format('d/m/Y') ?? '-' }}">
+                                            Base: {{ $part->created_at?->format('d/m/Y') ?? '-' }}
+                                        </div>
+                                    </div>
                                 </td>
-                                <td class="px-3 py-3 text-[11px] text-gray-500">
-                                    {{ $part->created_at?->format('d/m/Y') ?? '-' }}
-                                </td>
-                                <td class="px-3 py-3 text-right">
+                                <td class="px-3 py-3 text-right align-top">
                                     <button type="button" class="acoes-btn p-2 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                                         data-id="{{ $part->id }}"
                                         data-nome="{{ $part->razao_social }}"
@@ -348,14 +376,14 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="px-6 py-12 text-center">
+                                <td colspan="6" class="px-6 py-12 text-center">
                                     <div class="flex flex-col items-center">
                                         <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                         </svg>
                                         <h3 class="text-lg font-semibold text-gray-900 mb-2 uppercase tracking-wide">Nenhum participante encontrado</h3>
                                         <p class="text-sm text-gray-600 mb-4">
-                                            @if(($filtros['importacao'] ?? null) || ($filtros['cliente'] ?? null) || ($filtros['origem'] ?? null) || ($filtros['busca'] ?? null))
+                                            @if(($filtros['importacao'] ?? null) || ($filtros['cliente'] ?? null) || ($filtros['origem'] ?? null) || ($filtros['busca'] ?? null) || ($filtros['regime'] ?? null) || ($filtros['situacao'] ?? null) || ($filtros['uf'] ?? null) || ($filtros['tipo_documento'] ?? null))
                                                 Nenhum participante corresponde aos filtros aplicados.
                                             @else
                                                 Importe participantes de um arquivo SPED para comecar.
@@ -391,6 +419,7 @@
         <div id="participantes-cards" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             @forelse($participantes ?? [] as $part)
                 @php
+                    $isCpf = $part->is_cpf;
                     $cardOrigemLabel = match($part->origem_tipo) {
                         'SPED_EFD_FISCAL'  => ['label' => 'EFD Fiscal', 'color' => '#4338ca'],
                         'SPED_EFD_CONTRIB' => ['label' => 'EFD Contrib', 'color' => '#7c3aed'],
@@ -404,8 +433,34 @@
                      data-href="/app/participante/{{ $part->id }}">
                     <div class="flex items-start justify-between gap-2">
                         <div class="flex-1 min-w-0">
-                            <div class="text-sm font-semibold text-gray-900 truncate">{{ $part->razao_social ?? '-' }}</div>
+                            <div class="flex items-center gap-2 min-w-0">
+                                <div class="text-sm font-semibold text-gray-900 truncate min-w-0">{{ $part->razao_social ?? '-' }}</div>
+                                @if($isCpf)
+                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white flex-shrink-0" style="background-color: #9ca3af">CPF</span>
+                                @endif
+                            </div>
                             <div class="text-[11px] font-mono text-gray-500 mt-1">{{ $part->cnpj_formatado }}</div>
+                            @if($isCpf)
+                                <div class="text-[11px] text-gray-500 mt-1">Cadastro bloqueado para seleção em lote</div>
+                            @endif
+                            <div class="mt-2 flex items-center justify-center gap-2 flex-wrap">
+                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $part->consulta_status_hex }}">
+                                    {{ $part->consulta_status_label }}
+                                </span>
+                                @if($part->assinatura_label)
+                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $part->assinatura_hex }}">
+                                        {{ $part->assinatura_label }}
+                                    </span>
+                                @endif
+                            </div>
+                            <p class="text-[11px] text-gray-500 mt-1 text-center">{{ $part->consulta_status_meta }}</p>
+                            <div class="text-[11px] text-gray-500 mt-1 truncate">
+                                @if($part->cliente)
+                                    Cliente: {{ $part->cliente->razao_social ?? '-' }}
+                                @else
+                                    Sem vínculo com cliente
+                                @endif
+                            </div>
                         </div>
                         <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white flex-shrink-0" style="background-color: {{ $cardOrigemLabel['color'] }}">
                             {{ $cardOrigemLabel['label'] }}
@@ -413,22 +468,47 @@
                     </div>
                     <div class="border-t border-gray-100 pt-3 flex flex-col gap-2">
                         <div>
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação</p>
-                            @if($part->situacao_cadastral === 'ATIVA')
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Ativa</span>
-                            @elseif($part->situacao_cadastral)
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">{{ $part->situacao_cadastral }}</span>
-                            @else
-                                <p class="text-xs text-gray-400">-</p>
-                            @endif
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide text-center">Status de consulta</p>
+                            <div class="flex flex-col items-center">
+                                <div class="flex items-center justify-center gap-2 flex-wrap">
+                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $part->consulta_status_hex }}">
+                                        {{ $part->consulta_status_label }}
+                                    </span>
+                                    @if($part->assinatura_label)
+                                        <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $part->assinatura_hex }}">
+                                            {{ $part->assinatura_label }}
+                                        </span>
+                                    @endif
+                                </div>
+                                <p class="text-[11px] text-gray-500 mt-1 leading-tight text-center">{{ $part->consulta_status_meta }}</p>
+                            </div>
                         </div>
                         <div>
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Cliente</p>
-                            <p class="text-xs text-gray-700 truncate">{{ $part->cliente?->razao_social ?? '-' }}</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide text-center">Situação / CND</p>
+                            <div class="flex flex-col items-center">
+                                <div class="flex items-center justify-center gap-2 flex-wrap">
+                                    @if($part->situacao_cadastral === 'ATIVA')
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857">Ativa</span>
+                                    @elseif($part->situacao_cadastral)
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #d97706">{{ $part->situacao_cadastral }}</span>
+                                    @else
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #9ca3af">Sem Mov.</span>
+                                    @endif
+                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $part->cnd_federal_status_hex }}">
+                                        {{ $part->cnd_federal_status_label }}
+                                    </span>
+                                </div>
+                                <p class="text-[11px] text-gray-500 mt-1 leading-tight text-center">{{ $part->cnd_federal_meta }}</p>
+                            </div>
                         </div>
                         <div>
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Importado em</p>
-                            <p class="text-xs text-gray-500">{{ $part->created_at?->format('d/m/Y') ?? '-' }}</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide text-center">Origem</p>
+                            <div class="flex flex-col items-center">
+                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cardOrigemLabel['color'] }}">
+                                    {{ $cardOrigemLabel['label'] }}
+                                </span>
+                                <p class="text-xs text-gray-500 text-center mt-1">{{ $part->created_at?->format('d/m/Y') ?? '-' }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -724,12 +804,20 @@
                     var filtroImportacao = document.getElementById('filtro-importacao');
                     var filtroCliente = document.getElementById('filtro-cliente');
                     var filtroOrigem = document.getElementById('filtro-origem');
+                    var filtroTipoDocumento = document.getElementById('filtro-tipo-documento');
                     var buscaInput = document.getElementById('busca-participantes');
+                    var filtroRegime = formFiltros ? formFiltros.querySelector('select[name="regime"]') : null;
+                    var filtroSituacao = formFiltros ? formFiltros.querySelector('select[name="situacao"]') : null;
+                    var filtroUf = formFiltros ? formFiltros.querySelector('select[name="uf"]') : null;
 
                     if (filtroImportacao && filtroImportacao.value) params.set('importacao', filtroImportacao.value);
                     if (filtroCliente && filtroCliente.value) params.set('cliente', filtroCliente.value);
                     if (filtroOrigem && filtroOrigem.value) params.set('origem', filtroOrigem.value);
+                    if (filtroTipoDocumento && filtroTipoDocumento.value) params.set('tipo_documento', filtroTipoDocumento.value);
                     if (buscaInput && buscaInput.value) params.set('busca', buscaInput.value);
+                    if (filtroRegime && filtroRegime.value) params.set('regime', filtroRegime.value);
+                    if (filtroSituacao && filtroSituacao.value) params.set('situacao', filtroSituacao.value);
+                    if (filtroUf && filtroUf.value) params.set('uf', filtroUf.value);
 
                     var url = '/app/participantes/todos-ids' + (params.toString() ? '?' + params.toString() : '');
                     var res = await fetch(url, {

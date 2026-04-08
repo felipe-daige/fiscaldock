@@ -62,6 +62,19 @@ class Participante extends Model
         'ultima_consulta_em' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::saving(function (self $participante) {
+            $documento = $participante->documentoNormalizado();
+
+            if (strlen($documento) === 11) {
+                $participante->tipo_documento = 'PF';
+            } elseif (strlen($documento) === 14) {
+                $participante->tipo_documento = 'PJ';
+            }
+        });
+    }
+
     /**
      * Usuário dono do participante.
      */
@@ -184,12 +197,46 @@ class Participante extends Model
         return $this->scopeExcluindoEmpresaPropria($query);
     }
 
+    public function scopeSomenteCpf($query)
+    {
+        return $query->whereRaw(
+            "length(regexp_replace(coalesce(documento, ''), '[^0-9]', '', 'g')) = 11"
+        );
+    }
+
+    public function scopeSomenteCnpj($query)
+    {
+        return $query->whereRaw(
+            "length(regexp_replace(coalesce(documento, ''), '[^0-9]', '', 'g')) = 14"
+        );
+    }
+
+    public function documentoNormalizado(): string
+    {
+        return preg_replace('/[^0-9]/', '', (string) $this->documento);
+    }
+
+    public function getDocumentoNormalizadoAttribute(): string
+    {
+        return $this->documentoNormalizado();
+    }
+
+    public function getIsCpfAttribute(): bool
+    {
+        return strlen($this->documentoNormalizado()) === 11;
+    }
+
+    public function getIsCnpjAttribute(): bool
+    {
+        return strlen($this->documentoNormalizado()) === 14;
+    }
+
     /**
      * CNPJ formatado.
      */
     public function getCnpjFormatadoAttribute(): string
     {
-        $doc = preg_replace('/[^0-9]/', '', $this->documento);
+        $doc = $this->documentoNormalizado();
         if (strlen($doc) === 14) {
             return preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $doc);
         }

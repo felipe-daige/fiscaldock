@@ -3,486 +3,290 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Relatorio de Consulta - Lote #{{ $lote->id }}</title>
+    <title>Consulta Fiscal - Lote #{{ $lote->id }}</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'DejaVu Sans', sans-serif;
+            font-family: DejaVu Sans, sans-serif;
             font-size: 9px;
-            line-height: 1.4;
-            color: #1a1a1a;
+            color: #111827;
+            line-height: 1.35;
         }
-
-        .container {
-            padding: 15px;
-        }
-
-        /* Header */
-        .header {
-            display: table;
-            width: 100%;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #2563eb;
-            padding-bottom: 10px;
-        }
-
-        .header-left {
-            display: table-cell;
-            vertical-align: middle;
-            width: 60%;
-        }
-
-        .header-right {
-            display: table-cell;
-            vertical-align: middle;
-            text-align: right;
-            width: 40%;
-        }
-
-        .logo-text {
-            font-size: 22px;
-            font-weight: bold;
-            color: #2563eb;
-        }
-
-        .logo-subtitle {
-            font-size: 10px;
-            color: #64748b;
-        }
-
-        .report-title {
-            font-size: 14px;
-            font-weight: bold;
-            color: #1e293b;
-        }
-
-        .report-meta {
-            font-size: 9px;
-            color: #64748b;
-            margin-top: 3px;
-        }
-
-        /* Summary section */
-        .summary {
-            margin-bottom: 20px;
-            background: #f8fafc;
-            padding: 12px;
-            border-radius: 4px;
-        }
-
-        .summary-title {
-            font-size: 12px;
-            font-weight: bold;
-            color: #1e293b;
+        .page { padding: 14px; }
+        .section {
+            border: 1px solid #d1d5db;
             margin-bottom: 10px;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 5px;
         }
-
-        .summary-grid {
-            display: table;
-            width: 100%;
-        }
-
-        .summary-row {
-            display: table-row;
-        }
-
-        .summary-cell {
-            display: table-cell;
-            padding: 5px 10px;
-            vertical-align: top;
-        }
-
-        .summary-label {
-            font-size: 8px;
-            color: #64748b;
+        .section-header {
+            background: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 6px 8px;
+            font-size: 9px;
+            font-weight: bold;
+            color: #6b7280;
             text-transform: uppercase;
+            letter-spacing: .08em;
         }
-
-        .summary-value {
-            font-size: 14px;
-            font-weight: bold;
-            color: #1e293b;
-        }
-
-        /* Risk indicators */
-        .risk-grid {
-            display: table;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .risk-item {
-            display: table-cell;
-            text-align: center;
-            padding: 5px;
-        }
-
-        .risk-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: bold;
-        }
-
-        .risk-baixo {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .risk-medio {
-            background: #fef9c3;
-            color: #854d0e;
-        }
-
-        .risk-alto {
-            background: #fed7aa;
-            color: #9a3412;
-        }
-
-        .risk-critico {
-            background: #fecaca;
-            color: #991b1b;
-        }
-
-        /* Table */
-        .results-table {
+        .header-grid, .summary-grid {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 8px;
         }
-
-        .results-table th {
-            background: #1e293b;
-            color: white;
-            padding: 6px 4px;
-            text-align: left;
-            font-weight: bold;
-            font-size: 7px;
-            text-transform: uppercase;
-        }
-
-        .results-table td {
-            padding: 5px 4px;
-            border-bottom: 1px solid #e2e8f0;
+        .header-grid td, .summary-grid td {
+            border-right: 1px solid #e5e7eb;
+            padding: 8px;
             vertical-align: top;
         }
-
-        .results-table tr:nth-child(even) {
-            background: #f8fafc;
+        .header-grid td:last-child, .summary-grid td:last-child {
+            border-right: none;
         }
-
-        .results-table tr:hover {
-            background: #f1f5f9;
+        .brand {
+            font-size: 18px;
+            font-weight: bold;
+            color: #111827;
+            text-transform: uppercase;
+            letter-spacing: .08em;
         }
-
-        /* Status badges */
-        .status-badge {
+        .muted { color: #6b7280; }
+        .meta-label {
+            font-size: 8px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            margin-bottom: 3px;
+        }
+        .meta-value {
+            font-size: 11px;
+            font-weight: bold;
+            color: #111827;
+        }
+        .badge {
             display: inline-block;
             padding: 2px 6px;
+            font-size: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #fff;
             border-radius: 3px;
-            font-size: 7px;
-            font-weight: bold;
         }
-
-        .status-ativa {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .status-suspensa {
-            background: #fef9c3;
-            color: #854d0e;
-        }
-
-        .status-inapta, .status-baixada {
-            background: #fecaca;
-            color: #991b1b;
-        }
-
-        .status-negativa, .status-regular {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .status-positiva, .status-irregular {
-            background: #fecaca;
-            color: #991b1b;
-        }
-
-        .status-erro {
-            background: #fecaca;
-            color: #991b1b;
-        }
-
-        .status-sucesso {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        /* Score cell */
-        .score-cell {
-            text-align: center;
-            font-weight: bold;
-        }
-
-        /* Footer */
-        .footer {
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #e2e8f0;
-            text-align: center;
-            color: #64748b;
-            font-size: 8px;
-        }
-
-        .footer-link {
-            color: #2563eb;
-            text-decoration: none;
-        }
-
-        /* Page break */
-        .page-break {
-            page-break-after: always;
-        }
-
-        /* Legend */
-        .legend {
-            margin-top: 15px;
-            padding: 10px;
-            background: #f8fafc;
-            border-radius: 4px;
-        }
-
-        .legend-title {
-            font-size: 10px;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .legend-grid {
-            display: table;
+        .table {
             width: 100%;
+            border-collapse: collapse;
         }
-
-        .legend-item {
-            display: table-cell;
-            padding: 3px 8px;
+        .table th {
+            background: #f9fafb;
+            border-bottom: 1px solid #d1d5db;
+            padding: 6px 5px;
+            text-align: left;
             font-size: 8px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+        .table td {
+            border-bottom: 1px solid #f3f4f6;
+            padding: 5px;
+            vertical-align: top;
+            font-size: 8px;
+            color: #374151;
+        }
+        .mono { font-family: DejaVu Sans Mono, monospace; }
+        .right { text-align: right; }
+        .center { text-align: center; }
+        .small { font-size: 7px; }
+        .footer {
+            margin-top: 8px;
+            border-top: 1px solid #d1d5db;
+            padding-top: 6px;
+            text-align: center;
+            font-size: 8px;
+            color: #6b7280;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="header-left">
-                <div class="logo-text">FiscalDock</div>
-                <div class="logo-subtitle">Compliance Fiscal Inteligente</div>
-            </div>
-            <div class="header-right">
-                <div class="report-title">Relatorio de Analise Fiscal</div>
-                <div class="report-meta">
-                    Lote #{{ $lote->id }} | Plano: {{ $plano->nome ?? 'N/A' }} | Gerado em: {{ $gerado_em }}
-                </div>
-            </div>
-        </div>
+@php
+    $statusHex = fn ($status) => match (strtoupper((string) $status)) {
+        'ATIVA', 'REGULAR', 'NEGATIVA', 'OK', 'HABILITADO', 'SUCESSO' => '#047857',
+        'SUSPENSA', 'EM ANALISE', 'PROCESSANDO' => '#d97706',
+        'BAIXADA', 'INAPTA', 'IRREGULAR', 'POSITIVA', 'ERRO', 'TIMEOUT', 'RESTRITO' => '#dc2626',
+        default => '#9ca3af',
+    };
+@endphp
 
-        <!-- Summary -->
-        <div class="summary">
-            <div class="summary-title">Resumo Executivo</div>
-            <div class="summary-grid">
-                <div class="summary-row">
-                    <div class="summary-cell">
-                        <div class="summary-label">Total Consultado</div>
-                        <div class="summary-value">{{ $resumo['total'] }}</div>
-                    </div>
-                    <div class="summary-cell">
-                        <div class="summary-label">Sucesso</div>
-                        <div class="summary-value" style="color: #166534;">{{ $resumo['sucesso'] }}</div>
-                    </div>
-                    <div class="summary-cell">
-                        <div class="summary-label">Erros</div>
-                        <div class="summary-value" style="color: #991b1b;">{{ $resumo['erro'] }}</div>
-                    </div>
-                    <div class="summary-cell">
-                        <div class="summary-label">Score Medio</div>
-                        <div class="summary-value">{{ $resumo['score_medio'] }}</div>
-                    </div>
-                </div>
-            </div>
+<div class="page">
+    <div class="section">
+        <div class="section-header">Identificação do Relatório</div>
+        <table class="header-grid">
+            <tr>
+                <td style="width: 34%">
+                    <div class="brand">FiscalDock</div>
+                    <div class="muted">Relatório consolidado de consulta fiscal em lote</div>
+                </td>
+                <td style="width: 22%">
+                    <div class="meta-label">Lote</div>
+                    <div class="meta-value">#{{ $lote->id }}</div>
+                </td>
+                <td style="width: 22%">
+                    <div class="meta-label">Plano</div>
+                    <div class="meta-value">{{ $plano->nome ?? 'N/A' }}</div>
+                </td>
+                <td style="width: 22%">
+                    <div class="meta-label">Gerado em</div>
+                    <div class="meta-value">{{ $gerado_em }}</div>
+                </td>
+            </tr>
+        </table>
+    </div>
 
-            <div class="risk-grid">
-                <div class="risk-item">
-                    <span class="risk-badge risk-baixo">Baixo: {{ $resumo['por_classificacao']['baixo'] }}</span>
-                </div>
-                <div class="risk-item">
-                    <span class="risk-badge risk-medio">Medio: {{ $resumo['por_classificacao']['medio'] }}</span>
-                </div>
-                <div class="risk-item">
-                    <span class="risk-badge risk-alto">Alto: {{ $resumo['por_classificacao']['alto'] }}</span>
-                </div>
-                <div class="risk-item">
-                    <span class="risk-badge risk-critico">Critico: {{ $resumo['por_classificacao']['critico'] }}</span>
-                </div>
-            </div>
-        </div>
+    <div class="section">
+        <div class="section-header">Resumo Operacional</div>
+        <table class="summary-grid">
+            <tr>
+                <td>
+                    <div class="meta-label">Total Consultado</div>
+                    <div class="meta-value">{{ $resumo['total'] }}</div>
+                </td>
+                <td>
+                    <div class="meta-label">Sucesso</div>
+                    <div class="meta-value">{{ $resumo['sucesso'] }}</div>
+                </td>
+                <td>
+                    <div class="meta-label">Erros</div>
+                    <div class="meta-value">{{ $resumo['erro'] }}</div>
+                </td>
+                <td>
+                    <div class="meta-label">Score Médio</div>
+                    <div class="meta-value">{{ $resumo['score_medio'] }}</div>
+                </td>
+                <td>
+                    <div class="meta-label">CND Federal OK</div>
+                    <div class="meta-value">{{ $resumo['cnd_federal']['negativa'] ?? 0 }}</div>
+                </td>
+                <td>
+                    <div class="meta-label">CND Federal Restrita</div>
+                    <div class="meta-value">{{ $resumo['cnd_federal']['positiva'] ?? 0 }}</div>
+                </td>
+            </tr>
+        </table>
+    </div>
 
-        <!-- Results Table -->
-        <table class="results-table">
+    <div class="section">
+        <div class="section-header">Resultados</div>
+        <table class="table">
             <thead>
                 <tr>
-                    <th style="width: 12%;">CNPJ</th>
-                    <th style="width: 18%;">Razao Social</th>
-                    <th style="width: 4%;">UF</th>
-                    <th style="width: 8%;">Situacao</th>
-                    <th style="width: 6%;">Simples</th>
+                    <th style="width: 12%">CNPJ</th>
+                    <th style="width: 19%">Razão Social</th>
+                    <th style="width: 4%">UF</th>
+                    <th style="width: 8%">Situação</th>
+                    <th style="width: 7%">Simples</th>
                     @if(in_array('sintegra', $plano->consultas_incluidas ?? []))
-                    <th style="width: 8%;">SINTEGRA</th>
+                        <th style="width: 8%">SINTEGRA</th>
                     @endif
                     @if(in_array('cnd_federal', $plano->consultas_incluidas ?? []))
-                    <th style="width: 10%;">CND Federal</th>
+                        <th style="width: 10%">CND Federal</th>
                     @endif
                     @if(in_array('crf_fgts', $plano->consultas_incluidas ?? []))
-                    <th style="width: 8%;">CRF FGTS</th>
+                        <th style="width: 8%">FGTS</th>
                     @endif
                     @if(in_array('cndt', $plano->consultas_incluidas ?? []))
-                    <th style="width: 8%;">CNDT</th>
+                        <th style="width: 8%">CNDT</th>
                     @endif
                     @if(in_array('tcu_consolidada', $plano->consultas_incluidas ?? []))
-                    <th style="width: 8%;">Compliance</th>
+                        <th style="width: 8%">Compliance</th>
                     @endif
-                    <th style="width: 6%;">Score</th>
-                    <th style="width: 8%;">Risco</th>
+                    <th style="width: 6%" class="center">Score</th>
+                    <th style="width: 10%">Classificação</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($resultados as $r)
-                <tr>
-                    <td>{{ $r['cnpj'] }}</td>
-                    <td>{{ \Illuminate\Support\Str::limit($r['razao_social'], 30) }}</td>
-                    <td>{{ $r['uf'] }}</td>
-                    <td>
-                        @if($r['status_consulta'] === 'sucesso')
-                            <span class="status-badge status-{{ strtolower($r['situacao_cadastral'] ?? 'ativa') }}">
-                                {{ $r['situacao_cadastral'] ?? '-' }}
-                            </span>
-                        @else
-                            <span class="status-badge status-erro">ERRO</span>
-                        @endif
-                    </td>
-                    <td>{{ $r['simples_nacional'] }}</td>
-                    @if(in_array('sintegra', $plano->consultas_incluidas ?? []))
-                    <td>
-                        @if($r['sintegra_situacao'])
-                            <span class="status-badge status-{{ strtolower($r['sintegra_situacao']) === 'habilitado' ? 'ativa' : 'suspensa' }}">
-                                {{ $r['sintegra_situacao'] }}
-                            </span>
-                        @else
-                            -
-                        @endif
-                    </td>
-                    @endif
-                    @if(in_array('cnd_federal', $plano->consultas_incluidas ?? []))
-                    <td>
-                        @if($r['cnd_federal_status'])
-                            <span class="status-badge status-{{ in_array(strtoupper($r['cnd_federal_status']), ['NEGATIVA', 'REGULAR']) ? 'negativa' : 'positiva' }}">
-                                {{ $r['cnd_federal_status'] }}
-                            </span>
-                            @if($r['cnd_federal_validade'])
-                                <br><small>Val: {{ $r['cnd_federal_validade'] }}</small>
+                    @php
+                        $situacao = $r['status_consulta'] === 'sucesso' ? ($r['situacao_cadastral'] ?? '-') : 'ERRO';
+                        $complianceLabel = '-';
+                        if ($r['ceis'] === 'Sim' || $r['cnep'] === 'Sim') {
+                            $complianceLabel = 'RESTRITO';
+                        } elseif ($r['tcu_situacao'] || $r['ceis'] === 'Nao') {
+                            $complianceLabel = 'OK';
+                        }
+                    @endphp
+                    <tr>
+                        <td class="mono">{{ $r['documento'] }}</td>
+                        <td>
+                            <strong style="color: #111827">{{ \Illuminate\Support\Str::limit($r['razao_social'], 38) }}</strong>
+                            @if($r['nome_fantasia'])
+                                <div class="small muted">{{ \Illuminate\Support\Str::limit($r['nome_fantasia'], 36) }}</div>
                             @endif
-                        @else
-                            -
+                        </td>
+                        <td>{{ $r['uf'] ?: '-' }}</td>
+                        <td>
+                            <span class="badge" style="background-color: {{ $statusHex($situacao) }}">{{ $situacao }}</span>
+                        </td>
+                        <td>{{ $r['simples_nacional'] ?: '-' }}</td>
+                        @if(in_array('sintegra', $plano->consultas_incluidas ?? []))
+                            <td>
+                                @if($r['sintegra_situacao'])
+                                    <span class="badge" style="background-color: {{ $statusHex($r['sintegra_situacao']) }}">{{ $r['sintegra_situacao'] }}</span>
+                                @else
+                                    -
+                                @endif
+                            </td>
                         @endif
-                    </td>
-                    @endif
-                    @if(in_array('crf_fgts', $plano->consultas_incluidas ?? []))
-                    <td>
-                        @if($r['crf_fgts_status'])
-                            <span class="status-badge status-{{ strtoupper($r['crf_fgts_status']) === 'REGULAR' ? 'regular' : 'irregular' }}">
-                                {{ $r['crf_fgts_status'] }}
-                            </span>
-                        @else
-                            -
+                        @if(in_array('cnd_federal', $plano->consultas_incluidas ?? []))
+                            <td>
+                                @if($r['cnd_federal_status'])
+                                    <span class="badge" style="background-color: {{ $statusHex($r['cnd_federal_status']) }}">{{ $r['cnd_federal_status'] }}</span>
+                                    @if($r['cnd_federal_validade'])
+                                        <div class="small muted">Val. {{ $r['cnd_federal_validade'] }}</div>
+                                    @endif
+                                @else
+                                    -
+                                @endif
+                            </td>
                         @endif
-                    </td>
-                    @endif
-                    @if(in_array('cndt', $plano->consultas_incluidas ?? []))
-                    <td>
-                        @if($r['cndt_status'])
-                            <span class="status-badge status-{{ in_array(strtoupper($r['cndt_status']), ['NEGATIVA', 'REGULAR']) ? 'negativa' : 'positiva' }}">
-                                {{ $r['cndt_status'] }}
-                            </span>
-                        @else
-                            -
+                        @if(in_array('crf_fgts', $plano->consultas_incluidas ?? []))
+                            <td>
+                                @if($r['crf_fgts_status'])
+                                    <span class="badge" style="background-color: {{ $statusHex($r['crf_fgts_status']) }}">{{ $r['crf_fgts_status'] }}</span>
+                                @else
+                                    -
+                                @endif
+                            </td>
                         @endif
-                    </td>
-                    @endif
-                    @if(in_array('tcu_consolidada', $plano->consultas_incluidas ?? []))
-                    <td>
-                        @if($r['ceis'] === 'Sim' || $r['cnep'] === 'Sim')
-                            <span class="status-badge status-positiva">RESTRITO</span>
-                        @elseif($r['tcu_situacao'] || $r['ceis'] === 'Nao')
-                            <span class="status-badge status-negativa">OK</span>
-                        @else
-                            -
+                        @if(in_array('cndt', $plano->consultas_incluidas ?? []))
+                            <td>
+                                @if($r['cndt_status'])
+                                    <span class="badge" style="background-color: {{ $statusHex($r['cndt_status']) }}">{{ $r['cndt_status'] }}</span>
+                                    @if($r['cndt_validade'])
+                                        <div class="small muted">Val. {{ $r['cndt_validade'] }}</div>
+                                    @endif
+                                @else
+                                    -
+                                @endif
+                            </td>
                         @endif
-                    </td>
-                    @endif
-                    <td class="score-cell">
-                        <strong>{{ $r['score_total'] }}</strong>
-                    </td>
-                    <td>
-                        <span class="risk-badge risk-{{ $r['classificacao'] }}">
-                            {{ ucfirst($r['classificacao']) }}
-                        </span>
-                    </td>
-                </tr>
+                        @if(in_array('tcu_consolidada', $plano->consultas_incluidas ?? []))
+                            <td>
+                                @if($complianceLabel !== '-')
+                                    <span class="badge" style="background-color: {{ $statusHex($complianceLabel) }}">{{ $complianceLabel }}</span>
+                                @else
+                                    -
+                                @endif
+                            </td>
+                        @endif
+                        <td class="center"><strong style="color: #111827">{{ $r['score_total'] }}</strong></td>
+                        <td>
+                            <span class="badge" style="background-color: {{ $statusHex($r['classificacao']) }}">{{ strtoupper($r['classificacao']) }}</span>
+                        </td>
+                    </tr>
                 @endforeach
             </tbody>
         </table>
-
-        <!-- Legend -->
-        <div class="legend">
-            <div class="legend-title">Legenda de Classificacao de Risco</div>
-            <div class="legend-grid">
-                <div class="legend-item">
-                    <span class="risk-badge risk-baixo">Baixo (0-20)</span> Empresa em situacao regular
-                </div>
-                <div class="legend-item">
-                    <span class="risk-badge risk-medio">Medio (21-50)</span> Atencao necessaria
-                </div>
-                <div class="legend-item">
-                    <span class="risk-badge risk-alto">Alto (51-80)</span> Irregularidades detectadas
-                </div>
-                <div class="legend-item">
-                    <span class="risk-badge risk-critico">Critico (81-100)</span> Risco elevado
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            <p>
-                Relatorio gerado automaticamente pelo sistema FiscalDock.
-                Os dados apresentados sao baseados em consultas realizadas junto a orgaos oficiais.
-            </p>
-            <p style="margin-top: 5px;">
-                <span class="footer-link">https://fiscaldock.com.br</span> |
-                Lote #{{ $lote->id }} |
-                Usuario ID: {{ $lote->user_id }} |
-                {{ $gerado_em }}
-            </p>
-        </div>
     </div>
+
+    <div class="footer">
+        Relatório gerado automaticamente pelo FiscalDock com base em consultas oficiais. Lote #{{ $lote->id }} | Usuário {{ $lote->user_id }} | {{ $gerado_em }}
+    </div>
+</div>
 </body>
 </html>

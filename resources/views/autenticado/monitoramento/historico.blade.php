@@ -1,22 +1,9 @@
 {{-- Monitoramento - Historico de Consultas --}}
 <div class="min-h-screen bg-gray-50" id="monitoramento-historico-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <style>
-            @keyframes card-slide-in {
-                from { opacity: 0; transform: translateY(60px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            .hist-animate {
-                opacity: 0;
-                animation: card-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-            @media (prefers-reduced-motion: reduce) {
-                .hist-animate { opacity: 1; animation: none; }
-            }
-        </style>
 
         {{-- Page Header --}}
-        <div class="mb-4 sm:mb-8 hist-animate">
+        <div class="mb-4 sm:mb-8">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-xl sm:text-2xl font-semibold text-gray-900">Historico de Consultas</h1>
@@ -37,7 +24,7 @@
 
         {{-- KPIs --}}
         <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-6">
-            <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 hist-animate" style="animation-delay: 0.05s">
+            <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6">
                 <div class="flex items-center justify-between">
                     <div class="flex-1 min-w-0">
                         <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Total de Consultas</p>
@@ -51,7 +38,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 hist-animate" style="animation-delay: 0.1s">
+            <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6">
                 <div class="flex items-center justify-between">
                     <div class="flex-1 min-w-0">
                         <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Creditos Utilizados</p>
@@ -65,7 +52,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 hist-animate" style="animation-delay: 0.15s">
+            <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6">
                 <div class="flex items-center justify-between">
                     <div class="flex-1 min-w-0">
                         <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Taxa de Sucesso</p>
@@ -82,7 +69,7 @@
         </div>
 
         {{-- Filtros --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-6 hist-animate" style="animation-delay: 0.2s">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-6">
             <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                 {{-- Filtro por tipo --}}
                 <div class="flex items-center gap-2">
@@ -139,7 +126,7 @@
         </div>
 
         {{-- Lista de Consultas --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm hist-animate" style="animation-delay: 0.25s">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50">

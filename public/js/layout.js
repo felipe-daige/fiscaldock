@@ -345,10 +345,41 @@ window.initLayout = initLayout;
 function updateActiveLink() {
     const currentPath = window.location.pathname;
     const allLinks = document.querySelectorAll('[data-link]');
+    const sidebarLinks = document.querySelectorAll('[data-sidebar-link]');
+    const sidebarGroupItems = document.querySelectorAll('[data-sidebar-group-item]');
+    const sidebarUserLinks = document.querySelectorAll('[data-sidebar-user-link]');
+    const sidebarGroupTriggers = document.querySelectorAll('[data-sidebar-group-trigger]');
+    const userTriggers = document.querySelectorAll('.sidebar__user-trigger');
+    const isSidebarLink = (link) => link.matches('[data-sidebar-link], [data-sidebar-group-item], [data-sidebar-user-link]');
+    const normalizePath = (value) => {
+        if (!value) {
+            return '';
+        }
+
+        try {
+            const url = new URL(value, window.location.origin);
+            return url.pathname.replace(/\/+$/, '') || '/';
+        } catch (error) {
+            return String(value).replace(/[?#].*$/, '').replace(/\/+$/, '') || '/';
+        }
+    };
+    const matchesSidebarPath = (href, path) => {
+        const normalizedHref = normalizePath(href);
+        const normalizedPath = normalizePath(path);
+
+        if (!normalizedHref || normalizedHref === '#') {
+            return false;
+        }
+
+        return normalizedPath === normalizedHref || normalizedPath.startsWith(normalizedHref + '/');
+    };
 
     // Remove active classes from all links
     allLinks.forEach(link => {
         if (link.hasAttribute('data-no-active')) {
+            return;
+        }
+        if (isSidebarLink(link)) {
             return;
         }
         const isButton = link.classList.contains('btn-accent') || link.classList.contains('btn-primary') || link.classList.contains('btn-secondary');
@@ -361,9 +392,28 @@ function updateActiveLink() {
         }
     });
 
+    sidebarLinks.forEach(link => {
+        link.classList.remove('sidebar__item--active');
+    });
+    sidebarGroupItems.forEach(link => {
+        link.classList.remove('sidebar__group-menu-item--active');
+    });
+    sidebarUserLinks.forEach(link => {
+        link.classList.remove('sidebar__user-menu-item--active');
+    });
+    sidebarGroupTriggers.forEach(trigger => {
+        trigger.classList.remove('sidebar__group-trigger--active');
+    });
+    userTriggers.forEach(trigger => {
+        trigger.classList.remove('sidebar__user-trigger--active');
+    });
+
     // Add active classes to current link
     allLinks.forEach(link => {
         if (link.hasAttribute('data-no-active')) {
+            return;
+        }
+        if (isSidebarLink(link)) {
             return;
         }
         if (link.getAttribute('href') === currentPath) {
@@ -377,14 +427,81 @@ function updateActiveLink() {
             }
         }
     });
+
+    sidebarLinks.forEach(link => {
+        if (matchesSidebarPath(link.getAttribute('href'), currentPath)) {
+            link.classList.add('sidebar__item--active');
+        }
+    });
+
+    sidebarGroupItems.forEach(link => {
+        if (matchesSidebarPath(link.getAttribute('href'), currentPath)) {
+            link.classList.add('sidebar__group-menu-item--active');
+
+            const group = link.closest('[data-sidebar-group]');
+            const trigger = group ? group.querySelector('[data-sidebar-group-trigger]') : null;
+            if (group) {
+                group.setAttribute('open', 'open');
+            }
+            if (trigger) {
+                trigger.classList.add('sidebar__group-trigger--active');
+            }
+        }
+    });
+
+    sidebarUserLinks.forEach(link => {
+        if (matchesSidebarPath(link.getAttribute('href'), currentPath)) {
+            link.classList.add('sidebar__user-menu-item--active');
+
+            const userDetails = link.closest('details');
+            const userTrigger = userDetails ? userDetails.querySelector('.sidebar__user-trigger') : null;
+            if (userDetails) {
+                userDetails.setAttribute('open', 'open');
+            }
+            if (userTrigger) {
+                userTrigger.classList.add('sidebar__user-trigger--active');
+            }
+        }
+    });
 }
 
 // Called by SPA when page changes
 function setActiveLink(path) {
     const allLinks = document.querySelectorAll('[data-link]');
+    const sidebarLinks = document.querySelectorAll('[data-sidebar-link]');
+    const sidebarGroupItems = document.querySelectorAll('[data-sidebar-group-item]');
+    const sidebarUserLinks = document.querySelectorAll('[data-sidebar-user-link]');
+    const sidebarGroupTriggers = document.querySelectorAll('[data-sidebar-group-trigger]');
+    const userTriggers = document.querySelectorAll('.sidebar__user-trigger');
+    const isSidebarLink = (link) => link.matches('[data-sidebar-link], [data-sidebar-group-item], [data-sidebar-user-link]');
+    const normalizePath = (value) => {
+        if (!value) {
+            return '';
+        }
+
+        try {
+            const url = new URL(value, window.location.origin);
+            return url.pathname.replace(/\/+$/, '') || '/';
+        } catch (error) {
+            return String(value).replace(/[?#].*$/, '').replace(/\/+$/, '') || '/';
+        }
+    };
+    const matchesSidebarPath = (href, currentPath) => {
+        const normalizedHref = normalizePath(href);
+        const normalizedPath = normalizePath(currentPath);
+
+        if (!normalizedHref || normalizedHref === '#') {
+            return false;
+        }
+
+        return normalizedPath === normalizedHref || normalizedPath.startsWith(normalizedHref + '/');
+    };
 
     allLinks.forEach(link => {
         if (link.hasAttribute('data-no-active')) {
+            return;
+        }
+        if (isSidebarLink(link)) {
             return;
         }
         const isButton = link.classList.contains('btn-accent') || link.classList.contains('btn-primary') || link.classList.contains('btn-secondary');
@@ -399,6 +516,9 @@ function setActiveLink(path) {
 
     allLinks.forEach(link => {
         if (link.hasAttribute('data-no-active')) {
+            return;
+        }
+        if (isSidebarLink(link)) {
             return;
         }
         const linkHref = link.getAttribute('href');
@@ -428,6 +548,55 @@ function setActiveLink(path) {
                 if (userDetails && !userDetails.open) {
                     userDetails.open = true;
                 }
+            }
+        }
+    });
+
+    sidebarLinks.forEach(link => {
+        link.classList.remove('sidebar__item--active');
+        if (matchesSidebarPath(link.getAttribute('href'), path)) {
+            link.classList.add('sidebar__item--active');
+        }
+    });
+
+    sidebarGroupItems.forEach(link => {
+        link.classList.remove('sidebar__group-menu-item--active');
+    });
+    sidebarGroupTriggers.forEach(trigger => {
+        trigger.classList.remove('sidebar__group-trigger--active');
+    });
+    sidebarGroupItems.forEach(link => {
+        if (matchesSidebarPath(link.getAttribute('href'), path)) {
+            link.classList.add('sidebar__group-menu-item--active');
+
+            const group = link.closest('[data-sidebar-group]');
+            const trigger = group ? group.querySelector('[data-sidebar-group-trigger]') : null;
+            if (group) {
+                group.setAttribute('open', 'open');
+            }
+            if (trigger) {
+                trigger.classList.add('sidebar__group-trigger--active');
+            }
+        }
+    });
+
+    sidebarUserLinks.forEach(link => {
+        link.classList.remove('sidebar__user-menu-item--active');
+    });
+    userTriggers.forEach(trigger => {
+        trigger.classList.remove('sidebar__user-trigger--active');
+    });
+    sidebarUserLinks.forEach(link => {
+        if (matchesSidebarPath(link.getAttribute('href'), path)) {
+            link.classList.add('sidebar__user-menu-item--active');
+
+            const userDetails = link.closest('details');
+            const userTrigger = userDetails ? userDetails.querySelector('.sidebar__user-trigger') : null;
+            if (userDetails) {
+                userDetails.setAttribute('open', 'open');
+            }
+            if (userTrigger) {
+                userTrigger.classList.add('sidebar__user-trigger--active');
             }
         }
     });

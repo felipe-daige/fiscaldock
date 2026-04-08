@@ -100,12 +100,14 @@ document.addEventListener('DOMContentLoaded', () => {
         '/app/importacao/efd': 'initImportacaoEfd',
         '/app/monitoramento/avulso': 'initMonitoramentoAvulso',
         '/app/consultas/avulso': 'initMonitoramentoAvulso',
+        '/app/consulta/avulso': 'initMonitoramentoAvulso',
         '/app/novo-participante': 'initNovoParticipante',
         '/app/novo-cliente': 'initNovoCliente',
         '/app/monitoramento/historico': 'initMonitoramentoHistorico',
         // Nota: /app/participante/{id} é tratada dinamicamente em obterInfoPagina()
         '/app/importacao/xml': 'initMonitoramentoXml',
         '/app/consultas/nova': 'initConsultaLote',
+        '/app/consulta/nova': 'initConsultaLote',
         '/app/perfil': 'initPerfil',
         '/app/bi/dashboard': 'initBi',
         '/app/dashboard': 'initDashboard',
@@ -146,9 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (typeof window._impactosInitialized !== 'undefined') {
             window._impactosInitialized = false;
-        }
-        if (typeof window._solucoesCarouselInitialized !== 'undefined') {
-            window._solucoesCarouselInitialized = false;
         }
         if (typeof window._consultaLoteLastInit !== 'undefined') {
             window._consultaLoteLastInit = 0;
@@ -719,62 +718,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const caminho = window.location.pathname;
         
         // Primeiro, processar scripts inline que já estão no DOM
-        // Isso garante que funções definidas em scripts inline (como window.initSolucoesCarousel)
-        // estejam disponíveis antes de executar funções específicas
         processarScriptsInline();
-        
-        // Aguardar um delay maior para garantir que todos os scripts foram executados
+
+        // Aguardar um delay para garantir que todos os scripts foram executados
         setTimeout(() => {
-            // Verificar se funções críticas estão disponíveis (especialmente para rota raiz)
-            // Para a rota raiz (/), verificar se window.initSolucoesCarousel existe
-            if (caminho === '/' || caminho === '/inicio') {
-                let retryCount = 0;
-                const maxRetries = 5;
-                
-                function verificarEExecutar() {
-                    if (typeof window.initSolucoesCarousel === 'function') {
-                        // Função disponível, prosseguir com carregamento
-                        carregarJavaScriptEspecifico(caminho);
-                        
-                        setTimeout(() => {
-                            try {
-                                executarFuncoesEspecificas();
-                            } catch (error) {
-                                console.error('Erro ao executar funções específicas na primeira carga:', error);
-                            }
-                        }, 100);
-                    } else if (retryCount < maxRetries) {
-                        // Função ainda não disponível, tentar novamente
-                        retryCount++;
-                        setTimeout(verificarEExecutar, 50);
-                    } else {
-                        // Prosseguir mesmo sem a função (pode não ser necessária para todas as páginas)
-                        console.warn('window.initSolucoesCarousel não encontrado após', maxRetries, 'tentativas, prosseguindo...');
-                        carregarJavaScriptEspecifico(caminho);
-                        
-                        setTimeout(() => {
-                            try {
-                                executarFuncoesEspecificas();
-                            } catch (error) {
-                                console.error('Erro ao executar funções específicas na primeira carga:', error);
-                            }
-                        }, 100);
-                    }
+            carregarJavaScriptEspecifico(caminho);
+
+            setTimeout(() => {
+                try {
+                    executarFuncoesEspecificas();
+                } catch (error) {
+                    console.error('Erro ao executar funções específicas na primeira carga:', error);
                 }
-                
-                verificarEExecutar();
-            } else {
-                // Para outras rotas, comportamento normal
-                carregarJavaScriptEspecifico(caminho);
-                
-                setTimeout(() => {
-                    try {
-                        executarFuncoesEspecificas();
-                    } catch (error) {
-                        console.error('Erro ao executar funções específicas na primeira carga:', error);
-                    }
-                }, 100);
-            }
+            }, 100);
         }, 150);
     }
     
@@ -782,4 +738,3 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarJavaScriptInicial();
 
 });
-

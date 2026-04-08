@@ -5,15 +5,6 @@
         <style>
             @keyframes ck-fade-in {
                 from { opacity: 0; transform: translateY(20px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            .ck-animate {
-                opacity: 0;
-                animation: ck-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-            @media (prefers-reduced-motion: reduce) {
-                .ck-animate { opacity: 1; animation: none; }
-            }
             @keyframes ck-spin {
                 to { transform: rotate(360deg); }
             }
@@ -30,7 +21,7 @@
         </style>
 
         {{-- Voltar --}}
-        <a href="/app/plano" data-link class="ck-animate inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-6 transition-colors" style="animation-delay: 0.05s">
+        <a href="/app/plano" data-link class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-6 transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -38,7 +29,7 @@
         </a>
 
         {{-- Header --}}
-        <div class="ck-animate mb-8" style="animation-delay: 0.1s">
+        <div class="mb-8">
             <h1 class="text-2xl font-bold text-gray-900">Finalizar Compra</h1>
             <p class="mt-1 text-sm text-gray-500">Complete o pagamento para adicionar creditos a sua conta.</p>
         </div>
@@ -49,7 +40,7 @@
             <div class="lg:col-span-3 space-y-6" id="ck-form-area">
 
                 {{-- Metodo de Pagamento --}}
-                <div class="ck-animate bg-white rounded-lg border border-gray-200 p-6" style="animation-delay: 0.15s">
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
                     <h2 class="text-sm font-semibold text-gray-900 mb-4">Metodo de Pagamento</h2>
 
                     {{-- Tabs --}}
@@ -123,7 +114,7 @@
                 {{-- Botao Pagar (cartao only) --}}
                 <div id="ck-btn-area">
                     <button type="button" id="ck-btn-pagar" onclick="window._ckProcessPayment()"
-                            class="ck-animate w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2" style="animation-delay: 0.25s">
+                            class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                         </svg>
@@ -134,7 +125,7 @@
 
             {{-- Resumo do Pedido (2/5) --}}
             <div class="lg:col-span-2">
-                <div class="ck-animate bg-white rounded-lg border border-gray-200 p-6 lg:sticky lg:top-6" style="animation-delay: 0.2s">
+                <div class="bg-white rounded-lg border border-gray-200 p-6 lg:sticky lg:top-6">
                     <h2 class="text-sm font-semibold text-gray-900 mb-4">Resumo do Pedido</h2>
 
                     <div class="space-y-3 pb-4 border-b border-gray-100">

@@ -141,11 +141,13 @@
 
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4 text-sm">
-                    <button type="button" id="btn-selecionar-todos-clientes" class="text-gray-700 hover:text-gray-900 font-medium underline">Selecionar todos desta página</button>
+                    <button type="button" id="btn-selecionar-todos-clientes" class="text-gray-700 hover:text-gray-900 font-medium underline">
+                        Selecionar todos (<span id="total-filtrado-clientes">{{ $clientes->total() }}</span>)
+                    </button>
                     <button type="button" id="btn-limpar-selecao-clientes" class="text-gray-500 hover:text-gray-700 hidden">Limpar seleção</button>
                 </div>
                 <span id="total-selecionados-clientes-info" class="text-xs text-gray-500 hidden">
-                    <span id="total-selecionados-clientes">0</span> selecionados
+                    <span id="total-selecionados-clientes">0</span> selecionados (todas as páginas)
                 </span>
             </div>
 
@@ -238,6 +240,14 @@
                                                     </a>
                                                 </div>
                                             @endif
+                                            <div class="mt-2 flex items-center gap-2 flex-wrap">
+                                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cliente->consulta_status_hex }}">
+                                                    {{ $cliente->consulta_status_label }}
+                                                </span>
+                                            </div>
+                                            <div class="text-[11px] text-gray-500 mt-1">
+                                                {{ $cliente->consulta_status_meta }}
+                                            </div>
                                         </td>
                                         <td class="px-3 py-3 text-sm text-gray-700 font-mono">{{ $cliente->documento_formatado }}</td>
                                         <td class="px-3 py-3">
@@ -253,9 +263,23 @@
                                             {{ number_format($cliente->participantes_count ?? 0, 0, ',', '.') }}
                                         </td>
                                         <td class="px-3 py-3">
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cliente->ativo ? '#047857' : '#9ca3af' }}">
-                                                {{ $cliente->ativo ? 'Ativo' : 'Inativo' }}
-                                            </span>
+                                            <div class="flex flex-col gap-1">
+                                                <div class="flex items-center gap-2 flex-wrap">
+                                                    @if(($cliente->situacao_cadastral ?? '') === 'ATIVA')
+                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857">Ativa</span>
+                                                    @elseif($cliente->situacao_cadastral)
+                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #d97706">{{ $cliente->situacao_cadastral }}</span>
+                                                    @else
+                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #9ca3af">{{ $cliente->ativo ? 'Ativo' : 'Inativo' }}</span>
+                                                    @endif
+                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: {{ $cliente->cnd_federal_status_hex }}">
+                                                        {{ $cliente->cnd_federal_status_label }}
+                                                    </span>
+                                                </div>
+                                                <div class="text-[11px] text-gray-500">
+                                                    {{ $cliente->cnd_federal_meta }}
+                                                </div>
+                                            </div>
                                         </td>
                                         <td class="px-3 py-3 text-right">
                                             <button
@@ -338,6 +362,14 @@
                                                     </a>
                                                 </div>
                                             @endif
+                                            <div class="mt-2 flex items-center gap-2 flex-wrap">
+                                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cliente->consulta_status_hex }}">
+                                                    {{ $cliente->consulta_status_label }}
+                                                </span>
+                                            </div>
+                                            <div class="text-[11px] text-gray-500 mt-1">
+                                                {{ $cliente->consulta_status_meta }}
+                                            </div>
                                         </div>
                                     </div>
                                     <button
@@ -374,11 +406,21 @@
                                         <p class="text-sm text-gray-700 mt-1">{{ number_format($cliente->participantes_count ?? 0, 0, ',', '.') }}</p>
                                     </div>
                                     <div>
-                                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Status</p>
+                                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação / CND</p>
                                         <div class="mt-1">
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cliente->ativo ? '#047857' : '#9ca3af' }}">
-                                                {{ $cliente->ativo ? 'Ativo' : 'Inativo' }}
-                                            </span>
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                @if(($cliente->situacao_cadastral ?? '') === 'ATIVA')
+                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857">Ativa</span>
+                                                @elseif($cliente->situacao_cadastral)
+                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #d97706">{{ $cliente->situacao_cadastral }}</span>
+                                                @else
+                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #9ca3af">{{ $cliente->ativo ? 'Ativo' : 'Inativo' }}</span>
+                                                @endif
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: {{ $cliente->cnd_federal_status_hex }}">
+                                                    {{ $cliente->cnd_federal_status_label }}
+                                                </span>
+                                            </div>
+                                            <p class="text-[11px] text-gray-500 mt-1">{{ $cliente->cnd_federal_meta }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -483,12 +525,14 @@
 (function() {
     'use strict';
 
+    var STORAGE_KEY = 'clientes_selecionados';
+
     function initClientes() {
         var container = document.getElementById('clientes-container');
         if (!container || container.dataset.initialized === '1') return;
         container.dataset.initialized = '1';
 
-        var clientesSelecionados = new Set();
+        var clientesSelecionados = carregarSelecao();
         var selectAll = document.getElementById('select-all-clientes');
         var dropdownAcoes = document.getElementById('dropdown-acoes');
         var dropdownAcoesNome = document.getElementById('dropdown-acoes-nome');
@@ -504,6 +548,28 @@
         var btnViewCards = document.getElementById('btn-view-cards-clientes');
         var listView = document.getElementById('clientes-list-view');
         var cardsView = document.getElementById('clientes-cards-view');
+        var btnSelecionarTodos = document.getElementById('btn-selecionar-todos-clientes');
+        var btnLimparSelecaoGlobal = document.getElementById('btn-limpar-selecao-clientes');
+
+        function carregarSelecao() {
+            try {
+                var raw = sessionStorage.getItem(STORAGE_KEY);
+                if (raw) return new Set(JSON.parse(raw).map(Number));
+            } catch (e) {}
+            return new Set();
+        }
+
+        function salvarSelecao(setIds) {
+            try {
+                sessionStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(setIds)));
+            } catch (e) {}
+        }
+
+        function limparSelecaoStorage() {
+            try {
+                sessionStorage.removeItem(STORAGE_KEY);
+            } catch (e) {}
+        }
 
         function ativarModoVisualizacao(mode) {
             var isCards = mode === 'cards';
@@ -542,13 +608,15 @@
             if (label) label.textContent = total === 1 ? 'cliente selecionado' : 'clientes selecionados';
 
             if (!selectAll) return;
-            var checkboxes = container.querySelectorAll('.cliente-checkbox');
+            var checkboxes = Array.from(container.querySelectorAll('.cliente-checkbox'));
             var checked = 0;
             checkboxes.forEach(function(cb) {
                 if (cb.checked) checked++;
             });
-            selectAll.checked = checked > 0 && checked === checkboxes.length;
+            selectAll.checked = checked > 0 && checked === checkboxes.length && checkboxes.length > 0;
             selectAll.indeterminate = checked > 0 && checked < checkboxes.length;
+            selectAll.disabled = checkboxes.length === 0;
+            salvarSelecao(clientesSelecionados);
         }
 
         ativarModoVisualizacao('list');
@@ -556,6 +624,13 @@
         function sincronizarCheckboxesCliente(id, checked) {
             container.querySelectorAll('.cliente-checkbox[data-id="' + id + '"]').forEach(function(cb) {
                 cb.checked = checked;
+            });
+        }
+
+        function sincronizarCheckboxes() {
+            container.querySelectorAll('.cliente-checkbox').forEach(function(cb) {
+                var id = Number(cb.dataset.id);
+                cb.checked = clientesSelecionados.has(id);
             });
         }
 
@@ -575,8 +650,8 @@
         if (selectAll) {
             selectAll.addEventListener('change', function() {
                 container.querySelectorAll('.cliente-checkbox').forEach(function(cb) {
-                    cb.checked = selectAll.checked;
                     var id = parseInt(cb.dataset.id, 10);
+                    cb.checked = selectAll.checked;
                     if (selectAll.checked) {
                         clientesSelecionados.add(id);
                     } else {
@@ -599,29 +674,63 @@
             atualizarBarraAcoes();
         });
 
-        var btnSelecionarTodos = document.getElementById('btn-selecionar-todos-clientes');
         if (btnSelecionarTodos) {
-            btnSelecionarTodos.addEventListener('click', function() {
-                container.querySelectorAll('.cliente-checkbox').forEach(function(cb) {
-                    cb.checked = true;
-                    clientesSelecionados.add(parseInt(cb.dataset.id, 10));
-                });
-                atualizarBarraAcoes();
+            btnSelecionarTodos.addEventListener('click', async function() {
+                btnSelecionarTodos.disabled = true;
+                btnSelecionarTodos.textContent = 'Carregando...';
+
+                try {
+                    var params = new URLSearchParams();
+                    var filtrosForm = container.querySelector('form[action="/app/clientes"]');
+
+                    if (filtrosForm) {
+                        ['status', 'tipo', 'regime', 'situacao', 'uf', 'busca'].forEach(function(name) {
+                            var field = filtrosForm.querySelector('[name="' + name + '"]');
+                            if (field && field.value) params.set(name, field.value);
+                        });
+                    }
+
+                    var url = '/app/clientes/todos-ids' + (params.toString() ? '?' + params.toString() : '');
+                    var res = await fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                    });
+
+                    var data = await res.json();
+                    if (!data.success) throw new Error('Erro ao buscar IDs');
+
+                    data.ids.forEach(function(id) { clientesSelecionados.add(Number(id)); });
+                    sincronizarCheckboxes();
+                    atualizarBarraAcoes();
+
+                    window.showToast && window.showToast(data.total + ' clientes selecionados', 'success');
+                } catch (err) {
+                    console.error('[Clientes] Erro ao selecionar todos:', err);
+                    window.showToast && window.showToast('Erro ao selecionar todos os clientes', 'error');
+                } finally {
+                    var totalEl = document.getElementById('total-filtrado-clientes');
+                    var total = totalEl ? totalEl.textContent : '?';
+                    btnSelecionarTodos.disabled = false;
+                    btnSelecionarTodos.innerHTML = 'Selecionar todos (<span id="total-filtrado-clientes">' + total + '</span>)';
+                }
             });
         }
 
         function limparSelecao() {
             clientesSelecionados.clear();
-            container.querySelectorAll('.cliente-checkbox').forEach(function(cb) {
-                cb.checked = false;
-            });
+            limparSelecaoStorage();
+            sincronizarCheckboxes();
             atualizarBarraAcoes();
         }
 
         var btnLimparSelecao = document.getElementById('btn-limpar-selecao');
         if (btnLimparSelecao) btnLimparSelecao.addEventListener('click', limparSelecao);
-        var btnLimparSelecaoGlobal = document.getElementById('btn-limpar-selecao-clientes');
         if (btnLimparSelecaoGlobal) btnLimparSelecaoGlobal.addEventListener('click', limparSelecao);
+
+        sincronizarCheckboxes();
+        atualizarBarraAcoes();
 
         function fecharDropdownAcoes() {
             if (dropdownAcoes) dropdownAcoes.classList.add('hidden');
@@ -780,6 +889,85 @@
                         if (cardExpand) cardExpand.innerHTML = '<div class="text-sm text-red-600">Erro ao carregar participantes vinculados.</div>';
                     });
             }
+        });
+
+        container.addEventListener('submit', function(event) {
+            var relatedFilterForm = event.target.closest('.js-related-filter-form');
+            if (!relatedFilterForm) return;
+
+            event.preventDefault();
+
+            var baseUrl = relatedFilterForm.getAttribute('action') || '';
+            var formData = new FormData(relatedFilterForm);
+            var params = new URLSearchParams();
+            formData.forEach(function(value, key) {
+                if (value !== null && String(value).trim() !== '') {
+                    params.set(key, String(value));
+                }
+            });
+
+            var targetUrl = baseUrl + (params.toString() ? '?' + params.toString() : '');
+            var row = relatedFilterForm.closest('.cliente-expand-row');
+            var cardExpand = relatedFilterForm.closest('.cliente-card-expand');
+            var cell = row ? row.querySelector('td') : null;
+
+            if (cell) {
+                cell.innerHTML = '<div class="text-sm text-gray-500">Carregando participantes...</div>';
+            }
+            if (cardExpand) {
+                cardExpand.innerHTML = '<div class="text-sm text-gray-500">Carregando participantes...</div>';
+            }
+
+            fetch(targetUrl, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'text/html',
+                },
+            })
+                .then(function(res) { return res.text(); })
+                .then(function(html) {
+                    if (cell) cell.innerHTML = html;
+                    if (cardExpand) cardExpand.innerHTML = html;
+                })
+                .catch(function() {
+                    if (cell) cell.innerHTML = '<div class="text-sm text-red-600">Erro ao carregar participantes vinculados.</div>';
+                    if (cardExpand) cardExpand.innerHTML = '<div class="text-sm text-red-600">Erro ao carregar participantes vinculados.</div>';
+                });
+        });
+
+        container.addEventListener('click', function(event) {
+            var relatedFilterReset = event.target.closest('.js-related-filter-reset');
+            if (!relatedFilterReset) return;
+
+            event.preventDefault();
+
+            var targetUrl = relatedFilterReset.getAttribute('href');
+            var row = relatedFilterReset.closest('.cliente-expand-row');
+            var cardExpand = relatedFilterReset.closest('.cliente-card-expand');
+            var cell = row ? row.querySelector('td') : null;
+
+            if (cell) {
+                cell.innerHTML = '<div class="text-sm text-gray-500">Carregando participantes...</div>';
+            }
+            if (cardExpand) {
+                cardExpand.innerHTML = '<div class="text-sm text-gray-500">Carregando participantes...</div>';
+            }
+
+            fetch(targetUrl, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'text/html',
+                },
+            })
+                .then(function(res) { return res.text(); })
+                .then(function(html) {
+                    if (cell) cell.innerHTML = html;
+                    if (cardExpand) cardExpand.innerHTML = html;
+                })
+                .catch(function() {
+                    if (cell) cell.innerHTML = '<div class="text-sm text-red-600">Erro ao carregar participantes vinculados.</div>';
+                    if (cardExpand) cardExpand.innerHTML = '<div class="text-sm text-red-600">Erro ao carregar participantes vinculados.</div>';
+                });
         });
 
         if (dropdownAcoesExpandir) {

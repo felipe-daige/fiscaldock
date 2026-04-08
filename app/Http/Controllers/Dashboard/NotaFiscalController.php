@@ -104,7 +104,7 @@ class NotaFiscalController extends Controller
             }
 
             return view(self::AUTH_LAYOUT_VIEW, [
-                'initialView' => 'autenticado.notas-fiscais.partials.xml-inline',
+                'initialView' => 'autenticado.notas-fiscais.xml-nota',
                 'nota' => $nota,
             ]);
         }

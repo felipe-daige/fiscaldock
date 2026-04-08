@@ -28,13 +28,13 @@ class MonitoramentoPlanoSeeder extends Seeder
             [
                 'codigo' => 'validacao',
                 'nome' => 'Validação',
-                'descricao' => 'Dados cadastrais completos com verificação de Simples Nacional e MEI',
+                'descricao' => 'Dados cadastrais completos com Simples Nacional, MEI e regime tributário — gratuito por tempo limitado',
                 'consultas_incluidas' => [
                     'situacao_cadastral', 'dados_cadastrais', 'endereco',
                     'cnaes', 'qsa', 'simples_nacional', 'mei',
                 ],
-                'custo_creditos' => 2,
-                'is_gratuito' => false,
+                'custo_creditos' => 0,
+                'is_gratuito' => true,
                 'ordem' => 2,
             ],
             [

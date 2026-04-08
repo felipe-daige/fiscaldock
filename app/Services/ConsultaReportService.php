@@ -215,10 +215,13 @@ class ConsultaReportService
      */
     private function getColunasCsv(ConsultaLote $lote, Collection $resultados): array
     {
-        // Colunas base do plano gratuito (sem UF)
         $colunas = [
             'CNPJ',
             'Razao Social',
+            'Nome Fantasia',
+            'UF',
+            'Status da Consulta',
+            'Consultado em',
             'Situacao Cadastral',
             'Regime Tributario',
             'Simples Nacional',
@@ -291,6 +294,10 @@ class ConsultaReportService
             $linha[] = match ($coluna) {
                 'CNPJ' => $resultado['documento'],
                 'Razao Social' => $resultado['razao_social'],
+                'Nome Fantasia' => $resultado['nome_fantasia'],
+                'UF' => $resultado['uf'],
+                'Status da Consulta' => $this->formatarStatusConsulta($resultado['status_consulta']),
+                'Consultado em' => $resultado['consultado_em'],
                 'Situacao Cadastral' => $resultado['situacao_cadastral'],
                 'Regime Tributario' => $resultado['regime_tributario'],
                 'Simples Nacional' => $resultado['simples_nacional'],
@@ -319,6 +326,17 @@ class ConsultaReportService
         }
 
         return $linha;
+    }
+
+    private function formatarStatusConsulta(?string $status): string
+    {
+        return match ($status) {
+            'sucesso' => 'Sucesso',
+            'erro' => 'Erro',
+            'timeout' => 'Timeout',
+            'pendente' => 'Pendente',
+            default => (string) $status,
+        };
     }
 
     /**

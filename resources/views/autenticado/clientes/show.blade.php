@@ -1,286 +1,283 @@
 {{-- Cliente - Detalhes --}}
-<div class="min-h-screen bg-gray-50" id="cliente-show-container">
+@php
+    $clienteNome = $cliente->razao_social ?? $cliente->nome ?? 'Cliente';
+    $tipoPessoaBadge = $cliente->tipo_pessoa === 'PJ'
+        ? ['label' => 'PJ', 'hex' => '#374151']
+        : ['label' => 'PF', 'hex' => '#6b7280'];
+    $statusBadge = $cliente->ativo
+        ? ['label' => 'ATIVO', 'hex' => '#047857']
+        : ['label' => 'INATIVO', 'hex' => '#dc2626'];
+    $empresaBadge = ['label' => 'EMPRESA PRÓPRIA', 'hex' => '#0f766e'];
+    $resumoCliente = [
+        ['label' => 'Participantes Vinculados', 'valor' => number_format($totalParticipantes, 0, ',', '.'), 'sub' => 'Base vinculada ao cadastro'],
+        ['label' => 'Notas Fiscais', 'valor' => number_format($totalNotas, 0, ',', '.'), 'sub' => 'Notas unificadas EFD e XML'],
+        ['label' => 'Localização', 'valor' => implode(' / ', array_filter([$cliente->municipio, $cliente->uf])) ?: 'Não informado', 'sub' => 'Município e UF'],
+        ['label' => 'Cadastro', 'valor' => $cliente->created_at?->format('d/m/Y') ?? '-', 'sub' => 'Data de inclusão'],
+    ];
+    $dadosCadastrais = [
+        ['label' => $cliente->tipo_pessoa === 'PJ' ? 'Razão Social' : 'Nome', 'valor' => $cliente->razao_social ?? $cliente->nome ?? '-', 'mono' => false],
+        ['label' => $cliente->tipo_pessoa === 'PJ' ? 'Nome Fantasia' : 'Nome de Exibição', 'valor' => $cliente->nome ?? '-', 'mono' => false],
+        ['label' => $cliente->tipo_pessoa === 'PJ' ? 'CNPJ' : 'CPF', 'valor' => $cliente->documento_formatado, 'mono' => true],
+        ['label' => 'E-mail', 'valor' => $cliente->email ?: 'Não informado', 'mono' => false],
+        ['label' => 'Telefone', 'valor' => $cliente->telefone ?: 'Não informado', 'mono' => false],
+        ['label' => 'Município / UF', 'valor' => implode(' - ', array_filter([$cliente->municipio, $cliente->uf])) ?: 'Não informado', 'mono' => false],
+        ['label' => 'CEP', 'valor' => $cliente->cep ?: 'Não informado', 'mono' => true],
+        ['label' => 'Status do Cadastro', 'valor' => $cliente->ativo ? 'Ativo' : 'Inativo', 'mono' => false],
+    ];
+@endphp
+
+<div class="min-h-screen bg-gray-100" id="cliente-show-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {{-- Page Header --}}
-        <div class="mb-4 sm:mb-6">
-            <div class="flex items-center justify-between flex-wrap gap-4">
-                <div class="flex items-center gap-4">
-                    <a
-                        href="/app/clientes"
-                        class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
-                        data-link
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                        </svg>
-                        Voltar
-                    </a>
-                    <div>
-                        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">
-                            {{ $cliente->razao_social ?? $cliente->nome ?? 'Cliente' }}
-                        </h1>
-                        <p class="text-sm text-gray-600 font-mono whitespace-nowrap tabular-nums">
-                            {{ $cliente->documento_formatado }}
-                        </p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3 flex-wrap">
-                    {{-- Badge Tipo Pessoa --}}
-                    @if($cliente->tipo_pessoa === 'PJ')
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
-                            Pessoa Jurídica
-                        </span>
-                    @else
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">
-                            Pessoa Física
-                        </span>
-                    @endif
-
-                    {{-- Badge Status --}}
-                    @if($cliente->ativo)
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-                            Ativo
-                        </span>
-                    @else
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
-                            Inativo
-                        </span>
-                    @endif
-
-                    {{-- Badge Empresa Propria --}}
-                    @if($cliente->is_empresa_propria)
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-600 border border-green-200">
-                            Empresa Própria
-                        </span>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        {{-- Acoes Rapidas --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-6">
-            <div class="flex items-center justify-between flex-wrap gap-4">
-                <div class="text-sm text-gray-500">
-                    Cadastrado em: <strong class="text-gray-900">{{ $cliente->created_at?->format('d/m/Y') ?? '-' }}</strong>
-                </div>
-                <div class="flex items-center gap-3">
-                    <a
-                        href="{{ route('app.cliente.edit', $cliente->id) }}"
-                        data-link
-                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                        </svg>
-                        Editar
-                    </a>
-                    @if(!$cliente->is_empresa_propria)
-                        <button
-                            type="button"
-                            id="btn-excluir-cliente"
-                            data-id="{{ $cliente->id }}"
-                            data-nome="{{ $cliente->razao_social ?? $cliente->nome }}"
-                            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-red-200 bg-white text-red-600 text-sm font-semibold shadow-sm transition hover:bg-red-50"
+        <div class="mb-4 sm:mb-8">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <a
+                            href="/app/clientes"
+                            class="text-xs text-gray-600 hover:text-gray-900 hover:underline"
+                            data-link
                         >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                            </svg>
-                            Excluir
-                        </button>
+                            Voltar para clientes
+                        </a>
+                        <span class="text-gray-300 hidden sm:inline">|</span>
+                        <span class="text-xs text-gray-500">Cadastro operacional</span>
+                    </div>
+                    <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide mt-2">{{ $clienteNome }}</h1>
+                    <p class="text-xs text-gray-500 mt-1">{{ $cliente->documento_formatado }}</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoPessoaBadge['hex'] }}">{{ $tipoPessoaBadge['label'] }}</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusBadge['hex'] }}">{{ $statusBadge['label'] }}</span>
+                    @if($cliente->is_empresa_propria)
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $empresaBadge['hex'] }}">{{ $empresaBadge['label'] }}</span>
                     @endif
                 </div>
             </div>
         </div>
 
-        {{-- Grid: Dados Cadastrais + Estatisticas --}}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-            {{-- Dados Cadastrais --}}
-            <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6">
-                <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">Dados Cadastrais</h2>
-                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-4">
-                    @if($cliente->tipo_pessoa === 'PJ' && $cliente->razao_social)
-                        <div>
-                            <dt class="text-xs text-gray-500 font-medium">Razão Social</dt>
-                            <dd class="mt-1 text-sm text-gray-900">{{ $cliente->razao_social }}</dd>
-                        </div>
-                    @endif
-                    @if($cliente->nome)
-                        <div>
-                            <dt class="text-xs text-gray-500 font-medium">{{ $cliente->tipo_pessoa === 'PJ' ? 'Nome Fantasia' : 'Nome' }}</dt>
-                            <dd class="mt-1 text-sm text-gray-900">{{ $cliente->nome }}</dd>
-                        </div>
-                    @endif
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6 sm:mb-8">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <dt class="text-xs text-gray-500 font-medium">{{ $cliente->tipo_pessoa === 'PJ' ? 'CNPJ' : 'CPF' }}</dt>
-                        <dd class="mt-1 text-sm text-gray-900 font-mono">{{ $cliente->documento_formatado }}</dd>
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Ações Operacionais</span>
+                        <p class="text-[11px] text-gray-500 mt-1">Gerencie o cadastro e acompanhe os vínculos fiscais do cliente.</p>
                     </div>
-                    @if($cliente->email)
-                        <div>
-                            <dt class="text-xs text-gray-500 font-medium">E-mail</dt>
-                            <dd class="mt-1 text-sm text-gray-900">{{ $cliente->email }}</dd>
-                        </div>
-                    @endif
-                    @if($cliente->telefone)
-                        <div>
-                            <dt class="text-xs text-gray-500 font-medium">Telefone</dt>
-                            <dd class="mt-1 text-sm text-gray-900">{{ $cliente->telefone }}</dd>
-                        </div>
-                    @endif
-                    @if($cliente->municipio || $cliente->uf)
-                        <div>
-                            <dt class="text-xs text-gray-500 font-medium">Município/UF</dt>
-                            <dd class="mt-1 text-sm text-gray-900">
-                                {{ implode(' - ', array_filter([$cliente->municipio, $cliente->uf])) }}
-                            </dd>
-                        </div>
-                    @endif
-                    @if($cliente->cep)
-                        <div>
-                            <dt class="text-xs text-gray-500 font-medium">CEP</dt>
-                            <dd class="mt-1 text-sm text-gray-900 font-mono">{{ $cliente->cep }}</dd>
-                        </div>
-                    @endif
-                    @if($cliente->endereco ?? null)
-                        <div class="sm:col-span-2">
-                            <dt class="text-xs text-gray-500 font-medium">Endereço</dt>
-                            <dd class="mt-1 text-sm text-gray-900">{{ $cliente->endereco }}</dd>
-                        </div>
-                    @endif
-                </dl>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <a
+                            href="{{ route('app.cliente.edit', $cliente->id) }}"
+                            data-link
+                            class="px-3 py-2 text-sm font-medium bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded"
+                        >
+                            Editar cadastro
+                        </a>
+                        @if(!$cliente->is_empresa_propria)
+                            <button
+                                type="button"
+                                id="btn-excluir-cliente"
+                                data-id="{{ $cliente->id }}"
+                                data-nome="{{ $clienteNome }}"
+                                class="px-3 py-2 text-sm font-medium bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded"
+                            >
+                                Excluir
+                            </button>
+                        @endif
+                    </div>
+                </div>
             </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-200">
+                @foreach($resumoCliente as $item)
+                    <div class="p-4 sm:p-6">
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">{{ $item['label'] }}</p>
+                        <p class="text-lg font-bold text-gray-900">{{ $item['valor'] }}</p>
+                        <p class="text-[11px] text-gray-500 mt-1">{{ $item['sub'] }}</p>
+                    </div>
+                @endforeach
+            </div>
+        </div>
 
-            {{-- Estatisticas --}}
-            <div class="space-y-4">
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6">
-                    <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">Estatísticas</h2>
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                    </svg>
-                                </div>
-                                <span class="text-sm text-gray-600">Participantes</span>
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div class="xl:col-span-2 space-y-6">
+                <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dados Cadastrais</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-200">
+                        @foreach($dadosCadastrais as $dado)
+                            <div class="px-4 py-3 sm:px-5 sm:py-4">
+                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ $dado['label'] }}</p>
+                                <p class="text-sm text-gray-700 {{ $dado['mono'] ? 'font-mono' : '' }}">{{ $dado['valor'] }}</p>
                             </div>
-                            <span class="text-xl font-bold text-gray-900">{{ $totalParticipantes }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                    </svg>
-                                </div>
-                                <span class="text-sm text-gray-600">Notas Fiscais</span>
+                        @endforeach
+                        @if($cliente->endereco ?? null)
+                            <div class="px-4 py-3 sm:px-5 sm:py-4 sm:col-span-2 lg:col-span-3 border-t border-gray-200">
+                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Endereço</p>
+                                <p class="text-sm text-gray-700">{{ $cliente->endereco }}</p>
                             </div>
-                            <span class="text-xl font-bold text-gray-900">{{ $totalNotas }}</span>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo Relacional</span>
+                            <a href="/app/clientes" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">
+                                Voltar à carteira
+                            </a>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-gray-200">
+                        <div class="px-4 py-4">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Participantes vinculados</p>
+                            <p class="text-base font-bold text-gray-900">{{ number_format($totalParticipantes, 0, ',', '.') }}</p>
+                            <p class="text-[11px] text-gray-500 mt-1">Cadastros que usam este cliente como vínculo operacional.</p>
+                        </div>
+                        <div class="px-4 py-4">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Notas registradas</p>
+                            <p class="text-base font-bold text-gray-900">{{ number_format($totalNotas, 0, ',', '.') }}</p>
+                            <p class="text-[11px] text-gray-500 mt-1">Movimentação fiscal consolidada disponível para análise.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-0">
+                    @include('autenticado.partials.notas-fiscais-card', [
+                        'notas' => $notasFiscais,
+                        'totalNotas' => $totalNotasFiscais,
+                        'ajaxUrl' => $notasAjaxUrl,
+                        'contexto' => $notasContexto,
+                        'entityId' => $notasEntityId,
+                    ])
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Situação do Cadastro</span>
+                    </div>
+                    <div class="p-4 space-y-4">
+                        <div>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Tipo de Pessoa</p>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoPessoaBadge['hex'] }}">{{ $tipoPessoaBadge['label'] }}</span>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Status</p>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusBadge['hex'] }}">{{ $statusBadge['label'] }}</span>
+                        </div>
+                        @if($cliente->is_empresa_propria)
+                            <div>
+                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Classificação</p>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $empresaBadge['hex'] }}">{{ $empresaBadge['label'] }}</span>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Metadados</span>
+                    </div>
+                    <div class="divide-y divide-gray-200">
+                        <div class="px-4 py-3">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Criado em</p>
+                            <p class="text-sm text-gray-700">{{ $cliente->created_at?->format('d/m/Y H:i') ?? '-' }}</p>
+                        </div>
+                        <div class="px-4 py-3">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Documento</p>
+                            <p class="text-sm text-gray-700 font-mono">{{ $cliente->documento_formatado }}</p>
+                        </div>
+                        <div class="px-4 py-3">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Base fiscal</p>
+                            <p class="text-sm text-gray-700">{{ number_format($totalNotas, 0, ',', '.') }} notas disponíveis</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Notas Fiscais (EFD + XML unificadas) --}}
-        <div class="mt-6">
-            @include('autenticado.partials.notas-fiscais-card', [
-                'notas' => $notasFiscais,
-                'totalNotas' => $totalNotasFiscais,
-                'ajaxUrl' => $notasAjaxUrl,
-                'contexto' => $notasContexto,
-                'entityId' => $notasEntityId,
-            ])
-        </div>
-    </div>
-
-    {{-- Modal de confirmacao de exclusao --}}
-    @if(!$cliente->is_empresa_propria)
-    <div id="modal-excluir-show" class="fixed inset-0 z-50 hidden">
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" id="modal-excluir-show-overlay"></div>
-        <div class="relative z-10 flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                        </svg>
+        @if(!$cliente->is_empresa_propria)
+            <div id="modal-excluir-show" class="fixed inset-0 z-50 hidden">
+                <div class="absolute inset-0 bg-black/40" id="modal-excluir-show-overlay"></div>
+                <div class="relative z-10 flex items-center justify-center min-h-screen p-4">
+                    <div class="bg-white rounded border border-gray-300 w-full max-w-md overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Excluir Cliente</span>
+                        </div>
+                        <div class="p-5">
+                            <p class="text-sm text-gray-700">
+                                Confirmar exclusão de <strong>{{ $clienteNome }}</strong>? Esta ação remove o cadastro da carteira.
+                            </p>
+                        </div>
+                        <div class="px-4 py-3 border-t border-gray-200 bg-white flex justify-end gap-2">
+                            <button type="button" id="btn-cancelar-excluir-show" class="px-3 py-2 text-sm font-medium bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded">
+                                Cancelar
+                            </button>
+                            <button type="button" id="btn-confirmar-excluir-show" class="px-3 py-2 text-sm font-medium bg-gray-800 text-white hover:bg-gray-700 rounded" data-id="{{ $cliente->id }}">
+                                Excluir
+                            </button>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="text-base font-bold text-gray-900">Excluir cliente</h3>
-                        <p class="text-sm text-gray-500">Esta ação não pode ser desfeita.</p>
-                    </div>
-                </div>
-                <p class="text-sm text-gray-700 mb-6">
-                    Tem certeza que deseja excluir <strong>{{ $cliente->razao_social ?? $cliente->nome }}</strong>?
-                </p>
-                <div class="flex gap-3 justify-end">
-                    <button type="button" id="btn-cancelar-excluir-show" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors">
-                        Cancelar
-                    </button>
-                    <button type="button" id="btn-confirmar-excluir-show" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors" data-id="{{ $cliente->id }}">
-                        Excluir
-                    </button>
                 </div>
             </div>
-        </div>
+
+            <script>
+            (function() {
+                var btnExcluir = document.getElementById('btn-excluir-cliente');
+                var modal = document.getElementById('modal-excluir-show');
+                var overlay = document.getElementById('modal-excluir-show-overlay');
+                var btnCancelar = document.getElementById('btn-cancelar-excluir-show');
+                var btnConfirmar = document.getElementById('btn-confirmar-excluir-show');
+
+                if (btnExcluir) {
+                    btnExcluir.addEventListener('click', function() {
+                        if (modal) modal.classList.remove('hidden');
+                    });
+                }
+
+                function fecharModal() {
+                    if (modal) modal.classList.add('hidden');
+                }
+
+                if (overlay) overlay.addEventListener('click', fecharModal);
+                if (btnCancelar) btnCancelar.addEventListener('click', fecharModal);
+
+                if (btnConfirmar) {
+                    btnConfirmar.addEventListener('click', function() {
+                        var id = this.dataset.id;
+                        var csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+                            || document.querySelector('input[name="_token"]')?.value
+                            || '';
+
+                        fetch('/app/cliente/' + id, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                            },
+                        })
+                        .then(function(res) { return res.json(); })
+                        .then(function(data) {
+                            if (data.success) {
+                                if (window.navigateTo) {
+                                    window.navigateTo('/app/clientes');
+                                } else {
+                                    window.location.href = '/app/clientes';
+                                }
+                            } else {
+                                fecharModal();
+                                alert(data.message || 'Erro ao excluir cliente.');
+                            }
+                        })
+                        .catch(function() {
+                            fecharModal();
+                            alert('Erro ao excluir cliente.');
+                        });
+                    });
+                }
+            })();
+            </script>
+        @endif
     </div>
-
-    <script>
-    (function() {
-        var btnExcluir = document.getElementById('btn-excluir-cliente');
-        var modal = document.getElementById('modal-excluir-show');
-        var overlay = document.getElementById('modal-excluir-show-overlay');
-        var btnCancelar = document.getElementById('btn-cancelar-excluir-show');
-        var btnConfirmar = document.getElementById('btn-confirmar-excluir-show');
-
-        if (btnExcluir) {
-            btnExcluir.addEventListener('click', function() {
-                if (modal) modal.classList.remove('hidden');
-            });
-        }
-
-        function fecharModal() {
-            if (modal) modal.classList.add('hidden');
-        }
-
-        if (overlay) overlay.addEventListener('click', fecharModal);
-        if (btnCancelar) btnCancelar.addEventListener('click', fecharModal);
-
-        if (btnConfirmar) {
-            btnConfirmar.addEventListener('click', function() {
-                var id = this.dataset.id;
-                var csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
-                    || document.querySelector('input[name="_token"]')?.value
-                    || '';
-
-                fetch('/app/cliente/' + id, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken,
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json',
-                    },
-                })
-                .then(function(res) { return res.json(); })
-                .then(function(data) {
-                    if (data.success) {
-                        if (window.navigateTo) {
-                            window.navigateTo('/app/clientes');
-                        } else {
-                            window.location.href = '/app/clientes';
-                        }
-                    } else {
-                        fecharModal();
-                        alert(data.message || 'Erro ao excluir cliente.');
-                    }
-                })
-                .catch(function() {
-                    fecharModal();
-                    alert('Erro ao excluir cliente.');
-                });
-            });
-        }
-    })();
-    </script>
-    @endif
 </div>

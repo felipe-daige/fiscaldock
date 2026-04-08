@@ -1,19 +1,8 @@
 {{-- Dashboard de Notas Fiscais --}}
-<div class="min-h-screen bg-gray-50" id="dashboard-nf-container">
+<div class="min-h-screen bg-gray-100" id="dashboard-nf-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
         <style>
-            @keyframes card-slide-in {
-                from { opacity: 0; transform: translateY(60px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            .dash-animate {
-                opacity: 0;
-                animation: card-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-            @media (prefers-reduced-motion: reduce) {
-                .dash-animate { opacity: 1; animation: none; }
-            }
             .dnf-skeleton {
                 background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
                 background-size: 200% 100%;
@@ -27,44 +16,37 @@
         </style>
 
         {{-- Page Header --}}
-        <div class="mb-4 sm:mb-8 dash-animate">
+        <div class="mb-4 sm:mb-8">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h1 class="text-xl sm:text-2xl font-semibold text-gray-900">Dashboard de Notas Fiscais</h1>
-                        <p class="mt-0.5 text-sm text-gray-500">Análise consolidada das notas fiscais importadas</p>
-                    </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Dashboard de Notas Fiscais</h1>
+                    <p class="mt-0.5 text-xs text-gray-500">Análise consolidada das notas fiscais importadas</p>
                 </div>
             </div>
         </div>
 
         {{-- Filtros Globais --}}
-        <div class="bg-white rounded-lg border border-gray-200 p-4 sm:p-5 mb-4 sm:mb-6 dash-animate" style="animation-delay: 0.1s">
+        <div class="bg-white rounded border border-gray-300 p-4 sm:p-5 mb-4 sm:mb-6">
             <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-end gap-3">
                 {{-- Periodo Inicio --}}
                 <div class="flex-1 min-w-[140px]">
-                    <label for="dnf-periodo-inicio" class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Período Início</label>
+                    <label for="dnf-periodo-inicio" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Período Início</label>
                     <input type="month" id="dnf-periodo-inicio" value="{{ $filtros['periodo_inicio'] }}"
-                           class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                           class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                 </div>
 
                 {{-- Periodo Fim --}}
                 <div class="flex-1 min-w-[140px]">
-                    <label for="dnf-periodo-fim" class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Período Fim</label>
+                    <label for="dnf-periodo-fim" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Período Fim</label>
                     <input type="month" id="dnf-periodo-fim" value="{{ $filtros['periodo_fim'] }}"
-                           class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                           class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                 </div>
 
                 {{-- Cliente --}}
                 <div class="flex-1 min-w-[180px]">
-                    <label for="dnf-cliente" class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Cliente</label>
+                    <label for="dnf-cliente" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Cliente</label>
                     <select id="dnf-cliente"
-                            class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         <option value="">Todos os Clientes</option>
                         @foreach($clientes ?? [] as $cliente)
                             @if($cliente->is_empresa_propria)
@@ -78,9 +60,9 @@
 
                 {{-- Participante --}}
                 <div class="flex-1 min-w-[200px]">
-                    <label for="dnf-participante" class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Participante</label>
+                    <label for="dnf-participante" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Participante</label>
                     <select id="dnf-participante"
-                            class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         <option value="">Todos os Participantes</option>
                         @foreach($participantes ?? [] as $part)
                             <option value="{{ $part->id }}">{{ $part->razao_social }} ({{ $part->documento }})</option>
@@ -90,9 +72,9 @@
 
                 {{-- Tipo EFD --}}
                 <div class="flex-1 min-w-[160px]">
-                    <label for="dnf-tipo-efd" class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Tipo EFD</label>
+                    <label for="dnf-tipo-efd" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Tipo EFD</label>
                     <select id="dnf-tipo-efd"
-                            class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         <option value="todos" {{ $filtros['tipo_efd'] === 'todos' ? 'selected' : '' }}>Todos</option>
                         <option value="EFD ICMS/IPI" {{ $filtros['tipo_efd'] === 'EFD ICMS/IPI' ? 'selected' : '' }}>EFD ICMS/IPI</option>
                         <option value="EFD PIS/COFINS" {{ $filtros['tipo_efd'] === 'EFD PIS/COFINS' ? 'selected' : '' }}>EFD PIS/COFINS</option>
@@ -101,9 +83,9 @@
 
                 {{-- Importacao --}}
                 <div class="flex-1 min-w-[200px]">
-                    <label for="dnf-importacao" class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Importação</label>
+                    <label for="dnf-importacao" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Importação</label>
                     <select id="dnf-importacao"
-                            class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         <option value="">Todas as importações</option>
                         @foreach($importacoes as $imp)
                             <option value="{{ $imp->id }}" {{ $filtros['importacao_id'] == $imp->id ? 'selected' : '' }}>
@@ -116,7 +98,7 @@
                 {{-- Botao Filtrar --}}
                 <div class="flex-shrink-0">
                     <button id="dnf-btn-filtrar"
-                            class="w-full sm:w-auto px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                            class="w-full sm:w-auto px-5 py-2 bg-gray-800 text-white text-sm font-medium rounded hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-400 transition-colors">
                         Filtrar
                     </button>
                 </div>
@@ -135,11 +117,11 @@
                 'compliance' => ['label' => 'Compliance', 'icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z'],
             ];
             $tabClass = fn($tab) => $tab === $defaultTab
-                ? 'dnf-tab active border-blue-500 text-blue-600 whitespace-nowrap py-3 sm:py-4 px-3 sm:px-1 border-b-2 font-medium text-sm'
+                ? 'dnf-tab active border-gray-800 text-gray-900 whitespace-nowrap py-3 sm:py-4 px-3 sm:px-1 border-b-2 font-medium text-sm'
                 : 'dnf-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 sm:py-4 px-3 sm:px-1 border-b-2 font-medium text-sm';
         @endphp
 
-        <div class="mb-4 sm:mb-6 dash-animate" style="animation-delay: 0.2s" data-default-tab="{{ $defaultTab }}">
+        <div class="mb-4 sm:mb-6" data-default-tab="{{ $defaultTab }}">
             <div class="border-b border-gray-200 scroll-fade-right sm:after:hidden">
                 <nav class="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide" aria-label="Tabs">
                     @foreach($tabs as $tabKey => $tab)
@@ -157,45 +139,45 @@
             {{-- KPI Cards --}}
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-6 mb-4 sm:mb-6">
                 {{-- Total Notas --}}
-                <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 dash-animate min-h-[88px] sm:min-h-[112px]" style="animation-delay: 0.3s">
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2 whitespace-nowrap">Total de Notas</p>
-                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 whitespace-nowrap" id="dnf-kpi-total">
+                <div class="bg-white rounded border border-gray-300 p-3 sm:p-6 min-h-[88px] sm:min-h-[112px]">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2 whitespace-nowrap">Total de Notas</p>
+                    <p class="text-lg font-bold text-gray-900 whitespace-nowrap" id="dnf-kpi-total">
                         <span class="dnf-skeleton inline-block w-16 h-7 sm:h-9">&nbsp;</span>
                     </p>
                     <p class="text-xs text-gray-400 mt-1 sm:mt-2 whitespace-nowrap">Notas no período</p>
                 </div>
 
                 {{-- Valor Entradas --}}
-                <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 dash-animate min-h-[88px] sm:min-h-[112px]" style="animation-delay: 0.35s">
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2 whitespace-nowrap">Entradas</p>
-                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-green-600 whitespace-nowrap" id="dnf-kpi-entradas">
+                <div class="bg-white rounded border border-gray-300 p-3 sm:p-6 min-h-[88px] sm:min-h-[112px]">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2 whitespace-nowrap">Entradas</p>
+                    <p class="text-lg font-bold text-gray-900 whitespace-nowrap" id="dnf-kpi-entradas">
                         <span class="dnf-skeleton inline-block w-24 h-7 sm:h-9">&nbsp;</span>
                     </p>
                     <p class="text-xs text-gray-400 mt-1 sm:mt-2 whitespace-nowrap">Valor total de entradas</p>
                 </div>
 
                 {{-- Valor Saidas --}}
-                <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 dash-animate min-h-[88px] sm:min-h-[112px]" style="animation-delay: 0.4s">
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2 whitespace-nowrap">Saídas</p>
-                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-red-500 whitespace-nowrap" id="dnf-kpi-saidas">
+                <div class="bg-white rounded border border-gray-300 p-3 sm:p-6 min-h-[88px] sm:min-h-[112px]">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2 whitespace-nowrap">Saídas</p>
+                    <p class="text-lg font-bold text-gray-900 whitespace-nowrap" id="dnf-kpi-saidas">
                         <span class="dnf-skeleton inline-block w-24 h-7 sm:h-9">&nbsp;</span>
                     </p>
                     <p class="text-xs text-gray-400 mt-1 sm:mt-2 whitespace-nowrap">Valor total de saídas</p>
                 </div>
 
                 {{-- Saldo --}}
-                <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 dash-animate min-h-[88px] sm:min-h-[112px]" style="animation-delay: 0.45s">
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2 whitespace-nowrap">Saldo</p>
-                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold whitespace-nowrap" id="dnf-kpi-saldo">
+                <div class="bg-white rounded border border-gray-300 p-3 sm:p-6 min-h-[88px] sm:min-h-[112px]">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2 whitespace-nowrap">Saldo</p>
+                    <p class="text-lg font-bold whitespace-nowrap" id="dnf-kpi-saldo">
                         <span class="dnf-skeleton inline-block w-24 h-7 sm:h-9">&nbsp;</span>
                     </p>
                     <p class="text-xs text-gray-400 mt-1 sm:mt-2 whitespace-nowrap">Entradas - Saídas</p>
                 </div>
 
                 {{-- Participantes Unicos --}}
-                <div class="col-span-2 lg:col-span-1 bg-white rounded-lg border border-gray-200 p-3 sm:p-6 dash-animate min-h-[88px] sm:min-h-[112px]" style="animation-delay: 0.5s">
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2 whitespace-nowrap">Participantes</p>
-                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 whitespace-nowrap" id="dnf-kpi-participantes">
+                <div class="col-span-2 lg:col-span-1 bg-white rounded border border-gray-300 p-3 sm:p-6 min-h-[88px] sm:min-h-[112px]">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2 whitespace-nowrap">Participantes</p>
+                    <p class="text-lg font-bold text-gray-900 whitespace-nowrap" id="dnf-kpi-participantes">
                         <span class="dnf-skeleton inline-block w-12 h-7 sm:h-9">&nbsp;</span>
                     </p>
                     <p class="text-xs text-gray-400 mt-1 sm:mt-2 whitespace-nowrap">Únicos no período</p>
@@ -203,7 +185,7 @@
             </div>
 
             {{-- Grafico de Evolucao Temporal --}}
-            <div class="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6 dash-animate" style="animation-delay: 0.55s">
+            <div class="bg-white rounded border border-gray-300 p-4 sm:p-6 mb-4 sm:mb-6">
                 <h3 class="text-sm font-medium text-gray-700 mb-4">Evolução Mensal — Entradas vs Saídas</h3>
                 <div id="dnf-chart-evolucao" style="min-height: 320px;">
                     <div class="flex items-center justify-center h-64 text-gray-400">
@@ -216,7 +198,7 @@
             {{-- Breakdown por Tipo de Documento + Top 5 Participantes --}}
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {{-- Tipo de Documento --}}
-                <div class="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 dash-animate" style="animation-delay: 0.6s">
+                <div class="bg-white rounded border border-gray-300 p-4 sm:p-6">
                     <h3 class="text-sm font-medium text-gray-700 mb-4">Notas Fiscais por Modelo</h3>
                     <div id="dnf-table-modelos">
                         <div class="space-y-3">
@@ -229,7 +211,7 @@
                 </div>
 
                 {{-- Top 5 Participantes --}}
-                <div class="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 dash-animate" style="animation-delay: 0.65s">
+                <div class="bg-white rounded border border-gray-300 p-4 sm:p-6">
                     <h3 class="text-sm font-medium text-gray-700 mb-4">Top 5 Participantes por Volume</h3>
                     <div id="dnf-table-participantes">
                         <div class="space-y-3">
@@ -243,9 +225,9 @@
 
             {{-- Estado vazio (hidden por padrao) --}}
             <div id="dnf-empty-state" class="hidden">
-                <div class="bg-white rounded-lg border border-gray-200">
+                <div class="bg-white rounded border border-gray-300">
                     <div class="flex flex-col items-center justify-center py-16 sm:py-24 text-gray-400">
-                        <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+                        <div class="w-16 h-16 bg-gray-100 rounded flex items-center justify-center mb-4">
                             <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
@@ -263,10 +245,10 @@
             {{-- KPI Cards Resumo --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-6">
                 {{-- Entradas --}}
-                <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 dash-animate" style="animation-delay: 0.3s">
+                <div class="bg-white rounded border border-gray-300 p-3 sm:p-6">
                     <div class="flex items-center justify-between">
                         <div class="flex-1 min-w-0">
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">CFOPs de Entrada</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">CFOPs de Entrada</p>
                             <p class="text-xl sm:text-2xl font-semibold text-green-600 whitespace-nowrap" id="dnf-cfop-entradas-valor">
                                 <span class="dnf-skeleton inline-block w-24 h-7 sm:h-9">&nbsp;</span>
                             </p>
@@ -274,25 +256,25 @@
                                 <span class="dnf-skeleton inline-block w-32 h-4">&nbsp;</span>
                             </p>
                         </div>
-                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
+                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
                             <svg class="w-4 h-4 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
                         </div>
                     </div>
                 </div>
 
                 {{-- Saidas --}}
-                <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 dash-animate" style="animation-delay: 0.35s">
+                <div class="bg-white rounded border border-gray-300 p-3 sm:p-6">
                     <div class="flex items-center justify-between">
                         <div class="flex-1 min-w-0">
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">CFOPs de Saída</p>
-                            <p class="text-xl sm:text-2xl font-semibold text-blue-600 whitespace-nowrap" id="dnf-cfop-saidas-valor">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">CFOPs de Saída</p>
+                            <p class="text-lg font-bold text-gray-900 whitespace-nowrap" id="dnf-cfop-saidas-valor">
                                 <span class="dnf-skeleton inline-block w-24 h-7 sm:h-9">&nbsp;</span>
                             </p>
                             <p class="text-xs text-gray-400 mt-1 sm:mt-2" id="dnf-cfop-saidas-info">
                                 <span class="dnf-skeleton inline-block w-32 h-4">&nbsp;</span>
                             </p>
                         </div>
-                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
+                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
                             <svg class="w-4 h-4 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
                         </div>
                     </div>
@@ -300,20 +282,20 @@
             </div>
 
             {{-- Filtro local + Tabela --}}
-            <div class="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 dash-animate" style="animation-delay: 0.4s">
+            <div class="bg-white rounded border border-gray-300 p-4 sm:p-6">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                     <div class="flex items-center gap-3">
                         <h3 class="text-sm font-medium text-gray-700">Ranking de CFOPs</h3>
                         <div class="flex items-center gap-1 text-xs text-gray-400" id="dnf-cfop-sort-controls">
                             <span>Ordenar:</span>
-                            <button data-cfop-sort="valor_total" class="cfop-sort-btn px-1.5 py-0.5 rounded text-blue-500 font-medium">Valor ↓</button>
+                            <button data-cfop-sort="valor_total" class="cfop-sort-btn px-1.5 py-0.5 rounded text-gray-800 font-medium">Valor ↓</button>
                             <span>·</span>
                             <button data-cfop-sort="qtd_itens" class="cfop-sort-btn px-1.5 py-0.5 rounded text-gray-400 hover:text-gray-600">Qtd</button>
                             <span>·</span>
                             <button data-cfop-sort="cfop" class="cfop-sort-btn px-1.5 py-0.5 rounded text-gray-400 hover:text-gray-600">CFOP</button>
                         </div>
                     </div>
-                    <div class="flex gap-1 bg-gray-100 rounded-lg p-0.5" id="dnf-cfop-filtro-local">
+                    <div class="flex gap-1 bg-gray-100 rounded p-0.5" id="dnf-cfop-filtro-local">
                         <button data-cfop-filtro="todos" class="cfop-filtro-btn px-3 py-1.5 text-xs font-medium rounded-md bg-white text-gray-700 shadow-sm">Todos</button>
                         <button data-cfop-filtro="entrada" class="cfop-filtro-btn px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-700">Entradas</button>
                         <button data-cfop-filtro="saida" class="cfop-filtro-btn px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-700">Saídas</button>
@@ -322,10 +304,10 @@
                 <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400 mb-3 pb-3 border-b border-gray-100">
                     <span>Barra = volume relativo de itens</span>
                     <span class="hidden sm:inline">&middot;</span>
-                    <span class="inline-flex items-center gap-1"><span class="w-4 h-4 rounded bg-green-100 text-green-700 text-[10px] font-bold inline-flex items-center justify-center">E</span> Entrada</span>
-                    <span class="inline-flex items-center gap-1"><span class="w-4 h-4 rounded bg-red-100 text-red-600 text-[10px] font-bold inline-flex items-center justify-center">S</span> Saída</span>
-                    <span class="inline-flex items-center gap-1"><span class="w-4 h-4 rounded bg-amber-100 text-amber-700 text-[10px] font-bold inline-flex items-center justify-center">D</span> Devolução</span>
-                    <span class="inline-flex items-center gap-1"><span class="w-4 h-4 rounded bg-purple-100 text-purple-700 text-[10px] font-bold inline-flex items-center justify-center">T</span> Transferência</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-4 h-4 rounded text-[10px] font-bold inline-flex items-center justify-center text-white" style="background-color: #047857">E</span> Entrada</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-4 h-4 rounded text-[10px] font-bold inline-flex items-center justify-center text-white" style="background-color: #d97706">S</span> Saída</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-4 h-4 rounded text-[10px] font-bold inline-flex items-center justify-center text-white" style="background-color: #d97706">D</span> Devolução</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-4 h-4 rounded text-[10px] font-bold inline-flex items-center justify-center text-white" style="background-color: #7c3aed">T</span> Transferência</span>
                 </div>
                 <div id="dnf-cfop-table">
                     <div class="space-y-3">
@@ -340,9 +322,9 @@
 
             {{-- Estado vazio CFOP --}}
             <div id="dnf-cfop-empty" class="hidden">
-                <div class="bg-white rounded-lg border border-gray-200">
+                <div class="bg-white rounded border border-gray-300">
                     <div class="flex flex-col items-center justify-center py-16 sm:py-24 text-gray-400">
-                        <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+                        <div class="w-16 h-16 bg-gray-100 rounded flex items-center justify-center mb-4">
                             <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
                             </svg>
@@ -360,45 +342,45 @@
             {{-- KPI Cards --}}
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 mb-4 sm:mb-6">
                 {{-- Total Participantes --}}
-                <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 dash-animate" style="animation-delay: 0.3s">
+                <div class="bg-white rounded border border-gray-300 p-3 sm:p-6">
                     <div class="flex items-center justify-between">
                         <div class="flex-1 min-w-0">
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Total Participantes</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Total Participantes</p>
                             <p class="text-xl sm:text-2xl font-semibold text-gray-900 whitespace-nowrap" id="dnf-part-total">
                                 <span class="dnf-skeleton inline-block w-12 h-7 sm:h-9">&nbsp;</span>
                             </p>
                         </div>
-                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
+                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
                             <svg class="w-4 h-4 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         </div>
                     </div>
                 </div>
 
                 {{-- Fornecedores --}}
-                <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 dash-animate" style="animation-delay: 0.35s">
+                <div class="bg-white rounded border border-gray-300 p-3 sm:p-6">
                     <div class="flex items-center justify-between">
                         <div class="flex-1 min-w-0">
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Fornecedores</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Fornecedores</p>
                             <p class="text-xl sm:text-2xl font-semibold text-green-600 whitespace-nowrap" id="dnf-part-fornecedores">
                                 <span class="dnf-skeleton inline-block w-12 h-7 sm:h-9">&nbsp;</span>
                             </p>
                         </div>
-                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
+                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
                             <svg class="w-4 h-4 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
                         </div>
                     </div>
                 </div>
 
                 {{-- Clientes --}}
-                <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 dash-animate" style="animation-delay: 0.4s">
+                <div class="bg-white rounded border border-gray-300 p-3 sm:p-6">
                     <div class="flex items-center justify-between">
                         <div class="flex-1 min-w-0">
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Clientes</p>
-                            <p class="text-xl sm:text-2xl font-semibold text-blue-600 whitespace-nowrap" id="dnf-part-clientes">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Clientes</p>
+                            <p class="text-lg font-bold text-gray-900 whitespace-nowrap" id="dnf-part-clientes">
                                 <span class="dnf-skeleton inline-block w-12 h-7 sm:h-9">&nbsp;</span>
                             </p>
                         </div>
-                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
+                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
                             <svg class="w-4 h-4 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
                         </div>
                     </div>
@@ -406,7 +388,7 @@
             </div>
 
             {{-- Concentracao --}}
-            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 dash-animate" style="animation-delay: 0.45s" id="dnf-part-concentracao-card">
+            <div class="bg-white rounded border border-gray-300 border-l-4 border-l-amber-500 p-3 sm:p-4 mb-4 sm:mb-6" id="dnf-part-concentracao-card">
                 <div class="flex items-start gap-2">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <p class="text-sm text-amber-800" id="dnf-part-concentracao">
@@ -416,13 +398,13 @@
             </div>
 
             {{-- Filtro local + Busca + Tabela --}}
-            <div class="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 dash-animate" style="animation-delay: 0.5s">
+            <div class="bg-white rounded border border-gray-300 p-4 sm:p-6">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                     <h3 class="text-sm font-medium text-gray-700">Ranking de Participantes</h3>
                     <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
                         <input type="text" id="dnf-part-busca" placeholder="Buscar por nome ou CNPJ..."
-                               class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-56">
-                        <div class="flex gap-1 bg-gray-100 rounded-lg p-0.5" id="dnf-part-filtro-local">
+                               class="px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 w-full sm:w-56">
+                        <div class="flex gap-1 bg-gray-100 rounded p-0.5" id="dnf-part-filtro-local">
                             <button data-part-filtro="todos" class="part-filtro-btn px-3 py-1.5 text-xs font-medium rounded-md bg-white text-gray-700 shadow-sm">Todos</button>
                             <button data-part-filtro="fornecedor" class="part-filtro-btn px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-700">Fornecedores</button>
                             <button data-part-filtro="cliente" class="part-filtro-btn px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-700">Clientes</button>
@@ -443,9 +425,9 @@
 
             {{-- Estado vazio --}}
             <div id="dnf-part-empty" class="hidden">
-                <div class="bg-white rounded-lg border border-gray-200">
+                <div class="bg-white rounded border border-gray-300">
                     <div class="flex flex-col items-center justify-center py-16 sm:py-24 text-gray-400">
-                        <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+                        <div class="w-16 h-16 bg-gray-100 rounded flex items-center justify-center mb-4">
                             <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                             </svg>
@@ -461,7 +443,7 @@
         <div id="tab-tributario" class="dnf-tab-content hidden">
 
             {{-- Alerta PIS/COFINS --}}
-            <div id="dnf-trib-alerta" class="hidden bg-amber-50 border border-amber-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 dash-animate" style="animation-delay: 0.3s">
+            <div id="dnf-trib-alerta" class="hidden bg-white rounded border border-gray-300 border-l-4 border-l-amber-500 p-3 sm:p-4 mb-4 sm:mb-6">
                 <div class="flex items-start gap-2">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
                     <p class="text-sm text-amber-800">Dados de PIS/COFINS podem estar incompletos. Isso ocorre por uma limitação no processamento de arquivos EFD PIS/COFINS. Os valores de ICMS não são afetados.</p>
@@ -471,10 +453,10 @@
             {{-- KPI Cards --}}
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 mb-4 sm:mb-6">
                 {{-- Saldo ICMS --}}
-                <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 dash-animate" style="animation-delay: 0.35s">
+                <div class="bg-white rounded border border-gray-300 p-3 sm:p-6">
                     <div class="flex items-center justify-between">
                         <div class="flex-1 min-w-0">
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Saldo ICMS</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Saldo ICMS</p>
                             <p class="text-xl sm:text-2xl font-semibold whitespace-nowrap" id="dnf-trib-icms">
                                 <span class="dnf-skeleton inline-block w-24 h-7 sm:h-9">&nbsp;</span>
                             </p>
@@ -482,17 +464,17 @@
                                 <span class="dnf-skeleton inline-block w-40 h-4">&nbsp;</span>
                             </p>
                         </div>
-                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
+                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
                             <svg class="w-4 h-4 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                         </div>
                     </div>
                 </div>
 
                 {{-- Saldo PIS --}}
-                <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 dash-animate" style="animation-delay: 0.4s">
+                <div class="bg-white rounded border border-gray-300 p-3 sm:p-6">
                     <div class="flex items-center justify-between">
                         <div class="flex-1 min-w-0">
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Saldo PIS</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Saldo PIS</p>
                             <p class="text-xl sm:text-2xl font-semibold whitespace-nowrap" id="dnf-trib-pis">
                                 <span class="dnf-skeleton inline-block w-24 h-7 sm:h-9">&nbsp;</span>
                             </p>
@@ -500,17 +482,17 @@
                                 <span class="dnf-skeleton inline-block w-40 h-4">&nbsp;</span>
                             </p>
                         </div>
-                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
+                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
                             <svg class="w-4 h-4 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                         </div>
                     </div>
                 </div>
 
                 {{-- Saldo COFINS --}}
-                <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 dash-animate" style="animation-delay: 0.45s">
+                <div class="bg-white rounded border border-gray-300 p-3 sm:p-6">
                     <div class="flex items-center justify-between">
                         <div class="flex-1 min-w-0">
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Saldo COFINS</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Saldo COFINS</p>
                             <p class="text-xl sm:text-2xl font-semibold whitespace-nowrap" id="dnf-trib-cofins">
                                 <span class="dnf-skeleton inline-block w-24 h-7 sm:h-9">&nbsp;</span>
                             </p>
@@ -518,7 +500,7 @@
                                 <span class="dnf-skeleton inline-block w-40 h-4">&nbsp;</span>
                             </p>
                         </div>
-                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
+                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
                             <svg class="w-4 h-4 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                         </div>
                     </div>
@@ -526,7 +508,7 @@
             </div>
 
             {{-- Gráfico evolução ICMS --}}
-            <div class="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6 dash-animate" style="animation-delay: 0.5s">
+            <div class="bg-white rounded border border-gray-300 p-4 sm:p-6 mb-4 sm:mb-6">
                 <h3 class="text-sm font-medium text-gray-700 mb-4">Evolução Mensal — Débito vs Crédito ICMS</h3>
                 <div id="dnf-trib-chart" style="min-height: 320px;">
                     <div class="flex items-center justify-center h-64 text-gray-400">
@@ -537,7 +519,7 @@
             </div>
 
             {{-- Tabela consolidada por período --}}
-            <div class="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6 dash-animate" style="animation-delay: 0.55s">
+            <div class="bg-white rounded border border-gray-300 p-4 sm:p-6 mb-4 sm:mb-6">
                 <h3 class="text-sm font-medium text-gray-700 mb-4">Consolidado por Período</h3>
                 <div id="dnf-trib-table-periodo">
                     <div class="space-y-3">
@@ -549,7 +531,7 @@
             </div>
 
             {{-- Análise por CST (colapsável) --}}
-            <div class="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 dash-animate" style="animation-delay: 0.6s">
+            <div class="bg-white rounded border border-gray-300 p-4 sm:p-6">
                 <button id="dnf-trib-cst-toggle" class="flex items-center justify-between w-full text-left">
                     <h3 class="text-sm font-medium text-gray-700">Análise por CST ICMS</h3>
                     <svg id="dnf-trib-cst-chevron" class="w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -564,9 +546,9 @@
 
             {{-- Estado vazio --}}
             <div id="dnf-trib-empty" class="hidden">
-                <div class="bg-white rounded-lg border border-gray-200">
+                <div class="bg-white rounded border border-gray-300">
                     <div class="flex flex-col items-center justify-center py-16 sm:py-24 text-gray-400">
-                        <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+                        <div class="w-16 h-16 bg-gray-100 rounded flex items-center justify-center mb-4">
                             <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                             </svg>
@@ -584,15 +566,15 @@
             {{-- Resumo por severidade --}}
             <div id="dnf-alertas-resumo" class="grid grid-cols-3 gap-3 sm:gap-6 mb-4 sm:mb-6">
                 {{-- Alta --}}
-                <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 dash-animate" style="animation-delay: 0.3s">
+                <div class="bg-white rounded border border-gray-300 p-3 sm:p-6">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <div class="w-10 h-10 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
                             <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
                             </svg>
                         </div>
                         <div>
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Alta</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide tracking-wide">Alta</p>
                             <p class="text-2xl font-semibold text-red-600" id="dnf-alertas-alta">
                                 <span class="dnf-skeleton inline-block w-8 h-7">&nbsp;</span>
                             </p>
@@ -600,15 +582,15 @@
                     </div>
                 </div>
                 {{-- Media --}}
-                <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 dash-animate" style="animation-delay: 0.4s">
+                <div class="bg-white rounded border border-gray-300 p-3 sm:p-6">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <div class="w-10 h-10 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
                             <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                         </div>
                         <div>
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Média</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide tracking-wide">Média</p>
                             <p class="text-2xl font-semibold text-yellow-600" id="dnf-alertas-media">
                                 <span class="dnf-skeleton inline-block w-8 h-7">&nbsp;</span>
                             </p>
@@ -616,15 +598,15 @@
                     </div>
                 </div>
                 {{-- Baixa --}}
-                <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6 dash-animate" style="animation-delay: 0.5s">
+                <div class="bg-white rounded border border-gray-300 p-3 sm:p-6">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <div class="w-10 h-10 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                         </div>
                         <div>
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Baixa</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide tracking-wide">Baixa</p>
                             <p class="text-2xl font-semibold text-gray-600" id="dnf-alertas-baixa">
                                 <span class="dnf-skeleton inline-block w-8 h-7">&nbsp;</span>
                             </p>
@@ -635,16 +617,16 @@
 
             {{-- Lista de alertas --}}
             <div id="dnf-alertas-list" class="space-y-3">
-                <div class="dnf-skeleton h-16 rounded-lg">&nbsp;</div>
-                <div class="dnf-skeleton h-16 rounded-lg">&nbsp;</div>
-                <div class="dnf-skeleton h-16 rounded-lg">&nbsp;</div>
+                <div class="dnf-skeleton h-16 rounded">&nbsp;</div>
+                <div class="dnf-skeleton h-16 rounded">&nbsp;</div>
+                <div class="dnf-skeleton h-16 rounded">&nbsp;</div>
             </div>
 
             {{-- Empty state --}}
             <div id="dnf-alertas-empty" class="hidden">
-                <div class="bg-white rounded-lg border border-gray-200">
+                <div class="bg-white rounded border border-gray-300">
                     <div class="flex flex-col items-center justify-center py-16 sm:py-24 text-gray-400">
-                        <div class="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center mb-4">
+                        <div class="w-16 h-16 bg-gray-100 rounded flex items-center justify-center mb-4">
                             <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/>
                             </svg>
@@ -660,28 +642,28 @@
         <div id="tab-compliance" class="dnf-tab-content hidden">
             {{-- 4 KPI cards de cobertura --}}
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-                <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-4 dash-animate">
+                <div class="bg-white rounded border border-gray-300 p-3 sm:p-4">
                     <p class="text-xs text-gray-500 mb-1">Consultados</p>
                     <p id="dnf-comp-consultados" class="text-lg sm:text-xl font-bold text-gray-900">
                         <span class="inline-block h-6 w-16 bg-gray-200 rounded animate-pulse"></span>
                     </p>
                     <p id="dnf-comp-consultados-pct" class="text-xs text-gray-400 mt-0.5">&mdash;</p>
                 </div>
-                <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-4 dash-animate">
+                <div class="bg-white rounded border border-gray-300 p-3 sm:p-4">
                     <p class="text-xs text-gray-500 mb-1">Regulares</p>
                     <p id="dnf-comp-regulares" class="text-lg sm:text-xl font-bold text-green-600">
                         <span class="inline-block h-6 w-16 bg-gray-200 rounded animate-pulse"></span>
                     </p>
                     <p id="dnf-comp-regulares-pct" class="text-xs text-gray-400 mt-0.5">&mdash;</p>
                 </div>
-                <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-4 dash-animate">
+                <div class="bg-white rounded border border-gray-300 p-3 sm:p-4">
                     <p class="text-xs text-gray-500 mb-1">Exposição fiscal</p>
                     <p id="dnf-comp-exposicao" class="text-lg sm:text-xl font-bold text-red-600">
                         <span class="inline-block h-6 w-16 bg-gray-200 rounded animate-pulse"></span>
                     </p>
                     <p id="dnf-comp-exposicao-sub" class="text-xs text-gray-400 mt-0.5">&mdash;</p>
                 </div>
-                <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-4 dash-animate">
+                <div class="bg-white rounded border border-gray-300 p-3 sm:p-4">
                     <p class="text-xs text-gray-500 mb-1">Não consultados</p>
                     <p id="dnf-comp-nao-consultados" class="text-lg sm:text-xl font-bold text-yellow-600">
                         <span class="inline-block h-6 w-16 bg-gray-200 rounded animate-pulse"></span>
@@ -691,13 +673,13 @@
             </div>
 
             {{-- Filtros locais + Botao lote --}}
-            <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-4 mb-4 sm:mb-6">
+            <div class="bg-white rounded border border-gray-300 p-3 sm:p-4 mb-4 sm:mb-6">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div class="flex flex-wrap gap-2" id="dnf-comp-filtro-local">
-                        <button data-filtro="todos" class="px-3 py-1.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700">Todos</button>
-                        <button data-filtro="regulares" class="px-3 py-1.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">Regulares</button>
-                        <button data-filtro="irregulares" class="px-3 py-1.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">Irregulares</button>
-                        <button data-filtro="nao_consultados" class="px-3 py-1.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">Não consultados</button>
+                        <button data-filtro="todos" class="px-3 py-1.5 text-xs font-medium rounded text-white" style="background-color: #1f2937">Todos</button>
+                        <button data-filtro="regulares" class="px-3 py-1.5 text-xs font-medium rounded bg-white border border-gray-300 text-gray-600 hover:bg-gray-50">Regulares</button>
+                        <button data-filtro="irregulares" class="px-3 py-1.5 text-xs font-medium rounded bg-white border border-gray-300 text-gray-600 hover:bg-gray-50">Irregulares</button>
+                        <button data-filtro="nao_consultados" class="px-3 py-1.5 text-xs font-medium rounded bg-white border border-gray-300 text-gray-600 hover:bg-gray-50">Não consultados</button>
                     </div>
                     <div class="flex gap-2">
                         <select id="dnf-comp-ordenar" class="text-xs border border-gray-300 rounded-md px-2 py-1.5">
@@ -706,7 +688,7 @@
                             <option value="nome">Nome</option>
                         </select>
                         <button id="dnf-comp-consultar-todos" disabled
-                            class="px-3 py-1.5 text-xs font-medium rounded-md bg-gray-100 text-gray-400 cursor-not-allowed"
+                            class="px-3 py-1.5 text-xs font-medium rounded bg-gray-100 text-gray-400 cursor-not-allowed"
                             title="Em breve — consulta via InfoSimples">
                             Consultar todos pendentes
                         </button>
@@ -715,19 +697,19 @@
             </div>
 
             {{-- Tabela de participantes --}}
-            <div id="dnf-comp-tabela-wrap" class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div id="dnf-comp-tabela-wrap" class="bg-white rounded border border-gray-300 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
-                            <tr>
-                                <th class="px-3 sm:px-4 py-3 text-left font-medium">Participante</th>
-                                <th class="px-3 sm:px-4 py-3 text-left font-medium">CNPJ</th>
-                                <th class="px-3 sm:px-4 py-3 text-left font-medium">UF</th>
-                                <th class="px-3 sm:px-4 py-3 text-left font-medium">Situação</th>
-                                <th class="px-3 sm:px-4 py-3 text-left font-medium">Regime</th>
-                                <th class="px-3 sm:px-4 py-3 text-right font-medium">Volume</th>
-                                <th class="px-3 sm:px-4 py-3 text-left font-medium">Última consulta</th>
-                                <th class="px-3 sm:px-4 py-3 text-center font-medium">Ação</th>
+                        <thead class="bg-gray-50">
+                            <tr class="border-b border-gray-300">
+                                <th class="px-3 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participante</th>
+                                <th class="px-3 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">CNPJ</th>
+                                <th class="px-3 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">UF</th>
+                                <th class="px-3 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação</th>
+                                <th class="px-3 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Regime</th>
+                                <th class="px-3 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Volume</th>
+                                <th class="px-3 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Última consulta</th>
+                                <th class="px-3 sm:px-4 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Ação</th>
                             </tr>
                         </thead>
                         <tbody id="dnf-comp-tbody">
@@ -744,8 +726,8 @@
             </div>
 
             {{-- Empty state --}}
-            <div id="dnf-comp-empty" class="hidden bg-white rounded-lg border border-gray-200 py-16 text-center">
-                <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div id="dnf-comp-empty" class="hidden bg-white rounded border border-gray-300 py-16 text-center">
+                <div class="w-16 h-16 bg-gray-100 rounded flex items-center justify-center mx-auto mb-4">
                     <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                     </svg>
@@ -755,51 +737,51 @@
             </div>
 
             {{-- Secao informativa: consultas futuras --}}
-            <div class="mt-4 sm:mt-6 bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+            <div class="mt-4 sm:mt-6 bg-white rounded border border-gray-300 p-4 sm:p-6">
                 <h3 class="text-sm font-semibold text-gray-700 mb-3">Consultas disponíveis em breve</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                    <div class="flex flex-col items-center text-center p-3 rounded-lg border border-dashed border-gray-200 bg-gray-50">
-                        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center mb-2 border border-gray-200">
+                    <div class="flex flex-col items-center text-center p-3 rounded border border-dashed border-gray-300 bg-gray-50">
+                        <div class="w-10 h-10 bg-white rounded flex items-center justify-center mb-2 border border-gray-300">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         </div>
                         <p class="text-xs font-medium text-gray-600">SINTEGRA</p>
                         <p class="text-[10px] text-gray-400 mt-0.5">Valida IE estadual</p>
                         <span class="mt-1.5 px-2 py-0.5 text-[10px] font-medium rounded-full bg-gray-100 text-gray-500">Em breve</span>
                     </div>
-                    <div class="flex flex-col items-center text-center p-3 rounded-lg border border-dashed border-gray-200 bg-gray-50">
-                        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center mb-2 border border-gray-200">
+                    <div class="flex flex-col items-center text-center p-3 rounded border border-dashed border-gray-300 bg-gray-50">
+                        <div class="w-10 h-10 bg-white rounded flex items-center justify-center mb-2 border border-gray-300">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                         </div>
                         <p class="text-xs font-medium text-gray-600">Simples Nacional</p>
                         <p class="text-[10px] text-gray-400 mt-0.5">Regime tributário</p>
                         <span class="mt-1.5 px-2 py-0.5 text-[10px] font-medium rounded-full bg-gray-100 text-gray-500">Em breve</span>
                     </div>
-                    <div class="flex flex-col items-center text-center p-3 rounded-lg border border-dashed border-gray-200 bg-gray-50">
-                        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center mb-2 border border-gray-200">
+                    <div class="flex flex-col items-center text-center p-3 rounded border border-dashed border-gray-300 bg-gray-50">
+                        <div class="w-10 h-10 bg-white rounded flex items-center justify-center mb-2 border border-gray-300">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </div>
                         <p class="text-xs font-medium text-gray-600">CND Federal</p>
                         <p class="text-[10px] text-gray-400 mt-0.5">Regularidade fiscal</p>
                         <span class="mt-1.5 px-2 py-0.5 text-[10px] font-medium rounded-full bg-gray-100 text-gray-500">Em breve</span>
                     </div>
-                    <div class="flex flex-col items-center text-center p-3 rounded-lg border border-dashed border-gray-200 bg-gray-50">
-                        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center mb-2 border border-gray-200">
+                    <div class="flex flex-col items-center text-center p-3 rounded border border-dashed border-gray-300 bg-gray-50">
+                        <div class="w-10 h-10 bg-white rounded flex items-center justify-center mb-2 border border-gray-300">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                         </div>
                         <p class="text-xs font-medium text-gray-600">CEIS / CNEP</p>
                         <p class="text-[10px] text-gray-400 mt-0.5">Empresas inidôneas</p>
                         <span class="mt-1.5 px-2 py-0.5 text-[10px] font-medium rounded-full bg-gray-100 text-gray-500">Em breve</span>
                     </div>
-                    <div class="flex flex-col items-center text-center p-3 rounded-lg border border-dashed border-gray-200 bg-gray-50">
-                        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center mb-2 border border-gray-200">
+                    <div class="flex flex-col items-center text-center p-3 rounded border border-dashed border-gray-300 bg-gray-50">
+                        <div class="w-10 h-10 bg-white rounded flex items-center justify-center mb-2 border border-gray-300">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
                         </div>
                         <p class="text-xs font-medium text-gray-600">Protestos</p>
                         <p class="text-[10px] text-gray-400 mt-0.5">IEPTB / CENPROT</p>
                         <span class="mt-1.5 px-2 py-0.5 text-[10px] font-medium rounded-full bg-gray-100 text-gray-500">Em breve</span>
                     </div>
-                    <div class="flex flex-col items-center text-center p-3 rounded-lg border border-dashed border-gray-200 bg-gray-50">
-                        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center mb-2 border border-gray-200">
+                    <div class="flex flex-col items-center text-center p-3 rounded border border-dashed border-gray-300 bg-gray-50">
+                        <div class="w-10 h-10 bg-white rounded flex items-center justify-center mb-2 border border-gray-300">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
                         </div>
                         <p class="text-xs font-medium text-gray-600">Trabalho escravo</p>
@@ -822,7 +804,7 @@
     const container = document.getElementById('dashboard-nf-container');
     if (!container) return;
 
-    const ACTIVE_CLASS = 'active border-blue-500 text-blue-600 whitespace-nowrap py-3 sm:py-4 px-3 sm:px-1 border-b-2 font-medium text-sm';
+    const ACTIVE_CLASS = 'active border-gray-800 text-gray-900 whitespace-nowrap py-3 sm:py-4 px-3 sm:px-1 border-b-2 font-medium text-sm';
     const INACTIVE_CLASS = 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 sm:py-4 px-3 sm:px-1 border-b-2 font-medium text-sm';
 
     let currentTab = '{{ $defaultTab }}';
@@ -997,7 +979,7 @@
                 { name: 'Entradas', data: seriesEntradas },
                 { name: 'Saidas', data: seriesSaidas },
             ],
-            colors: ['#22c55e', '#ef4444'],
+            colors: ['#047857', '#d97706'],
             plotOptions: {
                 bar: { columnWidth: '60%', borderRadius: 4 },
             },
@@ -1073,13 +1055,13 @@
             html += '</div>';
             // Stacked proportion bar
             html += '<div class="flex h-1.5 rounded-full overflow-hidden bg-gray-100 mb-2">';
-            if (m.entradas.valor > 0) html += '<div class="bg-green-500 transition-all duration-500" style="width:' + entPct + '%"></div>';
-            if (m.saidas.valor > 0) html += '<div class="bg-red-400 transition-all duration-500" style="width:' + saiPct + '%"></div>';
+            if (m.entradas.valor > 0) html += '<div class="transition-all duration-500" style="width:' + entPct + '%;background-color:#047857"></div>';
+            if (m.saidas.valor > 0) html += '<div class="transition-all duration-500" style="width:' + saiPct + '%;background-color:#d97706"></div>';
             html += '</div>';
             // Sub-rows: entradas e saidas
             html += '<div class="flex flex-wrap justify-between gap-x-4 gap-y-1 text-xs">';
-            html += '  <span class="text-green-600"><span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>' + formatNum(m.entradas.quantidade) + ' entradas &middot; ' + formatBrl(m.entradas.valor) + '</span>';
-            html += '  <span class="text-red-500"><span class="inline-block w-2 h-2 rounded-full bg-red-400 mr-1"></span>' + formatNum(m.saidas.quantidade) + ' sa\u00eddas &middot; ' + formatBrl(m.saidas.valor) + '</span>';
+            html += '  <span class="text-gray-600"><span class="inline-block w-2 h-2 rounded-full mr-1" style="background-color:#047857"></span>' + formatNum(m.entradas.quantidade) + ' entradas &middot; ' + formatBrl(m.entradas.valor) + '</span>';
+            html += '  <span class="text-gray-600"><span class="inline-block w-2 h-2 rounded-full mr-1" style="background-color:#d97706"></span>' + formatNum(m.saidas.quantidade) + ' sa\u00eddas &middot; ' + formatBrl(m.saidas.valor) + '</span>';
             html += '</div>';
             html += '</div>';
         });
@@ -1100,7 +1082,7 @@
             modeloDonutChart = null;
         }
 
-        const cores = ['#3b82f6', '#22c55e', '#f97316', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899'];
+        const cores = ['#374151', '#047857', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#ea580c', '#65a30d', '#db2777', '#4f46e5'];
 
         const options = {
             chart: { type: 'donut', height: 180, fontFamily: 'inherit' },
@@ -1162,15 +1144,15 @@
 
         let html = '<div class="overflow-x-auto"><table class="w-full text-sm">';
         html += '<thead><tr class="border-b border-gray-200">';
-        html += '<th class="text-left py-2 px-2 text-xs font-medium text-gray-500 uppercase">Participante</th>';
-        html += '<th class="text-right py-2 px-2 text-xs font-medium text-gray-500 uppercase">Notas</th>';
-        html += '<th class="text-right py-2 px-2 text-xs font-medium text-gray-500 uppercase">Valor Total</th>';
+        html += '<th class="text-left py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participante</th>';
+        html += '<th class="text-right py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas</th>';
+        html += '<th class="text-right py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Valor Total</th>';
         html += '</tr></thead><tbody>';
 
         participantes.forEach((p, i) => {
             const bg = i % 2 === 0 ? '' : 'bg-gray-50';
             html += '<tr class="' + bg + '">';
-            html += '<td class="py-2 px-2"><div class="truncate max-w-[200px]"><a href="/app/participante/' + p.participante_id + '" class="text-blue-600 hover:text-blue-800 hover:underline">' + escapeHtml(p.razao_social) + '</a></div>';
+            html += '<td class="py-2 px-2"><div class="truncate max-w-[200px]"><a href="/app/participante/' + p.participante_id + '" class="text-gray-900 hover:text-gray-600 hover:underline">' + escapeHtml(p.razao_social) + '</a></div>';
             if (p.cnpj) html += '<div class="text-xs text-gray-400">' + escapeHtml(p.cnpj) + '</div>';
             html += '</td>';
             html += '<td class="py-2 px-2 text-right text-gray-600">' + formatNum(p.total_notas) + '</td>';
@@ -1270,7 +1252,7 @@
             html += '<div class="hidden sm:flex items-center gap-3 py-1.5">';
             html += '  <span class="text-xs font-bold text-gray-400 w-6 shrink-0">#' + (i + 1) + '</span>';
             html += '  <span class="font-mono text-sm font-semibold text-gray-800 w-12 shrink-0">' + c.cfop + '</span>';
-            html += '  <span class="inline-flex items-center justify-center w-5 h-5 rounded text-xs font-bold ' + badge.cls + ' shrink-0" title="' + badge.label + '">' + badge.letter + '</span>';
+            html += '  <span class="inline-flex items-center justify-center w-5 h-5 rounded text-xs font-bold text-white shrink-0" style="' + badge.style + '" title="' + badge.label + '">' + badge.letter + '</span>';
             html += '  <span class="text-sm text-gray-600 truncate flex-1 min-w-0" title="' + escapeHtml(c.descricao) + '">' + escapeHtml(c.descricao) + '</span>';
             html += '  <div class="w-32 lg:w-48 shrink-0"><div class="bg-gray-100 rounded-full h-2"><div class="' + badge.barColor + ' rounded-full h-2 transition-all duration-500" style="width: ' + barWidth + '%"></div></div></div>';
             html += '  <span class="text-sm font-semibold text-gray-800 w-14 text-right shrink-0 whitespace-nowrap">' + formatNum(c.qtd_itens) + '</span>';
@@ -1283,7 +1265,7 @@
             html += '  <div class="flex items-center gap-2 mb-1.5">';
             html += '    <span class="text-xs font-bold text-gray-400">#' + (i + 1) + '</span>';
             html += '    <span class="font-mono text-sm font-semibold text-gray-800">' + c.cfop + '</span>';
-            html += '    <span class="inline-flex items-center justify-center w-5 h-5 rounded text-xs font-bold ' + badge.cls + '" title="' + badge.label + '">' + badge.letter + '</span>';
+            html += '    <span class="inline-flex items-center justify-center w-5 h-5 rounded text-xs font-bold text-white" style="' + badge.style + '" title="' + badge.label + '">' + badge.letter + '</span>';
             html += '    <span class="text-xs text-gray-600 truncate flex-1 min-w-0">' + escapeHtml(c.descricao) + '</span>';
             html += '  </div>';
             html += '  <div class="flex items-center gap-2">';
@@ -1310,12 +1292,12 @@
 
     function cfopNaturezaBadge(natureza) {
         const map = {
-            'entrada':       { cls: 'bg-green-100 text-green-700',  letter: 'E', barColor: 'bg-green-500', label: 'Entrada' },
-            'saida':         { cls: 'bg-red-100 text-red-600',      letter: 'S', barColor: 'bg-red-400',   label: 'Sa\u00edda' },
-            'devolucao':     { cls: 'bg-amber-100 text-amber-700',  letter: 'D', barColor: 'bg-amber-500', label: 'Devolu\u00e7\u00e3o' },
-            'transferencia': { cls: 'bg-purple-100 text-purple-700', letter: 'T', barColor: 'bg-purple-500', label: 'Transfer\u00eancia' },
+            'entrada':       { style: 'background-color:#047857', letter: 'E', barColor: 'bg-green-500', label: 'Entrada' },
+            'saida':         { style: 'background-color:#d97706', letter: 'S', barColor: 'bg-amber-500', label: 'Sa\u00edda' },
+            'devolucao':     { style: 'background-color:#dc2626', letter: 'D', barColor: 'bg-red-500',   label: 'Devolu\u00e7\u00e3o' },
+            'transferencia': { style: 'background-color:#7c3aed', letter: 'T', barColor: 'bg-purple-500', label: 'Transfer\u00eancia' },
         };
-        return map[natureza] || { cls: 'bg-gray-100 text-gray-600', letter: '?', barColor: 'bg-gray-400', label: natureza || 'Outro' };
+        return map[natureza] || { style: 'background-color:#9ca3af', letter: '?', barColor: 'bg-gray-400', label: natureza || 'Outro' };
     }
 
     function updateCfopSortControls() {
@@ -1323,7 +1305,7 @@
         document.querySelectorAll('#dnf-cfop-sort-controls .cfop-sort-btn').forEach(btn => {
             const col = btn.getAttribute('data-cfop-sort');
             if (col === cfopSortCol) {
-                btn.className = 'cfop-sort-btn px-1.5 py-0.5 rounded text-blue-500 font-medium';
+                btn.className = 'cfop-sort-btn px-1.5 py-0.5 rounded text-gray-800 font-medium';
                 const labels = { 'valor_total': 'Valor', 'qtd_itens': 'Qtd', 'cfop': 'CFOP' };
                 btn.textContent = (labels[col] || col) + ' ' + arrows[cfopSortAsc];
             } else {
@@ -1441,7 +1423,7 @@
         txt += ' \u00b7 Top 5 clientes = ' + conc.top5_saidas_pct.toFixed(1).replace('.', ',') + '% das saídas';
 
         if (conc.top5_entradas_pct > 80 || conc.top5_saidas_pct > 80) {
-            txt += ' <span class="inline-block ml-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">Alta concentração</span>';
+            txt += ' <span class="inline-block ml-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#dc2626">Alta concentração</span>';
         }
 
         el.innerHTML = txt;
@@ -1458,31 +1440,31 @@
 
         let html = '<div class="overflow-x-auto"><table class="w-full text-sm">';
         html += '<thead><tr class="border-b border-gray-200">';
-        html += '<th class="text-left py-2 px-2 text-xs font-medium text-gray-500 uppercase">Participante</th>';
-        html += '<th class="text-center py-2 px-2 text-xs font-medium text-gray-500 uppercase">UF</th>';
-        html += '<th class="text-right py-2 px-2 text-xs font-medium text-gray-500 uppercase">Notas</th>';
-        html += '<th class="text-right py-2 px-2 text-xs font-medium text-gray-500 uppercase">Entradas</th>';
-        html += '<th class="text-right py-2 px-2 text-xs font-medium text-gray-500 uppercase">Saídas</th>';
-        html += '<th class="text-center py-2 px-2 text-xs font-medium text-gray-500 uppercase">Papel</th>';
-        html += '<th class="text-center py-2 px-2 text-xs font-medium text-gray-500 uppercase">Situação</th>';
-        html += '<th class="text-left py-2 px-2 text-xs font-medium text-gray-500 uppercase">Regime</th>';
-        html += '<th class="text-center py-2 px-2 text-xs font-medium text-gray-500 uppercase"></th>';
+        html += '<th class="text-left py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participante</th>';
+        html += '<th class="text-center py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">UF</th>';
+        html += '<th class="text-right py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas</th>';
+        html += '<th class="text-right py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Entradas</th>';
+        html += '<th class="text-right py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saídas</th>';
+        html += '<th class="text-center py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Papel</th>';
+        html += '<th class="text-center py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação</th>';
+        html += '<th class="text-left py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Regime</th>';
+        html += '<th class="text-center py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wide"></th>';
         html += '</tr></thead><tbody>';
 
         participantes.forEach((p, i) => {
             const bg = i % 2 === 0 ? '' : 'bg-gray-50';
             html += '<tr class="' + bg + ' hover:bg-gray-100 transition-colors">';
-            html += '<td class="py-2 px-2"><div class="truncate max-w-[220px]" title="' + escapeHtml(p.razao_social) + '"><a href="/app/participante/' + p.participante_id + '" class="text-blue-600 hover:text-blue-800 hover:underline">' + escapeHtml(p.razao_social) + '</a></div>';
+            html += '<td class="py-2 px-2"><div class="truncate max-w-[220px]" title="' + escapeHtml(p.razao_social) + '"><a href="/app/participante/' + p.participante_id + '" class="text-gray-900 hover:text-gray-600 hover:underline">' + escapeHtml(p.razao_social) + '</a></div>';
             if (p.cnpj) html += '<div class="text-xs text-gray-400">' + escapeHtml(p.cnpj) + '</div>';
             html += '</td>';
             html += '<td class="py-2 px-2 text-center text-gray-600">' + escapeHtml(p.uf || '\u2014') + '</td>';
             html += '<td class="py-2 px-2 text-right text-gray-600">' + formatNum(p.total_notas) + '</td>';
             html += '<td class="py-2 px-2 text-right text-green-600">' + formatBrl(p.valor_entradas) + '</td>';
-            html += '<td class="py-2 px-2 text-right text-blue-600">' + formatBrl(p.valor_saidas) + '</td>';
+            html += '<td class="py-2 px-2 text-right text-gray-700">' + formatBrl(p.valor_saidas) + '</td>';
             html += '<td class="py-2 px-2 text-center">' + papelBadge(p.papel) + '</td>';
             html += '<td class="py-2 px-2 text-center">' + situacaoBadge(p.situacao_cadastral) + '</td>';
             html += '<td class="py-2 px-2 text-gray-600 text-sm truncate max-w-[120px]">' + escapeHtml(p.regime_tributario || '\u2014') + '</td>';
-            html += '<td class="py-2 px-2 text-center"><a href="/app/participante/' + p.participante_id + '" class="text-blue-600 hover:text-blue-800 text-xs font-medium">Ver</a></td>';
+            html += '<td class="py-2 px-2 text-center"><a href="/app/participante/' + p.participante_id + '" class="text-gray-600 hover:text-gray-900 hover:underline text-xs font-medium">Ver</a></td>';
             html += '</tr>';
         });
 
@@ -1510,7 +1492,7 @@
         const start = Math.max(1, pag.current_page - 2);
         const end = Math.min(pag.last_page, pag.current_page + 2);
         for (let i = start; i <= end; i++) {
-            const active = i === pag.current_page ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 text-gray-600 hover:bg-gray-50';
+            const active = i === pag.current_page ? 'text-white border-gray-800" style="background-color:#1f2937' : 'border-gray-300 text-gray-600 hover:bg-gray-50';
             html += '<button data-part-page="' + i + '" class="part-page-btn px-3 py-1 text-sm rounded border ' + active + '">' + i + '</button>';
         }
 
@@ -1531,24 +1513,24 @@
 
     function papelBadge(papel) {
         const map = {
-            'fornecedor': ['bg-green-100 text-green-700', 'Fornecedor'],
-            'cliente': ['bg-blue-100 text-blue-700', 'Cliente'],
-            'ambos': ['bg-indigo-100 text-indigo-700', 'Ambos'],
+            'fornecedor': ['#047857', 'Fornecedor'],
+            'cliente': ['#374151', 'Cliente'],
+            'ambos': ['#4338ca', 'Ambos'],
         };
-        const [cls, label] = map[papel] || ['bg-gray-100 text-gray-600', papel];
-        return '<span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium ' + cls + '">' + label + '</span>';
+        const [hex, label] = map[papel] || ['#9ca3af', papel];
+        return '<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:' + hex + '">' + label + '</span>';
     }
 
     function situacaoBadge(situacao) {
         if (!situacao) return '<span class="text-gray-300">\u2014</span>';
         const lower = situacao.toLowerCase();
         if (lower === 'ativa') {
-            return '<span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Ativa</span>';
+            return '<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#047857">Ativa</span>';
         }
         if (['baixada', 'inapta', 'suspensa', 'nula'].includes(lower)) {
-            return '<span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">' + escapeHtml(situacao) + '</span>';
+            return '<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#dc2626">' + escapeHtml(situacao) + '</span>';
         }
-        return '<span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">' + escapeHtml(situacao) + '</span>';
+        return '<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#9ca3af">' + escapeHtml(situacao) + '</span>';
     }
 
     function setupPartFiltroLocal() {
@@ -1676,13 +1658,13 @@
                 { name: 'Débito ICMS', data: evolucao.map(function(e) { return parseFloat(e.icms_debito); }) },
                 { name: 'Crédito ICMS', data: evolucao.map(function(e) { return parseFloat(e.icms_credito); }) }
             ],
-            colors: ['#ef4444', '#22c55e'],
+            colors: ['#dc2626', '#047857'],
             plotOptions: { bar: { columnWidth: '60%', borderRadius: 4 } },
             xaxis: { categories: evolucao.map(function(e) { return mesLabel(e.mes); }), labels: { style: { fontSize: '11px' } } },
             yaxis: { labels: { formatter: function(val) { return formatBrl(val); }, style: { fontSize: '11px' } } },
             tooltip: { y: { formatter: function(val) { return formatBrl(val); } } },
             legend: { position: 'top', horizontalAlign: 'right', fontSize: '12px' },
-            grid: { borderColor: '#f3f4f6' },
+            grid: { borderColor: '#e5e7eb' },
             dataLabels: { enabled: false },
             responsive: [{ breakpoint: 640, options: { chart: { height: 260 }, plotOptions: { bar: { columnWidth: '80%' } } } }]
         };
@@ -1703,16 +1685,16 @@
 
         var html = '<div class="overflow-x-auto -mx-4 sm:mx-0"><table class="min-w-full text-xs">'
             + '<thead><tr class="bg-gray-50 border-b">'
-            + '<th class="px-2 sm:px-3 py-2 text-left text-xs font-medium text-gray-500">Período</th>'
-            + '<th class="px-2 sm:px-3 py-2 text-right text-xs font-medium text-gray-500">ICMS Déb</th>'
-            + '<th class="px-2 sm:px-3 py-2 text-right text-xs font-medium text-gray-500">ICMS Créd</th>'
-            + '<th class="px-2 sm:px-3 py-2 text-right text-xs font-medium text-gray-500">Saldo ICMS</th>'
-            + '<th class="px-2 sm:px-3 py-2 text-right text-xs font-medium text-gray-500">PIS Déb</th>'
-            + '<th class="px-2 sm:px-3 py-2 text-right text-xs font-medium text-gray-500">PIS Créd</th>'
-            + '<th class="px-2 sm:px-3 py-2 text-right text-xs font-medium text-gray-500">Saldo PIS</th>'
-            + '<th class="px-2 sm:px-3 py-2 text-right text-xs font-medium text-gray-500">COF Déb</th>'
-            + '<th class="px-2 sm:px-3 py-2 text-right text-xs font-medium text-gray-500">COF Créd</th>'
-            + '<th class="px-2 sm:px-3 py-2 text-right text-xs font-medium text-gray-500">Saldo COF</th>'
+            + '<th class="px-2 sm:px-3 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Período</th>'
+            + '<th class="px-2 sm:px-3 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">ICMS Déb</th>'
+            + '<th class="px-2 sm:px-3 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">ICMS Créd</th>'
+            + '<th class="px-2 sm:px-3 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saldo ICMS</th>'
+            + '<th class="px-2 sm:px-3 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">PIS Déb</th>'
+            + '<th class="px-2 sm:px-3 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">PIS Créd</th>'
+            + '<th class="px-2 sm:px-3 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saldo PIS</th>'
+            + '<th class="px-2 sm:px-3 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">COF Déb</th>'
+            + '<th class="px-2 sm:px-3 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">COF Créd</th>'
+            + '<th class="px-2 sm:px-3 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saldo COF</th>'
             + '</tr></thead><tbody>';
 
         porPeriodo.forEach(function(r, idx) {
@@ -1758,10 +1740,10 @@
 
         var html = '<div class="overflow-x-auto -mx-4 sm:mx-0"><table class="min-w-full text-xs">'
             + '<thead><tr class="bg-gray-50 border-b">'
-            + '<th class="px-3 py-2 text-left text-xs font-medium text-gray-500">CST</th>'
-            + '<th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Descrição</th>'
-            + '<th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Qtd Itens</th>'
-            + '<th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Valor Total</th>'
+            + '<th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">CST</th>'
+            + '<th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Descrição</th>'
+            + '<th class="px-3 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Qtd Itens</th>'
+            + '<th class="px-3 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Valor Total</th>'
             + '</tr></thead><tbody>';
 
         csts.forEach(function(c, idx) {
@@ -1849,9 +1831,9 @@
         });
 
         var sevConfig = {
-            alta:  { badge: 'bg-red-100 text-red-800', border: 'border-red-200', dot: 'bg-red-400' },
-            media: { badge: 'bg-yellow-100 text-yellow-800', border: 'border-yellow-200', dot: 'bg-yellow-400' },
-            baixa: { badge: 'bg-gray-100 text-gray-700', border: 'border-gray-200', dot: 'bg-gray-400' },
+            alta:  { badgeStyle: 'background-color:#dc2626', border: 'border-gray-200', dot: 'bg-red-400' },
+            media: { badgeStyle: 'background-color:#d97706', border: 'border-gray-200', dot: 'bg-yellow-400' },
+            baixa: { badgeStyle: 'background-color:#9ca3af', border: 'border-gray-200', dot: 'bg-gray-400' },
         };
 
         var html = '';
@@ -1860,7 +1842,7 @@
             var isPaid = alerta.tipo === 'paid' && !alerta.disponivel;
             var sevLabel = alerta.severidade.charAt(0).toUpperCase() + alerta.severidade.slice(1);
 
-            html += '<div class="bg-white rounded-lg border ' + cfg.border + ' overflow-hidden">';
+            html += '<div class="bg-white rounded border border-gray-300 overflow-hidden">';
 
             // Header
             html += '<button class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors dnf-alerta-toggle">';
@@ -1875,9 +1857,9 @@
             html += '</div>';
             html += '<div class="flex items-center gap-2 flex-shrink-0">';
             if (isPaid) {
-                html += '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">Pro</span>';
+                html += '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#374151">Pro</span>';
             }
-            html += '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ' + cfg.badge + '">' + sevLabel + '</span>';
+            html += '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="' + cfg.badgeStyle + '">' + sevLabel + '</span>';
             html += '<svg class="w-4 h-4 text-gray-400 transition-transform dnf-alerta-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
             html += '</div>';
             html += '</button>';
@@ -1887,7 +1869,7 @@
             if (isPaid) {
                 html += '<div class="flex flex-col items-center py-6 text-center">';
                 html += '<p class="text-sm text-gray-500 mb-3">' + escapeHtml(alerta.descricao) + '</p>';
-                html += '<button class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors dnf-alertas-compliance-cta">';
+                html += '<button class="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded hover:bg-gray-700 transition-colors dnf-alertas-compliance-cta">';
                 html += 'Ative consultas de compliance';
                 html += '</button>';
                 html += '</div>';
@@ -1940,18 +1922,18 @@
     function renderDetalheDuplicadas(detalhes) {
         var h = '<div class="overflow-x-auto"><table class="min-w-full text-xs">';
         h += '<thead><tr class="border-b border-gray-200">';
-        h += '<th class="text-left py-2 pr-4 font-medium text-gray-500">Número</th>';
-        h += '<th class="text-left py-2 pr-4 font-medium text-gray-500">Série</th>';
-        h += '<th class="text-left py-2 pr-4 font-medium text-gray-500">Modelo</th>';
-        h += '<th class="text-left py-2 pr-4 font-medium text-gray-500">Participante</th>';
-        h += '<th class="text-right py-2 font-medium text-gray-500">Ocorrências</th>';
+        h += '<th class="text-left py-2 pr-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Número</th>';
+        h += '<th class="text-left py-2 pr-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Série</th>';
+        h += '<th class="text-left py-2 pr-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Modelo</th>';
+        h += '<th class="text-left py-2 pr-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participante</th>';
+        h += '<th class="text-right py-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Ocorrências</th>';
         h += '</tr></thead><tbody>';
         detalhes.forEach(function(d) {
             h += '<tr class="border-b border-gray-100">';
-            h += '<td class="py-1.5 pr-4">' + (d.nota_id ? '<a href="/app/notas-fiscais/efd/' + d.nota_id + '" class="text-blue-600 hover:text-blue-800 hover:underline">' + escapeHtml(String(d.numero || '')) + '</a>' : '<span class="text-gray-700">' + escapeHtml(String(d.numero || '')) + '</span>') + '</td>';
+            h += '<td class="py-1.5 pr-4">' + (d.nota_id ? '<a href="/app/notas-fiscais/efd/' + d.nota_id + '" class="text-gray-900 hover:text-gray-600 hover:underline">' + escapeHtml(String(d.numero || '')) + '</a>' : '<span class="text-gray-700">' + escapeHtml(String(d.numero || '')) + '</span>') + '</td>';
             h += '<td class="py-1.5 pr-4 text-gray-700">' + escapeHtml(String(d.serie || '')) + '</td>';
             h += '<td class="py-1.5 pr-4 text-gray-700">' + escapeHtml(String(d.modelo || '')) + '</td>';
-            h += '<td class="py-1.5 pr-4 truncate max-w-[200px]">' + (d.participante_id ? '<a href="/app/participante/' + d.participante_id + '" class="text-blue-600 hover:text-blue-800 hover:underline">' + escapeHtml(String(d.participante || '')) + '</a>' : escapeHtml(String(d.participante || ''))) + '</td>';
+            h += '<td class="py-1.5 pr-4 truncate max-w-[200px]">' + (d.participante_id ? '<a href="/app/participante/' + d.participante_id + '" class="text-gray-900 hover:text-gray-600 hover:underline">' + escapeHtml(String(d.participante || '')) + '</a>' : escapeHtml(String(d.participante || ''))) + '</td>';
             h += '<td class="py-1.5 text-right font-medium text-red-600">' + d.qtd + '</td>';
             h += '</tr>';
         });
@@ -1963,19 +1945,19 @@
     function renderDetalheNotas(detalhes) {
         var h = '<div class="overflow-x-auto"><table class="min-w-full text-xs">';
         h += '<thead><tr class="border-b border-gray-200">';
-        h += '<th class="text-left py-2 pr-4 font-medium text-gray-500">Número</th>';
-        h += '<th class="text-left py-2 pr-4 font-medium text-gray-500">Série</th>';
-        h += '<th class="text-left py-2 pr-4 font-medium text-gray-500">Modelo</th>';
-        h += '<th class="text-left py-2 pr-4 font-medium text-gray-500">Participante</th>';
-        h += '<th class="text-left py-2 pr-4 font-medium text-gray-500">Data</th>';
-        h += '<th class="text-right py-2 font-medium text-gray-500">Valor</th>';
+        h += '<th class="text-left py-2 pr-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Número</th>';
+        h += '<th class="text-left py-2 pr-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Série</th>';
+        h += '<th class="text-left py-2 pr-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Modelo</th>';
+        h += '<th class="text-left py-2 pr-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participante</th>';
+        h += '<th class="text-left py-2 pr-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Data</th>';
+        h += '<th class="text-right py-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Valor</th>';
         h += '</tr></thead><tbody>';
         detalhes.forEach(function(d) {
             h += '<tr class="border-b border-gray-100">';
-            h += '<td class="py-1.5 pr-4">' + (d.nota_id ? '<a href="/app/notas-fiscais/efd/' + d.nota_id + '" class="text-blue-600 hover:text-blue-800 hover:underline">' + escapeHtml(String(d.numero || '')) + '</a>' : escapeHtml(String(d.numero || ''))) + '</td>';
+            h += '<td class="py-1.5 pr-4">' + (d.nota_id ? '<a href="/app/notas-fiscais/efd/' + d.nota_id + '" class="text-gray-900 hover:text-gray-600 hover:underline">' + escapeHtml(String(d.numero || '')) + '</a>' : escapeHtml(String(d.numero || ''))) + '</td>';
             h += '<td class="py-1.5 pr-4 text-gray-700">' + escapeHtml(String(d.serie || '')) + '</td>';
             h += '<td class="py-1.5 pr-4 text-gray-700">' + escapeHtml(String(d.modelo || '')) + '</td>';
-            h += '<td class="py-1.5 pr-4 truncate max-w-[200px]">' + (d.participante_id ? '<a href="/app/participante/' + d.participante_id + '" class="text-blue-600 hover:text-blue-800 hover:underline">' + escapeHtml(String(d.participante || '')) + '</a>' : escapeHtml(String(d.participante || 'N/A'))) + '</td>';
+            h += '<td class="py-1.5 pr-4 truncate max-w-[200px]">' + (d.participante_id ? '<a href="/app/participante/' + d.participante_id + '" class="text-gray-900 hover:text-gray-600 hover:underline">' + escapeHtml(String(d.participante || '')) + '</a>' : escapeHtml(String(d.participante || 'N/A'))) + '</td>';
             h += '<td class="py-1.5 pr-4 text-gray-700">' + escapeHtml(String(d.data_emissao || '')) + '</td>';
             h += '<td class="py-1.5 text-right text-gray-700">' + formatBrl(d.valor_total || 0) + '</td>';
             h += '</tr>';
@@ -1988,14 +1970,14 @@
     function renderDetalheParticipantes(detalhes) {
         var h = '<div class="overflow-x-auto"><table class="min-w-full text-xs">';
         h += '<thead><tr class="border-b border-gray-200">';
-        h += '<th class="text-left py-2 pr-4 font-medium text-gray-500">CNPJ/CPF</th>';
-        h += '<th class="text-left py-2 pr-4 font-medium text-gray-500">Razão Social</th>';
-        h += '<th class="text-right py-2 font-medium text-gray-500">Notas</th>';
+        h += '<th class="text-left py-2 pr-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">CNPJ/CPF</th>';
+        h += '<th class="text-left py-2 pr-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Razão Social</th>';
+        h += '<th class="text-right py-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas</th>';
         h += '</tr></thead><tbody>';
         detalhes.forEach(function(d) {
             h += '<tr class="border-b border-gray-100">';
             h += '<td class="py-1.5 pr-4 text-gray-700 font-mono text-xs">' + escapeHtml(String(d.cnpj || '')) + '</td>';
-            h += '<td class="py-1.5 pr-4 truncate max-w-[200px]">' + (d.participante_id ? '<a href="/app/participante/' + d.participante_id + '" class="text-blue-600 hover:text-blue-800 hover:underline">' + escapeHtml(String(d.razao_social || '')) + '</a>' : escapeHtml(String(d.razao_social || ''))) + '</td>';
+            h += '<td class="py-1.5 pr-4 truncate max-w-[200px]">' + (d.participante_id ? '<a href="/app/participante/' + d.participante_id + '" class="text-gray-900 hover:text-gray-600 hover:underline">' + escapeHtml(String(d.razao_social || '')) + '</a>' : escapeHtml(String(d.razao_social || ''))) + '</td>';
             h += '<td class="py-1.5 text-right text-gray-700">' + d.total_notas + '</td>';
             h += '</tr>';
         });
@@ -2006,14 +1988,14 @@
     function renderDetalheCfops(detalhes) {
         var h = '<div class="overflow-x-auto"><table class="min-w-full text-xs">';
         h += '<thead><tr class="border-b border-gray-200">';
-        h += '<th class="text-left py-2 pr-4 font-medium text-gray-500">Nota N.</th>';
-        h += '<th class="text-left py-2 pr-4 font-medium text-gray-500">Série</th>';
-        h += '<th class="text-left py-2 pr-4 font-medium text-gray-500">Operação</th>';
-        h += '<th class="text-left py-2 font-medium text-gray-500">CFOP</th>';
+        h += '<th class="text-left py-2 pr-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Nota N.</th>';
+        h += '<th class="text-left py-2 pr-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Série</th>';
+        h += '<th class="text-left py-2 pr-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Operação</th>';
+        h += '<th class="text-left py-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">CFOP</th>';
         h += '</tr></thead><tbody>';
         detalhes.forEach(function(d) {
             h += '<tr class="border-b border-gray-100">';
-            h += '<td class="py-1.5 pr-4">' + (d.nota_id ? '<a href="/app/notas-fiscais/efd/' + d.nota_id + '" class="text-blue-600 hover:text-blue-800 hover:underline">' + escapeHtml(String(d.numero || '')) + '</a>' : escapeHtml(String(d.numero || ''))) + '</td>';
+            h += '<td class="py-1.5 pr-4">' + (d.nota_id ? '<a href="/app/notas-fiscais/efd/' + d.nota_id + '" class="text-gray-900 hover:text-gray-600 hover:underline">' + escapeHtml(String(d.numero || '')) + '</a>' : escapeHtml(String(d.numero || ''))) + '</td>';
             h += '<td class="py-1.5 pr-4 text-gray-700">' + escapeHtml(String(d.serie || '')) + '</td>';
             h += '<td class="py-1.5 pr-4 text-gray-700">' + escapeHtml(String(d.tipo_operacao || '')) + '</td>';
             h += '<td class="py-1.5 text-gray-700 font-mono">' + escapeHtml(String(d.cfop || '')) + '</td>';
@@ -2028,7 +2010,7 @@
         var labels = detalhes.map(function(m) { return mesLabel(m); });
         var h = '<div class="flex flex-wrap gap-2">';
         labels.forEach(function(l) {
-            h += '<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-yellow-50 text-yellow-800 border border-yellow-200">' + escapeHtml(l) + '</span>';
+            h += '<span class="inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#d97706">' + escapeHtml(l) + '</span>';
         });
         h += '</div>';
         return h;
@@ -2036,17 +2018,17 @@
 
     function renderDetalhePisCofins(detalhes) {
         var h = '<div class="grid grid-cols-3 gap-4 text-center">';
-        h += '<div class="bg-gray-50 rounded-lg p-3">';
-        h += '<p class="text-xs text-gray-500">Total de itens</p>';
-        h += '<p class="text-lg font-semibold text-gray-800">' + formatNum(detalhes.total_itens) + '</p>';
+        h += '<div class="bg-gray-50 rounded p-3">';
+        h += '<p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Total de itens</p>';
+        h += '<p class="text-lg font-bold text-gray-900">' + formatNum(detalhes.total_itens) + '</p>';
         h += '</div>';
-        h += '<div class="bg-red-50 rounded-lg p-3">';
-        h += '<p class="text-xs text-gray-500">Itens sem tributo</p>';
-        h += '<p class="text-lg font-semibold text-red-600">' + formatNum(detalhes.itens_sem_tributo) + '</p>';
+        h += '<div class="bg-gray-50 rounded p-3">';
+        h += '<p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Itens sem tributo</p>';
+        h += '<p class="text-lg font-bold text-gray-900">' + formatNum(detalhes.itens_sem_tributo) + '</p>';
         h += '</div>';
-        h += '<div class="bg-yellow-50 rounded-lg p-3">';
-        h += '<p class="text-xs text-gray-500">Percentual</p>';
-        h += '<p class="text-lg font-semibold text-yellow-600">' + detalhes.percentual + '%</p>';
+        h += '<div class="bg-gray-50 rounded p-3">';
+        h += '<p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Percentual</p>';
+        h += '<p class="text-lg font-bold text-gray-900">' + detalhes.percentual + '%</p>';
         h += '</div>';
         h += '</div>';
         return h;
@@ -2148,20 +2130,20 @@
 
         let html = '';
         filtered.forEach((p, i) => {
-            const rowBg = p.irregular && p.volume > 0 ? 'bg-red-50' : (i % 2 === 0 ? 'bg-white' : 'bg-gray-50');
+            const rowBg = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
             let badgeSituacao;
             if (!p.situacao_cadastral) {
-                badgeSituacao = '<span class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-500">Não consultado</span>';
+                badgeSituacao = '<span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded text-white" style="background-color:#9ca3af">Não consultado</span>';
             } else if (p.situacao_cadastral === 'ATIVA') {
-                badgeSituacao = '<span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">ATIVA</span>';
+                badgeSituacao = '<span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded text-white" style="background-color:#047857">ATIVA</span>';
             } else {
-                badgeSituacao = '<span class="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700">' + escapeHtml(p.situacao_cadastral) + '</span>';
+                badgeSituacao = '<span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded text-white" style="background-color:#dc2626">' + escapeHtml(p.situacao_cadastral) + '</span>';
             }
 
             const volumeClass = p.irregular && p.volume > 0 ? 'text-red-600 font-semibold' : 'text-gray-900';
 
             html += '<tr class="border-t border-gray-100 ' + rowBg + '">'
-                + '<td class="px-3 sm:px-4 py-3 font-medium max-w-[200px] truncate" title="' + escapeHtml(p.razao_social) + '"><a href="/app/participante/' + p.id + '" class="text-blue-600 hover:text-blue-800 hover:underline">' + escapeHtml(p.razao_social) + '</a></td>'
+                + '<td class="px-3 sm:px-4 py-3 font-medium max-w-[200px] truncate" title="' + escapeHtml(p.razao_social) + '"><a href="/app/participante/' + p.id + '" class="text-gray-900 hover:text-gray-600 hover:underline">' + escapeHtml(p.razao_social) + '</a></td>'
                 + '<td class="px-3 sm:px-4 py-3 text-gray-600 text-xs font-mono">' + formatCnpj(p.cnpj) + '</td>'
                 + '<td class="px-3 sm:px-4 py-3 text-gray-600">' + escapeHtml(p.uf || '—') + '</td>'
                 + '<td class="px-3 sm:px-4 py-3">' + badgeSituacao + '</td>'
@@ -2169,7 +2151,7 @@
                 + '<td class="px-3 sm:px-4 py-3 text-right ' + volumeClass + '">' + formatBrl(p.volume) + '</td>'
                 + '<td class="px-3 sm:px-4 py-3 text-gray-600 text-xs">' + (p.ultima_consulta_em || '<span class="text-yellow-600">Nunca</span>') + '</td>'
                 + '<td class="px-3 sm:px-4 py-3 text-center">'
-                + '<button disabled class="px-2.5 py-1 text-xs font-medium rounded-md bg-gray-100 text-gray-400 cursor-not-allowed" title="Em breve — consulta via InfoSimples">Consultar</button>'
+                + '<button disabled class="px-2.5 py-1 text-xs font-medium rounded bg-gray-100 text-gray-400 cursor-not-allowed" title="Em breve — consulta via InfoSimples">Consultar</button>'
                 + '</td>'
                 + '</tr>';
         });
@@ -2189,8 +2171,8 @@
             compFiltroLocal = filtro;
             filtroEl.querySelectorAll('[data-filtro]').forEach(b => {
                 b.className = b.getAttribute('data-filtro') === filtro
-                    ? 'px-3 py-1.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700'
-                    : 'px-3 py-1.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200';
+                    ? 'px-3 py-1.5 text-xs font-medium rounded bg-gray-800 text-white'
+                    : 'px-3 py-1.5 text-xs font-medium rounded bg-white border border-gray-300 text-gray-600 hover:bg-gray-50';
             });
 
             if (compData && compData.participantes) {

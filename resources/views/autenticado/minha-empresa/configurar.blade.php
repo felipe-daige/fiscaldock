@@ -60,7 +60,7 @@
                     </svg>
                     <h3 class="mt-4 text-lg font-medium text-gray-900">Nenhuma empresa cadastrada</h3>
                     <p class="mt-2 text-sm text-gray-500">Você ainda não possui empresas (PJ) cadastradas no sistema.</p>
-                    <a href="/app/novo-cliente" data-link class="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
+                    <a href="/app/cliente/novo" data-link class="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-semibold transition hover:bg-gray-50">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                         </svg>

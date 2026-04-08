@@ -1234,6 +1234,7 @@ class BiService
             ->get()
             ->map(fn ($n) => [
                 'id' => $n->id,
+                'participante_id' => $participanteId,
                 'tipo_nota' => $n->tipo_operacao === 'entrada' ? 'E' : 'S',
                 'vl_doc' => (float) $n->valor_total,
                 'data_emissao' => Carbon::parse($n->data_emissao)->format('d/m/Y'),

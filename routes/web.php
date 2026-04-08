@@ -17,6 +17,7 @@ use App\Http\Controllers\Dashboard\ParticipanteGrupoController;
 use App\Http\Controllers\Landing\BlogController;
 use App\Http\Controllers\Landing\LandingPageController;
 use App\Http\Controllers\Landing\SitemapController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingPageController::class, 'inicio'])->name('home');
@@ -66,16 +67,19 @@ Route::middleware('auth')->group(function () {
     });
 
     // Rota de Novo Cliente (formulário de cadastro)
-    Route::get('/app/novo-cliente', [DashboardController::class, 'novoCliente'])->name('app.novo.cliente');
-    Route::post('/app/novo-cliente', [ClienteController::class, 'store'])->name('app.cliente.store');
+    Route::redirect('/app/novo-cliente', '/app/cliente/novo');
+    Route::get('/app/cliente/novo', [DashboardController::class, 'novoCliente'])->name('app.cliente.novo');
+    Route::post('/app/cliente/novo', [ClienteController::class, 'store'])->name('app.cliente.store');
 
     // Rota de Clientes
     Route::get('/app/clientes', [DashboardController::class, 'clientes'])->name('app.clientes');
+    Route::get('/app/clientes/todos-ids', [ClienteController::class, 'todosIds'])->name('app.clientes.todos-ids');
     Route::delete('/app/clientes/bulk-delete', [ClienteController::class, 'bulkDestroy'])->name('app.clientes.bulk-delete');
     Route::get('/app/cliente/{id}/editar', [ClienteController::class, 'edit'])->name('app.cliente.edit');
     Route::put('/app/cliente/{id}', [ClienteController::class, 'update'])->name('app.cliente.update');
     Route::delete('/app/cliente/{id}', [ClienteController::class, 'destroy'])->name('app.cliente.destroy');
     Route::get('/app/cliente/{id}/notas', [DashboardController::class, 'clienteNotas'])->name('app.cliente.notas');
+    Route::get('/app/cliente/{id}/participantes', [DashboardController::class, 'clienteParticipantes'])->name('app.cliente.participantes');
     Route::get('/app/cliente/{id}', [DashboardController::class, 'clienteDetalhes'])->name('app.cliente.detalhes');
 
     // Participantes (rotas independentes)
@@ -88,6 +92,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/participantes/por-importacao/{id}', [ParticipanteController::class, 'porImportacao'])->name('participantes.por-importacao');
         Route::post('/participantes/por-ids', [ParticipanteController::class, 'porIds'])->name('participantes.por-ids');
 
+        // Novo participante
+        Route::redirect('/novo-participante', '/app/participante/novo');
+        Route::get('/participante/novo', [ParticipanteController::class, 'create'])->name('participante.novo');
+        Route::post('/participante/novo', [ParticipanteController::class, 'store'])->name('participante.novo.store');
+
         // Participante individual
         Route::get('/participante/nota-fiscal/{id}', [ParticipanteController::class, 'notaFiscalDetalhes'])->name('participante.nota-fiscal');
         Route::get('/participante/{id}/notas', [ParticipanteController::class, 'notas'])->name('participante.notas');
@@ -95,10 +104,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/participante/{id}/editar', [ParticipanteController::class, 'edit'])->name('participante.editar');
         Route::put('/participante/{id}', [ParticipanteController::class, 'update'])->name('participante.update');
         Route::delete('/participante/{id}', [ParticipanteController::class, 'destroy'])->name('participante.excluir');
-
-        // Novo participante
-        Route::get('/novo-participante', [ParticipanteController::class, 'create'])->name('novo-participante');
-        Route::post('/novo-participante', [ParticipanteController::class, 'store'])->name('novo-participante.store');
     });
 
     // Rotas de Monitoramento
@@ -124,6 +129,7 @@ Route::middleware('auth')->group(function () {
         // Grupos de participantes
         Route::get('/grupos', [ParticipanteGrupoController::class, 'index'])->name('grupos');
         Route::post('/grupos', [ParticipanteGrupoController::class, 'store'])->name('grupos.criar');
+        Route::get('/grupos/{id}/participantes', [ParticipanteGrupoController::class, 'participantes'])->name('grupos.participantes');
         Route::put('/grupos/{id}', [ParticipanteGrupoController::class, 'update'])->name('grupos.editar');
         Route::delete('/grupos/{id}', [ParticipanteGrupoController::class, 'destroy'])->name('grupos.excluir');
 
@@ -207,8 +213,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/historico', [MinhaEmpresaController::class, 'historico'])->name('historico');
     });
 
-    // CONSULTAS (estrutura unificada)
-    Route::prefix('app/consultas')->name('app.consultas.')->group(function () {
+    // CONSULTA (estrutura unificada)
+    Route::prefix('app/consulta')->name('app.consulta.')->group(function () {
         // Nova Consulta
         Route::get('/nova', [ConsultaController::class, 'index'])->name('nova');
         Route::get('/nova/participantes', [ConsultaController::class, 'getParticipantes'])->name('nova.participantes');
@@ -222,7 +228,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/nova/grupos', [ConsultaController::class, 'getGrupos'])->name('nova.grupos');
 
         // Consulta Avulsa (redirect para Nova Consulta)
-        Route::get('/avulso', fn () => redirect('/app/consultas/nova', 301))->name('avulso');
+        Route::get('/avulso', fn () => redirect('/app/consulta/nova', 301))->name('avulso');
 
         // Planos Disponiveis
         Route::get('/planos', [MonitoramentoController::class, 'planos'])->name('planos');
@@ -239,5 +245,32 @@ Route::middleware('auth')->group(function () {
         // Resultados de um lote (para exibição inline)
         Route::get('/lote/{id}/resultados', [ConsultaController::class, 'resultadosLote'])->name('lote.resultados');
 
+    });
+
+    // Compatibilidade legada: /app/consultas/*
+    Route::prefix('app/consultas')->group(function () {
+        $legacyRedirect = function (Request $request, string $path) {
+            $queryString = $request->getQueryString();
+
+            return redirect($queryString ? "{$path}?{$queryString}" : $path, 301);
+        };
+
+        Route::get('/nova', fn (Request $request) => $legacyRedirect($request, '/app/consulta/nova'));
+        Route::get('/historico', fn (Request $request) => $legacyRedirect($request, '/app/consulta/historico'));
+        Route::get('/planos', fn (Request $request) => $legacyRedirect($request, '/app/consulta/planos'));
+        Route::get('/avulso', fn (Request $request) => $legacyRedirect($request, '/app/consulta/avulso'));
+        Route::get('/lote/{id}/baixar', fn (Request $request, $id) => $legacyRedirect($request, "/app/consulta/lote/{$id}/baixar"));
+        Route::get('/lote/{id}/status', fn (Request $request, $id) => $legacyRedirect($request, "/app/consulta/lote/{$id}/status"));
+        Route::get('/lote/{id}/resultados', fn (Request $request, $id) => $legacyRedirect($request, "/app/consulta/lote/{$id}/resultados"));
+
+        Route::get('/nova/participantes', [ConsultaController::class, 'getParticipantes']);
+        Route::get('/nova/participantes/grupo/{id}', [ConsultaController::class, 'getParticipantesGrupo']);
+        Route::post('/nova/calcular-custo', [ConsultaController::class, 'calcularCusto']);
+        Route::post('/nova/executar', [ConsultaController::class, 'executar']);
+        Route::post('/nova/adicionar-cnpj', [ConsultaController::class, 'adicionarCnpj']);
+        Route::get('/nova/progresso/stream', [ConsultaController::class, 'streamProgresso']);
+        Route::get('/nova/clientes', [ConsultaController::class, 'getClientes']);
+        Route::post('/nova/participantes-por-clientes', [ConsultaController::class, 'getParticipanteIdsByClientes']);
+        Route::get('/nova/grupos', [ConsultaController::class, 'getGrupos']);
     });
 });

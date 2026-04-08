@@ -3,38 +3,25 @@
     $isEditing = isset($participante) && $participante;
     $tipoDoc = $isEditing ? ($participante->tipo_documento ?? 'PJ') : 'PJ';
 @endphp
-<div class="min-h-screen bg-gray-50" id="novo-participante-container">
+<div class="bg-gray-100 min-h-screen" id="novo-participante-container">
     {{-- Main Content --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <style>
-            @keyframes card-slide-in {
-                from { opacity: 0; transform: translateY(60px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            .np-animate {
-                opacity: 0;
-                animation: card-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-            @media (prefers-reduced-motion: reduce) {
-                .np-animate { opacity: 1; animation: none; }
-            }
-        </style>
 
         {{-- Header inline --}}
         <div class="mb-4 sm:mb-8">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-semibold text-gray-900">{{ $isEditing ? 'Editar Participante' : 'Novo Participante' }}</h1>
-                    <p class="mt-1 text-sm text-gray-500">
+                    <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">{{ $isEditing ? 'Editar Participante' : 'Novo Participante' }}</h1>
+                    <p class="mt-1 text-xs text-gray-500">
                         @if($isEditing)
                             Atualize os dados do participante <strong>{{ $participante->cnpj_formatado }}</strong>.
                         @else
-                            Cadastre pessoa juridica (CNPJ) ou fisica (CPF).
+                            Cadastre pessoa jurídica (CNPJ) ou física (CPF).
                         @endif
                     </p>
                 </div>
                 <a href="{{ $isEditing ? '/app/participante/' . $participante->id : '/app/participantes' }}" data-link
-                   class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 bg-white text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors">
+                   class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 bg-white text-gray-700 text-sm font-medium rounded hover:bg-gray-50 transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
@@ -44,23 +31,23 @@
         </div>
 
         {{-- Info box --}}
-        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 np-animate">
+        <div class="bg-white border border-gray-300 rounded p-4 mb-6">
             <div class="flex items-start gap-3">
-                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
-                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-8 h-8 bg-gray-100 rounded flex items-center justify-center shrink-0 mt-0.5">
+                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
                 <div>
                     @if($isEditing)
-                        <h4 class="text-sm font-semibold text-blue-900">Edicao de Participante</h4>
-                        <p class="text-sm text-blue-700 mt-0.5">
-                            O tipo de documento e o {{ $tipoDoc === 'PF' ? 'CPF' : 'CNPJ' }} nao podem ser alterados. Atualize os demais campos conforme necessario.
+                        <h4 class="text-sm font-semibold text-gray-900">Edição de Participante</h4>
+                        <p class="text-sm text-gray-700 mt-0.5">
+                            O tipo de documento e o {{ $tipoDoc === 'PF' ? 'CPF' : 'CNPJ' }} não podem ser alterados. Atualize os demais campos conforme necessário.
                         </p>
                     @else
-                        <h4 class="text-sm font-semibold text-blue-900">Cadastro de Participantes</h4>
-                        <p class="text-sm text-blue-700 mt-0.5">
-                            Cadastre empresas (CNPJ) ou pessoas fisicas (CPF) para monitoramento fiscal, consultas e analise de risco.
+                        <h4 class="text-sm font-semibold text-gray-900">Cadastro de Participantes</h4>
+                        <p class="text-sm text-gray-700 mt-0.5">
+                            Cadastre empresas (CNPJ) ou pessoas físicas (CPF) para monitoramento fiscal, consultas e análise de risco.
                         </p>
                     @endif
                 </div>
@@ -76,40 +63,43 @@
                     <input type="hidden" name="tipo_documento" id="np_tipo_documento" value="{{ $tipoDoc }}">
 
                     {{-- Card: Tipo de Pessoa + Dados --}}
-                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm np-animate" style="animation-delay: 0.1s">
+                    <div class="bg-white rounded border border-gray-300 overflow-hidden">
                         <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
-                            <h2 class="text-base font-semibold text-gray-800">Dados do Participante</h2>
+                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dados do Participante</span>
                         </div>
                         <div class="px-4 sm:px-6 py-4 sm:py-5 space-y-5">
 
                             {{-- Toggle PF/PJ --}}
-                            <div class="grid grid-cols-2 gap-3 {{ $isEditing ? 'pointer-events-none opacity-60' : '' }}">
+                            <div class="mb-5">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Pessoa</label>
+                                <div class="grid grid-cols-2 gap-3 {{ $isEditing ? 'pointer-events-none opacity-60' : '' }}">
                                 <button type="button" id="np_btn_pj"
-                                    class="np-tipo-btn flex items-center gap-3 p-3 rounded-lg border-2 {{ $tipoDoc === 'PJ' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 bg-white' }} cursor-pointer transition-all"
+                                    class="np-tipo-btn flex items-center gap-3 p-3 rounded border-2 {{ $tipoDoc === 'PJ' ? 'border-gray-800 bg-gray-50' : 'border-gray-300 bg-white' }} cursor-pointer transition-all"
                                     onclick="window._npToggleTipo('PJ')">
-                                    <div class="w-10 h-10 {{ $tipoDoc === 'PJ' ? 'bg-blue-100' : 'bg-gray-100' }} rounded-lg flex items-center justify-center shrink-0">
-                                        <svg class="w-5 h-5 {{ $tipoDoc === 'PJ' ? 'text-blue-600' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="w-10 h-10 {{ $tipoDoc === 'PJ' ? 'bg-gray-100' : 'bg-gray-100' }} rounded-lg flex items-center justify-center shrink-0">
+                                        <svg class="w-5 h-5 {{ $tipoDoc === 'PJ' ? 'text-gray-700' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                                         </svg>
                                     </div>
                                     <div class="text-left">
-                                        <span class="block text-sm font-semibold text-gray-900">Pessoa Juridica</span>
+                                        <span class="block text-sm font-semibold text-gray-900">Pessoa Jurídica</span>
                                         <span class="block text-xs text-gray-500">CNPJ</span>
                                     </div>
                                 </button>
                                 <button type="button" id="np_btn_pf"
-                                    class="np-tipo-btn flex items-center gap-3 p-3 rounded-lg border-2 {{ $tipoDoc === 'PF' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 bg-white' }} cursor-pointer transition-all"
+                                    class="np-tipo-btn flex items-center gap-3 p-3 rounded border-2 {{ $tipoDoc === 'PF' ? 'border-gray-800 bg-gray-50' : 'border-gray-300 bg-white' }} cursor-pointer transition-all"
                                     onclick="window._npToggleTipo('PF')">
-                                    <div class="w-10 h-10 {{ $tipoDoc === 'PF' ? 'bg-blue-100' : 'bg-gray-100' }} rounded-lg flex items-center justify-center shrink-0">
-                                        <svg class="w-5 h-5 {{ $tipoDoc === 'PF' ? 'text-blue-600' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="w-10 h-10 {{ $tipoDoc === 'PF' ? 'bg-gray-100' : 'bg-gray-100' }} rounded-lg flex items-center justify-center shrink-0">
+                                        <svg class="w-5 h-5 {{ $tipoDoc === 'PF' ? 'text-gray-700' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                         </svg>
                                     </div>
                                     <div class="text-left">
-                                        <span class="block text-sm font-semibold text-gray-900">Pessoa Fisica</span>
+                                        <span class="block text-sm font-semibold text-gray-900">Pessoa Física</span>
                                         <span class="block text-xs text-gray-500">CPF</span>
                                     </div>
                                 </button>
+                                </div>
                             </div>
 
                             {{-- Documento (CNPJ/CPF) --}}
@@ -126,7 +116,7 @@
                                     maxlength="{{ $tipoDoc === 'PF' ? '14' : '18' }}"
                                     value="{{ $isEditing ? $participante->cnpj_formatado : '' }}"
                                     {{ $isEditing ? 'readonly' : '' }}
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 {{ $isEditing ? 'bg-gray-100 cursor-not-allowed' : '' }}"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400 {{ $isEditing ? 'bg-gray-100 cursor-not-allowed' : '' }}"
                                 >
                                 <p id="np_cnpj_error" class="mt-1 text-sm text-red-600 hidden"></p>
                             </div>
@@ -141,8 +131,8 @@
                                     id="np_razao_social"
                                     name="razao_social"
                                     value="{{ old('razao_social', $isEditing ? $participante->razao_social : '') }}"
-                                    placeholder="Razao social completa"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Razão social completa"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 >
                                 <p id="np_razao_social_error" class="mt-1 text-sm text-red-600 hidden"></p>
                             </div>
@@ -158,7 +148,7 @@
                                     name="nome_fantasia"
                                     value="{{ old('nome_fantasia', $isEditing ? $participante->nome_fantasia : '') }}"
                                     placeholder="Nome fantasia (opcional)"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 >
                                 <p id="np_nome_fantasia_error" class="mt-1 text-sm text-red-600 hidden"></p>
                             </div>
@@ -166,15 +156,15 @@
                             {{-- Inscricao Estadual (PJ only) --}}
                             <div id="np_campo_ie">
                                 <label for="np_inscricao_estadual" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Inscricao Estadual
+                                    Inscrição Estadual
                                 </label>
                                 <input
                                     type="text"
                                     id="np_inscricao_estadual"
                                     name="inscricao_estadual"
                                     value="{{ old('inscricao_estadual', $isEditing ? $participante->inscricao_estadual : '') }}"
-                                    placeholder="Inscricao estadual (opcional)"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Inscrição estadual (opcional)"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 >
                             </div>
 
@@ -187,10 +177,10 @@
                                     <select
                                         id="np_crt"
                                         name="crt"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                     >
                                         @php $crtVal = old('crt', $isEditing ? $participante->crt : ''); @endphp
-                                        <option value="">Nao informado</option>
+                                        <option value="">Não informado</option>
                                         <option value="1" {{ $crtVal == '1' ? 'selected' : '' }}>1 - Simples Nacional</option>
                                         <option value="2" {{ $crtVal == '2' ? 'selected' : '' }}>2 - Simples (Excesso)</option>
                                         <option value="3" {{ $crtVal == '3' ? 'selected' : '' }}>3 - Regime Normal</option>
@@ -207,7 +197,7 @@
                                         value="{{ old('telefone', $isEditing ? $participante->telefone : '') }}"
                                         placeholder="(00) 00000-0000"
                                         maxlength="15"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                     >
                                 </div>
                             </div>
@@ -220,10 +210,10 @@
                                 <select
                                     id="np_cliente_id"
                                     name="cliente_id"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 >
                                     @php $clienteIdVal = old('cliente_id', $isEditing ? $participante->cliente_id : ''); @endphp
-                                    <option value="">Nao associar</option>
+                                    <option value="">Não associar</option>
                                     @foreach($clientes as $cliente)
                                         <option value="{{ $cliente->id }}" {{ $clienteIdVal == $cliente->id ? 'selected' : '' }}>{{ $cliente->razao_social ?? $cliente->nome }} ({{ $cliente->documento }})</option>
                                     @endforeach
@@ -233,9 +223,9 @@
                     </div>
 
                     {{-- Card: Endereço --}}
-                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm np-animate" style="animation-delay: 0.2s">
+                    <div class="bg-white rounded border border-gray-300 overflow-hidden">
                         <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
-                            <h2 class="text-base font-semibold text-gray-800">Endereço</h2>
+                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Endereço</span>
                         </div>
                         <div class="px-4 sm:px-6 py-4 sm:py-5 space-y-4">
                             {{-- CEP --}}
@@ -251,7 +241,7 @@
                                         value="{{ old('cep', $isEditing ? $participante->cep : '') }}"
                                         placeholder="00000-000"
                                         maxlength="9"
-                                        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                     >
                                     <button
                                         type="button"
@@ -275,7 +265,7 @@
                                     name="endereco"
                                     value="{{ old('endereco', $isEditing ? $participante->endereco : '') }}"
                                     placeholder="Rua, Avenida, etc."
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 >
                             </div>
 
@@ -283,7 +273,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label for="np_numero" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Numero
+                                        Número
                                     </label>
                                     <input
                                         type="text"
@@ -291,7 +281,7 @@
                                         name="numero"
                                         value="{{ old('numero', $isEditing ? $participante->numero : '') }}"
                                         placeholder="123"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                     >
                                 </div>
                                 <div>
@@ -304,7 +294,7 @@
                                         name="complemento"
                                         value="{{ old('complemento', $isEditing ? $participante->complemento : '') }}"
                                         placeholder="Apto, Sala, etc."
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                     >
                                 </div>
                             </div>
@@ -320,7 +310,7 @@
                                     name="bairro"
                                     value="{{ old('bairro', $isEditing ? $participante->bairro : '') }}"
                                     placeholder="Nome do bairro"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 >
                             </div>
 
@@ -328,15 +318,15 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label for="np_municipio" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Municipio
+                                        Município
                                     </label>
                                     <input
                                         type="text"
                                         id="np_municipio"
                                         name="municipio"
                                         value="{{ old('municipio', $isEditing ? $participante->municipio : '') }}"
-                                        placeholder="Nome do municipio"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Nome do município"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                     >
                                 </div>
                                 <div>
@@ -347,7 +337,7 @@
                                     <select
                                         id="np_uf"
                                         name="uf"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                     >
                                         <option value="">Selecione</option>
                                         @foreach(['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'] as $uf)
@@ -360,15 +350,15 @@
                     </div>
 
                     {{-- Botoes de Acao --}}
-                    <div class="flex gap-4 justify-end np-animate" style="animation-delay: 0.3s">
+                    <div class="flex gap-4 justify-end">
                         <a href="{{ $isEditing ? '/app/participante/' . $participante->id : '/app/participantes' }}" data-link
-                           class="px-6 py-2.5 bg-white text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 border border-gray-300 transition-colors">
+                           class="px-6 py-2.5 bg-white text-gray-700 rounded text-sm font-medium hover:bg-gray-50 border border-gray-300 transition-colors">
                             Cancelar
                         </a>
                         <button
                             type="submit"
                             id="np_btn_salvar"
-                            class="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            class="px-6 py-2.5 bg-gray-800 text-white rounded text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {{ $isEditing ? 'Atualizar Participante' : 'Salvar Participante' }}
                         </button>
@@ -376,112 +366,79 @@
                 </form>
             </div>
 
-            {{-- CTA Sidebar (1/3) --}}
+            {{-- Preview Sidebar (1/3) --}}
             <div class="lg:col-span-1">
-                <div class="sticky top-6 space-y-4">
-                    {{-- Card: Consultar CNPJ --}}
-                    <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl shadow-sm text-white overflow-hidden np-animate" style="animation-delay: 0.4s">
-                        <div class="px-5 py-5">
-                            <div class="flex items-center gap-3 mb-3">
-                                <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                    </svg>
-                                </div>
-                                <h3 class="text-base font-bold">Consultar CNPJ</h3>
-                            </div>
+                <div class="sticky top-4 bg-white rounded border border-gray-300 p-4 sm:p-6">
+                    <h3 class="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-4">Preview</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2">
+                            <span id="np_preview_badge"
+                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold text-white"
+                                style="background-color: {{ $tipoDoc === 'PJ' ? '#374151' : '#9ca3af' }}">
+                                {{ $tipoDoc }}
+                            </span>
+                            <span id="np_preview_cliente_badge"
+                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold text-white {{ ($isEditing && $participante->cliente_id) ? '' : 'hidden' }}"
+                                style="background-color: #047857">
+                                Cliente Associado
+                            </span>
+                        </div>
 
-                            <p class="text-sm text-blue-100 mb-4">
-                                Preencha os dados automaticamente consultando a Receita Federal.
+                        <div>
+                            <p id="np_preview_razao" class="text-sm font-semibold text-gray-900">{{ $isEditing ? ($participante->razao_social ?: $participante->nome_fantasia ?: '-') : '-' }}</p>
+                            <p id="np_preview_nome" class="text-xs text-gray-400">{{ $isEditing ? ($participante->nome_fantasia ?: '') : '' }}</p>
+                        </div>
+
+                        <div>
+                            <span class="text-xs uppercase tracking-wide text-gray-400">Documento</span>
+                            <p id="np_preview_doc" class="text-sm font-mono text-gray-700">{{ $isEditing ? $participante->cnpj_formatado : '-' }}</p>
+                        </div>
+
+                        <div id="np_preview_crt_wrap" class="{{ $tipoDoc === 'PF' ? 'hidden' : '' }}">
+                            <span class="text-xs uppercase tracking-wide text-gray-400">Regime Tributário</span>
+                            <p id="np_preview_crt" class="text-sm text-gray-700">
+                                @if($isEditing && $participante->crt)
+                                    @switch($participante->crt)
+                                        @case(1) Simples Nacional @break
+                                        @case(2) Simples (Excesso) @break
+                                        @case(3) Regime Normal @break
+                                    @endswitch
+                                @else
+                                    -
+                                @endif
                             </p>
-
-                            <div class="space-y-2 mb-5">
-                                <div class="flex items-center gap-2 text-sm text-blue-100">
-                                    <svg class="w-4 h-4 text-green-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    Razão Social
-                                </div>
-                                <div class="flex items-center gap-2 text-sm text-blue-100">
-                                    <svg class="w-4 h-4 text-green-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    Endereço completo
-                                </div>
-                                <div class="flex items-center gap-2 text-sm text-blue-100">
-                                    <svg class="w-4 h-4 text-green-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    CRT / Regime Tributário
-                                </div>
-                                <div class="flex items-center gap-2 text-sm text-blue-100">
-                                    <svg class="w-4 h-4 text-green-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    Situação cadastral
-                                </div>
-                                <div class="flex items-center gap-2 text-sm text-blue-100">
-                                    <svg class="w-4 h-4 text-green-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    CNAEs e QSA (sócios)
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-green-500/20 text-green-200 text-xs font-semibold rounded-full border border-green-400/30">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    Gratuito
-                                </span>
-                                <span class="text-xs text-blue-200 ml-1">(Disponível para PJ)</span>
-                            </div>
-
-                            <a href="/app/consultas/avulso" data-link id="np_link_consultar_cnpj"
-                               class="block w-full text-center px-4 py-2.5 bg-white text-blue-700 rounded-lg text-sm font-bold hover:bg-blue-50 transition-colors">
-                                Consultar na Receita Federal
-                            </a>
                         </div>
-                    </div>
 
-                    {{-- Card: CPF monitoring em breve --}}
-                    <div class="bg-amber-50 border border-amber-200 rounded-xl shadow-sm p-5 np-animate" style="animation-delay: 0.5s">
-                        <div class="flex items-start gap-3">
-                            <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
-                                <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <h4 class="text-sm font-semibold text-amber-900 mb-1">Monitoramento de CPF</h4>
-                                <p class="text-xs text-amber-700 leading-relaxed">
-                                    Em breve voce podera monitorar pessoas fisicas com as mesmas funcionalidades de PJ.
-                                </p>
-                                <a href="/app/consultas/planos" data-link class="inline-block mt-2 text-xs font-semibold text-amber-700 hover:text-amber-900 transition-colors">
-                                    Ver planos disponiveis &rarr;
-                                </a>
-                            </div>
+                        <div>
+                            <span class="text-xs uppercase tracking-wide text-gray-400">Cliente</span>
+                            <p id="np_preview_cliente" class="text-sm text-gray-700">{{ $isEditing && $participante->cliente ? ($participante->cliente->razao_social ?? $participante->cliente->nome ?? '-') : '-' }}</p>
                         </div>
-                    </div>
 
-                    {{-- Card: Info complementar --}}
-                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 np-animate" style="animation-delay: 0.6s">
-                        <div class="flex items-start gap-3">
-                            <div class="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center shrink-0">
-                                <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <h4 class="text-sm font-semibold text-gray-800 mb-1">Precisa de mais dados?</h4>
-                                <p class="text-xs text-gray-500 leading-relaxed">
-                                    Use nossos planos de consulta para obter CNDs, SINTEGRA, listas restritivas e muito mais.
-                                </p>
-                                <a href="/app/consultas/planos" data-link class="inline-block mt-2 text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors">
-                                    Ver planos disponiveis &rarr;
-                                </a>
-                            </div>
+                        <div>
+                            <span class="text-xs uppercase tracking-wide text-gray-400">Contato</span>
+                            <p id="np_preview_tel" class="text-sm text-gray-700">{{ $isEditing ? ($participante->telefone ?: '-') : '-' }}</p>
+                        </div>
+
+                        <div>
+                            <span class="text-xs uppercase tracking-wide text-gray-400">Endereço</span>
+                            <p id="np_preview_endereco" class="text-sm text-gray-700">
+                                @if($isEditing && $participante->endereco)
+                                    {{ implode(', ', array_filter([$participante->endereco, $participante->numero, $participante->bairro])) }}
+                                @else
+                                    -
+                                @endif
+                            </p>
+                        </div>
+
+                        <div>
+                            <span class="text-xs uppercase tracking-wide text-gray-400">Localização</span>
+                            <p id="np_preview_local" class="text-sm text-gray-700">
+                                @if($isEditing && ($participante->municipio || $participante->uf))
+                                    {{ implode(' - ', array_filter([$participante->municipio, $participante->uf])) }}
+                                @else
+                                    -
+                                @endif
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -615,18 +572,18 @@
         var svgPF = btnPF.querySelector('svg');
 
         if (isPF) {
-            btnPJ.className = 'np-tipo-btn flex items-center gap-3 p-3 rounded-lg border-2 border-gray-300 bg-white cursor-pointer transition-all';
-            btnPF.className = 'np-tipo-btn flex items-center gap-3 p-3 rounded-lg border-2 border-blue-600 bg-blue-50 cursor-pointer transition-all';
+            btnPJ.className = 'np-tipo-btn flex items-center gap-3 p-3 rounded border-2 border-gray-300 bg-white cursor-pointer transition-all';
+            btnPF.className = 'np-tipo-btn flex items-center gap-3 p-3 rounded border-2 border-gray-800 bg-gray-50 cursor-pointer transition-all';
             iconPJ.className = 'w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0';
-            iconPF.className = 'w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center shrink-0';
-            svgPJ.className.baseVal = 'w-5 h-5 text-gray-500';
-            svgPF.className.baseVal = 'w-5 h-5 text-blue-600';
-        } else {
-            btnPJ.className = 'np-tipo-btn flex items-center gap-3 p-3 rounded-lg border-2 border-blue-600 bg-blue-50 cursor-pointer transition-all';
-            btnPF.className = 'np-tipo-btn flex items-center gap-3 p-3 rounded-lg border-2 border-gray-300 bg-white cursor-pointer transition-all';
-            iconPJ.className = 'w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center shrink-0';
             iconPF.className = 'w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0';
-            svgPJ.className.baseVal = 'w-5 h-5 text-blue-600';
+            svgPJ.className.baseVal = 'w-5 h-5 text-gray-500';
+            svgPF.className.baseVal = 'w-5 h-5 text-gray-700';
+        } else {
+            btnPJ.className = 'np-tipo-btn flex items-center gap-3 p-3 rounded border-2 border-gray-800 bg-gray-50 cursor-pointer transition-all';
+            btnPF.className = 'np-tipo-btn flex items-center gap-3 p-3 rounded border-2 border-gray-300 bg-white cursor-pointer transition-all';
+            iconPJ.className = 'w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0';
+            iconPF.className = 'w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0';
+            svgPJ.className.baseVal = 'w-5 h-5 text-gray-700';
             svgPF.className.baseVal = 'w-5 h-5 text-gray-500';
         }
 
@@ -678,6 +635,7 @@
 
         // Update CTA link
         atualizarLinkConsultaCnpj(inputDoc.value);
+        atualizarPreview();
     }
 
     // Expose for inline onclick
@@ -690,7 +648,7 @@
 
         var statusEl = document.getElementById('np_cep_status');
         statusEl.textContent = 'Buscando CEP...';
-        statusEl.className = 'mt-1 text-sm text-blue-600';
+        statusEl.className = 'mt-1 text-sm text-gray-600';
         statusEl.classList.remove('hidden');
 
         try {
@@ -702,6 +660,7 @@
                 document.getElementById('np_bairro').value = data.bairro || '';
                 document.getElementById('np_municipio').value = data.localidade || '';
                 document.getElementById('np_uf').value = data.uf || '';
+                atualizarPreview();
                 statusEl.textContent = 'CEP encontrado!';
                 statusEl.className = 'mt-1 text-sm text-green-600';
                 setTimeout(function() { statusEl.classList.add('hidden'); }, 2000);
@@ -773,10 +732,67 @@
         if (!link) return;
         var cnpjLimpo = cnpjValue.replace(/\D/g, '');
         if (currentTipo === 'PJ' && cnpjLimpo.length === 14) {
-            link.href = '/app/consultas/avulso?cnpj=' + cnpjLimpo;
+            link.href = '/app/consulta/avulso?cnpj=' + cnpjLimpo;
         } else {
-            link.href = '/app/consultas/avulso';
+            link.href = '/app/consulta/avulso';
         }
+    }
+
+    function atualizarPreview() {
+        var badge = document.getElementById('np_preview_badge');
+        var badgeCliente = document.getElementById('np_preview_cliente_badge');
+        var nome = document.getElementById('np_nome_fantasia');
+        var razao = document.getElementById('np_razao_social');
+        var doc = document.getElementById('np_cnpj');
+        var crt = document.getElementById('np_crt');
+        var cliente = document.getElementById('np_cliente_id');
+        var telefone = document.getElementById('np_telefone');
+        var endereco = document.getElementById('np_endereco');
+        var numero = document.getElementById('np_numero');
+        var bairro = document.getElementById('np_bairro');
+        var municipio = document.getElementById('np_municipio');
+        var uf = document.getElementById('np_uf');
+        var crtWrap = document.getElementById('np_preview_crt_wrap');
+
+        if (badge) {
+            badge.textContent = currentTipo;
+            badge.style.backgroundColor = currentTipo === 'PF' ? '#9ca3af' : '#374151';
+        }
+
+        if (crtWrap) {
+            crtWrap.classList.toggle('hidden', currentTipo === 'PF');
+        }
+
+        var razaoValor = currentTipo === 'PF'
+            ? ((nome && nome.value.trim()) || '-')
+            : ((razao && razao.value.trim()) || '-');
+        var nomeValor = currentTipo === 'PF'
+            ? ''
+            : ((nome && nome.value.trim()) || '');
+        var docValor = (doc && doc.value.trim()) || '-';
+        var crtValor = '-';
+        if (crt && crt.value) {
+            crtValor = crt.options[crt.selectedIndex].text;
+        }
+        var clienteValor = '-';
+        if (cliente && cliente.value) {
+            clienteValor = cliente.options[cliente.selectedIndex].text;
+            if (badgeCliente) badgeCliente.classList.remove('hidden');
+        } else if (badgeCliente) {
+            badgeCliente.classList.add('hidden');
+        }
+        var telValor = (telefone && telefone.value.trim()) || '-';
+        var enderecoValor = [endereco && endereco.value.trim(), numero && numero.value.trim(), bairro && bairro.value.trim()].filter(Boolean).join(', ') || '-';
+        var localValor = [municipio && municipio.value.trim(), uf && uf.value].filter(Boolean).join(' - ') || '-';
+
+        document.getElementById('np_preview_razao').textContent = razaoValor;
+        document.getElementById('np_preview_nome').textContent = nomeValor;
+        document.getElementById('np_preview_doc').textContent = docValor;
+        document.getElementById('np_preview_crt').textContent = crtValor;
+        document.getElementById('np_preview_cliente').textContent = clienteValor;
+        document.getElementById('np_preview_tel').textContent = telValor;
+        document.getElementById('np_preview_endereco').textContent = enderecoValor;
+        document.getElementById('np_preview_local').textContent = localValor;
     }
 
     // === Init ===
@@ -794,11 +810,20 @@
         var cepInput = document.getElementById('np_cep');
         var telefoneInput = document.getElementById('np_telefone');
         var btnBuscarCep = document.getElementById('np_btn_buscar_cep');
+        var camposPreview = ['np_razao_social', 'np_nome_fantasia', 'np_cnpj', 'np_crt', 'np_cliente_id', 'np_telefone', 'np_endereco', 'np_numero', 'np_bairro', 'np_municipio', 'np_uf'];
 
         // In edit mode, apply toggle visual for the stored tipo
         if (isEditing && currentTipo === 'PF') {
             toggleTipoDocumento('PF');
         }
+        atualizarPreview();
+
+        camposPreview.forEach(function(id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('input', atualizarPreview);
+            el.addEventListener('change', atualizarPreview);
+        });
 
         // Document input mask (dynamic)
         if (cnpjInput) {
@@ -929,7 +954,7 @@
             // Determine URL and method based on mode
             var fetchUrl = isEditing
                 ? '/app/participante/' + editId
-                : '/app/novo-participante';
+                : '/app/participante/novo';
 
             if (isEditing) {
                 body._method = 'PUT';

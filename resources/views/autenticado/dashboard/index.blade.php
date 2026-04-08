@@ -2,20 +2,6 @@
 <div class="min-h-screen bg-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
-        <style>
-            @keyframes card-slide-in {
-                from { opacity: 0; transform: translateY(60px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            .dash-animate {
-                opacity: 0;
-                animation: card-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-            @media (prefers-reduced-motion: reduce) {
-                .dash-animate { opacity: 1; animation: none; }
-            }
-        </style>
-
         {{-- Header --}}
         <div class="mb-4 sm:mb-8">
             <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Dashboard</h1>
@@ -35,7 +21,7 @@
         @endphp
 
         {{-- KPIs (Resumo Fiscal) --}}
-        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6 sm:mb-10 dash-animate">
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6 sm:mb-10">
             <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-200">
                 
                 {{-- KPI 1: Volume Processado --}}
@@ -73,7 +59,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-10">
 
             {{-- Notas Fiscais --}}
-            <a href="/app/notas-fiscais" data-link class="bg-white rounded border border-gray-300 p-4 sm:p-6 hover:border-gray-400 transition-all group dash-animate" style="animation-delay: 0.1s">
+            <a href="/app/notas-fiscais" data-link class="bg-white rounded border border-gray-300 p-4 sm:p-6 hover:border-gray-400 transition-all group">
                 <div class="flex items-center gap-3 mb-3">
                     <div>
                         <h3 class="text-sm font-semibold text-gray-900 group-hover:text-gray-600 transition-colors uppercase tracking-wide">Notas Fiscais</h3>
@@ -87,7 +73,7 @@
             </a>
 
             {{-- BI Fiscal --}}
-            <a href="/app/bi/dashboard" data-link class="bg-white rounded border border-gray-300 p-4 sm:p-6 hover:border-gray-400 transition-all group dash-animate" style="animation-delay: 0.2s">
+            <a href="/app/bi/dashboard" data-link class="bg-white rounded border border-gray-300 p-4 sm:p-6 hover:border-gray-400 transition-all group">
                 <div class="flex items-center gap-3 mb-3">
                     <div>
                         <h3 class="text-sm font-semibold text-gray-900 group-hover:text-gray-600 transition-colors uppercase tracking-wide">BI Fiscal</h3>
@@ -100,7 +86,7 @@
             </a>
 
             {{-- Importar EFD --}}
-            <a href="/app/importacao/efd" data-link class="bg-white rounded border border-gray-300 p-4 sm:p-6 hover:border-gray-400 transition-all group dash-animate" style="animation-delay: 0.3s">
+            <a href="/app/importacao/efd" data-link class="bg-white rounded border border-gray-300 p-4 sm:p-6 hover:border-gray-400 transition-all group">
                 <div class="flex items-center gap-3 mb-3">
                     <div>
                         <h3 class="text-sm font-semibold text-gray-900 group-hover:text-gray-600 transition-colors uppercase tracking-wide">Importar EFD</h3>
@@ -128,7 +114,7 @@
         </div>
 
         {{-- Atividade Recente --}}
-        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6 sm:mb-10 dash-animate" style="animation-delay: 0.4s">
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6 sm:mb-10">
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <h2 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Atividade Recente</h2>
             </div>
@@ -182,7 +168,7 @@
 
         {{-- Primeiros Passos (condicional) --}}
         @if($isUsuarioNovo)
-            <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6 sm:mb-10 dash-animate" style="animation-delay: 0.5s">
+            <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6 sm:mb-10">
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                     <h2 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Primeiros Passos</h2>
                 </div>
@@ -222,7 +208,7 @@
         @endif
 
         {{-- Suporte --}}
-        <div class="bg-gray-50 rounded border border-gray-200 p-4 dash-animate" style="animation-delay: {{ $isUsuarioNovo ? '0.6' : '0.5' }}s">
+        <div class="bg-gray-50 rounded border border-gray-200 p-4">
             <div class="flex items-start gap-3">
                 <div>
                     <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Precisa de ajuda?</p>

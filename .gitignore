@@ -28,6 +28,13 @@ Thumbs.db
 
 # Arquivos sensiveis / internos
 /.claude/
+.claude/
+**/.claude/
+.codex
+.codex/
+**/.codex/
+AGENTS.md
+agents.md
 CLAUDE.md
 /docs/
 

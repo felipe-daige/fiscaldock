@@ -17,7 +17,7 @@
                     <p class="mt-1 text-sm text-gray-600">{{ $empresa->razao_social ?? $empresa->nome }} - {{ $empresa->documento_formatado }}</p>
                 </div>
                 <div>
-                    <a href="/app/consultas/nova?participante={{ $participante->id ?? '' }}" data-link class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
+                    <a href="/app/consulta/nova?participante={{ $participante->id ?? '' }}" data-link class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
@@ -99,7 +99,7 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
                                         @if($consulta->lote)
-                                            <a href="/app/consultas/lote/{{ $consulta->lote->id }}/baixar" class="text-blue-600 hover:text-blue-900">
+                                            <a href="/app/consulta/lote/{{ $consulta->lote->id }}/baixar" class="text-blue-600 hover:text-blue-900">
                                                 Baixar CSV
                                             </a>
                                         @endif
@@ -124,7 +124,7 @@
                     </svg>
                     <h3 class="mt-4 text-lg font-medium text-gray-900">Nenhuma consulta realizada</h3>
                     <p class="mt-2 text-sm text-gray-500">Ainda nao foram realizadas consultas para esta empresa.</p>
-                    <a href="/app/consultas/nova?participante={{ $participante->id ?? '' }}" data-link class="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
+                    <a href="/app/consulta/nova?participante={{ $participante->id ?? '' }}" data-link class="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>

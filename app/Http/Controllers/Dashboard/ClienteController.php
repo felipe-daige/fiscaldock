@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -11,6 +12,54 @@ use Illuminate\Validation\ValidationException;
 
 class ClienteController extends Controller
 {
+    public function todosIds(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Nao autenticado'], 401);
+        }
+
+        $status = trim($request->string('status')->toString());
+        $tipo = strtoupper(trim($request->string('tipo')->toString()));
+        $busca = trim($request->string('busca')->toString());
+        $regime = trim($request->string('regime')->toString());
+        $situacao = trim($request->string('situacao')->toString());
+        $uf = strtoupper(trim($request->string('uf')->toString()));
+
+        $ids = Cliente::where('user_id', $user->id)
+            ->where('is_empresa_propria', false)
+            ->when($status !== '', function ($query) use ($status) {
+                if ($status === 'ativos') {
+                    $query->where('ativo', true);
+                } elseif ($status === 'inativos') {
+                    $query->where('ativo', false);
+                }
+            })
+            ->when($tipo !== '', fn ($query) => $query->where('tipo_pessoa', $tipo))
+            ->when($busca !== '', function ($query) use ($busca) {
+                $documento = preg_replace('/\D/', '', $busca);
+
+                $query->where(function ($sub) use ($busca, $documento) {
+                    $sub->where('razao_social', 'ilike', "%{$busca}%")
+                        ->orWhere('nome', 'ilike', "%{$busca}%");
+
+                    if ($documento !== '') {
+                        $sub->orWhere('documento', 'like', "%{$documento}%");
+                    }
+                });
+            })
+            ->when($regime !== '', fn ($query) => $query->where('regime_tributario', 'ilike', $regime))
+            ->when($situacao !== '', fn ($query) => $query->where('situacao_cadastral', 'ilike', $situacao))
+            ->when($uf !== '', fn ($query) => $query->where('uf', $uf))
+            ->pluck('id');
+
+        return response()->json([
+            'success' => true,
+            'ids' => $ids,
+            'total' => $ids->count(),
+        ]);
+    }
+
     /**
      * Store a newly created cliente in storage.
      */

@@ -9,7 +9,7 @@
                     <p class="mt-1 text-sm text-gray-600">Consulte a situação cadastral e fiscal de CNPJs.</p>
                 </div>
                 <a
-                    href="/app/consultas/nova"
+                    href="/app/consulta/nova"
                     class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
                     data-link
                 >
@@ -1291,7 +1291,7 @@
         function iniciarSSE(tabId) {
             fecharSSE();
 
-            const url = '/app/consultas/nova/progresso/stream?tab_id=' + encodeURIComponent(tabId);
+            const url = '/app/consulta/nova/progresso/stream?tab_id=' + encodeURIComponent(tabId);
             eventSource = new EventSource(url);
 
             eventSource.addEventListener('progresso', function(e) {
@@ -1309,7 +1309,7 @@
 
                         const linkDownload = document.getElementById('link-download-manual');
                         if (linkDownload && consultaLoteId) {
-                            linkDownload.href = '/app/consultas/lote/' + consultaLoteId + '/baixar';
+                            linkDownload.href = '/app/consulta/lote/' + consultaLoteId + '/baixar';
                         }
 
                         showModal('sucesso');

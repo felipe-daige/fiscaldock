@@ -4,6 +4,7 @@
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+@source '../../public/js/**/*.js';
 
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
@@ -240,16 +241,15 @@
     }
 
     /* ═══════════════════════════════════════════
-       SIDEBAR — BEM component
+       SIDEBAR — DANFE modernizado
        ═══════════════════════════════════════════ */
 
-    /* Container */
     .sidebar {
-        @apply fixed inset-y-0 left-0 z-50 flex flex-col bg-white border-r border-gray-200;
-        width: 224px;
+        @apply fixed inset-y-0 left-0 z-50 flex flex-col bg-white border-r border-gray-300;
+        width: 256px;
         max-height: 100vh;
         height: 100vh;
-        transition: width 0.3s ease, transform 0.3s ease;
+        transition: transform 0.25s ease;
         transform: translateX(-100%);
     }
 
@@ -262,139 +262,184 @@
         }
     }
 
-    /* Overlay (mobile) */
     .sidebar__overlay {
-        @apply fixed inset-0 z-40 bg-black/50 hidden;
+        @apply fixed inset-0 z-40 bg-gray-900/30 hidden;
     }
     .sidebar__overlay--visible {
         @apply block;
     }
 
-    /* Mobile open */
     .sidebar--open {
         transform: translateX(0);
     }
 
-    /* Brand */
     .sidebar__brand {
-        @apply flex-shrink-0 flex items-center justify-between gap-2 px-4 py-4 border-b border-gray-200;
+        @apply flex-shrink-0 flex items-center justify-between gap-3 px-4 py-3 bg-gray-50 border-b border-gray-300;
+    }
+    .sidebar__brand-link {
+        @apply flex items-center gap-3 min-w-0;
     }
     .sidebar__brand-logo {
         @apply h-8 object-contain shrink-0;
     }
+    .sidebar__brand-copy {
+        @apply min-w-0;
+    }
     .sidebar__brand-text {
-        @apply text-lg font-bold transition-all duration-300;
+        @apply block text-sm font-bold text-gray-900 uppercase tracking-wide leading-none;
+    }
+    .sidebar__brand-subtitle {
+        @apply block mt-1 text-[10px] font-semibold text-gray-400 uppercase tracking-widest leading-none;
     }
     .sidebar__close-btn {
-        @apply inline-flex md:hidden items-center justify-center w-9 h-9 rounded-lg border border-gray-200
-               text-gray-600 hover:text-blue-500 hover:bg-gray-500/8 transition-colors;
+        @apply inline-flex md:hidden items-center justify-center w-9 h-9 rounded border border-gray-300
+               text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors;
     }
 
-    /* Nav (scrollable) */
     .sidebar__nav {
-        @apply flex-1 min-h-0 px-3 py-4 overflow-y-auto overflow-x-hidden space-y-2;
+        @apply flex-1 min-h-0 px-3 py-4 overflow-y-auto overflow-x-hidden;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: thin;
-        scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+        scrollbar-color: rgba(156, 163, 175, 0.6) transparent;
     }
     .sidebar__nav::-webkit-scrollbar { width: 6px; }
     .sidebar__nav::-webkit-scrollbar-track { background: transparent; }
     .sidebar__nav::-webkit-scrollbar-thumb {
-        background-color: rgba(156, 163, 175, 0.5);
-        border-radius: 3px;
+        background-color: rgba(156, 163, 175, 0.6);
+        border-radius: 9999px;
     }
     .sidebar__nav::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(156, 163, 175, 0.7);
+        background-color: rgba(107, 114, 128, 0.7);
     }
 
-    /* Section */
     .sidebar__section + .sidebar__section {
-        @apply mt-4;
+        @apply mt-4 pt-4 border-t border-gray-200;
     }
     .sidebar__section-title {
-        @apply px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider leading-4 transition-all duration-300;
+        @apply px-2 pb-2 text-[10px] font-semibold text-gray-500 uppercase tracking-widest leading-4;
     }
 
-    /* Item */
-    .sidebar__item {
-        @apply flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors w-full leading-5;
+    .sidebar__item,
+    .sidebar__group-trigger,
+    .sidebar__user-trigger {
+        @apply flex items-center gap-3 w-full px-3 py-2 text-sm text-gray-700 rounded border border-transparent transition-colors;
     }
+    .sidebar__item:hover,
+    .sidebar__group-trigger:hover,
+    .sidebar__user-trigger:hover {
+        @apply bg-gray-50 text-gray-900 border-gray-200;
+    }
+    .sidebar__item--active,
+    .sidebar__group-trigger--active,
+    .sidebar__group-menu-item--active,
+    .sidebar__user-trigger--active,
+    .sidebar__user-menu-item--active {
+        @apply bg-gray-100 text-gray-900 border-gray-300;
+    }
+    .sidebar__group-trigger--active,
+    .sidebar__user-trigger--active,
     .sidebar__item--active {
-        @apply text-blue-500;
+        box-shadow: inset 3px 0 0 #1f2937;
     }
     .sidebar__item--disabled {
         @apply opacity-60 cursor-default;
     }
-    .sidebar__item-icon {
-        @apply w-5 h-5 text-gray-400 shrink-0;
+    .sidebar__item-icon,
+    .sidebar__user-avatar {
+        @apply w-4 h-4 text-gray-400 shrink-0;
     }
-    .sidebar__item-label {
-        @apply font-medium transition-all duration-300;
+    .sidebar__item--active .sidebar__item-icon,
+    .sidebar__group-trigger--active .sidebar__item-icon,
+    .sidebar__user-trigger--active .sidebar__user-avatar {
+        @apply text-gray-700;
+    }
+    .sidebar__item-label,
+    .sidebar__group-menu-item-label {
+        @apply min-w-0 flex-1 font-medium;
     }
     .sidebar__item-badge {
-        @apply ml-auto w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 transition-all duration-300;
+        @apply ml-auto w-1.5 h-1.5 rounded-full shrink-0;
+        background-color: #d97706;
     }
 
-    /* Group (collapsible) */
-    .sidebar__group-trigger {
-        @apply flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-gray-700 leading-5 cursor-pointer hover:bg-gray-500/8 transition-colors w-full;
+    .sidebar__group {
+        @apply space-y-1;
     }
     .sidebar__group-arrow {
-        @apply w-4 h-4 text-gray-400;
+        @apply w-4 h-4 text-gray-400 shrink-0;
     }
     .sidebar__group-menu {
-        @apply mt-1 ml-3 pl-3 border-l border-gray-200 space-y-1;
+        @apply mt-1 ml-5 pl-4 border-l border-gray-200 space-y-1;
     }
-    .sidebar__group-menu-item {
-        @apply block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-500/8 transition-colors leading-5;
+    .sidebar__group-menu-item,
+    .sidebar__user-menu-item {
+        @apply flex items-center gap-3 w-full px-3 py-2 text-sm text-gray-600 rounded border border-transparent transition-colors;
     }
-    .sidebar__group-menu-item-label {
-        @apply font-medium;
+    .sidebar__group-menu-item:hover,
+    .sidebar__user-menu-item:hover {
+        @apply bg-gray-50 text-gray-900 border-gray-200;
+    }
+    .sidebar__group-menu-item--active,
+    .sidebar__user-menu-item--active {
+        box-shadow: inset 2px 0 0 #4b5563;
     }
 
-    /* User section (bottom) */
     .sidebar__user {
-        @apply flex-shrink-0 border-t border-gray-200;
+        @apply flex-shrink-0 border-t border-gray-300 bg-gray-50;
     }
-    .sidebar__user-trigger {
-        @apply flex items-center gap-2 px-2 py-2 rounded-lg text-gray-700 leading-5 cursor-pointer hover:bg-gray-500/8 transition-colors w-full;
-    }
-    .sidebar__user-avatar {
-        @apply w-5 h-5 text-gray-400 shrink-0;
+    .sidebar__user-panel {
+        @apply p-3;
     }
     .sidebar__user-name {
-        @apply font-medium text-sm truncate flex-1 transition-all duration-300;
+        @apply font-medium text-sm truncate flex-1 text-gray-900;
+    }
+    .sidebar__user-role {
+        @apply text-[10px] font-semibold text-gray-400 uppercase tracking-widest;
     }
     .sidebar__user-menu {
-        @apply space-y-0.5 mb-1 pb-1 border-b border-gray-100;
-    }
-    .sidebar__user-menu-item {
-        @apply flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-500/8 transition-colors leading-5;
+        @apply mt-2 space-y-1;
     }
     .sidebar__user-menu-item-icon {
         @apply w-4 h-4 text-gray-400 shrink-0;
     }
 
-    /* Logout */
     .sidebar__logout {
-        @apply px-3 pb-3 pt-1;
+        @apply px-3 pb-3;
     }
     .sidebar__logout-btn {
-        @apply w-full flex items-center justify-center gap-2 px-4 py-1.5 text-sm font-medium text-gray-700
-               bg-white/60 border border-gray-300/60 rounded-lg hover:bg-gray-500/8 hover:text-red-600 transition-colors;
+        @apply w-full flex items-center justify-center gap-2 px-4 py-2 text-[10px] font-semibold text-gray-700
+               bg-white border border-gray-300 rounded uppercase tracking-wide hover:bg-gray-100 hover:text-gray-900 transition-colors;
     }
     .sidebar__logout-label {
-        @apply text-xs transition-all duration-300;
+        @apply text-[10px] font-semibold uppercase tracking-wide;
     }
 
-    /* Layout offsets */
+    .mobile-auth-topbar {
+        @apply md:hidden sticky top-0 z-30 bg-white border-b border-gray-300;
+    }
+    .mobile-auth-topbar__inner {
+        @apply flex items-center gap-3 px-4 py-3 bg-gray-50;
+    }
+    .mobile-auth-topbar__button {
+        @apply inline-flex items-center justify-center w-9 h-9 rounded border border-gray-300 text-gray-500 hover:text-gray-700 hover:bg-white transition-colors;
+    }
+    .mobile-auth-topbar__brand {
+        @apply flex items-center gap-2 min-w-0;
+    }
+    .mobile-auth-topbar__brand-logo {
+        @apply h-7 object-contain shrink-0;
+    }
+    .mobile-auth-topbar__brand-text {
+        @apply text-sm font-bold text-gray-900 uppercase tracking-wide;
+    }
+
     @media (min-width: 768px) {
         .layout-with-sidebar {
-            padding-left: 224px;
+            padding-left: 256px;
         }
         .layout-sidebar-expanded {
-            padding-left: 224px;
+            padding-left: 256px;
         }
     }
 }

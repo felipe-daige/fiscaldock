@@ -4,37 +4,24 @@
     $tipoPessoa = $isEditing ? $cliente->tipo_pessoa : 'PJ';
     $estados = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
 @endphp
-<div class="min-h-screen bg-gray-50" id="novo-cliente-container">
+<div class="bg-gray-100 min-h-screen" id="novo-cliente-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <style>
-            @keyframes card-slide-in {
-                from { opacity: 0; transform: translateY(60px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            .nc-animate {
-                opacity: 0;
-                animation: card-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-            @media (prefers-reduced-motion: reduce) {
-                .nc-animate { opacity: 1; animation: none; }
-            }
-        </style>
 
         {{-- Header --}}
-        <div class="mb-4 sm:mb-6">
+        <div class="mb-4 sm:mb-8">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900">{{ $isEditing ? 'Editar Cliente' : 'Novo Cliente' }}</h1>
-                    <p class="mt-1 text-sm text-gray-600">
+                    <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">{{ $isEditing ? 'Editar Cliente' : 'Novo Cliente' }}</h1>
+                    <p class="mt-1 text-xs text-gray-500">
                         @if($isEditing)
-                            Atualize os dados do cliente. Tipo de pessoa e documento nao podem ser alterados.
+                            Atualize os dados do cliente. Tipo de pessoa e documento não podem ser alterados.
                         @else
-                            Cadastre pessoa juridica (CNPJ) ou fisica (CPF).
+                            Cadastre pessoa jurídica (CNPJ) ou física (CPF).
                         @endif
                     </p>
                 </div>
                 <a href="/app/clientes" data-link
-                   class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                   class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 bg-white text-gray-700 text-sm font-medium rounded hover:bg-gray-50 transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
@@ -43,27 +30,69 @@
             </div>
         </div>
 
+        <div class="bg-white border border-gray-300 rounded p-4 mb-6">
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 bg-gray-100 rounded flex items-center justify-center shrink-0 mt-0.5">
+                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    @if($isEditing)
+                        <h4 class="text-sm font-semibold text-gray-900">Edição de Cliente</h4>
+                        <p class="text-sm text-gray-700 mt-0.5">
+                            O tipo de pessoa e o documento não podem ser alterados. Atualize os demais campos conforme necessário.
+                        </p>
+                    @else
+                        <h4 class="text-sm font-semibold text-gray-900">Cadastro de Clientes</h4>
+                        <p class="text-sm text-gray-700 mt-0.5">
+                            Cadastre empresas (CNPJ) ou pessoas físicas (CPF) para organizar a base operacional e vincular participantes e importações.
+                        </p>
+                    @endif
+                </div>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {{-- Form Column (2/3) --}}
             <div class="lg:col-span-2 space-y-4 sm:space-y-6">
 
                 {{-- Card 1: Dados do Cliente --}}
-                <div class="nc-animate bg-white rounded-lg border border-gray-100 p-4 sm:p-6" style="animation-delay: 0.1s">
-                    <h2 class="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-5">Dados do Cliente</h2>
+                <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                    <div class="bg-gray-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dados do Cliente</span>
+                    </div>
+                    <div class="px-4 sm:px-6 py-4 sm:py-5 space-y-5">
 
                     {{-- Tipo Pessoa Toggle --}}
-                    <div class="mb-5">
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Pessoa</label>
-                        <div class="flex rounded-lg border border-gray-200 overflow-hidden w-fit">
+                        <div class="grid grid-cols-2 gap-3 {{ $isEditing ? 'pointer-events-none opacity-60' : '' }}">
                             <button type="button" id="btn-pj"
-                                class="px-4 py-2 text-sm font-medium transition-colors {{ $tipoPessoa === 'PJ' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' }} {{ $isEditing ? 'pointer-events-none opacity-60' : '' }}"
+                                class="tipo-pessoa-btn flex items-center gap-3 p-3 rounded border-2 {{ $tipoPessoa === 'PJ' ? 'border-gray-800 bg-gray-50' : 'border-gray-300 bg-white' }} cursor-pointer transition-all"
                                 onclick="setTipoPessoa('PJ')">
-                                Pessoa Juridica
+                                <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5 {{ $tipoPessoa === 'PJ' ? 'text-gray-700' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                    </svg>
+                                </div>
+                                <div class="text-left">
+                                    <span class="block text-sm font-semibold text-gray-900">Pessoa Jurídica</span>
+                                    <span class="block text-xs text-gray-500">CNPJ</span>
+                                </div>
                             </button>
                             <button type="button" id="btn-pf"
-                                class="px-4 py-2 text-sm font-medium transition-colors border-l border-gray-200 {{ $tipoPessoa === 'PF' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' }} {{ $isEditing ? 'pointer-events-none opacity-60' : '' }}"
+                                class="tipo-pessoa-btn flex items-center gap-3 p-3 rounded border-2 {{ $tipoPessoa === 'PF' ? 'border-gray-800 bg-gray-50' : 'border-gray-300 bg-white' }} cursor-pointer transition-all"
                                 onclick="setTipoPessoa('PF')">
-                                Pessoa Fisica
+                                <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5 {{ $tipoPessoa === 'PF' ? 'text-gray-700' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                    </svg>
+                                </div>
+                                <div class="text-left">
+                                    <span class="block text-sm font-semibold text-gray-900">Pessoa Física</span>
+                                    <span class="block text-xs text-gray-500">CPF</span>
+                                </div>
                             </button>
                         </div>
                         <input type="hidden" id="tipo_pessoa" value="{{ $tipoPessoa }}">
@@ -76,7 +105,7 @@
                         </label>
                         <input type="text" id="documento"
                             value="{{ $isEditing ? $cliente->documento_formatado : '' }}"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 {{ $isEditing ? 'bg-gray-100 cursor-not-allowed' : '' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400 {{ $isEditing ? 'bg-gray-100 cursor-not-allowed' : '' }}"
                             placeholder="{{ $tipoPessoa === 'PJ' ? '00.000.000/0000-00' : '000.000.000-00' }}"
                             maxlength="18"
                             {{ $isEditing ? 'readonly' : '' }}>
@@ -84,18 +113,18 @@
                     </div>
 
                     {{-- Razao Social --}}
-                    <div id="field-razao" class="mb-5 {{ $tipoPessoa === 'PF' ? 'hidden' : '' }}">
+                    <div id="field-razao" class="{{ $tipoPessoa === 'PF' ? 'hidden' : '' }}">
                         <label for="razao_social" class="block text-sm font-medium text-gray-700 mb-1">
-                            Razao Social <span class="text-red-500">*</span>
+                            Razão Social <span class="text-red-500">*</span>
                         </label>
                         <input type="text" id="razao_social"
                             value="{{ $isEditing ? $cliente->razao_social : '' }}"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Razao social da empresa">
+                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                            placeholder="Razão social da empresa">
                     </div>
 
                     {{-- Nome / Nome Fantasia --}}
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label for="nome" class="block text-sm font-medium text-gray-700 mb-1">
                                 <span id="label-nome">{{ $tipoPessoa === 'PJ' ? 'Nome Fantasia' : 'Nome Completo' }}</span>
@@ -103,28 +132,28 @@
                             </label>
                             <input type="text" id="nome"
                                 value="{{ $isEditing ? $cliente->nome : '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 placeholder="{{ $tipoPessoa === 'PJ' ? 'Nome fantasia (opcional)' : 'Nome completo' }}">
                         </div>
                         {{-- Inscricao Estadual (PJ only) --}}
                         <div id="field-ie" class="{{ $tipoPessoa === 'PF' ? 'hidden' : '' }}">
-                            <label for="inscricao_estadual" class="block text-sm font-medium text-gray-700 mb-1">Inscricao Estadual</label>
+                            <label for="inscricao_estadual" class="block text-sm font-medium text-gray-700 mb-1">Inscrição Estadual</label>
                             <input type="text" id="inscricao_estadual"
                                 value="{{ $isEditing ? $cliente->inscricao_estadual : '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Inscricao estadual"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                placeholder="Inscrição estadual"
                                 maxlength="20">
                         </div>
                     </div>
 
                     {{-- CRT (PJ only) + Telefone --}}
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div id="field-crt" class="{{ $tipoPessoa === 'PF' ? 'hidden' : '' }}">
-                            <label for="crt" class="block text-sm font-medium text-gray-700 mb-1">CRT (Regime Tributario)</label>
+                            <label for="crt" class="block text-sm font-medium text-gray-700 mb-1">CRT (Regime Tributário)</label>
                             @php $crtVal = $isEditing ? $cliente->crt : ''; @endphp
                             <select id="crt"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
-                                <option value="">Nao informado</option>
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400 bg-white">
+                                <option value="">Não informado</option>
                                 <option value="1" {{ $crtVal == 1 ? 'selected' : '' }}>1 - Simples Nacional</option>
                                 <option value="2" {{ $crtVal == 2 ? 'selected' : '' }}>2 - Simples (Excesso)</option>
                                 <option value="3" {{ $crtVal == 3 ? 'selected' : '' }}>3 - Regime Normal</option>
@@ -134,25 +163,25 @@
                             <label for="telefone" class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
                             <input type="text" id="telefone"
                                 value="{{ $isEditing ? $cliente->telefone : '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 placeholder="(00) 00000-0000"
                                 maxlength="20">
                         </div>
                     </div>
 
                     {{-- Email --}}
-                    <div class="mb-5">
+                    <div>
                         <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                         <input type="email" id="email"
                             value="{{ $isEditing ? $cliente->email : '' }}"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                             placeholder="email@empresa.com">
                     </div>
 
                     {{-- Empresa Propria Toggle --}}
                     <div class="flex items-center gap-3 pt-2 border-t border-gray-100">
                         <button type="button" id="btn-empresa-propria"
-                            class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 {{ ($isEditing && $cliente->is_empresa_propria) ? 'bg-blue-600' : 'bg-gray-200' }}"
+                            class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-gray-400 focus:ring-offset-2 {{ ($isEditing && $cliente->is_empresa_propria) ? 'bg-gray-800' : 'bg-gray-200' }}"
                             role="switch"
                             aria-checked="{{ ($isEditing && $cliente->is_empresa_propria) ? 'true' : 'false' }}"
                             onclick="toggleEmpresaPropria()">
@@ -160,28 +189,32 @@
                                 id="toggle-knob"></span>
                         </button>
                         <div>
-                            <span class="text-sm font-medium text-gray-700">Esta e minha empresa</span>
-                            <p class="text-xs text-gray-400">Marque se este CNPJ e da sua propria empresa/escritorio</p>
+                            <span class="text-sm font-medium text-gray-700">Esta é minha empresa</span>
+                            <p class="text-xs text-gray-400">Marque se este CNPJ é da sua própria empresa/escritório</p>
                         </div>
                         <input type="hidden" id="is_empresa_propria" value="{{ ($isEditing && $cliente->is_empresa_propria) ? '1' : '0' }}">
+                    </div>
                     </div>
                 </div>
 
                 {{-- Card 2: Endereco --}}
-                <div class="nc-animate bg-white rounded-lg border border-gray-100 p-4 sm:p-6" style="animation-delay: 0.2s">
-                    <h2 class="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-5">Endereco</h2>
+                <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                    <div class="bg-gray-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Endereço</span>
+                    </div>
+                    <div class="px-4 sm:px-6 py-4 sm:py-5 space-y-4">
 
                     {{-- CEP com busca --}}
-                    <div class="mb-4">
+                    <div>
                         <label for="cep" class="block text-sm font-medium text-gray-700 mb-1">CEP</label>
                         <div class="flex gap-2">
                             <input type="text" id="cep"
                                 value="{{ $isEditing ? $cliente->cep : '' }}"
-                                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 placeholder="00000-000"
                                 maxlength="9">
                             <button type="button" id="btn-buscar-cep"
-                                class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 border border-gray-300 transition-colors">
+                                class="px-4 py-2 bg-gray-100 text-gray-700 rounded text-sm font-semibold hover:bg-gray-200 border border-gray-300 transition-colors">
                                 Buscar
                             </button>
                         </div>
@@ -189,21 +222,21 @@
                     </div>
 
                     {{-- Logradouro --}}
-                    <div class="mb-4">
+                    <div>
                         <label for="endereco" class="block text-sm font-medium text-gray-700 mb-1">Logradouro</label>
                         <input type="text" id="endereco"
                             value="{{ $isEditing ? $cliente->endereco : '' }}"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                             placeholder="Rua, Avenida, etc.">
                     </div>
 
                     {{-- Numero + Complemento --}}
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label for="numero" class="block text-sm font-medium text-gray-700 mb-1">Numero</label>
                             <input type="text" id="numero"
                                 value="{{ $isEditing ? $cliente->numero : '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 placeholder="123"
                                 maxlength="20">
                         </div>
@@ -211,18 +244,18 @@
                             <label for="complemento" class="block text-sm font-medium text-gray-700 mb-1">Complemento</label>
                             <input type="text" id="complemento"
                                 value="{{ $isEditing ? $cliente->complemento : '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 placeholder="Apto, Sala, etc."
                                 maxlength="100">
                         </div>
                     </div>
 
                     {{-- Bairro --}}
-                    <div class="mb-4">
+                    <div>
                         <label for="bairro" class="block text-sm font-medium text-gray-700 mb-1">Bairro</label>
                         <input type="text" id="bairro"
                             value="{{ $isEditing ? $cliente->bairro : '' }}"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                             placeholder="Nome do bairro"
                             maxlength="100">
                     </div>
@@ -230,16 +263,16 @@
                     {{-- Municipio + UF --}}
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label for="municipio" class="block text-sm font-medium text-gray-700 mb-1">Municipio</label>
+                            <label for="municipio" class="block text-sm font-medium text-gray-700 mb-1">Município</label>
                             <input type="text" id="municipio"
                                 value="{{ $isEditing ? $cliente->municipio : '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 placeholder="Nome do municipio">
                         </div>
                         <div>
                             <label for="uf" class="block text-sm font-medium text-gray-700 mb-1">UF</label>
                             <select id="uf"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400 bg-white">
                                 <option value="">Selecione</option>
                                 @foreach($estados as $uf)
                                     <option value="{{ $uf }}" {{ ($isEditing && $cliente->uf === $uf) ? 'selected' : '' }}>{{ $uf }}</option>
@@ -247,86 +280,90 @@
                             </select>
                         </div>
                     </div>
+                    </div>
                 </div>
 
                 {{-- Card 3: Dados Receita Federal (PJ only) --}}
-                <div id="card-dados-rf" class="nc-animate bg-white rounded-lg border border-gray-100 p-4 sm:p-6 {{ $tipoPessoa === 'PF' ? 'hidden' : '' }}" style="animation-delay: 0.3s">
-                    <h2 class="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-5">Dados Receita Federal</h2>
-                    <p class="text-xs text-gray-400 mb-4">Campos preenchidos automaticamente por consultas ou manualmente.</p>
+                <div id="card-dados-rf" class="bg-white rounded border border-gray-300 overflow-hidden {{ $tipoPessoa === 'PF' ? 'hidden' : '' }}">
+                    <div class="bg-gray-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dados Receita Federal</span>
+                    </div>
+                    <div class="px-4 sm:px-6 py-4 sm:py-5 space-y-4">
+                    <p class="text-sm text-gray-700">Campos preenchidos automaticamente por consultas ou manualmente.</p>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label for="situacao_cadastral" class="block text-sm font-medium text-gray-700 mb-1">Situacao Cadastral</label>
+                            <label for="situacao_cadastral" class="block text-sm font-medium text-gray-700 mb-1">Situação Cadastral</label>
                             <input type="text" id="situacao_cadastral"
                                 value="{{ $isEditing ? $cliente->situacao_cadastral : '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 placeholder="ATIVA, BAIXADA, etc.">
                         </div>
                         <div>
-                            <label for="regime_tributario" class="block text-sm font-medium text-gray-700 mb-1">Regime Tributario</label>
+                            <label for="regime_tributario" class="block text-sm font-medium text-gray-700 mb-1">Regime Tributário</label>
                             <input type="text" id="regime_tributario"
                                 value="{{ $isEditing ? $cliente->regime_tributario : '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 placeholder="Simples Nacional, Lucro Presumido, etc.">
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label for="capital_social" class="block text-sm font-medium text-gray-700 mb-1">Capital Social</label>
                             <input type="text" id="capital_social"
                                 value="{{ $isEditing && $cliente->capital_social ? number_format($cliente->capital_social, 2, ',', '.') : '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 placeholder="0,00">
                         </div>
                         <div>
-                            <label for="natureza_juridica" class="block text-sm font-medium text-gray-700 mb-1">Natureza Juridica</label>
+                            <label for="natureza_juridica" class="block text-sm font-medium text-gray-700 mb-1">Natureza Jurídica</label>
                             <input type="text" id="natureza_juridica"
                                 value="{{ $isEditing ? $cliente->natureza_juridica : '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 placeholder="206-2 - Sociedade Ltda">
                         </div>
                         <div>
                             <label for="porte" class="block text-sm font-medium text-gray-700 mb-1">Porte</label>
                             <input type="text" id="porte"
                                 value="{{ $isEditing ? $cliente->porte : '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 placeholder="ME, EPP, Demais">
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label for="data_inicio_atividade" class="block text-sm font-medium text-gray-700 mb-1">Inicio Atividade</label>
+                            <label for="data_inicio_atividade" class="block text-sm font-medium text-gray-700 mb-1">Início Atividade</label>
                             <input type="date" id="data_inicio_atividade"
                                 value="{{ $isEditing && $cliente->data_inicio_atividade ? $cliente->data_inicio_atividade->format('Y-m-d') : '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         </div>
                         <div>
                             <label for="cnpj_matriz" class="block text-sm font-medium text-gray-700 mb-1">CNPJ Matriz</label>
                             <input type="text" id="cnpj_matriz"
                                 value="{{ $isEditing ? $cliente->cnpj_matriz : '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 placeholder="Apenas para filiais"
                                 maxlength="14">
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label for="cnae_principal" class="block text-sm font-medium text-gray-700 mb-1">CNAE Principal</label>
                             <input type="text" id="cnae_principal"
                                 value="{{ $isEditing ? $cliente->cnae_principal : '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 placeholder="0000-0/00"
                                 maxlength="10">
                         </div>
                         <div>
-                            <label for="cnae_principal_descricao" class="block text-sm font-medium text-gray-700 mb-1">Descricao CNAE</label>
+                            <label for="cnae_principal_descricao" class="block text-sm font-medium text-gray-700 mb-1">Descrição CNAE</label>
                             <input type="text" id="cnae_principal_descricao"
                                 value="{{ $isEditing ? $cliente->cnae_principal_descricao : '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Descricao da atividade principal">
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                placeholder="Descrição da atividade principal">
                         </div>
                     </div>
 
@@ -335,25 +372,26 @@
                             <label for="suframa" class="block text-sm font-medium text-gray-700 mb-1">SUFRAMA</label>
                             <input type="text" id="suframa"
                                 value="{{ $isEditing ? $cliente->suframa : '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Numero SUFRAMA (opcional)"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                placeholder="Número SUFRAMA (opcional)"
                                 maxlength="20">
                         </div>
                         <div>
-                            <label for="codigo_municipal" class="block text-sm font-medium text-gray-700 mb-1">Codigo Municipal</label>
+                            <label for="codigo_municipal" class="block text-sm font-medium text-gray-700 mb-1">Código Municipal</label>
                             <input type="text" id="codigo_municipal"
                                 value="{{ $isEditing ? $cliente->codigo_municipal : '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Codigo IBGE"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                placeholder="Código IBGE"
                                 maxlength="10">
                         </div>
+                    </div>
                     </div>
                 </div>
 
                 {{-- Submit Button --}}
-                <div class="nc-animate flex items-center gap-3" style="animation-delay: 0.4s">
+                <div class="flex items-center gap-3">
                     <button type="button" id="btn-salvar"
-                        class="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        class="px-6 py-2.5 bg-gray-800 text-white rounded text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         onclick="salvarCliente()">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -369,37 +407,40 @@
 
             {{-- Preview Column (1/3) --}}
             <div class="lg:col-span-1">
-                <div class="nc-animate sticky top-4 bg-white rounded-lg border border-gray-100 p-4 sm:p-6" style="animation-delay: 0.3s">
-                    <h3 class="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-4">Preview</h3>
-
-                    <div class="space-y-4">
+                <div class="sticky top-4 bg-white rounded border border-gray-300 overflow-hidden">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Preview</span>
+                    </div>
+                    <div class="px-4 sm:px-6 py-4 sm:py-5 space-y-4">
                         {{-- Tipo --}}
                         <div class="flex items-center gap-2">
                             <span id="preview-badge"
-                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold {{ $tipoPessoa === 'PJ' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' }}">
+                                class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
+                                style="background-color: {{ $tipoPessoa === 'PJ' ? '#374151' : '#9ca3af' }}">
                                 {{ $tipoPessoa }}
                             </span>
                             <span id="preview-empresa-propria"
-                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800 {{ ($isEditing && $cliente->is_empresa_propria) ? '' : 'hidden' }}">
-                                Empresa Propria
+                                class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white {{ ($isEditing && $cliente->is_empresa_propria) ? '' : 'hidden' }}"
+                                style="background-color: #047857">
+                                Empresa Própria
                             </span>
                         </div>
 
                         {{-- Nome/Razao --}}
                         <div>
                             <p id="preview-razao" class="text-sm font-semibold text-gray-900">{{ $isEditing ? ($cliente->razao_social ?? $cliente->nome ?? '-') : '-' }}</p>
-                            <p id="preview-nome" class="text-xs text-gray-400">{{ $isEditing ? $cliente->nome : '' }}</p>
+                            <p id="preview-nome" class="text-sm text-gray-500">{{ $isEditing ? $cliente->nome : '' }}</p>
                         </div>
 
                         {{-- Documento --}}
                         <div>
-                            <span class="text-xs uppercase tracking-wide text-gray-400">Documento</span>
+                            <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Documento</span>
                             <p id="preview-doc" class="text-sm font-mono text-gray-700">{{ $isEditing ? $cliente->documento_formatado : '-' }}</p>
                         </div>
 
                         {{-- CRT (PJ) --}}
                         <div id="preview-crt-wrap" class="{{ $tipoPessoa === 'PF' ? 'hidden' : '' }}">
-                            <span class="text-xs uppercase tracking-wide text-gray-400">Regime Tributario</span>
+                            <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Regime Tributário</span>
                             <p id="preview-crt" class="text-sm text-gray-700">
                                 @if($isEditing && $cliente->crt)
                                     @switch($cliente->crt)
@@ -415,14 +456,14 @@
 
                         {{-- Contato --}}
                         <div>
-                            <span class="text-xs uppercase tracking-wide text-gray-400">Contato</span>
+                            <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Contato</span>
                             <p id="preview-email" class="text-sm text-gray-700">{{ $isEditing ? $cliente->email : '-' }}</p>
                             <p id="preview-tel" class="text-sm text-gray-700">{{ $isEditing ? $cliente->telefone : '' }}</p>
                         </div>
 
-                        {{-- Endereco --}}
+                        {{-- Endereço --}}
                         <div>
-                            <span class="text-xs uppercase tracking-wide text-gray-400">Endereco</span>
+                            <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Endereço</span>
                             <p id="preview-endereco" class="text-sm text-gray-700">
                                 @if($isEditing && $cliente->endereco)
                                     {{ implode(', ', array_filter([$cliente->endereco, $cliente->numero, $cliente->bairro])) }}
@@ -432,9 +473,9 @@
                             </p>
                         </div>
 
-                        {{-- Localizacao --}}
+                        {{-- Localização --}}
                         <div>
-                            <span class="text-xs uppercase tracking-wide text-gray-400">Localizacao</span>
+                            <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Localização</span>
                             <p id="preview-local" class="text-sm text-gray-700">
                                 @if($isEditing && ($cliente->municipio || $cliente->uf))
                                     {{ implode(' - ', array_filter([$cliente->municipio, $cliente->uf])) }}
@@ -444,9 +485,9 @@
                             </p>
                         </div>
 
-                        {{-- Situacao (PJ) --}}
+                        {{-- Situação (PJ) --}}
                         <div id="preview-situacao-wrap" class="{{ $tipoPessoa === 'PF' ? 'hidden' : '' }}">
-                            <span class="text-xs uppercase tracking-wide text-gray-400">Situacao Cadastral</span>
+                            <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação Cadastral</span>
                             <p id="preview-situacao" class="text-sm text-gray-700">{{ $isEditing && $cliente->situacao_cadastral ? $cliente->situacao_cadastral : '-' }}</p>
                         </div>
                     </div>
@@ -477,29 +518,43 @@
         const nomeRequired = document.getElementById('nome-required');
         const docInput = document.getElementById('documento');
         const previewBadge = document.getElementById('preview-badge');
+        const iconPJ = btnPJ.querySelector('.w-10');
+        const iconPF = btnPF.querySelector('.w-10');
+        const svgPJ = btnPJ.querySelector('svg');
+        const svgPF = btnPF.querySelector('svg');
 
         if (tipo === 'PJ') {
-            btnPJ.className = btnPJ.className.replace('bg-white text-gray-700 hover:bg-gray-50', 'bg-blue-600 text-white');
-            btnPF.className = btnPF.className.replace('bg-blue-600 text-white', 'bg-white text-gray-700 hover:bg-gray-50');
+            btnPJ.className = 'tipo-pessoa-btn flex items-center gap-3 p-3 rounded border-2 border-gray-800 bg-gray-50 cursor-pointer transition-all';
+            btnPF.className = 'tipo-pessoa-btn flex items-center gap-3 p-3 rounded border-2 border-gray-300 bg-white cursor-pointer transition-all';
+            iconPJ.className = 'w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0';
+            iconPF.className = 'w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0';
+            svgPJ.className.baseVal = 'w-5 h-5 text-gray-700';
+            svgPF.className.baseVal = 'w-5 h-5 text-gray-500';
             labelDoc.textContent = 'CNPJ';
             labelNome.textContent = 'Nome Fantasia';
             nomeRequired.classList.add('hidden');
             docInput.placeholder = '00.000.000/0000-00';
             previewBadge.textContent = 'PJ';
-            previewBadge.className = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800';
+            previewBadge.className = 'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white';
+            previewBadge.style.backgroundColor = '#374151';
             pjOnlyFields.forEach(function(id) {
                 var el = document.getElementById(id);
                 if (el) el.classList.remove('hidden');
             });
         } else {
-            btnPF.className = btnPF.className.replace('bg-white text-gray-700 hover:bg-gray-50', 'bg-blue-600 text-white');
-            btnPJ.className = btnPJ.className.replace('bg-blue-600 text-white', 'bg-white text-gray-700 hover:bg-gray-50');
+            btnPJ.className = 'tipo-pessoa-btn flex items-center gap-3 p-3 rounded border-2 border-gray-300 bg-white cursor-pointer transition-all';
+            btnPF.className = 'tipo-pessoa-btn flex items-center gap-3 p-3 rounded border-2 border-gray-800 bg-gray-50 cursor-pointer transition-all';
+            iconPJ.className = 'w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0';
+            iconPF.className = 'w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0';
+            svgPJ.className.baseVal = 'w-5 h-5 text-gray-500';
+            svgPF.className.baseVal = 'w-5 h-5 text-gray-700';
             labelDoc.textContent = 'CPF';
             labelNome.textContent = 'Nome Completo';
             nomeRequired.classList.remove('hidden');
             docInput.placeholder = '000.000.000-00';
             previewBadge.textContent = 'PF';
-            previewBadge.className = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-purple-100 text-purple-800';
+            previewBadge.className = 'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white';
+            previewBadge.style.backgroundColor = '#9ca3af';
             pjOnlyFields.forEach(function(id) {
                 var el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
@@ -516,14 +571,14 @@
 
         if (empresaPropria) {
             btn.classList.remove('bg-gray-200');
-            btn.classList.add('bg-blue-600');
+            btn.classList.add('bg-gray-800');
             btn.setAttribute('aria-checked', 'true');
             knob.classList.remove('translate-x-0');
             knob.classList.add('translate-x-5');
             input.value = '1';
             preview.classList.remove('hidden');
         } else {
-            btn.classList.remove('bg-blue-600');
+            btn.classList.remove('bg-gray-800');
             btn.classList.add('bg-gray-200');
             btn.setAttribute('aria-checked', 'false');
             knob.classList.remove('translate-x-5');
@@ -716,7 +771,7 @@
             data.codigo_municipal = document.getElementById('codigo_municipal').value || null;
         }
 
-        var url = isEditing ? '/app/clientes/' + clienteId : '/app/novo-cliente';
+        var url = isEditing ? '/app/clientes/' + clienteId : '/app/cliente/novo';
         var method = isEditing ? 'PUT' : 'POST';
 
         fetch(url, {

@@ -6,23 +6,23 @@
 <div class="bg-white rounded border border-gray-300 mt-6" id="catalogo-section">
  <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-4 flex-wrap">
  <div class="flex items-center gap-2">
- <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Catalogo de Produtos/Servicos</span>
+<span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Catálogo de Produtos/Serviços</span>
  <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ $totalCatalogo }}</span>
  </div>
  <div class="flex items-center gap-3">
  <div class="relative">
  <select class="pl-3 pr-8 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400 bg-white" onchange="let u = new URL(window.location.href); u.searchParams.set('per_page_catalogo', this.value); u.searchParams.delete('catalogo_page'); window.asyncLoadEFD(u.toString(), ['catalogo-section']);">
- <option value="10" {{ request('per_page_catalogo', 10) == 10 ? 'selected' : '' }}>10 por pag.</option>
- <option value="25" {{ request('per_page_catalogo') == 25 ? 'selected' : '' }}>25 por pag.</option>
- <option value="50" {{ request('per_page_catalogo') == 50 ? 'selected' : '' }}>50 por pag.</option>
- <option value="100" {{ request('per_page_catalogo') == 100 ? 'selected' : '' }}>100 por pag.</option>
+ <option value="10" {{ request('per_page_catalogo', 10) == 10 ? 'selected' : '' }}>10 por pág.</option>
+ <option value="25" {{ request('per_page_catalogo') == 25 ? 'selected' : '' }}>25 por pág.</option>
+ <option value="50" {{ request('per_page_catalogo') == 50 ? 'selected' : '' }}>50 por pág.</option>
+ <option value="100" {{ request('per_page_catalogo') == 100 ? 'selected' : '' }}>100 por pág.</option>
  </select>
  </div>
  <div class="relative">
  <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
  </svg>
- <input type="text" id="busca-catalogo" placeholder="Buscar por codigo, descricao ou NCM..." class="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400 w-72">
+ <input type="text" id="busca-catalogo" placeholder="Buscar por código, descrição ou NCM..." class="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400 w-72">
  </div>
  </div>
  </div>
@@ -31,8 +31,8 @@
  <table class="min-w-full divide-y divide-gray-100 text-sm" id="tabela-catalogo">
  <thead>
  <tr>
- <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Codigo</th>
- <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Descricao</th>
+ <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Código</th>
+ <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Descrição</th>
  <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">NCM</th>
  <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Tipo</th>
  <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Unidade</th>
@@ -80,10 +80,10 @@
  @endif
  <span class="px-3 py-1.5 text-xs text-gray-500">{{ $catalogoItens->currentPage() }} / {{ $catalogoItens->lastPage() }}</span>
  @if($catalogoItens->hasMorePages())
- <a href="{{ $catalogoItens->nextPageUrl() }}" data-link class="px-3 py-1.5 rounded border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50 transition">Proxima</a>
- @else
- <span class="px-3 py-1.5 rounded border border-gray-300 text-gray-300 text-xs cursor-not-allowed">Proxima</span>
- @endif
+ <a href="{{ $catalogoItens->nextPageUrl() }}" data-link class="px-3 py-1.5 rounded border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50 transition">Próxima</a>
+@else
+ <span class="px-3 py-1.5 rounded border border-gray-300 text-gray-300 text-xs cursor-not-allowed">Próxima</span>
+@endif
  </div>
  </div>
  @endif

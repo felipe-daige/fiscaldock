@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\ConsultaLote;
+use App\Models\ConsultaResultado;
+use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\ParticipanteGrupo;
 use App\Services\CreditService;
 use App\Services\ConsultaReportService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,7 +32,7 @@ class ConsultaController extends Controller
 
     private function getViewPrefix(): string
     {
-        return 'autenticado.consultas.';
+        return 'autenticado.consulta.';
     }
 
     /**
@@ -57,6 +60,24 @@ class ConsultaController extends Controller
             ->orderBy('razao_social')
             ->get();
 
+        $participantesUfs = Participante::where('user_id', $user->id)
+            ->excludingEmpresaPropria()
+            ->whereNotNull('uf')
+            ->where('uf', '!=', '')
+            ->selectRaw('upper(uf) as uf')
+            ->distinct()
+            ->orderBy('uf')
+            ->pluck('uf');
+
+        $clientesUfs = Cliente::where('user_id', $user->id)
+            ->where('ativo', true)
+            ->whereNotNull('uf')
+            ->where('uf', '!=', '')
+            ->selectRaw('upper(uf) as uf')
+            ->distinct()
+            ->orderBy('uf')
+            ->pluck('uf');
+
         // Buscar grupos do usuário
         $grupos = ParticipanteGrupo::doUsuario($user->id)
             ->withCount('participantes')
@@ -79,6 +100,8 @@ class ConsultaController extends Controller
             'grupos' => $grupos,
             'totalParticipantes' => $totalParticipantes,
             'ultimosLotes' => $ultimosLotes,
+            'participantesUfs' => $participantesUfs,
+            'clientesUfs' => $clientesUfs,
             'credits' => $this->creditService->getBalance($user),
         ];
 
@@ -111,6 +134,9 @@ class ConsultaController extends Controller
             'grupo_id' => 'nullable|integer|exists:participantes_grupos,id',
             'cliente_id' => 'nullable|integer|exists:clientes,id',
             'origem_tipo' => 'nullable|string|in:NFE,NFSE,CTE,SPED_EFD_FISCAL,SPED_EFD_CONTRIB,MANUAL',
+            'tipo_documento' => 'nullable|string|in:PF,PJ',
+            'situacao_cadastral' => 'nullable|string|max:50',
+            'uf' => 'nullable|string|size:2',
             'busca' => 'nullable|string|max:100',
             'page' => 'nullable|integer|min:1',
             'per_page' => 'nullable|integer|min:10|max:100',
@@ -120,7 +146,14 @@ class ConsultaController extends Controller
 
         $query = Participante::where('user_id', $user->id)
             ->excludingEmpresaPropria()
-            ->with(['grupos:id,nome,cor', 'cliente:id,razao_social,is_empresa_propria']);
+            ->with([
+                'grupos:id,nome,cor',
+                'cliente:id,razao_social,is_empresa_propria',
+                'assinaturas' => fn ($q) => $q
+                    ->whereIn('status', ['ativo', 'pausado'])
+                    ->orderByRaw("CASE WHEN status = 'ativo' THEN 0 ELSE 1 END")
+                    ->orderBy('updated_at', 'desc'),
+            ]);
 
         // Filtro por grupo
         if (! empty($validated['grupo_id'])) {
@@ -137,6 +170,18 @@ class ConsultaController extends Controller
         // Filtro por origem
         if (! empty($validated['origem_tipo'])) {
             $query->where('origem_tipo', $validated['origem_tipo']);
+        }
+
+        if (! empty($validated['tipo_documento'])) {
+            $query->where('tipo_documento', strtoupper($validated['tipo_documento']));
+        }
+
+        if (! empty($validated['situacao_cadastral'])) {
+            $query->where('situacao_cadastral', 'ILIKE', $validated['situacao_cadastral']);
+        }
+
+        if (! empty($validated['uf'])) {
+            $query->where('uf', strtoupper($validated['uf']));
         }
 
         // Filtro por busca (CNPJ ou razão social)
@@ -156,10 +201,127 @@ class ConsultaController extends Controller
 
         $participantes = $query->orderBy('razao_social')
             ->paginate($perPage);
+        $agora = Carbon::now();
+        $participanteIds = $participantes->getCollection()->pluck('id')->all();
+        $ultimosResultados = ConsultaResultado::query()
+            ->whereIn('participante_id', $participanteIds)
+            ->where('status', ConsultaResultado::STATUS_SUCESSO)
+            ->orderBy('consultado_em', 'desc')
+            ->get()
+            ->unique('participante_id')
+            ->keyBy('participante_id');
 
         return response()->json([
             'success' => true,
-            'data' => $participantes->items(),
+            'data' => $participantes->getCollection()->map(function ($participante) use ($ultimosResultados, $agora) {
+                $ultimoResultado = $ultimosResultados->get($participante->id);
+                $cndFederal = $ultimoResultado?->getCndFederal() ?? [];
+                $alerta = $this->buildParticipanteAlertData($ultimoResultado, $agora);
+                $assinatura = $participante->assinaturas->first();
+                $ultimaConsultaEm = $participante->ultima_consulta_em;
+
+                $consultaStatusLabel = 'Nunca foi consultado';
+                $consultaStatusHex = '#9ca3af';
+                $consultaStatusMeta = 'Situação cadastral: não consultada';
+
+                if ($ultimaConsultaEm) {
+                    $diasSemConsulta = $ultimaConsultaEm->diffInDays($agora);
+
+                    if ($diasSemConsulta > 30) {
+                        $consultaStatusLabel = 'Consulta desatualizada';
+                        $consultaStatusHex = '#d97706';
+                    } else {
+                        $consultaStatusLabel = 'Consultado recentemente';
+                        $consultaStatusHex = '#047857';
+                    }
+
+                    $consultaStatusMeta = 'Última atualização em '.$ultimaConsultaEm->format('d/m/Y H:i');
+                }
+
+                $cndStatus = strtoupper((string) ($cndFederal['status'] ?? ''));
+                $cndValidade = $cndFederal['data_validade'] ?? null;
+                $cndStatusLabel = 'Não consultada';
+                $cndStatusHex = '#9ca3af';
+                $cndMeta = 'CND: não consultada';
+
+                if ($cndStatus !== '') {
+                    if (in_array($cndStatus, ['NEGATIVA', 'REGULAR', 'REGULARIDADE'])) {
+                        $cndStatusLabel = 'Negativa';
+                        $cndStatusHex = '#047857';
+                    } elseif (str_contains($cndStatus, 'POSITIVA COM EFEITO') || str_contains($cndStatus, 'EFEITO DE NEGATIVA')) {
+                        $cndStatusLabel = 'Positiva c/ efeito';
+                        $cndStatusHex = '#d97706';
+                    } elseif (in_array($cndStatus, ['POSITIVA', 'IRREGULAR', 'IRREGULARIDADE'])) {
+                        $cndStatusLabel = 'Positiva';
+                        $cndStatusHex = '#dc2626';
+                    } else {
+                        $cndStatusLabel = $cndStatus;
+                        $cndStatusHex = '#374151';
+                    }
+
+                    $cndMeta = 'Validade não informada';
+
+                    if ($cndValidade) {
+                        try {
+                            $dataValidade = Carbon::parse($cndValidade);
+                            $diasRestantes = $agora->diffInDays($dataValidade, false);
+
+                            if ($diasRestantes <= 0) {
+                                $cndMeta = 'Vencida em '.$dataValidade->format('d/m/Y');
+                            } elseif ($diasRestantes <= 7) {
+                                $cndMeta = 'Vence em '.(int) $diasRestantes.' dias';
+                            } else {
+                                $cndMeta = 'Validade: '.$dataValidade->format('d/m/Y');
+                            }
+                        } catch (\Exception $e) {
+                            $cndMeta = 'Validade: '.(string) $cndValidade;
+                        }
+                    }
+                }
+
+                $assinaturaLabel = null;
+                $assinaturaHex = null;
+                if ($assinatura instanceof MonitoramentoAssinatura) {
+                    $assinaturaLabel = $assinatura->status === 'ativo' ? 'Monitoramento ativo' : 'Monitoramento pausado';
+                    $assinaturaHex = $assinatura->status === 'ativo' ? '#1f2937' : '#6b7280';
+                }
+
+                return [
+                    'id' => $participante->id,
+                    'documento' => $participante->documento,
+                    'documento_formatado' => $participante->cnpj_formatado,
+                    'razao_social' => $participante->razao_social,
+                    'nome_fantasia' => $participante->nome_fantasia,
+                    'tipo_documento' => $participante->tipo_documento,
+                    'is_cpf' => $participante->is_cpf,
+                    'is_cnpj' => $participante->is_cnpj,
+                    'pode_consultar' => $participante->is_cnpj,
+                    'situacao_cadastral' => $participante->situacao_cadastral,
+                    'ultima_consulta_em' => $ultimaConsultaEm?->toIso8601String(),
+                    'consulta_status_label' => $consultaStatusLabel,
+                    'consulta_status_hex' => $consultaStatusHex,
+                    'consulta_status_meta' => $consultaStatusMeta,
+                    'consultas_realizadas' => $alerta['consultas_realizadas'],
+                    'cnd_federal_status_label' => $cndStatusLabel,
+                    'cnd_federal_status_hex' => $cndStatusHex,
+                    'cnd_federal_meta' => $cndMeta,
+                    'alerta_nivel' => $alerta['nivel'],
+                    'alerta_label' => $alerta['label'],
+                    'alerta_hex' => $alerta['hex'],
+                    'alerta_icone' => $alerta['icone'],
+                    'alerta_detalhe' => $alerta['detalhe'],
+                    'assinatura_label' => $assinaturaLabel,
+                    'assinatura_hex' => $assinaturaHex,
+                    'origem_tipo' => $participante->origem_tipo,
+                    'created_at_formatado' => $participante->created_at?->format('d/m/Y') ?? '-',
+                    'cliente' => $participante->cliente ? [
+                        'id' => $participante->cliente->id,
+                        'razao_social' => $participante->cliente->razao_social,
+                        'is_empresa_propria' => $participante->cliente->is_empresa_propria,
+                    ] : null,
+                    'grupos' => $participante->grupos,
+                ];
+            })->values(),
             'pagination' => [
                 'current_page' => $participantes->currentPage(),
                 'last_page' => $participantes->lastPage(),
@@ -167,6 +329,165 @@ class ConsultaController extends Controller
                 'total' => $participantes->total(),
             ],
         ]);
+    }
+
+    /**
+     * Deriva o alerta operacional exibido na lista de participantes.
+     *
+     * @return array{
+     *     nivel: string,
+     *     label: string,
+     *     detalhe: string,
+     *     hex: string,
+     *     icone: string,
+     *     consultas_realizadas: array<int, string>
+     * }
+     */
+    private function buildParticipanteAlertData(?ConsultaResultado $resultado, Carbon $agora): array
+    {
+        $consultasRealizadas = $this->normalizeConsultasRealizadas($resultado);
+
+        if (! $resultado) {
+            return [
+                'nivel' => 'grave',
+                'label' => 'Nunca consultado',
+                'detalhe' => 'Participante sem histórico de consulta.',
+                'hex' => '#ea580c',
+                'icone' => 'alert-triangle',
+                'consultas_realizadas' => [],
+            ];
+        }
+
+        $dados = $resultado->resultado_dados ?? [];
+        $situacao = strtoupper((string) ($dados['situacao_cadastral'] ?? ''));
+
+        if (in_array($situacao, ['BAIXADA', 'INAPTA', 'SUSPENSA', 'NULA'], true)) {
+            return [
+                'nivel' => 'super_grave',
+                'label' => 'Risco crítico',
+                'detalhe' => 'Situação cadastral '.$situacao.'.',
+                'hex' => '#dc2626',
+                'icone' => 'x-circle',
+                'consultas_realizadas' => $consultasRealizadas,
+            ];
+        }
+
+        $cndFederal = $resultado->getCndFederal() ?? [];
+        $cndStatus = strtoupper(trim((string) ($cndFederal['status'] ?? '')));
+        $cndValidade = $cndFederal['data_validade'] ?? $cndFederal['validade'] ?? null;
+
+        if ($cndStatus !== '') {
+            if (
+                in_array($cndStatus, ['POSITIVA', 'IRREGULAR', 'IRREGULARIDADE'], true) ||
+                str_contains($cndStatus, 'SUSPENS')
+            ) {
+                return [
+                    'nivel' => 'super_grave',
+                    'label' => 'Risco crítico',
+                    'detalhe' => 'CND Federal com pendência: '.$cndStatus.'.',
+                    'hex' => '#dc2626',
+                    'icone' => 'x-circle',
+                    'consultas_realizadas' => $consultasRealizadas,
+                ];
+            }
+
+            if ($cndValidade) {
+                try {
+                    $dataValidade = Carbon::parse($cndValidade);
+
+                    if ($agora->greaterThanOrEqualTo($dataValidade)) {
+                        return [
+                            'nivel' => 'super_grave',
+                            'label' => 'Risco crítico',
+                            'detalhe' => 'CND Federal vencida em '.$dataValidade->format('d/m/Y').'.',
+                            'hex' => '#dc2626',
+                            'icone' => 'x-circle',
+                            'consultas_realizadas' => $consultasRealizadas,
+                        ];
+                    }
+                } catch (\Exception $e) {
+                    // Mantém o fluxo sem promover alerta em caso de formato inesperado.
+                }
+            }
+        }
+
+        $somenteSituacaoCadastral = in_array('situacao_cadastral', $consultasRealizadas, true) &&
+            count(array_diff($consultasRealizadas, ['situacao_cadastral'])) === 0;
+
+        if ($somenteSituacaoCadastral) {
+            return [
+                'nivel' => 'medio',
+                'label' => 'Consulta inicial apenas',
+                'detalhe' => 'Apenas a situação cadastral foi consultada.',
+                'hex' => '#6b7280',
+                'icone' => 'info-circle',
+                'consultas_realizadas' => $consultasRealizadas,
+            ];
+        }
+
+        return [
+            'nivel' => 'ok',
+            'label' => 'Consultado sem alertas críticos',
+            'detalhe' => 'Última consulta sem alertas críticos.',
+            'hex' => '#047857',
+            'icone' => 'check-circle',
+            'consultas_realizadas' => $consultasRealizadas,
+        ];
+    }
+
+    /**
+     * Normaliza consultas realizadas e aplica fallback com base nos dados retornados.
+     *
+     * @return array<int, string>
+     */
+    private function normalizeConsultasRealizadas(?ConsultaResultado $resultado): array
+    {
+        if (! $resultado) {
+            return [];
+        }
+
+        $consultas = collect($resultado->getConsultasRealizadas())
+            ->map(function ($item) {
+                if (! is_string($item)) {
+                    return null;
+                }
+
+                return strtolower(trim($item));
+            })
+            ->filter()
+            ->values()
+            ->all();
+
+        if (! empty($consultas)) {
+            return array_values(array_unique($consultas));
+        }
+
+        $dados = $resultado->resultado_dados ?? [];
+        $mapaFallback = [
+            'situacao_cadastral',
+            'dados_cadastrais',
+            'endereco',
+            'cnaes',
+            'qsa',
+            'simples_nacional',
+            'mei',
+            'sintegra',
+            'tcu_consolidada',
+            'cnd_federal',
+            'crf_fgts',
+            'cnd_estadual',
+            'cndt',
+            'protestos',
+            'lista_devedores_pgfn',
+            'trabalho_escravo',
+            'ibama_autuacoes',
+            'processos_cnj',
+        ];
+
+        return collect($mapaFallback)
+            ->filter(fn ($chave) => array_key_exists($chave, $dados) && ! empty($dados[$chave]))
+            ->values()
+            ->all();
     }
 
     /**
@@ -194,7 +515,10 @@ class ConsultaController extends Controller
             ], Response::HTTP_NOT_FOUND);
         }
 
-        $participanteIds = $grupo->participantes()->pluck('participantes.id')->toArray();
+        $participanteIds = $grupo->participantes()
+            ->somenteCnpj()
+            ->pluck('participantes.id')
+            ->toArray();
 
         return response()->json([
             'success' => true,
@@ -227,13 +551,14 @@ class ConsultaController extends Controller
 
         // Verificar que os participantes pertencem ao usuário
         $participantesValidos = Participante::where('user_id', $user->id)
+            ->somenteCnpj()
             ->whereIn('id', $validated['participante_ids'])
             ->count();
 
         if ($participantesValidos !== count($validated['participante_ids'])) {
             return response()->json([
                 'success' => false,
-                'error' => 'Alguns participantes selecionados não pertencem ao usuário.',
+                'error' => 'Alguns participantes selecionados são inválidos para consulta.',
             ], Response::HTTP_FORBIDDEN);
         }
 
@@ -292,13 +617,14 @@ class ConsultaController extends Controller
 
         // Verificar que os participantes pertencem ao usuário
         $participantes = Participante::where('user_id', $user->id)
+            ->somenteCnpj()
             ->whereIn('id', $validated['participante_ids'])
             ->get(['id', 'documento', 'razao_social', 'uf', 'crt']);
 
         if ($participantes->count() !== count($validated['participante_ids'])) {
             return response()->json([
                 'success' => false,
-                'error' => 'Alguns participantes selecionados não pertencem ao usuário.',
+                'error' => 'Alguns participantes selecionados são inválidos para consulta.',
             ], Response::HTTP_FORBIDDEN);
         }
 
@@ -756,6 +1082,7 @@ class ConsultaController extends Controller
 
         $ids = Participante::where('user_id', auth()->id())
             ->whereIn('cliente_id', $validated['cliente_ids'])
+            ->somenteCnpj()
             ->pluck('id');
 
         return response()->json([
@@ -782,7 +1109,15 @@ class ConsultaController extends Controller
             ->where('ativo', true)
             ->withCount('participantes');
 
-        $busca = $request->input('busca');
+        $validated = $request->validate([
+            'busca' => 'nullable|string|max:100',
+            'tipo_pessoa' => 'nullable|string|in:PF,PJ',
+            'situacao_cadastral' => 'nullable|string|max:50',
+            'uf' => 'nullable|string|size:2',
+            'faixa_participantes' => 'nullable|string|in:0,1-10,11-50,51+',
+        ]);
+
+        $busca = $validated['busca'] ?? null;
         if ($busca) {
             $buscaLimpa = preg_replace('/[^0-9]/', '', $busca);
             $query->where(function ($q) use ($busca, $buscaLimpa) {
@@ -794,20 +1129,81 @@ class ConsultaController extends Controller
             });
         }
 
+        if (! empty($validated['tipo_pessoa'])) {
+            $query->where('tipo_pessoa', strtoupper($validated['tipo_pessoa']));
+        }
+
+        if (! empty($validated['situacao_cadastral'])) {
+            $query->where('situacao_cadastral', 'ILIKE', $validated['situacao_cadastral']);
+        }
+
+        if (! empty($validated['uf'])) {
+            $query->where('uf', strtoupper($validated['uf']));
+        }
+
+        if (! empty($validated['faixa_participantes'])) {
+            match ($validated['faixa_participantes']) {
+                '0' => $query->having('participantes_count', '=', 0),
+                '1-10' => $query->havingBetween('participantes_count', [1, 10]),
+                '11-50' => $query->havingBetween('participantes_count', [11, 50]),
+                '51+' => $query->having('participantes_count', '>=', 51),
+                default => null,
+            };
+        }
+
         $clientes = $query->orderBy('razao_social')
-            ->get(['id', 'razao_social', 'nome', 'documento', 'tipo_pessoa', 'is_empresa_propria']);
+            ->get(['id', 'razao_social', 'nome', 'documento', 'tipo_pessoa', 'is_empresa_propria', 'situacao_cadastral', 'uf']);
+
+        $agora = Carbon::now();
+        $documentosClientes = $clientes
+            ->pluck('documento')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $participantesEquivalentes = Participante::query()
+            ->where('user_id', $user->id)
+            ->whereIn('documento', $documentosClientes)
+            ->orderBy('id')
+            ->get(['id', 'documento'])
+            ->unique('documento')
+            ->keyBy('documento');
+
+        $participanteIds = $participantesEquivalentes->pluck('id')->all();
+        $ultimosResultados = ConsultaResultado::query()
+            ->whereIn('participante_id', $participanteIds)
+            ->where('status', ConsultaResultado::STATUS_SUCESSO)
+            ->orderBy('consultado_em', 'desc')
+            ->get()
+            ->unique('participante_id')
+            ->keyBy('participante_id');
 
         return response()->json([
             'success' => true,
-            'data' => $clientes->map(fn ($c) => [
-                'id' => $c->id,
-                'razao_social' => $c->razao_social ?? $c->nome,
-                'nome' => $c->nome,
-                'documento' => $c->documento,
-                'tipo_pessoa' => $c->tipo_pessoa,
-                'is_empresa_propria' => $c->is_empresa_propria,
-                'participantes_count' => $c->participantes_count,
-            ]),
+            'data' => $clientes->map(function ($c) use ($participantesEquivalentes, $ultimosResultados, $agora) {
+                $participanteEquivalente = $participantesEquivalentes->get($c->documento);
+                $ultimoResultado = $participanteEquivalente
+                    ? $ultimosResultados->get($participanteEquivalente->id)
+                    : null;
+                $alerta = $this->buildParticipanteAlertData($ultimoResultado, $agora);
+
+                return [
+                    'id' => $c->id,
+                    'razao_social' => $c->razao_social ?? $c->nome,
+                    'nome' => $c->nome,
+                    'documento' => $c->documento,
+                    'tipo_pessoa' => $c->tipo_pessoa,
+                    'is_empresa_propria' => $c->is_empresa_propria,
+                    'situacao_cadastral' => $c->situacao_cadastral,
+                    'uf' => $c->uf,
+                    'participantes_count' => $c->participantes_count,
+                    'alerta_nivel' => $alerta['nivel'],
+                    'alerta_label' => $alerta['label'],
+                    'alerta_hex' => $alerta['hex'],
+                    'alerta_icone' => $alerta['icone'],
+                    'alerta_detalhe' => $alerta['detalhe'],
+                ];
+            }),
         ]);
     }
 
@@ -858,15 +1254,78 @@ class ConsultaController extends Controller
 
         $user = Auth::user();
 
+        $validated = $request->validate([
+            'busca' => 'nullable|string|max:100',
+            'status' => 'nullable|in:pendente,processando,concluido,erro',
+            'plano_id' => 'nullable|integer|exists:monitoramento_planos,id',
+            'data_inicio' => 'nullable|date',
+            'data_fim' => 'nullable|date',
+        ]);
+
         // Lotes de consultas (excluindo lotes associados à empresa própria)
-        $lotes = ConsultaLote::where('user_id', $user->id)
+        $baseQuery = ConsultaLote::where('user_id', $user->id)
             ->whereDoesntHave('cliente', fn ($q) => $q->where('is_empresa_propria', true))
-            ->with('plano')
+            ->with('plano');
+
+        if (! empty($validated['busca'])) {
+            $busca = trim($validated['busca']);
+
+            $baseQuery->where(function ($q) use ($busca) {
+                $q->where('consulta_lotes.id', 'like', "%{$busca}%")
+                    ->orWhere('consulta_lotes.error_code', 'ilike', "%{$busca}%")
+                    ->orWhere('consulta_lotes.error_message', 'ilike', "%{$busca}%")
+                    ->orWhereHas('plano', fn ($plano) => $plano->where('nome', 'ilike', "%{$busca}%"));
+            });
+        }
+
+        if (! empty($validated['status'])) {
+            $baseQuery->where('status', $validated['status']);
+        }
+
+        if (! empty($validated['plano_id'])) {
+            $baseQuery->where('plano_id', $validated['plano_id']);
+        }
+
+        if (! empty($validated['data_inicio'])) {
+            $baseQuery->whereDate('created_at', '>=', $validated['data_inicio']);
+        }
+
+        if (! empty($validated['data_fim'])) {
+            $baseQuery->whereDate('created_at', '<=', $validated['data_fim']);
+        }
+
+        $kpis = [
+            'total_lotes' => (clone $baseQuery)->count(),
+            'total_participantes' => (int) ((clone $baseQuery)->sum('total_participantes') ?? 0),
+            'total_creditos' => (int) ((clone $baseQuery)->sum('creditos_cobrados') ?? 0),
+            'concluidos' => (clone $baseQuery)->where('status', ConsultaLote::STATUS_CONCLUIDO)->count(),
+            'processando' => (clone $baseQuery)->where('status', ConsultaLote::STATUS_PROCESSANDO)->count(),
+            'erro' => (clone $baseQuery)->where('status', ConsultaLote::STATUS_ERRO)->count(),
+        ];
+
+        $lotes = (clone $baseQuery)
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
+
+        $planosFiltro = MonitoramentoPlano::ativos()
+            ->sortBy('nome')
+            ->values();
+
+        $filtros = [
+            'busca' => $validated['busca'] ?? '',
+            'status' => $validated['status'] ?? '',
+            'plano_id' => $validated['plano_id'] ?? '',
+            'data_inicio' => $validated['data_inicio'] ?? '',
+            'data_fim' => $validated['data_fim'] ?? '',
+        ];
 
         $data = [
             'lotes' => $lotes,
+            'kpis' => $kpis,
+            'filtros' => $filtros,
+            'filtrosAtivos' => count(array_filter($filtros, fn ($value) => $value !== null && $value !== '')),
+            'planosFiltro' => $planosFiltro,
             'relatoriosLegados' => collect([]), // Tabelas legadas removidas
             'credits' => $this->creditService->getBalance($user),
         ];

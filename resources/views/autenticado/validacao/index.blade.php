@@ -21,22 +21,9 @@
     {{-- Main Content --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div class="space-y-6">
-            <style>
-                @keyframes card-slide-in {
-                    from { opacity: 0; transform: translateY(60px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                .vc-animate {
-                    opacity: 0;
-                    animation: card-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-                }
-                @media (prefers-reduced-motion: reduce) {
-                    .vc-animate { opacity: 1; animation: none; }
-                }
-            </style>
 
         {{-- KPIs --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 vc-animate" style="animation-delay: 0.05s">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
             {{-- Total Notas --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
                 <div class="flex items-center gap-3">
@@ -130,7 +117,7 @@
 
         @if(($notasCriticas ?? collect())->count() > 0)
         {{-- Alertas Criticos --}}
-        <div class="bg-red-50 border border-red-200 rounded-xl p-4 vc-animate" style="animation-delay: 0.1s">
+        <div class="bg-red-50 border border-red-200 rounded-xl p-4">
             <div class="flex items-start gap-3">
                 <svg class="w-5 h-5 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
@@ -157,7 +144,7 @@
         </div>
         @endif
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 vc-animate" style="animation-delay: 0.15s">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {{-- Importacoes para Validar --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
@@ -242,7 +229,7 @@
         </div>
 
         {{-- Informacoes de Precificacao --}}
-        <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 vc-animate" style="animation-delay: 0.2s">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
             <h4 class="font-semibold text-blue-900 mb-3">Sobre a Validacao</h4>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>

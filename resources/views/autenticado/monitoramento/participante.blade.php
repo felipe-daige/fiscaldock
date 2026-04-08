@@ -1,64 +1,90 @@
 {{-- Monitoramento - Detalhe do Participante --}}
-<div class="min-h-screen bg-gray-50" id="monitoramento-participante-container">
+@php
+    $situacaoUpper = strtoupper((string) ($participante->situacao_cadastral ?? ''));
+    $situacaoBadge = match($situacaoUpper) {
+        'ATIVA', '02' => ['label' => 'ATIVA', 'hex' => '#047857'],
+        'INAPTA', 'SUSPENSA' => ['label' => $situacaoUpper, 'hex' => '#dc2626'],
+        'BAIXADA' => ['label' => 'BAIXADA', 'hex' => '#9ca3af'],
+        default => ['label' => $situacaoUpper ?: 'SEM STATUS', 'hex' => '#6b7280'],
+    };
+    $regimeUpper = strtoupper((string) ($participante->regime_tributario ?? ''));
+    $regimeBadge = match($regimeUpper) {
+        'SIMPLES NACIONAL', 'SIMPLES' => ['label' => $regimeUpper, 'hex' => '#0f766e'],
+        'LUCRO PRESUMIDO' => ['label' => $regimeUpper, 'hex' => '#d97706'],
+        'LUCRO REAL' => ['label' => $regimeUpper, 'hex' => '#374151'],
+        default => $regimeUpper ? ['label' => $regimeUpper, 'hex' => '#6b7280'] : null,
+    };
+@endphp
+<div class="min-h-screen bg-gray-100" id="monitoramento-participante-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {{-- Page Header --}}
-        <div class="mb-4 sm:mb-6">
-            <div class="flex items-center justify-between flex-wrap gap-4">
-                <div class="flex items-center gap-4">
+        <div class="mb-4 sm:mb-8">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <div class="flex items-center gap-3 flex-wrap">
                     <a
                         href="/app/dashboard"
-                        class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
+                        class="text-xs text-gray-600 hover:text-gray-900 hover:underline"
                         data-link
                     >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                        </svg>
-                        Voltar
+                        Voltar para o dashboard
                     </a>
-                    <div>
-                        <h1 class="text-xl sm:text-2xl font-semibold text-gray-900">{{ $participante->razao_social ?? 'Participante' }}</h1>
-                        <p class="text-sm text-gray-500 font-mono whitespace-nowrap tabular-nums">{{ $participante->cnpj_formatado }}</p>
+                        <span class="text-gray-300 hidden sm:inline">|</span>
+                        <span class="text-xs text-gray-500">Detalhe operacional do participante</span>
                     </div>
+                    <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide mt-2">{{ $participante->razao_social ?? 'Participante' }}</h1>
+                    <p class="text-xs text-gray-500 mt-1 font-mono whitespace-nowrap tabular-nums">{{ $participante->cnpj_formatado }}</p>
                 </div>
-                <div class="flex items-center gap-3">
-                    {{-- Badge Situação Cadastral --}}
+                <div class="flex items-center gap-2 flex-wrap">
                     @if($participante->situacao_cadastral)
-                        @php
-                            $situacaoClass = match(strtoupper($participante->situacao_cadastral)) {
-                                'ATIVA' => 'bg-green-100 text-green-700',
-                                'INAPTA', 'SUSPENSA' => 'bg-red-100 text-red-700',
-                                default => 'bg-gray-100 text-gray-700',
-                            };
-                        @endphp
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $situacaoClass }}">
-                            {{ strtoupper($participante->situacao_cadastral) }}
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge['hex'] }}">
+                            {{ $situacaoBadge['label'] }}
                         </span>
                     @endif
-                    {{-- Badge Regime Tributário --}}
-                    @if($participante->regime_tributario)
-                        @php
-                            $regimeClass = match(strtoupper($participante->regime_tributario)) {
-                                'SIMPLES NACIONAL', 'SIMPLES' => 'bg-blue-100 text-blue-700',
-                                'LUCRO PRESUMIDO' => 'bg-purple-100 text-purple-700',
-                                'LUCRO REAL' => 'bg-amber-100 text-amber-700',
-                                default => 'bg-gray-100 text-gray-700',
-                            };
-                        @endphp
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $regimeClass }}">
-                            {{ strtoupper($participante->regime_tributario) }}
+                    @if($regimeBadge)
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $regimeBadge['hex'] }}">
+                            {{ $regimeBadge['label'] }}
                         </span>
                     @endif
                 </div>
             </div>
         </div>
 
-        {{-- Ações Rápidas --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-6">
-            <div class="flex items-center justify-between flex-wrap gap-4">
-                <div class="flex items-center gap-2 text-sm text-gray-600">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6 sm:mb-8">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Ações Operacionais</span>
+                        <p class="text-[11px] text-gray-500 mt-1">Gerencie consulta, assinatura e origem cadastral deste participante.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <a
+                            href="/app/participante/{{ $participante->id }}/editar"
+                            data-link
+                            class="px-3 py-2 text-sm font-medium bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded"
+                        >
+                            Editar cadastro
+                        </a>
+                        <a
+                            href="/app/consulta/nova?participantes={{ $participante->id }}"
+                            data-link
+                            class="px-3 py-2 text-sm font-medium bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded"
+                        >
+                            Nova consulta
+                        </a>
+                        @if(!$assinaturaAtiva)
+                            <button
+                                type="button"
+                                id="btn-criar-assinatura"
+                                class="px-3 py-2 text-sm font-medium bg-gray-800 text-white hover:bg-gray-700 rounded"
+                            >
+                                Criar assinatura
+                            </button>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-200">
+                <div class="p-4 sm:p-6">
                     @php
                         $origemLabel = match($participante->origem_tipo) {
                             'SPED_EFD_FISCAL' => 'EFD ICMS/IPI',
@@ -70,49 +96,24 @@
                         };
                         $arquivoOrigem = $participante->origem_ref['arquivo'] ?? null;
                     @endphp
-                    <span>Origem: <strong class="text-gray-900">{{ $origemLabel }}</strong></span>
-                    @if($arquivoOrigem)
-                        <span class="mx-2">|</span>
-                        <span>Arquivo: <strong class="text-gray-900">{{ $arquivoOrigem }}</strong></span>
-                    @endif
-                    @if($participante->ultima_consulta_em)
-                        <span class="mx-2">|</span>
-                        <span>Última consulta: <strong class="text-gray-900">{{ $participante->ultima_consulta_em->format('d/m/Y H:i') }}</strong></span>
-                    @endif
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Origem</p>
+                    <p class="text-lg font-bold text-gray-900">{{ $origemLabel }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">{{ $arquivoOrigem ?: 'Sem arquivo vinculado' }}</p>
                 </div>
-                <div class="flex items-center gap-3">
-                    <a
-                        href="/app/participante/{{ $participante->id }}/editar"
-                        data-link
-                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                        </svg>
-                        Editar
-                    </a>
-                    <a
-                        href="/app/consultas/nova?participantes={{ $participante->id }}"
-                        data-link
-                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                        Consultar
-                    </a>
-                    @if(!$assinaturaAtiva)
-                        <button
-                            type="button"
-                            id="btn-criar-assinatura"
-                            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                            </svg>
-                            Criar Assinatura
-                        </button>
-                    @endif
+                <div class="p-4 sm:p-6">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Última Consulta</p>
+                    <p class="text-lg font-bold text-gray-900">{{ $participante->ultima_consulta_em ? $participante->ultima_consulta_em->format('d/m/Y') : 'Nunca' }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">{{ $participante->ultima_consulta_em ? $participante->ultima_consulta_em->format('H:i') : 'Sem consulta realizada' }}</p>
+                </div>
+                <div class="p-4 sm:p-6">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Situação</p>
+                    <p class="text-lg font-bold text-gray-900">{{ $situacaoBadge['label'] }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Base cadastral e fiscal monitorada</p>
+                </div>
+                <div class="p-4 sm:p-6">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Documento</p>
+                    <p class="text-lg font-bold text-gray-900 font-mono">{{ $participante->cnpj_formatado }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">{{ $participante->municipio ?: 'Município não informado' }}{{ $participante->uf ? ' / '.$participante->uf : '' }}</p>
                 </div>
             </div>
         </div>
@@ -121,9 +122,9 @@
             {{-- Coluna Principal --}}
             <div class="lg:col-span-2 space-y-4 sm:space-y-6">
                 {{-- Dados Cadastrais --}}
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-900">Dados Cadastrais</h2>
+                <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dados Cadastrais</span>
                     </div>
                     <div class="p-4 sm:p-6">
                         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-4">
@@ -169,17 +170,17 @@
                         $dados = $ultimaConsulta->resultado_dados;
                         $consultasRealizadas = $dados['consultas_realizadas'] ?? [];
                     @endphp
-                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                    <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <h2 class="text-lg font-semibold text-gray-900">Dados da Última Consulta</h2>
+                                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dados da Última Consulta</span>
                                     <p class="text-xs text-gray-500 mt-1">
                                         Consultado em {{ $ultimaConsulta->consultado_em?->format('d/m/Y H:i') }}
                                         @if($ultimaConsulta->lote)
                                         <span class="mx-1">|</span>
-                                        <a href="/app/consultas/historico?lote={{ $ultimaConsulta->lote->id }}"
-                                           class="text-blue-600 hover:text-blue-800 hover:underline"
+                                        <a href="/app/consulta/historico?lote={{ $ultimaConsulta->lote->id }}"
+                                           class="text-gray-600 hover:text-gray-900 hover:underline"
                                            data-link>
                                             Lote #{{ $ultimaConsulta->lote->id }}
                                         </a>
@@ -190,19 +191,16 @@
                                     @if($ultimaConsulta->lote?->plano)
                                     @php
                                         $planoBadgeColors = [
-                                            'gratuito' => 'bg-gray-100 text-gray-700',
-                                            'validacao' => 'bg-blue-100 text-blue-700',
-                                            'licitacao' => 'bg-purple-100 text-purple-700',
-                                            'compliance' => 'bg-amber-100 text-amber-700',
-                                            'due_diligence' => 'bg-rose-100 text-rose-700',
-                                            'enterprise' => 'bg-indigo-100 text-indigo-700',
+                                            'gratuito' => '#6b7280',
+                                            'validacao' => '#4338ca',
+                                            'licitacao' => '#7c3aed',
+                                            'compliance' => '#d97706',
+                                            'due_diligence' => '#be123c',
+                                            'enterprise' => '#1f2937',
                                         ];
-                                        $badgeColor = $planoBadgeColors[$ultimaConsulta->lote->plano->codigo] ?? 'bg-gray-100 text-gray-700';
+                                        $badgeColor = $planoBadgeColors[$ultimaConsulta->lote->plano->codigo] ?? '#6b7280';
                                     @endphp
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $badgeColor }}">
-                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                        </svg>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeColor }}">
                                         {{ $ultimaConsulta->lote->plano->nome }}
                                     </span>
                                     @endif
@@ -215,14 +213,14 @@
                             <div>
                                 <h3 class="text-sm font-semibold text-gray-700 mb-3">Situação e Regime Tributário</h3>
                                 <dl class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 border border-gray-200 p-3 rounded">
                                         <dt class="text-xs text-gray-500">Situação Cadastral</dt>
                                         <dd class="mt-1 text-sm font-semibold {{ ($dados['situacao_cadastral'] ?? '') === 'ATIVA' ? 'text-green-600' : 'text-red-600' }}">
                                             {{ $dados['situacao_cadastral'] ?? '-' }}
                                         </dd>
                                     </div>
                                     @if(isset($dados['regime_tributario']))
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 border border-gray-200 p-3 rounded">
                                         <dt class="text-xs text-gray-500">Regime Tributário</dt>
                                         <dd class="mt-1 text-sm font-medium text-gray-700">
                                             {{ $dados['regime_tributario'] }}
@@ -230,7 +228,7 @@
                                     </div>
                                     @endif
                                     @if(isset($dados['simples_nacional']))
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 border border-gray-200 p-3 rounded">
                                         <dt class="text-xs text-gray-500">Simples Nacional</dt>
                                         <dd class="mt-1 flex items-center gap-1.5">
                                             @if($dados['simples_nacional'])
@@ -248,7 +246,7 @@
                                     </div>
                                     @endif
                                     @if(isset($dados['mei']))
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 border border-gray-200 p-3 rounded">
                                         <dt class="text-xs text-gray-500">MEI</dt>
                                         <dd class="mt-1 flex items-center gap-1.5">
                                             @if($dados['mei'])
@@ -387,10 +385,10 @@
                             <div class="border-t border-gray-200 pt-4">
                                 <h3 class="text-sm font-semibold text-gray-700 mb-3">Atividades Econômicas (CNAEs)</h3>
                                 @if(isset($dados['cnaes']['principal']))
-                                <div class="bg-blue-50 rounded-lg p-3 mb-3">
-                                    <dt class="text-xs text-blue-600 font-semibold">CNAE Principal</dt>
+                                <div class="bg-gray-50 border border-gray-200 rounded p-3 mb-3">
+                                    <dt class="text-xs text-gray-500 font-semibold uppercase tracking-wide">CNAE Principal</dt>
                                     <dd class="mt-1 text-sm text-gray-900">
-                                        <span class="font-mono text-blue-700">{{ $dados['cnaes']['principal']['codigo'] ?? '' }}</span>
+                                        <span class="font-mono text-gray-700">{{ $dados['cnaes']['principal']['codigo'] ?? '' }}</span>
                                         - {{ $dados['cnaes']['principal']['descricao'] ?? '' }}
                                     </dd>
                                 </div>
@@ -562,7 +560,7 @@
                                 @if(empty($dados['protestos']))
                                     <p class="text-sm text-green-600 font-medium">Nenhum protesto encontrado</p>
                                 @else
-                                    <div class="bg-red-50 rounded-lg p-4">
+                                    <div class="bg-white border border-gray-300 border-l-4 border-l-red-500 rounded p-4">
                                         <p class="text-sm font-semibold text-red-700">{{ count($dados['protestos']) }} protesto(s) encontrado(s)</p>
                                         <p class="text-xs text-red-600 mt-1">Consulte o relatório completo para detalhes</p>
                                     </div>
@@ -576,7 +574,7 @@
                                 <h3 class="text-sm font-semibold text-gray-700 mb-3">ESG</h3>
                                 <div class="grid grid-cols-2 gap-4">
                                     @if(isset($dados['trabalho_escravo']))
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 border border-gray-200 rounded p-3">
                                         <dt class="text-xs text-gray-500">Lista Trabalho Escravo</dt>
                                         <dd class="mt-1 text-sm font-semibold {{ !$dados['trabalho_escravo'] ? 'text-green-600' : 'text-red-600' }}">
                                             {{ $dados['trabalho_escravo'] ? 'Consta' : 'Nada consta' }}
@@ -584,7 +582,7 @@
                                     </div>
                                     @endif
                                     @if(isset($dados['ibama_autuacoes']))
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 border border-gray-200 rounded p-3">
                                         <dt class="text-xs text-gray-500">Autuações IBAMA</dt>
                                         <dd class="mt-1 text-sm font-semibold {{ empty($dados['ibama_autuacoes']) ? 'text-green-600' : 'text-red-600' }}">
                                             {{ empty($dados['ibama_autuacoes']) ? 'Nenhuma' : count($dados['ibama_autuacoes']) . ' autuacao(oes)' }}
@@ -598,9 +596,9 @@
                     </div>
                 @else
                     {{-- Estado vazio - nenhuma consulta realizada --}}
-                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
-                            <h2 class="text-lg font-semibold text-gray-900">Dados da Última Consulta</h2>
+                    <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dados da Última Consulta</span>
                         </div>
                         <div class="p-4 sm:p-6 text-center">
                             <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -614,11 +612,11 @@
 
                 {{-- Histórico de Consultas --}}
                 @if(isset($lotesDoParticipante))
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                         <div class="flex items-center justify-between">
-                            <h2 class="text-lg font-semibold text-gray-900">Histórico de Consultas</h2>
-                            <span class="text-sm text-gray-500">{{ $lotesDoParticipante->count() }} consulta(s)</span>
+                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Histórico de Consultas</span>
+                            <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ $lotesDoParticipante->count() }}</span>
                         </div>
                     </div>
                     @if($lotesDoParticipante->isEmpty())
@@ -632,12 +630,12 @@
                     <div class="divide-y divide-gray-200">
                         @php
                             $lotePlanoBadgeColors = [
-                                'gratuito' => 'bg-gray-100 text-gray-700',
-                                'validacao' => 'bg-blue-100 text-blue-700',
-                                'licitacao' => 'bg-purple-100 text-purple-700',
-                                'compliance' => 'bg-amber-100 text-amber-700',
-                                'due_diligence' => 'bg-rose-100 text-rose-700',
-                                'enterprise' => 'bg-indigo-100 text-indigo-700',
+                                'gratuito' => '#6b7280',
+                                'validacao' => '#4338ca',
+                                'licitacao' => '#7c3aed',
+                                'compliance' => '#d97706',
+                                'due_diligence' => '#be123c',
+                                'enterprise' => '#1f2937',
                             ];
                         @endphp
                         @foreach($lotesDoParticipante as $lote)
@@ -650,12 +648,12 @@
                             $cndt = $resultado?->getDado('cndt');
                             $dataConsulta = $resultado?->consultado_em ?? $lote->created_at;
                             $resultadoStatusColors = [
-                                'sucesso'     => 'bg-green-100 text-green-700',
-                                'erro'        => 'bg-red-100 text-red-700',
-                                'timeout'     => 'bg-red-100 text-red-700',
-                                'pendente'    => $lote->status === 'processando' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700',
-                                'processando' => 'bg-blue-100 text-blue-700',
-                                'concluido'   => 'bg-green-100 text-green-700',
+                                'sucesso'     => '#047857',
+                                'erro'        => '#dc2626',
+                                'timeout'     => '#dc2626',
+                                'pendente'    => $lote->status === 'processando' ? '#4338ca' : '#6b7280',
+                                'processando' => '#4338ca',
+                                'concluido'   => '#047857',
                             ];
                             $resultadoStatusLabel = [
                                 'sucesso'     => 'Sucesso',
@@ -670,8 +668,8 @@
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-4">
                                     <div class="flex-shrink-0">
-                                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div class="w-10 h-10 rounded border border-gray-300 bg-gray-50 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                                             </svg>
                                         </div>
@@ -705,15 +703,15 @@
                                 </div>
                                 <div class="flex items-center gap-3">
                                     @if($lote->plano)
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $lotePlanoBadgeColors[$lote->plano->codigo] ?? 'bg-gray-100 text-gray-700' }}">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $lotePlanoBadgeColors[$lote->plano->codigo] ?? '#6b7280' }}">
                                         {{ $lote->plano->nome }}
                                     </span>
                                     @endif
-                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium {{ $resultadoStatusColors[$statusResultado] ?? 'bg-gray-100 text-gray-700' }}">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $resultadoStatusColors[$statusResultado] ?? '#6b7280' }}">
                                         {{ $resultadoStatusLabel[$statusResultado] ?? ucfirst($statusResultado) }}
                                     </span>
-                                    <a href="/app/consultas/historico?lote={{ $lote->id }}"
-                                       class="inline-flex items-center p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                    <a href="/app/consulta/historico?lote={{ $lote->id }}"
+                                       class="inline-flex items-center p-2 rounded text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
                                        data-link
                                        title="Ver detalhes do lote">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -730,25 +728,27 @@
                 @endif
 
                 {{-- Notas Fiscais (EFD + XML unificadas) --}}
-                @include('autenticado.partials.notas-fiscais-card', [
-                    'notas' => $notasFiscais,
-                    'totalNotas' => $totalNotasFiscais,
-                    'ajaxUrl' => $notasAjaxUrl,
-                    'contexto' => $notasContexto,
-                    'entityId' => $notasEntityId,
-                ])
+                <div id="notas-fiscais">
+                    @include('autenticado.partials.notas-fiscais-card', [
+                        'notas' => $notasFiscais,
+                        'totalNotas' => $totalNotasFiscais,
+                        'ajaxUrl' => $notasAjaxUrl,
+                        'contexto' => $notasContexto,
+                        'entityId' => $notasEntityId,
+                    ])
+                </div>
             </div>
 
             {{-- Coluna Lateral --}}
             <div class="space-y-4 sm:space-y-6">
                 {{-- Assinatura Ativa --}}
                 @if($assinaturaAtiva)
-                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                    <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                             <div class="flex items-center justify-between">
-                                <h2 class="text-lg font-semibold text-gray-900">Assinatura Ativa</h2>
-                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
-                                    Ativa
+                                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Assinatura Ativa</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">
+                                    ATIVA
                                 </span>
                             </div>
                         </div>
@@ -791,7 +791,7 @@
                                 @if($assinaturaAtiva->status === 'ativo')
                                     <button
                                         type="button"
-                                        class="btn-pausar-assinatura flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-amber-300 bg-amber-50 text-amber-700 text-sm font-semibold transition hover:bg-amber-100"
+                                        class="btn-pausar-assinatura flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded border border-gray-300 bg-white text-gray-600 text-sm font-semibold transition hover:bg-gray-50"
                                         data-assinatura-id="{{ $assinaturaAtiva->id }}"
                                     >
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -802,7 +802,7 @@
                                 @else
                                     <button
                                         type="button"
-                                        class="btn-reativar-assinatura flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-green-300 bg-green-50 text-green-700 text-sm font-semibold transition hover:bg-green-100"
+                                        class="btn-reativar-assinatura flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded border border-gray-300 bg-white text-gray-600 text-sm font-semibold transition hover:bg-gray-50"
                                         data-assinatura-id="{{ $assinaturaAtiva->id }}"
                                     >
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -814,7 +814,7 @@
                                 @endif
                                 <button
                                     type="button"
-                                    class="btn-cancelar-assinatura inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm font-semibold transition hover:bg-red-100"
+                                    class="btn-cancelar-assinatura inline-flex items-center justify-center gap-2 px-3 py-2 rounded border border-gray-300 bg-white text-gray-600 text-sm font-semibold transition hover:bg-gray-50"
                                     data-assinatura-id="{{ $assinaturaAtiva->id }}"
                                 >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -828,9 +828,9 @@
                 @endif
 
                 {{-- Estatisticas --}}
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-900">Estatísticas</h2>
+                <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Estatísticas</span>
                     </div>
                     <div class="p-4 sm:p-6 space-y-4">
                         <div class="flex items-center justify-between">
@@ -857,25 +857,30 @@
                 </div>
 
                 {{-- Saldo de Creditos --}}
-                <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl shadow-sm p-6 text-white">
+                <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Saldo de Créditos</span>
+                    </div>
+                    <div class="p-6">
                     <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-10 h-10 rounded border border-gray-300 bg-gray-50 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
                         <div>
-                            <p class="text-sm text-white/80">Saldo de Créditos</p>
-                            <p class="text-2xl font-bold">{{ number_format($credits ?? 0, 0, ',', '.') }}</p>
+                            <p class="text-sm text-gray-500">Saldo de Créditos</p>
+                            <p class="text-2xl font-bold text-gray-900">{{ number_format($credits ?? 0, 0, ',', '.') }}</p>
                         </div>
                     </div>
                     <a
                         href="/app/creditos"
-                        class="block w-full text-center px-4 py-2 rounded-lg bg-white/20 text-white text-sm font-semibold transition hover:bg-white/30"
+                        class="block w-full text-center px-4 py-2 rounded bg-gray-800 text-white text-sm font-semibold transition hover:bg-gray-700"
                         data-link
                     >
                         Comprar Créditos
                     </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -884,10 +889,10 @@
 
 {{-- Modal Criar Assinatura --}}
 <div id="modal-criar-assinatura" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl max-w-md w-full">
-        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+    <div class="bg-white rounded border border-gray-300 max-w-md w-full overflow-hidden">
+        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
             <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900">Criar Assinatura</h3>
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Criar Assinatura</span>
                 <button type="button" class="modal-close text-gray-400 hover:text-gray-500">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -898,8 +903,8 @@
         <form id="form-criar-assinatura">
             <div class="p-4 sm:p-6 space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Selecione o Plano</label>
-                    <select name="plano_id" id="select-plano-assinatura" class="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Selecione o Plano</label>
+                    <select name="plano_id" id="select-plano-assinatura" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400" required>
                         <option value="">Selecione...</option>
                         @foreach($planos as $plano)
                             <option value="{{ $plano->id }}" data-creditos="{{ $plano->custo_creditos }}">
@@ -909,25 +914,25 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Frequencia</label>
-                    <select name="frequencia" id="select-frequencia" class="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Frequência</label>
+                    <select name="frequencia" id="select-frequencia" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400" required>
                         <option value="diario">Diaria</option>
                         <option value="semanal">Semanal</option>
                         <option value="quinzenal" selected>Quinzenal</option>
                         <option value="mensal">Mensal</option>
                     </select>
                 </div>
-                <div class="bg-gray-50 rounded-lg p-4">
+                <div class="bg-gray-50 border border-gray-200 rounded p-4">
                     <p class="text-sm text-gray-600 mb-2">Participante:</p>
                     <p class="text-sm font-semibold text-gray-900">{{ $participante->razao_social ?? $participante->cnpj_formatado }}</p>
                     <p class="text-xs text-gray-500 font-mono">{{ $participante->cnpj_formatado }}</p>
                 </div>
             </div>
-            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
-                <button type="button" class="modal-close px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
+            <div class="px-6 py-4 border-t border-gray-200 bg-white flex justify-end gap-3">
+                <button type="button" class="modal-close px-4 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-semibold transition hover:bg-gray-50">
                     Cancelar
                 </button>
-                <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
+                <button type="submit" class="px-4 py-2 rounded bg-gray-800 text-white text-sm font-semibold transition hover:bg-gray-700">
                     Criar Assinatura
                 </button>
             </div>
