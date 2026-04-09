@@ -1,93 +1,106 @@
-
-<section id="login" class="flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 min-h-[calc(100vh-80px)] px-4 py-4">
-    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md md:max-w-lg border border-gray-100 relative overflow-hidden">
-        <!-- Decorative elements -->
-        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
-        <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-100 to-transparent rounded-full translate-y-12 -translate-x-12"></div>
-        
-        <div class="relative z-10">
-            <!-- Logo e título centralizados -->
-            <div class="text-center mb-10">
-                <!-- Logo minimalista -->
-                <div class="mb-8">
-                    <img 
-                        src="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}" 
-                        alt="FiscalDock" 
-                        class="h-14 md:h-16 mx-auto object-contain"
-                    >
-                </div>
-                
-                <!-- Título e subtítulo -->
-                <h2 class="text-2xl md:text-3xl font-semibold text-gray-900 mb-2 tracking-tight">Bem-vindo de volta</h2>
-                <p class="text-sm text-gray-500">Entre na sua conta para continuar</p>
-            </div>
-
-            <form id="login-form" class="space-y-5" method="POST" action="/login">
-                @csrf
-                <!-- Campos de entrada -->
-                <div class="space-y-4">
-                    <div>
-                        <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">E-mail</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
-                                </svg>
-                            </div>
-                            <input 
-                                type="email" 
-                                id="email" 
-                                name="email" 
-                                required
-                                oninvalid="this.setCustomValidity('Inclua um @ e insira um e-mail válido.')"
-                                oninput="this.setCustomValidity('')"
-                                class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
-                                placeholder="seu@empresa.com"
-                            >
+<section id="login" class="bg-gray-100 min-h-[calc(100vh-80px)]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div class="max-w-sm mx-auto">
+            <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Acesso FiscalDock</p>
+                            <h1 class="text-lg font-bold text-gray-900 uppercase tracking-wide mt-1">Entrar no painel</h1>
                         </div>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
+                            Seguro
+                        </span>
+                    </div>
+                </div>
+
+                <div class="p-4 sm:p-5">
+                    <div class="mb-5 text-center">
+                        <img
+                            src="{{ asset('binary_files/logo/logo-fiscaldock_whitebg-removebg.png') }}"
+                            alt="FiscalDock"
+                            class="h-12 mx-auto object-contain"
+                        >
+                        <p class="text-xs text-gray-500 mt-3">Informe seu e-mail corporativo e senha para acessar o ambiente autenticado.</p>
                     </div>
 
-                    <div>
-                        <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">Senha</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                                </svg>
-                            </div>
-                            <input 
-                                type="password" 
-                                id="password" 
-                                name="password" 
+                    @if ($errors->any())
+                        <div class="mb-4 bg-white rounded border border-gray-300 p-4 border-l-4 border-l-red-500">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Falha de autenticação</p>
+                            <ul class="mt-2 space-y-1 text-sm text-gray-700">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    <form id="login-form" class="space-y-4" method="POST" action="/login">
+                        @csrf
+
+                        <div>
+                            <label for="email" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">E-mail</label>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                value="{{ old('email') }}"
                                 required
-                                class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                                autocomplete="email"
+                                oninvalid="this.setCustomValidity('Inclua um @ e insira um e-mail válido.')"
+                                oninput="this.setCustomValidity('')"
+                                class="w-full border border-gray-300 rounded text-sm px-3 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                placeholder="seu@empresa.com.br"
+                            >
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between gap-3 mb-1">
+                                <label for="password" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Senha</label>
+                                <span class="text-[10px] text-gray-500 uppercase tracking-wide">Mínimo de 8 caracteres</span>
+                            </div>
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                required
+                                autocomplete="current-password"
+                                class="w-full border border-gray-300 rounded text-sm px-3 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 placeholder="Digite sua senha"
                             >
                         </div>
-                    </div>
-                </div>
 
-                <!-- Opções e ações -->
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <input type="checkbox" id="remember" name="remember" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                        <label for="remember" class="ml-2 text-sm text-gray-600">Lembrar-me</label>
-                    </div>
-                    <a href="#" class="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">Esqueceu a senha?</a>
-                </div>
+                        <div class="flex items-center justify-between gap-3">
+                            <label for="remember" class="inline-flex items-center gap-2 text-sm text-gray-600">
+                                <input
+                                    type="checkbox"
+                                    id="remember"
+                                    name="remember"
+                                    class="h-4 w-4 border border-gray-300 rounded text-gray-800 focus:ring-1 focus:ring-gray-400"
+                                >
+                                <span>Lembrar-me</span>
+                            </label>
+                            <a href="/agendar" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">
+                                Precisa de acesso?
+                            </a>
+                        </div>
 
-                <!-- Botão de submit -->
-                <button type="submit" id="login-submit-btn" class="w-full bg-blue-600 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 active:from-blue-700 active:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-white font-semibold py-2.5 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-blue-500 disabled:hover:to-blue-600">
-                    Entrar
-                </button>
+                        <button
+                            type="submit"
+                            id="login-submit-btn"
+                            class="w-full bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium px-4 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Entrar no painel
+                        </button>
 
-                <!-- Link para criar conta -->
-                <div class="text-center text-gray-600">
-                    Não tem uma conta? 
-                    <a href="/agendar" data-link class="text-blue-600 hover:text-blue-700 font-semibold transition-colors">Abrir Conta</a>
+                        <div class="bg-gray-50 border border-gray-200 rounded px-4 py-3 text-sm text-gray-600">
+                            <span class="font-medium text-gray-900">Novo por aqui?</span>
+                            Solicite acesso comercial em
+                            <a href="/agendar" data-link class="text-gray-900 hover:text-gray-600 hover:underline">Abrir Conta</a>.
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </section>
-<!-- Scripts carregados no layout -->
