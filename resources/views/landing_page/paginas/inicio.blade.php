@@ -343,105 +343,116 @@
 </section>
 
 <!-- Como Funciona Section -->
-<section id="como-funciona" class="bg-gray-50 py-20 sm:py-24 lg:py-28">
+<section id="como-funciona" class="bg-gray-50 py-16 sm:py-20 lg:py-24">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        <!-- Header -->
-        <div class="text-center mb-16 sm:mb-20">
-            <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-400 mb-3">Passo a passo</p>
-            <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight mb-4">Como Funciona na Prática</h2>
-            <p class="text-base text-gray-500 max-w-2xl mx-auto">
-                Do upload do arquivo ao monitoramento contínuo — tudo automatizado para o seu escritório.
+        <div class="text-center mb-12 sm:mb-14 lg:mb-16">
+            <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400 mb-3">Como funciona</p>
+            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight mb-4">Da importação ao monitoramento contínuo</h2>
+            <p class="text-sm sm:text-base text-gray-500 max-w-2xl mx-auto">
+                Um fluxo simples para transformar arquivos fiscais e consultas oficiais em alertas acionáveis para o seu escritório.
             </p>
         </div>
 
-        <!-- Steps -->
-        <div class="relative" id="cf-grid">
+        <div class="bg-white rounded-[2rem] border border-gray-200 shadow-[0_22px_50px_-30px_rgba(15,23,42,0.18)] overflow-hidden">
+            <div class="px-5 py-5 sm:px-7 sm:py-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 via-white to-gray-50">
+                <div class="relative">
+                    <div class="hidden lg:block absolute left-[12.5%] right-[12.5%] top-6 border-t-[3px] border-dashed border-slate-400" aria-hidden="true"></div>
 
-            <!-- Trilha horizontal desktop -->
-            <div class="hidden md:block absolute top-[52px] left-[12.5%] right-[12.5%] h-0" style="border-top: 2px dashed #d1d5db;"></div>
-
-            <div class="grid grid-cols-1 gap-14 md:grid-cols-4 md:gap-8 lg:gap-12">
-
-                <!-- 1 — Importe -->
-                <div class="cf-step text-center">
-                    <div class="relative z-10 mx-auto mb-6">
-                        <div class="cf-icon-box w-[104px] h-[104px] rounded-2xl mx-auto flex items-center justify-center" style="background-color: #eef2f7; border: 1px solid #dce3ed; box-shadow: 0 2px 8px -2px rgba(11,31,58,0.06);">
-                            <svg class="w-10 h-10" style="color: #1e4fa0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                            </svg>
+                    <div class="grid grid-cols-1 gap-4 lg:grid-cols-4 lg:gap-6">
+                        <div class="relative flex items-center gap-4 lg:flex-col lg:text-center lg:items-center">
+                            <div class="w-12 h-12 rounded-full border-2 border-slate-500 bg-white flex items-center justify-center text-sm font-bold text-slate-700 shrink-0 relative z-10">1</div>
+                            <div class="min-w-0">
+                                <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400">Etapa</p>
+                                <p class="text-sm font-bold text-gray-900 mt-1">Importação</p>
+                            </div>
                         </div>
-                        <div class="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white" style="background-color: #0b1f3a;">1</div>
-                    </div>
-                    <h3 class="text-base font-bold text-gray-900 mb-2">Importe</h3>
-                    <p class="text-sm text-gray-500 leading-relaxed mb-3">Faça upload do arquivo fiscal e a plataforma extrai automaticamente notas, participantes e catálogo.</p>
-                    <span class="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide text-gray-500 bg-white border border-gray-200">SPED, EFD ou XML</span>
-                </div>
-
-                <!-- 2 — Cruze -->
-                <div class="cf-step text-center">
-                    <div class="relative z-10 mx-auto mb-6">
-                        <div class="cf-icon-box w-[104px] h-[104px] rounded-2xl mx-auto flex items-center justify-center" style="background-color: #eef2f7; border: 1px solid #dce3ed; box-shadow: 0 2px 8px -2px rgba(11,31,58,0.06);">
-                            <svg class="w-10 h-10" style="color: #1e4fa0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
+                        <div class="relative flex items-center gap-4 lg:flex-col lg:text-center lg:items-center">
+                            <div class="w-12 h-12 rounded-full border-2 border-slate-500 bg-white flex items-center justify-center text-sm font-bold text-slate-700 shrink-0 relative z-10">2</div>
+                            <div class="min-w-0">
+                                <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400">Etapa</p>
+                                <p class="text-sm font-bold text-gray-900 mt-1">Cruzamento</p>
+                            </div>
                         </div>
-                        <div class="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white" style="background-color: #0b1f3a;">2</div>
-                    </div>
-                    <h3 class="text-base font-bold text-gray-900 mb-2">Cruze</h3>
-                    <p class="text-sm text-gray-500 leading-relaxed mb-3">Cada CNPJ é verificado em tempo real nas bases oficiais — situação cadastral, inscrição estadual e impedimentos.</p>
-                    <span class="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide text-gray-500 bg-white border border-gray-200">Receita, SEFAZ, CEIS</span>
-                </div>
-
-                <!-- 3 — Identifique -->
-                <div class="cf-step text-center">
-                    <div class="relative z-10 mx-auto mb-6">
-                        <div class="cf-icon-box w-[104px] h-[104px] rounded-2xl mx-auto flex items-center justify-center" style="background-color: #fef8ee; border: 1px solid #f5e6c8; box-shadow: 0 2px 8px -2px rgba(11,31,58,0.06);">
-                            <svg class="w-10 h-10" style="color: #b45309;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                            </svg>
+                        <div class="relative flex items-center gap-4 lg:flex-col lg:text-center lg:items-center">
+                            <div class="w-12 h-12 rounded-full border-2 border-slate-500 bg-white flex items-center justify-center text-sm font-bold text-slate-700 shrink-0 relative z-10">3</div>
+                            <div class="min-w-0">
+                                <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400">Etapa</p>
+                                <p class="text-sm font-bold text-gray-900 mt-1">Alertas</p>
+                            </div>
                         </div>
-                        <div class="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white" style="background-color: #0b1f3a;">3</div>
-                    </div>
-                    <h3 class="text-base font-bold text-gray-900 mb-2">Identifique</h3>
-                    <p class="text-sm text-gray-500 leading-relaxed mb-3">Fornecedores inaptos, IE suspensa, empresas no CEIS — tudo sinalizado antes que vire problema.</p>
-                    <span class="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide text-gray-500 bg-white border border-gray-200">Alertas automáticos</span>
-                </div>
-
-                <!-- 4 — Monitore -->
-                <div class="cf-step text-center">
-                    <div class="relative z-10 mx-auto mb-6">
-                        <div class="cf-icon-box w-[104px] h-[104px] rounded-2xl mx-auto flex items-center justify-center" style="background-color: #eefbf5; border: 1px solid #c6eed8; box-shadow: 0 2px 8px -2px rgba(11,31,58,0.06);">
-                            <svg class="w-10 h-10" style="color: #047857;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                            </svg>
+                        <div class="relative flex items-center gap-4 lg:flex-col lg:text-center lg:items-center">
+                            <div class="w-12 h-12 rounded-full border-2 border-slate-500 bg-white flex items-center justify-center text-sm font-bold text-slate-700 shrink-0 relative z-10">4</div>
+                            <div class="min-w-0">
+                                <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400">Etapa</p>
+                                <p class="text-sm font-bold text-gray-900 mt-1">Monitoramento</p>
+                            </div>
                         </div>
-                        <div class="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white" style="background-color: #0b1f3a;">4</div>
                     </div>
-                    <h3 class="text-base font-bold text-gray-900 mb-2">Monitore</h3>
-                    <p class="text-sm text-gray-500 leading-relaxed mb-3">Acompanhe mudanças de situação cadastral dos seus participantes sem consultar um por um.</p>
-                    <span class="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide text-gray-500 bg-white border border-gray-200">Atualização contínua</span>
                 </div>
+            </div>
 
+            <div class="p-5 sm:p-7">
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4 xl:gap-7">
+                <article class="relative bg-white rounded-[1.75rem] border border-gray-200 px-6 py-8 sm:px-7 sm:py-9 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.18)] flex flex-col">
+                    <div class="w-20 h-20 rounded-[1.5rem] flex items-center justify-center mb-6 relative z-10" style="background-color: #eef2f7; border: 1px solid #dce3ed;">
+                        <svg class="w-10 h-10" style="color: #1f2937;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        </svg>
+                    </div>
+                    <span class="self-start px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.14em] text-white" style="background-color: #374151">Etapa 1</span>
+                    <h3 class="text-xl font-bold text-gray-900 mt-5">Importe</h3>
+                    <p class="text-sm text-gray-600 leading-7 mt-3">Envie SPED, EFD ou XML e deixe a plataforma organizar notas, participantes e catálogo em uma base pronta para análise.</p>
+                    <div class="self-start inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500" style="margin-top: 2.5rem;">
+                        SPED, EFD ou XML
+                    </div>
+                </article>
+
+                <article class="relative bg-white rounded-[1.75rem] border border-gray-200 px-6 py-8 sm:px-7 sm:py-9 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.18)] flex flex-col">
+                    <div class="w-20 h-20 rounded-[1.5rem] flex items-center justify-center mb-6 relative z-10" style="background-color: #eef2f7; border: 1px solid #dce3ed;">
+                        <svg class="w-10 h-10" style="color: #1f2937;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <span class="self-start px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.14em] text-white" style="background-color: #374151">Etapa 2</span>
+                    <h3 class="text-xl font-bold text-gray-900 mt-5">Cruze</h3>
+                    <p class="text-sm text-gray-600 leading-7 mt-3">Valide CNPJs e documentos nas bases oficiais e entenda, com contexto, a situação fiscal real de cada participante.</p>
+                    <div class="self-start inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500" style="margin-top: 2.5rem;">
+                        Receita, SEFAZ, CEIS
+                    </div>
+                </article>
+
+                <article class="relative bg-white rounded-[1.75rem] border border-gray-200 px-6 py-8 sm:px-7 sm:py-9 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.18)] flex flex-col">
+                    <div class="w-20 h-20 rounded-[1.5rem] flex items-center justify-center mb-6 relative z-10" style="background-color: #fef8ee; border: 1px solid #f5e6c8;">
+                        <svg class="w-10 h-10" style="color: #b45309;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                    </div>
+                    <span class="self-start px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.14em] text-white" style="background-color: #374151">Etapa 3</span>
+                    <h3 class="text-xl font-bold text-gray-900 mt-5">Identifique</h3>
+                    <p class="text-sm text-gray-600 leading-7 mt-3">Veja com antecedência fornecedores inaptos, inscrições suspensas e sinais de risco antes que eles virem problema.</p>
+                    <div class="self-start inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500" style="margin-top: 2.5rem;">
+                        Alertas automáticos
+                    </div>
+                </article>
+
+                <article class="relative bg-white rounded-[1.75rem] border border-gray-200 px-6 py-8 sm:px-7 sm:py-9 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.18)] flex flex-col">
+                    <div class="w-20 h-20 rounded-[1.5rem] flex items-center justify-center mb-6 relative z-10" style="background-color: #eefbf5; border: 1px solid #c6eed8;">
+                        <svg class="w-10 h-10" style="color: #047857;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                    </div>
+                    <span class="self-start px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.14em] text-white" style="background-color: #374151">Etapa 4</span>
+                    <h3 class="text-xl font-bold text-gray-900 mt-5">Monitore</h3>
+                    <p class="text-sm text-gray-600 leading-7 mt-3">Acompanhe mudanças cadastrais de forma contínua e mantenha sua base sempre atualizada e confiável.</p>
+                    <div class="self-start inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500" style="margin-top: 2.5rem;">
+                        Atualização contínua
+                    </div>
+                </article>
+                </div>
             </div>
         </div>
     </div>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var grid = document.getElementById('cf-grid');
-        if (!grid) return;
-        new IntersectionObserver(function(entries, obs) {
-            entries.forEach(function(e) {
-                if (e.isIntersecting) {
-                    grid.querySelectorAll('.cf-step').forEach(function(s) { s.classList.add('cf-visible'); });
-                    obs.unobserve(e.target);
-                }
-            });
-        }, { threshold: 0.15 }).observe(grid);
-    });
-    </script>
 </section>
 
 <!-- Soluções Section -->
@@ -463,7 +474,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
 
             <!-- 1. SPED / EFD -->
-            <div class="group">
+            <div class="group rounded-xl border border-gray-200 p-6 lg:p-8">
                 <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-5" style="background-color: #eef2f7; border: 1px solid #dce3ed;">
                     <svg class="w-7 h-7" style="color: #1e4fa0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -483,11 +494,11 @@
                         Cruzamento exato com malha fina
                     </li>
                 </ul>
-                <span class="inline-block mt-4 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide text-gray-500 bg-gray-100 border border-gray-200">SPED / EFD</span>
+                <span class="inline-block mt-4 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500 bg-gray-100 border border-gray-200">SPED / EFD</span>
             </div>
 
             <!-- 2. XML -->
-            <div class="group">
+            <div class="group rounded-xl border border-gray-200 p-6 lg:p-8">
                 <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-5" style="background-color: #eef2f7; border: 1px solid #dce3ed;">
                     <svg class="w-7 h-7" style="color: #1e4fa0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
@@ -507,11 +518,11 @@
                         Consolidação imediata de CSOSN
                     </li>
                 </ul>
-                <span class="inline-block mt-4 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide text-gray-500 bg-gray-100 border border-gray-200">XMLs / NF-e</span>
+                <span class="inline-block mt-4 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500 bg-gray-100 border border-gray-200">XMLs / NF-e</span>
             </div>
 
             <!-- 3. Monitoramento -->
-            <div class="group relative">
+            <div class="group relative rounded-xl border border-gray-200 p-6 lg:p-8">
                 <div class="absolute -top-1 -left-1 flex h-2.5 w-2.5">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style="background-color: #f87171;"></span>
                     <span class="relative inline-flex rounded-full h-2.5 w-2.5" style="background-color: #dc2626;"></span>
@@ -535,11 +546,11 @@
                         Bloqueie envios para inidôneos
                     </li>
                 </ul>
-                <span class="inline-block mt-4 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide text-gray-500 bg-gray-100 border border-gray-200">Participantes</span>
+                <span class="inline-block mt-4 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500 bg-gray-100 border border-gray-200">Participantes</span>
             </div>
 
             <!-- 4. BI -->
-            <div class="group">
+            <div class="group rounded-xl border border-gray-200 p-6 lg:p-8">
                 <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-5" style="background-color: #eefbf5; border: 1px solid #c6eed8;">
                     <svg class="w-7 h-7" style="color: #047857;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
@@ -559,11 +570,11 @@
                         Contabilidade de alto valor sem esforço
                     </li>
                 </ul>
-                <span class="inline-block mt-4 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide text-gray-500 bg-gray-100 border border-gray-200">B.I. Fiscal</span>
+                <span class="inline-block mt-4 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500 bg-gray-100 border border-gray-200">B.I. Fiscal</span>
             </div>
 
             <!-- 5. Créditos & API -->
-            <div class="group">
+            <div class="group rounded-xl border border-gray-200 p-6 lg:p-8">
                 <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-5" style="background-color: #eef2f7; border: 1px solid #dce3ed;">
                     <svg class="w-7 h-7" style="color: #1e4fa0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -583,13 +594,13 @@
                         Integração nativa com automações
                     </li>
                 </ul>
-                <span class="inline-block mt-4 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide text-gray-500 bg-gray-100 border border-gray-200">Créditos & API</span>
+                <span class="inline-block mt-4 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500 bg-gray-100 border border-gray-200">Créditos & API</span>
             </div>
 
             <!-- 6. BPO Premium — card destaque -->
             <div class="group rounded-xl p-6 lg:p-8 relative" style="background-color: #0b1f3a;">
                 <div class="absolute top-4 right-4">
-                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide" style="background-color: #facc15; color: #0b1f3a;">Premium</span>
+                    <span class="px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.12em]" style="background-color: #facc15; color: #0b1f3a;">Premium</span>
                 </div>
                 <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-5" style="background-color: rgba(250,204,21,0.12); border: 1px solid rgba(250,204,21,0.2);">
                     <svg class="w-7 h-7" style="color: #facc15;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -610,6 +621,7 @@
                         Suporte tributário exclusivo
                     </li>
                 </ul>
+                <span class="inline-block mt-4 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.12em]" style="background-color: rgba(250,204,21,0.15); color: #facc15; border: 1px solid rgba(250,204,21,0.25);">BPO Fiscal</span>
             </div>
 
         </div>
