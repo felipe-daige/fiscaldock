@@ -384,6 +384,28 @@
     .sidebar__user-menu-item--active {
         box-shadow: inset 2px 0 0 #4b5563;
     }
+    .sidebar__group-menu-item {
+        position: relative;
+    }
+    .sidebar__group-menu-item-suffix {
+        @apply shrink-0 inline-flex items-center text-amber-600;
+    }
+    .sidebar__group-menu-item-suffix-icon {
+        @apply w-3.5 h-3.5;
+    }
+    .sidebar__group-menu-item-tooltip {
+        @apply absolute left-full top-1/2 ml-2 px-2 py-1 rounded text-[10px] font-semibold text-white whitespace-nowrap opacity-0 invisible;
+        background-color: #1f2937;
+        transform: translateY(-50%);
+        transition: opacity 0s linear, visibility 0s linear;
+        pointer-events: none;
+        z-index: 20;
+    }
+    .sidebar__group-menu-item:hover .sidebar__group-menu-item-tooltip,
+    .sidebar__group-menu-item:focus-visible .sidebar__group-menu-item-tooltip,
+    .sidebar__group-menu-item:focus-within .sidebar__group-menu-item-tooltip {
+        @apply opacity-100 visible;
+    }
 
     .sidebar__user {
         @apply flex-shrink-0 border-t border-gray-300 bg-gray-50;

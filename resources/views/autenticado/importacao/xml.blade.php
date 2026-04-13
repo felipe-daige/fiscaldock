@@ -1,955 +1,579 @@
 {{-- Monitoramento - Importar XMLs --}}
-<div class="min-h-screen bg-gray-50" id="importacao-xml-container">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="min-h-screen bg-gray-100" id="importacao-xml-container" data-em-breve="1">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
         {{-- Page Header --}}
-        <div class="mb-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Importar XMLs de Notas Fiscais</h1>
-                    <p class="mt-1 text-sm text-gray-600">Adicione CNPJs a sua lista de monitoramento a partir de arquivos XML de NF-e, NFS-e ou CT-e.</p>
-                </div>
-                <a
-                    href="/app/dashboard"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
-                    data-link
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
-                    Voltar
-                </a>
+        <div class="mb-4 sm:mb-6 flex items-center justify-between gap-3">
+            <div>
+                <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Importação de XMLs</h1>
+                <p class="text-xs text-gray-500 mt-0.5">Extraia CNPJs de NF-e, NFS-e ou CT-e e adicione à sua lista de monitoramento.</p>
             </div>
+            <a
+                href="/app/dashboard"
+                class="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-gray-300 bg-white text-gray-600 text-xs font-medium hover:bg-gray-50 transition"
+                data-link
+            >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Voltar
+            </a>
         </div>
 
-        {{-- Info Box --}}
-        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-            <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <div>
-                    <h3 class="text-sm font-semibold text-blue-900">Como funciona?</h3>
-                    <p class="text-sm text-blue-800 mt-1">
-                        Importe XMLs de notas fiscais para extrair automaticamente os CNPJs de fornecedores e clientes. Os participantes serão adicionados à sua lista de monitoramento.
-                    </p>
+        <div class="mb-6">
+            <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                <div class="border-l-4 border-l-amber-500 px-4 py-4 sm:px-5">
+                    <div class="flex items-start gap-3">
+                        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded border border-amber-200 bg-amber-50 text-amber-700">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"></path>
+                            </svg>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Alerta Operacional</p>
+                            <h2 class="mt-1 text-base font-bold text-gray-900 uppercase tracking-wide">Importação XML indisponível</h2>
+                            <p class="mt-1 text-sm text-gray-700">Esta tela está marcada como <strong>Em Breve</strong>. A funcionalidade ainda não está em desenvolvimento para uso operacional e todos os botões de importação permanecem desabilitados.</p>
+                            <p class="mt-1 text-xs text-gray-500">Você ainda pode consultar o histórico e voltar para outras áreas do painel normalmente.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         {{-- Upload Section --}}
-        <div id="upload-section" class="mb-6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {{-- Card Upload (Esquerdo) --}}
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-base font-semibold text-gray-900">Enviar Arquivos XML</h3>
-                    </div>
-                    <div class="p-6">
-                        {{-- Seleção Tipo Documento --}}
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Documento:</label>
-                            <div class="space-y-2">
-                                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition tipo-doc-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-tipo="NFE">
-                                    <input type="radio" name="tipo-documento" value="NFE" class="w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
-                                    <div class="flex-shrink-0 w-7 h-7 rounded-md bg-blue-100 flex items-center justify-center">
-                                        <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-sm font-medium text-gray-900">NF-e</span>
-                                        </div>
-                                        <p class="text-xs text-gray-500 mt-0.5 truncate">Nota Fiscal Eletrônica</p>
-                                    </div>
-                                </label>
-                                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition tipo-doc-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-tipo="NFSE">
-                                    <input type="radio" name="tipo-documento" value="NFSE" class="w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
-                                    <div class="flex-shrink-0 w-7 h-7 rounded-md bg-green-100 flex items-center justify-center">
-                                        <svg class="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-sm font-medium text-gray-900">NFS-e</span>
-                                        </div>
-                                        <p class="text-xs text-gray-500 mt-0.5 truncate">Nota Fiscal de Serviços</p>
-                                    </div>
-                                </label>
-                                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition tipo-doc-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-tipo="CTE">
-                                    <input type="radio" name="tipo-documento" value="CTE" class="w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
-                                    <div class="flex-shrink-0 w-7 h-7 rounded-md bg-amber-100 flex items-center justify-center">
-                                        <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path>
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-sm font-medium text-gray-900">CT-e</span>
-                                        </div>
-                                        <p class="text-xs text-gray-500 mt-0.5 truncate">Conhecimento de Transporte</p>
-                                    </div>
-                                </label>
+        <div id="upload-section" class="mb-6 space-y-4 sm:space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
+                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Upload dos Arquivos</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Em Breve</span>
+                        </div>
+                        <div class="p-4 sm:p-5">
+                            <div class="mb-4">
+                                <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Tipo de Documento</label>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <label class="flex flex-col items-start gap-1 p-3 border border-gray-300 rounded cursor-pointer transition tipo-doc-label has-[:checked]:border-gray-700 has-[:checked]:bg-gray-50 hover:border-gray-400" data-tipo="NFE">
+                                        <input type="radio" name="tipo-documento" value="NFE" class="sr-only" disabled>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #0f766e">NF-e</span>
+                                        <span class="text-[11px] text-gray-500 leading-tight">Nota Fiscal Eletrônica</span>
+                                    </label>
+                                    <label class="flex flex-col items-start gap-1 p-3 border border-gray-300 rounded cursor-pointer transition tipo-doc-label has-[:checked]:border-gray-700 has-[:checked]:bg-gray-50 hover:border-gray-400" data-tipo="NFSE">
+                                        <input type="radio" name="tipo-documento" value="NFSE" class="sr-only" disabled>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">NFS-e</span>
+                                        <span class="text-[11px] text-gray-500 leading-tight">Nota Fiscal de Serviços</span>
+                                    </label>
+                                    <label class="flex flex-col items-start gap-1 p-3 border border-gray-300 rounded cursor-pointer transition tipo-doc-label has-[:checked]:border-gray-700 has-[:checked]:bg-gray-50 hover:border-gray-400" data-tipo="CTE">
+                                        <input type="radio" name="tipo-documento" value="CTE" class="sr-only" disabled>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">CT-e</span>
+                                        <span class="text-[11px] text-gray-500 leading-tight">Conhecimento de Transporte</span>
+                                    </label>
+                                </div>
                             </div>
-                        </div>
 
-                        {{-- Seleção Modo de Envio --}}
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Modo de Envio:</label>
-                            <div class="space-y-2">
-                                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition modo-envio-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-modo="zip">
-                                    <input type="radio" name="modo-envio" value="zip" class="w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
-                                    <div class="flex-shrink-0 w-7 h-7 rounded-md bg-purple-100 flex items-center justify-center">
-                                        <svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
+                            <div class="mb-4">
+                                <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Modo de Envio</label>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <label class="flex flex-col items-start gap-1 p-3 border border-gray-300 rounded cursor-pointer transition modo-envio-label has-[:checked]:border-gray-700 has-[:checked]:bg-gray-50 hover:border-gray-400" data-modo="zip">
+                                        <input type="radio" name="modo-envio" value="zip" class="sr-only" disabled>
                                         <div class="flex items-center gap-2">
-                                            <span class="text-sm font-medium text-gray-900">Arquivo ZIP</span>
-                                            <span class="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">50 MB</span>
+                                            <span class="text-sm font-semibold text-gray-900">Arquivo ZIP</span>
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">50 MB</span>
                                         </div>
-                                        <p class="text-xs text-gray-500 mt-0.5 truncate">Envie um ZIP com até 5.000 XMLs</p>
-                                    </div>
-                                </label>
-                                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition modo-envio-label border-gray-200 hover:border-gray-300 hover:bg-gray-500/8" data-modo="xml">
-                                    <input type="radio" name="modo-envio" value="xml" class="w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
-                                    <div class="flex-shrink-0 w-7 h-7 rounded-md bg-blue-100 flex items-center justify-center">
-                                        <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
+                                        <span class="text-[11px] text-gray-500 leading-tight">Até 5.000 XMLs em um ZIP</span>
+                                    </label>
+                                    <label class="flex flex-col items-start gap-1 p-3 border border-gray-300 rounded cursor-pointer transition modo-envio-label has-[:checked]:border-gray-700 has-[:checked]:bg-gray-50 hover:border-gray-400" data-modo="xml">
+                                        <input type="radio" name="modo-envio" value="xml" class="sr-only" disabled>
                                         <div class="flex items-center gap-2">
-                                            <span class="text-sm font-medium text-gray-900">XMLs Avulsos</span>
-                                            <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">100 arq</span>
+                                            <span class="text-sm font-semibold text-gray-900">XMLs Avulsos</span>
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">100 arq</span>
                                         </div>
-                                        <p class="text-xs text-gray-500 mt-0.5 truncate">Selecione até 100 arquivos XML (200 MB total)</p>
-                                    </div>
-                                </label>
+                                        <span class="text-[11px] text-gray-500 leading-tight">Até 100 arquivos por lote</span>
+                                    </label>
+                                </div>
                             </div>
-                        </div>
 
-                        {{-- Seleção de Cliente (Opcional) --}}
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Cliente (sua empresa): <span class="text-gray-400 font-normal">(opcional)</span>
-                            </label>
-                            <select
-                                id="cliente-select"
-                                name="cliente_id"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                            >
-                                <option value="">Importar emit e dest de todas as notas</option>
-                                @foreach($clientes ?? [] as $cliente)
-                                    <option value="{{ $cliente->id }}" data-cnpj="{{ $cliente->documento }}">
-                                        {{ $cliente->razao_social ?? $cliente->nome }}
-                                        ({{ preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $cliente->documento) }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            <p class="text-xs text-gray-500 mt-1">
-                                Se selecionado, importa apenas o parceiro (fornecedor ou cliente) de cada nota.
-                            </p>
-                        </div>
+                            <div class="mb-4">
+                                <div id="xml-dropzone" class="border-2 border-dashed border-gray-300 rounded p-8 min-h-[180px] flex flex-col items-center justify-center transition-colors cursor-not-allowed bg-gray-50 opacity-60 pointer-events-none" role="button" tabindex="0" aria-disabled="true">
+                                    <div class="mb-3" id="xml-dropzone-icon">
+                                        <svg class="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="space-y-1 text-center">
+                                        <p class="text-sm font-medium text-gray-600" id="xml-dropzone-main-text">Importação XML temporariamente indisponível</p>
+                                        <p class="text-[11px] text-gray-400" id="xml-dropzone-sub-text">Esta área será liberada quando o desenvolvimento operacional estiver concluído</p>
+                                        <p class="text-[11px] text-gray-400 mt-2">Nenhum arquivo pode ser enviado no momento</p>
+                                    </div>
+                                    <input
+                                        type="file"
+                                        id="xml-file-input"
+                                        name="xml_files"
+                                        accept=".xml,.zip"
+                                        multiple
+                                        class="hidden"
+                                        disabled
+                                    >
+                                </div>
+                            </div>
 
-                        {{-- Importar Movimentações Financeiras --}}
-                        <div class="mb-4">
-                            <label class="flex items-start p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition" id="salvar-movimentacoes-label">
-                                <input
-                                    type="checkbox"
-                                    id="salvar-movimentacoes"
-                                    name="salvar_movimentacoes"
-                                    class="mt-1 mr-3 w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                                >
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-semibold text-gray-800 text-sm">Importar Movimentações Financeiras</span>
-                                    </div>
-                                    <div class="text-xs text-gray-600 mt-0.5">
-                                        Além dos participantes, guarda os dados completos de cada nota fiscal (valores, tributos, itens).
-                                        Permite consultas e relatórios futuros.
-                                    </div>
-                                    <div class="flex items-center gap-2 mt-1">
-                                        <span class="inline-flex items-center gap-1 text-xs text-green-600">
-                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                            </svg>
-                                            Gratuito
-                                        </span>
-                                    </div>
+                            <div id="xml-files-list" class="mb-4 hidden">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Arquivos selecionados</span>
+                                    <button type="button" id="xml-clear-all" class="text-[11px] text-gray-500 hover:text-gray-700 hover:underline">Limpar todos</button>
                                 </div>
-                            </label>
-                        </div>
+                                <div id="xml-files-container" class="space-y-1 max-h-[200px] overflow-y-auto"></div>
+                                <div class="mt-2 pt-2 border-t border-gray-200 flex items-center justify-between text-[11px] text-gray-500">
+                                    <span id="xml-files-count">0 arquivos</span>
+                                    <span id="xml-files-size">0 MB</span>
+                                </div>
+                            </div>
 
-                        {{-- Dropzone --}}
-                        <div class="mb-4">
-                            <div id="xml-dropzone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 min-h-[180px] flex flex-col items-center justify-center transition-colors cursor-not-allowed bg-gray-100 opacity-60 pointer-events-none" role="button" tabindex="0" aria-disabled="true">
-                                <div class="mb-4" id="xml-dropzone-icon">
-                                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                                    </svg>
+                            <div id="xml-error-message" class="mb-4 hidden">
+                                <div class="bg-white border border-gray-300 border-l-4 border-l-red-500 p-3">
+                                    <p class="text-xs text-gray-700" id="xml-error-text"></p>
                                 </div>
-                                <div class="space-y-1 text-center">
-                                    <p class="text-sm font-medium text-gray-500" id="xml-dropzone-main-text">Selecione o tipo e modo de envio</p>
-                                    <p class="text-xs text-gray-400" id="xml-dropzone-sub-text">Escolha as opções acima para habilitar o envio</p>
-                                </div>
-                                <input
-                                    type="file"
-                                    id="xml-file-input"
-                                    name="xml_files"
-                                    accept=".xml,.zip"
-                                    multiple
-                                    class="hidden"
+                            </div>
+
+                            <div class="flex justify-end">
+                                <button
+                                    type="button"
+                                    id="xml-importar-btn"
+                                    class="inline-flex items-center gap-2 px-4 py-2 rounded bg-gray-800 text-white text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled
                                 >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                                    </svg>
+                                    <span class="btn-text">Em Breve</span>
+                                </button>
                             </div>
-                        </div>
-
-                        {{-- Lista de Arquivos --}}
-                        <div id="xml-files-list" class="mb-4 hidden">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm font-medium text-gray-700">Arquivos selecionados:</span>
-                                <button type="button" id="xml-clear-all" class="text-xs text-red-600 hover:text-red-700">Limpar todos</button>
-                            </div>
-                            <div id="xml-files-container" class="space-y-2 max-h-[200px] overflow-y-auto">
-                                {{-- Files will be added here --}}
-                            </div>
-                            <div class="mt-2 pt-2 border-t border-gray-200 flex items-center justify-between text-xs text-gray-500">
-                                <span id="xml-files-count">0 arquivos</span>
-                                <span id="xml-files-size">0 MB</span>
-                            </div>
-                        </div>
-
-                        {{-- Error Message --}}
-                        <div id="xml-error-message" class="mb-4 hidden">
-                            <div class="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                                <svg class="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <p class="text-xs text-red-800" id="xml-error-text"></p>
-                            </div>
-                        </div>
-
-                        {{-- Botao Importar --}}
-                        <div class="flex justify-end">
-                            <button
-                                type="button"
-                                id="xml-importar-btn"
-                                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                disabled
-                            >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                                </svg>
-                                <span class="btn-text">Importar</span>
-                            </button>
                         </div>
                     </div>
                 </div>
 
-                {{-- Card Informações (Direito) --}}
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <h3 class="text-base font-semibold text-gray-900">Informações</h3>
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded border border-gray-300 overflow-hidden h-full">
+                        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Como Funciona</span>
                         </div>
-                    </div>
-                    <div class="p-6 space-y-6">
-                        {{-- Seção Como Funciona --}}
-                        <div>
-                            <h4 class="text-sm font-semibold text-gray-900 mb-3">Como Funciona</h4>
-                            <div class="space-y-4">
-                                <div class="flex items-start gap-3">
-                                    <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">1</div>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-900">Selecione o Tipo</p>
-                                        <p class="text-xs text-gray-500">Escolha entre NF-e, NFS-e ou CT-e.</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-3">
-                                    <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">2</div>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-900">Escolha o Modo</p>
-                                        <p class="text-xs text-gray-500">ZIP com multiplas notas ou XMLs avulsos.</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-3">
-                                    <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">3</div>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-900">Envie os Arquivos</p>
-                                        <p class="text-xs text-gray-500">Arraste ou clique para selecionar.</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-3">
-                                    <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">4</div>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-900">Extracao Automatica</p>
-                                        <p class="text-xs text-gray-500">O sistema extrai CNPJs do emitente e destinatario de cada nota.</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-3">
-                                    <div class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold">5</div>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-900">Monitoramento</p>
-                                        <p class="text-xs text-gray-500">Configure alertas e consultas periodicas para os participantes importados.</p>
-                                    </div>
+                        <div class="p-4 sm:p-5 space-y-3">
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0 w-6 h-6 rounded border border-gray-300 bg-gray-50 text-gray-700 flex items-center justify-center text-xs font-bold">1</div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">Selecione o Tipo</p>
+                                    <p class="text-[11px] text-gray-500">Escolha entre NF-e, NFS-e ou CT-e conforme o lote que será importado.</p>
                                 </div>
                             </div>
-                        </div>
-
-                        {{-- Planos disponíveis - Badges dinâmicos --}}
-                        @php
-                            $planoMeta = [
-                                'gratuito' => [
-                                    'cor' => 'green',
-                                    'icone' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-                                    'consultas_display' => ['Situação Cadastral (Ativa, Inapta, Baixada)', 'Dados Cadastrais Completos', 'CNAEs Principal e Secundários', 'Quadro Societário (QSA)', 'Simples Nacional e MEI'],
-                                    'casos_uso' => ['Checar se CNPJ está ativo', 'Conferir regime para emitir NF', 'Consultar sócios e QSA'],
-                                ],
-                                'validacao' => [
-                                    'cor' => 'blue',
-                                    'icone' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
-                                    'consultas_display' => ['Situação Cadastral (Ativa, Inapta, Baixada)', 'Dados Completos, CNAEs e QSA', 'Simples Nacional e MEI', 'SINTEGRA — IE ativa em todos os estados', 'TCU Consolidada (CEIS, CNEP, Inidôneos)'],
-                                    'casos_uso' => ['Conferir IE interestadual', 'Checar listas restritivas do TCU', 'Qualificar novos fornecedores'],
-                                ],
-                                'licitacao' => [
-                                    'cor' => 'blue',
-                                    'icone' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-                                    'consultas_display' => ['Tudo do Validação', 'CND Federal (PGFN/RFB)', 'CRF FGTS (Regularidade)', 'CND Estadual (ICMS)', 'CNDT Trabalhista (TST)'],
-                                    'casos_uso' => ['Documentação para editais', 'Homologar com CNDs exigidas', 'Renovar contratos públicos'],
-                                    'promo' => true,
-                                ],
-                                'compliance' => [
-                                    'cor' => 'purple',
-                                    'icone' => 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
-                                    'consultas_display' => ['Situação Cadastral e Dados Completos', 'SINTEGRA e TCU Consolidada', 'CND Federal, Estadual, CRF e CNDT', 'Protestos em Cartório (IEPTB Nacional)', 'Devedores da Dívida Ativa (PGFN)', 'Análise completa de risco financeiro'],
-                                    'casos_uso' => ['Gestão de risco de terceiros', 'Atender Lei Anticorrupção', 'Monitorar protestos e dívidas'],
-                                ],
-                                'due_diligence' => [
-                                    'cor' => 'amber',
-                                    'icone' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7',
-                                    'consultas_display' => ['Todas as CNDs (Federal, Estadual, FGTS, Trabalhista)', 'Protestos e Devedores PGFN', 'SINTEGRA e TCU Consolidada', 'Trabalho Escravo (Lista Suja — MTE)', 'IBAMA — Autuações Ambientais', 'Compliance trabalhista e ambiental (ESG)'],
-                                    'casos_uso' => ['Análise pré-aquisição (M&A)', 'Atender requisitos ESG', 'Riscos trabalhistas e ambientais'],
-                                ],
-                                'enterprise' => [
-                                    'cor' => 'slate',
-                                    'icone' => 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
-                                    'consultas_display' => ['Todas as CNDs e Certidões', 'Protestos, Dívida Ativa e TCU', 'Trabalho Escravo e IBAMA (ESG)', 'Processos Judiciais (CNJ/SEEU)', 'SINTEGRA — Inscrição Estadual', 'Raio-X completo — 18 consultas por CNPJ'],
-                                    'casos_uso' => ['Due diligence jurídico completo', 'Mapear litígios antes de contratar', 'Relatório para comitês internos'],
-                                ],
-                            ];
-
-                            $planosDetalhados = [];
-                            foreach ($planos as $p) {
-                                $meta = $planoMeta[$p->codigo] ?? ['cor' => 'gray', 'icone' => 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'consultas_display' => [], 'casos_uso' => []];
-                                $planosDetalhados[] = [
-                                    'codigo' => $p->codigo,
-                                    'nome' => $p->nome,
-                                    'creditos' => $p->custo_creditos,
-                                    'creditos_original' => null,
-                                    'promo' => $meta['promo'] ?? false,
-                                    'gratuito' => $p->is_gratuito,
-                                    'descricao' => $p->descricao,
-                                    'cor' => $meta['cor'],
-                                    'icone' => $meta['icone'],
-                                    'consultas' => $meta['consultas_display'],
-                                    'casos_uso' => $meta['casos_uso'],
-                                ];
-                            }
-
-                            $corClasses = [
-                                'green' => ['bg' => 'bg-green-100', 'text' => 'text-green-700', 'icon' => 'text-green-600', 'badge' => 'bg-green-100 text-green-700', 'border' => 'border-green-200', 'btn' => 'bg-green-600 hover:bg-green-700'],
-                                'blue' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-700', 'icon' => 'text-blue-600', 'badge' => 'bg-blue-100 text-blue-700', 'border' => 'border-blue-200', 'btn' => 'bg-blue-600 hover:bg-blue-700'],
-                                'purple' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-700', 'icon' => 'text-purple-600', 'badge' => 'bg-purple-100 text-purple-700', 'border' => 'border-purple-200', 'btn' => 'bg-purple-600 hover:bg-purple-700'],
-                                'amber' => ['bg' => 'bg-amber-100', 'text' => 'text-amber-700', 'icon' => 'text-amber-600', 'badge' => 'bg-amber-100 text-amber-700', 'border' => 'border-amber-200', 'btn' => 'bg-amber-600 hover:bg-amber-700'],
-                                'slate' => ['bg' => 'bg-slate-100', 'text' => 'text-slate-700', 'icon' => 'text-slate-600', 'badge' => 'bg-slate-100 text-slate-700', 'border' => 'border-slate-200', 'btn' => 'bg-slate-700 hover:bg-slate-800'],
-                            ];
-                        @endphp
-
-                        <div class="border-t border-gray-200 pt-4 mt-4">
-                            <div class="flex items-center justify-between mb-3">
-                                <h4 class="text-sm font-semibold text-gray-900">Planos disponíveis</h4>
-                                <button type="button" id="btn-ver-detalhes-planos" class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors inline-flex items-center gap-1">
-                                    Ver detalhes
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                    </svg>
-                                </button>
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0 w-6 h-6 rounded border border-gray-300 bg-gray-50 text-gray-700 flex items-center justify-center text-xs font-bold">2</div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">Escolha o Modo</p>
+                                    <p class="text-[11px] text-gray-500">Envie um ZIP consolidado ou um conjunto de XMLs avulsos.</p>
+                                </div>
                             </div>
-                            <div class="flex flex-col gap-2 w-full">
-                                @foreach($planosDetalhados as $idx => $pd)
-                                    @php
-                                        $badgeCor = match($pd['cor']) {
-                                            'green' => 'bg-green-100 text-green-700',
-                                            'blue' => 'bg-blue-100 text-blue-700',
-                                            'purple' => 'bg-purple-100 text-purple-700',
-                                            'amber' => 'bg-amber-100 text-amber-700',
-                                            'slate' => 'bg-slate-100 text-slate-700',
-                                            default => 'bg-gray-100 text-gray-600',
-                                        };
-                                    @endphp
-                                    @if($pd['promo'] ?? false)
-                                        <button
-                                            type="button"
-                                            class="badge-plano group w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg
-                                                   border border-amber-200 bg-amber-50 hover:bg-amber-100 hover:border-amber-300
-                                                   transition-colors cursor-pointer text-left"
-                                            data-slide-index="{{ $idx }}"
-                                        >
-                                            <div class="flex-1 min-w-0">
-                                                <span class="text-xs font-semibold text-gray-800 group-hover:text-gray-900 transition-colors">{{ $pd['nome'] }}</span>
-                                                <p class="text-xs text-gray-400 group-hover:text-gray-500 transition-colors truncate">{{ $pd['descricao'] }}</p>
-                                            </div>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-100 text-orange-700 whitespace-nowrap flex-shrink-0">
-                                                {{ $pd['creditos'] }} cred.
-                                            </span>
-                                        </button>
-                                    @else
-                                        <button
-                                            type="button"
-                                            class="badge-plano group w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer text-left"
-                                            data-slide-index="{{ $idx }}"
-                                        >
-                                            <div class="flex-1 min-w-0">
-                                                <span class="text-xs font-semibold text-gray-800 group-hover:text-gray-900 transition-colors">{{ $pd['nome'] }}</span>
-                                                <p class="text-xs text-gray-400 group-hover:text-gray-500 transition-colors truncate">{{ $pd['descricao'] }}</p>
-                                            </div>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $badgeCor }} transition-colors whitespace-nowrap flex-shrink-0">
-                                                {{ $pd['gratuito'] ? 'Grátis' : $pd['creditos'] . ' cred.' }}
-                                            </span>
-                                        </button>
-                                    @endif
-                                @endforeach
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0 w-6 h-6 rounded border border-gray-300 bg-gray-50 text-gray-700 flex items-center justify-center text-xs font-bold">3</div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">Envie os Arquivos</p>
+                                    <p class="text-[11px] text-gray-500">Arraste ou selecione os arquivos para iniciar a validação do lote.</p>
+                                </div>
                             </div>
-                            <p class="text-xs text-gray-400 mt-2">Clique para ver detalhes.</p>
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0 w-6 h-6 rounded border border-gray-300 bg-gray-50 text-gray-700 flex items-center justify-center text-xs font-bold">4</div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">Extração Fiscal</p>
+                                    <p class="text-[11px] text-gray-500">O sistema identifica participantes, notas e movimentações compatíveis com o documento enviado.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0 w-6 h-6 rounded border border-gray-300 text-white flex items-center justify-center text-xs font-bold" style="background-color: #047857">5</div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">Revisão Operacional</p>
+                                    <p class="text-[11px] text-gray-500">Ao concluir, revise os resultados e avance com monitoramento e consultas dos participantes importados.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        {{-- Modal: Carousel de Planos --}}
-        <div id="modal-planos-carousel" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-            <div class="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] flex flex-col relative overflow-visible">
-                {{-- Modal Header --}}
-                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+            <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
                     <div class="flex items-center gap-2">
-                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                        </svg>
-                        <h3 class="text-base font-semibold text-gray-900">Detalhes dos Planos</h3>
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Últimas Importações</span>
+                        <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ min(($importacoes ?? collect())->count(), 4) }}</span>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <span id="carousel-counter" class="text-xs text-gray-400">1 / {{ count($planosDetalhados) }}</span>
-                        <button type="button" id="btn-fechar-carousel" class="p-1 text-gray-400 hover:text-gray-600 transition-colors">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </div>
+                    <a href="/app/importacao/historico" data-link class="text-[10px] font-semibold text-gray-600 hover:text-gray-900 hover:underline uppercase tracking-wide">Abrir histórico</a>
                 </div>
-
-                {{-- Navigation arrows (overlay) --}}
-                <button type="button" id="swiper-planos-prev" class="absolute -left-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:bg-white hover:text-gray-700 hover:shadow-lg transition-all cursor-pointer">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                    </svg>
-                </button>
-                <button type="button" id="swiper-planos-next" class="absolute -right-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:bg-white hover:text-gray-700 hover:shadow-lg transition-all cursor-pointer">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                </button>
-
-                {{-- Swiper Carousel --}}
-                <div class="flex-1 overflow-hidden relative">
-                    <div class="swiper h-full" id="swiper-planos">
-                        <div class="swiper-wrapper">
-                            @foreach($planosDetalhados as $idx => $pd)
-                                @php $cores = $corClasses[$pd['cor']]; @endphp
-                                <div class="swiper-slide">
-                                    <div class="p-5 overflow-y-auto" style="max-height: calc(90vh - 200px);">
-                                        {{-- Plan header --}}
-                                        <div class="flex items-center gap-3 mb-3">
-                                            <div class="flex-shrink-0 w-9 h-9 rounded-lg {{ $cores['bg'] }} flex items-center justify-center">
-                                                <svg class="w-[18px] h-[18px] {{ $cores['icon'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $pd['icone'] }}"></path>
-                                                </svg>
-                                            </div>
-                                            <div class="flex-1">
-                                                <h4 class="text-base font-bold text-gray-900">{{ $pd['nome'] }}</h4>
-                                                @if($pd['promo'] ?? false)
-                                                    <span class="text-sm text-amber-700 font-semibold">{{ $pd['creditos'] }} cred./CNPJ</span>
-                                                @else
-                                                    <span class="text-sm {{ $pd['gratuito'] ? 'text-green-600 font-medium' : 'text-gray-500' }}">
-                                                        {{ $pd['gratuito'] ? 'Gratuito' : $pd['creditos'] . ' créditos/CNPJ' }}
-                                                    </span>
-                                                @endif
-                                            </div>
-                                            @if($pd['promo'] ?? false)
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">{{ $pd['creditos'] }} cred.</span>
-                                            @elseif($pd['gratuito'])
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Grátis</span>
-                                            @else
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $cores['badge'] }}">{{ $pd['creditos'] }} cred.</span>
+                @if(($importacoes ?? collect())->isEmpty())
+                    <div class="p-4 sm:p-5">
+                        <p class="text-sm text-gray-700">Nenhuma importação registrada ainda.</p>
+                        <p class="text-xs text-gray-500 mt-1">As próximas operações concluídas aparecerão aqui.</p>
+                    </div>
+                @else
+                    <div class="divide-y divide-gray-100">
+                        @foreach(($importacoes ?? collect())->take(4) as $recentImp)
+                            @php
+                                $recentTipoBadge = match(strtoupper($recentImp->tipo_documento ?? '')) {
+                                    'NFE' => ['label' => 'NF-e', 'hex' => '#0f766e'],
+                                    'NFSE' => ['label' => 'NFS-e', 'hex' => '#4338ca'],
+                                    'CTE' => ['label' => 'CT-e', 'hex' => '#374151'],
+                                    default => ['label' => 'XML', 'hex' => '#374151'],
+                                };
+                                $recentStatus = match($recentImp->status) {
+                                    'concluido' => ['label' => 'Concluído', 'hex' => '#047857'],
+                                    'processando' => ['label' => 'Processando', 'hex' => '#d97706'],
+                                    'erro' => ['label' => 'Erro', 'hex' => '#dc2626'],
+                                    default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
+                                };
+                            @endphp
+                            <a href="/app/importacao/xml/{{ $recentImp->id }}" data-link class="block px-4 py-3 hover:bg-gray-50/50 transition-colors">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $recentTipoBadge['hex'] }}">{{ $recentTipoBadge['label'] }}</span>
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $recentStatus['hex'] }}">{{ $recentStatus['label'] }}</span>
+                                        </div>
+                                        <p class="text-sm text-gray-900 mt-2 truncate">{{ $recentImp->arquivo ?? ('Importação #' . $recentImp->id) }}</p>
+                                        <p class="text-[11px] text-gray-500 mt-1">
+                                            {{ optional($recentImp->created_at)->format('d/m/Y H:i') }}
+                                            @if(!empty($recentImp->total_xmls))
+                                                · {{ number_format($recentImp->total_xmls, 0, ',', '.') }} XMLs
                                             @endif
-                                        </div>
-
-                                        {{-- Description --}}
-                                        <p class="text-sm text-gray-600 mb-3">{{ $pd['descricao'] }}</p>
-
-                                        @if($pd['promo'] ?? false)
-                                            <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-lg mb-3">
-                                                <p class="text-xs font-semibold text-amber-800">&#x1f3f7;&#xfe0e; Oferta por tempo limitado</p>
-                                                <p class="text-xs text-amber-700 mt-0.5">Todas as CNDs por {{ $pd['creditos'] }} créd./CNPJ — aproveite antes do reajuste.</p>
-                                            </div>
-                                        @endif
-
-                                        {{-- Consultas incluidas --}}
-                                        <div class="mb-3">
-                                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Consultas incluídas</p>
-                                            <ul class="space-y-1">
-                                                @foreach($pd['consultas'] as $consulta)
-                                                    <li class="flex items-start gap-2 text-sm text-gray-700">
-                                                        <svg class="w-4 h-4 {{ $cores['icon'] }} mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                        </svg>
-                                                        <span>{{ $consulta }}</span>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        </div>
-
-                                        {{-- Quando usar --}}
-                                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-100 mb-4">
-                                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Quando usar</p>
-                                            <ul class="space-y-1">
-                                                @foreach($pd['casos_uso'] as $caso)
-                                                    <li class="flex items-start gap-2 text-xs text-gray-600">
-                                                        <svg class="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                                        </svg>
-                                                        <span>{{ $caso }}</span>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        </div>
+                                        </p>
                                     </div>
+                                    <span class="text-[10px] text-gray-500 uppercase tracking-wide whitespace-nowrap">{{ optional($recentImp->created_at)->diffForHumans() }}</span>
                                 </div>
-                            @endforeach
-                        </div>
+                            </a>
+                        @endforeach
                     </div>
-                </div>
-
-                {{-- Pagination dots --}}
-                <div class="px-6 py-3 border-t border-gray-100 flex-shrink-0">
-                    <div id="swiper-planos-pagination" class="flex justify-center"></div>
-                </div>
+                @endif
             </div>
         </div>
 
         {{-- Secao de Progresso (inicialmente oculta) --}}
         <div id="importacao-progresso" class="hidden">
-            <div id="progresso-card" class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                {{-- Header --}}
-                <div class="flex items-start gap-3 mb-4">
-                    <div id="progresso-icon" class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                        <svg class="w-5 h-5 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                        </svg>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <h3 id="progresso-titulo" class="font-semibold text-gray-900 truncate">
-                            Processando XMLs...
-                        </h3>
-                        <p id="progresso-subtitulo" class="text-sm text-gray-500">
-                            Aguarde enquanto os arquivos sao processados.
-                        </p>
-                    </div>
+            <div id="progresso-card" class="bg-white rounded border border-gray-300 overflow-hidden">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Processamento</span>
                 </div>
-
-                {{-- Barra de progresso --}}
-                <div class="mb-3">
-                    <div class="flex justify-between text-sm mb-1">
-                        <span id="progresso-mensagem" class="text-gray-600">Iniciando...</span>
-                        <span id="progresso-porcentagem" class="font-medium text-gray-900">0%</span>
-                    </div>
-                    <div class="bg-gray-100 rounded-full h-2 overflow-hidden">
-                        <div id="barra-progresso" class="bg-blue-600 h-full rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                {{-- Stats em tempo real --}}
-                <div id="progresso-stats" class="grid grid-cols-5 gap-2 mb-4 hidden">
-                    <div class="text-center p-2 bg-gray-50 rounded-lg">
-                        <p class="text-lg font-bold text-gray-900" id="stat-xmls-processados">0</p>
-                        <p class="text-xs text-gray-500">Processados</p>
-                    </div>
-                    <div class="text-center p-2 bg-green-50 rounded-lg">
-                        <p class="text-lg font-bold text-green-600" id="stat-notas-novas">0</p>
-                        <p class="text-xs text-gray-500">Novas</p>
-                    </div>
-                    <div class="text-center p-2 bg-amber-50 rounded-lg">
-                        <p class="text-lg font-bold text-amber-600" id="stat-notas-duplicadas">0</p>
-                        <p class="text-xs text-gray-500">Duplicadas</p>
-                    </div>
-                    <div class="text-center p-2 bg-blue-50 rounded-lg">
-                        <p class="text-lg font-bold text-blue-600" id="stat-participantes-novos">0</p>
-                        <p class="text-xs text-gray-500">Part. Novos</p>
-                    </div>
-                    <div class="text-center p-2 bg-red-50 rounded-lg">
-                        <p class="text-lg font-bold text-red-600" id="stat-erros">0</p>
-                        <p class="text-xs text-gray-500">Erros</p>
-                    </div>
-                </div>
-
-                {{-- Nota atual sendo processada --}}
-                <div id="progresso-nota-atual" class="hidden mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                    <div class="flex items-center gap-2 text-sm">
-                        <svg class="w-4 h-4 text-blue-500 animate-pulse flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        <span class="text-blue-700 font-medium" id="nota-atual-info">-</span>
-                    </div>
-                </div>
-
-                {{-- Secao de Erro --}}
-                <div id="progresso-erro" class="hidden pt-3 border-t border-red-100">
-                    <p id="progresso-erro-msg" class="text-sm text-gray-700 mb-3">
-                        Ocorreu um erro durante o processamento.
-                    </p>
-                    <div class="flex gap-3">
-                        <button type="button"
-                                id="btn-tentar-novamente"
-                                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                <div class="p-4">
+                    {{-- Header --}}
+                    <div class="flex items-start gap-3 mb-4">
+                        <div id="progresso-icon" class="w-9 h-9 rounded border border-gray-300 bg-gray-50 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-gray-700 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                             </svg>
-                            Tentar Novamente
-                        </button>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 id="progresso-titulo" class="text-sm font-bold text-gray-900 uppercase tracking-wide truncate">
+                                Processando XMLs...
+                            </h3>
+                            <p id="progresso-subtitulo" class="text-[11px] text-gray-500">
+                                Aguarde enquanto os arquivos são processados.
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- Barra de progresso --}}
+                    <div class="mb-4">
+                        <div class="flex justify-between text-[11px] mb-1">
+                            <span id="progresso-mensagem" class="text-gray-600">Iniciando...</span>
+                            <span id="progresso-porcentagem" class="font-semibold text-gray-900">0%</span>
+                        </div>
+                        <div class="bg-gray-200 rounded h-2 overflow-hidden">
+                            <div id="barra-progresso" class="bg-gray-800 h-full transition-all duration-500 ease-out" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    {{-- Stats em tempo real --}}
+                    <div id="progresso-stats" class="grid grid-cols-5 divide-x divide-gray-200 border border-gray-200 rounded mb-4 hidden">
+                        <div class="text-center px-2 py-3">
+                            <p class="text-lg font-bold text-gray-900" id="stat-xmls-processados">0</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Processados</p>
+                        </div>
+                        <div class="text-center px-2 py-3">
+                            <p class="text-lg font-bold text-gray-900" id="stat-notas-novas">0</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Novas</p>
+                        </div>
+                        <div class="text-center px-2 py-3">
+                            <p class="text-lg font-bold text-gray-900" id="stat-notas-duplicadas">0</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Duplicadas</p>
+                        </div>
+                        <div class="text-center px-2 py-3">
+                            <p class="text-lg font-bold text-gray-900" id="stat-participantes-novos">0</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Part. Novos</p>
+                        </div>
+                        <div class="text-center px-2 py-3">
+                            <p class="text-lg font-bold text-gray-900" id="stat-erros">0</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Erros</p>
+                        </div>
+                    </div>
+
+                    {{-- Nota atual sendo processada --}}
+                    <div id="progresso-nota-atual" class="hidden mb-4 bg-white border border-gray-300 border-l-4 border-l-gray-400 p-3">
+                        <div class="flex items-center gap-2 text-xs">
+                            <svg class="w-3.5 h-3.5 text-gray-500 animate-pulse flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <span class="text-gray-700 font-medium" id="nota-atual-info">-</span>
+                        </div>
+                    </div>
+
+                    {{-- Secao de Erro --}}
+                    <div id="progresso-erro" class="hidden pt-3 border-t border-gray-200">
+                        <div class="bg-white border border-gray-300 border-l-4 border-l-red-500 p-3 mb-3">
+                            <p id="progresso-erro-msg" class="text-xs text-gray-700">
+                                Ocorreu um erro durante o processamento.
+                            </p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="button"
+                                    id="btn-tentar-novamente"
+                                    class="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-gray-300 bg-white text-gray-600 text-xs font-medium hover:bg-gray-50 transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                                Tentar Novamente
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {{-- Secao de Resultados (aparece apos importacao concluida) --}}
             <div id="resultado-importacao" class="hidden mt-4">
-                <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
-                    {{-- Header dos Resultados - Clean --}}
-                    <div class="px-6 py-4 border-b border-gray-100">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                <h3 class="font-semibold text-gray-900">Importacao Concluida</h3>
-                                <span class="text-sm text-gray-500" id="resultado-resumo"></span>
-                            </div>
-                            <button
-                                type="button"
-                                id="btn-nova-importacao"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition shadow-sm"
-                            >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                </svg>
-                                Nova Importacao
-                            </button>
+                <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                    {{-- Header dos Resultados --}}
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Importação Concluída</span>
+                            <span class="text-[10px] text-gray-400" id="resultado-resumo"></span>
                         </div>
-                    </div>
-
-                    {{-- Metricas Principais - Cards Uniformes --}}
-                    <div class="px-6 py-5 border-b border-gray-100">
-                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                            <div class="bg-gray-50 rounded-lg px-4 py-3 text-center">
-                                <span class="text-2xl font-semibold text-gray-900" id="resultado-xmls">0</span>
-                                <p class="text-xs text-gray-500 mt-0.5">XMLs processados</p>
-                            </div>
-                            <div class="bg-green-50 rounded-lg px-4 py-3 text-center">
-                                <span class="text-2xl font-semibold text-green-600" id="resultado-notas-novas">0</span>
-                                <p class="text-xs text-gray-500 mt-0.5">notas novas</p>
-                            </div>
-                            <div class="bg-amber-50 rounded-lg px-4 py-3 text-center">
-                                <span class="text-2xl font-semibold text-amber-600" id="resultado-notas-duplicadas">0</span>
-                                <p class="text-xs text-gray-500 mt-0.5">duplicadas</p>
-                            </div>
-                            <div class="bg-blue-50 rounded-lg px-4 py-3 text-center">
-                                <span class="text-2xl font-semibold text-blue-600" id="resultado-total-participantes">0</span>
-                                <p class="text-xs text-gray-500 mt-0.5">participantes</p>
-                            </div>
-                            <div class="bg-red-50 rounded-lg px-4 py-3 text-center">
-                                <span class="text-2xl font-semibold text-red-600" id="resultado-xmls-erro">0</span>
-                                <p class="text-xs text-gray-500 mt-0.5">com erro</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Resumo de Titularidade (identificacao de CNPJs) --}}
-                    <div id="resultado-titularidade" class="hidden px-6 py-4 border-b border-gray-100">
-                        <div class="flex items-center gap-2 mb-3">
-                            <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        <button
+                            type="button"
+                            id="btn-nova-importacao"
+                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded text-[11px] font-medium bg-gray-800 text-white hover:bg-gray-700 transition"
+                        >
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                             </svg>
-                            <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Identificacao de CNPJs</h4>
+                            Nova Importação
+                        </button>
+                    </div>
+
+                    {{-- Metricas Principais --}}
+                    <div class="grid grid-cols-2 sm:grid-cols-5 divide-x divide-y sm:divide-y-0 divide-gray-200 border-b border-gray-200">
+                        <div class="px-4 py-3 text-center">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">XMLs Proc.</p>
+                            <p class="text-lg font-bold text-gray-900 mt-0.5" id="resultado-xmls">0</p>
                         </div>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                            <div class="bg-indigo-50 rounded-lg px-4 py-3">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                                    <span class="text-xs font-medium text-indigo-700">Sua Empresa</span>
-                                </div>
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Emitente:</span>
-                                    <span class="font-semibold text-indigo-700" id="tit-propria-emit">0</span>
-                                </div>
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Destinatario:</span>
-                                    <span class="font-semibold text-indigo-700" id="tit-propria-dest">0</span>
-                                </div>
-                            </div>
-                            <div class="bg-emerald-50 rounded-lg px-4 py-3">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                    <span class="text-xs font-medium text-emerald-700">Clientes Cadastrados</span>
-                                </div>
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Emitente:</span>
-                                    <span class="font-semibold text-emerald-700" id="tit-cliente-emit">0</span>
-                                </div>
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Destinatario:</span>
-                                    <span class="font-semibold text-emerald-700" id="tit-cliente-dest">0</span>
-                                </div>
-                            </div>
-                            <div class="bg-gray-100 rounded-lg px-4 py-3">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="w-2 h-2 rounded-full bg-gray-400"></span>
-                                    <span class="text-xs font-medium text-gray-600">Terceiros</span>
-                                </div>
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Emitente:</span>
-                                    <span class="font-semibold text-gray-700" id="tit-terceiro-emit">0</span>
-                                </div>
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Destinatario:</span>
-                                    <span class="font-semibold text-gray-700" id="tit-terceiro-dest">0</span>
-                                </div>
-                            </div>
+                        <div class="px-4 py-3 text-center">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas Novas</p>
+                            <p class="text-lg font-bold text-gray-900 mt-0.5" id="resultado-notas-novas">0</p>
+                        </div>
+                        <div class="px-4 py-3 text-center">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Duplicadas</p>
+                            <p class="text-lg font-bold text-gray-900 mt-0.5" id="resultado-notas-duplicadas">0</p>
+                        </div>
+                        <div class="px-4 py-3 text-center">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participantes</p>
+                            <p class="text-lg font-bold text-gray-900 mt-0.5" id="resultado-total-participantes">0</p>
+                        </div>
+                        <div class="px-4 py-3 text-center col-span-2 sm:col-span-1">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Com Erro</p>
+                            <p class="text-lg font-bold text-gray-900 mt-0.5" id="resultado-xmls-erro">0</p>
                         </div>
                     </div>
 
-                    {{-- CNPJs Novos (preview para usuario decidir) --}}
-                    <div id="resultado-cnpjs-novos-container" class="hidden px-6 py-4 border-b border-gray-100">
-                        <div class="flex items-center justify-between mb-3">
+                    {{-- CNPJs Novos --}}
+                    <div id="resultado-cnpjs-novos-container" class="hidden px-4 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between mb-3 gap-3">
                             <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
-                                </svg>
-                                <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide">CNPJs Novos Encontrados</h4>
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-orange-100 text-orange-700" id="cnpjs-novos-count-badge">0</span>
+                                <h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">CNPJs Novos Encontrados</h4>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706" id="cnpjs-novos-count-badge">0</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <button type="button" id="btn-selecionar-todos-cnpjs" class="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                                <button type="button" id="btn-selecionar-todos-cnpjs" class="text-[11px] text-gray-600 hover:text-gray-900 hover:underline font-medium">
                                     Selecionar todos
                                 </button>
                                 <button type="button" id="btn-salvar-cnpjs-selecionados"
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-orange-600 text-white hover:bg-orange-700 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded text-[11px] font-medium bg-gray-800 text-white hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled>
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
                                     <span id="btn-salvar-cnpjs-text">Salvar Selecionados</span>
                                 </button>
                             </div>
                         </div>
-                        <p class="text-sm text-gray-600 mb-3">
-                            Estes CNPJs nao existiam no sistema. Selecione quais deseja salvar como participante ou cliente.
+                        <p class="text-xs text-gray-500 mb-3">
+                            Estes CNPJs não existiam no sistema. Selecione quais deseja salvar como participante ou cliente.
                         </p>
-                        <div id="cnpjs-novos-lista" class="overflow-x-auto max-h-[280px] overflow-y-auto border border-orange-100 rounded-lg">
+                        <div id="cnpjs-novos-lista" class="overflow-x-auto max-h-[280px] overflow-y-auto border border-gray-200 rounded">
                             <table class="min-w-full text-xs">
-                                <thead class="sticky top-0 bg-orange-50">
-                                    <tr>
-                                        <th class="px-3 py-2 text-left font-medium text-orange-700 w-8">
-                                            <input type="checkbox" id="cnpjs-novos-check-all" class="w-3.5 h-3.5 text-orange-600 rounded">
+                                <thead class="sticky top-0">
+                                    <tr class="border-b border-gray-300">
+                                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50 w-8">
+                                            <input type="checkbox" id="cnpjs-novos-check-all" class="w-3.5 h-3.5 text-gray-700 rounded border-gray-300">
                                         </th>
-                                        <th class="px-3 py-2 text-left font-medium text-orange-700">CNPJ</th>
-                                        <th class="px-3 py-2 text-left font-medium text-orange-700">Razao Social</th>
-                                        <th class="px-3 py-2 text-center font-medium text-orange-700">UF</th>
-                                        <th class="px-3 py-2 text-center font-medium text-orange-700">Polo</th>
-                                        <th class="px-3 py-2 text-center font-medium text-orange-700">Notas</th>
-                                        <th class="px-3 py-2 text-left font-medium text-orange-700">Salvar como</th>
+                                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">CNPJ</th>
+                                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Razão Social</th>
+                                        <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">UF</th>
+                                        <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Polo</th>
+                                        <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Notas</th>
+                                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Salvar como</th>
                                     </tr>
                                 </thead>
-                                <tbody id="cnpjs-novos-tabela-body" class="bg-white divide-y divide-orange-100">
-                                </tbody>
+                                <tbody id="cnpjs-novos-tabela-body" class="divide-y divide-gray-100"></tbody>
                             </table>
                         </div>
-                        <div id="cnpjs-novos-truncated-msg" class="hidden mt-2 text-xs text-orange-600">
+                        <div id="cnpjs-novos-truncated-msg" class="hidden mt-2 text-[11px] text-gray-500">
                             Exibindo 500 de <span id="cnpjs-novos-total-count">0</span> CNPJs novos.
                         </div>
-                        <div id="cnpjs-novos-salvos-msg" class="hidden mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                            <div class="flex items-center gap-2 text-sm text-green-700">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                <span id="cnpjs-novos-salvos-text">CNPJs salvos com sucesso!</span>
-                            </div>
+                        <div id="cnpjs-novos-salvos-msg" class="hidden mt-3 bg-white border border-gray-300 border-l-4 border-l-gray-400 p-3">
+                            <p class="text-xs text-gray-700" id="cnpjs-novos-salvos-text">CNPJs salvos com sucesso!</p>
                         </div>
                     </div>
 
                     {{-- Duplicadas Detectadas --}}
-                    <div id="resultado-duplicadas-container" class="hidden px-6 py-4 border-b border-gray-100">
-                        <div class="flex items-center justify-between mb-3">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                                </svg>
-                                <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Notas Duplicadas Ignoradas</h4>
-                            </div>
-                            <button type="button" id="btn-toggle-duplicadas" class="text-xs text-amber-600 hover:text-amber-700 font-medium">
+                    <div id="resultado-duplicadas-container" class="hidden px-4 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between mb-3 gap-3">
+                            <h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas Duplicadas Ignoradas</h4>
+                            <button type="button" id="btn-toggle-duplicadas" class="text-[11px] text-gray-600 hover:text-gray-900 hover:underline font-medium">
                                 Ver detalhes
                             </button>
                         </div>
-                        <p class="text-sm text-gray-600 mb-2">
-                            <span id="duplicadas-count" class="font-semibold text-amber-600">0</span> notas ja existiam no sistema e foram ignoradas.
+                        <p class="text-xs text-gray-600 mb-2">
+                            <span id="duplicadas-count" class="font-bold text-gray-900">0</span> notas já existiam no sistema e foram ignoradas.
                         </p>
-                        <div id="duplicadas-lista" class="hidden overflow-x-auto max-h-[180px] overflow-y-auto border border-amber-100 rounded-lg">
+                        <div id="duplicadas-lista" class="hidden overflow-x-auto max-h-[180px] overflow-y-auto border border-gray-200 rounded">
                             <table class="min-w-full text-xs">
-                                <thead class="sticky top-0 bg-amber-50">
-                                    <tr>
-                                        <th class="px-3 py-2 text-left font-medium text-amber-700">N/Serie</th>
-                                        <th class="px-3 py-2 text-left font-medium text-amber-700">Emitente</th>
-                                        <th class="px-3 py-2 text-left font-medium text-amber-700">Data</th>
-                                        <th class="px-3 py-2 text-right font-medium text-amber-700">Valor</th>
-                                        <th class="px-3 py-2 text-left font-medium text-amber-700">Importada em</th>
+                                <thead class="sticky top-0">
+                                    <tr class="border-b border-gray-300">
+                                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">N/Série</th>
+                                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Emitente</th>
+                                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Data</th>
+                                        <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Valor</th>
+                                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Importada em</th>
                                     </tr>
                                 </thead>
-                                <tbody id="duplicadas-tabela-body" class="bg-white divide-y divide-amber-100">
-                                    {{-- Duplicadas serao inseridas aqui via JS --}}
-                                </tbody>
+                                <tbody id="duplicadas-tabela-body" class="divide-y divide-gray-100"></tbody>
                             </table>
                         </div>
                     </div>
 
-                    {{-- Resumo Financeiro (visivel quando salvar_movimentacoes=true) --}}
-                    <div id="resultado-financeiro" class="hidden px-6 py-4 border-b border-gray-100">
-                        <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Resumo Financeiro</h4>
-                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-3">
-                            <div class="bg-emerald-50 rounded-lg px-4 py-3 text-center">
-                                <span class="text-lg font-semibold text-emerald-700" id="resultado-valor-total">R$ 0,00</span>
-                                <p class="text-xs text-emerald-600 mt-0.5">Valor Total</p>
+                    {{-- Resumo Financeiro --}}
+                    <div id="resultado-financeiro" class="hidden px-4 py-4 border-b border-gray-200">
+                        <h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-3">Resumo Financeiro</h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-5 divide-x divide-y sm:divide-y-0 divide-gray-200 border border-gray-200 rounded mb-3">
+                            <div class="px-4 py-3 text-center">
+                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Valor Total</p>
+                                <p class="text-sm font-bold text-gray-900 font-mono mt-0.5" id="resultado-valor-total">R$ 0,00</p>
                             </div>
-                            <div class="bg-gray-50 rounded-lg px-4 py-3 text-center">
-                                <span class="text-lg font-semibold text-gray-700" id="resultado-qtd-entradas">0</span>
-                                <p class="text-xs text-gray-500 mt-0.5">Entradas</p>
+                            <div class="px-4 py-3 text-center">
+                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Entradas</p>
+                                <p class="text-sm font-bold text-gray-900 font-mono mt-0.5" id="resultado-qtd-entradas">0</p>
                             </div>
-                            <div class="bg-gray-50 rounded-lg px-4 py-3 text-center">
-                                <span class="text-lg font-semibold text-gray-700" id="resultado-qtd-saidas">0</span>
-                                <p class="text-xs text-gray-500 mt-0.5">Saidas</p>
+                            <div class="px-4 py-3 text-center">
+                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saídas</p>
+                                <p class="text-sm font-bold text-gray-900 font-mono mt-0.5" id="resultado-qtd-saidas">0</p>
                             </div>
-                            <div class="bg-amber-50 rounded-lg px-4 py-3 text-center">
-                                <span class="text-lg font-semibold text-amber-700" id="resultado-qtd-devolucoes">0</span>
-                                <p class="text-xs text-amber-600 mt-0.5">Devolucoes</p>
+                            <div class="px-4 py-3 text-center">
+                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Devoluções</p>
+                                <p class="text-sm font-bold text-gray-900 font-mono mt-0.5" id="resultado-qtd-devolucoes">0</p>
                             </div>
-                            <div class="bg-gray-50 rounded-lg px-4 py-3 text-center">
-                                <span class="text-lg font-semibold text-gray-700" id="resultado-ticket-medio">R$ 0,00</span>
-                                <p class="text-xs text-gray-500 mt-0.5">Ticket Medio</p>
+                            <div class="px-4 py-3 text-center col-span-2 sm:col-span-1">
+                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Ticket Médio</p>
+                                <p class="text-sm font-bold text-gray-900 font-mono mt-0.5" id="resultado-ticket-medio">R$ 0,00</p>
                             </div>
                         </div>
-                        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 bg-gray-50 rounded-lg px-4 py-2">
-                            <span class="font-medium text-gray-600">Tributos:</span>
-                            <span>ICMS <span class="font-semibold text-gray-700" id="resultado-icms-total">R$ 0</span></span>
+                        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-200 rounded px-4 py-2">
+                            <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Tributos</span>
+                            <span>ICMS <span class="font-mono font-semibold text-gray-900" id="resultado-icms-total">R$ 0</span></span>
                             <span class="text-gray-300">|</span>
-                            <span>PIS/COFINS <span class="font-semibold text-gray-700" id="resultado-pis-cofins">R$ 0</span></span>
+                            <span>PIS/COFINS <span class="font-mono font-semibold text-gray-900" id="resultado-pis-cofins">R$ 0</span></span>
                             <span class="text-gray-300">|</span>
-                            <span>IPI <span class="font-semibold text-gray-700" id="resultado-ipi">R$ 0</span></span>
+                            <span>IPI <span class="font-mono font-semibold text-gray-900" id="resultado-ipi">R$ 0</span></span>
                             <span class="text-gray-300">|</span>
-                            <span><span class="font-semibold text-gray-700" id="resultado-ufs-count">0</span> UFs</span>
+                            <span><span class="font-mono font-semibold text-gray-900" id="resultado-ufs-count">0</span> UFs</span>
                         </div>
                     </div>
 
-                    {{-- Notas Fiscais (visivel quando salvar_movimentacoes=true) --}}
-                    <div id="resultado-notas-container" class="hidden px-6 py-4 border-b border-gray-100">
-                        <div class="flex items-center justify-between mb-3">
-                            <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Notas Fiscais</h4>
-                            <div class="flex gap-1 bg-gray-100 rounded-lg p-0.5" id="notas-filtros">
-                                <button type="button" class="notas-filtro-btn px-2.5 py-1 text-xs rounded-md bg-white text-gray-900 font-medium shadow-sm" data-filtro="todas">
+                    {{-- Notas Fiscais --}}
+                    <div id="resultado-notas-container" class="hidden px-4 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
+                            <h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas Fiscais</h4>
+                            <div class="flex gap-0 border border-gray-300 rounded overflow-hidden" id="notas-filtros">
+                                <button type="button" class="notas-filtro-btn px-2.5 py-1 text-[11px] bg-gray-800 text-white font-medium" data-filtro="todas">
                                     Todas <span id="notas-count-todas">0</span>
                                 </button>
-                                <button type="button" class="notas-filtro-btn px-2.5 py-1 text-xs rounded-md text-gray-600 hover:text-gray-900" data-filtro="entradas">
+                                <button type="button" class="notas-filtro-btn px-2.5 py-1 text-[11px] bg-white text-gray-600 hover:bg-gray-50 border-l border-gray-300" data-filtro="entradas">
                                     Entrada <span id="notas-count-entradas">0</span>
                                 </button>
-                                <button type="button" class="notas-filtro-btn px-2.5 py-1 text-xs rounded-md text-gray-600 hover:text-gray-900" data-filtro="saidas">
+                                <button type="button" class="notas-filtro-btn px-2.5 py-1 text-[11px] bg-white text-gray-600 hover:bg-gray-50 border-l border-gray-300" data-filtro="saidas">
                                     Saída <span id="notas-count-saidas">0</span>
                                 </button>
-                                <button type="button" class="notas-filtro-btn px-2.5 py-1 text-xs rounded-md text-gray-600 hover:text-gray-900" data-filtro="devolucoes">
+                                <button type="button" class="notas-filtro-btn px-2.5 py-1 text-[11px] bg-white text-gray-600 hover:bg-gray-50 border-l border-gray-300" data-filtro="devolucoes">
                                     Dev <span id="notas-count-devolucoes">0</span>
                                 </button>
                             </div>
                         </div>
-                        <div class="overflow-x-auto max-h-[220px] overflow-y-auto border border-gray-100 rounded-lg">
+                        <div class="overflow-x-auto max-h-[220px] overflow-y-auto border border-gray-200 rounded">
                             <table class="min-w-full text-xs">
-                                <thead class="sticky top-0 bg-gray-50">
-                                    <tr>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">N/Serie</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Emissao</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Emitente</th>
-                                        <th class="px-3 py-2 text-right font-medium text-gray-600">Valor</th>
-                                        <th class="px-3 py-2 text-right font-medium text-gray-600">ICMS</th>
-                                        <th class="px-3 py-2 text-right font-medium text-gray-600">PIS</th>
-                                        <th class="px-3 py-2 text-right font-medium text-gray-600">COFINS</th>
-                                        <th class="px-3 py-2 text-right font-medium text-gray-600">IPI</th>
-                                        <th class="px-3 py-2 text-center font-medium text-gray-600">Tipo</th>
+                                <thead class="sticky top-0">
+                                    <tr class="border-b border-gray-300">
+                                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">N/Série</th>
+                                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Emissão</th>
+                                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Emitente</th>
+                                        <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Valor</th>
+                                        <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">ICMS</th>
+                                        <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">PIS</th>
+                                        <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">COFINS</th>
+                                        <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">IPI</th>
+                                        <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Tipo</th>
                                     </tr>
                                 </thead>
-                                <tbody id="notas-tabela-body" class="bg-white divide-y divide-gray-100">
-                                    {{-- Notas serao inseridas aqui via JS --}}
-                                </tbody>
+                                <tbody id="notas-tabela-body" class="divide-y divide-gray-100"></tbody>
                             </table>
                         </div>
-                        <p id="notas-empty" class="hidden text-center text-gray-400 text-sm py-4">Nenhuma nota fiscal encontrada.</p>
+                        <p id="notas-empty" class="hidden text-center text-gray-400 text-xs py-4">Nenhuma nota fiscal encontrada.</p>
                     </div>
 
                     {{-- Participantes Importados --}}
-                    <div id="resultado-participantes-container" class="hidden px-6 py-4 border-b border-gray-100">
-                        <div class="flex items-center justify-between mb-3">
-                            <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Participantes</h4>
-                            <div class="flex gap-1 bg-gray-100 rounded-lg p-0.5" id="participantes-filtros">
-                                <button type="button" class="part-filtro-btn px-2.5 py-1 text-xs rounded-md bg-white text-gray-900 font-medium shadow-sm" data-filtro="todos">
+                    <div id="resultado-participantes-container" class="hidden px-4 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
+                            <h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participantes</h4>
+                            <div class="flex gap-0 border border-gray-300 rounded overflow-hidden" id="participantes-filtros">
+                                <button type="button" class="part-filtro-btn px-2.5 py-1 text-[11px] bg-gray-800 text-white font-medium" data-filtro="todos">
                                     Todos <span id="part-count-todos">0</span>
                                 </button>
-                                <button type="button" class="part-filtro-btn px-2.5 py-1 text-xs rounded-md text-gray-600 hover:text-gray-900" data-filtro="novos">
+                                <button type="button" class="part-filtro-btn px-2.5 py-1 text-[11px] bg-white text-gray-600 hover:bg-gray-50 border-l border-gray-300" data-filtro="novos">
                                     Novos <span id="part-count-novos">0</span>
                                 </button>
-                                <button type="button" class="part-filtro-btn px-2.5 py-1 text-xs rounded-md text-gray-600 hover:text-gray-900" data-filtro="atualizados">
+                                <button type="button" class="part-filtro-btn px-2.5 py-1 text-[11px] bg-white text-gray-600 hover:bg-gray-50 border-l border-gray-300" data-filtro="atualizados">
                                     Já Reg. <span id="part-count-atualizados">0</span>
                                 </button>
                             </div>
                         </div>
-                        <div class="overflow-x-auto max-h-[220px] overflow-y-auto border border-gray-100 rounded-lg">
+                        <div class="overflow-x-auto max-h-[220px] overflow-y-auto border border-gray-200 rounded">
                             <table class="min-w-full text-xs">
-                                <thead class="sticky top-0 bg-gray-50">
-                                    <tr>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Razao Social</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">CNPJ</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Endereco</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">IE</th>
-                                        <th class="px-3 py-2 text-center font-medium text-gray-600">Status</th>
+                                <thead class="sticky top-0">
+                                    <tr class="border-b border-gray-300">
+                                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Razão Social</th>
+                                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">CNPJ</th>
+                                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Endereço</th>
+                                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">IE</th>
+                                        <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody id="participantes-tabela-body" class="bg-white divide-y divide-gray-100">
-                                    {{-- Participantes serao inseridos aqui via JS --}}
-                                </tbody>
+                                <tbody id="participantes-tabela-body" class="divide-y divide-gray-100"></tbody>
                             </table>
                         </div>
-                        <p id="participantes-empty" class="hidden text-center text-gray-400 text-sm py-4">Nenhum participante encontrado.</p>
-                        <p id="participantes-loading" class="hidden text-center text-gray-400 text-sm py-4">
+                        <p id="participantes-empty" class="hidden text-center text-gray-400 text-xs py-4">Nenhum participante encontrado.</p>
+                        <p id="participantes-loading" class="hidden text-center text-gray-400 text-xs py-4">
                             <svg class="inline w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
@@ -958,33 +582,24 @@
                         </p>
                     </div>
 
-                    {{-- Erros detalhados (se houver) --}}
-                    <div id="resultado-erros-container" class="hidden px-6 py-4 border-b border-gray-100">
-                        <div class="flex items-center gap-2 mb-2">
-                            <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                            </svg>
-                            <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Erros</h4>
-                        </div>
-                        <div id="resultado-erros-lista" class="max-h-[120px] overflow-y-auto space-y-1 text-xs">
-                            {{-- Erros serao listados aqui --}}
-                        </div>
+                    {{-- Erros detalhados --}}
+                    <div id="resultado-erros-container" class="hidden px-4 py-4 border-b border-gray-200">
+                        <h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Erros</h4>
+                        <div id="resultado-erros-lista" class="max-h-[120px] overflow-y-auto space-y-1 text-xs text-gray-700 bg-white border border-gray-300 border-l-4 border-l-red-500 p-3"></div>
                     </div>
 
-                    {{-- Acoes - Simplificado --}}
-                    <div class="px-6 py-4">
-                        <div class="flex justify-end">
-                            <a
-                                href="/app/dashboard"
-                                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition"
-                                data-link
-                            >
-                                Ver Participantes
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                            </a>
-                        </div>
+                    {{-- Acoes --}}
+                    <div class="px-4 py-3 bg-gray-50 flex justify-end">
+                        <a
+                            href="/app/dashboard"
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded bg-gray-800 text-white text-sm font-medium hover:bg-gray-700 transition"
+                            data-link
+                        >
+                            Ver Participantes
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -992,22 +607,30 @@
     </div>
 </div>
 
-<style>
-    #swiper-planos-pagination .swiper-pagination-bullet {
-        width: 8px;
-        height: 8px;
-        background: #d1d5db;
-        opacity: 1;
-        margin: 0 4px;
-        border-radius: 50%;
-        transition: all 0.2s;
-    }
-    #swiper-planos-pagination .swiper-pagination-bullet-active {
-        background: #3b82f6;
-        width: 20px;
-        border-radius: 4px;
-    }
-</style>
+<div id="xml-em-breve-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="xml-em-breve-modal-title" role="dialog" aria-modal="true">
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div id="xml-em-breve-modal-overlay" class="fixed inset-0 bg-black/50 transition-opacity"></div>
+        <div class="relative w-full max-w-lg overflow-hidden rounded border border-gray-300 bg-white shadow-xl">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Aviso de Desenvolvimento</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Em Breve</span>
+            </div>
+            <div class="p-5">
+                <h3 id="xml-em-breve-modal-title" class="text-base font-bold text-gray-900 uppercase tracking-wide">Esta view ainda não está funcionando</h3>
+                <p class="mt-3 text-sm text-gray-700">A importação de XMLs continua indisponível para uso. Os controles exibidos nesta tela estão apenas como referência visual e não executam validação, upload ou processamento.</p>
+                <p class="mt-2 text-sm text-gray-700">Enquanto o desenvolvimento não é retomado, utilize outras áreas do painel normalmente. O histórico permanece acessível para consulta.</p>
+                <div class="mt-5 flex justify-end gap-3">
+                    <a href="/app/dashboard" data-link class="inline-flex items-center gap-2 rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50">
+                        Voltar ao painel
+                    </a>
+                    <button type="button" id="xml-em-breve-modal-close" class="inline-flex items-center gap-2 rounded bg-gray-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-700">
+                        Entendi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 (function() {
@@ -1082,6 +705,10 @@
         const modoEnvioRadios = document.querySelectorAll('input[name="modo-envio"]');
         const uploadSection = document.getElementById('upload-section');
         const progressoContainer = document.getElementById('importacao-progresso');
+        const xmlEmBreveModal = document.getElementById('xml-em-breve-modal');
+        const xmlEmBreveModalClose = document.getElementById('xml-em-breve-modal-close');
+        const xmlEmBreveModalOverlay = document.getElementById('xml-em-breve-modal-overlay');
+        const viewEmBreve = container.dataset.emBreve === '1';
 
         // Limites
         const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -1103,6 +730,57 @@
         let dadosCnpjsNovos = [];
         let salvarMovimentacoesAtivo = false;
 
+        function closeEmBreveModal() {
+            if (xmlEmBreveModal) {
+                xmlEmBreveModal.classList.add('hidden');
+            }
+        }
+
+        function openEmBreveModal() {
+            if (xmlEmBreveModal) {
+                xmlEmBreveModal.classList.remove('hidden');
+            }
+        }
+
+        function bloquearViewEmBreve() {
+            tipoDocRadios.forEach(radio => {
+                radio.checked = false;
+                radio.disabled = true;
+            });
+
+            modoEnvioRadios.forEach(radio => {
+                radio.checked = false;
+                radio.disabled = true;
+            });
+
+            if (dropzone) {
+                dropzone.classList.remove('bg-white', 'hover:border-gray-500', 'hover:bg-gray-50', 'cursor-pointer');
+                dropzone.classList.add('bg-gray-50', 'opacity-60', 'cursor-not-allowed', 'pointer-events-none');
+                dropzone.setAttribute('aria-disabled', 'true');
+            }
+
+            if (fileInput) {
+                fileInput.disabled = true;
+                fileInput.value = '';
+            }
+
+            if (importarBtn) {
+                importarBtn.disabled = true;
+                const btnText = importarBtn.querySelector('.btn-text');
+                if (btnText) btnText.textContent = 'Em Breve';
+            }
+
+            if (filesList) {
+                filesList.classList.add('hidden');
+            }
+
+            if (errorMessage) {
+                errorMessage.classList.add('hidden');
+            }
+
+            selectedFiles = [];
+        }
+
         // Funcao para obter tipo de documento selecionado
         function getSelectedTipoDoc() {
             const selected = Array.from(tipoDocRadios).find(radio => radio.checked);
@@ -1117,36 +795,21 @@
 
         // Atualizar visual dos labels de tipo documento
         function updateTipoDocLabels() {
-            const selectedValue = getSelectedTipoDoc();
-            document.querySelectorAll('.tipo-doc-label').forEach(function(label) {
-                const radio = label.querySelector('input[type="radio"]');
-                if (radio && radio.value === selectedValue) {
-                    label.classList.remove('border-gray-200', 'hover:border-gray-300', 'hover:bg-gray-500/8');
-                    label.classList.add('border-blue-500', 'bg-blue-50/60', 'ring-2', 'ring-blue-100');
-                } else {
-                    label.classList.remove('border-blue-500', 'bg-blue-50/60', 'ring-2', 'ring-blue-100');
-                    label.classList.add('border-gray-200', 'hover:border-gray-300', 'hover:bg-gray-500/8');
-                }
-            });
+            // Visual toggle handled via has-[:checked] in markup — no runtime class swap needed.
         }
 
         // Atualizar visual dos labels de modo de envio
         function updateModoEnvioLabels() {
-            const selectedValue = getSelectedModoEnvio();
-            document.querySelectorAll('.modo-envio-label').forEach(function(label) {
-                const radio = label.querySelector('input[type="radio"]');
-                if (radio && radio.value === selectedValue) {
-                    label.classList.remove('border-gray-200', 'hover:border-gray-300', 'hover:bg-gray-500/8');
-                    label.classList.add('border-blue-500', 'bg-blue-50/60', 'ring-2', 'ring-blue-100');
-                } else {
-                    label.classList.remove('border-blue-500', 'bg-blue-50/60', 'ring-2', 'ring-blue-100');
-                    label.classList.add('border-gray-200', 'hover:border-gray-300', 'hover:bg-gray-500/8');
-                }
-            });
+            // Visual toggle handled via has-[:checked] in markup — no runtime class swap needed.
         }
 
         // Atualizar estado do dropzone
         function updateDropzoneState() {
+            if (viewEmBreve) {
+                bloquearViewEmBreve();
+                return;
+            }
+
             const hasTipoDoc = getSelectedTipoDoc() !== '';
             const modoEnvio = getSelectedModoEnvio();
             const hasModoEnvio = modoEnvio !== '';
@@ -1158,7 +821,8 @@
             if (dropzone && fileInput) {
                 if (isReady) {
                     // Habilitar dropzone
-                    dropzone.classList.remove('border-gray-300', 'bg-gray-100', 'opacity-60', 'cursor-not-allowed', 'pointer-events-none');
+                    dropzone.classList.remove('bg-gray-50', 'opacity-60', 'cursor-not-allowed', 'pointer-events-none');
+                    dropzone.classList.add('bg-white', 'hover:border-gray-500', 'hover:bg-gray-50', 'cursor-pointer');
                     dropzone.setAttribute('aria-disabled', 'false');
                     fileInput.disabled = false;
 
@@ -1166,15 +830,13 @@
                     if (modoEnvio === 'zip') {
                         fileInput.accept = '.zip';
                         fileInput.multiple = false;
-                        dropzone.classList.add('border-purple-300', 'bg-purple-50', 'hover:border-purple-400', 'hover:bg-purple-100', 'cursor-pointer');
 
                         if (iconContainer) {
-                            iconContainer.innerHTML = '<svg class="mx-auto h-12 w-12 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>';
+                            iconContainer.innerHTML = '<svg class="mx-auto h-10 w-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>';
                         }
                         if (mainText) {
                             mainText.textContent = 'Arraste seu arquivo ZIP aqui';
-                            mainText.classList.remove('text-gray-500');
-                            mainText.classList.add('text-purple-700', 'font-medium');
+                            mainText.className = 'text-sm font-semibold text-gray-900';
                         }
                         if (subText) {
                             subText.textContent = 'ou clique para selecionar (1 arquivo ZIP)';
@@ -1182,15 +844,13 @@
                     } else {
                         fileInput.accept = '.xml';
                         fileInput.multiple = true;
-                        dropzone.classList.add('border-blue-300', 'bg-blue-50', 'hover:border-blue-400', 'hover:bg-blue-100', 'cursor-pointer');
 
                         if (iconContainer) {
-                            iconContainer.innerHTML = '<svg class="mx-auto h-12 w-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
+                            iconContainer.innerHTML = '<svg class="mx-auto h-10 w-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
                         }
                         if (mainText) {
                             mainText.textContent = 'Arraste seus arquivos XML aqui';
-                            mainText.classList.remove('text-gray-500');
-                            mainText.classList.add('text-blue-700', 'font-medium');
+                            mainText.className = 'text-sm font-semibold text-gray-900';
                         }
                         if (subText) {
                             subText.textContent = 'ou clique para selecionar (multiplos arquivos)';
@@ -1198,21 +858,19 @@
                     }
                 } else {
                     // Desabilitar dropzone
-                    dropzone.classList.remove('border-purple-300', 'border-blue-300', 'bg-purple-50', 'bg-blue-50',
-                        'hover:border-purple-400', 'hover:border-blue-400', 'hover:bg-purple-100', 'hover:bg-blue-100', 'cursor-pointer');
-                    dropzone.classList.add('border-gray-300', 'bg-gray-100', 'opacity-60', 'cursor-not-allowed', 'pointer-events-none');
+                    dropzone.classList.remove('bg-white', 'hover:border-gray-500', 'hover:bg-gray-50', 'cursor-pointer');
+                    dropzone.classList.add('bg-gray-50', 'opacity-60', 'cursor-not-allowed', 'pointer-events-none');
                     dropzone.setAttribute('aria-disabled', 'true');
                     fileInput.disabled = true;
                     fileInput.accept = '.xml,.zip';
                     fileInput.multiple = true;
 
                     if (iconContainer) {
-                        iconContainer.innerHTML = '<svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>';
+                        iconContainer.innerHTML = '<svg class="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>';
                     }
                     if (mainText) {
                         mainText.textContent = 'Selecione o tipo e modo de envio';
-                        mainText.classList.remove('text-purple-700', 'text-blue-700', 'font-medium');
-                        mainText.classList.add('text-gray-500');
+                        mainText.className = 'text-sm font-medium text-gray-600';
                     }
                     if (subText) {
                         subText.textContent = 'Escolha as opcoes acima para habilitar o envio';
@@ -1223,6 +881,15 @@
 
         // Atualizar botao importar
         function updateImportButtonState() {
+            if (viewEmBreve) {
+                if (importarBtn) {
+                    importarBtn.disabled = true;
+                    const btnText = importarBtn.querySelector('.btn-text');
+                    if (btnText) btnText.textContent = 'Em Breve';
+                }
+                return;
+            }
+
             const hasTipoDoc = getSelectedTipoDoc() !== '';
             const hasModoEnvio = getSelectedModoEnvio() !== '';
             const hasFiles = selectedFiles.length > 0;
@@ -1292,6 +959,15 @@
 
         // Validar arquivo via API (conta XMLs em ZIPs, detecta tipo)
         async function validarArquivoApi(fileObj, index, retryCount = 0) {
+            if (viewEmBreve) {
+                fileObj.status = 'error';
+                fileObj.error = 'Importacao XML indisponivel nesta fase.';
+                fileObj.totalXmls = 0;
+                renderFilesList();
+                updateImportButtonState();
+                return;
+            }
+
             fileObj.status = 'validating';
             renderFilesList();
             updateImportButtonState();
@@ -1390,14 +1066,16 @@
 
                 const div = document.createElement('div');
                 const isError = fileObj.status === 'error';
-                div.className = 'flex items-center justify-between p-2 rounded-lg border ' +
-                    (isError ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200');
+                div.className = 'flex items-center justify-between p-2 rounded border ' +
+                    (isError ? 'bg-white border-gray-300 border-l-4 border-l-red-500' : 'bg-white border-gray-200');
+
+                const badgeBase = 'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white flex-shrink-0';
 
                 // Build status indicator HTML
                 let statusHtml = '';
                 if (fileObj.status === 'validating') {
                     statusHtml = `
-                        <svg class="w-4 h-4 text-blue-500 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 text-gray-500 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                         </svg>`;
@@ -1406,58 +1084,43 @@
                     if (isZip) {
                         const xmlCount = fileObj.totalXmls;
                         if (xmlCount === -1) {
-                            // Contagem indisponível - será feita pelo n8n
-                            statusHtml = `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 flex-shrink-0" title="A contagem será feita durante o processamento">ZIP aceito</span>`;
+                            statusHtml = `<span class="${badgeBase}" style="background-color: #374151" title="A contagem será feita durante o processamento">ZIP aceito</span>`;
                         } else if (xmlCount === 0) {
-                            statusHtml = `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700 flex-shrink-0">0 XMLs</span>`;
+                            statusHtml = `<span class="${badgeBase}" style="background-color: #d97706">0 XMLs</span>`;
                         } else {
-                            statusHtml = `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 flex-shrink-0">${xmlCount} XML${xmlCount > 1 ? 's' : ''}</span>`;
+                            statusHtml = `<span class="${badgeBase}" style="background-color: #374151">${xmlCount} XML${xmlCount > 1 ? 's' : ''}</span>`;
                         }
                     } else if (fileObj.tipoDoc) {
                         const tipoLabels = { 'NFE': 'NF-e', 'NFSE': 'NFS-e', 'CTE': 'CT-e' };
-                        statusHtml = `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 flex-shrink-0">${tipoLabels[fileObj.tipoDoc] || fileObj.tipoDoc}</span>`;
+                        const tipoHex = { 'NFE': '#0f766e', 'NFSE': '#4338ca', 'CTE': '#374151' };
+                        statusHtml = `<span class="${badgeBase}" style="background-color: ${tipoHex[fileObj.tipoDoc] || '#374151'}">${tipoLabels[fileObj.tipoDoc] || fileObj.tipoDoc}</span>`;
                     } else {
-                        statusHtml = `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 flex-shrink-0">XML</span>`;
+                        statusHtml = `<span class="${badgeBase}" style="background-color: #047857">XML</span>`;
                     }
                 } else if (fileObj.status === 'error') {
                     let errorDisplay = fileObj.error || 'Erro';
                     if (fileObj.hint) {
-                        errorDisplay += `<span class="block text-xs text-gray-500 font-normal mt-0.5">Dica: ${fileObj.hint}</span>`;
+                        errorDisplay += `<span class="block text-[11px] text-gray-500 font-normal mt-0.5">Dica: ${fileObj.hint}</span>`;
                     }
-                    statusHtml = `<span class="text-xs text-red-600 font-medium flex-shrink-0">${errorDisplay}</span>`;
+                    statusHtml = `<span class="text-xs text-gray-700 font-medium flex-shrink-0">${errorDisplay}</span>`;
                 }
 
-                // Determine file icon based on type
-                const isZipFile = file.name.toLowerCase().endsWith('.zip');
-                let fileIconHtml = '';
-                if (isError) {
-                    fileIconHtml = `<svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>`;
-                } else if (isZipFile) {
-                    // Archive/ZIP icon
-                    fileIconHtml = `<svg class="w-4 h-4 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
-                    </svg>`;
-                } else {
-                    // XML document icon
-                    fileIconHtml = `<svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>`;
-                }
+                const fileIconHtml = `<svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>`;
 
                 div.innerHTML = `
                     <div class="flex items-center gap-2 min-w-0 flex-1">
                         ${fileIconHtml}
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2">
-                                <span class="text-xs font-medium ${isError ? 'text-red-800' : 'text-gray-800'} truncate">${file.name}</span>
+                                <span class="text-xs font-medium text-gray-800 truncate">${file.name}</span>
                                 ${statusHtml}
                             </div>
-                            <div class="text-xs text-gray-500">${formatSize(file.size)}</div>
+                            <div class="text-[11px] text-gray-500">${formatSize(file.size)}</div>
                         </div>
                     </div>
-                    <button type="button" class="remove-file ${isError ? 'text-red-500 hover:text-red-700' : 'text-gray-400 hover:text-red-500'} p-1 flex-shrink-0" data-index="${index}">
+                    <button type="button" class="remove-file text-gray-400 hover:text-gray-700 p-1 flex-shrink-0" data-index="${index}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -1494,6 +1157,11 @@
 
         // Adicionar arquivos
         function addFiles(files) {
+            if (viewEmBreve) {
+                mostrarErro('Importacao XML indisponivel. Nenhum arquivo pode ser enviado nesta tela.');
+                return;
+            }
+
             ocultarErro();
 
             let totalSize = selectedFiles.reduce((sum, f) => sum + f.file.size, 0);
@@ -1560,21 +1228,6 @@
             ocultarErro();
         }
 
-        // Event listener salvar movimentacoes
-        const salvarMovimentacoesCheckbox = document.getElementById('salvar-movimentacoes');
-        const salvarMovimentacoesLabel = document.getElementById('salvar-movimentacoes-label');
-        if (salvarMovimentacoesCheckbox && salvarMovimentacoesLabel) {
-            salvarMovimentacoesCheckbox.addEventListener('change', function() {
-                if (this.checked) {
-                    salvarMovimentacoesLabel.classList.remove('border-gray-200', 'hover:border-blue-400');
-                    salvarMovimentacoesLabel.classList.add('border-blue-600', 'bg-blue-50');
-                } else {
-                    salvarMovimentacoesLabel.classList.remove('border-blue-600', 'bg-blue-50');
-                    salvarMovimentacoesLabel.classList.add('border-gray-200', 'hover:border-blue-400');
-                }
-            });
-        }
-
         // Event listeners tipo documento
         tipoDocRadios.forEach(radio => {
             radio.addEventListener('change', function() {
@@ -1598,26 +1251,33 @@
         // Dropzone click
         if (dropzone && fileInput) {
             dropzone.addEventListener('click', function() {
+                if (viewEmBreve) {
+                    openEmBreveModal();
+                    return;
+                }
                 if (!fileInput.disabled) fileInput.click();
             });
 
             dropzone.addEventListener('dragover', function(e) {
+                if (viewEmBreve) return;
                 if (fileInput.disabled) return;
                 e.preventDefault();
                 dropzone.classList.remove('border-gray-300', 'bg-gray-50');
-                dropzone.classList.add('border-blue-500', 'bg-blue-50');
+                dropzone.classList.add('border-gray-500', 'bg-gray-50');
             });
 
             dropzone.addEventListener('dragleave', function() {
+                if (viewEmBreve) return;
                 if (fileInput.disabled) return;
-                dropzone.classList.remove('border-blue-500', 'bg-blue-50');
+                dropzone.classList.remove('border-gray-500', 'bg-gray-50');
                 dropzone.classList.add('border-gray-300', 'bg-gray-50');
             });
 
             dropzone.addEventListener('drop', function(e) {
+                if (viewEmBreve) return;
                 if (fileInput.disabled) return;
                 e.preventDefault();
-                dropzone.classList.remove('border-blue-500', 'bg-blue-50');
+                dropzone.classList.remove('border-gray-500', 'bg-gray-50');
                 dropzone.classList.add('border-gray-300', 'bg-gray-50');
 
                 if (e.dataTransfer?.files) {
@@ -1629,6 +1289,7 @@
         // File input change
         if (fileInput) {
             fileInput.addEventListener('change', function(e) {
+                if (viewEmBreve) return;
                 if (e.target.files) {
                     addFiles(Array.from(e.target.files));
                 }
@@ -1651,34 +1312,39 @@
         const progressoErroMsg = document.getElementById('progresso-erro-msg');
         const resultadoContainer = document.getElementById('resultado-importacao');
 
+        function buildBadgeHtml(label, hexColor, extraClasses) {
+            const classes = extraClasses ? ' ' + extraClasses : '';
+            return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white' + classes + '" style="background-color: ' + hexColor + '">' + label + '</span>';
+        }
+
         // Atualizar icone de status
         function atualizarIconeStatus(status) {
             const card = document.getElementById('progresso-card');
             if (!progressoIcon || !card) return;
 
-            card.className = 'bg-white border rounded-lg p-4 shadow-sm';
+            card.className = 'bg-white rounded border border-gray-300 overflow-hidden';
 
             switch (status) {
                 case 'concluido':
-                    progressoIcon.className = 'w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0';
-                    progressoIcon.innerHTML = '<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
-                    card.classList.add('border-green-200');
-                    if (barraProgresso) barraProgresso.className = 'bg-green-600 h-full rounded-full transition-all duration-500 ease-out';
+                    progressoIcon.className = 'w-9 h-9 rounded border border-gray-300 bg-gray-50 flex items-center justify-center flex-shrink-0';
+                    progressoIcon.innerHTML = '<svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+                    if (barraProgresso) barraProgresso.className = 'h-full transition-all duration-500 ease-out';
+                    if (barraProgresso) barraProgresso.style.backgroundColor = '#047857';
                     if (progressoErro) progressoErro.classList.add('hidden');
                     break;
                 case 'erro':
                 case 'timeout':
-                    progressoIcon.className = 'w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0';
-                    progressoIcon.innerHTML = '<svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
-                    card.classList.add('border-red-200');
-                    if (barraProgresso) barraProgresso.className = 'bg-red-600 h-full rounded-full transition-all duration-500 ease-out';
+                    progressoIcon.className = 'w-9 h-9 rounded border border-gray-300 bg-gray-50 flex items-center justify-center flex-shrink-0';
+                    progressoIcon.innerHTML = '<svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+                    if (barraProgresso) barraProgresso.className = 'h-full transition-all duration-500 ease-out';
+                    if (barraProgresso) barraProgresso.style.backgroundColor = '#dc2626';
                     if (progressoErro) progressoErro.classList.remove('hidden');
                     break;
                 default:
-                    progressoIcon.className = 'w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0';
-                    progressoIcon.innerHTML = '<svg class="w-5 h-5 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>';
-                    card.classList.add('border-gray-200');
-                    if (barraProgresso) barraProgresso.className = 'bg-blue-600 h-full rounded-full transition-all duration-500 ease-out';
+                    progressoIcon.className = 'w-9 h-9 rounded border border-gray-300 bg-gray-50 flex items-center justify-center flex-shrink-0';
+                    progressoIcon.innerHTML = '<svg class="w-4 h-4 text-gray-700 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>';
+                    if (barraProgresso) barraProgresso.className = 'h-full transition-all duration-500 ease-out';
+                    if (barraProgresso) barraProgresso.style.backgroundColor = '#374151';
                     if (progressoErro) progressoErro.classList.add('hidden');
             }
         }
@@ -1753,7 +1419,8 @@
         function resetarProgresso() {
             if (barraProgresso) {
                 barraProgresso.style.width = '0%';
-                barraProgresso.className = 'bg-blue-600 h-full rounded-full transition-all duration-500 ease-out';
+                barraProgresso.className = 'h-full transition-all duration-500 ease-out';
+                barraProgresso.style.backgroundColor = '#374151';
             }
             if (progressoPorcentagem) progressoPorcentagem.textContent = '0%';
             if (progressoMensagem) progressoMensagem.textContent = 'Iniciando...';
@@ -1783,7 +1450,6 @@
             const notasContainer = document.getElementById('resultado-notas-container');
             const participantesContainer = document.getElementById('resultado-participantes-container');
             const errosContainer = document.getElementById('resultado-erros-container');
-            const titularidadeContainer = document.getElementById('resultado-titularidade');
             const duplicadasContainer = document.getElementById('resultado-duplicadas-container');
             const duplicadasLista = document.getElementById('duplicadas-lista');
 
@@ -1791,7 +1457,6 @@
             if (notasContainer) notasContainer.classList.add('hidden');
             if (participantesContainer) participantesContainer.classList.add('hidden');
             if (errosContainer) errosContainer.classList.add('hidden');
-            if (titularidadeContainer) titularidadeContainer.classList.add('hidden');
             if (duplicadasContainer) duplicadasContainer.classList.add('hidden');
             if (duplicadasLista) duplicadasLista.classList.add('hidden');
 
@@ -1844,28 +1509,6 @@
             if (totalParticipantes) totalParticipantes.textContent = totalPartCount;
             if (xmlsErro) xmlsErro.textContent = errosCount;
 
-            // Resumo de Titularidade
-            const titularidadeContainer = document.getElementById('resultado-titularidade');
-            if (dados.resumo_titularidade && titularidadeContainer) {
-                titularidadeContainer.classList.remove('hidden');
-                const tit = dados.resumo_titularidade;
-                const titPropriaEmit = document.getElementById('tit-propria-emit');
-                const titPropriaDest = document.getElementById('tit-propria-dest');
-                const titClienteEmit = document.getElementById('tit-cliente-emit');
-                const titClienteDest = document.getElementById('tit-cliente-dest');
-                const titTerceiroEmit = document.getElementById('tit-terceiro-emit');
-                const titTerceiroDest = document.getElementById('tit-terceiro-dest');
-
-                if (titPropriaEmit) titPropriaEmit.textContent = tit.propria_emit || 0;
-                if (titPropriaDest) titPropriaDest.textContent = tit.propria_dest || 0;
-                if (titClienteEmit) titClienteEmit.textContent = tit.cliente_emit || 0;
-                if (titClienteDest) titClienteDest.textContent = tit.cliente_dest || 0;
-                if (titTerceiroEmit) titTerceiroEmit.textContent = tit.terceiro_emit || 0;
-                if (titTerceiroDest) titTerceiroDest.textContent = tit.terceiro_dest || 0;
-            } else if (titularidadeContainer) {
-                titularidadeContainer.classList.add('hidden');
-            }
-
             // Duplicadas detectadas
             const duplicadasContainer = document.getElementById('resultado-duplicadas-container');
             const duplicadasLista = document.getElementById('duplicadas-lista');
@@ -1882,7 +1525,7 @@
                     duplicadasBody.innerHTML = dados.duplicadas_detectadas.slice(0, 100).map(dup => {
                         const cnpjFmt = dup.emit_cnpj ?
                             dup.emit_cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5') : '-';
-                        return '<tr class="hover:bg-amber-50">' +
+                        return '<tr class="hover:bg-gray-50">' +
                             '<td class="px-3 py-2 text-gray-900 whitespace-nowrap">' + (dup.numero_nota || '-') + '</td>' +
                             '<td class="px-3 py-2 text-gray-900 max-w-[180px] truncate" title="' + (dup.emit_razao || '') + '">' +
                                 (dup.emit_razao || cnpjFmt) +
@@ -1897,7 +1540,7 @@
 
                     // Adicionar aviso se houver mais de 100
                     if (dados.duplicadas_detectadas.length > 100) {
-                        duplicadasBody.innerHTML += '<tr><td colspan="5" class="px-3 py-2 text-center text-xs text-amber-600">... e mais ' + (dados.duplicadas_detectadas.length - 100) + ' duplicadas</td></tr>';
+                        duplicadasBody.innerHTML += '<tr><td colspan="5" class="px-3 py-2 text-center text-xs text-gray-500">... e mais ' + (dados.duplicadas_detectadas.length - 100) + ' duplicadas</td></tr>';
                     }
                 }
 
@@ -1917,10 +1560,10 @@
             if (errosDetectados.length > 0 && errosContainer && errosLista) {
                 errosContainer.classList.remove('hidden');
                 errosLista.innerHTML = errosDetectados.map(e =>
-                    '<div class="py-1.5 px-2 bg-red-50 rounded text-red-700 border-l-2 border-red-400">' +
-                    '<span class="font-medium">' + (e.arquivo || 'XML') + ':</span> ' +
-                    (e.erro || e.motivo || 'Erro desconhecido') +
-                    (e.detalhe ? '<span class="block text-xs text-red-500 mt-0.5">' + e.detalhe + '</span>' : '') +
+                    '<div class="bg-white border border-gray-300 border-l-4 border-l-red-500 rounded px-3 py-2">' +
+                    '<span class="font-medium text-gray-900">' + (e.arquivo || 'XML') + ':</span> ' +
+                    '<span class="text-gray-700"> ' + (e.erro || e.motivo || 'Erro desconhecido') + '</span>' +
+                    (e.detalhe ? '<span class="block text-xs text-gray-500 mt-0.5">' + e.detalhe + '</span>' : '') +
                     '</div>'
                 ).join('');
             } else if (errosContainer) {
@@ -1981,12 +1624,12 @@
             tbody.innerHTML = cnpjsNovos.map(function(cnpj, idx) {
                 const polos = (cnpj.visto_como || []).map(function(p) {
                     return p === 'emit'
-                        ? '<span class="inline-flex items-center px-1 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-700">Emit</span>'
-                        : '<span class="inline-flex items-center px-1 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">Dest</span>';
+                        ? buildBadgeHtml('Emit', '#047857')
+                        : buildBadgeHtml('Dest', '#4338ca');
                 }).join(' ');
 
-                return '<tr class="hover:bg-orange-50" data-cnpj="' + cnpj.cnpj + '">' +
-                    '<td class="px-3 py-2"><input type="checkbox" class="cnpj-novo-check w-3.5 h-3.5 text-orange-600 rounded" data-idx="' + idx + '"></td>' +
+                return '<tr class="hover:bg-gray-50" data-cnpj="' + cnpj.cnpj + '">' +
+                    '<td class="px-3 py-2"><input type="checkbox" class="cnpj-novo-check w-3.5 h-3.5 text-gray-700 rounded border-gray-300" data-idx="' + idx + '"></td>' +
                     '<td class="px-3 py-2 text-gray-900 whitespace-nowrap font-mono">' + fmtCnpj(cnpj.cnpj) + '</td>' +
                     '<td class="px-3 py-2 text-gray-900 max-w-[200px] truncate" title="' + (cnpj.razao_social || '') + '">' + (cnpj.razao_social || '-') + '</td>' +
                     '<td class="px-3 py-2 text-center text-gray-600">' + (cnpj.uf || '-') + '</td>' +
@@ -2149,8 +1792,8 @@
                         }
                     } catch (err) {
                         console.error('[Monitoramento XML] Erro ao salvar CNPJs novos:', err);
-                        if (window.showToast) {
-                            window.showToast('Erro: ' + err.message, 'error');
+                        if (window.showErrorAlert) {
+                            window.showErrorAlert('Erro ao salvar CNPJs: ' + err.message);
                         }
                         btnSalvar.disabled = false;
                         if (btnSalvarText) btnSalvarText.textContent = 'Salvar Selecionados';
@@ -2335,9 +1978,11 @@
             if (emptyMsg) emptyMsg.classList.add('hidden');
 
             tbody.innerHTML = notasFiltradas.map(nota => {
-                const tipoClass = nota.tipo_nota === 0 ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
                 const tipoIcon = nota.tipo_nota === 0 ? '&#8595;' : '&#8593;';
                 const tipoText = nota.tipo_nota === 0 ? 'Entrada' : 'Saída';
+                const tipoBadge = nota.tipo_nota === 0
+                    ? buildBadgeHtml(tipoIcon + ' ' + tipoText, '#047857', 'inline-flex items-center')
+                    : buildBadgeHtml(tipoIcon + ' ' + tipoText, '#d97706', 'inline-flex items-center');
 
                 return '<tr class="hover:bg-gray-50" data-tipo="' + nota.tipo_nota + '" data-finalidade="' + nota.finalidade + '">' +
                     '<td class="px-3 py-2 text-gray-900 whitespace-nowrap">' + (nota.numero_nota || '-') + '/' + (nota.serie || 1) + '</td>' +
@@ -2345,15 +1990,13 @@
                     '<td class="px-3 py-2 text-gray-900 max-w-[200px] truncate" title="' + (nota.emit_razao_social || '') + '">' +
                         (nota.emit_razao_social || nota.emit_cnpj_formatado || '-') +
                     '</td>' +
-                    '<td class="px-3 py-2 text-right text-gray-900 whitespace-nowrap">' + (nota.valor_formatado || formatarBRL(nota.valor_total)) + '</td>' +
-                    '<td class="px-3 py-2 text-right text-gray-600 whitespace-nowrap">' + formatarBRL(nota.icms_valor) + '</td>' +
-                    '<td class="px-3 py-2 text-right text-gray-600 whitespace-nowrap">' + formatarBRL(nota.pis_valor) + '</td>' +
-                    '<td class="px-3 py-2 text-right text-gray-600 whitespace-nowrap">' + formatarBRL(nota.cofins_valor) + '</td>' +
-                    '<td class="px-3 py-2 text-right text-gray-600 whitespace-nowrap">' + formatarBRL(nota.ipi_valor) + '</td>' +
+                    '<td class="px-3 py-2 text-right text-gray-900 font-mono whitespace-nowrap">' + (nota.valor_formatado || formatarBRL(nota.valor_total)) + '</td>' +
+                    '<td class="px-3 py-2 text-right text-gray-600 font-mono whitespace-nowrap">' + formatarBRL(nota.icms_valor) + '</td>' +
+                    '<td class="px-3 py-2 text-right text-gray-600 font-mono whitespace-nowrap">' + formatarBRL(nota.pis_valor) + '</td>' +
+                    '<td class="px-3 py-2 text-right text-gray-600 font-mono whitespace-nowrap">' + formatarBRL(nota.cofins_valor) + '</td>' +
+                    '<td class="px-3 py-2 text-right text-gray-600 font-mono whitespace-nowrap">' + formatarBRL(nota.ipi_valor) + '</td>' +
                     '<td class="px-3 py-2 text-center whitespace-nowrap">' +
-                        '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ' + tipoClass + '">' +
-                        tipoIcon + ' ' + tipoText +
-                        '</span>' +
+                        tipoBadge +
                     '</td>' +
                 '</tr>';
             }).join('');
@@ -2393,8 +2036,9 @@
             if (emptyMsg) emptyMsg.classList.add('hidden');
 
             tbody.innerHTML = partsFiltrados.map(p => {
-                const statusClass = p.is_novo ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
-                const statusText = p.is_novo ? 'Novo' : 'Já Registrado';
+                const statusBadge = p.is_novo
+                    ? buildBadgeHtml('Novo', '#047857')
+                    : buildBadgeHtml('Já Reg.', '#374151');
 
                 return '<tr class="hover:bg-gray-50" data-novo="' + (p.is_novo ? '1' : '0') + '">' +
                     '<td class="px-3 py-2 text-gray-900 max-w-[200px] truncate" title="' + (p.razao_social || '') + '">' + (p.razao_social || '-') + '</td>' +
@@ -2402,9 +2046,7 @@
                     '<td class="px-3 py-2 text-gray-600 max-w-[180px] truncate" title="' + (p.endereco || '') + '">' + (p.endereco || '-') + '</td>' +
                     '<td class="px-3 py-2 text-gray-600 whitespace-nowrap">' + (p.inscricao_estadual || '-') + '</td>' +
                     '<td class="px-3 py-2 text-center">' +
-                        '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ' + statusClass + '">' +
-                        statusText +
-                        '</span>' +
+                        statusBadge +
                     '</td>' +
                 '</tr>';
             }).join('');
@@ -2419,11 +2061,11 @@
 
                     // Atualizar visual dos botoes (tab style)
                     filtros.forEach(b => {
-                        b.classList.remove('bg-white', 'text-gray-900', 'font-medium', 'shadow-sm');
-                        b.classList.add('text-gray-600', 'hover:text-gray-900');
+                        b.classList.remove('bg-gray-800', 'text-white', 'font-medium');
+                        b.classList.add('bg-white', 'text-gray-600', 'hover:bg-gray-50');
                     });
-                    this.classList.remove('text-gray-600', 'hover:text-gray-900');
-                    this.classList.add('bg-white', 'text-gray-900', 'font-medium', 'shadow-sm');
+                    this.classList.remove('bg-white', 'text-gray-600', 'hover:bg-gray-50');
+                    this.classList.add('bg-gray-800', 'text-white', 'font-medium');
 
                     // Re-renderizar
                     renderizarParticipantes(dadosParticipantes, filtro);
@@ -2440,11 +2082,11 @@
 
                     // Atualizar visual dos botoes (tab style)
                     filtros.forEach(b => {
-                        b.classList.remove('bg-white', 'text-gray-900', 'font-medium', 'shadow-sm');
-                        b.classList.add('text-gray-600', 'hover:text-gray-900');
+                        b.classList.remove('bg-gray-800', 'text-white', 'font-medium');
+                        b.classList.add('bg-white', 'text-gray-600', 'hover:bg-gray-50');
                     });
-                    this.classList.remove('text-gray-600', 'hover:text-gray-900');
-                    this.classList.add('bg-white', 'text-gray-900', 'font-medium', 'shadow-sm');
+                    this.classList.remove('bg-white', 'text-gray-600', 'hover:bg-gray-50');
+                    this.classList.add('bg-gray-800', 'text-white', 'font-medium');
 
                     // Re-renderizar
                     renderizarNotas(dadosNotasFiscais, filtro);
@@ -2533,20 +2175,25 @@
         // Botao importar
         if (importarBtn) {
             importarBtn.addEventListener('click', async function() {
+                if (viewEmBreve) {
+                    openEmBreveModal();
+                    return;
+                }
+
                 const tipoDoc = getSelectedTipoDoc();
                 if (!tipoDoc) {
-                    if (window.showToast) window.showToast('Selecione o tipo de documento.', 'error');
+                    if (window.showToast) window.showToast('Selecione o tipo de documento.', 'warning');
                     return;
                 }
 
                 const modoEnvioSelecionado = getSelectedModoEnvio();
                 if (!modoEnvioSelecionado) {
-                    if (window.showToast) window.showToast('Selecione o modo de envio.', 'error');
+                    if (window.showToast) window.showToast('Selecione o modo de envio.', 'warning');
                     return;
                 }
 
                 if (selectedFiles.length === 0) {
-                    if (window.showToast) window.showToast('Selecione ao menos um arquivo.', 'error');
+                    if (window.showToast) window.showToast('Selecione ao menos um arquivo.', 'warning');
                     return;
                 }
 
@@ -2580,15 +2227,12 @@
                         };
                     }));
 
-                    const clienteSelect = document.getElementById('cliente-select');
-                    const salvarMovimentacoes = document.getElementById('salvar-movimentacoes');
                     const modoEnvio = getSelectedModoEnvio();
                     const payload = {
                         tipo_documento: tipoDoc,
                         modo_envio: modoEnvio,
                         tab_id: tabId,
-                        cliente_id: clienteSelect ? clienteSelect.value || null : null,
-                        salvar_movimentacoes: salvarMovimentacoes ? salvarMovimentacoes.checked : false,
+                        salvar_movimentacoes: false,
                         arquivos: arquivos
                     };
 
@@ -2643,10 +2287,8 @@
 
                 } catch (err) {
                     console.error('[Monitoramento XML] Erro:', err);
-                    if (window.showToast) {
-                        window.showToast('Erro: ' + err.message, 'error');
-                    } else {
-                        alert('Erro: ' + err.message);
+                    if (window.showErrorAlert) {
+                        window.showErrorAlert('Erro ao importar XML: ' + err.message);
                     }
                     importarBtn.disabled = false;
                     const totalXmls = selectedFiles.reduce((sum, f) => sum + (f.totalXmls > 0 ? f.totalXmls : 0), 0);
@@ -2689,6 +2331,10 @@
         const btnNovaImportacao = document.getElementById('btn-nova-importacao');
         if (btnNovaImportacao) {
             btnNovaImportacao.addEventListener('click', function() {
+                if (viewEmBreve) {
+                    openEmBreveModal();
+                    return;
+                }
                 importacaoEmAndamento = false;
                 currentImportacaoId = null;
                 salvarMovimentacoesAtivo = false;
@@ -2707,6 +2353,25 @@
             });
         }
 
+        if (xmlEmBreveModalClose) {
+            xmlEmBreveModalClose.addEventListener('click', closeEmBreveModal);
+        }
+
+        if (xmlEmBreveModalOverlay) {
+            xmlEmBreveModalOverlay.addEventListener('click', closeEmBreveModal);
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeEmBreveModal();
+            }
+        });
+
+        if (viewEmBreve) {
+            bloquearViewEmBreve();
+            openEmBreveModal();
+        }
+
         // Cleanup
         window._cleanupFunctions = window._cleanupFunctions || {};
         window._cleanupFunctions.initImportacaoXml = function() {
@@ -2723,106 +2388,9 @@
         console.log('[Monitoramento XML] Inicializado com tab_id:', tabId);
     }
 
-    // ==========================================
-    // Modal Carousel de Planos (funcao separada)
-    // ==========================================
-    function initCarouselPlanos() {
-        var totalPlanos = {{ count($planosDetalhados) }};
-        var swiperPlanos = null;
-        var modalPlanos = document.getElementById('modal-planos-carousel');
-
-        function showPlanosModal(startIndex) {
-            if (!modalPlanos) return;
-            modalPlanos.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-
-            setTimeout(function() {
-                if (swiperPlanos && !swiperPlanos.destroyed) {
-                    swiperPlanos.slideToLoop(startIndex || 0, 0);
-                    swiperPlanos.update();
-                    updateCarouselCounter(startIndex || 0);
-                    return;
-                }
-
-                swiperPlanos = new Swiper('#swiper-planos', {
-                    slidesPerView: 1,
-                    spaceBetween: 0,
-                    loop: true,
-                    initialSlide: startIndex || 0,
-                    navigation: {
-                        prevEl: '#swiper-planos-prev',
-                        nextEl: '#swiper-planos-next',
-                    },
-                    pagination: {
-                        el: '#swiper-planos-pagination',
-                        clickable: true,
-                    },
-                    on: {
-                        slideChange: function() {
-                            updateCarouselCounter(this.realIndex);
-                        },
-                    },
-                });
-
-                updateCarouselCounter(startIndex || 0);
-            }, 50);
-        }
-
-        function hidePlanosModal() {
-            if (!modalPlanos) return;
-            modalPlanos.classList.add('hidden');
-            document.body.style.overflow = '';
-        }
-
-        function updateCarouselCounter(index) {
-            var counter = document.getElementById('carousel-counter');
-            if (counter) {
-                counter.textContent = (index + 1) + ' / ' + totalPlanos;
-            }
-        }
-
-        // Close modal: overlay click
-        if (modalPlanos) {
-            modalPlanos.addEventListener('click', function(e) {
-                if (e.target === modalPlanos) {
-                    hidePlanosModal();
-                }
-            });
-        }
-
-        // Close modal: ESC key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && modalPlanos && !modalPlanos.classList.contains('hidden')) {
-                hidePlanosModal();
-            }
-        });
-
-        // Close modal: X button
-        document.getElementById('btn-fechar-carousel')?.addEventListener('click', hidePlanosModal);
-
-        // "Ver detalhes" button -> open modal at slide 0
-        var btnVerDetalhes = document.getElementById('btn-ver-detalhes-planos');
-        if (btnVerDetalhes) {
-            btnVerDetalhes.addEventListener('click', function() {
-                showPlanosModal(0);
-            });
-        }
-
-        // Badge clicks -> open modal at specific slide
-        document.querySelectorAll('.badge-plano').forEach(function(badge) {
-            badge.addEventListener('click', function() {
-                var idx = parseInt(this.dataset.slideIndex) || 0;
-                showPlanosModal(idx);
-            });
-        });
-
-        console.log('[Monitoramento XML] Carousel de planos inicializado');
-    }
-
-    // Auto-inicializar (funcoes independentes com try-catch)
+    // Auto-inicializar
     function _initAll() {
         try { initMonitoramentoXml(); } catch(e) { console.error('[XML] Erro init:', e); }
-        try { initCarouselPlanos(); } catch(e) { console.error('[XML] Erro carousel:', e); }
     }
 
     if (document.readyState === 'loading') {
@@ -2834,7 +2402,6 @@
     // Expor para SPA (chama ambas as funcoes)
     window.initMonitoramentoXml = function() {
         try { initMonitoramentoXml(); } catch(e) { console.error('[XML] Erro init:', e); }
-        try { initCarouselPlanos(); } catch(e) { console.error('[XML] Erro carousel:', e); }
     };
 })();
 </script>
