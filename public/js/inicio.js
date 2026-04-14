@@ -2,6 +2,8 @@
 // Usar propriedades em window para permitir múltiplas execuções do script sem erro de redeclaração
 window._inicioInitialized = window._inicioInitialized || false;
 window._countdownInterval = window._countdownInterval || null;
+window._officialSourcesResizeHandler = window._officialSourcesResizeHandler || null;
+window._officialSourcesRaf = window._officialSourcesRaf || null;
 
 function initInicio() {
     // Limpar recursos anteriores se já foi inicializado
@@ -57,6 +59,73 @@ function initInicio() {
 
     initCountdown();
 
+    function initOfficialSourcesMarquee() {
+        const marquee = document.querySelector('.official-sources-marquee');
+        const track = marquee?.querySelector('.official-sources-track');
+        const sourceGroup = track?.querySelector('[data-official-sources-group]');
+
+        if (!marquee || !track || !sourceGroup) {
+            return;
+        }
+
+        track.querySelectorAll('[data-official-sources-clone="true"]').forEach((clone) => clone.remove());
+        track.style.removeProperty('--official-sources-cycle-width');
+        track.style.removeProperty('--official-sources-duration');
+
+        // Measure the rendered group width after layout so the loop includes the seam spacing.
+        const cycleWidth = Math.ceil(sourceGroup.getBoundingClientRect().width);
+        const marqueeWidth = Math.ceil(marquee.getBoundingClientRect().width);
+
+        if (!cycleWidth || !marqueeWidth) {
+            return;
+        }
+
+        const minTrackWidth = marqueeWidth + (cycleWidth * 2);
+        let currentWidth = cycleWidth;
+        let cloneIndex = 0;
+
+        while (currentWidth < minTrackWidth) {
+            const clone = sourceGroup.cloneNode(true);
+            clone.setAttribute('aria-hidden', 'true');
+            clone.dataset.officialSourcesClone = 'true';
+            cloneIndex += 1;
+            clone.dataset.officialSourcesCloneIndex = String(cloneIndex);
+            track.appendChild(clone);
+            currentWidth += cycleWidth;
+        }
+
+        const pixelsPerSecond = 72;
+        const duration = cycleWidth / pixelsPerSecond;
+
+        track.style.setProperty('--official-sources-cycle-width', `${cycleWidth}px`);
+        track.style.setProperty('--official-sources-duration', `${duration}s`);
+    }
+
+    function scheduleOfficialSourcesMarquee() {
+        if (window._officialSourcesRaf) {
+            cancelAnimationFrame(window._officialSourcesRaf);
+        }
+
+        window._officialSourcesRaf = requestAnimationFrame(() => {
+            initOfficialSourcesMarquee();
+            window._officialSourcesRaf = null;
+        });
+    }
+
+    scheduleOfficialSourcesMarquee();
+
+    if (document.fonts && typeof document.fonts.ready?.then === 'function') {
+        document.fonts.ready.then(() => {
+            scheduleOfficialSourcesMarquee();
+        });
+    }
+
+    window._officialSourcesResizeHandler = function() {
+        scheduleOfficialSourcesMarquee();
+    };
+
+    window.addEventListener('resize', window._officialSourcesResizeHandler);
+
     // Inicializar FAQ se a função existir
     if (typeof initFaq === 'function') {
         initFaq();
@@ -98,6 +167,16 @@ function cleanupInicio() {
         window._countdownInterval = null;
     }
 
+    if (window._officialSourcesRaf) {
+        cancelAnimationFrame(window._officialSourcesRaf);
+        window._officialSourcesRaf = null;
+    }
+
+    if (window._officialSourcesResizeHandler) {
+        window.removeEventListener('resize', window._officialSourcesResizeHandler);
+        window._officialSourcesResizeHandler = null;
+    }
+
     // Remover handler do formulário
     if (window._contactFormHandler) {
         const contactForm = document.getElementById('contact-form');
@@ -106,6 +185,10 @@ function cleanupInicio() {
         }
         window._contactFormHandler = null;
     }
+
+    document
+        .querySelectorAll('.official-sources-track [data-official-sources-clone="true"]')
+        .forEach((clone) => clone.remove());
     
     window._inicioInitialized = false;
 }
@@ -117,5 +200,3 @@ if (!window._cleanupFunctions) {
 window._cleanupFunctions.initInicio = cleanupInicio;
 
 // Inicialização é feita pelo spa.js
-
-

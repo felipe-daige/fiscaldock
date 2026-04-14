@@ -18,7 +18,7 @@ Contadores, escritórios contábeis e departamentos fiscais de empresas brasilei
 ## Páginas principais
 
 - [Soluções](https://fiscaldock.com/solucoes): visão geral dos produtos
-- [Preços](https://fiscaldock.com/precos): planos e créditos
+- [Preços](https://fiscaldock.com/precos): créditos avulsos e faixas de economia
 - [Dúvidas](https://fiscaldock.com/duvidas): perguntas frequentes sobre EFD, SPED e uso da plataforma
 - [Blog](https://fiscaldock.com/blog): artigos sobre EFD, revisão fiscal e compliance
 - [Hub EFD](https://fiscaldock.com/blog/efd): cluster editorial sobre EFD para contadores

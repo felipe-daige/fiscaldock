@@ -176,7 +176,7 @@
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Preferir ajuda humana?</span>
                     </div>
                     <div class="p-4 space-y-3 text-sm text-gray-700">
-                        <p>Se quiser confirmar aderência, planos ou regras de uso antes de criar a conta, fale direto com nosso time comercial.</p>
+                        <p>Se quiser confirmar aderência, pacotes de créditos, faixas ou regras de uso antes de criar a conta, fale direto com nosso time comercial.</p>
                         <a href="{{ route('agendar') }}" class="inline-flex items-center justify-center rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
                             Falar com especialista
                         </a>

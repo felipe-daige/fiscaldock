@@ -14,7 +14,7 @@
                 <li class="flex items-center" aria-hidden="true"><span class="text-gray-300 select-none">|</span></li>
                 <li class="flex items-center"><a href="/login" class="text-gray-600 hover:text-gray-900 transition-colors font-medium inline-flex items-center" style="min-height: 40px; line-height: 1.2;">Login</a></li>
                 <li class="flex items-center">
-                    <a href="/criar-conta" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white rounded hover:bg-gray-700" style="min-height: 40px; background-color: #1f2937;">
+                    <a href="/criar-conta" class="btn-cta btn-cta--nav">
                         Criar conta grátis
                     </a>
                 </li>
@@ -39,7 +39,7 @@
             <a href="/blog" data-link class="text-gray-600 hover:text-gray-900 transition-colors font-medium py-2">Blog</a>
             <div class="border-t border-gray-200 pt-4 flex flex-col gap-4">
                 <a href="/login" data-link class="text-gray-600 hover:text-gray-900 transition-colors font-medium py-2">Login</a>
-                <a href="/criar-conta" data-link class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded" style="background-color: #1f2937">
+                <a href="/criar-conta" data-link class="btn-cta btn-cta--block">
                     Criar conta grátis
                 </a>
                 <a href="/agendar" data-link class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Landing;
 
 use App\Http\Controllers\Controller;
 use App\Models\LandingLead;
+use App\Services\PricingCatalogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -44,7 +45,7 @@ class LandingPageController extends Controller
     {
         return $this->renderLanding($request, 'paginas.duvidas', [
             'title' => 'Dúvidas Frequentes — FiscalDock',
-            'description' => 'Respostas sobre importação SPED, monitoramento fiscal, créditos, segurança dos dados e planos da FiscalDock. Tire sua dúvida antes de começar.',
+            'description' => 'Respostas sobre importação SPED, monitoramento fiscal, créditos, faixas de economia e segurança dos dados na FiscalDock. Tire sua dúvida antes de começar.',
             'canonical' => self::BASE_URL . '/duvidas',
             'og_type' => 'website',
             'og_title' => 'Perguntas frequentes — FiscalDock',
@@ -52,15 +53,17 @@ class LandingPageController extends Controller
         ]);
     }
 
-    public function precos(Request $request)
+    public function precos(Request $request, PricingCatalogService $pricingCatalogService)
     {
         return $this->renderLanding($request, 'paginas.precos', [
-            'title' => 'Preços — FiscalDock | Planos Essencial, Profissional e Compliance',
-            'description' => 'Planos a partir de R$ 159/mês para escritórios contábeis e empresas. Compare Essencial, Profissional e Compliance e escolha o nível de automação fiscal que precisa.',
+            'title' => 'Preços — FiscalDock | Créditos e Faixas por Volume',
+            'description' => 'Compre créditos avulsos e pague menos por consulta conforme seu volume acumulado. Modelo sem assinatura, com faixas de economia para Compliance e Clearance.',
             'canonical' => self::BASE_URL . '/precos',
             'og_type' => 'website',
-            'og_title' => 'Planos e preços — FiscalDock',
+            'og_title' => 'Créditos e faixas de economia — FiscalDock',
             'og_image' => self::BASE_URL . '/binary_files/logo/Logo FiscalDock.png',
+        ], [
+            'pricingData' => $pricingCatalogService->getLandingPricingData(),
         ]);
     }
 
@@ -98,7 +101,7 @@ class LandingPageController extends Controller
      * Renderiza uma view da landing page aplicando o tema padrão e redirecionando
      * usuários autenticados para o dashboard.
      */
-    private function renderLanding(Request $request, string $viewName, array $seo = [])
+    private function renderLanding(Request $request, string $viewName, array $seo = [], array $viewData = [])
     {
         $fullViewName = "landing_page.$viewName";
 
@@ -119,13 +122,13 @@ class LandingPageController extends Controller
         }
 
         if ($request->ajax()) {
-            return view($fullViewName);
+            return view($fullViewName, $viewData);
         }
 
-        return view('landing_page.layouts.public', [
+        return view('landing_page.layouts.public', array_merge([
             'initialView' => $viewName,
             'themeClass' => $this->themeClass,
             'seo' => $seo,
-        ]);
+        ], $viewData));
     }
 }

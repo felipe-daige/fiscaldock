@@ -301,7 +301,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                 </a>
                 <p class="sol-card-interlinks mt-4 text-xs text-gray-500">
-                    <a href="{{ route('precos') }}#compare" class="hover:underline" style="color: #1e4fa0">Ver plano com este módulo</a>
+                    <a href="{{ route('precos') }}#precos-consumo" class="hover:underline" style="color: #1e4fa0">Ver créditos para este módulo</a>
                     <span class="mx-2 text-gray-300">·</span>
                     <a href="{{ route('duvidas') }}" class="hover:underline" style="color: #1e4fa0">Tirar dúvida</a>
                     <span class="mx-2 text-gray-300">·</span>
@@ -421,7 +421,7 @@
                     Saiba antes do fisco quando um fornecedor vira risco
                 </h2>
                 <p class="text-base text-gray-600 leading-relaxed mb-6">
-                    Cada CNPJ extraído do SPED recebe consulta de situação cadastral via Receita Federal e, nos planos pagos, enriquecimento via sistemas públicos oficiais (CND Federal). Integração com SINTEGRA e CEIS está no roadmap.
+                    Cada CNPJ extraído do SPED recebe consulta de situação cadastral via Receita Federal e, nas consultas premium pagas com créditos, enriquecimento via sistemas públicos oficiais (CND Federal). Integração com SINTEGRA e CEIS está no roadmap.
                 </p>
                 <ul class="space-y-3 mb-7">
                     @foreach ([
@@ -441,7 +441,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                 </a>
                 <p class="sol-card-interlinks mt-4 text-xs text-gray-500">
-                    <a href="{{ route('precos') }}#compare" class="hover:underline" style="color: #1e4fa0">Ver plano com este módulo</a>
+                    <a href="{{ route('precos') }}#precos-consumo" class="hover:underline" style="color: #1e4fa0">Ver créditos para este módulo</a>
                     <span class="mx-2 text-gray-300">·</span>
                     <a href="{{ route('duvidas') }}" class="hover:underline" style="color: #1e4fa0">Tirar dúvida</a>
                     <span class="mx-2 text-gray-300">·</span>
@@ -488,7 +488,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                 </a>
                 <p class="sol-card-interlinks mt-4 text-xs text-gray-500">
-                    <a href="{{ route('precos') }}#compare" class="hover:underline" style="color: #1e4fa0">Ver plano com este módulo</a>
+                    <a href="{{ route('precos') }}#precos-consumo" class="hover:underline" style="color: #1e4fa0">Ver créditos para este módulo</a>
                     <span class="mx-2 text-gray-300">·</span>
                     <a href="{{ route('duvidas') }}" class="hover:underline" style="color: #1e4fa0">Tirar dúvida</a>
                     <span class="mx-2 text-gray-300">·</span>
@@ -647,7 +647,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                 </a>
                 <p class="sol-card-interlinks mt-4 text-xs text-gray-500">
-                    <a href="{{ route('precos') }}#compare" class="hover:underline" style="color: #1e4fa0">Ver plano com este módulo</a>
+                    <a href="{{ route('precos') }}#precos-consumo" class="hover:underline" style="color: #1e4fa0">Ver créditos para este módulo</a>
                     <span class="mx-2 text-gray-300">·</span>
                     <a href="{{ route('duvidas') }}" class="hover:underline" style="color: #1e4fa0">Tirar dúvida</a>
                     <span class="mx-2 text-gray-300">·</span>
@@ -860,7 +860,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                 </a>
                 <p class="sol-card-interlinks mt-4 text-xs text-gray-500">
-                    <a href="{{ route('precos') }}#compare" class="hover:underline" style="color: #1e4fa0">Ver plano com este módulo</a>
+                    <a href="{{ route('precos') }}#precos-consumo" class="hover:underline" style="color: #1e4fa0">Ver créditos para este módulo</a>
                     <span class="mx-2 text-gray-300">·</span>
                     <a href="{{ route('duvidas') }}" class="hover:underline" style="color: #1e4fa0">Tirar dúvida</a>
                     <span class="mx-2 text-gray-300">·</span>
@@ -889,7 +889,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                 </a>
                 <a href="{{ route('precos') }}" class="sol-cta-secondary inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-base">
-                    Ver planos e preços
+                    Ver créditos e faixas
                 </a>
             </div>
         </div>

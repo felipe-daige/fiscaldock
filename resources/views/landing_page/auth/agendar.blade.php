@@ -59,7 +59,7 @@
                     <div class="bg-white rounded border border-gray-300 p-4 mb-6 border-l-4 border-l-blue-500">
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Quando falar com a FiscalDock</p>
                         <ul class="space-y-2 text-sm text-gray-700">
-                            <li>Entender qual plano combina com o seu volume e rotina fiscal.</li>
+                            <li>Entender quantos créditos e qual faixa combinam com o seu volume e rotina fiscal.</li>
                             <li>Tirar dúvidas sobre SPED, monitoramento, consultas e compliance.</li>
                             <li>Solicitar uma conversa comercial por WhatsApp.</li>
                         </ul>
@@ -67,7 +67,7 @@
 
                     <div class="flex flex-col sm:flex-row gap-3">
                         <a href="{{ route('signup') }}"
-                           class="bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium px-4 py-3 text-center">
+                           class="btn-cta justify-center text-center">
                             Criar conta grátis
                         </a>
                         <a href="{{ $whatsAppUrl ?? 'https://wa.me/5567999844366' }}"
@@ -78,7 +78,7 @@
                         </a>
                         <a href="{{ route('precos') }}"
                            class="bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded text-sm font-medium px-4 py-3 text-center">
-                            Ver planos
+                            Ver créditos e faixas
                         </a>
                         <a href="{{ route('duvidas') }}"
                            class="bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded text-sm font-medium px-4 py-3 text-center">

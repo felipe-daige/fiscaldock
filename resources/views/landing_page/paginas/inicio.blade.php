@@ -202,7 +202,7 @@
 }
 
 .hero-first-fold {
-    min-height: calc(100svh - var(--landing-header-height));
+    min-height: calc(100svh - var(--landing-header-height) - 8.25rem);
     display: flex;
     flex-direction: column;
     background-color: #f3f4f6;
@@ -218,7 +218,7 @@
 
 .hero-shell {
     width: 100%;
-    min-height: calc(100svh - var(--landing-header-height) - 96px);
+    min-height: calc(100svh - var(--landing-header-height) - 14.75rem);
     display: flex;
     align-items: center;
 }
@@ -269,7 +269,7 @@
 .official-sources-section {
     position: relative;
     z-index: 10;
-    margin-top: -1.5rem;
+    margin-top: -3.875rem;
 }
 
 /* ── Como Funciona ── */
@@ -300,6 +300,7 @@
 }
 
 .official-sources-marquee {
+    --official-sources-gap: 2.5rem;
     position: relative;
     overflow: hidden;
     mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
@@ -312,15 +313,16 @@
     width: max-content;
     align-items: center;
     gap: 0;
-    animation: officialSourcesScroll 28s linear infinite;
+    animation: officialSourcesScroll var(--official-sources-duration, 28s) linear infinite;
     will-change: transform;
 }
 
 .official-sources-group {
     display: flex;
     align-items: center;
-    gap: 2.5rem;
-    padding-right: 2.5rem;
+    gap: var(--official-sources-gap);
+    /* Keep the seam spacing inside the measured cycle width. */
+    padding-right: var(--official-sources-gap);
     flex-shrink: 0;
 }
 
@@ -348,7 +350,7 @@
         transform: translate3d(0, 0, 0);
     }
     to {
-        transform: translate3d(-50%, 0, 0);
+        transform: translate3d(calc(-1 * var(--official-sources-cycle-width, 50%)), 0, 0);
     }
 }
 
@@ -366,8 +368,13 @@
 }
 
 @media (min-width: 1280px) {
+    .hero-first-fold {
+        min-height: calc(100svh - var(--landing-header-height) - 8.75rem);
+    }
+
     .hero-shell {
         max-width: min(94vw, 104rem);
+        min-height: calc(100svh - var(--landing-header-height) - 15.75rem);
     }
 
     .hero-grid {
@@ -388,10 +395,15 @@
         overflow: clip;
     }
 
+    .hero-first-fold {
+        min-height: calc(100svh - var(--landing-header-height) - 9.5rem);
+    }
+
     .hero-shell {
         max-width: min(95vw, 118rem);
-        padding-top: 3rem;
-        padding-bottom: 4.5rem;
+        min-height: calc(100svh - var(--landing-header-height) - 16.5rem);
+        padding-top: 2.625rem;
+        padding-bottom: 3.5rem;
     }
 
     .hero-grid {
@@ -432,8 +444,13 @@
 }
 
 @media (min-width: 1920px) {
+    .hero-first-fold {
+        min-height: calc(100svh - var(--landing-header-height) - 9.75rem);
+    }
+
     .hero-shell {
         max-width: min(95vw, 132rem);
+        min-height: calc(100svh - var(--landing-header-height) - 16.75rem);
     }
 
     .hero-grid {
@@ -480,19 +497,15 @@
     }
 
     .official-sources-section {
-        margin-top: -0.75rem;
+        margin-top: -2.25rem;
     }
 }
 
 @media (max-width: 639px) {
     .official-sources-marquee {
+        --official-sources-gap: 1.75rem;
         mask-image: none;
         -webkit-mask-image: none;
-    }
-
-    .official-sources-group {
-        gap: 1.75rem;
-        padding-right: 1.75rem;
     }
 
     .official-sources-logo {
@@ -505,7 +518,7 @@
 <div class="hero-first-fold">
 <!-- Hero Section (refeito) -->
 <section id="hero" class="relative overflow-hidden bg-gradient-to-br from-primary-700 to-primary-500 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e5a9a 50%, #0f172a 100%);">
-    <div class="hero-shell mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-14 sm:pt-8 sm:pb-16 lg:pt-10 lg:pb-16">
+    <div class="hero-shell mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12 sm:pt-8 sm:pb-12 lg:pt-8 lg:pb-12">
         <div class="hero-grid grid grid-cols-1 lg:grid-cols-12 gap-8 items-center justify-center">
             <!-- Coluna Esquerda: Texto -->
             <div class="hero-copy lg:col-span-5 xl:col-span-6">
@@ -606,43 +619,7 @@
         </p>
         <div class="official-sources-marquee" aria-label="Fontes oficiais integradas">
             <div class="official-sources-track">
-                <div class="official-sources-group" aria-hidden="false">
-                    <div class="official-sources-logo">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 24px; height: 24px; flex-shrink: 0; display: block;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 3.75h6.586a1 1 0 01.707.293l2.664 2.664a1 1 0 01.293.707V19.25A1.75 1.75 0 0115.5 21h-8A1.75 1.75 0 015.75 19.25V5.5A1.75 1.75 0 017.5 3.75z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 3.75V7a1 1 0 001 1h3.25"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.75 10.25h6.5"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.75 13.25h6.5"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.75 16.25h4"></path>
-                        </svg>
-                        Receita Federal
-                    </div>
-                    <div class="official-sources-logo">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 24px; height: 24px; flex-shrink: 0; display: block;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                        </svg>
-                        SEFAZ
-                    </div>
-                    <div class="official-sources-logo">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 24px; height: 24px; flex-shrink: 0; display: block;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
-                        </svg>
-                        Portal da Transparência
-                    </div>
-                    <div class="official-sources-logo">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 24px; height: 24px; flex-shrink: 0; display: block;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                        </svg>
-                        SINTEGRA
-                    </div>
-                    <div class="official-sources-logo">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 24px; height: 24px; flex-shrink: 0; display: block;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
-                        </svg>
-                        PGFN
-                    </div>
-                </div>
-                <div class="official-sources-group" aria-hidden="true">
+                <div class="official-sources-group" data-official-sources-group aria-hidden="false">
                     <div class="official-sources-logo">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 24px; height: 24px; flex-shrink: 0; display: block;">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 3.75h6.586a1 1 0 01.707.293l2.664 2.664a1 1 0 01.293.707V19.25A1.75 1.75 0 0115.5 21h-8A1.75 1.75 0 015.75 19.25V5.5A1.75 1.75 0 017.5 3.75z"></path>
@@ -1191,7 +1168,7 @@
                 <ul class="space-y-2.5 mb-4">
                     <li class="flex items-start text-sm text-gray-500 leading-relaxed">
                         <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" style="color: #047857;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        Planos acessíveis com créditos para consultas tributárias
+                        Créditos acessíveis com faixas de economia para consultas tributárias
                     </li>
                     <li class="flex items-start text-sm text-gray-500 leading-relaxed">
                         <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" style="color: #047857;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>

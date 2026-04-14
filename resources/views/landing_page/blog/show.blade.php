@@ -159,7 +159,9 @@
                     <div class="mt-8 bg-gray-50 rounded-xl border border-gray-200 p-6">
                         <h4 class="text-base font-bold text-gray-900 mb-2">Quer ver na prática?</h4>
                         <p class="text-sm text-gray-600 mb-4">Fale com a FiscalDock para tirar dúvidas comerciais e entender o melhor caminho para sua operação.</p>
-                        <a href="/agendar" class="btn-cta btn-cta--block text-sm">Falar com um especialista</a>
+                        <a href="/agendar" class="inline-flex items-center justify-center rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            Falar com um especialista
+                        </a>
                     </div>
                 </div>
             </aside>
