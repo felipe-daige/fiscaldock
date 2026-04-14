@@ -12,8 +12,11 @@ use App\Http\Controllers\Dashboard\MinhaEmpresaController;
 use App\Http\Controllers\Dashboard\EfdImportacaoController;
 use App\Http\Controllers\Dashboard\MonitoramentoController;
 use App\Http\Controllers\Dashboard\NotaFiscalController;
+use App\Http\Controllers\Dashboard\CatalogoController;
+use App\Http\Controllers\Dashboard\ClearanceController;
 use App\Http\Controllers\Dashboard\ParticipanteController;
 use App\Http\Controllers\Dashboard\ParticipanteGrupoController;
+use App\Http\Controllers\Dashboard\SupportController;
 use App\Http\Controllers\Landing\BlogController;
 use App\Http\Controllers\Landing\LandingPageController;
 use App\Http\Controllers\Landing\SitemapController;
@@ -25,17 +28,28 @@ Route::get('/', [LandingPageController::class, 'inicio'])->name('home');
 Route::get('/inicio', [LandingPageController::class, 'inicio'])->name('inicio');
 Route::get('/solucoes', [LandingPageController::class, 'solucoes'])->name('solucoes');
 Route::get('/precos', [LandingPageController::class, 'precos'])->name('precos');
-Route::get('/faq', [LandingPageController::class, 'faq'])->name('faq');
+Route::get('/duvidas', [LandingPageController::class, 'duvidas'])->name('duvidas');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog');
+Route::get('/blog/efd', [BlogController::class, 'topicEfd'])->name('blog.efd');
+Route::get('/blog/tema/{tema}', [BlogController::class, 'topic'])->name('blog.tema');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.post');
 
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
+
+Route::get('/llms.txt', function () {
+    return response(view('landing_page.llms')->render(), 200, [
+        'Content-Type' => 'text/plain; charset=utf-8',
+    ]);
+})->name('llms');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::get('/agendar', [AuthController::class, 'showAgendar'])->name('agendar');
 Route::post('/agendar', [AuthController::class, 'agendar'])->name('agendar.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+Route::post('/lead/banner-contato', [LandingPageController::class, 'capturarLead'])
+    ->name('landing.lead.banner');
 
 // Endpoint para obter CSRF token atualizado (usado pelo SPA)
 Route::get('/api/csrf-token', function () {
@@ -57,6 +71,7 @@ Route::middleware('auth')->group(function () {
 
     // Usuário (Placeholder)
     Route::get('/app/configuracoes', [DashboardController::class, 'configuracoes'])->name('app.configuracoes');
+    Route::patch('/app/configuracoes/notificacoes', [DashboardController::class, 'atualizarNotificacaoConfiguracao'])->name('app.configuracoes.notificacoes.update');
     Route::get('/app/plano', [DashboardController::class, 'meuPlano'])->name('app.plano');
     Route::get('/app/checkout/{pacote}', [DashboardController::class, 'checkout'])->name('app.checkout');
     Route::get('/app/creditos', [DashboardController::class, 'creditos'])->name('app.creditos');
@@ -202,8 +217,17 @@ Route::middleware('auth')->group(function () {
     // Redirect legado: /app/risk/* -> /app/score-fiscal/*
     Route::get('app/risk/{any?}', fn ($any = '') => redirect("/app/score-fiscal/{$any}"))->where('any', '.*');
 
-    // Validação Contábil (placeholder público)
-    Route::get('app/validacao', [DashboardController::class, 'validacaoPlaceholder'])->name('app.validacao.index.placeholder');
+    // Clearance NF-e
+    Route::get('app/validacao', [ClearanceController::class, 'index'])->name('app.clearance.index');
+    Route::get('app/validacao/notas', [ClearanceController::class, 'notas'])->name('app.clearance.notas');
+    Route::get('app/validacao/notas/todos-ids', [ClearanceController::class, 'todosIds'])->name('app.clearance.todos-ids');
+
+    // Catálogo de Produtos/Serviços
+    Route::get('app/catalogo', [CatalogoController::class, 'index'])->name('app.catalogo.index');
+
+    // Suporte
+    Route::get('/app/suporte', [SupportController::class, 'index'])->name('app.suporte.index');
+    Route::post('/app/suporte', [SupportController::class, 'store'])->name('app.suporte.store');
 
     // Minha Empresa
     Route::prefix('app/minha-empresa')->name('app.minha-empresa.')->group(function () {

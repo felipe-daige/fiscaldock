@@ -3,30 +3,30 @@
 namespace App\Http\Controllers\Landing;
 
 use App\Http\Controllers\Controller;
+use App\Support\Landing\BlogPostCatalog;
+use Illuminate\Support\Facades\Cache;
 
 class SitemapController extends Controller
 {
+    private const BASE_URL = 'https://fiscaldock.com';
+    private const CACHE_TTL = 3600;
+
     public function __invoke()
     {
-        $urls = [
-            ['loc' => '/', 'priority' => '1.0', 'changefreq' => 'weekly'],
-            ['loc' => '/solucoes', 'priority' => '0.8', 'changefreq' => 'monthly'],
-            ['loc' => '/precos', 'priority' => '0.8', 'changefreq' => 'monthly'],
-            ['loc' => '/faq', 'priority' => '0.7', 'changefreq' => 'monthly'],
-            ['loc' => '/blog', 'priority' => '0.8', 'changefreq' => 'weekly'],
-            ['loc' => '/blog/5-riscos-fiscais-que-todo-contador-deveria-monitorar', 'priority' => '0.7', 'changefreq' => 'monthly'],
-            ['loc' => '/blog/importacao-sped-automatizada-economiza-horas', 'priority' => '0.7', 'changefreq' => 'monthly'],
-            ['loc' => '/blog/fornecedor-irregular-como-identificar-antes-da-auditoria', 'priority' => '0.7', 'changefreq' => 'monthly'],
-            ['loc' => '/login', 'priority' => '0.5', 'changefreq' => 'yearly'],
-            ['loc' => '/agendar', 'priority' => '0.6', 'changefreq' => 'yearly'],
-        ];
+        $xml = Cache::remember('sitemap_xml', self::CACHE_TTL, fn () => $this->buildXml());
 
+        return response($xml, 200, ['Content-Type' => 'application/xml']);
+    }
+
+    private function buildXml(): string
+    {
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
 
-        foreach ($urls as $url) {
+        foreach ($this->urls() as $url) {
             $xml .= '  <url>' . "\n";
-            $xml .= '    <loc>https://fiscaldock.com' . $url['loc'] . '</loc>' . "\n";
+            $xml .= '    <loc>' . self::BASE_URL . $url['loc'] . '</loc>' . "\n";
+            $xml .= '    <lastmod>' . $url['lastmod'] . '</lastmod>' . "\n";
             $xml .= '    <changefreq>' . $url['changefreq'] . '</changefreq>' . "\n";
             $xml .= '    <priority>' . $url['priority'] . '</priority>' . "\n";
             $xml .= '  </url>' . "\n";
@@ -34,6 +34,65 @@ class SitemapController extends Controller
 
         $xml .= '</urlset>';
 
-        return response($xml, 200, ['Content-Type' => 'application/xml']);
+        return $xml;
+    }
+
+    private function urls(): array
+    {
+        $posts = BlogPostCatalog::all();
+        $blogIndexLastmod = $this->blogIndexLastmod($posts);
+
+        $urls = [
+            ['loc' => '/', 'priority' => '1.0', 'changefreq' => 'weekly', 'lastmod' => $this->lastmodFor('views/landing_page/paginas/inicio.blade.php')],
+            ['loc' => '/solucoes', 'priority' => '0.8', 'changefreq' => 'monthly', 'lastmod' => $this->lastmodFor('views/landing_page/solucoes/index.blade.php')],
+            ['loc' => '/precos', 'priority' => '0.8', 'changefreq' => 'monthly', 'lastmod' => $this->lastmodFor('views/landing_page/paginas/precos.blade.php')],
+            ['loc' => '/duvidas', 'priority' => '0.7', 'changefreq' => 'monthly', 'lastmod' => $this->lastmodFor('views/landing_page/paginas/duvidas.blade.php')],
+            ['loc' => '/blog', 'priority' => '0.8', 'changefreq' => 'weekly', 'lastmod' => $blogIndexLastmod],
+            ['loc' => '/blog/efd', 'priority' => '0.8', 'changefreq' => 'weekly', 'lastmod' => $blogIndexLastmod],
+            ['loc' => '/agendar', 'priority' => '0.6', 'changefreq' => 'yearly', 'lastmod' => $this->lastmodFor('views/landing_page/auth/agendar.blade.php')],
+        ];
+
+        foreach (BlogPostCatalog::topics() as $topic) {
+            if ($topic['slug'] === 'efd') {
+                continue;
+            }
+            $urls[] = [
+                'loc' => '/blog/tema/' . $topic['slug'],
+                'priority' => '0.8',
+                'changefreq' => 'weekly',
+                'lastmod' => $blogIndexLastmod,
+            ];
+        }
+
+        foreach ($posts as $post) {
+            $urls[] = [
+                'loc' => '/blog/' . $post['slug'],
+                'priority' => '0.7',
+                'changefreq' => 'monthly',
+                'lastmod' => $post['data'],
+            ];
+        }
+
+        return $urls;
+    }
+
+    private function lastmodFor(string $viewPath): string
+    {
+        $fullPath = resource_path($viewPath);
+        $mtime = @filemtime($fullPath);
+
+        return date('Y-m-d', $mtime ?: time());
+    }
+
+    private function blogIndexLastmod(array $posts): string
+    {
+        $latest = null;
+        foreach ($posts as $post) {
+            if ($latest === null || $post['data'] > $latest) {
+                $latest = $post['data'];
+            }
+        }
+
+        return $latest ?? date('Y-m-d');
     }
 }

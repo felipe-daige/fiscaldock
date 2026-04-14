@@ -1,48 +1,48 @@
-<p>Se voce trabalha em um escritorio contabil, sabe quanto tempo leva para analisar um arquivo SPED manualmente. Abrir o arquivo .txt, identificar participantes, cruzar notas fiscais, somar valores por bloco — tudo isso consome horas que poderiam ser dedicadas a tarefas estrategicas.</p>
+<p>Se você trabalha em um escritório contábil, sabe quanto tempo leva para analisar um arquivo SPED manualmente. Abrir o arquivo <code>.txt</code>, identificar participantes, cruzar notas fiscais e somar valores por bloco: tudo isso consome horas que poderiam ser dedicadas a tarefas estratégicas.</p>
 
-<p>A importacao automatizada de SPED muda esse cenario completamente. Veja como.</p>
+<p>A importação automatizada de SPED muda esse cenário completamente. Veja como.</p>
 
-<h2 class="text-2xl font-bold text-gray-900 mt-10 mb-4">O Problema: Analise Manual de SPED</h2>
+<h2 class="text-2xl font-bold text-gray-900 mt-10 mb-4">O problema: análise manual de SPED</h2>
 
-<p>Um arquivo SPED (Escrituracao Fiscal Digital) contem milhares de registros organizados em blocos. O EFD ICMS/IPI tem blocos C e D com notas fiscais de mercadorias e servicos de transporte. O EFD PIS/COFINS tem o bloco A com documentos de servicos.</p>
+<p>Um arquivo SPED (Escrituração Fiscal Digital) contém milhares de registros organizados em blocos. O EFD ICMS/IPI tem blocos C e D com notas fiscais de mercadorias e serviços de transporte. O EFD PIS/COFINS tem o bloco A com documentos de serviços.</p>
 
 <p>Analisar isso manualmente envolve:</p>
 
 <ul class="list-disc pl-6 space-y-2 my-4">
-    <li>Abrir o arquivo .txt e navegar por milhares de linhas</li>
-    <li>Identificar cada participante (fornecedor/cliente) pelo CNPJ</li>
-    <li>Cruzar notas fiscais com os participantes</li>
-    <li>Somar valores por bloco para conferencia</li>
-    <li>Verificar a situacao cadastral de cada participante manualmente</li>
+    <li>abrir o arquivo <code>.txt</code> e navegar por milhares de linhas</li>
+    <li>identificar cada participante (fornecedor ou cliente) pelo CNPJ</li>
+    <li>cruzar notas fiscais com os participantes</li>
+    <li>somar valores por bloco para conferência</li>
+    <li>verificar a situação cadastral de cada participante manualmente</li>
 </ul>
 
-<p>Para um escritorio com dezenas de clientes, isso se multiplica rapidamente. O resultado: horas (ou dias) gastos em tarefas repetitivas e propensas a erro.</p>
+<p>Para um escritório com dezenas de clientes, isso se multiplica rapidamente. O resultado são horas, ou até dias, gastos em tarefas repetitivas e propensas a erro.</p>
 
-<h2 class="text-2xl font-bold text-gray-900 mt-10 mb-4">A Solucao: Importacao Automatizada</h2>
+<h2 class="text-2xl font-bold text-gray-900 mt-10 mb-4">A solução: importação automatizada</h2>
 
-<p>Com uma plataforma como o FiscalDock, o processo e drasticamente diferente:</p>
+<p>Com uma plataforma como o FiscalDock, o processo fica drasticamente mais simples:</p>
 
 <ol class="list-decimal pl-6 space-y-3 my-4">
-    <li><strong>Upload do arquivo:</strong> Voce faz o upload do arquivo .txt do SPED (EFD ICMS/IPI ou PIS/COFINS). O sistema identifica automaticamente o tipo de EFD.</li>
-    <li><strong>Extracao de participantes:</strong> O FiscalDock extrai todos os participantes do arquivo — fornecedores e clientes — com CNPJ, razao social e demais dados cadastrais.</li>
-    <li><strong>Extracao de notas por bloco:</strong> As notas fiscais sao extraidas e organizadas por bloco (A para servicos PIS/COFINS, C para mercadorias ICMS/IPI, D para transporte). Valores totais sao calculados automaticamente.</li>
-    <li><strong>Progresso em tempo real:</strong> Todo o processamento mostra progresso em tempo real via SSE (Server-Sent Events). Voce acompanha cada etapa sem precisar recarregar a pagina.</li>
-    <li><strong>Resumo final:</strong> Ao concluir, voce recebe um resumo com totais por bloco, quantidade de notas, participantes novos vs. existentes e valores consolidados.</li>
+    <li><strong>Upload do arquivo:</strong> você faz o upload do arquivo <code>.txt</code> do SPED (EFD ICMS/IPI ou PIS/COFINS). O sistema identifica automaticamente o tipo de EFD.</li>
+    <li><strong>Extração de participantes:</strong> o FiscalDock extrai todos os participantes do arquivo, com CNPJ, razão social e demais dados cadastrais.</li>
+    <li><strong>Extração de notas por bloco:</strong> as notas fiscais são extraídas e organizadas por bloco (A para serviços de PIS/COFINS, C para mercadorias de ICMS/IPI e D para transporte). Os valores totais são calculados automaticamente.</li>
+    <li><strong>Progresso em tempo real:</strong> todo o processamento mostra progresso em tempo real via SSE (Server-Sent Events). Você acompanha cada etapa sem precisar recarregar a página.</li>
+    <li><strong>Resumo final:</strong> ao concluir, você recebe um resumo com totais por bloco, quantidade de notas, participantes novos versus existentes e valores consolidados.</li>
 </ol>
 
-<h2 class="text-2xl font-bold text-gray-900 mt-10 mb-4">O Ganho Real</h2>
+<h2 class="text-2xl font-bold text-gray-900 mt-10 mb-4">O ganho real</h2>
 
-<p>O que antes levava horas agora leva minutos. Mas o ganho vai alem do tempo:</p>
+<p>O que antes levava horas agora leva minutos. Mas o ganho vai além do tempo:</p>
 
 <ul class="list-disc pl-6 space-y-2 my-4">
-    <li><strong>Menos erros:</strong> Extracao automatica elimina erros de transcricao e calculo</li>
-    <li><strong>Visibilidade imediata:</strong> Dashboards mostram faturamento, compras e tributos assim que a importacao termina</li>
-    <li><strong>Base para monitoramento:</strong> Os participantes extraidos ja ficam disponiveis para monitoramento continuo de situacao cadastral</li>
-    <li><strong>Historico organizado:</strong> Cada importacao fica registrada com data, tipo de EFD e resumo de resultados</li>
+    <li><strong>Menos erros:</strong> a extração automatizada elimina falhas de transcrição e cálculo</li>
+    <li><strong>Visibilidade imediata:</strong> dashboards mostram faturamento, compras e tributos assim que a importação termina</li>
+    <li><strong>Base para monitoramento:</strong> os participantes extraídos já ficam disponíveis para monitoramento contínuo de situação cadastral</li>
+    <li><strong>Histórico organizado:</strong> cada importação fica registrada com data, tipo de EFD e resumo de resultados</li>
 </ul>
 
-<h2 class="text-2xl font-bold text-gray-900 mt-10 mb-4">Conclusao</h2>
+<h2 class="text-2xl font-bold text-gray-900 mt-10 mb-4">Conclusão</h2>
 
-<p>A importacao automatizada de SPED nao e um luxo — e uma necessidade para escritorios contabeis que querem escalar sem aumentar proporcionalmente a equipe. O tempo economizado pode ser direcionado para consultoria, planejamento tributario e atendimento ao cliente.</p>
+<p>A importação automatizada de SPED não é luxo. É uma necessidade para escritórios contábeis que querem escalar sem aumentar proporcionalmente a equipe. O tempo economizado pode ser direcionado para consultoria, planejamento tributário e atendimento ao cliente.</p>
 
-<p>Se voce ainda analisa SPED manualmente, o FiscalDock pode transformar essa rotina. Importe seu primeiro arquivo e veja o resultado em minutos.</p>
+<p>Se você ainda analisa SPED manualmente, o FiscalDock pode transformar essa rotina. Importe seu primeiro arquivo e veja o resultado em minutos.</p>

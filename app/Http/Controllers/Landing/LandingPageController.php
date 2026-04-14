@@ -3,11 +3,15 @@
 namespace App\Http\Controllers\Landing;
 
 use App\Http\Controllers\Controller;
+use App\Models\LandingLead;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 
 class LandingPageController extends Controller
 {
+    private const BASE_URL = 'https://fiscaldock.com';
+
     /**
      * Tema padrão usado nas páginas públicas.
      */
@@ -18,31 +22,76 @@ class LandingPageController extends Controller
         return $this->renderLanding($request, 'paginas.inicio', [
             'title' => 'FiscalDock | Inteligência Fiscal para Contadores',
             'description' => 'Importe seus arquivos SPED, monitore participantes e detecte riscos fiscais antes da auditoria. Plataforma completa para contadores e escritórios contábeis.',
+            'canonical' => self::BASE_URL . '/',
+            'og_type' => 'website',
+            'og_image' => self::BASE_URL . '/binary_files/logo/Logo FiscalDock.png',
         ]);
     }
 
     public function solucoes(Request $request)
     {
         return $this->renderLanding($request, 'solucoes.index', [
-            'title' => 'Soluções — FiscalDock | Compliance Fiscal Automatizado',
-            'description' => 'Importação de SPED, monitoramento de fornecedores, consultas tributárias e dashboards analíticos. Tudo que seu escritório precisa.',
+            'title' => 'Soluções — FiscalDock | Importação SPED, Monitoramento, BI Fiscal',
+            'description' => 'Seis módulos num só radar fiscal: importação SPED/EFD, monitoramento de participantes, consultas CNPJ, BI fiscal, clearance de notas e central de alertas. Conheça os produtos.',
+            'canonical' => self::BASE_URL . '/solucoes',
+            'og_type' => 'website',
+            'og_title' => 'Seis produtos. Um só radar fiscal — FiscalDock',
+            'og_image' => self::BASE_URL . '/binary_files/logo/Logo FiscalDock.png',
         ]);
     }
 
-    public function faq(Request $request)
+    public function duvidas(Request $request)
     {
-        return $this->renderLanding($request, 'paginas.faq', [
-            'title' => 'Perguntas Frequentes — FiscalDock',
-            'description' => 'Tire suas dúvidas sobre importação de SPED, monitoramento fiscal, créditos e segurança dos dados.',
+        return $this->renderLanding($request, 'paginas.duvidas', [
+            'title' => 'Dúvidas Frequentes — FiscalDock',
+            'description' => 'Respostas sobre importação SPED, monitoramento fiscal, créditos, segurança dos dados e planos da FiscalDock. Tire sua dúvida antes de começar.',
+            'canonical' => self::BASE_URL . '/duvidas',
+            'og_type' => 'website',
+            'og_title' => 'Perguntas frequentes — FiscalDock',
+            'og_image' => self::BASE_URL . '/binary_files/logo/Logo FiscalDock.png',
         ]);
     }
 
     public function precos(Request $request)
     {
         return $this->renderLanding($request, 'paginas.precos', [
-            'title' => 'Preços — FiscalDock | Planos para Contadores',
-            'description' => 'Planos acessíveis para escritórios contábeis de todos os tamanhos. Comece gratuitamente.',
+            'title' => 'Preços — FiscalDock | Planos Essencial, Profissional e Compliance',
+            'description' => 'Planos a partir de R$ 159/mês para escritórios contábeis e empresas. Compare Essencial, Profissional e Compliance e escolha o nível de automação fiscal que precisa.',
+            'canonical' => self::BASE_URL . '/precos',
+            'og_type' => 'website',
+            'og_title' => 'Planos e preços — FiscalDock',
+            'og_image' => self::BASE_URL . '/binary_files/logo/Logo FiscalDock.png',
         ]);
+    }
+
+    /**
+     * Captura lead enviado pelo formulário inline do banner #contato da LP.
+     * Salva o e-mail e redireciona para /agendar com o campo pré-preenchido.
+     */
+    public function capturarLead(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email', 'max:255'],
+        ]);
+
+        $email = mb_strtolower(trim($validated['email']));
+
+        $rateKey = 'landing-lead:' . $request->ip();
+        if (RateLimiter::tooManyAttempts($rateKey, 5)) {
+            return back()
+                ->withErrors(['email' => 'Muitas tentativas. Tente novamente em alguns instantes.'])
+                ->withInput();
+        }
+        RateLimiter::hit($rateKey, 60);
+
+        LandingLead::create([
+            'email' => $email,
+            'origem' => $request->input('origem', 'banner_contato'),
+            'user_agent' => mb_substr((string) $request->userAgent(), 0, 500),
+            'ip' => $request->ip(),
+        ]);
+
+        return redirect()->route('agendar', ['email' => $email]);
     }
 
     /**

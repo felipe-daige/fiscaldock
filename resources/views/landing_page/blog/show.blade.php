@@ -1,3 +1,43 @@
+@push('structured-data')
+<script type="application/ld+json">
+{!! json_encode([
+    '@context' => 'https://schema.org',
+    '@type' => 'BlogPosting',
+    'headline' => $post['title'],
+    'description' => $post['meta_description'],
+    'datePublished' => $post['data'],
+    'dateModified' => $post['data'],
+    'url' => 'https://fiscaldock.com/blog/' . $post['slug'],
+    'mainEntityOfPage' => [
+        '@type' => 'WebPage',
+        '@id' => 'https://fiscaldock.com/blog/' . $post['slug'],
+    ],
+    'image' => asset('binary_files/logo/Logo FiscalDock.png'),
+    'articleSection' => $post['categoria'],
+    'author' => ['@type' => 'Organization', 'name' => 'FiscalDock'],
+    'publisher' => [
+        '@type' => 'Organization',
+        'name' => 'FiscalDock',
+        'logo' => [
+            '@type' => 'ImageObject',
+            'url' => asset('binary_files/logo/Logo FiscalDock.png'),
+        ],
+    ],
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+</script>
+<script type="application/ld+json">
+{!! json_encode([
+    '@context' => 'https://schema.org',
+    '@type' => 'BreadcrumbList',
+    'itemListElement' => [
+        ['@type' => 'ListItem', 'position' => 1, 'name' => 'Início', 'item' => 'https://fiscaldock.com/'],
+        ['@type' => 'ListItem', 'position' => 2, 'name' => 'Blog', 'item' => 'https://fiscaldock.com/blog'],
+        ['@type' => 'ListItem', 'position' => 3, 'name' => $post['title'], 'item' => 'https://fiscaldock.com/blog/' . $post['slug']],
+    ],
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+</script>
+@endpush
+
 <section class="py-20 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -10,10 +50,40 @@
                         </svg>
                         Voltar ao Blog
                     </a>
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">{{ $post['categoria'] }}</span>
-                        <span class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($post['data'])->format('d/m/Y') }}</span>
-                        <span class="text-sm text-gray-500">{{ $post['tempo_leitura'] }} de leitura</span>
+                    <div class="blog-meta-panel">
+                        <div class="blog-meta-panel__top">
+                            <span class="blog-badge blog-badge--primary">{{ $post['categoria'] }}</span>
+                            @if(!empty($post['serie']))
+                            <span class="blog-badge blog-badge--series">Série</span>
+                            <span class="blog-badge blog-badge--muted">{{ $post['serie'] }}</span>
+                            @endif
+                            @if(($post['tema'] ?? null) === 'efd')
+                            <a href="/blog/efd" class="blog-meta-link">Hub de EFD</a>
+                            @endif
+                        </div>
+                        <div class="blog-meta-panel__facts">
+                            <span class="blog-meta-chip">
+                                <span class="blog-meta-chip__dot"></span>
+                                {{ \Carbon\Carbon::parse($post['data'])->format('d/m/Y') }}
+                            </span>
+                            <span class="blog-meta-chip">
+                                <span class="blog-meta-chip__dot"></span>
+                                {{ $post['tempo_leitura'] }} de leitura
+                            </span>
+                            @if(!empty($seriePos) && !empty($serieTotal))
+                            <span class="blog-meta-chip">
+                                <span class="blog-meta-chip__dot"></span>
+                                Parte {{ $seriePos }} de {{ $serieTotal }}
+                            </span>
+                            @endif
+                        </div>
+                        @if(!empty($post['tags']))
+                        <div class="blog-meta-panel__top" style="margin-top:0.75rem;">
+                            @foreach($post['tags'] as $tag)
+                            <span class="blog-badge blog-badge--muted">#{{ $tag }}</span>
+                            @endforeach
+                        </div>
+                        @endif
                     </div>
                     <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight">{{ $post['title'] }}</h1>
                 </div>
@@ -22,10 +92,45 @@
                     @include($post['view'])
                 </div>
 
-                {{-- CTA ao final do artigo --}}
-                <div class="mt-12 bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl p-8 text-white">
+                @if(!empty($seriesPosts))
+                <div class="mt-10 rounded-2xl border border-gray-200 bg-gray-50 p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Continue na série</h3>
+                    <div class="space-y-3">
+                        @foreach($seriesPosts as $seriesPost)
+                        <a href="/blog/{{ $seriesPost['slug'] }}" class="flex items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white px-4 py-3 hover:border-blue-300 hover:shadow-sm transition-all">
+                            <div>
+                                <div class="text-sm font-semibold text-gray-900">{{ $seriesPost['title'] }}</div>
+                                <div class="text-xs text-gray-500 mt-1">{{ $seriesPost['tempo_leitura'] }} de leitura</div>
+                            </div>
+                            <span class="text-blue-600 font-medium text-sm">Ler</span>
+                        </a>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                @if(!empty($seriePrev) || !empty($serieNext))
+                <div class="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    @if(!empty($seriePrev))
+                    <a href="/blog/{{ $seriePrev['slug'] }}" class="rounded-xl border border-gray-200 bg-white p-4 hover:border-blue-300 hover:shadow-sm transition-all">
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 mb-1">← Anterior na série</div>
+                        <div class="text-sm font-semibold text-gray-900">{{ $seriePrev['title'] }}</div>
+                    </a>
+                    @else
+                    <div></div>
+                    @endif
+                    @if(!empty($serieNext))
+                    <a href="/blog/{{ $serieNext['slug'] }}" class="rounded-xl border border-gray-200 bg-white p-4 hover:border-blue-300 hover:shadow-sm transition-all sm:text-right">
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 mb-1">Próximo na série →</div>
+                        <div class="text-sm font-semibold text-gray-900">{{ $serieNext['title'] }}</div>
+                    </a>
+                    @endif
+                </div>
+                @endif
+
+                <div class="mt-12 rounded-xl p-8 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e5a9a 50%, #0f172a 100%);">
                     <h3 class="text-2xl font-bold mb-3">Proteja seus clientes contra riscos fiscais</h3>
-                    <p class="text-white/80 mb-6">O FiscalDock automatiza o monitoramento de participantes, importacao de SPED e deteccao de riscos. Teste gratuitamente.</p>
+                    <p class="text-white/80 mb-6">O FiscalDock automatiza o monitoramento de participantes, a importação de SPED e a detecção de riscos. Teste gratuitamente.</p>
                     <a href="/agendar" class="btn-cta inline-flex items-center">
                         Testar Gratuitamente
                         <svg class="h-5 w-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -38,7 +143,7 @@
             {{-- Sidebar --}}
             <aside class="lg:col-span-4">
                 <div class="sticky top-24">
-                    <h3 class="text-lg font-bold text-gray-900 mb-6">Outros artigos</h3>
+                    <h3 class="text-lg font-bold text-gray-900 mb-6">Artigos relacionados</h3>
                     <div class="space-y-6">
                         @foreach($otherPosts as $otherPost)
                         <a href="/blog/{{ $otherPost['slug'] }}" class="group block">
@@ -51,11 +156,10 @@
                         @endforeach
                     </div>
 
-                    {{-- Mini CTA sidebar --}}
                     <div class="mt-8 bg-gray-50 rounded-xl border border-gray-200 p-6">
-                        <h4 class="text-base font-bold text-gray-900 mb-2">Quer ver na pratica?</h4>
-                        <p class="text-sm text-gray-600 mb-4">Agende uma demonstracao gratuita do FiscalDock.</p>
-                        <a href="/agendar" class="btn-cta btn-cta--block text-sm">Agendar demonstracao</a>
+                        <h4 class="text-base font-bold text-gray-900 mb-2">Quer ver na prática?</h4>
+                        <p class="text-sm text-gray-600 mb-4">Agende uma demonstração gratuita do FiscalDock.</p>
+                        <a href="/agendar" class="btn-cta btn-cta--block text-sm">Agendar demonstração</a>
                     </div>
                 </div>
             </aside>
@@ -63,25 +167,3 @@
     </div>
 </section>
 
-{{-- JSON-LD BlogPosting --}}
-<script type="application/ld+json">
-{
-    "@@context": "https://schema.org",
-    "@@type": "BlogPosting",
-    "headline": "{{ $post['title'] }}",
-    "description": "{{ $post['meta_description'] }}",
-    "datePublished": "{{ $post['data'] }}",
-    "author": {
-        "@@type": "Organization",
-        "name": "FiscalDock"
-    },
-    "publisher": {
-        "@@type": "Organization",
-        "name": "FiscalDock",
-        "logo": {
-            "@@type": "ImageObject",
-            "url": "{{ asset('binary_files/logo/Logo FiscalDock.png') }}"
-        }
-    }
-}
-</script>

@@ -1,3 +1,43 @@
+@php
+    // Fonte única para JSON-LD. Se alterar preços aqui, atualize também os cards logo abaixo.
+    $planos = [
+        ['slug' => 'essencial',     'nome' => 'Essencial',     'preco' => 159, 'descricao' => 'Importação SPED, consultas CNPJ na Receita Federal, BI fiscal e 50 créditos/mês.'],
+        ['slug' => 'profissional',  'nome' => 'Profissional',  'preco' => 239, 'descricao' => 'Tudo do Essencial + monitoramento contínuo de participantes, consultas em lote e 200 créditos/mês.'],
+        ['slug' => 'compliance',    'nome' => 'Compliance',    'preco' => 367, 'descricao' => 'Tudo do Profissional + CND Federal, verificação de protestos, validação SEFAZ e 500 créditos/mês.'],
+    ];
+@endphp
+
+@push('structured-data')
+<script type="application/ld+json">
+{!! json_encode([
+    '@context' => 'https://schema.org',
+    '@type' => 'BreadcrumbList',
+    'itemListElement' => [
+        ['@type' => 'ListItem', 'position' => 1, 'name' => 'Início', 'item' => url('/')],
+        ['@type' => 'ListItem', 'position' => 2, 'name' => 'Preços', 'item' => url('/precos')],
+    ],
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+</script>
+<script type="application/ld+json">
+{!! json_encode([
+    '@context' => 'https://schema.org',
+    '@type' => 'Product',
+    'name' => 'FiscalDock — Plataforma de Inteligência Fiscal',
+    'description' => 'SaaS brasileiro de monitoramento fiscal e tributário para contadores e empresas: importação SPED, monitoramento de participantes, consultas CNPJ, BI fiscal e clearance de notas.',
+    'brand' => ['@type' => 'Brand', 'name' => 'FiscalDock'],
+    'offers' => array_map(fn ($p) => [
+        '@type' => 'Offer',
+        'name' => 'Plano ' . $p['nome'],
+        'description' => $p['descricao'],
+        'price' => number_format($p['preco'], 2, '.', ''),
+        'priceCurrency' => 'BRL',
+        'availability' => 'https://schema.org/InStock',
+        'url' => url('/precos#plano-' . $p['slug']),
+    ], $planos),
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+</script>
+@endpush
+
 <!-- Hero Section -->
 <section id="precos-hero" class="bg-white pt-12 pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -54,7 +94,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Plano Light -->
-            <div class="plan-card bg-white rounded-xl shadow-sm border-2 border-gray-200 p-8 hover:shadow-lg transition-all duration-300" data-plan="light">
+            <div id="plano-essencial" class="plan-card bg-white rounded-xl shadow-sm border-2 border-gray-200 p-8 hover:shadow-lg transition-all duration-300" data-plan="light">
                 <div class="text-center mb-6">
                     <h3 class="text-2xl font-bold text-gray-900 mb-2">Essencial</h3>
                     <div class="mb-4">
@@ -117,7 +157,7 @@
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">50 créditos de consulta inclusos/mês</span>
+                        <span class="text-gray-600">50 créditos/mês para consultas premium em bases públicas. Consultas na Receita Federal são gratuitas.</span>
                     </li>
                 </ul>
 
@@ -127,11 +167,14 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
                 </a>
+                <a href="{{ route('duvidas') }}#categoria-planos" class="mt-2 text-xs text-gray-500 hover:text-blue-600 flex items-center">
+                    Tem dúvida sobre este plano? Ver FAQ →
+                </a>
             </div>
 
             <!-- Plano Plus -->
-            <div class="plan-card bg-white rounded-xl shadow-lg border-2 border-blue-500 p-8 hover:shadow-xl transition-all duration-300 relative" data-plan="plus">
-                <div class="absolute top-0 right-0 bg-blue-500 text-white px-4 py-1 rounded-bl-lg rounded-tr-xl text-sm font-semibold">
+            <div id="plano-profissional" class="plan-card bg-white rounded-xl shadow-lg border-2 border-blue-500 p-8 hover:shadow-xl transition-all duration-300 relative" data-plan="plus">
+                <div class="absolute top-0 right-0 text-white px-4 py-1 rounded-bl-lg rounded-tr-xl text-sm font-semibold" style="background: linear-gradient(135deg, #0f172a 0%, #1e5a9a 50%, #0f172a 100%);">
                     Mais Popular
                 </div>
                 <div class="text-center mb-6">
@@ -182,7 +225,7 @@
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Consulta SINTEGRA (IE e situação cadastral)</span>
+                        <span class="text-gray-600">Consulta SINTEGRA — IE e situação cadastral <span class="text-xs text-amber-600 font-medium">(roadmap)</span></span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,7 +237,7 @@
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">200 créditos de consulta inclusos/mês</span>
+                        <span class="text-gray-600">200 créditos/mês para consultas premium em bases públicas. Consultas na Receita Federal são gratuitas.</span>
                     </li>
                 </ul>
 
@@ -204,10 +247,13 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
                 </a>
+                <a href="{{ route('duvidas') }}#categoria-planos" class="mt-2 text-xs text-gray-500 hover:text-blue-600 flex items-center">
+                    Tem dúvida sobre este plano? Ver FAQ →
+                </a>
             </div>
 
             <!-- Plano Premium -->
-            <div class="plan-card bg-white rounded-xl shadow-sm border-2 border-gray-200 p-8 hover:shadow-lg transition-all duration-300" data-plan="premium">
+            <div id="plano-compliance" class="plan-card bg-white rounded-xl shadow-sm border-2 border-gray-200 p-8 hover:shadow-lg transition-all duration-300" data-plan="premium">
                 <div class="text-center mb-6">
                     <h3 class="text-2xl font-bold text-gray-900 mb-2">Compliance</h3>
                     <div class="mb-4">
@@ -244,13 +290,13 @@
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Enriquecimento CEIS (empresas inidôneas)</span>
+                        <span class="text-gray-600">Enriquecimento CEIS — empresas inidôneas <span class="text-xs text-amber-600 font-medium">(em breve)</span></span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Consulta CND Federal (PGFN)</span>
+                        <span class="text-gray-600">Consulta CND Federal — PGFN <span class="text-xs text-amber-600 font-medium">(em implementação)</span></span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -262,7 +308,7 @@
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">Regularidade FGTS e CND Estadual</span>
+                        <span class="text-gray-600">Regularidade FGTS e CND Estadual <span class="text-xs text-amber-600 font-medium">(roadmap)</span></span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -280,7 +326,7 @@
                         <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        <span class="text-gray-600">500 créditos de consulta inclusos/mês</span>
+                        <span class="text-gray-600">500 créditos/mês para consultas premium em bases públicas. Consultas na Receita Federal são gratuitas.</span>
                     </li>
                 </ul>
 
@@ -289,6 +335,9 @@
                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
+                </a>
+                <a href="{{ route('duvidas') }}#categoria-planos" class="mt-2 text-xs text-gray-500 hover:text-blue-600 flex items-center">
+                    Tem dúvida sobre este plano? Ver FAQ →
                 </a>
             </div>
         </div>
@@ -554,7 +603,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Consulta SINTEGRA (IE e situação cadastral)</td>
+                        <td class="py-4 px-4 text-gray-700">Consulta SINTEGRA — IE e situação cadastral <span class="text-xs text-amber-600 font-medium">(roadmap)</span></td>
                         <td class="py-4 px-4 text-center">
                             <span class="text-gray-400">—</span>
                         </td>
@@ -654,7 +703,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Enriquecimento CEIS (empresas inidôneas)</td>
+                        <td class="py-4 px-4 text-gray-700">Enriquecimento CEIS — empresas inidôneas <span class="text-xs text-amber-600 font-medium">(em breve)</span></td>
                         <td class="py-4 px-4 text-center">
                             <span class="text-gray-400">—</span>
                         </td>
@@ -668,7 +717,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Consulta CND Federal (PGFN)</td>
+                        <td class="py-4 px-4 text-gray-700">Consulta CND Federal — PGFN <span class="text-xs text-amber-600 font-medium">(em implementação)</span></td>
                         <td class="py-4 px-4 text-center">
                             <span class="text-gray-400">—</span>
                         </td>
@@ -696,7 +745,7 @@
                         </td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="py-4 px-4 text-gray-700">Regularidade FGTS e CND Estadual</td>
+                        <td class="py-4 px-4 text-gray-700">Regularidade FGTS e CND Estadual <span class="text-xs text-amber-600 font-medium">(roadmap)</span></td>
                         <td class="py-4 px-4 text-center">
                             <span class="text-gray-400">—</span>
                         </td>
@@ -766,7 +815,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="py-4 px-4 text-gray-700">500 créditos de consulta inclusos/mês</td>
+                        <td class="py-4 px-4 text-gray-700">Créditos mensais para consultas premium em bases públicas <span class="text-xs text-gray-500">(Receita Federal é gratuita)</span></td>
                         <td class="py-4 px-4 text-center">
                             <span class="text-gray-400">—</span>
                         </td>
@@ -781,6 +830,25 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+</section>
+
+<!-- Próximos passos / interlinking -->
+<section id="precos-proximos-passos" class="bg-gray-50 py-12">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-3">Ainda em dúvida?</h2>
+        <p class="text-gray-600 mb-8">Confira o que cada módulo entrega, leia as perguntas frequentes ou fale com a gente.</p>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <a href="{{ route('solucoes') }}" class="px-6 py-3 rounded-lg font-semibold border-2 border-gray-300 text-gray-800 hover:border-blue-500 hover:text-blue-600 transition-colors">
+                Ver todas as soluções
+            </a>
+            <a href="{{ route('duvidas') }}" class="px-6 py-3 rounded-lg font-semibold border-2 border-gray-300 text-gray-800 hover:border-blue-500 hover:text-blue-600 transition-colors">
+                Perguntas frequentes
+            </a>
+            <a href="{{ route('agendar') }}" class="btn-cta">
+                Agendar demonstração
+            </a>
         </div>
     </div>
 </section>
