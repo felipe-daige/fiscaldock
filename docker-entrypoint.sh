@@ -59,10 +59,10 @@ if [ -n "$WEBHOOK_IMPORTACAO_XML_URL" ]; then
 else
     echo "AVISO: WEBHOOK_IMPORTACAO_XML_URL vazio"
 fi
-if [ -n "$WEBHOOK_CONSULTAS_LOTES_URL" ]; then
+if [ -n "$WEBHOOK_CONSULTAS_URL" ]; then
     echo "Webhook Consultas: configurado"
 else
-    echo "AVISO: WEBHOOK_CONSULTAS_LOTES_URL vazio"
+    echo "AVISO: WEBHOOK_CONSULTAS_URL vazio"
 fi
 
 # Gerar caches de produção
@@ -71,8 +71,8 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Verificar se API_TOKEN foi cacheado corretamente
-API_TOKEN_STATUS=$(php -r "\$c = require '/var/www/html/bootstrap/cache/config.php'; \$t = \$c['services']['api']['token'] ?? ''; echo \$t ? 'OK (' . substr(\$t, 0, 8) . '..., len=' . strlen(\$t) . ')' : 'VAZIO';")
+# Verificar se API_TOKEN foi cacheado corretamente sem expor prefixo do segredo
+API_TOKEN_STATUS=$(php -r "\$c = require '/var/www/html/bootstrap/cache/config.php'; \$t = \$c['services']['api']['token'] ?? ''; echo \$t ? 'OK (len=' . strlen(\$t) . ')' : 'VAZIO';")
 echo "API_TOKEN no config cache: ${API_TOKEN_STATUS}"
 
 # IMPORTANTE: Corrigir permissões DEPOIS de gerar caches
