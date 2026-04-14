@@ -16,6 +16,8 @@ docker-stack-resolved.yml
 /.zed
 /auth.json
 /node_modules
+/node-v*-linux-*
+/node-v*-linux-*.tar.*
 /public/build
 /public/hot
 /public/storage
