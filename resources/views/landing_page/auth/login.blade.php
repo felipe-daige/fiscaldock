@@ -105,7 +105,7 @@
                         <a
                             href="/criar-conta"
                             data-link
-                            class="btn-cta btn-cta--block gap-2"
+                            class="w-full inline-flex items-center justify-center gap-2 rounded border border-gray-300 bg-white text-gray-800 hover:bg-gray-50 hover:border-gray-400 text-sm font-medium px-4 py-2.5 transition-colors"
                         >
                             Criar conta grátis
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

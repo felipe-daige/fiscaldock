@@ -9,53 +9,93 @@ use App\Models\User;
 class PricingCatalogService
 {
     public const CREDIT_UNIT_PRICE = 0.20;
+    public const MINIMUM_DEPOSIT = 50.00;
 
     /**
-     * Pacotes avulsos de compra.
+     * Ofertas promocionais destacadas.
      */
-    public function getPackages(): array
+    public function getFeaturedOffers(): array
     {
         return [
-            [
-                'slug' => 'starter',
-                'nome' => 'Starter',
-                'creditos' => 100,
-                'preco' => 20.00,
-                'descricao' => 'Pacote de entrada para validar o fluxo e iniciar as primeiras consultas.',
-            ],
-            [
-                'slug' => 'growth',
-                'nome' => 'Growth',
-                'creditos' => 500,
-                'preco' => 100.00,
-                'descricao' => 'Bom ponto de entrada para escritórios com rotina recorrente de consultas.',
-            ],
             [
                 'slug' => 'business',
                 'nome' => 'Business',
                 'creditos' => 1000,
                 'preco' => 200.00,
-                'descricao' => 'Faixa Base de 100 consultas de compliance por R$ 200.',
+                'badge' => 'Promocional',
+                'usage_hint' => 'Para volume mensal',
+                'featured' => true,
+                'descricao' => 'Atalho promocional para rotina mensal com saldo forte de entrada.',
             ],
             [
                 'slug' => 'enterprise',
                 'nome' => 'Enterprise',
                 'creditos' => 5000,
                 'preco' => 1000.00,
-                'descricao' => 'Escala o saldo e acelera a chegada às faixas com melhor economia.',
+                'badge' => 'Escala',
+                'usage_hint' => 'Para operação intensiva',
+                'featured' => false,
+                'descricao' => 'Atalho promocional para operações intensivas que precisam acelerar saldo e faixa.',
             ],
         ];
     }
 
+    public function getPackages(): array
+    {
+        return $this->getFeaturedOffers();
+    }
+
+    public function getMinimumDeposit(): float
+    {
+        return self::MINIMUM_DEPOSIT;
+    }
+
     public function getPackageBySlug(string $slug): ?array
     {
-        foreach ($this->getPackages() as $package) {
+        foreach ($this->getFeaturedOffers() as $package) {
             if ($package['slug'] === $slug) {
-                return $package;
+                return $this->decorateOffer($package);
             }
         }
 
         return null;
+    }
+
+    public function buildCustomDeposit(float $amount): ?array
+    {
+        $normalizedAmount = round($amount, 2);
+
+        if ($normalizedAmount < $this->getMinimumDeposit()) {
+            return null;
+        }
+
+        return [
+            'slug' => 'custom',
+            'nome' => 'Recarga personalizada',
+            'creditos' => (int) round($normalizedAmount / self::CREDIT_UNIT_PRICE),
+            'preco' => $normalizedAmount,
+            'badge' => 'Valor livre',
+            'usage_hint' => 'Você escolhe quanto pagar',
+            'featured' => false,
+            'descricao' => 'Depósito customizado acima do mínimo operacional para comprar apenas o saldo que fizer sentido agora.',
+            'is_custom' => true,
+            'kind' => 'custom',
+        ];
+    }
+
+    public function resolveCheckoutSelection(string $slug, mixed $amount = null): ?array
+    {
+        if ($slug === 'custom') {
+            $normalizedAmount = $this->normalizeAmount($amount);
+
+            if ($normalizedAmount === null) {
+                return null;
+            }
+
+            return $this->buildCustomDeposit($normalizedAmount);
+        }
+
+        return $this->getPackageBySlug($slug);
     }
 
     /**
@@ -125,6 +165,8 @@ class PricingCatalogService
     public function getLandingPricingData(): array
     {
         $tiers = $this->getTiers();
+        $featuredOffers = array_map(fn (array $package) => $this->decorateOffer($package), $this->getFeaturedOffers());
+
         $products = array_map(function (array $product) use ($tiers) {
             $rows = [];
             foreach ($tiers as $tier) {
@@ -138,12 +180,21 @@ class PricingCatalogService
                 ];
             }
 
-            return array_merge($product, ['rows' => $rows]);
+            $entryRow = $rows[0];
+            $bestRow = $rows[array_key_last($rows)];
+
+            return array_merge($product, [
+                'rows' => $rows,
+                'entry_price_label' => 'A partir de R$ '.number_format($entryRow['price'], 2, ',', '.').'/consulta',
+                'best_price_label' => 'Melhor faixa: R$ '.number_format($bestRow['price'], 2, ',', '.').'/consulta',
+            ]);
         }, $this->getProductCatalog());
 
         return [
             'credit_unit_price' => self::CREDIT_UNIT_PRICE,
-            'packages' => $this->getPackages(),
+            'minimum_deposit' => $this->getMinimumDeposit(),
+            'featured_offers' => $featuredOffers,
+            'packages' => $featuredOffers,
             'tiers' => $tiers,
             'products' => $products,
         ];
@@ -261,6 +312,7 @@ class PricingCatalogService
     {
         $progress = $this->getTierProgressForUser($user);
         $tier = $progress['current_tier'];
+        $featuredOffers = array_map(fn (array $package) => $this->decorateOffer($package), $this->getFeaturedOffers());
 
         $products = array_map(function (array $product) use ($tier) {
             $credits = $product['credits_by_tier'][$tier['slug']];
@@ -276,9 +328,39 @@ class PricingCatalogService
 
         return array_merge($progress, [
             'credit_unit_price' => self::CREDIT_UNIT_PRICE,
+            'minimum_deposit' => $this->getMinimumDeposit(),
+            'featured_offers' => $featuredOffers,
             'products' => $products,
-            'packages' => $this->getPackages(),
+            'packages' => $featuredOffers,
         ]);
+    }
+
+    private function decorateOffer(array $package): array
+    {
+        $package['price_per_credit'] = $package['creditos'] > 0
+            ? round($package['preco'] / $package['creditos'], 2)
+            : 0.0;
+        $package['is_custom'] = false;
+        $package['kind'] = 'featured';
+
+        return $package;
+    }
+
+    private function normalizeAmount(mixed $amount): ?float
+    {
+        if ($amount === null || $amount === '') {
+            return null;
+        }
+
+        if (is_string($amount)) {
+            $amount = str_replace(',', '.', trim($amount));
+        }
+
+        if (! is_numeric($amount)) {
+            return null;
+        }
+
+        return round((float) $amount, 2);
     }
 
     public function creditsToCurrency(int $credits): float

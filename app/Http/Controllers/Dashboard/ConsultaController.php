@@ -11,6 +11,7 @@ use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\ParticipanteGrupo;
 use App\Services\CreditService;
+use App\Services\PricingCatalogService;
 use App\Services\ConsultaReportService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -27,7 +28,8 @@ class ConsultaController extends Controller
 
     public function __construct(
         protected CreditService $creditService,
-        protected ConsultaReportService $reportService
+        protected ConsultaReportService $reportService,
+        protected PricingCatalogService $pricingCatalogService
     ) {}
 
     private function getViewPrefix(): string
@@ -52,7 +54,7 @@ class ConsultaController extends Controller
 
         $user = Auth::user();
 
-        // Buscar planos ativos
+        // Buscar catálogo legado de produtos consultáveis
         $planos = MonitoramentoPlano::ativos();
 
         // Buscar clientes do usuário
@@ -567,12 +569,12 @@ class ConsultaController extends Controller
         if (! $plano || ! $plano->is_active) {
             return response()->json([
                 'success' => false,
-                'error' => 'Plano não disponível.',
+                'error' => 'Produto de consulta não disponível.',
             ], Response::HTTP_BAD_REQUEST);
         }
 
         $totalParticipantes = count($validated['participante_ids']);
-        $custoUnitario = $plano->custo_creditos;
+        $custoUnitario = $this->pricingCatalogService->getProductCreditsByPlan($plano, $user);
         $custoTotal = $totalParticipantes * $custoUnitario;
         $saldoAtual = $this->creditService->getBalance($user);
         $saldoApos = $saldoAtual - $custoTotal;
@@ -581,6 +583,8 @@ class ConsultaController extends Controller
             'success' => true,
             'calculo' => [
                 'total_participantes' => $totalParticipantes,
+                'produto_codigo' => $plano->codigo,
+                'produto_nome' => $plano->nome,
                 'plano_codigo' => $plano->codigo,
                 'plano_nome' => $plano->nome,
                 'custo_unitario' => $custoUnitario,
@@ -633,13 +637,14 @@ class ConsultaController extends Controller
         if (! $plano || ! $plano->is_active) {
             return response()->json([
                 'success' => false,
-                'error' => 'Plano não disponível.',
+                'error' => 'Produto de consulta não disponível.',
             ], Response::HTTP_BAD_REQUEST);
         }
 
         // Calcular custo
         $totalParticipantes = $participantes->count();
-        $custoTotal = $totalParticipantes * $plano->custo_creditos;
+        $custoUnitario = $this->pricingCatalogService->getProductCreditsByPlan($plano, $user);
+        $custoTotal = $totalParticipantes * $custoUnitario;
 
         // Verificar créditos (se não for gratuito)
         if (! $plano->is_gratuito && ! $this->creditService->hasEnough($user, $custoTotal)) {
@@ -691,7 +696,7 @@ class ConsultaController extends Controller
             Log::info('Consulta: lote criado', [
                 'consulta_lote_id' => $lote->id,
                 'user_id' => $user->id,
-                'plano' => $plano->codigo,
+                'produto' => $plano->codigo,
                 'total_participantes' => $totalParticipantes,
                 'creditos_cobrados' => $custoTotal,
             ]);

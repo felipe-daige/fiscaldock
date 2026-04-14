@@ -29,11 +29,11 @@
 
     <!-- Fallback crítico do CTA (caso o CSS do Vite não carregue) -->
     <style>
-        .btn-cta{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border-radius:.5rem;padding:.875rem 1.5rem;min-height:48px;font-size:1rem;border:2px solid #facc15;background:#facc15;color:#0b1f3a;font-weight:700;letter-spacing:normal;line-height:1.1;text-decoration:none;transform:translateY(0);box-shadow:0 20px 50px -20px rgba(250,204,21,.55);transition:transform .16s ease,box-shadow .16s ease,background-color .16s ease,border-color .16s ease;-webkit-tap-highlight-color:transparent}
+        .btn-cta{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border-radius:8px;padding:.875rem 1.5rem;min-height:48px;font-size:1rem;border:2px solid #facc15;background:#facc15;color:#0b1f3a;font-weight:700;letter-spacing:normal;line-height:1.1;text-decoration:none;transform:translateY(0);box-shadow:0 20px 50px -20px rgba(250,204,21,.55);transition:transform .16s ease,box-shadow .16s ease,background-color .16s ease,border-color .16s ease;-webkit-tap-highlight-color:transparent}
         .btn-cta:hover{background:#eab308;border-color:#eab308;transform:translateY(-1px);box-shadow:0 26px 60px -22px rgba(250,204,21,.65)}
         .btn-cta:active{background:#ca8a04;border-color:#ca8a04;transform:translateY(0);box-shadow:0 14px 35px -22px rgba(250,204,21,.55)}
         .btn-cta:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(250,204,21,.35),0 20px 50px -20px rgba(250,204,21,.55)}
-        .btn-cta--nav{min-height:40px;padding:.625rem 1.2rem;font-size:.875rem;line-height:1.2;font-weight:700}
+        .btn-cta--nav{border-radius:6px;min-height:40px;padding:.625rem 1.2rem;font-size:.875rem;line-height:1.2;font-weight:700}
         .btn-cta--block{width:100%;justify-content:center}
         @media (prefers-reduced-motion:reduce){.btn-cta{transition:none}}
     </style>

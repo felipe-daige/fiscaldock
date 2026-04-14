@@ -12,6 +12,7 @@ use App\Models\Participante;
 use App\Services\AlertaCentralService;
 use App\Services\Dashboard\DashboardDataService;
 use App\Services\NotaFiscalService;
+use App\Services\PricingCatalogService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,6 +24,7 @@ class DashboardController extends Controller
         protected DashboardDataService $dashboardDataService,
         protected NotaFiscalService $notaFiscalService,
         protected AlertaCentralService $alertaCentralService,
+        protected PricingCatalogService $pricingCatalogService,
     ) {}
 
     private const AUTH_VIEW_PREFIX = 'autenticado.';
@@ -803,6 +805,7 @@ class DashboardController extends Controller
         $now = now();
         $mesInicio = $now->copy()->startOfMonth();
         $mesFim = $now->copy()->endOfMonth();
+        $pricing = $this->pricingCatalogService->getCommercialSummaryForUser($user);
 
         // KPI 1: Saldo atual
         $saldoAtual = (int) $user->credits;
@@ -861,6 +864,7 @@ class DashboardController extends Controller
             'ultimasTransacoes' => $ultimasTransacoes,
             'consumoMensal' => $consumoMensal,
             'maxConsumo' => $maxConsumo,
+            'pricing' => $pricing,
             'trialResumo' => $this->buildTrialResumo($user),
         ];
 
@@ -888,6 +892,7 @@ class DashboardController extends Controller
         }
 
         $user = Auth::user();
+        $pricing = $this->pricingCatalogService->getCommercialSummaryForUser($user);
 
         $saldoAtual = (int) $user->credits;
 
@@ -909,13 +914,6 @@ class DashboardController extends Controller
             ->limit(30)
             ->get();
 
-        $pacotes = [
-            ['slug' => 'starter', 'nome' => 'Starter', 'creditos' => 100, 'preco' => 26.00, 'desconto' => null],
-            ['slug' => 'growth', 'nome' => 'Growth', 'creditos' => 500, 'preco' => 117.00, 'desconto' => 10],
-            ['slug' => 'business', 'nome' => 'Business', 'creditos' => 1000, 'preco' => 208.00, 'desconto' => 20],
-            ['slug' => 'enterprise', 'nome' => 'Enterprise', 'creditos' => 5000, 'preco' => 910.00, 'desconto' => 30],
-        ];
-
         $creditosView = self::AUTH_VIEW_PREFIX.'creditos.index';
 
         $data = [
@@ -924,7 +922,8 @@ class DashboardController extends Controller
             'totalConsumido' => $totalConsumido,
             'ultimaEntrada' => $ultimaEntrada,
             'historicoCreditos' => $historicoCreditos,
-            'pacotes' => $pacotes,
+            'pacotes' => $this->pricingCatalogService->getPackages(),
+            'pricing' => $pricing,
             'trialResumo' => $this->buildTrialResumo($user),
         ];
 
@@ -939,29 +938,29 @@ class DashboardController extends Controller
 
     public function checkout(Request $request, string $pacote)
     {
-        $pacotes = [
-            'starter' => ['nome' => 'Starter', 'creditos' => 100, 'preco' => 26.00, 'desconto' => null],
-            'growth' => ['nome' => 'Growth', 'creditos' => 500, 'preco' => 117.00, 'desconto' => 10],
-            'business' => ['nome' => 'Business', 'creditos' => 1000, 'preco' => 208.00, 'desconto' => 20],
-            'enterprise' => ['nome' => 'Enterprise', 'creditos' => 5000, 'preco' => 910.00, 'desconto' => 30],
-        ];
+        $dados = $this->pricingCatalogService->resolveCheckoutSelection($pacote, $request->query('amount'));
 
-        if (! isset($pacotes[$pacote])) {
-            return redirect()->route('app.plano');
+        if (! $dados) {
+            return redirect()
+                ->route('app.creditos')
+                ->withErrors([
+                    'amount' => 'Informe um valor válido a partir de R$ '.number_format($this->pricingCatalogService->getMinimumDeposit(), 0, ',', '.').'.',
+                ]);
         }
-
-        $dados = $pacotes[$pacote];
-        $dados['slug'] = $pacote;
 
         $checkoutView = self::AUTH_VIEW_PREFIX.'plano.checkout';
 
         if ($this->isAjaxRequest($request)) {
-            return view($checkoutView, ['pacote' => $dados]);
+            return view($checkoutView, [
+                'pacote' => $dados,
+                'pricing' => $this->pricingCatalogService->getCommercialSummaryForUser(Auth::user()),
+            ]);
         }
 
         return view(self::AUTH_LAYOUT_VIEW, [
             'initialView' => $checkoutView,
             'pacote' => $dados,
+            'pricing' => $this->pricingCatalogService->getCommercialSummaryForUser(Auth::user()),
         ]);
     }
 

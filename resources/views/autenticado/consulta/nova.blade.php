@@ -6,7 +6,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Nova Consulta</h1>
-                    <p class="text-xs text-gray-500 mt-1">Selecione participantes, defina o plano e execute consultas fiscais em lote.</p>
+                    <p class="text-xs text-gray-500 mt-1">Selecione participantes, escolha o produto de consulta e execute consultas fiscais em lote.</p>
                 </div>
             </div>
             <a
@@ -23,7 +23,7 @@
         <div class="space-y-6">
 
         @php
-                // Metadata visual por codigo de plano (DB)
+                // Metadata visual por código legado do produto (DB)
                 $planoMeta = [
                     'gratuito' => [
                         'cor' => 'green',
@@ -670,7 +670,7 @@
                             <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                             </svg>
-                            <h3 class="text-base font-semibold text-gray-900">Detalhes dos Planos</h3>
+                            <h3 class="text-base font-semibold text-gray-900">Detalhes dos Produtos</h3>
                         </div>
                         <div class="flex items-center gap-3">
                             <span id="carousel-counter-lote" class="text-xs text-gray-400">1 / {{ count($planosAtivos) }}</span>
@@ -790,7 +790,7 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                             </svg>
-                            Selecionar este plano
+                            Selecionar este produto
                         </button>
                     </div>
 

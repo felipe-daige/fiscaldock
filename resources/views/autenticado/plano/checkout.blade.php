@@ -1,3 +1,8 @@
+@php
+    $isCustomCheckout = (bool) ($pacote['is_custom'] ?? false);
+    $isFeaturedCheckout = ($pacote['kind'] ?? null) === 'featured';
+@endphp
+
 {{-- Checkout - Simulacao de Gateway --}}
 <div class="min-h-screen bg-gray-50" id="checkout-container">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -25,13 +30,19 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
-            Voltar para Meu Plano
+            Voltar para Faixa Comercial
         </a>
 
         {{-- Header --}}
         <div class="mb-8">
             <h1 class="text-2xl font-bold text-gray-900">Finalizar Compra</h1>
-            <p class="mt-1 text-sm text-gray-500">Complete o pagamento para adicionar creditos a sua conta.</p>
+            <p class="mt-1 text-sm text-gray-500">
+                @if($isCustomCheckout)
+                    Confirme sua recarga personalizada para adicionar créditos pré-pagos à conta.
+                @else
+                    Complete o pagamento para adicionar os créditos da oferta promocional à sua conta.
+                @endif
+            </p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -130,18 +141,26 @@
 
                     <div class="space-y-3 pb-4 border-b border-gray-100">
                         <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Pacote</span>
+                            <span class="text-sm text-gray-600">Origem</span>
                             <span class="text-sm font-semibold text-gray-900">{{ $pacote['nome'] }}</span>
                         </div>
                         <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Creditos</span>
+                            <span class="text-sm text-gray-600">Modelo</span>
+                            <span class="text-sm font-medium text-gray-700">{{ $isCustomCheckout ? 'Valor livre' : 'Oferta promocional' }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Créditos</span>
                             <span class="text-sm font-medium text-gray-700">{{ number_format($pacote['creditos'], 0, ',', '.') }}</span>
                         </div>
-                        @if($pacote['desconto'])
                         <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Desconto</span>
-                            <span class="text-sm font-medium text-emerald-600">-{{ $pacote['desconto'] }}%</span>
+                            <span class="text-sm text-gray-600">Valor pago</span>
+                            <span class="text-sm font-medium text-gray-700">R$ {{ number_format($pacote['preco'], 2, ',', '.') }}</span>
                         </div>
+                        @if($isFeaturedCheckout)
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Benefício</span>
+                                <span class="text-sm font-medium text-emerald-600">{{ $pacote['badge'] ?? 'Oferta' }}</span>
+                            </div>
                         @endif
                     </div>
 
@@ -155,7 +174,13 @@
                             <svg class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            <p class="text-xs text-blue-700">Creditos adicionados instantaneamente apos confirmacao do pagamento.</p>
+                            <p class="text-xs text-blue-700">
+                                Créditos adicionados após a confirmação do pagamento.
+                                @if($isCustomCheckout)
+                                    Você escolheu um valor livre acima do mínimo de R$ {{ number_format($pricing['minimum_deposit'] ?? 50, 0, ',', '.') }}.
+                                @endif
+                                Sua faixa comercial sobe conforme o histórico acumulado de créditos pagos.
+                            </p>
                         </div>
                     </div>
 
@@ -180,12 +205,12 @@
                 </div>
                 <h3 class="text-lg font-bold text-gray-900 mb-1">Pagamento Confirmado!</h3>
                 <p class="text-sm text-gray-500 mb-2">
-                    <span class="font-semibold text-emerald-600">{{ number_format($pacote['creditos'], 0, ',', '.') }} creditos</span> adicionados a sua conta.
+                    <span class="font-semibold text-emerald-600">{{ number_format($pacote['creditos'], 0, ',', '.') }} créditos</span> adicionados à sua conta.
                 </p>
-                <p class="text-xs text-gray-400 mb-6">Pacote {{ $pacote['nome'] }} - R$ {{ number_format($pacote['preco'], 2, ',', '.') }}</p>
+                <p class="text-xs text-gray-400 mb-6">{{ $pacote['nome'] }} - R$ {{ number_format($pacote['preco'], 2, ',', '.') }}</p>
                 <a href="/app/plano" data-link
                    class="inline-flex items-center justify-center w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition-colors">
-                    Voltar para Meu Plano
+                    Voltar para Faixa Comercial
                 </a>
             </div>
         </div>

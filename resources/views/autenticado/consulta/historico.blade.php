@@ -79,7 +79,7 @@
                             type="text"
                             name="busca"
                             value="{{ $buscaFiltro }}"
-                            placeholder="Buscar lote, plano ou erro..."
+                            placeholder="Buscar lote, produto ou erro..."
                             class="w-full px-3 py-2 border border-gray-300 rounded text-sm text-gray-700 focus:ring-1 focus:ring-gray-400 focus:border-gray-400 xl:col-span-2"
                         >
                         <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded text-sm text-gray-700 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
@@ -90,7 +90,7 @@
                             <option value="erro" {{ $statusFiltro === 'erro' ? 'selected' : '' }}>Erro</option>
                         </select>
                         <select name="plano_id" class="w-full px-3 py-2 border border-gray-300 rounded text-sm text-gray-700 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
-                            <option value="">Todos os planos</option>
+                            <option value="">Todos os produtos</option>
                             @foreach(($planosFiltro ?? collect()) as $plano)
                                 <option value="{{ $plano->id }}" {{ (string) $planoFiltro === (string) $plano->id ? 'selected' : '' }}>{{ $plano->nome }}</option>
                             @endforeach
@@ -140,7 +140,7 @@
                         <thead>
                             <tr class="border-b border-gray-300">
                                 <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Lote / Data</th>
-                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Plano</th>
+                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Produto</th>
                                 <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participantes</th>
                                 <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Créditos</th>
                                 <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Status</th>
