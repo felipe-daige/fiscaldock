@@ -131,8 +131,8 @@
                 <div class="mt-12 rounded-xl p-8 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e5a9a 50%, #0f172a 100%);">
                     <h3 class="text-2xl font-bold mb-3">Proteja seus clientes contra riscos fiscais</h3>
                     <p class="text-white/80 mb-6">O FiscalDock automatiza o monitoramento de participantes, a importação de SPED e a detecção de riscos. Teste gratuitamente.</p>
-                    <a href="/agendar" class="btn-cta inline-flex items-center">
-                        Testar Gratuitamente
+                    <a href="/criar-conta" class="btn-cta inline-flex items-center">
+                        Criar conta grátis
                         <svg class="h-5 w-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
                         </svg>
@@ -158,12 +158,11 @@
 
                     <div class="mt-8 bg-gray-50 rounded-xl border border-gray-200 p-6">
                         <h4 class="text-base font-bold text-gray-900 mb-2">Quer ver na prática?</h4>
-                        <p class="text-sm text-gray-600 mb-4">Agende uma demonstração gratuita do FiscalDock.</p>
-                        <a href="/agendar" class="btn-cta btn-cta--block text-sm">Agendar demonstração</a>
+                        <p class="text-sm text-gray-600 mb-4">Fale com a FiscalDock para tirar dúvidas comerciais e entender o melhor caminho para sua operação.</p>
+                        <a href="/agendar" class="btn-cta btn-cta--block text-sm">Falar com um especialista</a>
                     </div>
                 </div>
             </aside>
         </div>
     </div>
 </section>
-

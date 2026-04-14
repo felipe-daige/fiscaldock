@@ -15,6 +15,23 @@
             <p class="text-xs text-gray-500 mt-1">Resumo operacional do consumo de créditos.</p>
         </div>
 
+        @if(($trialResumo['is_active'] ?? false) || ($trialResumo['is_expired'] ?? false))
+            <div class="bg-white rounded border border-gray-300 p-4 border-l-4 {{ ($trialResumo['is_active'] ?? false) ? 'border-l-blue-500' : 'border-l-amber-500' }}">
+                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Créditos promocionais</p>
+                @if($trialResumo['is_active'] ?? false)
+                    <p class="mt-2 text-sm text-gray-700">
+                        Você recebeu {{ number_format($trialResumo['granted'] ?? 0, 0, ',', '.') }} créditos grátis.
+                        Restam {{ number_format($trialResumo['remaining'] ?? 0, 0, ',', '.') }} até {{ optional($trialResumo['expires_at'])->format('d/m/Y H:i') }}.
+                    </p>
+                @else
+                    <p class="mt-2 text-sm text-gray-700">
+                        O trial expirou em {{ optional($trialResumo['expires_at'])->format('d/m/Y H:i') }}.
+                        Créditos comprados continuam válidos normalmente.
+                    </p>
+                @endif
+            </div>
+        @endif
+
         <div class="bg-white rounded border border-gray-300 overflow-hidden">
             <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-200">
                 <div class="p-4 sm:p-6">
@@ -181,7 +198,7 @@
                         </div>
                         <div class="flex items-start gap-3">
                             <span class="text-[10px] font-bold uppercase tracking-wide text-white rounded px-2 py-0.5" style="background-color: #374151">3</span>
-                            <p>Créditos não expiram; utilize conforme o ritmo do seu escritório.</p>
+                            <p>Créditos comprados não expiram; créditos promocionais do trial expiram ao fim do período informado.</p>
                         </div>
                     </div>
                 </div>

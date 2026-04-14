@@ -66,7 +66,7 @@ class LandingPageController extends Controller
 
     /**
      * Captura lead enviado pelo formulário inline do banner #contato da LP.
-     * Salva o e-mail e redireciona para /agendar com o campo pré-preenchido.
+     * Salva o e-mail e redireciona para /criar-conta com o campo pré-preenchido.
      */
     public function capturarLead(Request $request)
     {
@@ -91,7 +91,7 @@ class LandingPageController extends Controller
             'ip' => $request->ip(),
         ]);
 
-        return redirect()->route('agendar', ['email' => $email]);
+        return redirect()->route('signup', ['email' => $email]);
     }
 
     /**

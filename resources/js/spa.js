@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         bi: null, // Script carregado como tag externa na view — nao tentar recarregar no SPA
         notasFiscais: null, // Código inline na view
         alertas: null, // Código inline na view
+        validacao: null, // Código inline na view (clearance.js carregado como tag externa)
     };
 
     // Converte slug (com hífen/underscore) para camelCase
@@ -95,6 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
         '/': 'initInicio',
         '/inicio': 'initInicio',
         '/login': 'initLogin',
+        '/criar-conta': 'initCriarConta',
         '/agendar': 'initAgendar',
         '/solucoes': 'initSolucoes',
         '/app/importacao/efd': 'initImportacaoEfd',
@@ -114,6 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
         '/app/notas-fiscais': null, // IIFE inline na view, sem init function
         '/app/notas-fiscais/dashboard': null, // IIFE inline na view
         '/app/alertas': null, // IIFE inline na view
+        '/app/validacao': null, // Clearance dashboard — IIFE inline
+        '/app/validacao/notas': null, // Clearance notas — clearance.js carregado como tag
     };
     
     // 0. LIMPAR RECURSOS ANTES DE NAVEGAR
@@ -143,8 +147,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof window._solucoesInitialized !== 'undefined') {
             window._solucoesInitialized = false;
         }
-        if (typeof window._faqInitialized !== 'undefined') {
-            window._faqInitialized = false;
+        if (typeof window._duvidasInitialized !== 'undefined') {
+            window._duvidasInitialized = false;
         }
         if (typeof window._impactosInitialized !== 'undefined') {
             window._impactosInitialized = false;
@@ -217,6 +221,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             // Ignorar erro se cleanupBi não estiver definida (BI não foi carregado)
+        }
+
+        // Limpar alerta de erro inline ao navegar entre páginas
+        try {
+            if (typeof window.hideErrorAlert === 'function') {
+                window.hideErrorAlert();
+            } else {
+                const errBox = document.getElementById('error-alert-container');
+                if (errBox) errBox.innerHTML = '';
+            }
+        } catch (error) {
+            // Ignorar
         }
     }
     

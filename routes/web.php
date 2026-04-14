@@ -44,8 +44,12 @@ Route::get('/llms.txt', function () {
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::get('/criar-conta', [AuthController::class, 'showSignup'])->name('signup');
+Route::post('/criar-conta', [AuthController::class, 'signup'])->name('signup.post');
 Route::get('/agendar', [AuthController::class, 'showAgendar'])->name('agendar');
 Route::post('/agendar', [AuthController::class, 'agendar'])->name('agendar.post');
+Route::get('/termos', [AuthController::class, 'showTerms'])->name('termos');
+Route::get('/privacidade', [AuthController::class, 'showPrivacy'])->name('privacidade');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::post('/lead/banner-contato', [LandingPageController::class, 'capturarLead'])

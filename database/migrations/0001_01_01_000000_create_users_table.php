@@ -21,6 +21,24 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
             $table->decimal('credits', 12, 2)->default(0);
+            $table->string('empresa')->nullable();
+            $table->string('cargo')->nullable();
+            $table->string('cnpj', 18)->nullable();
+            $table->string('faturamento_anual')->nullable();
+            $table->string('desafio_principal')->nullable();
+            $table->timestamp('terms_accepted_at')->nullable();
+            $table->boolean('marketing_opt_in')->default(false);
+            $table->timestamp('marketing_opt_in_at')->nullable();
+            $table->boolean('trial_used')->default(false);
+            $table->timestamp('trial_started_at')->nullable();
+            $table->timestamp('trial_expires_at')->nullable();
+            $table->unsignedInteger('trial_credits_granted')->default(0);
+            $table->unsignedInteger('trial_credits_remaining')->default(0);
+            $table->unsignedInteger('trial_credits_expired')->default(0);
+            $table->string('trial_source')->nullable();
+            $table->boolean('alertas_operacionais')->default(true);
+            $table->boolean('alertas_monitoramento')->default(true);
+            $table->boolean('resumo_periodico')->default(true);
             $table->timestamps();
         });
 
@@ -38,6 +56,17 @@ return new class extends Migration
             $table->longText('payload');
             $table->integer('last_activity')->index();
         });
+
+        Schema::create('landing_leads', function (Blueprint $table) {
+            $table->id();
+            $table->string('email');
+            $table->string('origem')->default('banner_contato');
+            $table->string('user_agent', 500)->nullable();
+            $table->ipAddress('ip')->nullable();
+            $table->timestamp('converted_at')->nullable();
+            $table->timestamps();
+            $table->index('email');
+        });
     }
 
     /**
@@ -45,6 +74,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('landing_leads');
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');

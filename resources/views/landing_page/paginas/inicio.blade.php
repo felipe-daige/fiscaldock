@@ -528,8 +528,8 @@
 
                 <!-- CTAs -->
                 <div class="mt-5">
-                    <a href="/agendar" data-link data-button="cta" class="btn-cta">
-                        <span class="whitespace-nowrap">Testar Gratuitamente</span>
+                    <a href="/criar-conta" data-link data-button="cta" class="btn-cta">
+                        <span class="whitespace-nowrap">Criar conta grátis</span>
                         <svg class="h-5 w-5 shrink-0 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                         </svg>
@@ -1062,8 +1062,8 @@
                         </div>
                     </div>
                     <div class="shrink-0 flex flex-col items-center gap-3">
-                        <a href="/agendar" class="btn-cta">
-                            Testar Gratuitamente
+                        <a href="/criar-conta" class="btn-cta">
+                            Criar conta grátis
                             <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
                         </a>
                         <p class="text-[11px]" style="color: rgba(255,255,255,0.35);">Sem cartão de crédito</p>
@@ -1075,8 +1075,8 @@
 
         <!-- CTA da seção -->
         <div class="text-center mt-12 sm:mt-16">
-            <a href="/agendar" class="btn-cta">
-                Explorar Funcionalidades
+            <a href="/criar-conta" class="btn-cta">
+                Criar conta grátis
                 <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
             </a>
             <p class="mt-3 text-xs text-gray-400">Sem mensalidade — pague apenas pelos créditos que usar</p>
@@ -1537,7 +1537,7 @@
             <a href="/agendar"
                data-link
                class="inline-flex items-center justify-center rounded-full border border-white/35 bg-white/12 px-3 py-1.5 text-sm font-semibold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/20 hover:border-white/55 focus:outline-none focus:ring-2 focus:ring-white/70 focus:ring-offset-2 focus:ring-offset-slate-900">
-                Fale com um especialista
+                Falar com um especialista
             </a>
         </p>
 

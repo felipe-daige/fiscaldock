@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('alertas:recalcular')->dailyAt('06:00');
+Schedule::command('trial:expire-credits')->dailyAt('01:00');

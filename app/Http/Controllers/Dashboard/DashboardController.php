@@ -15,6 +15,7 @@ use App\Services\NotaFiscalService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class DashboardController extends Controller
 {
@@ -61,6 +62,7 @@ class DashboardController extends Controller
             'atividadeRecente' => $atividadeRecente,
             'isUsuarioNovo' => $isUsuarioNovo,
             'ultimaImportacao' => $ultimaImportacao,
+            'trialResumo' => $this->buildTrialResumo($user),
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -673,17 +675,114 @@ class DashboardController extends Controller
 
     public function configuracoes(Request $request)
     {
-        return $this->renderPlaceholder($request,
-            'Configurações',
-            'Configure suas preferências e integrações.',
-            'cog',
-            [
-                'Preferências de notificação',
-                'Configurar webhooks',
-                'Gerenciar integrações',
-                'Personalizar interface',
-            ]
-        );
+        $configuracoesView = self::AUTH_VIEW_PREFIX.'usuario.configuracoes';
+
+        if (! view()->exists($configuracoesView)) {
+            abort(404);
+        }
+
+        if (! Auth::check()) {
+            if ($this->isAjaxRequest($request)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Você não está logado',
+                    'redirect' => '/login',
+                ]);
+            }
+
+            return redirect('/login');
+        }
+
+        $user = Auth::user();
+        $empresaAtual = $user->empresaPropria();
+
+        $configuracoes = [
+            'notificacoes' => [
+                'email_ativo' => ! empty($user->email),
+                'alertas_operacionais' => (bool) $user->alertas_operacionais,
+                'alertas_monitoramento' => (bool) $user->alertas_monitoramento,
+                'resumo_periodico' => (bool) $user->resumo_periodico,
+                'canal_principal' => ! empty($user->email) ? 'E-mail' : 'Não configurado',
+            ],
+            'recursos' => [
+                'consultas' => [
+                    'label' => 'Consultas',
+                    'descricao' => 'Consultas cadastrais e fiscais para acompanhamento operacional da base.',
+                    'status_label' => 'Disponível',
+                    'status_hex' => '#047857',
+                ],
+                'importacao_xml' => [
+                    'label' => 'Importação XML',
+                    'descricao' => 'Recepção e processamento de XMLs fiscais para composição do ambiente.',
+                    'status_label' => 'Em evolução',
+                    'status_hex' => '#d97706',
+                ],
+                'importacao_efd' => [
+                    'label' => 'Importação EFD',
+                    'descricao' => 'Carga de arquivos EFD para extração, auditoria e cruzamentos fiscais.',
+                    'status_label' => 'Disponível',
+                    'status_hex' => '#047857',
+                ],
+                'monitoramento' => [
+                    'label' => 'Monitoramento',
+                    'descricao' => 'Acompanhamento contínuo de ocorrências e sinais relevantes da operação.',
+                    'status_label' => 'Em evolução',
+                    'status_hex' => '#d97706',
+                ],
+            ],
+            'preferencias' => [
+                'dashboard_inicial' => 'Dashboard',
+                'empresa_inicial_label' => $empresaAtual?->razao_social ?? $empresaAtual?->nome,
+                'filtros_salvos' => false,
+            ],
+        ];
+
+        $data = [
+            'user' => $user,
+            'empresaAtual' => $empresaAtual,
+            'configuracoes' => $configuracoes,
+            'resumo' => [
+                'notificacoes_ativas' => collect($configuracoes['notificacoes'])
+                    ->only(['email_ativo', 'alertas_operacionais', 'alertas_monitoramento', 'resumo_periodico'])
+                    ->filter(fn ($valor) => $valor === true)
+                    ->count(),
+                'canais_ativos' => ! empty($user->email) ? 1 : 0,
+                'recursos_disponiveis' => collect($configuracoes['recursos'])
+                    ->filter(fn (array $recurso) => ($recurso['status_label'] ?? null) === 'Disponível')
+                    ->count(),
+                'empresa_principal_configurada' => $empresaAtual !== null,
+            ],
+        ];
+
+        if ($this->isAjaxRequest($request)) {
+            return view($configuracoesView, $data);
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, array_merge([
+            'initialView' => $configuracoesView,
+        ], $data));
+    }
+
+    public function atualizarNotificacaoConfiguracao(Request $request)
+    {
+        $payload = $request->validate([
+            'campo' => ['required', 'string', Rule::in([
+                'alertas_operacionais',
+                'alertas_monitoramento',
+                'resumo_periodico',
+            ])],
+            'valor' => ['required', 'boolean'],
+        ]);
+
+        $user = Auth::user();
+        $user->{$payload['campo']} = $payload['valor'];
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'campo' => $payload['campo'],
+            'valor' => (bool) $user->{$payload['campo']},
+        ]);
     }
 
     public function meuPlano(Request $request)
@@ -762,6 +861,7 @@ class DashboardController extends Controller
             'ultimasTransacoes' => $ultimasTransacoes,
             'consumoMensal' => $consumoMensal,
             'maxConsumo' => $maxConsumo,
+            'trialResumo' => $this->buildTrialResumo($user),
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -791,7 +891,7 @@ class DashboardController extends Controller
 
         $saldoAtual = (int) $user->credits;
 
-        $totalComprado = (int) CreditTransaction::where('user_id', $user->id)
+        $totalRecebido = (int) CreditTransaction::where('user_id', $user->id)
             ->where('amount', '>', 0)
             ->sum('amount');
 
@@ -799,13 +899,12 @@ class DashboardController extends Controller
             ->where('amount', '<', 0)
             ->sum('amount'));
 
-        $ultimaCompra = CreditTransaction::where('user_id', $user->id)
+        $ultimaEntrada = CreditTransaction::where('user_id', $user->id)
             ->where('amount', '>', 0)
             ->orderBy('created_at', 'desc')
             ->first();
 
-        $historicoCompras = CreditTransaction::where('user_id', $user->id)
-            ->where('amount', '>', 0)
+        $historicoCreditos = CreditTransaction::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
             ->limit(30)
             ->get();
@@ -821,11 +920,12 @@ class DashboardController extends Controller
 
         $data = [
             'saldoAtual' => $saldoAtual,
-            'totalComprado' => $totalComprado,
+            'totalRecebido' => $totalRecebido,
             'totalConsumido' => $totalConsumido,
-            'ultimaCompra' => $ultimaCompra,
-            'historicoCompras' => $historicoCompras,
+            'ultimaEntrada' => $ultimaEntrada,
+            'historicoCreditos' => $historicoCreditos,
             'pacotes' => $pacotes,
+            'trialResumo' => $this->buildTrialResumo($user),
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -908,5 +1008,25 @@ class DashboardController extends Controller
                 'Top 10 clientes e fornecedores',
             ]
         );
+    }
+
+    private function buildTrialResumo($user): array
+    {
+        $expiresAt = $user->trial_expires_at;
+        $hasTrial = (bool) $user->trial_used;
+        $isActive = $hasTrial && $expiresAt && now()->lt($expiresAt);
+        $isExpired = $hasTrial && $expiresAt && now()->gte($expiresAt);
+
+        return [
+            'has_trial' => $hasTrial,
+            'is_active' => $isActive,
+            'is_expired' => $isExpired,
+            'started_at' => $user->trial_started_at,
+            'expires_at' => $expiresAt,
+            'days_remaining' => $isActive && $expiresAt ? max(0, now()->diffInDays($expiresAt, false)) : 0,
+            'granted' => (int) $user->trial_credits_granted,
+            'remaining' => (int) $user->trial_credits_remaining,
+            'expired' => (int) $user->trial_credits_expired,
+        ];
     }
 }

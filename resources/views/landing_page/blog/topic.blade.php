@@ -104,7 +104,7 @@
                     <div class="rounded-2xl border border-gray-200 bg-white p-6">
                         <h3 class="text-lg font-bold text-gray-900 mb-3">Próximo passo</h3>
                         <p class="text-sm text-gray-600 mb-4">Veja o FiscalDock aplicar isso em escala na sua carteira de clientes.</p>
-                        <a href="/agendar" class="btn-cta btn-cta--block text-sm">Agendar demonstração</a>
+                        <a href="/agendar" class="btn-cta btn-cta--block text-sm">Falar com um especialista</a>
                     </div>
                 </div>
             </aside>

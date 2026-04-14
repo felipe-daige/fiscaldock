@@ -81,7 +81,7 @@
                                 <span>Lembrar-me</span>
                             </label>
                             <a href="/agendar" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">
-                                Precisa de acesso?
+                                Falar com especialista
                             </a>
                         </div>
 
@@ -93,11 +93,25 @@
                             Entrar no painel
                         </button>
 
-                        <div class="bg-gray-50 border border-gray-200 rounded px-4 py-3 text-sm text-gray-600">
-                            <span class="font-medium text-gray-900">Novo por aqui?</span>
-                            Solicite acesso comercial em
-                            <a href="/agendar" data-link class="text-gray-900 hover:text-gray-600 hover:underline">Abrir Conta</a>.
+                        <div class="relative my-1">
+                            <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                                <div class="w-full border-t border-gray-200"></div>
+                            </div>
+                            <div class="relative flex justify-center">
+                                <span class="bg-white px-3 text-xs uppercase tracking-wider text-gray-500">novo no FiscalDock?</span>
+                            </div>
                         </div>
+
+                        <a
+                            href="/criar-conta"
+                            data-link
+                            class="w-full inline-flex items-center justify-center gap-2 rounded border border-gray-800 bg-white text-gray-900 hover:bg-gray-900 hover:text-white transition-colors text-sm font-semibold px-4 py-2.5"
+                        >
+                            Criar conta grátis
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                            </svg>
+                        </a>
                     </form>
                 </div>
             </div>

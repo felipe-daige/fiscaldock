@@ -3,6 +3,8 @@
         'purchase' => ['label' => 'Compra', 'hex' => '#047857'],
         'refund' => ['label' => 'Reembolso', 'hex' => '#d97706'],
         'manual_add' => ['label' => 'Ajuste', 'hex' => '#4338ca'],
+        'trial_bonus' => ['label' => 'Trial', 'hex' => '#1d4ed8'],
+        'trial_expiration' => ['label' => 'Expiração', 'hex' => '#b45309'],
     ];
 @endphp
 
@@ -14,6 +16,21 @@
             <p class="text-xs text-gray-500 mt-1">Pacotes disponíveis e histórico de compras.</p>
         </div>
 
+        @if(($trialResumo['is_active'] ?? false) || ($trialResumo['is_expired'] ?? false))
+            <div class="bg-white rounded border border-gray-300 p-4 border-l-4 {{ ($trialResumo['is_active'] ?? false) ? 'border-l-blue-500' : 'border-l-amber-500' }}">
+                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Status do trial</p>
+                @if($trialResumo['is_active'] ?? false)
+                    <p class="mt-2 text-sm text-gray-700">
+                        Trial ativo: {{ number_format($trialResumo['remaining'] ?? 0, 0, ',', '.') }} créditos promocionais restantes até {{ optional($trialResumo['expires_at'])->format('d/m/Y H:i') }}.
+                    </p>
+                @else
+                    <p class="mt-2 text-sm text-gray-700">
+                        Trial encerrado em {{ optional($trialResumo['expires_at'])->format('d/m/Y H:i') }}. Compras novas não expiram.
+                    </p>
+                @endif
+            </div>
+        @endif
+
         <div class="bg-white rounded border border-gray-300 overflow-hidden">
             <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-200">
                 <div class="p-4 sm:p-6">
@@ -22,8 +39,8 @@
                     <p class="text-[11px] text-gray-500 mt-1">créditos</p>
                 </div>
                 <div class="p-4 sm:p-6">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Total comprado</p>
-                    <p class="text-lg sm:text-xl font-bold text-gray-900">{{ number_format($totalComprado, 0, ',', '.') }}</p>
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Total recebido</p>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900">{{ number_format($totalRecebido, 0, ',', '.') }}</p>
                     <p class="text-[11px] text-gray-500 mt-1">créditos</p>
                 </div>
                 <div class="p-4 sm:p-6">
@@ -32,13 +49,13 @@
                     <p class="text-[11px] text-gray-500 mt-1">créditos</p>
                 </div>
                 <div class="p-4 sm:p-6">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Última compra</p>
-                    @if($ultimaCompra)
-                        <p class="text-lg sm:text-xl font-bold text-gray-900">+{{ number_format($ultimaCompra->amount, 0, ',', '.') }}</p>
-                        <p class="text-[11px] text-gray-500 mt-1">{{ $ultimaCompra->created_at->format('d/m/Y') }}</p>
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Última entrada</p>
+                    @if($ultimaEntrada)
+                        <p class="text-lg sm:text-xl font-bold text-gray-900">+{{ number_format($ultimaEntrada->amount, 0, ',', '.') }}</p>
+                        <p class="text-[11px] text-gray-500 mt-1">{{ $ultimaEntrada->created_at->format('d/m/Y') }}</p>
                     @else
                         <p class="text-lg sm:text-xl font-bold text-gray-900">--</p>
-                        <p class="text-[11px] text-gray-500 mt-1">nenhuma compra</p>
+                        <p class="text-[11px] text-gray-500 mt-1">nenhuma entrada</p>
                     @endif
                 </div>
             </div>
@@ -75,10 +92,10 @@
 
         <div class="bg-white rounded border border-gray-300 overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Histórico de compras</span>
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Histórico de créditos</span>
                 <a href="/app/plano" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Ver consumo detalhado</a>
             </div>
-            @if($historicoCompras->count() > 0)
+            @if($historicoCreditos->count() > 0)
                 <div class="overflow-x-auto">
                     <table class="min-w-full">
                         <thead>
@@ -91,9 +108,11 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
-                            @foreach($historicoCompras as $tx)
+                            @foreach($historicoCreditos as $tx)
                                 @php
                                     $badge = $tipoBadgeMap[$tx->type] ?? ['label' => ucfirst($tx->type ?? 'Outro'), 'hex' => '#9ca3af'];
+                                    $amountClass = $tx->amount >= 0 ? 'text-emerald-600' : 'text-red-600';
+                                    $amountPrefix = $tx->amount >= 0 ? '+' : '';
                                 @endphp
                                 <tr class="hover:bg-gray-50/50 transition-colors">
                                     <td class="px-3 py-2.5 text-sm text-gray-700 whitespace-nowrap">{{ $tx->created_at->format('d/m/Y H:i') }}</td>
@@ -101,7 +120,7 @@
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badge['hex'] }}">{{ $badge['label'] }}</span>
                                     </td>
                                     <td class="px-3 py-2.5 text-sm text-gray-600">{{ $tx->description ?? '-' }}</td>
-                                    <td class="px-3 py-2.5 text-sm text-right font-semibold text-emerald-600">+{{ number_format($tx->amount, 0, ',', '.') }}</td>
+                                    <td class="px-3 py-2.5 text-sm text-right font-semibold {{ $amountClass }}">{{ $amountPrefix }}{{ number_format($tx->amount, 0, ',', '.') }}</td>
                                     <td class="px-3 py-2.5 text-sm text-right text-gray-500">{{ $tx->balance_after !== null ? number_format($tx->balance_after, 0, ',', '.') : '-' }}</td>
                                 </tr>
                             @endforeach
@@ -110,8 +129,8 @@
                 </div>
             @else
                 <div class="p-6 text-center text-sm text-gray-500 space-y-2">
-                    <p>Nenhuma compra realizada ainda.</p>
-                    <p class="text-xs text-gray-400">Escolha um pacote acima para começar.</p>
+                    <p>Nenhuma movimentação de créditos ainda.</p>
+                    <p class="text-xs text-gray-400">Crie saldo com o trial ou compre um pacote acima.</p>
                 </div>
             @endif
         </div>
@@ -126,8 +145,8 @@
                 <p class="text-sm font-semibold text-gray-900">Custo varia por plano.</p>
             </div>
             <div class="bg-white rounded border border-gray-300 p-4 text-center space-y-2">
-                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Sem expiração</p>
-                <p class="text-sm font-semibold text-gray-900">Use os créditos no seu ritmo.</p>
+                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Validade</p>
+                <p class="text-sm font-semibold text-gray-900">Créditos pagos não expiram; o bônus do trial expira em 30 dias.</p>
             </div>
             <div class="bg-white rounded border border-gray-300 p-4 text-center space-y-2">
                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Transparência</p>

@@ -4,16 +4,23 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
+use App\Models\LandingLead;
 use App\Models\User;
-use Exception;
+use App\Services\CreditService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        protected CreditService $creditService
+    ) {}
+
     public function showLogin(Request $request){
         if(!view()->exists("landing_page.auth.login")){
             abort(404);
@@ -33,28 +40,134 @@ class AuthController extends Controller
         if($request->ajax()){
             return view("landing_page.auth.login");
         }
-        return view("landing_page.layouts.public", ['initialView' => 'auth.login']);
+        return view("landing_page.layouts.public", [
+            'initialView' => 'auth.login',
+            'seo' => [
+                'title' => 'Login — FiscalDock',
+                'description' => 'Acesse sua conta FiscalDock para gerenciar importações de SPED, monitoramento fiscal e consultas tributárias.',
+                'canonical' => 'https://fiscaldock.com/login',
+                'robots' => 'noindex,follow',
+            ],
+        ]);
     }
     public function showAgendar(Request $request){
         if(!view()->exists("landing_page.auth.agendar")){
             abort(404);
         }
 
-        if(Auth::check()){
-            if($request->ajax()){
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Você já está logado',
-                    'redirect' => '/app/dashboard'
-                ]);
-            }
-            return redirect('/app/dashboard');
+        $email = trim((string) $request->query('email', ''));
+        $whatsAppMessage = 'Olá! Quero falar com a FiscalDock sobre a plataforma.';
+
+        if ($email !== '') {
+            $whatsAppMessage = "Olá! Quero falar com a FiscalDock sobre a plataforma. Meu e-mail é {$email}.";
         }
 
         if($request->ajax()){
-            return view("landing_page.auth.agendar");
+            return view("landing_page.auth.agendar", [
+                'whatsAppUrl' => 'https://wa.me/5567999844366?text=' . rawurlencode($whatsAppMessage),
+            ]);
         }
-        return view("landing_page.layouts.public", ['initialView' => 'auth.agendar']);
+        return view("landing_page.layouts.public", [
+            'initialView' => 'auth.agendar',
+            'seo' => [
+                'title' => 'Contato Comercial — FiscalDock',
+                'description' => 'Fale com a FiscalDock por WhatsApp ou e-mail para tirar dúvidas comerciais e entender como a plataforma se encaixa na sua operação fiscal.',
+                'canonical' => 'https://fiscaldock.com/agendar',
+                'robots' => 'noindex,follow',
+                'og_type' => 'website',
+                'og_title' => 'Contato comercial — FiscalDock',
+                'og_image' => 'https://fiscaldock.com/binary_files/logo/Logo FiscalDock.png',
+            ],
+            'whatsAppUrl' => 'https://wa.me/5567999844366?text=' . rawurlencode($whatsAppMessage),
+        ]);
+    }
+
+    public function showSignup(Request $request)
+    {
+        if (! view()->exists('landing_page.auth.criar-conta')) {
+            abort(404);
+        }
+
+        if (Auth::check()) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Você já está logado',
+                    'redirect' => '/app/dashboard',
+                ]);
+            }
+
+            return redirect('/app/dashboard');
+        }
+
+        if ($request->filled('email') && ! session()->hasOldInput('email')) {
+            session()->flashInput(['email' => $request->query('email')]);
+        }
+
+        if ($request->ajax()) {
+            return view('landing_page.auth.criar-conta');
+        }
+
+        return view('landing_page.layouts.public', [
+            'initialView' => 'auth.criar-conta',
+            'seo' => [
+                'title' => 'Criar Conta Grátis — FiscalDock',
+                'description' => 'Crie sua conta FiscalDock e receba 100 créditos grátis para usar em até 30 dias.',
+                'canonical' => 'https://fiscaldock.com/criar-conta',
+                'robots' => 'index,follow',
+                'og_type' => 'website',
+                'og_title' => 'Crie sua conta grátis — FiscalDock',
+                'og_image' => 'https://fiscaldock.com/binary_files/logo/Logo FiscalDock.png',
+            ],
+        ]);
+    }
+
+    public function showTerms(Request $request)
+    {
+        if (! view()->exists('landing_page.paginas.termos')) {
+            abort(404);
+        }
+
+        if ($request->ajax()) {
+            return view('landing_page.paginas.termos');
+        }
+
+        return view('landing_page.layouts.public', [
+            'initialView' => 'paginas.termos',
+            'seo' => [
+                'title' => 'Termos de Uso — FiscalDock',
+                'description' => 'Leia os termos de uso da FiscalDock para o uso das páginas públicas, canais de contato e plataforma.',
+                'canonical' => 'https://fiscaldock.com/termos',
+                'robots' => 'index,follow',
+                'og_type' => 'website',
+                'og_title' => 'Termos de uso — FiscalDock',
+                'og_image' => 'https://fiscaldock.com/binary_files/logo/Logo FiscalDock.png',
+            ],
+        ]);
+    }
+
+    public function showPrivacy(Request $request)
+    {
+        if (! view()->exists('landing_page.paginas.privacidade')) {
+            abort(404);
+        }
+
+        if ($request->ajax()) {
+            return view('landing_page.paginas.privacidade');
+        }
+
+        return view('landing_page.layouts.public', [
+            'initialView' => 'paginas.privacidade',
+            'seo' => [
+                'title' => 'Política de Privacidade — FiscalDock',
+                'description' => 'Veja como a FiscalDock coleta, utiliza e protege dados pessoais em seus canais públicos e fluxos comerciais.',
+                'canonical' => 'https://fiscaldock.com/privacidade',
+                'robots' => 'index,follow',
+                'og_type' => 'website',
+                'og_title' => 'Política de privacidade — FiscalDock',
+                'og_image' => 'https://fiscaldock.com/binary_files/logo/Logo FiscalDock.png',
+            ],
+        ]);
     }
 
     public function login(Request $request){
@@ -124,9 +237,10 @@ class AuthController extends Controller
         return redirect('/app/dashboard');
     }
 
-    public function agendar(Request $request){
+    public function signup(Request $request)
+    {
         try {
-            $request->validate([
+            $validated = $request->validate([
                 'nome' => 'required|string|max:255',
                 'sobrenome' => 'required|string|max:255',
                 'email' => 'required|email|max:255',
@@ -134,92 +248,174 @@ class AuthController extends Controller
                 'senha' => 'required|min:8|confirmed',
                 'empresa' => 'required|string|max:255',
                 'cargo' => 'required|string|max:255',
-                'cnpj' => 'required|string|max:18',
-                'faturamento' => 'required|string',
+                'documento' => 'required|string|max:18',
+                'faturamento' => 'required|string|max:255',
                 'desafio_principal' => 'required|string|max:100',
+                'terms_aceitos' => 'accepted',
+                'marketing_opt_in' => 'nullable|boolean',
             ], [
-                'nome.required' => 'O campo nome é obrigatório',
-                'nome.string' => 'O campo nome deve ser uma string',
-                'nome.max' => 'O campo nome deve ter no máximo 255 caracteres',
-                'sobrenome.required' => 'O campo sobrenome é obrigatório',
-                'sobrenome.string' => 'O campo sobrenome deve ser uma string',
-                'sobrenome.max' => 'O campo sobrenome deve ter no máximo 255 caracteres',
-                'email.required' => 'O campo email é obrigatório',
-                'email.email' => 'O campo email deve ser um email válido',
-                'email.max' => 'O campo email deve ter no máximo 255 caracteres',
-                'telefone.required' => 'O campo telefone é obrigatório',
-                'telefone.string' => 'O campo telefone deve ser uma string',
-                'telefone.max' => 'O campo telefone deve ter no máximo 20 caracteres',
-                'senha.required' => 'O campo senha é obrigatório',
-                'senha.min' => 'A senha deve ter pelo menos 8 caracteres',
-                'senha.confirmed' => 'As senhas não conferem',
-                'empresa.required' => 'O campo empresa é obrigatório',
-                'empresa.string' => 'O campo empresa deve ser uma string',
-                'empresa.max' => 'O campo empresa deve ter no máximo 255 caracteres',
+                'terms_aceitos.accepted' => 'Você precisa aceitar os Termos de Uso e a Política de Privacidade.',
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Dados inválidos',
-                'errors' => $e->errors()
-            ], 422);
+
+            $validated['telefone'] = $this->normalizePhone($validated['telefone']);
+            $validated['documento'] = $this->normalizeDocument($validated['documento']);
+
+            if (! in_array(strlen($validated['documento']), [11, 14], true)) {
+                throw ValidationException::withMessages([
+                    'documento' => 'Informe um CPF ou CNPJ válido.',
+                ]);
+            }
+
+            $conflictMessage = $this->detectSignupConflict($validated);
+            if ($conflictMessage) {
+                throw ValidationException::withMessages([
+                    'email' => $conflictMessage,
+                ]);
+            }
+        } catch (ValidationException $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dados inválidos',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+
+            return back()->withErrors($e->errors())->withInput();
         }
 
-        return $this->criarClienteNovo($request);
+        return $this->createTrialAccount($request, $validated);
     }
 
-    private function criarClienteNovo(Request $request){
+    public function agendar(Request $request){
+        $message = 'O cadastro direto por /agendar foi desativado. Fale com a FiscalDock pelo WhatsApp ou e-mail nesta página.';
+
+        if ($request->ajax() || $request->expectsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+                'redirect' => route('agendar'),
+                'whatsapp_url' => 'https://wa.me/5567999844366',
+            ], 410);
+        }
+
+        return redirect()
+            ->route('agendar')
+            ->with('contact_notice', $message);
+    }
+
+    private function createTrialAccount(Request $request, array $validated): JsonResponse|\Illuminate\Http\RedirectResponse
+    {
         DB::beginTransaction();
 
-        try{
-            $documento = preg_replace('/\D/', '', $request->cnpj);
-            $tipoPessoa = strlen($documento) <= 11 ? 'PF' : 'PJ';
+        try {
+            $tipoPessoa = strlen($validated['documento']) <= 11 ? 'PF' : 'PJ';
 
             $user = User::create([
-                'name' => $request->nome,
-                'sobrenome' => $request->sobrenome,
-                'email' => $request->email,
-                'telefone' => $request->telefone,
-                'password' => Hash::make($request->senha),
-                'empresa' => $request->empresa,
-                'cargo' => $request->cargo,
-                'cnpj' => $documento,
-                'faturamento_anual' => $request->faturamento,
-                'desafio_principal' => $request->desafio_principal,
+                'name' => $validated['nome'],
+                'sobrenome' => $validated['sobrenome'],
+                'email' => mb_strtolower(trim($validated['email'])),
+                'telefone' => $validated['telefone'],
+                'password' => Hash::make($validated['senha']),
+                'empresa' => $validated['empresa'],
+                'cargo' => $validated['cargo'],
+                'cnpj' => $validated['documento'],
+                'faturamento_anual' => $validated['faturamento'],
+                'desafio_principal' => $validated['desafio_principal'],
+                'terms_accepted_at' => now(),
+                'marketing_opt_in' => (bool) ($validated['marketing_opt_in'] ?? false),
+                'marketing_opt_in_at' => ! empty($validated['marketing_opt_in']) ? now() : null,
             ]);
 
-            $cliente = Cliente::create([
+            Cliente::create([
                 'user_id' => $user->id,
                 'tipo_pessoa' => $tipoPessoa,
-                'documento' => $documento,
-                'nome' => $request->empresa,
-                'razao_social' => $tipoPessoa === 'PJ' ? $request->empresa : null,
-                'telefone' => $request->telefone,
-                'email' => $request->email,
-                'is_empresa_propria' => $tipoPessoa === 'PJ',
+                'documento' => $validated['documento'],
+                'nome' => $validated['empresa'],
+                'razao_social' => $validated['empresa'],
+                'telefone' => $validated['telefone'],
+                'email' => mb_strtolower(trim($validated['email'])),
+                'is_empresa_propria' => true,
             ]);
 
-            Auth::attempt($request->only('email', 'senha'));
+            $this->creditService->grantTrial($user, 100, now()->addDays(30));
+
+            Auth::login($user);
+
+            LandingLead::markConvertedByEmail($validated['email']);
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Cadastro realizado com sucesso!',
-                'redirect' => '/app/dashboard'
+            $message = 'Conta criada com sucesso. Você recebeu 100 créditos grátis por 30 dias.';
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'redirect' => '/app/dashboard',
+                ]);
+            }
+
+            return redirect('/app/dashboard')->with('success', $message);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            Log::error('Erro ao criar conta trial', [
+                'message' => $e->getMessage(),
             ]);
 
-        } catch (Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao criar a conta. Tente novamente.',
+                ], 500);
+            }
 
-            LOG::info($e->getMessage());
-
-            DB::rollback();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao realizar cadastro.'
-            ], 500);
+            return back()->withErrors([
+                'email' => 'Erro ao criar a conta. Tente novamente.',
+            ])->withInput();
         }
+    }
+
+    private function detectSignupConflict(array $validated): ?string
+    {
+        $email = mb_strtolower(trim($validated['email']));
+        $telefone = $validated['telefone'];
+        $documento = $validated['documento'];
+
+        if (User::where('email', $email)->exists()) {
+            return 'Já existe uma conta ou trial para este e-mail. Faça login ou fale com nosso time.';
+        }
+
+        if (User::where('telefone', $telefone)->exists()) {
+            return 'Este telefone já foi usado em outra conta ou trial. Fale com nosso time se precisar de ajuda.';
+        }
+
+        if (User::where('cnpj', $documento)->exists()) {
+            return 'Este CPF/CNPJ já foi usado em outra conta ou trial. Fale com nosso time se precisar de ajuda.';
+        }
+
+        $sameProfile = User::query()
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($validated['nome']))])
+            ->whereRaw('LOWER(sobrenome) = ?', [mb_strtolower(trim($validated['sobrenome']))])
+            ->whereRaw('LOWER(empresa) = ?', [mb_strtolower(trim($validated['empresa']))])
+            ->exists();
+
+        if ($sameProfile) {
+            return 'Já encontramos um cadastro muito parecido com estes dados. Fale com nosso time para evitar duplicidade.';
+        }
+
+        return null;
+    }
+
+    private function normalizePhone(?string $value): string
+    {
+        return preg_replace('/\D/', '', (string) $value);
+    }
+
+    private function normalizeDocument(?string $value): string
+    {
+        return preg_replace('/\D/', '', (string) $value);
     }
 
     public function logout(Request $request){

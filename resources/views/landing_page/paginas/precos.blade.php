@@ -118,8 +118,8 @@
                     </div>
                 </div>
                 
-                <a href="/agendar" data-link data-button="cta" class="btn-primary-solid mb-6 block w-full px-6 py-3 text-center font-semibold">
-                    Começar agora
+                <a href="/criar-conta" data-link data-button="cta" class="btn-primary-solid mb-6 block w-full px-6 py-3 text-center font-semibold">
+                    Criar conta grátis
                 </a>
 
                 <ul class="space-y-3 mb-6">
@@ -200,8 +200,8 @@
                     </div>
                 </div>
                 
-                <a href="/agendar" data-link data-button="cta" class="btn-primary-solid mb-6 block w-full px-6 py-3 text-center font-semibold">
-                    Começar agora
+                <a href="/criar-conta" data-link data-button="cta" class="btn-primary-solid mb-6 block w-full px-6 py-3 text-center font-semibold">
+                    Criar conta grátis
                 </a>
 
                 <div class="mb-4">
@@ -277,8 +277,8 @@
                     </div>
                 </div>
                 
-                <a href="/agendar" data-link data-button="cta" class="btn-primary-solid mb-6 block w-full px-6 py-3 text-center font-semibold">
-                    Começar agora
+                <a href="/criar-conta" data-link data-button="cta" class="btn-primary-solid mb-6 block w-full px-6 py-3 text-center font-semibold">
+                    Criar conta grátis
                 </a>
 
                 <div class="mb-4">
@@ -847,7 +847,7 @@
                 Perguntas frequentes
             </a>
             <a href="{{ route('agendar') }}" class="btn-cta">
-                Agendar demonstração
+                Falar com especialista
             </a>
         </div>
     </div>

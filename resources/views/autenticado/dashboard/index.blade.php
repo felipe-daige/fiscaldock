@@ -8,6 +8,23 @@
             <p class="text-xs text-gray-500 mt-1">Visão geral do seu escritório</p>
         </div>
 
+        @if(($trialResumo['is_active'] ?? false) || ($trialResumo['is_expired'] ?? false))
+            <div class="bg-white rounded border border-gray-300 p-4 mb-6 border-l-4 {{ ($trialResumo['is_active'] ?? false) ? 'border-l-blue-500' : 'border-l-amber-500' }}">
+                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Trial</p>
+                @if($trialResumo['is_active'] ?? false)
+                    <p class="mt-2 text-sm text-gray-700">
+                        Seu trial está ativo com <strong>{{ number_format($trialResumo['remaining'] ?? 0, 0, ',', '.') }} créditos promocionais</strong>
+                        e expira em <strong>{{ optional($trialResumo['expires_at'])->format('d/m/Y H:i') }}</strong>.
+                    </p>
+                @else
+                    <p class="mt-2 text-sm text-gray-700">
+                        Seu período promocional terminou em <strong>{{ optional($trialResumo['expires_at'])->format('d/m/Y H:i') }}</strong>.
+                        Compre novos créditos para continuar usando as consultas pagas.
+                    </p>
+                @endif
+            </div>
+        @endif
+
         {{-- KPI Cards --}}
         @php
             $vol = $kpis['volume_total_notas'] ?? 0;

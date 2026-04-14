@@ -23,6 +23,19 @@ class User extends Authenticatable
         'cnpj',
         'faturamento_anual',
         'desafio_principal',
+        'terms_accepted_at',
+        'marketing_opt_in',
+        'marketing_opt_in_at',
+        'trial_used',
+        'trial_started_at',
+        'trial_expires_at',
+        'trial_credits_granted',
+        'trial_credits_remaining',
+        'trial_credits_expired',
+        'trial_source',
+        'alertas_operacionais',
+        'alertas_monitoramento',
+        'resumo_periodico',
     ];
 
     protected $hidden = [
@@ -36,6 +49,18 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'credits' => 'integer',
+            'terms_accepted_at' => 'datetime',
+            'marketing_opt_in' => 'boolean',
+            'marketing_opt_in_at' => 'datetime',
+            'trial_used' => 'boolean',
+            'trial_started_at' => 'datetime',
+            'trial_expires_at' => 'datetime',
+            'trial_credits_granted' => 'integer',
+            'trial_credits_remaining' => 'integer',
+            'trial_credits_expired' => 'integer',
+            'alertas_operacionais' => 'boolean',
+            'alertas_monitoramento' => 'boolean',
+            'resumo_periodico' => 'boolean',
         ];
     }
 
@@ -71,5 +96,20 @@ class User extends Authenticatable
         return $this->clientes()
             ->where('is_empresa_propria', true)
             ->first();
+    }
+
+    public function hasActiveTrial(): bool
+    {
+        return $this->trial_used
+            && $this->trial_expires_at !== null
+            && now()->lt($this->trial_expires_at)
+            && $this->trial_credits_remaining > 0;
+    }
+
+    public function isTrialExpired(): bool
+    {
+        return $this->trial_used
+            && $this->trial_expires_at !== null
+            && now()->gte($this->trial_expires_at);
     }
 }
