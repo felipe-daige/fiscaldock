@@ -24,10 +24,10 @@ O produto foi desenhado para transformar arquivos fiscais em inteligencia aciona
 ## Stack
 
 - Laravel 12
-- PHP 8.2+
+- PHP 8.3+
 - PostgreSQL
 - Vite
-- Tailwind CSS
+- Tailwind CSS v4
 - Docker
 - n8n
 - SSE (Server-Sent Events)
@@ -51,14 +51,14 @@ npm run build
 
 ### Opcao 2: operacao com containers
 
-Neste repositorio, comandos de aplicacao normalmente rodam dentro do container principal `html-app-1`.
+Neste repositorio, comandos de aplicacao normalmente rodam dentro do container principal `fiscaldock-app-1`. O scheduler roda em `fiscaldock-scheduler-1`.
 
 ```bash
-docker exec html-app-1 php artisan about
-docker exec html-app-1 php artisan migrate --force
-docker exec html-app-1 php artisan test
-docker exec html-app-1 ./vendor/bin/pest
-docker exec html-app-1 ./vendor/bin/pint
+docker exec fiscaldock-app-1 php artisan about
+docker exec fiscaldock-app-1 php artisan migrate --force
+docker exec fiscaldock-app-1 php artisan test
+docker exec fiscaldock-app-1 ./vendor/bin/pest
+docker exec fiscaldock-app-1 ./vendor/bin/pint
 ```
 
 ## Comandos uteis
@@ -66,10 +66,10 @@ docker exec html-app-1 ./vendor/bin/pint
 ```bash
 composer test
 npm run build
-docker exec html-app-1 php artisan migrate:status
-docker exec html-app-1 php artisan queue:failed
-docker exec html-app-1 php artisan schedule:list
-docker exec html-app-1 php artisan pail
+docker exec fiscaldock-app-1 php artisan migrate:status
+docker exec fiscaldock-app-1 php artisan queue:failed
+docker exec fiscaldock-app-1 php artisan schedule:list
+docker exec fiscaldock-app-1 php artisan pail
 ```
 
 ## Configuracao
@@ -102,8 +102,8 @@ Antes de abrir um PR:
 
 ```bash
 composer test
-docker exec html-app-1 ./vendor/bin/pest
-docker exec html-app-1 ./vendor/bin/pint
+docker exec fiscaldock-app-1 ./vendor/bin/pest
+docker exec fiscaldock-app-1 ./vendor/bin/pint
 ```
 
 Prefira mudancas pequenas, objetivas e coerentes com a arquitetura existente.
