@@ -189,6 +189,8 @@ Dois produtos independentes, cruzamento apenas no BI:
 - Mercado Pago: checkout real, webhooks, idempotência, reconciliação de status e liberação de créditos confirmados.
 - Dívida visual DANFE foi concluída em 2026-04-15; tratar apenas regressões específicas.
 
+**CND Federal InfoSimples `611`:** mapear como `cnd_federal.status = INDETERMINADO`, nunca como irregular. Esse retorno significa que a fonte oficial não conseguiu emitir a certidão pela internet porque os dados disponíveis na Receita Federal/origem são insuficientes. Preservar a mensagem original de `errors[]`.
+
 **Decisão MVP de fornecedor:** começar com InfoSimples `receita-federal/nfe` para consulta avulsa NF-e por chave. Não consultar SEFAZ estadual por UF no MVP. Se houver aderência, avaliar Focus NFe para escala/recebidas/MDe e manter InfoSimples como fallback ou consulta pontual.
 
 **Persistência prevista para busca avulsa:** Laravel valida o input e `cliente_id` opcional; n8n consulta o provedor, normaliza, faz upsert em `xml_notas`, salva payload completo e associa ao cliente quando informado. Chave operacional de idempotência: `user_id + nfe_id`.

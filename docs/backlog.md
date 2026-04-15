@@ -208,7 +208,8 @@ Mesma arquitetura da CND Federal. InfoSimples centraliza os 27 estados em uma ú
 - **Auth:** token como parâmetro (`INFOSIMPLES_TOKEN` no `.env`)
 - **Endpoint:** `https://api.infosimples.com/api/v2/consultas/{servico}`
 - **Resposta:** `{ code, code_message, data, header, site_receipts }`
-- **5 grupos:** sucesso (200/201), não encontrado (612), erro do participante (608/611/619/620), temporário/retry (600/605/609/610/613/614/615/618), fatal (601-607/617/621/622)
+- **6 grupos:** sucesso (200/201), não encontrado (612), indeterminado por origem (611), erro do participante (608/619/620), temporário/retry (600/605/609/610/613/614/615/618), fatal (601-607/617/621/622)
+- **Regra crítica do 611:** não classificar como irregular. Usar `cnd_federal.status = INDETERMINADO`, porque algumas empresas não conseguem emitir CND pela internet quando a Receita Federal/origem informa dados insuficientes.
 
 **Mapeamento crítico (InfoSimples → Laravel):**
 - `data[0].tipo` → `cnd_federal.status` (lido por `ConsultaController` via `strtoupper()`)
