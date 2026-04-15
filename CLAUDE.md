@@ -70,7 +70,7 @@ database/migrations/        # EDITAR existentes, nunca criar novas
 - **Injeção de dependência** no construtor dos controllers
 - **Single-action controllers** usam `__invoke`
 - **AJAX detection:** controllers retornam views parciais via `$request->ajax()` ou `$request->wantsJson()`
-- **Design System DANFE Modernizado** — todas as views autenticadas seguem esse padrão. **Regra dura: nunca usar classes Tailwind de cor para background de badges** (Tailwind v4 compila para `oklch()` e não renderiza em todos os browsers). Sempre `style="background-color: #hex"` inline. Detalhes completos em `docs/design-system.md`.
+- **Design System DANFE Modernizado** — todas as views autenticadas seguem esse padrão. **Regra dura: nunca usar classes Tailwind de cor para background de badges** (Tailwind v4 compila para `oklch()` e não renderiza em todos os browsers). Sempre `style="background-color: #hex"` inline. Detalhes completos em `docs/design-system.md`. A dívida visual de `risk/*`, `minha-empresa/*`, monitoramento, formulários antigos e checkout foi concluída em 2026-04-15; não reabrir como backlog salvo regressão específica.
 
 ## Convenções de Banco de Dados
 

@@ -183,10 +183,15 @@ These views already follow the `DANFE Modernizado` pattern and should be used as
 - `autenticado/catalogo/index.blade.php`
 - `autenticado/bi/index.blade.php` with `public/js/bi.js`
 - `autenticado/dashboard/index.blade.php`
+- `autenticado/risk/*`
+- `autenticado/minha-empresa/*`
+- `autenticado/monitoramento/*`
+- `autenticado/plano/checkout.blade.php`
+- `autenticado/resumo-fiscal/index.blade.php`
 
 ### Pending Conversions
 
-Any remaining views in `resources/views/autenticado/` still using the older visual language, such as colorful cards, `bg-blue-600`, `rounded-lg`, or badges in the `bg-*-100 text-*-700` style, should be migrated toward the `DANFE Modernizado` system when touched.
+The previous visual debt covering `risk/*`, parts of `minha-empresa/*`, monitoring screens, older forms, and checkout was completed on 2026-04-15. Treat regressions to the older visual language, such as colorful cards, `bg-blue-600`, `rounded-lg`, or badges in the `bg-*-100 text-*-700` style, as bugs to fix when found.
 
 ## Testing Guidelines
 Tests run with Pest on top of PHPUnit. Put request and integration coverage in `tests/Feature`; keep narrow logic checks in `tests/Unit`. Name files with the subject followed by `Test.php`, for example `MinhaEmpresaTest.php`. Run `composer test` before opening a PR. Add or update tests for behavior changes in `app/` or `resources/views`.
@@ -208,7 +213,7 @@ Do not assume `docker-compose.yml` is a local-only developer setup. In this repo
 - Clearance DF-e is partially delivered: the authenticated UI exists for the dashboard (`/app/validacao`), note listing (`/app/validacao/notas`), and ad-hoc document lookup (`/app/validacao/buscar-nfe`). Real InfoSimples/SEFAZ execution is still pending; current lookup UI is frontend-ready and must later call n8n for external consultation and persistence.
 - Score Fiscal still depends on simulated data paths and should not be treated as a finished product while the real external consultation flow is missing.
 - XML import exists but still has product-completion work in navigation, automation hardening, and alignment between what the UI advertises and what is fully operational.
-- Some authenticated views still use the old visual language and should continue migrating to the DANFE Modernizado system.
+- The main authenticated visual-debt backlog was completed on 2026-04-15; maintain DANFE Modernizado consistency and fix any specific regressions when found.
 - Operational docs must be kept in sync with the actual container/runtime names and with the real commands available in the environment.
 - Public acquisition CTAs on the landing pages were standardized on `btn-cta` with inline fallback in the public layout on 2026-04-14; do not treat that issue as an open visual backlog item unless a new regression appears.
 

@@ -31,7 +31,8 @@ Consolidado de pendências conhecidas, planejamento futuro e decisões abertas.
 
 ### Acabamento e dívida visual
 
-- **Conversão visual pendente**: `autenticado/risk/*`, partes de `minha-empresa/*`, telas de monitoramento, formulários antigos, checkout — ainda usam estilo antigo (`rounded-lg`, `bg-blue-*`, badges `bg-*-100 text-*-700`).
+- ~~**Conversão visual pendente**: `autenticado/risk/*`, partes de `minha-empresa/*`, telas de monitoramento, formulários antigos, checkout — ainda usam estilo antigo (`rounded-lg`, `bg-blue-*`, badges `bg-*-100 text-*-700`).~~
+- **Concluído em 2026-04-15**: dívida visual migrada ao padrão DANFE Modernizado. Manter este item fechado; tratar apenas regressões específicas quando aparecerem.
 
 ## Public Site, SEO, Payments, and Plan Expansion
 
