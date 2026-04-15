@@ -21,8 +21,8 @@ class LandingPageController extends Controller
     public function inicio(Request $request)
     {
         return $this->renderLanding($request, 'paginas.inicio', [
-            'title' => 'FiscalDock | Inteligência Fiscal para Contadores',
-            'description' => 'Importe seus arquivos SPED, monitore participantes e detecte riscos fiscais antes da auditoria. Plataforma completa para contadores e escritórios contábeis.',
+            'title' => 'FiscalDock | Radar de Riscos Fiscais',
+            'description' => 'Monitore CNPJs, emita CND, CNDT e FGTS numa só consulta e detecte inconsistências no SPED antes da malha fiscal. Créditos prepagos, sem mensalidade.',
             'canonical' => self::BASE_URL . '/',
             'og_type' => 'website',
             'og_image' => self::BASE_URL . '/binary_files/logo/Logo FiscalDock.png',

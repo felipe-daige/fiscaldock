@@ -156,8 +156,8 @@ class AlertaCentralService
                 'tipo' => 'gap_importacao',
                 'categoria' => 'importacao',
                 'severidade' => 'media',
-                'titulo' => "{$totalMeses} mes(es) sem importacao EFD nos ultimos 12 meses",
-                'descricao' => "Foram detectados {$totalMeses} meses sem nenhuma importacao EFD (Fiscal ou Contribuicoes). Meses faltantes podem indicar obrigacoes acessorias nao entregues.",
+                'titulo' => "{$totalMeses} mês(es) sem importação EFD nos últimos 12 meses",
+                'descricao' => "Foram detectados {$totalMeses} meses sem nenhuma importação EFD (Fiscal ou Contribuições). Meses faltantes podem indicar obrigações acessórias não entregues.",
                 'total_afetados' => $totalMeses,
                 'detalhes' => [
                     'meses_faltantes' => $gapImportacoes,

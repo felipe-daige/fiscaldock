@@ -1383,6 +1383,7 @@
             participante_inativo: 'Participante Inativo',
             participante_sem_ie: 'Participante sem IE',
             cnpj_situacao_irregular: 'CNPJ com Situação Irregular',
+            gap_importacao: 'Gap de Importação',
             gap_temporal: 'Gap Temporal de Importação',
             pis_cofins_incompleto: 'PIS/COFINS Incompleto',
             situacao_irregular: 'Situação Cadastral Irregular',

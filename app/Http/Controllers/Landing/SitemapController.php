@@ -47,9 +47,11 @@ class SitemapController extends Controller
             ['loc' => '/solucoes', 'priority' => '0.8', 'changefreq' => 'monthly', 'lastmod' => $this->lastmodFor('views/landing_page/solucoes/index.blade.php')],
             ['loc' => '/precos', 'priority' => '0.8', 'changefreq' => 'monthly', 'lastmod' => $this->lastmodFor('views/landing_page/paginas/precos.blade.php')],
             ['loc' => '/duvidas', 'priority' => '0.7', 'changefreq' => 'monthly', 'lastmod' => $this->lastmodFor('views/landing_page/paginas/duvidas.blade.php')],
+            ['loc' => '/criar-conta', 'priority' => '0.7', 'changefreq' => 'monthly', 'lastmod' => $this->lastmodFor('views/landing_page/auth/criar-conta.blade.php')],
+            ['loc' => '/termos', 'priority' => '0.3', 'changefreq' => 'yearly', 'lastmod' => $this->lastmodFor('views/landing_page/paginas/termos.blade.php')],
+            ['loc' => '/privacidade', 'priority' => '0.3', 'changefreq' => 'yearly', 'lastmod' => $this->lastmodFor('views/landing_page/paginas/privacidade.blade.php')],
             ['loc' => '/blog', 'priority' => '0.8', 'changefreq' => 'weekly', 'lastmod' => $blogIndexLastmod],
             ['loc' => '/blog/efd', 'priority' => '0.8', 'changefreq' => 'weekly', 'lastmod' => $blogIndexLastmod],
-            ['loc' => '/agendar', 'priority' => '0.6', 'changefreq' => 'yearly', 'lastmod' => $this->lastmodFor('views/landing_page/auth/agendar.blade.php')],
         ];
 
         foreach (BlogPostCatalog::topics() as $topic) {
