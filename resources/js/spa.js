@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         bi: null, // Script carregado como tag externa na view — nao tentar recarregar no SPA
         notasFiscais: null, // Código inline na view
         alertas: null, // Código inline na view
-        validacao: null, // Código inline na view (clearance.js carregado como tag externa)
+        validacao: null, // Código inline/script externo por view de clearance
     };
 
     // Converte slug (com hífen/underscore) para camelCase
@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
         '/app/notas-fiscais/dashboard': null, // IIFE inline na view
         '/app/alertas': null, // IIFE inline na view
         '/app/validacao': null, // Clearance dashboard — IIFE inline
-        '/app/validacao/notas': null, // Clearance notas — clearance.js carregado como tag
+        '/app/validacao/notas': null, // Clearance notas — clearance-notas.js carregado como tag
         '/app/validacao/buscar-nfe': null, // Clearance busca avulsa — script carregado como tag
     };
     
