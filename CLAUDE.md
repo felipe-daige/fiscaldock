@@ -178,6 +178,17 @@ Dois produtos independentes, cruzamento apenas no BI:
 
 **Status:** dashboard/listagem/detalhe usam dados locais de XML/importações e validação contábil local. A busca avulsa permite selecionar NF-e/CT-e/NFS-e e associar cliente, mas a execução real ainda deve ser ligada ao n8n + InfoSimples e persistir em `xml_notas`. Integração SEFAZ/InfoSimples ainda não é fonte de verdade em produção.
 
+**Backlog canônico de produto (atualizado em 2026-04-15):** manter sincronizado com `docs/backlog.md`.
+- Clearance DF-e real: ligar InfoSimples/n8n, persistir resultado externo em `xml_notas`, ler KPIs da fonte externa e classificar o resultado operacional.
+- NF-e/SEFAZ: expor contrato persistido para `situacao_sefaz` e `verificado_sefaz_em` (campos dedicados ou payload normalizado equivalente) e concluir pipeline por chave. MVP usa `receita-federal/nfe`; não criar fallback SEFAZ estadual por UF sem evidência de uso/conversão.
+- Score Fiscal real: substituir simulação do `RiskScoreController` por dados externos/persistidos.
+- Busca avulsa DF-e: validar `cliente_id`, chamar n8n + InfoSimples, retornar status/custo ao usuário e fazer upsert em `xml_notas`.
+- BI consultas × clearance: cruzar regularidade/certidões de participantes com status SEFAZ/XML.
+- n8n consultas: Laravel já recebe `status=erro` em `/api/consultas/progresso`; falta garantir envio pelo workflow em todos os caminhos de falha e refund aplicável.
+- XML import: remover "Em Breve" somente quando a automação XML estiver operacional end-to-end.
+- Mercado Pago: checkout real, webhooks, idempotência, reconciliação de status e liberação de créditos confirmados.
+- Dívida visual DANFE foi concluída em 2026-04-15; tratar apenas regressões específicas.
+
 **Decisão MVP de fornecedor:** começar com InfoSimples `receita-federal/nfe` para consulta avulsa NF-e por chave. Não consultar SEFAZ estadual por UF no MVP. Se houver aderência, avaliar Focus NFe para escala/recebidas/MDe e manter InfoSimples como fallback ou consulta pontual.
 
 **Persistência prevista para busca avulsa:** Laravel valida o input e `cliente_id` opcional; n8n consulta o provedor, normaliza, faz upsert em `xml_notas`, salva payload completo e associa ao cliente quando informado. Chave operacional de idempotência: `user_id + nfe_id`.

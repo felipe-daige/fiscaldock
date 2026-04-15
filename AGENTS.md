@@ -210,22 +210,27 @@ Do not assume `docker-compose.yml` is a local-only developer setup. In this repo
 
 ### Current product and implementation gaps
 
-- Clearance DF-e is partially delivered: the authenticated UI exists for the dashboard (`/app/validacao`), note listing (`/app/validacao/notas`), and ad-hoc document lookup (`/app/validacao/buscar-nfe`). Real InfoSimples/SEFAZ execution is still pending; current lookup UI is frontend-ready and must later call n8n for external consultation and persistence.
-- Score Fiscal still depends on simulated data paths and should not be treated as a finished product while the real external consultation flow is missing.
-- XML import exists but still has product-completion work in navigation, automation hardening, and alignment between what the UI advertises and what is fully operational.
+- Canonical backlog is maintained in `docs/backlog.md`; keep this section synchronized when backlog status changes.
+- Clearance DF-e is partially delivered: authenticated UI exists for `/app/validacao`, `/app/validacao/notas`, and `/app/validacao/buscar-nfe`. Pending work is real InfoSimples/n8n execution, persistence of external results in `xml_notas`, KPI reads from external source data, and operational result classification.
+- NF-e/SEFAZ via InfoSimples is pending: expose a persisted contract for `situacao_sefaz` and `verificado_sefaz_em` (dedicated fields or normalized payload equivalent), and complete the key-based pipeline. MVP uses `receita-federal/nfe`; do not build direct per-state SEFAZ fallback before usage/conversion evidence.
+- Score Fiscal still depends on simulated `RiskScoreController` paths and should not be treated as a finished product while the real external consultation flow is missing.
+- XML import exists but still has product-completion work in navigation, end-to-end automation hardening, and alignment between what the UI advertises and what is fully operational.
 - The main authenticated visual-debt backlog was completed on 2026-04-15; maintain DANFE Modernizado consistency and fix any specific regressions when found.
 - Operational docs must be kept in sync with the actual container/runtime names and with the real commands available in the environment.
 - Public acquisition CTAs on the landing pages were standardized on `btn-cta` with inline fallback in the public layout on 2026-04-14; do not treat that issue as an open visual backlog item unless a new regression appears.
 
 Active backlog items:
 
-- Consulta de CND Federal, CNDT, FGTS, CND Estadual, CND Municipal, sanções, CNJ, protestos and processes are part of the credit-based product ladder and must keep clear per-query economics before implementation.
+- Ad-hoc DF-e lookup must be wired from Laravel to n8n + InfoSimples, with ownership validation for optional `cliente_id`, cost/status feedback, and upsert into `xml_notas`.
+- BI cross-checks between consultations and clearance are pending: combine participant regularity/certificates with SEFAZ/XML document status in dashboards and alerts.
+- n8n must send `status=erro` to `/api/consultas/progresso` for all consultation failure paths. Laravel already receives this status; the remaining work is workflow coverage and refund semantics.
+- CND Federal, CNDT, FGTS, CND Estadual, CND Municipal, sanções, CNJ, protestos and processes are part of the credit-based product ladder and must keep clear per-query economics before implementation.
 - Current product ladder: `Gratuito` 0 credits, `Validação` 5 credits, `Licitação` 10 credits, `Compliance` 18 credits, `Due Diligence` 35 credits. Keep `1 crédito = R$ 0,20`; margin changes should alter credits consumed, not credit unit price.
 - `Compliance` and `Due Diligence` are blocked until the first confirmed credit purchase. The source of truth is `credit_transactions.type = purchase` with `amount > 0`; do not add a duplicated boolean in `users` unless explicitly requested for caching/segmentation.
 - When evaluating new paid products or tier expansions, document any candidate external APIs before implementation. Current likely candidates are fiscal/compliance sources that materially expand the `resultado_dados` surface without overlapping the existing free queries.
 - Mercado Pago integration is planned for real credit-purchase checkout flows. The current checkout UI must be treated as placeholder until payment provider integration, webhook handling, status reconciliation, and credit release rules are defined.
 - InfoSimples is the chosen MVP provider for ad-hoc NF-e lookup. Use `receita-federal/nfe` first; do not build direct per-state SEFAZ fallback until the feature has usage/conversion evidence. Future scale candidate: Focus NFe.
-- Ad-hoc DF-e lookup results must be persisted through n8n into `xml_notas`. The user may optionally associate the consulted document to a `cliente_id`; Laravel must validate ownership before calling n8n.
+- Remove "Em Breve" from XML import only after XML automation is operational end-to-end.
 
 When changing docs, code, or planning around these items, prefer documenting:
 - target routes/views affected

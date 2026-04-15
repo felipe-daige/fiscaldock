@@ -4,11 +4,13 @@ Consolidado de pendências conhecidas, planejamento futuro e decisões abertas.
 
 ## Pendências Conhecidas
 
+Lista canônica atualizada em 2026-04-15. Use esta lista como fonte para todos os agentes; não reabrir dívida visual DANFE salvo regressão específica.
+
 ### Alta prioridade
 
-- **Clearance DF-e real**: o módulo existe em frontend/backend via `ValidacaoController`, com dashboard, listagem, detalhe e busca avulsa. Falta integração real InfoSimples/SEFAZ/n8n, classificação `conforme/divergente/irregular`, persistência do resultado externo e leitura real dos KPIs baseados em fonte externa.
-- **Integração NF-e/SEFAZ via InfoSimples**: a documentação de mapeamento existe, mas o app ainda não expõe campos persistidos como `situacao_sefaz` / `verificado_sefaz_em` nem o pipeline completo de consulta por chave de acesso.
-- **Score Fiscal real**: `RiskScoreController` ainda possui geração simulada e não deve ser tratado como feature concluída até a integração externa substituir esse caminho.
+- **Clearance DF-e real**: o módulo existe em frontend/backend via `ValidacaoController`, com dashboard, listagem, detalhe e busca avulsa. Falta execução real InfoSimples/n8n, persistência do resultado externo em `xml_notas`, leitura dos KPIs a partir da fonte externa e classificação operacional de resultado.
+- **NF-e/SEFAZ via InfoSimples**: expor contrato persistido para `situacao_sefaz` e `verificado_sefaz_em` (campos dedicados ou payload normalizado equivalente) e concluir pipeline por chave de acesso. MVP usa `receita-federal/nfe`; não criar fallback SEFAZ estadual por UF antes de haver uso/conversão.
+- **Score Fiscal real**: substituir os caminhos simulados do `RiskScoreController` por dados de consulta externa/persistidos. Não tratar Score Fiscal como produto concluído enquanto depender de simulação.
 
 ### Decisão atual do MVP de clearance
 
@@ -24,10 +26,11 @@ Consolidado de pendências conhecidas, planejamento futuro e decisões abertas.
 
 ### Média prioridade
 
-- **Importação XML "pronta" de navegação/produto**: a feature existe, mas o menu ainda pode tratá-la como "Em Breve".
-- **Busca avulsa de DF-e no Clearance**: a view `/app/validacao/buscar-nfe` já existe com seleção de NF-e/CT-e/NFS-e, chave de acesso, cliente opcional, custo estimado, estados previstos e histórico local. Falta backend real para consulta via InfoSimples/Receita Federal, persistência via n8n em `xml_notas` e retorno de status ao usuário.
-- **Cruzamentos no BI entre consultas e clearance**: documentados, mas ainda backlog.
-- **n8n — status=erro em consultas**: implementar envio de `status=erro` para `POST /api/consultas/progresso` quando ocorrer falha no processamento.
+- **Busca avulsa DF-e**: ligar `/app/validacao/buscar-nfe` ao backend/n8n/InfoSimples, com validação de propriedade do `cliente_id`, custo, status ao usuário e upsert em `xml_notas`.
+- **Cruzamentos BI consultas × clearance**: cruzar regularidade cadastral/certidões de participantes com status SEFAZ/XML em painéis e alertas.
+- **n8n — erro em consultas**: o Laravel já recebe `status=erro` em `/api/consultas/progresso`; o pendente é garantir que o workflow n8n envie esse status em todos os caminhos de falha e refund aplicável.
+- **XML import operacional**: remover "Em Breve" do menu e da tela somente quando a automação XML end-to-end estiver operacional; até lá, manter a comunicação alinhada ao estado real.
+- **Mercado Pago**: implementar checkout real, webhooks, idempotência, reconciliação de status e liberação de créditos somente após pagamento confirmado.
 
 ### Acabamento e dívida visual
 
