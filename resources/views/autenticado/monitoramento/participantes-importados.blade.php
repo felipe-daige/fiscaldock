@@ -525,7 +525,7 @@
 {{-- Modais (fora do container para overlay correto) --}}
 
 {{-- Dropdown de acoes do participante (menu kebab) --}}
-<div id="dropdown-acoes" class="hidden fixed z-[9999] bg-white rounded border border-gray-300 shadow-sm w-56 py-1">
+<div id="dropdown-acoes" class="hidden fixed z-[9999] bg-white rounded border border-gray-300 w-56 py-1">
     <div class="px-3 py-2 border-b border-gray-100">
         <p class="text-sm font-semibold text-gray-900 truncate" id="dropdown-acoes-nome"></p>
         <p class="text-xs text-gray-500 font-mono whitespace-nowrap tabular-nums" id="dropdown-acoes-cnpj"></p>
@@ -548,7 +548,7 @@
         Editar
     </a>
     <button type="button" id="dropdown-acoes-excluir"
-        class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+        class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors" style="color: #b91c1c">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
         </svg>

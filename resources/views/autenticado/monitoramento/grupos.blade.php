@@ -150,7 +150,7 @@
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    class="btn-excluir-grupo p-2 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                                    class="btn-excluir-grupo p-2 rounded text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
                                                     data-grupo-id="{{ $grupo->id }}"
                                                     data-grupo-nome="{{ $grupo->nome }}"
                                                     title="Excluir grupo"
@@ -200,7 +200,7 @@
 </div>
 
 <div id="modal-grupo" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl max-w-md w-full">
+    <div class="bg-white rounded border border-gray-300 max-w-md w-full">
         <div class="px-6 py-4 border-b border-gray-200">
             <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-gray-900" id="modal-grupo-titulo">Novo Grupo</h3>
@@ -216,7 +216,7 @@
             <div class="p-6 space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Nome do Grupo *</label>
-                    <input type="text" name="nome" id="input-grupo-nome" class="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="Ex: Fornecedores Prioritários" required>
+                    <input type="text" name="nome" id="input-grupo-nome" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="Ex: Fornecedores Prioritários" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Cor do Badge</label>
@@ -231,12 +231,12 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
-                    <textarea name="descricao" id="input-grupo-descricao" rows="2" class="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="Descreva o propósito deste grupo..."></textarea>
+                    <textarea name="descricao" id="input-grupo-descricao" rows="2" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="Descreva o propósito deste grupo..."></textarea>
                 </div>
             </div>
             <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
-                <button type="button" class="modal-close px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">Cancelar</button>
-                <button type="submit" id="btn-salvar-grupo" class="px-4 py-2 rounded-lg bg-gray-800 text-white text-sm font-semibold shadow-sm transition hover:bg-gray-700">Salvar</button>
+                <button type="button" class="modal-close px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-xs font-semibold transition hover:bg-gray-50">Cancelar</button>
+                <button type="submit" id="btn-salvar-grupo" class="px-3 py-2 rounded bg-gray-800 text-white text-xs font-semibold transition hover:bg-gray-700">Salvar</button>
             </div>
         </form>
     </div>

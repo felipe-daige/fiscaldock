@@ -1,90 +1,63 @@
-{{-- Monitoramento - Historico de Consultas --}}
-<div class="min-h-screen bg-gray-50" id="monitoramento-historico-container">
+{{-- Monitoramento - Histórico de Consultas (DANFE Modernizado) --}}
+<div class="min-h-screen bg-gray-100" id="monitoramento-historico-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
-        {{-- Page Header --}}
-        <div class="mb-4 sm:mb-8">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-xl sm:text-2xl font-semibold text-gray-900">Historico de Consultas</h1>
-                    <p class="mt-1 text-sm text-gray-500">Visualize todas as consultas realizadas.</p>
-                </div>
-                <a
-                    href="/app/dashboard"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
-                    data-link
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
-                    Voltar
-                </a>
+        {{-- Header --}}
+        <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+                <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Histórico de Consultas</h1>
+                <p class="text-xs text-gray-500 mt-1">Visualize todas as consultas realizadas.</p>
             </div>
+            <a href="/app/dashboard" data-link
+               class="inline-flex items-center gap-2 px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Voltar
+            </a>
         </div>
 
         {{-- KPIs --}}
-        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-6">
-            <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6">
-                <div class="flex items-center justify-between">
-                    <div class="flex-1 min-w-0">
-                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Total de Consultas</p>
-                        <p class="text-xl sm:text-3xl font-semibold text-gray-900">{{ $totalConsultas ?? 0 }}</p>
-                        <p class="text-xs text-gray-400 mt-1 sm:mt-2">Consultas realizadas</p>
-                    </div>
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 bg-blue-50 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
-                        <svg class="w-4 h-4 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </div>
-                </div>
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo</span>
             </div>
-            <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6">
-                <div class="flex items-center justify-between">
-                    <div class="flex-1 min-w-0">
-                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Creditos Utilizados</p>
-                        <p class="text-xl sm:text-3xl font-semibold text-gray-900">{{ $totalCreditos ?? 0 }}</p>
-                        <p class="text-xs text-gray-400 mt-1 sm:mt-2">Creditos consumidos</p>
-                    </div>
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 bg-amber-50 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
-                        <svg class="w-4 h-4 sm:w-6 sm:h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
+            <div class="grid grid-cols-2 lg:grid-cols-3 divide-x divide-y lg:divide-y-0 divide-gray-200">
+                <div class="p-4 sm:p-6">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Total de Consultas</p>
+                    <p class="text-lg font-bold text-gray-900 font-mono">{{ $totalConsultas ?? 0 }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Consultas realizadas</p>
                 </div>
-            </div>
-            <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-6">
-                <div class="flex items-center justify-between">
-                    <div class="flex-1 min-w-0">
-                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Taxa de Sucesso</p>
-                        <p class="text-xl sm:text-3xl font-semibold text-green-600">{{ $taxaSucesso ?? 0 }}%</p>
-                        <p class="text-xs text-gray-400 mt-1 sm:mt-2">Consultas com sucesso</p>
-                    </div>
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 bg-green-50 rounded-lg flex items-center justify-center ml-2 sm:ml-4 flex-shrink-0">
-                        <svg class="w-4 h-4 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
+                <div class="p-4 sm:p-6">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Créditos Utilizados</p>
+                    <p class="text-lg font-bold text-gray-900 font-mono">{{ $totalCreditos ?? 0 }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Créditos consumidos</p>
+                </div>
+                <div class="p-4 sm:p-6">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Taxa de Sucesso</p>
+                    <p class="text-lg font-bold text-gray-900 font-mono">{{ $taxaSucesso ?? 0 }}%</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Consultas com sucesso</p>
                 </div>
             </div>
         </div>
 
         {{-- Filtros --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-6">
-            <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-                {{-- Filtro por tipo --}}
-                <div class="flex items-center gap-2">
-                    <label class="text-sm font-medium text-gray-700">Tipo:</label>
-                    <select id="filtro-tipo" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
+            </div>
+            <div class="p-4 flex flex-wrap items-end gap-3">
+                <div>
+                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Tipo</label>
+                    <select id="filtro-tipo" class="px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         <option value="">Todos</option>
                         <option value="avulso">Avulso</option>
                         <option value="assinatura">Assinatura</option>
                     </select>
                 </div>
-
-                {{-- Filtro por status --}}
-                <div class="flex items-center gap-2">
-                    <label class="text-sm font-medium text-gray-700">Status:</label>
-                    <select id="filtro-status" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <div>
+                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Status</label>
+                    <select id="filtro-status" class="px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         <option value="">Todos</option>
                         <option value="sucesso">Sucesso</option>
                         <option value="pendente">Pendente</option>
@@ -92,13 +65,11 @@
                         <option value="erro">Erro</option>
                     </select>
                 </div>
-
-                {{-- Filtro por plano --}}
-                <div class="flex items-center gap-2">
-                    <label class="text-sm font-medium text-gray-700">Plano:</label>
-                    <select id="filtro-plano" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <div>
+                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Plano</label>
+                    <select id="filtro-plano" class="px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         <option value="">Todos</option>
-                        <option value="basico">Basico</option>
+                        <option value="basico">Básico</option>
                         <option value="cadastral_plus">Cadastral+</option>
                         <option value="fiscal_federal">Fiscal Federal</option>
                         <option value="fiscal_completo">Fiscal Completo</option>
@@ -107,17 +78,12 @@
                         <option value="completo">Completo</option>
                     </select>
                 </div>
-
-                {{-- Busca --}}
-                <div class="flex-1">
+                <div class="flex-1 min-w-[240px]">
+                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Buscar</label>
                     <div class="relative">
-                        <input
-                            type="text"
-                            id="busca-historico"
-                            placeholder="Buscar por CNPJ..."
-                            class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <input type="text" id="busca-historico" placeholder="Buscar por CNPJ..."
+                               class="w-full px-3 py-2 pl-9 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>
@@ -126,116 +92,83 @@
         </div>
 
         {{-- Lista de Consultas --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div class="bg-white rounded border border-gray-300 overflow-hidden">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Consultas</span>
+            </div>
             <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Data</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">CNPJ</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Razao Social</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Plano</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Creditos</th>
-                            <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Acoes</th>
+                <table class="min-w-full">
+                    <thead>
+                        <tr class="border-b border-gray-300">
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Data</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">CNPJ</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Razão Social</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Plano</th>
+                            <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Tipo</th>
+                            <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Status</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Créditos</th>
+                            <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ações</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200" id="historico-tbody">
+                    <tbody class="divide-y divide-gray-100" id="historico-tbody">
                         @forelse($consultas ?? [] as $consulta)
-                            <tr class="hover:bg-gray-50 transition-colors" data-consulta-id="{{ $consulta->id }}">
-                                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                            <tr class="hover:bg-gray-50/50 transition-colors" data-consulta-id="{{ $consulta->id }}">
+                                <td class="px-3 py-3 text-sm text-gray-700 font-mono whitespace-nowrap">
                                     {{ $consulta->created_at->format('d/m/Y H:i') }}
                                 </td>
-                                <td class="px-6 py-4 text-sm font-mono text-gray-900 whitespace-nowrap">
+                                <td class="px-3 py-3 text-sm font-mono text-gray-900 whitespace-nowrap">
                                     {{ preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $consulta->participante->cnpj ?? '') }}
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                                <td class="px-3 py-3 text-sm text-gray-900 max-w-xs truncate">
                                     {{ $consulta->participante->razao_social ?? '-' }}
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
+                                <td class="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
                                     {{ $consulta->plano->nome ?? '-' }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-3 py-3 whitespace-nowrap text-center">
                                     @if($consulta->tipo === 'avulso')
-                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
-                                            Avulso
-                                        </span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Avulso</span>
                                     @else
-                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-700">
-                                            Assinatura
-                                        </span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">Assinatura</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-3 py-3 whitespace-nowrap text-center">
                                     @if($consulta->status === 'sucesso')
-                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
-                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                            </svg>
-                                            Sucesso
-                                        </span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Sucesso</span>
                                     @elseif($consulta->status === 'pendente')
-                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-amber-100 text-amber-700">
-                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                            </svg>
-                                            Pendente
-                                        </span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Pendente</span>
                                     @elseif($consulta->status === 'processando')
-                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
-                                            <svg class="w-3 h-3 mr-1 animate-spin" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                                            </svg>
-                                            Processando
-                                        </span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">Processando</span>
                                     @else
-                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-100 text-red-700">
-                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                            </svg>
-                                            Erro
-                                        </span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">Erro</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
-                                    {{ $consulta->creditos_cobrados }} cred.
+                                <td class="px-3 py-3 text-sm text-gray-700 font-mono whitespace-nowrap">
+                                    {{ $consulta->creditos_cobrados }}
                                 </td>
-                                <td class="px-6 py-4 text-right whitespace-nowrap">
-                                    <button
-                                        type="button"
-                                        class="btn-ver-resultado inline-flex items-center p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                                        data-consulta-id="{{ $consulta->id }}"
-                                        title="Ver resultado"
-                                    >
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                        </svg>
+                                <td class="px-3 py-3 text-right whitespace-nowrap text-xs">
+                                    <button type="button"
+                                            class="btn-ver-resultado text-gray-600 hover:text-gray-900 hover:underline"
+                                            data-consulta-id="{{ $consulta->id }}">
+                                        Ver resultado
                                     </button>
                                 </td>
                             </tr>
                         @empty
                             <tr>
                                 <td colspan="8" class="px-6 py-12 text-center">
-                                    <div class="flex flex-col items-center">
-                                        <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                                    </svg>
+                                    <h3 class="mt-4 text-sm font-semibold text-gray-900 uppercase tracking-wide">Nenhuma consulta realizada</h3>
+                                    <p class="mt-2 text-xs text-gray-500">Suas consultas aparecerão aqui após serem realizadas.</p>
+                                    <a href="/app/monitoramento/avulso" data-link
+                                       class="mt-4 inline-flex items-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                         </svg>
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Nenhuma consulta realizada</h3>
-                                        <p class="text-sm text-gray-600 mb-4">Suas consultas aparecerao aqui apos serem realizadas.</p>
-                                        <a
-                                            href="/app/monitoramento/avulso"
-                                            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700"
-                                            data-link
-                                        >
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                            </svg>
-                                            Fazer Consulta Avulsa
-                                        </a>
-                                    </div>
+                                        Fazer Consulta Avulsa
+                                    </a>
                                 </td>
                             </tr>
                         @endforelse
@@ -243,9 +176,8 @@
                 </table>
             </div>
 
-            {{-- Pagination --}}
             @if(isset($consultas) && $consultas->hasPages())
-                <div class="px-6 py-4 border-t border-gray-200">
+                <div class="border-t border-gray-300 px-4 py-3">
                     {{ $consultas->links() }}
                 </div>
             @endif
@@ -256,22 +188,18 @@
 
 {{-- Modal Ver Resultado --}}
 <div id="modal-ver-resultado" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900">Resultado da Consulta</h3>
-                <button type="button" class="modal-close text-gray-400 hover:text-gray-500">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
+    <div class="bg-white rounded border border-gray-300 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resultado da Consulta</span>
+            <button type="button" class="modal-close text-gray-400 hover:text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
         </div>
-        <div class="p-6" id="modal-resultado-content">
-            {{-- Conteudo sera preenchido via JavaScript --}}
-        </div>
-        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end">
-            <button type="button" class="modal-close px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">
+        <div class="p-5" id="modal-resultado-content"></div>
+        <div class="px-4 py-3 border-t border-gray-200 bg-gray-50 flex justify-end">
+            <button type="button" class="modal-close px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 transition">
                 Fechar
             </button>
         </div>
@@ -424,7 +352,7 @@
 
                 if (r.detalhes.cnd_federal) {
                     const cndClass = r.detalhes.cnd_federal.status === 'NEGATIVA' ? 'text-green-600' : 'text-red-600';
-                    html += '<div class="bg-gray-50 rounded-lg p-3">';
+                    html += '<div class="bg-gray-50 rounded border border-gray-200 p-3">';
                     html += '<p class="text-xs text-gray-500">CND Federal</p>';
                     html += '<p class="text-sm font-semibold ' + cndClass + '">' + r.detalhes.cnd_federal.status + '</p>';
                     if (r.detalhes.cnd_federal.validade) {
@@ -435,7 +363,7 @@
 
                 if (r.detalhes.fgts) {
                     const fgtsClass = r.detalhes.fgts.status === 'REGULAR' ? 'text-green-600' : 'text-red-600';
-                    html += '<div class="bg-gray-50 rounded-lg p-3">';
+                    html += '<div class="bg-gray-50 rounded border border-gray-200 p-3">';
                     html += '<p class="text-xs text-gray-500">FGTS</p>';
                     html += '<p class="text-sm font-semibold ' + fgtsClass + '">' + r.detalhes.fgts.status + '</p>';
                     if (r.detalhes.fgts.validade) {
@@ -446,7 +374,7 @@
 
                 if (r.detalhes.cndt) {
                     const cndtClass = r.detalhes.cndt.status === 'NEGATIVA' ? 'text-green-600' : 'text-red-600';
-                    html += '<div class="bg-gray-50 rounded-lg p-3">';
+                    html += '<div class="bg-gray-50 rounded border border-gray-200 p-3">';
                     html += '<p class="text-xs text-gray-500">CNDT (Trabalhista)</p>';
                     html += '<p class="text-sm font-semibold ' + cndtClass + '">' + r.detalhes.cndt.status + '</p>';
                     html += '</div>';
@@ -454,7 +382,7 @@
 
                 if (r.detalhes.protestos !== undefined) {
                     const protestosClass = r.detalhes.protestos === 0 ? 'text-green-600' : 'text-red-600';
-                    html += '<div class="bg-gray-50 rounded-lg p-3">';
+                    html += '<div class="bg-gray-50 rounded border border-gray-200 p-3">';
                     html += '<p class="text-xs text-gray-500">Protestos</p>';
                     html += '<p class="text-sm font-semibold ' + protestosClass + '">' + r.detalhes.protestos + ' registro(s)</p>';
                     html += '</div>';

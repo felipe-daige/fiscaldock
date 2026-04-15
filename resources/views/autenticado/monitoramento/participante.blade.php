@@ -273,31 +273,31 @@
                                 <h3 class="text-sm font-semibold text-gray-700 mb-3">Dados Cadastrais</h3>
                                 <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     @if(isset($dados['razao_social']))
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
                                         <dt class="text-xs text-gray-500">Razão Social</dt>
                                         <dd class="mt-1 text-sm text-gray-900">{{ $dados['razao_social'] }}</dd>
                                     </div>
                                     @endif
                                     @if(isset($dados['nome_fantasia']) && $dados['nome_fantasia'])
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
                                         <dt class="text-xs text-gray-500">Nome Fantasia</dt>
                                         <dd class="mt-1 text-sm text-gray-900">{{ $dados['nome_fantasia'] }}</dd>
                                     </div>
                                     @endif
                                     @if(isset($dados['natureza_juridica']))
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
                                         <dt class="text-xs text-gray-500">Natureza Jurídica</dt>
                                         <dd class="mt-1 text-sm text-gray-900">{{ $dados['natureza_juridica'] }}</dd>
                                     </div>
                                     @endif
                                     @if(isset($dados['capital_social']))
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
                                         <dt class="text-xs text-gray-500">Capital Social</dt>
                                         <dd class="mt-1 text-sm font-semibold text-gray-900">R$ {{ number_format($dados['capital_social'], 2, ',', '.') }}</dd>
                                     </div>
                                     @endif
                                     @if(isset($dados['data_inicio_atividade']))
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
                                         <dt class="text-xs text-gray-500">Início Atividade</dt>
                                         <dd class="mt-1 text-sm text-gray-900">{{ \Carbon\Carbon::parse($dados['data_inicio_atividade'])->format('d/m/Y') }}</dd>
                                     </div>
@@ -311,7 +311,7 @@
                             <div class="border-t border-gray-200 pt-4">
                                 <h3 class="text-sm font-semibold text-gray-700 mb-3">Endereço</h3>
                                 @php $end = $dados['endereco']; @endphp
-                                <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="bg-gray-50 rounded border border-gray-200 p-4">
                                     <p class="text-sm text-gray-900">
                                         {{ $end['logradouro'] ?? '' }}{{ isset($end['numero']) ? ', ' . $end['numero'] : '' }}
                                         @if(isset($end['complemento']) && $end['complemento'])
@@ -328,7 +328,7 @@
                                 {{-- Telefones empilhados com icone --}}
                                 @if((isset($dados['telefone_1']) && $dados['telefone_1']) || (isset($dados['telefone_2']) && $dados['telefone_2']))
                                 <div class="mt-3">
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
                                         <dt class="text-xs text-gray-500 mb-2">Telefones</dt>
                                         <dd class="space-y-2">
                                             @php
@@ -372,7 +372,7 @@
                             <div class="border-t border-gray-200 pt-4">
                                 <div id="participante-mapa-container">
                                     <div id="participante-mapa"
-                                         class="h-48 rounded-lg border border-gray-200 bg-gray-100"
+                                         class="h-48 rounded border border-gray-200 bg-gray-100"
                                          data-lat="{{ $participante->latitude }}"
                                          data-lng="{{ $participante->longitude }}">
                                     </div>
@@ -399,7 +399,7 @@
                                         : [];
                                 @endphp
                                 @if(count($cnaesSecundariosValidos) > 0)
-                                <div class="bg-gray-50 rounded-lg p-3">
+                                <div class="bg-gray-50 rounded border border-gray-200 p-3">
                                     <dt class="text-xs text-gray-500 font-semibold mb-2">CNAEs Secundários ({{ count($cnaesSecundariosValidos) }})</dt>
                                     <dd class="space-y-1 max-h-40 overflow-y-auto">
                                         @foreach(array_slice($cnaesSecundariosValidos, 0, 10) as $cnae)
@@ -422,17 +422,17 @@
                             <div class="border-t border-gray-200 pt-4">
                                 <h3 class="text-sm font-semibold text-gray-700 mb-3">SINTEGRA</h3>
                                 <dl class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
                                         <dt class="text-xs text-gray-500">Inscrição Estadual</dt>
                                         <dd class="mt-1 text-sm font-mono text-gray-900">{{ $dados['sintegra']['ie'] ?? '-' }}</dd>
                                     </div>
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
                                         <dt class="text-xs text-gray-500">Situação IE</dt>
                                         <dd class="mt-1 text-sm font-semibold {{ ($dados['sintegra']['situacao'] ?? '') === 'HABILITADO' ? 'text-green-600' : 'text-red-600' }}">
                                             {{ $dados['sintegra']['situacao'] ?? '-' }}
                                         </dd>
                                     </div>
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
                                         <dt class="text-xs text-gray-500">Regime Apuração</dt>
                                         <dd class="mt-1 text-sm text-gray-900">{{ $dados['sintegra']['regime_apuracao'] ?? '-' }}</dd>
                                     </div>
@@ -446,7 +446,7 @@
                                 <h3 class="text-sm font-semibold text-gray-700 mb-3">Certidões Negativas</h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                     @if(isset($dados['cnd_federal']))
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
                                         <dt class="text-xs text-gray-500">CND Federal</dt>
                                         <dd class="mt-1 text-sm font-semibold {{ ($dados['cnd_federal']['status'] ?? '') === 'NEGATIVA' ? 'text-green-600' : 'text-red-600' }}">
                                             {{ $dados['cnd_federal']['status'] ?? '-' }}
@@ -457,7 +457,7 @@
                                     </div>
                                     @endif
                                     @if(isset($dados['cnd_estadual']))
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
                                         <dt class="text-xs text-gray-500">CND Estadual</dt>
                                         <dd class="mt-1 text-sm font-semibold {{ ($dados['cnd_estadual']['status'] ?? '') === 'NEGATIVA' ? 'text-green-600' : 'text-red-600' }}">
                                             {{ $dados['cnd_estadual']['status'] ?? '-' }}
@@ -468,7 +468,7 @@
                                     </div>
                                     @endif
                                     @if(isset($dados['crf_fgts']))
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
                                         <dt class="text-xs text-gray-500">CRF (FGTS)</dt>
                                         <dd class="mt-1 text-sm font-semibold {{ ($dados['crf_fgts']['situacao'] ?? '') === 'REGULAR' ? 'text-green-600' : 'text-red-600' }}">
                                             {{ $dados['crf_fgts']['situacao'] ?? '-' }}
@@ -479,7 +479,7 @@
                                     </div>
                                     @endif
                                     @if(isset($dados['cndt']))
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
                                         <dt class="text-xs text-gray-500">CNDT (Trabalhista)</dt>
                                         <dd class="mt-1 text-sm font-semibold {{ ($dados['cndt']['status'] ?? '') === 'NEGATIVA' ? 'text-green-600' : 'text-red-600' }}">
                                             {{ $dados['cndt']['status'] ?? '-' }}
@@ -498,25 +498,25 @@
                             <div class="border-t border-gray-200 pt-4">
                                 <h3 class="text-sm font-semibold text-gray-700 mb-3">Compliance</h3>
                                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
                                         <dt class="text-xs text-gray-500">CEIS</dt>
                                         <dd class="mt-1 text-sm font-semibold {{ !($dados['tcu_consolidada']['ceis'] ?? false) ? 'text-green-600' : 'text-red-600' }}">
                                             {{ ($dados['tcu_consolidada']['ceis'] ?? false) ? 'Consta' : 'Nada consta' }}
                                         </dd>
                                     </div>
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
                                         <dt class="text-xs text-gray-500">CNEP</dt>
                                         <dd class="mt-1 text-sm font-semibold {{ !($dados['tcu_consolidada']['cnep'] ?? false) ? 'text-green-600' : 'text-red-600' }}">
                                             {{ ($dados['tcu_consolidada']['cnep'] ?? false) ? 'Consta' : 'Nada consta' }}
                                         </dd>
                                     </div>
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
                                         <dt class="text-xs text-gray-500">Acórdão TCU</dt>
                                         <dd class="mt-1 text-sm font-semibold {{ !($dados['tcu_consolidada']['acordao_tcu'] ?? false) ? 'text-green-600' : 'text-red-600' }}">
                                             {{ ($dados['tcu_consolidada']['acordao_tcu'] ?? false) ? 'Consta' : 'Nada consta' }}
                                         </dd>
                                     </div>
-                                    <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
                                         <dt class="text-xs text-gray-500">Licitação Impedida</dt>
                                         <dd class="mt-1 text-sm font-semibold {{ !($dados['tcu_consolidada']['licitacao_impedida'] ?? false) ? 'text-green-600' : 'text-red-600' }}">
                                             {{ ($dados['tcu_consolidada']['licitacao_impedida'] ?? false) ? 'Sim' : 'Não' }}

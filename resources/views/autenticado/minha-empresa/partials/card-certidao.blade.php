@@ -1,24 +1,24 @@
-{{-- Card de Certidão — Minimalista com border-t colorida --}}
+{{-- Card de Certidão — DANFE Modernizado --}}
 @php
     $consultado = $dados['consultado'] ?? false;
     $status = strtoupper($dados['status'] ?? '');
     $validade = $dados['validade'] ?? null;
 
-    $cor = 'gray';
+    $corHex = '#9ca3af';
     $statusLabel = 'Não consultado';
 
     if ($consultado && !empty($status)) {
         if (in_array($status, ['NEGATIVA', 'REGULAR', 'REGULARIDADE'])) {
-            $cor = 'green';
+            $corHex = '#047857';
             $statusLabel = 'Negativa';
         } elseif (str_contains($status, 'POSITIVA COM EFEITO') || str_contains($status, 'EFEITO DE NEGATIVA')) {
-            $cor = 'yellow';
+            $corHex = '#d97706';
             $statusLabel = 'Positiva c/ Efeito';
         } elseif (in_array($status, ['POSITIVA', 'IRREGULAR', 'IRREGULARIDADE'])) {
-            $cor = 'red';
+            $corHex = '#b91c1c';
             $statusLabel = 'Positiva';
         } else {
-            $cor = 'blue';
+            $corHex = '#4338ca';
             $statusLabel = $status;
         }
     }
@@ -34,25 +34,26 @@
     }
 @endphp
 
-<div class="bg-white rounded-lg border border-gray-100 border-t-2 border-t-{{ $cor }}-500 p-5">
-    <span class="text-xs uppercase tracking-wide text-gray-400 font-semibold">{{ $nome }}</span>
+<div class="bg-white rounded border border-gray-300 border-t-2 p-4" style="border-top-color: {{ $corHex }}">
+    <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{{ $nome }}</span>
     <div class="mt-2">
         @if($consultado)
-            <p class="text-lg font-bold text-{{ $cor }}-600">{{ $statusLabel }}</p>
+            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
+                  style="background-color: {{ $corHex }}">{{ $statusLabel }}</span>
             @if($validade && $diasRestantes !== null)
-                <p class="text-xs text-gray-400 mt-1">
+                <p class="text-[11px] text-gray-500 mt-2">
                     @if($diasRestantes <= 0)
-                        <span class="text-red-600 font-medium">Vencida</span>
+                        <span class="font-semibold" style="color: #b91c1c">Vencida</span>
                     @elseif($diasRestantes <= 7)
-                        <span class="text-yellow-600 font-medium">Vence em {{ $diasRestantes }} dias</span>
+                        <span class="font-semibold" style="color: #d97706">Vence em {{ $diasRestantes }} dias</span>
                     @else
                         Val: {{ \Carbon\Carbon::parse($validade)->format('d/m/Y') }}
                     @endif
                 </p>
             @endif
         @else
-            <p class="text-lg font-semibold text-gray-300">-</p>
-            <p class="text-xs text-gray-400 mt-1">Não consultado</p>
+            <p class="text-sm font-semibold text-gray-300">—</p>
+            <p class="text-[11px] text-gray-500 mt-1">Não consultado</p>
         @endif
     </div>
 </div>

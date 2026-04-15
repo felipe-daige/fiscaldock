@@ -1,134 +1,102 @@
-{{-- Score Fiscal - Dashboard --}}
-<div class="min-h-screen bg-gray-50" id="risk-container">
-    {{-- Header Section --}}
-    <div class="bg-white border-b border-gray-200 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex items-center justify-between">
+{{-- Score Fiscal - Dashboard (DANFE Modernizado) --}}
+@php
+    $scoreColor = function($s) {
+        if ($s >= 80) return '#b91c1c';
+        if ($s >= 50) return '#ea580c';
+        if ($s >= 20) return '#d97706';
+        return '#047857';
+    };
+    $classBadge = [
+        'baixo' => ['label' => 'BAIXO', 'hex' => '#047857'],
+        'medio' => ['label' => 'MÉDIO', 'hex' => '#d97706'],
+        'alto' => ['label' => 'ALTO', 'hex' => '#ea580c'],
+        'critico' => ['label' => 'CRÍTICO', 'hex' => '#b91c1c'],
+    ];
+@endphp
+<div class="min-h-screen bg-gray-100" id="risk-container">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+
+        {{-- Header --}}
+        <div class="mb-6">
+            <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Score Fiscal</h1>
+            <p class="text-xs text-gray-500 mt-1">Avalie o risco fiscal e de compliance dos seus participantes.</p>
+        </div>
+
+        {{-- Filtros --}}
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
+            </div>
+            <div class="p-4 flex flex-wrap items-end gap-3">
                 <div>
-                    <h1 class="text-xl font-bold text-gray-800">Score Fiscal</h1>
-                    <p class="text-xs text-gray-500 mt-1">Avalie o risco fiscal e de compliance dos seus participantes.</p>
+                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Classificação</label>
+                    <select id="filtro-classificacao" class="px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        <option value="todos" {{ ($filtroClassificacao ?? 'todos') === 'todos' ? 'selected' : '' }}>Todas as Classificações</option>
+                        <option value="baixo" {{ ($filtroClassificacao ?? '') === 'baixo' ? 'selected' : '' }}>Baixo Risco</option>
+                        <option value="medio" {{ ($filtroClassificacao ?? '') === 'medio' ? 'selected' : '' }}>Médio Risco</option>
+                        <option value="alto" {{ ($filtroClassificacao ?? '') === 'alto' ? 'selected' : '' }}>Alto Risco</option>
+                        <option value="critico" {{ ($filtroClassificacao ?? '') === 'critico' ? 'selected' : '' }}>Crítico</option>
+                    </select>
+                </div>
+                <div class="flex-1 min-w-[240px]">
+                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Buscar</label>
+                    <div class="relative">
+                        <input type="text" id="busca-participante" placeholder="CNPJ ou razão social..." value="{{ $filtroBusca ?? '' }}" class="w-full px-3 py-2 pl-9 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    {{-- Filter Bar --}}
-    <div class="bg-white border-b border-gray-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div class="flex items-center gap-3">
-                <select id="filtro-classificacao" class="px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
-                    <option value="todos" {{ ($filtroClassificacao ?? 'todos') === 'todos' ? 'selected' : '' }}>Todas as Classificacoes</option>
-                    <option value="baixo" {{ ($filtroClassificacao ?? '') === 'baixo' ? 'selected' : '' }}>Baixo Risco</option>
-                    <option value="medio" {{ ($filtroClassificacao ?? '') === 'medio' ? 'selected' : '' }}>Medio Risco</option>
-                    <option value="alto" {{ ($filtroClassificacao ?? '') === 'alto' ? 'selected' : '' }}>Alto Risco</option>
-                    <option value="critico" {{ ($filtroClassificacao ?? '') === 'critico' ? 'selected' : '' }}>Critico</option>
-                </select>
-                <div class="relative flex-1 max-w-xs">
-                    <input type="text" id="busca-participante" placeholder="Buscar CNPJ ou razao social..." value="{{ $filtroBusca ?? '' }}" class="w-full px-3 py-2 pl-9 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
-                    <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Main Content --}}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div class="space-y-6">
 
         {{-- KPIs --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {{-- Total Avaliados --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-                <div class="flex items-center gap-3">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold text-gray-900">{{ $estatisticas['total_avaliados'] ?? 0 }}</p>
-                        <p class="text-sm text-gray-500">Avaliados</p>
-                    </div>
-                </div>
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo</span>
             </div>
-
-            {{-- Baixo Risco --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-                <div class="flex items-center gap-3">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold text-green-600">{{ $estatisticas['baixo_risco'] ?? 0 }}</p>
-                        <p class="text-sm text-gray-500">Baixo Risco</p>
-                    </div>
+            <div class="grid grid-cols-2 lg:grid-cols-5 divide-x divide-y lg:divide-y-0 divide-gray-200">
+                <div class="p-4 sm:p-6">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Avaliados</p>
+                    <p class="text-lg font-bold text-gray-900 font-mono">{{ $estatisticas['total_avaliados'] ?? 0 }}</p>
                 </div>
-            </div>
-
-            {{-- Medio Risco --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-                <div class="flex items-center gap-3">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold text-yellow-600">{{ $estatisticas['medio_risco'] ?? 0 }}</p>
-                        <p class="text-sm text-gray-500">Medio Risco</p>
-                    </div>
+                <div class="p-4 sm:p-6">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Baixo Risco</p>
+                    <p class="text-lg font-bold text-gray-900 font-mono">{{ $estatisticas['baixo_risco'] ?? 0 }}</p>
+                    <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">BAIXO</span>
                 </div>
-            </div>
-
-            {{-- Alto Risco --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-                <div class="flex items-center gap-3">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold text-orange-600">{{ $estatisticas['alto_risco'] ?? 0 }}</p>
-                        <p class="text-sm text-gray-500">Alto Risco</p>
-                    </div>
+                <div class="p-4 sm:p-6">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Médio Risco</p>
+                    <p class="text-lg font-bold text-gray-900 font-mono">{{ $estatisticas['medio_risco'] ?? 0 }}</p>
+                    <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">MÉDIO</span>
                 </div>
-            </div>
-
-            {{-- Critico --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-                <div class="flex items-center gap-3">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold text-red-600">{{ $estatisticas['critico'] ?? 0 }}</p>
-                        <p class="text-sm text-gray-500">Critico</p>
-                    </div>
+                <div class="p-4 sm:p-6">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Alto Risco</p>
+                    <p class="text-lg font-bold text-gray-900 font-mono">{{ $estatisticas['alto_risco'] ?? 0 }}</p>
+                    <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #ea580c">ALTO</span>
+                </div>
+                <div class="p-4 sm:p-6">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Crítico</p>
+                    <p class="text-lg font-bold text-gray-900 font-mono">{{ $estatisticas['critico'] ?? 0 }}</p>
+                    <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">CRÍTICO</span>
                 </div>
             </div>
         </div>
 
         @if(($emRiscoCritico ?? collect())->count() > 0)
-        {{-- Alertas de Risco Critico --}}
-        <div class="bg-red-50 border border-red-200 rounded-xl p-4">
+        {{-- Alerta de Risco Crítico --}}
+        <div class="bg-white rounded border border-gray-300 border-l-4 border-l-red-500 p-4 mb-6">
             <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 text-gray-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                 </svg>
                 <div>
-                    <h4 class="font-semibold text-red-800">Atencao: Participantes em Risco Critico</h4>
+                    <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wide">Participantes em Risco Crítico</h4>
                     <ul class="mt-2 space-y-1">
-                        @foreach($emRiscoCritico as $score)
-                            <li class="text-sm text-red-700">
-                                <a href="/app/score-fiscal/participante/{{ $score->participante_id }}" data-link class="hover:underline">
-                                    {{ $score->participante->razao_social ?? 'N/A' }} ({{ $score->participante->cnpj_formatado ?? '' }}) - Score: {{ $score->score_total }}
+                        @foreach($emRiscoCritico as $scoreItem)
+                            <li class="text-sm text-gray-700">
+                                <a href="/app/score-fiscal/participante/{{ $scoreItem->participante_id }}" data-link class="text-gray-900 hover:text-gray-600 hover:underline">
+                                    {{ $scoreItem->participante->razao_social ?? 'N/A' }} <span class="font-mono text-[11px] text-gray-500">({{ $scoreItem->participante->cnpj_formatado ?? '' }})</span> — Score: <span class="font-bold" style="color: #b91c1c">{{ $scoreItem->score_total }}</span>
                                 </a>
                             </li>
                         @endforeach
@@ -139,71 +107,72 @@
         @endif
 
         {{-- Lista de Participantes --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900">Participantes</h3>
-                <span class="text-sm text-gray-500">{{ $participantes->total() ?? 0 }} participante(s)</span>
+        <div class="bg-white rounded border border-gray-300 overflow-hidden">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Participantes</span>
+                <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ $participantes->total() ?? 0 }}</span>
             </div>
 
             @if(($participantes ?? collect())->count() > 0)
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Participante</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CNPJ</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UF</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Classificacao</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ultima Consulta</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acoes</th>
+                <table class="min-w-full">
+                    <thead>
+                        <tr class="border-b border-gray-300">
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participante</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">CNPJ</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">UF</th>
+                            <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Score</th>
+                            <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Classificação</th>
+                            <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Última Consulta</th>
+                            <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ações</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody class="divide-y divide-gray-100">
                         @foreach($participantes as $participante)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">{{ $participante->razao_social ?? 'N/A' }}</div>
+                        <tr class="hover:bg-gray-50/50 transition-colors">
+                            <td class="px-3 py-3 whitespace-nowrap">
+                                <div class="text-sm text-gray-900 font-medium">{{ $participante->razao_social ?? 'N/A' }}</div>
                                 @if($participante->nome_fantasia)
-                                    <div class="text-sm text-gray-500">{{ $participante->nome_fantasia }}</div>
+                                    <div class="text-[11px] text-gray-500">{{ $participante->nome_fantasia }}</div>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-700 font-mono">
                                 {{ $participante->cnpj_formatado }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ $participante->uf ?? '-' }}
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-700">
+                                {{ $participante->uf ?? '—' }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <td class="px-3 py-3 whitespace-nowrap text-center">
                                 @if($participante->score)
-                                    <span class="text-lg font-bold {{ $participante->score->score_total >= 80 ? 'text-red-600' : ($participante->score->score_total >= 50 ? 'text-orange-600' : ($participante->score->score_total >= 20 ? 'text-yellow-600' : 'text-green-600')) }}">
+                                    <span class="text-lg font-bold font-mono" style="color: {{ $scoreColor($participante->score->score_total) }}">
                                         {{ $participante->score->score_total }}
                                     </span>
                                 @else
-                                    <span class="text-sm text-gray-400">-</span>
+                                    <span class="text-sm text-gray-400">—</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center">
-                                @if($participante->score)
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $participante->score->classificacao_badge_class }}">
-                                        {{ $participante->score->classificacao_label }}
+                            <td class="px-3 py-3 whitespace-nowrap text-center">
+                                @if($participante->score && isset($classBadge[$participante->score->classificacao]))
+                                    @php $b = $classBadge[$participante->score->classificacao]; @endphp
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $b['hex'] }}">
+                                        {{ $b['label'] }}
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                                        Nao Avaliado
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">
+                                        Não Avaliado
                                     </span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                            <td class="px-3 py-3 whitespace-nowrap text-center text-sm text-gray-700 font-mono">
                                 @if($participante->score && $participante->score->ultima_consulta_em)
                                     {{ $participante->score->ultima_consulta_em->format('d/m/Y') }}
                                 @else
-                                    -
+                                    —
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                <a href="/app/score-fiscal/participante/{{ $participante->id }}" data-link class="text-blue-600 hover:text-blue-900 mr-3">Ver Detalhes</a>
-                                <button type="button" class="btn-consultar text-green-600 hover:text-green-900" data-id="{{ $participante->id }}">Consultar</button>
+                            <td class="px-3 py-3 whitespace-nowrap text-right text-xs">
+                                <a href="/app/score-fiscal/participante/{{ $participante->id }}" data-link class="text-gray-600 hover:text-gray-900 hover:underline mr-3">Detalhes</a>
+                                <button type="button" class="btn-consultar text-gray-600 hover:text-gray-900 hover:underline" data-id="{{ $participante->id }}">Consultar</button>
                             </td>
                         </tr>
                         @endforeach
@@ -213,7 +182,7 @@
 
             {{-- Paginacao --}}
             @if($participantes->hasPages())
-            <div class="px-6 py-4 border-t border-gray-200">
+            <div class="border-t border-gray-300 px-4 py-3">
                 {{ $participantes->withQueryString()->links() }}
             </div>
             @endif
@@ -223,9 +192,9 @@
                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                 </svg>
-                <h3 class="mt-4 text-lg font-medium text-gray-900">Nenhum participante encontrado</h3>
-                <p class="mt-2 text-sm text-gray-500">Importe participantes via SPED ou XMLs.</p>
-                <a href="/app/importacao/xml" data-link class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700">
+                <h3 class="mt-4 text-sm font-semibold text-gray-900 uppercase tracking-wide">Nenhum participante encontrado</h3>
+                <p class="mt-2 text-xs text-gray-500">Importe participantes via SPED ou XMLs.</p>
+                <a href="/app/importacao/xml" data-link class="mt-4 inline-flex items-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
                     </svg>
@@ -234,7 +203,7 @@
             </div>
             @endif
         </div>
-        </div>
+
     </div>
 </div>
 

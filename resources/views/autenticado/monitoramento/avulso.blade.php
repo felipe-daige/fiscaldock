@@ -1,35 +1,30 @@
-{{-- Monitoramento - Consulta Avulsa --}}
-<div class="min-h-screen bg-gray-50" id="monitoramento-avulso-container">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {{-- Page Header --}}
-        <div class="mb-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Consulta Avulsa</h1>
-                    <p class="mt-1 text-sm text-gray-600">Consulte a situação cadastral e fiscal de CNPJs.</p>
-                </div>
-                <a
-                    href="/app/consulta/nova"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50"
-                    data-link
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
-                    Voltar
-                </a>
+{{-- Monitoramento - Consulta Avulsa (DANFE Modernizado) --}}
+<div class="min-h-screen bg-gray-100" id="monitoramento-avulso-container">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {{-- Header --}}
+        <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+                <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Consulta Avulsa</h1>
+                <p class="text-xs text-gray-500 mt-1">Consulte a situação cadastral e fiscal de CNPJs.</p>
             </div>
+            <a href="/app/consulta/nova" data-link
+               class="inline-flex items-center gap-2 px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Voltar
+            </a>
         </div>
 
         {{-- Info Box --}}
-        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+        <div class="bg-white rounded border border-gray-300 border-l-4 border-l-blue-500 p-4 mb-6">
             <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
                 <div>
-                    <h3 class="text-sm font-semibold text-blue-900">Como funciona?</h3>
-                    <p class="text-sm text-blue-800 mt-1">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide">Como funciona?</h3>
+                    <p class="text-xs text-gray-700 mt-1">
                         Consulte a situação cadastral e fiscal de CNPJs individualmente. Escolha o tipo de consulta e receba informações detalhadas sobre fornecedores e clientes.
                     </p>
                 </div>
@@ -39,7 +34,7 @@
         {{-- Grid: Formulario + Info --}}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 items-stretch">
             {{-- Card Esquerdo: Nova Consulta --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm h-full flex flex-col">
+            <div class="bg-white rounded border border-gray-300 overflow-hidden h-full flex flex-col">
                 <div class="px-6 py-4 border-b border-gray-200">
                     <h2 class="text-lg font-semibold text-gray-900">Nova Consulta</h2>
                 </div>
@@ -79,7 +74,7 @@
                             {{-- Painel Propria Empresa --}}
                             <div id="painel-propria" class="hidden">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Selecione a empresa:</label>
-                                <select id="select-propria" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                <select id="select-propria" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400 text-sm">
                                     <option value="">Selecione...</option>
                                     @foreach($empresasProprias as $ep)
                                         <option value="{{ preg_replace('/\D/', '', $ep->documento) }}" data-razao="{{ $ep->razao_social ?? $ep->nome }}" data-cliente-id="{{ $ep->id }}">
@@ -94,8 +89,8 @@
                             <div id="painel-cliente" class="hidden">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Buscar cliente:</label>
                                 <div class="relative">
-                                    <input type="text" id="busca-cliente" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="Digite o nome ou CNPJ..." autocomplete="off">
-                                    <div id="dropdown-cliente" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto"></div>
+                                    <input type="text" id="busca-cliente" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400 text-sm" placeholder="Digite o nome ou CNPJ..." autocomplete="off">
+                                    <div id="dropdown-cliente" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded max-h-48 overflow-y-auto"></div>
                                 </div>
                             </div>
 
@@ -103,8 +98,8 @@
                             <div id="painel-participante" class="hidden">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Buscar participante:</label>
                                 <div class="relative">
-                                    <input type="text" id="busca-participante-select" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="Digite o nome ou CNPJ..." autocomplete="off">
-                                    <div id="dropdown-participante" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto"></div>
+                                    <input type="text" id="busca-participante-select" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400 text-sm" placeholder="Digite o nome ou CNPJ..." autocomplete="off">
+                                    <div id="dropdown-participante" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded max-h-48 overflow-y-auto"></div>
                                 </div>
                             </div>
 
@@ -118,7 +113,7 @@
                                 <input
                                     type="text"
                                     id="cnpj-input"
-                                    class="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400 font-mono"
                                     placeholder="00.000.000/0000-00"
                                     maxlength="18"
                                     autocomplete="off"
@@ -128,12 +123,12 @@
 
                             {{-- CNPJ Confirmacao chip --}}
                             <div id="cnpj-confirmacao" class="hidden mt-3">
-                                <div class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 max-w-full">
+                                <div class="inline-flex items-center gap-2 px-3 py-2 rounded border border-gray-300 border-l-4 border-l-blue-500 bg-white max-w-full">
                                     <div class="min-w-0">
-                                        <p id="confirmacao-razao" class="text-sm font-medium text-blue-900 truncate"></p>
-                                        <p id="confirmacao-cnpj" class="text-xs text-blue-600 font-mono"></p>
+                                        <p id="confirmacao-razao" class="text-sm font-semibold text-gray-900 truncate"></p>
+                                        <p id="confirmacao-cnpj" class="text-xs text-gray-500 font-mono"></p>
                                     </div>
-                                    <button type="button" id="btn-limpar-selecao" class="flex-shrink-0 p-0.5 text-blue-400 hover:text-blue-600 transition-colors">
+                                    <button type="button" id="btn-limpar-selecao" class="flex-shrink-0 p-0.5 text-gray-400 hover:text-gray-700 transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                     </button>
                                 </div>
@@ -205,12 +200,14 @@
                                 ];
                             }
 
+                            // Hex codes por cor para DANFE Modernizado (Tailwind v4 não renderiza bg classes em badges)
                             $corClasses = [
-                                'green' => ['bg' => 'bg-green-100', 'text' => 'text-green-700', 'icon' => 'text-green-600', 'badge' => 'bg-green-100 text-green-700', 'border' => 'border-green-200', 'btn' => 'bg-green-600 hover:bg-green-700'],
-                                'blue' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-700', 'icon' => 'text-blue-600', 'badge' => 'bg-blue-100 text-blue-700', 'border' => 'border-blue-200', 'btn' => 'bg-blue-600 hover:bg-blue-700'],
-                                'purple' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-700', 'icon' => 'text-purple-600', 'badge' => 'bg-purple-100 text-purple-700', 'border' => 'border-purple-200', 'btn' => 'bg-purple-600 hover:bg-purple-700'],
-                                'amber' => ['bg' => 'bg-amber-100', 'text' => 'text-amber-700', 'icon' => 'text-amber-600', 'badge' => 'bg-amber-100 text-amber-700', 'border' => 'border-amber-200', 'btn' => 'bg-amber-600 hover:bg-amber-700'],
-                                'slate' => ['bg' => 'bg-slate-100', 'text' => 'text-slate-700', 'icon' => 'text-slate-600', 'badge' => 'bg-slate-100 text-slate-700', 'border' => 'border-slate-200', 'btn' => 'bg-slate-700 hover:bg-slate-800'],
+                                'green'  => ['bg' => '#d1fae5', 'text' => '#047857', 'icon' => '#047857', 'border' => '#047857', 'btn' => '#047857'],
+                                'blue'   => ['bg' => '#dbeafe', 'text' => '#1d4ed8', 'icon' => '#1d4ed8', 'border' => '#1d4ed8', 'btn' => '#1d4ed8'],
+                                'purple' => ['bg' => '#ede9fe', 'text' => '#6d28d9', 'icon' => '#6d28d9', 'border' => '#6d28d9', 'btn' => '#6d28d9'],
+                                'amber'  => ['bg' => '#fef3c7', 'text' => '#b45309', 'icon' => '#b45309', 'border' => '#b45309', 'btn' => '#b45309'],
+                                'slate'  => ['bg' => '#f1f5f9', 'text' => '#334155', 'icon' => '#334155', 'border' => '#334155', 'btn' => '#334155'],
+                                'gray'   => ['bg' => '#f3f4f6', 'text' => '#374151', 'icon' => '#374151', 'border' => '#374151', 'btn' => '#374151'],
                             ];
                         @endphp
 
@@ -236,13 +233,13 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 Plano selecionado:
                             </label>
-                            <div id="plano-display-card" class="rounded-lg border border-gray-200 border-l-4 border-l-green-500 bg-white overflow-hidden">
+                            <div id="plano-display-card" class="rounded border border-gray-300 border-l-4 border-l-green-500 bg-white overflow-hidden">
                                 <div class="p-4">
                                     {{-- Header: icon + name + badge --}}
                                     <div class="flex items-center justify-between mb-3">
                                         <div class="flex items-center gap-3.5">
-                                            <div id="plano-display-icon-wrapper" class="flex-shrink-0 w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
-                                                <svg id="plano-display-icon" class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div id="plano-display-icon-wrapper" class="flex-shrink-0 w-8 h-8 rounded flex items-center justify-center" style="background-color: #d1fae5">
+                                                <svg id="plano-display-icon" class="w-4 h-4" style="color: #047857" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                 </svg>
                                             </div>
@@ -251,7 +248,7 @@
                                                 <p id="plano-display-descricao" class="text-xs text-gray-500 mt-0.5">{{ $planosDetalhados[0]['descricao'] ?? '' }}</p>
                                             </div>
                                         </div>
-                                        <span id="plano-display-badge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 whitespace-nowrap flex-shrink-0 ml-2">
+                                        <span id="plano-display-badge" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap flex-shrink-0 ml-2" style="background-color: #047857">
                                             Grátis
                                         </span>
                                     </div>
@@ -287,7 +284,7 @@
                                     <button
                                         type="button"
                                         id="btn-alterar-plano"
-                                        class="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors"
+                                        class="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors"
                                     >
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
@@ -300,7 +297,7 @@
                         </div>
 
                         {{-- Resumo e Submit --}}
-                        <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="bg-gray-50 rounded border border-gray-200 p-4">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-sm text-gray-600">Custo:</p>
@@ -312,7 +309,7 @@
                                 <button
                                     type="submit"
                                     id="btn-consultar"
-                                    class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    class="inline-flex items-center gap-2 px-6 py-3 rounded bg-gray-800 text-white text-sm font-semibold transition hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled
                                 >
                                     <svg class="w-4 h-4 btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -332,7 +329,7 @@
             </div>
 
             {{-- Card Direito: Como Funciona --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm h-full flex flex-col">
+            <div class="bg-white rounded border border-gray-300 overflow-hidden h-full flex flex-col">
                 <div class="px-6 py-4 border-b border-gray-200">
                     <div class="flex items-center gap-2">
                         <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -347,28 +344,28 @@
                             <h4 class="text-sm font-semibold text-gray-900 mb-3">Como Funciona</h4>
                             <div class="space-y-4">
                             <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">1</div>
+                                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-xs font-bold">1</div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">Digite o CNPJ</p>
                                     <p class="text-xs text-gray-500">Informe o CNPJ do fornecedor ou cliente que deseja consultar. Opcionalmente, associe a um cliente para melhor organização.</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">2</div>
+                                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-xs font-bold">2</div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">Escolha o tipo de consulta</p>
                                     <p class="text-xs text-gray-500">Quanto mais completa, mais informações você recebe</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">3</div>
+                                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-xs font-bold">3</div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">Notificações</p>
                                     <p class="text-xs text-gray-500">Configure frequência automática de consultas (semanal, mensal ou trimestral) e receba notificações sobre alterações</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold">4</div>
+                                <div class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style="background-color: #047857">4</div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">Resultado salvo automaticamente</p>
                                     <p class="text-xs text-gray-500">O participante será adicionado à sua lista para futuras consultas</p>
@@ -391,42 +388,41 @@
                             <div class="flex flex-col gap-2 w-full">
                                 @foreach($planosDetalhados as $idx => $pd)
                                     @php
-                                        $badgeCor = match($pd['cor']) {
-                                            'green' => 'bg-green-100 text-green-700',
-                                            'blue' => 'bg-blue-100 text-blue-700',
-                                            'purple' => 'bg-purple-100 text-purple-700',
-                                            'amber' => 'bg-amber-100 text-amber-700',
-                                            'slate' => 'bg-slate-100 text-slate-700',
-                                            default => 'bg-gray-100 text-gray-600',
+                                        $badgeHex = match($pd['cor']) {
+                                            'green' => '#047857',
+                                            'blue' => '#1d4ed8',
+                                            'purple' => '#6d28d9',
+                                            'amber' => '#b45309',
+                                            'slate' => '#334155',
+                                            default => '#374151',
                                         };
                                     @endphp
                                     @if($pd['promo'] ?? false)
                                         <button
                                             type="button"
-                                            class="badge-plano group w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg
-                                                   border border-amber-200 bg-amber-50 hover:bg-amber-100 hover:border-amber-300
-                                                   transition-colors cursor-pointer text-left"
+                                            class="badge-plano group w-full flex items-center justify-between gap-2 px-3 py-2 rounded border border-gray-200 border-l-4 bg-white hover:bg-gray-50 transition-colors cursor-pointer text-left"
+                                            style="border-left-color: #d97706"
                                             data-slide-index="{{ $idx }}"
                                         >
                                             <div class="flex-1 min-w-0">
                                                 <span class="text-xs font-semibold text-gray-800 group-hover:text-gray-900 transition-colors">{{ $pd['nome'] }}</span>
                                                 <p class="text-xs text-gray-400 group-hover:text-gray-500 transition-colors truncate">{{ $pd['descricao'] }}</p>
                                             </div>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-100 text-orange-700 whitespace-nowrap flex-shrink-0">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap flex-shrink-0" style="background-color: #d97706">
                                                 {{ $pd['creditos'] }} cred.
                                             </span>
                                         </button>
                                     @else
                                         <button
                                             type="button"
-                                            class="badge-plano group w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer text-left"
+                                            class="badge-plano group w-full flex items-center justify-between gap-2 px-3 py-2 rounded border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer text-left"
                                             data-slide-index="{{ $idx }}"
                                         >
                                             <div class="flex-1 min-w-0">
                                                 <span class="text-xs font-semibold text-gray-800 group-hover:text-gray-900 transition-colors">{{ $pd['nome'] }}</span>
                                                 <p class="text-xs text-gray-400 group-hover:text-gray-500 transition-colors truncate">{{ $pd['descricao'] }}</p>
                                             </div>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $badgeCor }} transition-colors whitespace-nowrap flex-shrink-0">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white transition-colors whitespace-nowrap flex-shrink-0" style="background-color: {{ $badgeHex }}">
                                                 {{ $pd['gratuito'] ? 'Grátis' : $pd['creditos'] . ' cred.' }}
                                             </span>
                                         </button>
@@ -441,7 +437,7 @@
 
         {{-- Modal de Progresso --}}
         <div id="modal-progresso" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-            <div class="bg-white rounded-lg shadow-lg max-w-xs w-full mx-4 p-5">
+            <div class="bg-white rounded border border-gray-300 max-w-xs w-full mx-4 p-5">
                 <div class="text-center">
                     <svg class="animate-spin h-6 w-6 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -459,23 +455,23 @@
 
         {{-- Modal de Sucesso --}}
         <div id="modal-sucesso" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-            <div class="bg-white rounded-lg shadow-lg max-w-xs w-full mx-4 p-5">
+            <div class="bg-white rounded border border-gray-300 max-w-xs w-full mx-4 p-5">
                 <div class="text-center">
-                    <div class="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3" style="background-color: #d1fae5">
+                        <svg class="w-5 h-5" style="color: #047857" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
                     </div>
                     <h3 class="text-sm font-semibold text-gray-900 mb-1">Consulta concluída</h3>
                     <p id="sucesso-mensagem" class="text-xs text-gray-500 mb-4">Resultado pronto para download.</p>
                     <div class="flex gap-2">
-                        <a id="link-download-manual" href="#" class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition text-sm font-medium">
+                        <a id="link-download-manual" href="#" class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition text-sm font-medium">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                             </svg>
                             Baixar
                         </a>
-                        <button type="button" id="btn-fechar-sucesso" class="flex-1 py-2 border border-gray-200 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm font-medium">
+                        <button type="button" id="btn-fechar-sucesso" class="flex-1 py-2 border border-gray-300 bg-white text-gray-700 rounded hover:bg-gray-50 transition text-sm font-medium">
                             Fechar
                         </button>
                     </div>
@@ -485,16 +481,16 @@
 
         {{-- Modal de Erro --}}
         <div id="modal-erro" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-            <div class="bg-white rounded-lg shadow-lg mx-4 p-4" style="max-width: 280px;">
+            <div class="bg-white rounded border border-gray-300 mx-4 p-4" style="max-width: 280px;">
                 <div class="text-center">
-                    <div class="w-8 h-8 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-2">
-                        <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-2" style="background-color: #fee2e2">
+                        <svg class="w-4 h-4" style="color: #b91c1c" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </div>
                     <h3 class="text-sm font-semibold text-gray-900 mb-1">Erro</h3>
                     <p id="erro-mensagem" class="text-xs text-gray-500 mb-3 break-words">Ocorreu um erro inesperado.</p>
-                    <button type="button" id="btn-fechar-erro" class="w-full py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition text-sm font-medium">
+                    <button type="button" id="btn-fechar-erro" class="w-full py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition text-sm font-medium">
                         Fechar
                     </button>
                 </div>
@@ -503,7 +499,7 @@
 
         {{-- Modal: Carousel de Planos --}}
         <div id="modal-planos-carousel" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-            <div class="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] flex flex-col relative overflow-visible">
+            <div class="bg-white rounded border border-gray-300 max-w-lg w-full mx-4 max-h-[90vh] flex flex-col relative overflow-visible">
                 {{-- Modal Header --}}
                 <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
                     <div class="flex items-center gap-2">
@@ -523,12 +519,12 @@
                 </div>
 
                 {{-- Navigation arrows (overlay) --}}
-                <button type="button" id="swiper-planos-prev" class="absolute -left-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:bg-white hover:text-gray-700 hover:shadow-lg transition-all cursor-pointer">
+                <button type="button" id="swiper-planos-prev" class="absolute -left-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                     </svg>
                 </button>
-                <button type="button" id="swiper-planos-next" class="absolute -right-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:bg-white hover:text-gray-700 hover:shadow-lg transition-all cursor-pointer">
+                <button type="button" id="swiper-planos-next" class="absolute -right-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
@@ -544,8 +540,8 @@
                                     <div class="p-5 overflow-y-auto" style="max-height: calc(90vh - 200px);">
                                         {{-- Plan header --}}
                                         <div class="flex items-center gap-3 mb-3">
-                                            <div class="flex-shrink-0 w-9 h-9 rounded-lg {{ $cores['bg'] }} flex items-center justify-center">
-                                                <svg class="w-[18px] h-[18px] {{ $cores['icon'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div class="flex-shrink-0 w-9 h-9 rounded flex items-center justify-center" style="background-color: {{ $cores['bg'] }}">
+                                                <svg class="w-[18px] h-[18px]" style="color: {{ $cores['icon'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $pd['icone'] }}"></path>
                                                 </svg>
                                             </div>
@@ -560,11 +556,11 @@
                                                 @endif
                                             </div>
                                             @if($pd['promo'] ?? false)
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">{{ $pd['creditos'] }} cred.</span>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">{{ $pd['creditos'] }} cred.</span>
                                             @elseif($pd['gratuito'])
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Grátis</span>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
                                             @else
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $cores['badge'] }}">{{ $pd['creditos'] }} cred.</span>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cores['btn'] }}">{{ $pd['creditos'] }} cred.</span>
                                             @endif
                                         </div>
 
@@ -572,7 +568,7 @@
                                         <p class="text-sm text-gray-600 mb-3">{{ $pd['descricao'] }}</p>
 
                                         @if($pd['promo'] ?? false)
-                                            <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-lg mb-3">
+                                            <div class="p-3.5 bg-gray-50 border border-gray-200 border-l-4 rounded mb-3" style="border-left-color: #d97706">
                                                 <p class="text-xs font-semibold text-amber-800">&#x1f3f7;&#xfe0e; Oferta por tempo limitado</p>
                                                 <p class="text-xs text-amber-700 mt-0.5">Todas as CNDs por {{ $pd['creditos'] }} créd./CNPJ — aproveite antes do reajuste.</p>
                                             </div>
@@ -584,7 +580,7 @@
                                             <ul class="space-y-1">
                                                 @foreach($pd['consultas'] as $consulta)
                                                     <li class="flex items-start gap-2 text-sm text-gray-700">
-                                                        <svg class="w-4 h-4 {{ $cores['icon'] }} mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <svg class="w-4 h-4 mt-0.5 flex-shrink-0" style="color: {{ $cores['icon'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                                         </svg>
                                                         <span>{{ $consulta }}</span>
@@ -594,7 +590,7 @@
                                         </div>
 
                                         {{-- Quando usar --}}
-                                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-100 mb-4">
+                                        <div class="p-3 bg-gray-50 rounded border border-gray-200 mb-4">
                                             <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Quando usar</p>
                                             <ul class="space-y-1">
                                                 @foreach($pd['casos_uso'] as $caso)
@@ -621,7 +617,7 @@
                     <button
                         type="button"
                         id="btn-selecionar-plano-footer"
-                        class="btn-selecionar-plano w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-semibold transition-colors"
+                        class="btn-selecionar-plano w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold transition-colors"
                         data-plano-codigo="{{ $planosDetalhados[0]['codigo'] ?? '' }}"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -639,7 +635,7 @@
         </div>
 
         {{-- Secao: Participantes Cadastrados --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div class="bg-white rounded border border-gray-300 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <h2 class="text-lg font-semibold text-gray-900">Participantes Cadastrados</h2>
@@ -647,7 +643,7 @@
                         <input
                             type="text"
                             id="busca-participante"
-                            class="px-3 py-2 border border-gray-300 rounded-lg text-sm w-full sm:w-64"
+                            class="px-3 py-2 border border-gray-300 rounded text-sm w-full sm:w-64 focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                             placeholder="Buscar CNPJ ou razão social..."
                         >
                     </div>
@@ -674,11 +670,11 @@
                                 <td class="px-4 py-3 text-sm text-gray-900">{{ $participante->razao_social ?? '-' }}</td>
                                 <td class="px-4 py-3">
                                     @if($participante->situacao_cadastral === 'ATIVA')
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Ativa</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Ativa</span>
                                     @elseif($participante->situacao_cadastral === 'BAIXADA' || $participante->situacao_cadastral === 'INAPTA')
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700">{{ $participante->situacao_cadastral }}</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">{{ $participante->situacao_cadastral }}</span>
                                     @elseif($participante->situacao_cadastral)
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-700">{{ $participante->situacao_cadastral }}</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">{{ $participante->situacao_cadastral }}</span>
                                     @else
                                         <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500">-</span>
                                     @endif
@@ -892,11 +888,11 @@
 
         function setActiveChip(chip) {
             document.querySelectorAll('.chip-origem').forEach(function(c) {
-                c.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                c.classList.remove('bg-gray-800', 'text-white', 'border-gray-800');
                 c.classList.add('border-gray-300', 'text-gray-600', 'bg-white');
             });
             chip.classList.remove('border-gray-300', 'text-gray-600', 'bg-white');
-            chip.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+            chip.classList.add('bg-gray-800', 'text-white', 'border-gray-800');
         }
 
         document.querySelectorAll('.chip-origem').forEach(function(chip) {
@@ -911,7 +907,7 @@
 
                 // Reset sub-chips for novo
                 document.querySelectorAll('.chip-novo-subtipo').forEach(function(c) {
-                    c.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                    c.classList.remove('bg-gray-800', 'text-white', 'border-gray-800');
                     c.classList.add('border-gray-300', 'text-gray-600', 'bg-white');
                 });
 
@@ -935,7 +931,7 @@
                     var defaultSubChip = document.querySelector('.chip-novo-subtipo[data-subtipo="participante"]');
                     if (defaultSubChip) {
                         defaultSubChip.classList.remove('border-gray-300', 'text-gray-600', 'bg-white');
-                        defaultSubChip.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+                        defaultSubChip.classList.add('bg-gray-800', 'text-white', 'border-gray-800');
                     }
                     if (cnpjInput) cnpjInput.focus();
                 }
@@ -973,7 +969,7 @@
             }
             var html = '';
             items.forEach(function(item, idx) {
-                html += '<button type="button" class="dropdown-item w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors' +
+                html += '<button type="button" class="dropdown-item w-full text-left px-3 py-2 text-sm hover:bg-gray-100 transition-colors' +
                     (idx < items.length - 1 ? ' border-b border-gray-100' : '') + '" data-idx="' + idx + '">' +
                     '<span class="font-medium text-gray-900">' + escapeHtml(item.razao || 'Sem nome') + '</span>' +
                     '<span class="text-xs text-gray-500 ml-1">' + formatarCnpj(item.cnpj) + '</span>' +
@@ -1070,11 +1066,11 @@
             chip.addEventListener('click', function() {
                 state.novoSubtipo = this.dataset.subtipo;
                 document.querySelectorAll('.chip-novo-subtipo').forEach(function(c) {
-                    c.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                    c.classList.remove('bg-gray-800', 'text-white', 'border-gray-800');
                     c.classList.add('border-gray-300', 'text-gray-600', 'bg-white');
                 });
                 this.classList.remove('border-gray-300', 'text-gray-600', 'bg-white');
-                this.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+                this.classList.add('bg-gray-800', 'text-white', 'border-gray-800');
             });
         });
 
@@ -1117,18 +1113,12 @@
         ) !!};
 
         var corClasses = {
-            'green':  { bg: 'bg-green-100',  icon: 'text-green-600',  badge: 'bg-green-100 text-green-700',   borderL: 'border-l-green-500',  check: 'text-green-500' },
-            'blue':   { bg: 'bg-blue-100',   icon: 'text-blue-600',   badge: 'bg-blue-100 text-blue-700',     borderL: 'border-l-blue-500',   check: 'text-blue-500' },
-            'purple': { bg: 'bg-purple-100', icon: 'text-purple-600', badge: 'bg-purple-100 text-purple-700', borderL: 'border-l-purple-500', check: 'text-purple-500' },
-            'amber':  { bg: 'bg-amber-100',  icon: 'text-amber-600',  badge: 'bg-amber-100 text-amber-700',   borderL: 'border-l-amber-500',  check: 'text-amber-500' },
-            'slate':  { bg: 'bg-slate-100',  icon: 'text-slate-600',  badge: 'bg-slate-100 text-slate-700',   borderL: 'border-l-slate-500',  check: 'text-slate-500' }
+            'green':  { bg: '#d1fae5', icon: '#047857', badge: '#047857', borderL: '#047857' },
+            'blue':   { bg: '#dbeafe', icon: '#1d4ed8', badge: '#1d4ed8', borderL: '#1d4ed8' },
+            'purple': { bg: '#ede9fe', icon: '#6d28d9', badge: '#6d28d9', borderL: '#6d28d9' },
+            'amber':  { bg: '#fef3c7', icon: '#b45309', badge: '#b45309', borderL: '#b45309' },
+            'slate':  { bg: '#f1f5f9', icon: '#334155', badge: '#334155', borderL: '#334155' }
         };
-
-        var allBorderLClasses = ['border-l-green-500', 'border-l-blue-500', 'border-l-purple-500', 'border-l-amber-500', 'border-l-slate-500'];
-        var allBgClasses = ['bg-green-100', 'bg-blue-100', 'bg-purple-100', 'bg-amber-100', 'bg-slate-100'];
-        var allIconClasses = ['text-green-600', 'text-blue-600', 'text-purple-600', 'text-amber-600', 'text-slate-600'];
-        var allBadgeClasses = ['bg-green-100', 'text-green-700', 'bg-blue-100', 'text-blue-700', 'bg-purple-100', 'text-purple-700', 'bg-amber-100', 'text-amber-700', 'bg-slate-100', 'text-slate-700'];
-        var allCheckClasses = ['text-green-500', 'text-blue-500', 'text-purple-500', 'text-amber-500', 'text-slate-500'];
 
         function atualizarPlanoDisplay() {
             var planoSelecionado = document.querySelector('input[name="plano"]:checked');
@@ -1149,35 +1139,28 @@
 
             if (!card) return;
 
-            allBorderLClasses.forEach(function(c) { card.classList.remove(c); });
-            card.classList.add(cores.borderL);
-
-            allBgClasses.forEach(function(c) { iconWrapper.classList.remove(c); });
-            iconWrapper.classList.add(cores.bg);
-
-            allIconClasses.forEach(function(c) { icon.classList.remove(c); });
-            icon.classList.add(cores.icon);
+            card.style.borderLeftColor = cores.borderL;
+            iconWrapper.style.backgroundColor = cores.bg;
+            icon.style.color = cores.icon;
             var pathEl = icon.querySelector('path');
             if (pathEl) pathEl.setAttribute('d', plano.icone);
 
             nome.textContent = plano.nome;
             descricao.textContent = plano.descricao;
 
-            allBadgeClasses.forEach(function(c) { badge.classList.remove(c); });
-
             if (plano.promo) {
-                badge.classList.add('bg-amber-100', 'text-amber-700');
+                badge.style.backgroundColor = '#d97706';
                 badge.textContent = plano.creditos + ' cred.';
             } else {
-                cores.badge.split(' ').forEach(function(c) { badge.classList.add(c); });
+                badge.style.backgroundColor = cores.badge;
                 badge.textContent = plano.creditos === 0 ? 'Grátis' : plano.creditos + ' cred.';
             }
 
-            var checkColor = cores.check;
+            var checkColor = cores.icon;
             var html = '';
             plano.consultas.forEach(function(consulta) {
                 html += '<li class="flex items-center gap-1.5 text-[11px] text-gray-600">' +
-                    '<svg class="w-3 h-3 ' + checkColor + ' flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' +
+                    '<svg class="w-3 h-3 flex-shrink-0" style="color: ' + checkColor + '" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' +
                     consulta +
                     '</li>';
             });
@@ -1492,16 +1475,11 @@
         }
 
         var footerBtnCodigos = {!! json_encode(collect($planosDetalhados)->pluck('codigo')->values()) !!};
-        var footerBtnCores = {!! json_encode(collect($planosDetalhados)->map(fn($p) => $corClasses[$p['cor']]['btn'])->values()) !!};
-        var allFooterBtnClasses = ['bg-green-600', 'hover:bg-green-700', 'bg-blue-600', 'hover:bg-blue-700', 'bg-purple-600', 'hover:bg-purple-700', 'bg-amber-600', 'hover:bg-amber-700', 'bg-slate-700', 'hover:bg-slate-800'];
 
         function updateFooterButton(index) {
             var btn = document.getElementById('btn-selecionar-plano-footer');
             if (!btn) return;
             btn.dataset.planoCodigo = footerBtnCodigos[index] || '';
-            allFooterBtnClasses.forEach(function(c) { btn.classList.remove(c); });
-            var corStr = footerBtnCores[index] || 'bg-blue-600 hover:bg-blue-700';
-            corStr.split(' ').forEach(function(c) { btn.classList.add(c); });
         }
 
         if (modalPlanos) {

@@ -76,7 +76,7 @@
                                 <button type="button" id="np_btn_pj"
                                     class="np-tipo-btn flex items-center gap-3 p-3 rounded border-2 {{ $tipoDoc === 'PJ' ? 'border-gray-800 bg-gray-50' : 'border-gray-300 bg-white' }} cursor-pointer transition-all"
                                     onclick="window._npToggleTipo('PJ')">
-                                    <div class="w-10 h-10 {{ $tipoDoc === 'PJ' ? 'bg-gray-100' : 'bg-gray-100' }} rounded-lg flex items-center justify-center shrink-0">
+                                    <div class="w-10 h-10 bg-gray-100 rounded flex items-center justify-center shrink-0">
                                         <svg class="w-5 h-5 {{ $tipoDoc === 'PJ' ? 'text-gray-700' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                                         </svg>
@@ -89,7 +89,7 @@
                                 <button type="button" id="np_btn_pf"
                                     class="np-tipo-btn flex items-center gap-3 p-3 rounded border-2 {{ $tipoDoc === 'PF' ? 'border-gray-800 bg-gray-50' : 'border-gray-300 bg-white' }} cursor-pointer transition-all"
                                     onclick="window._npToggleTipo('PF')">
-                                    <div class="w-10 h-10 {{ $tipoDoc === 'PF' ? 'bg-gray-100' : 'bg-gray-100' }} rounded-lg flex items-center justify-center shrink-0">
+                                    <div class="w-10 h-10 bg-gray-100 rounded flex items-center justify-center shrink-0">
                                         <svg class="w-5 h-5 {{ $tipoDoc === 'PF' ? 'text-gray-700' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                         </svg>
@@ -246,7 +246,7 @@
                                     <button
                                         type="button"
                                         id="np_btn_buscar_cep"
-                                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 border border-gray-300 transition-colors"
+                                        class="px-3 py-2 bg-gray-100 text-gray-700 rounded text-xs font-semibold hover:bg-gray-200 border border-gray-300 transition-colors"
                                     >
                                         Buscar
                                     </button>
@@ -449,7 +449,7 @@
 
 {{-- Toast notification container --}}
 <div id="np_toast" class="fixed top-4 right-4 z-50 hidden">
-    <div id="np_toast_content" class="flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-sm font-medium max-w-sm">
+    <div id="np_toast_content" class="flex items-center gap-3 px-4 py-3 rounded border border-gray-300 text-sm font-medium max-w-sm">
         <span id="np_toast_icon"></span>
         <span id="np_toast_message"></span>
     </div>
@@ -574,15 +574,15 @@
         if (isPF) {
             btnPJ.className = 'np-tipo-btn flex items-center gap-3 p-3 rounded border-2 border-gray-300 bg-white cursor-pointer transition-all';
             btnPF.className = 'np-tipo-btn flex items-center gap-3 p-3 rounded border-2 border-gray-800 bg-gray-50 cursor-pointer transition-all';
-            iconPJ.className = 'w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0';
-            iconPF.className = 'w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0';
+            iconPJ.className = 'w-10 h-10 bg-gray-100 rounded flex items-center justify-center shrink-0';
+            iconPF.className = 'w-10 h-10 bg-gray-100 rounded flex items-center justify-center shrink-0';
             svgPJ.className.baseVal = 'w-5 h-5 text-gray-500';
             svgPF.className.baseVal = 'w-5 h-5 text-gray-700';
         } else {
             btnPJ.className = 'np-tipo-btn flex items-center gap-3 p-3 rounded border-2 border-gray-800 bg-gray-50 cursor-pointer transition-all';
             btnPF.className = 'np-tipo-btn flex items-center gap-3 p-3 rounded border-2 border-gray-300 bg-white cursor-pointer transition-all';
-            iconPJ.className = 'w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0';
-            iconPF.className = 'w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0';
+            iconPJ.className = 'w-10 h-10 bg-gray-100 rounded flex items-center justify-center shrink-0';
+            iconPF.className = 'w-10 h-10 bg-gray-100 rounded flex items-center justify-center shrink-0';
             svgPJ.className.baseVal = 'w-5 h-5 text-gray-700';
             svgPF.className.baseVal = 'w-5 h-5 text-gray-500';
         }
@@ -684,10 +684,14 @@
         msg.textContent = message;
 
         if (type === 'success') {
-            content.className = 'flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-sm font-medium max-w-sm bg-green-600 text-white';
+            content.className = 'flex items-center gap-3 px-4 py-3 rounded border text-sm font-medium max-w-sm text-white';
+            content.style.backgroundColor = '#047857';
+            content.style.borderColor = '#047857';
             icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
         } else {
-            content.className = 'flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-sm font-medium max-w-sm bg-red-600 text-white';
+            content.className = 'flex items-center gap-3 px-4 py-3 rounded border text-sm font-medium max-w-sm text-white';
+            content.style.backgroundColor = '#b91c1c';
+            content.style.borderColor = '#b91c1c';
             icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
         }
 

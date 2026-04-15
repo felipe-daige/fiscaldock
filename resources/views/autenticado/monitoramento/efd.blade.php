@@ -302,7 +302,7 @@
                     </p>
                     <a href="https://wa.me/5567999844366"
                        target="_blank"
-                       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition mb-3">
+                       class="inline-flex items-center gap-2 px-3 py-2 rounded text-white text-xs font-semibold transition mb-3" style="background-color: #047857">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                         </svg>
@@ -311,7 +311,7 @@
                     <div>
                         <button type="button"
                                 id="btn-tentar-novamente"
-                                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition">
+                                class="inline-flex items-center gap-2 px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                             </svg>
@@ -434,7 +434,7 @@
                     {{-- Mini-painel Resumo Final de Notas EFD (aparece quando n8n envia resumo_final) --}}
                     <div id="resumo-final-notas" class="hidden px-6 py-4 border-b border-gray-200">
                         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Resumo de Notas Importadas</p>
-                        <div id="resumo-final-notas-content" class="space-y-1 text-sm font-mono bg-gray-50 rounded-lg p-3 border border-gray-200">
+                        <div id="resumo-final-notas-content" class="space-y-1 text-sm font-mono bg-gray-50 rounded p-3 border border-gray-200">
                             {{-- Preenchido via JS --}}
                         </div>
                     </div>
@@ -576,7 +576,7 @@
         </div>
         <div class="px-6 py-4">
             {{-- Info do participante --}}
-            <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+            <div class="mb-4 p-3 bg-gray-50 rounded border border-gray-200">
                 <p class="text-xs text-gray-500 mb-1">Participante</p>
                 <p class="text-sm font-mono font-semibold text-gray-900" id="modal-monitorar-cnpj-efd">00.000.000/0001-00</p>
                 <p class="text-sm text-gray-600" id="modal-monitorar-razao-efd">Razão Social</p>
@@ -615,7 +615,7 @@
             </div>
 
             {{-- Resumo --}}
-            <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+            <div class="mt-4 p-3 bg-gray-50 rounded border border-gray-200">
                 <div class="flex items-center justify-between text-sm">
                     <span class="text-gray-600">Frequência:</span>
                     <span class="font-medium text-gray-900">Mensal (30 dias)</span>
@@ -1026,19 +1026,27 @@
 
             switch (status) {
                 case 'concluido':
-                    progressoIcon.className = 'w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0';
-                    progressoIcon.innerHTML = '<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
-                    progressoCard.classList.add('border-green-200');
-                    if (barraProgresso) barraProgresso.className = 'bg-green-600 h-full rounded-full transition-all duration-500 ease-out';
+                    progressoIcon.className = 'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0';
+                    progressoIcon.style.backgroundColor = '#d1fae5';
+                    progressoIcon.innerHTML = '<svg class="w-5 h-5" style="color: #047857" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+                    progressoCard.classList.add('border-gray-300');
+                    if (barraProgresso) {
+                        barraProgresso.className = 'h-full rounded-full transition-all duration-500 ease-out';
+                        barraProgresso.style.backgroundColor = '#047857';
+                    }
                     // Ocultar seção de erro, manter stats
                     if (progressoErro) progressoErro.classList.add('hidden');
                     break;
                 case 'erro':
                 case 'timeout':
-                    progressoIcon.className = 'w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0';
-                    progressoIcon.innerHTML = '<svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
-                    progressoCard.classList.add('border-red-200');
-                    if (barraProgresso) barraProgresso.className = 'bg-red-600 h-full rounded-full transition-all duration-500 ease-out';
+                    progressoIcon.className = 'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0';
+                    progressoIcon.style.backgroundColor = '#fee2e2';
+                    progressoIcon.innerHTML = '<svg class="w-5 h-5" style="color: #b91c1c" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+                    progressoCard.classList.add('border-gray-300');
+                    if (barraProgresso) {
+                        barraProgresso.className = 'h-full rounded-full transition-all duration-500 ease-out';
+                        barraProgresso.style.backgroundColor = '#b91c1c';
+                    }
                     // Mostrar seção de erro
                     if (progressoErro) {
                         progressoErro.classList.remove('hidden');
@@ -1183,12 +1191,13 @@
                 pendente:    { pill: 'bg-gray-100 text-gray-400',   icon: svgDash },
                 processando: { pill: 'bg-gray-200 text-gray-700',   icon: svgSpinner },
                 inicio:      { pill: 'bg-gray-200 text-gray-700',   icon: svgSpinner },
-                concluido:   { pill: 'bg-green-100 text-green-700', icon: svgCheck },
+                concluido:   { pill: 'text-white', icon: svgCheck, style: 'background-color: #047857' },
                 skip:        { pill: 'bg-gray-100 text-gray-400',   icon: svgDash },
             };
 
             const estado = estados[status] || estados.pendente;
             item.className = 'etapa-item inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ' + estado.pill;
+            item.style.cssText = estado.style || '';
             iconEl.innerHTML = estado.icon;
         }
 
@@ -1699,7 +1708,7 @@
             // Helper para badge de status da importação (Novo/Atualizado)
             function getStatusImportacaoBadge(participanteId) {
                 if (novosIdsFromSSE && novosIdsFromSSE.includes(participanteId)) {
-                    return '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 ml-2">Novo</span>';
+                    return '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white ml-2" style="background-color: #047857">Novo</span>';
                 }
                 if (duplicadosIdsFromSSE && duplicadosIdsFromSSE.includes(participanteId)) {
                     return '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700 ml-2">Já Registrado</span>';
