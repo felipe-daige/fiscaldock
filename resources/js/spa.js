@@ -118,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
         '/app/alertas': null, // IIFE inline na view
         '/app/validacao': null, // Clearance dashboard — IIFE inline
         '/app/validacao/notas': null, // Clearance notas — clearance.js carregado como tag
+        '/app/validacao/buscar-nfe': null, // Clearance busca avulsa — script carregado como tag
     };
     
     // 0. LIMPAR RECURSOS ANTES DE NAVEGAR

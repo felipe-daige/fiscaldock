@@ -7,6 +7,7 @@
     $creditUnitPrice = $pricingData['credit_unit_price'] ?? 0.20;
     $complianceProduct = collect($products)->firstWhere('slug', 'compliance') ?? ($products[0] ?? null);
     $clearanceProduct = collect($products)->firstWhere('slug', 'clearance');
+    $complianceSources = $pricingData['compliance_sources'] ?? [];
 @endphp
 
 @push('structured-data')
@@ -116,6 +117,13 @@
                                         <p class="text-xs font-medium uppercase tracking-wide text-gray-400">Uso recorrente</p>
                                     </div>
                                     <p class="mt-2 text-sm text-gray-600">Regularidade fiscal por CNPJ para rotina operacional, com economia progressiva conforme sua faixa melhora.</p>
+                                    @if(!empty($complianceSources))
+                                        <div class="mt-4 pt-4 border-t border-gray-200">
+                                            <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">Fontes incluídas</p>
+                                            @include('partials.compliance-sources', ['sources' => $complianceSources, 'variant' => 'publico'])
+                                            <p class="mt-3 text-[11px] text-gray-500">Você contrata um pacote único — novas fontes entram automaticamente conforme liberadas. Créditos por consulta seguem a tabela de faixas abaixo.</p>
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="rounded-xl border border-gray-200 p-5 sm:p-6">
                                     <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Clearance</p>

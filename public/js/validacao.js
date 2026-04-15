@@ -70,10 +70,6 @@
 
         try {
             // First, get nota IDs for this import
-            const notasResponse = await fetchWithCsrf(`/app/importacao/xml/importacao/${currentImportacaoId}/participantes`);
-
-            // For now, we'll use a simplified approach - validate all notes in the import
-            // Calculate cost endpoint
             const custoResponse = await fetchWithCsrf(`/app/validacao/calcular-custo`, {
                 method: 'POST',
                 body: JSON.stringify({
@@ -93,14 +89,14 @@
 
             let html = `
                 <div class="space-y-4">
-                    <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="bg-gray-50 border border-gray-200 rounded p-4">
                         <p class="text-sm text-gray-600">Notas a validar: <span class="font-semibold text-gray-900">${notasCount}</span></p>
                         <p class="text-sm text-gray-600">Participantes unicos: <span class="font-semibold text-gray-900">${custo.participantes_unicos}</span></p>
                     </div>
 
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-700">Tipo de Validacao:</label>
-                        <select id="select-tipo-validacao" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Tipo de Validacao</label>
+                        <select id="select-tipo-validacao" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400 focus:outline-none bg-white">
                             <option value="local">Regras Locais (Gratis)</option>
                             <option value="completa" selected>Validacao Completa (${custo.participantes_unicos} cr)</option>
                             <option value="deep">Deep Analysis (${custo.participantes_unicos * 3} cr)</option>
@@ -121,7 +117,7 @@
 
             if (!suficiente && custo.custo_total > 0) {
                 html += `
-                    <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <div class="bg-white border border-gray-300 rounded p-3 border-l-4" style="border-left-color: #dc2626;">
                         <p class="text-sm text-red-700">Creditos insuficientes para a opcao selecionada.</p>
                     </div>
                 `;
@@ -179,7 +175,7 @@
         }
 
         try {
-            const response = await fetchWithCsrf(`/app/validacao/validar-importacao/${currentImportacaoId}`, {
+            const response = await fetchWithCsrf(`/app/validacao/importacao/${currentImportacaoId}/validar`, {
                 method: 'POST',
                 body: JSON.stringify({ tipo })
             });
@@ -194,7 +190,7 @@
                 }, 1500);
             } else {
                 setModalContent(`
-                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div class="bg-white border border-gray-300 rounded p-4 border-l-4" style="border-left-color: #dc2626;">
                         <p class="text-sm text-red-700">${response.message || 'Erro ao validar'}</p>
                     </div>
                 `);
@@ -223,7 +219,7 @@
         btn.textContent = 'Salvando...';
 
         try {
-            const response = await fetchWithCsrf('/app/validacao/validar-notas', {
+            const response = await fetchWithCsrf('/app/validacao/notas/validar', {
                 method: 'POST',
                 body: JSON.stringify({
                     nota_ids: [parseInt(notaId)],

@@ -34,30 +34,26 @@
                     'validacao' => [
                         'cor' => 'blue',
                         'icone' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
-                        'consultas_display' => ['Situação Cadastral (Ativa, Inapta, Baixada)', 'Dados Cadastrais Completos', 'CNAEs Principal e Secundários', 'Quadro Societário (QSA)', 'Simples Nacional e MEI'],
-                        'casos_uso' => ['Conferir regime tributário', 'Verificar se é MEI ou Simples', 'Qualificar novos fornecedores'],
+                        'consultas_display' => ['Situação Cadastral', 'Dados Cadastrais', 'Simples Nacional', 'MEI', 'SINTEGRA básico'],
+                        'casos_uso' => ['Conferir regime tributário', 'Validar inscrição estadual', 'Qualificar novos fornecedores'],
                     ],
                     'licitacao' => [
                         'cor' => 'blue',
                         'icone' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-                        'consultas_display' => ['Tudo do Validação', 'CND Federal (PGFN/RFB)'],
-                        'casos_uso' => ['Documentação para editais', 'Verificar regularidade federal', 'Homologar fornecedores'],
-                        'promo' => true,
-                        'preco_original' => 4,
+                        'consultas_display' => ['Tudo do Validação', 'CND Federal (PGFN/RFB)', 'CNDT', 'FGTS'],
+                        'casos_uso' => ['Documentação para editais', 'Contratos públicos', 'Homologar fornecedores'],
                     ],
                     'compliance' => [
                         'cor' => 'purple',
                         'icone' => 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
-                        'consultas_display' => [],
-                        'casos_uso' => [],
-                        'coming_soon' => true,
+                        'consultas_display' => ['Tudo do Licitação', 'CND Estadual', 'CND Municipal'],
+                        'casos_uso' => ['Regularidade completa', 'Auditoria de fornecedor', 'Contratos recorrentes'],
                     ],
                     'due_diligence' => [
                         'cor' => 'amber',
                         'icone' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7',
-                        'consultas_display' => [],
-                        'casos_uso' => [],
-                        'coming_soon' => true,
+                        'consultas_display' => ['Tudo do Compliance', 'Sanções', 'CNJ', 'Protestos e processos'],
+                        'casos_uso' => ['Risco ampliado', 'Due diligence comercial', 'Fornecedores críticos'],
                     ],
                     'enterprise' => [
                         'cor' => 'slate',
@@ -68,10 +64,14 @@
                     ],
                 ];
 
+                $hasMadeFirstPurchase = $hasMadeFirstPurchase ?? false;
+                $firstPurchaseLockedProducts = $firstPurchaseLockedProducts ?? ['compliance', 'due_diligence'];
                 $planosDetalhados = [];
-                $planosAtivos = $planos->where('is_active', true)->values();
+                $planosAtivos = $planos->where('is_active', true)->where('codigo', '!=', 'enterprise')->values();
                 foreach ($planosAtivos as $p) {
                     $meta = $planoMeta[$p->codigo] ?? ['cor' => 'gray', 'icone' => 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'consultas_display' => [], 'casos_uso' => []];
+                    $requiresFirstPurchase = in_array($p->codigo, $firstPurchaseLockedProducts, true);
+                    $isLocked = $requiresFirstPurchase && ! $hasMadeFirstPurchase;
                     $planosDetalhados[] = [
                         'codigo' => $p->codigo,
                         'nome' => $p->nome,
@@ -81,10 +81,12 @@
                         'icone' => $meta['icone'],
                         'consultas' => $meta['consultas_display'],
                         'casos_uso' => $meta['casos_uso'],
-                        'coming_soon' => $meta['coming_soon'] ?? false,
+                        'coming_soon' => $p->codigo === 'enterprise' ? true : ($meta['coming_soon'] ?? false),
                         'gratuito' => $p->is_gratuito,
                         'promo' => $meta['promo'] ?? false,
                         'preco_original' => $meta['preco_original'] ?? null,
+                        'requires_first_purchase' => $requiresFirstPurchase,
+                        'locked' => $isLocked,
                     ];
                 }
 
@@ -474,9 +476,10 @@
                                         'due_diligence' => '#9a3412',
                                         default => '#374151',
                                     };
+                                    $isLocked = $pd['locked'] ?? false;
                                 @endphp
-                                <label class="flex items-center gap-3 p-3 border rounded cursor-pointer transition plano-label border-gray-300 hover:border-gray-400 hover:bg-gray-50" data-plano-id="{{ $planosAtivos[$idx]->id }}">
-                                    <input type="radio" name="plano_id" value="{{ $planosAtivos[$idx]->id }}" class="w-4 h-4 text-gray-600 border-gray-300" data-custo="{{ $pd['creditos'] }}" data-gratuito="{{ $pd['gratuito'] ? '1' : '0' }}" {{ $idx === 0 ? 'checked' : '' }}>
+                                <label class="flex items-center gap-3 p-3 border rounded transition plano-label {{ $isLocked ? 'border-gray-200 bg-gray-50 opacity-75 cursor-not-allowed' : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50 cursor-pointer' }}" data-plano-id="{{ $planosAtivos[$idx]->id }}" data-locked="{{ $isLocked ? '1' : '0' }}">
+                                    <input type="radio" name="plano_id" value="{{ $planosAtivos[$idx]->id }}" class="w-4 h-4 text-gray-600 border-gray-300" data-custo="{{ $pd['creditos'] }}" data-gratuito="{{ $pd['gratuito'] ? '1' : '0' }}" {{ $idx === 0 ? 'checked' : '' }} {{ $isLocked ? 'disabled' : '' }}>
                                     <div class="flex-shrink-0 w-8 h-8 rounded bg-gray-100 flex items-center justify-center">
                                         <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $pd['icone'] }}"></path>
@@ -487,11 +490,25 @@
                                             <span class="text-sm font-medium text-gray-900 min-w-0 pr-2">{{ $pd['nome'] }}</span>
                                             @if($pd['gratuito'])
                                                 <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
+                                            @elseif($isLocked)
+                                                <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Bloqueado</span>
                                             @else
                                                 <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeHex }}">{{ $pd['creditos'] }} cred.</span>
                                             @endif
                                         </div>
                                         <p class="text-xs text-gray-500 mt-0.5">{{ $pd['descricao'] }}</p>
+                                        @if($isLocked)
+                                            <div class="mt-2 flex items-center justify-between gap-3 rounded border border-gray-200 bg-white px-3 py-2">
+                                                <span class="text-[11px] text-gray-600">Disponível após a primeira recarga.</span>
+                                                <a href="/app/creditos" data-link class="text-[11px] font-semibold text-gray-900 hover:text-gray-600 hover:underline">Comprar créditos</a>
+                                            </div>
+                                        @endif
+                                        @if($pd['codigo'] === 'compliance' && !empty($complianceSources))
+                                            <div class="mt-3 pt-3 border-t border-gray-200">
+                                                <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-2">Fontes incluídas</div>
+                                                @include('partials.compliance-sources', ['sources' => $complianceSources])
+                                            </div>
+                                        @endif
                                     </div>
                                     <button type="button" class="btn-info-plano-lote flex-shrink-0 w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:border-gray-400 transition" data-slide-index="{{ $idx }}" onclick="event.preventDefault(); event.stopPropagation();">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -720,17 +737,28 @@
                                                         <span class="text-sm text-gray-500">{{ $pd['creditos'] }} creditos/CNPJ</span>
                                                     @endif
                                                 </div>
-                                                @if($pd['gratuito'])
-                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Gratis</span>
+                                                @if($pd['locked'] ?? false)
+                                                    <span class="inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Bloqueado</span>
+                                                @elseif($pd['gratuito'])
+                                                    <span class="inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
                                                 @elseif($pd['promo'])
-                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">{{ $pd['creditos'] }} cred.</span>
+                                                    <span class="inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">{{ $pd['creditos'] }} cred.</span>
                                                 @else
-                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $cores['badge'] }}">{{ $pd['creditos'] }} cred.</span>
+                                                    <span class="inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $pd['creditos'] }} cred.</span>
                                                 @endif
                                             </div>
 
                                             {{-- Description --}}
                                             <p class="text-sm text-gray-600 mb-3">{{ $pd['descricao'] }}</p>
+
+                                            @if($pd['locked'] ?? false)
+                                                <div class="mb-3 p-3 bg-gray-50 border border-gray-200 rounded">
+                                                    <div class="flex items-center justify-between gap-3">
+                                                        <span class="text-xs font-semibold text-gray-700">Disponível após a primeira recarga.</span>
+                                                        <a href="/app/creditos" data-link class="text-xs font-semibold text-gray-900 hover:text-gray-600 hover:underline">Comprar créditos</a>
+                                                    </div>
+                                                </div>
+                                            @endif
 
                                             @if($pd['promo'])
                                                 <div class="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">

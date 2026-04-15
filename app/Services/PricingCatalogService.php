@@ -10,6 +10,7 @@ class PricingCatalogService
 {
     public const CREDIT_UNIT_PRICE = 0.20;
     public const MINIMUM_DEPOSIT = 50.00;
+    public const FIRST_PURCHASE_LOCKED_PRODUCTS = ['compliance', 'due_diligence'];
 
     /**
      * Ofertas promocionais destacadas.
@@ -48,6 +49,34 @@ class PricingCatalogService
     public function getMinimumDeposit(): float
     {
         return self::MINIMUM_DEPOSIT;
+    }
+
+    public function getFirstPurchaseLockedProducts(): array
+    {
+        return self::FIRST_PURCHASE_LOCKED_PRODUCTS;
+    }
+
+    public function userHasFirstPurchase(User $user): bool
+    {
+        return CreditTransaction::query()
+            ->where('user_id', $user->id)
+            ->where('type', 'purchase')
+            ->where('amount', '>', 0)
+            ->exists();
+    }
+
+    public function productRequiresFirstPurchase(string $productCode): bool
+    {
+        return in_array($productCode, self::FIRST_PURCHASE_LOCKED_PRODUCTS, true);
+    }
+
+    public function userCanUseProduct(User $user, string $productCode): bool
+    {
+        if (! $this->productRequiresFirstPurchase($productCode)) {
+            return true;
+        }
+
+        return $this->userHasFirstPurchase($user);
     }
 
     public function getPackageBySlug(string $slug): ?array
@@ -132,20 +161,126 @@ class PricingCatalogService
     }
 
     /**
+     * Fontes de dados que compõem o produto Compliance.
+     * Status: ativo (já operacional), em_implementacao (em rollout), em_breve (roadmap).
+     */
+    public function getComplianceSources(): array
+    {
+        return [
+            [
+                'slug' => 'minha_receita',
+                'nome' => 'Cadastro RFB (minhareceita.org)',
+                'categoria' => 'Cadastral',
+                'status' => 'ativo',
+                'descricao_curta' => 'Situação cadastral, CNAEs, QSA, regime tributário.',
+            ],
+            [
+                'slug' => 'cnd_federal',
+                'nome' => 'CND Federal (PGFN/RFB)',
+                'categoria' => 'Fiscal obrigatória',
+                'status' => 'em_implementacao',
+                'descricao_curta' => 'Certidão Negativa de Débitos Federais e Dívida Ativa da União.',
+            ],
+            [
+                'slug' => 'cnd_estadual',
+                'nome' => 'CND Estadual (SEFAZ)',
+                'categoria' => 'Fiscal obrigatória',
+                'status' => 'em_breve',
+                'descricao_curta' => 'Certidão estadual nas 27 UFs via SEFAZ.',
+            ],
+            [
+                'slug' => 'cnd_municipal',
+                'nome' => 'CND Municipal (Prefeituras)',
+                'categoria' => 'Fiscal obrigatória',
+                'status' => 'em_breve',
+                'descricao_curta' => 'Certidão municipal por cidade do participante.',
+            ],
+            [
+                'slug' => 'cndt',
+                'nome' => 'CNDT (TST)',
+                'categoria' => 'Trabalhista obrigatória',
+                'status' => 'em_breve',
+                'descricao_curta' => 'Certidão Negativa de Débitos Trabalhistas — exigida em licitação.',
+            ],
+            [
+                'slug' => 'crf_fgts',
+                'nome' => 'CRF FGTS (Caixa)',
+                'categoria' => 'FGTS obrigatória',
+                'status' => 'em_breve',
+                'descricao_curta' => 'Certificado de Regularidade do FGTS.',
+            ],
+            [
+                'slug' => 'cgu_cnc',
+                'nome' => 'CGU CNC (CEIS+CNEP+CEPIM+ePAD)',
+                'categoria' => 'Sanções',
+                'status' => 'em_breve',
+                'descricao_curta' => 'Cadastro unificado de sanções a entes privados.',
+            ],
+            [
+                'slug' => 'cnj_improbidade',
+                'nome' => 'CNJ Improbidade',
+                'categoria' => 'Reputacional',
+                'status' => 'em_breve',
+                'descricao_curta' => 'Improbidade e inelegibilidade de sócios e administradores.',
+            ],
+            [
+                'slug' => 'sintegra',
+                'nome' => 'SINTEGRA unificada',
+                'categoria' => 'Cadastral estadual',
+                'status' => 'em_breve',
+                'descricao_curta' => 'Inscrição estadual ativa — protege crédito de ICMS.',
+            ],
+        ];
+    }
+
+    /**
      * Catálogo comercial público.
      */
     public function getProductCatalog(): array
     {
         return [
             [
-                'slug' => 'compliance',
-                'nome' => 'Compliance',
-                'descricao' => 'Consulta premium de regularidade fiscal por CNPJ, incluindo o pacote de certidões e checagens que sustentam a oferta de compliance.',
+                'slug' => 'validacao',
+                'nome' => 'Validação',
+                'descricao' => 'Consulta fiscal básica de CNPJ com Simples Nacional e SINTEGRA para qualificação inicial.',
+                'credits_by_tier' => [
+                    'base' => 5,
+                    'x' => 5,
+                    'y' => 5,
+                    'z' => 5,
+                ],
+            ],
+            [
+                'slug' => 'licitacao',
+                'nome' => 'Licitação',
+                'descricao' => 'Consulta para editais e contratação pública com CND Federal, CNDT e FGTS.',
                 'credits_by_tier' => [
                     'base' => 10,
-                    'x' => 9,
-                    'y' => 8,
-                    'z' => 7,
+                    'x' => 10,
+                    'y' => 10,
+                    'z' => 10,
+                ],
+            ],
+            [
+                'slug' => 'compliance',
+                'nome' => 'Compliance',
+                'descricao' => 'Consulta de regularidade fiscal e trabalhista completa por CNPJ.',
+                'credits_by_tier' => [
+                    'base' => 18,
+                    'x' => 18,
+                    'y' => 18,
+                    'z' => 18,
+                ],
+            ],
+            [
+                'slug' => 'due_diligence',
+                'nome' => 'Due Diligence',
+                'descricao' => 'Consulta ampliada de risco com compliance, sanções, CNJ, protestos e processos.',
+                'credits_by_tier' => [
+                    'base' => 35,
+                    'x' => 35,
+                    'y' => 35,
+                    'z' => 35,
                 ],
             ],
             [
@@ -197,6 +332,7 @@ class PricingCatalogService
             'packages' => $featuredOffers,
             'tiers' => $tiers,
             'products' => $products,
+            'compliance_sources' => $this->getComplianceSources(),
         ];
     }
 
@@ -296,7 +432,10 @@ class PricingCatalogService
     public function getProductCreditsByPlan(MonitoramentoPlano $plan, User $user): int
     {
         $mappedProduct = match ($plan->codigo) {
+            'validacao' => 'validacao',
+            'licitacao' => 'licitacao',
             'compliance' => 'compliance',
+            'due_diligence' => 'due_diligence',
             'clearance' => 'clearance',
             default => null,
         };

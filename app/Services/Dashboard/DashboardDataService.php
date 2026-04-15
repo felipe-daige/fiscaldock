@@ -37,6 +37,10 @@ class DashboardDataService
         $participantesRisco = DB::table('participante_scores')
             ->join('participantes', 'participantes.id', '=', 'participante_scores.participante_id')
             ->where('participantes.user_id', $userId)
+            ->where(function ($q) {
+                $q->where('participantes.origem_tipo', '!=', 'PROPRIO')
+                    ->orWhereNull('participantes.origem_tipo');
+            })
             ->whereIn('participante_scores.classificacao', ['alto', 'critico'])
             ->count();
 
@@ -108,7 +112,14 @@ class DashboardDataService
      */
     public function isUsuarioNovo(int $userId): bool
     {
-        return Participante::where('user_id', $userId)->count() === 0
+        $participantesReais = Participante::where('user_id', $userId)
+            ->where(function ($q) {
+                $q->where('origem_tipo', '!=', 'PROPRIO')
+                    ->orWhereNull('origem_tipo');
+            })
+            ->count();
+
+        return $participantesReais === 0
             && EfdImportacao::where('user_id', $userId)->count() === 0;
     }
 
@@ -127,7 +138,12 @@ class DashboardDataService
      */
     public function getTotalParticipantes(int $userId): int
     {
-        return Participante::where('user_id', $userId)->count();
+        return Participante::where('user_id', $userId)
+            ->where(function ($q) {
+                $q->where('origem_tipo', '!=', 'PROPRIO')
+                    ->orWhereNull('origem_tipo');
+            })
+            ->count();
     }
 
     /**

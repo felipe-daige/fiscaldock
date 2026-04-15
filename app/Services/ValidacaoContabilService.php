@@ -82,7 +82,7 @@ class ValidacaoContabilService
     /**
      * Valida todas as notas de uma importacao.
      */
-    public function validarImportacao(int $importacaoId, int $userId): array
+    public function validarImportacao(int $importacaoId, int $userId, string $tipo = 'completa'): array
     {
         $notas = XmlNota::where('importacao_xml_id', $importacaoId)
             ->where('user_id', $userId)
@@ -111,8 +111,10 @@ class ValidacaoContabilService
 
         DB::beginTransaction();
         try {
+            $incluirOperacoes = $tipo !== 'local';
+
             foreach ($notas as $nota) {
-                $resultado = $this->validarNota($nota);
+                $resultado = $this->validarNota($nota, $incluirOperacoes);
                 $nota->update(['validacao' => $resultado]);
                 $resultados[] = $resultado;
 
@@ -152,7 +154,7 @@ class ValidacaoContabilService
     /**
      * Valida notas por IDs especificos.
      */
-    public function validarNotas(array $notaIds, int $userId): array
+    public function validarNotas(array $notaIds, int $userId, string $tipo = 'completa'): array
     {
         $notas = XmlNota::whereIn('id', $notaIds)
             ->where('user_id', $userId)
@@ -178,8 +180,10 @@ class ValidacaoContabilService
 
         DB::beginTransaction();
         try {
+            $incluirOperacoes = $tipo !== 'local';
+
             foreach ($notas as $nota) {
-                $resultado = $this->validarNota($nota);
+                $resultado = $this->validarNota($nota, $incluirOperacoes);
                 $nota->update(['validacao' => $resultado]);
                 $resultados[] = $resultado;
 

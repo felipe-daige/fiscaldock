@@ -3040,10 +3040,17 @@
         function updateFooterButtonLote(index) {
             var btn = document.getElementById('btn-selecionar-plano-footer-lote');
             if (!btn) return;
+            var pd = planosData[index] || {};
             btn.dataset.planoIndex = index;
             allFooterBtnClasses.forEach(function(c) { btn.classList.remove(c); });
-            var corStr = footerBtnColors[index] || 'bg-blue-600 hover:bg-blue-700';
+            var corStr = pd.locked ? 'bg-slate-700 hover:bg-slate-800' : (footerBtnColors[index] || 'bg-blue-600 hover:bg-blue-700');
             corStr.split(' ').forEach(function(c) { btn.classList.add(c); });
+            btn.disabled = !!pd.locked;
+            btn.classList.toggle('opacity-60', !!pd.locked);
+            btn.classList.toggle('cursor-not-allowed', !!pd.locked);
+            btn.innerHTML = pd.locked
+                ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2h-1V9a5 5 0 00-10 0v2H6a2 2 0 00-2 2v6a2 2 0 002 2zm3-10V9a3 3 0 116 0v2"></path></svg> Faça a primeira recarga'
+                : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Selecionar este produto';
         }
 
         // Info button clicks -> open modal at specific slide
@@ -3089,6 +3096,10 @@
                 var idx = parseInt(this.dataset.planoIndex) || 0;
                 var pd = planosData[idx];
                 if (!pd) return;
+                if (pd.locked) {
+                    window.location.href = '/app/creditos';
+                    return;
+                }
 
                 // Find the matching plano_id from window.consultaData.planos
                 var planoId = null;

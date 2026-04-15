@@ -1,273 +1,259 @@
-{{-- Validacao Contabil - Detalhes da Nota --}}
-<div class="min-h-screen bg-gray-50" id="validacao-nota-container">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {{-- Page Header --}}
-        <div class="mb-6">
-            <a href="/app/validacao" data-link class="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4">
+@php
+    $validacao = $validacao ?? [];
+    $categorias = $categorias ?? [];
+
+    $scoreTotal = (int) ($validacao['score_total'] ?? 0);
+    $scoreHex = match (true) {
+        $scoreTotal >= 50 => '#dc2626',
+        $scoreTotal >= 30 => '#d97706',
+        $scoreTotal >= 10 => '#b45309',
+        default => '#047857',
+    };
+
+    $classificacaoHex = match (strtolower((string) ($nota->validacao_classificacao ?? $validacao['classificacao'] ?? ''))) {
+        'conforme' => '#047857',
+        'atencao' => '#d97706',
+        'irregular' => '#b45309',
+        'critico' => '#dc2626',
+        default => '#374151',
+    };
+@endphp
+
+<div class="min-h-screen bg-gray-100" id="validacao-nota-container">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div class="mb-4 sm:mb-8">
+            <a href="/app/validacao" data-link class="inline-flex items-center gap-2 text-xs text-gray-600 hover:text-gray-900 hover:underline mb-3">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
-                Voltar
+                Voltar para validação
             </a>
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Nota Fiscal #{{ $nota->numero_nota }}</h1>
-                    <p class="mt-1 text-sm text-gray-600">{{ $nota->emit_razao_social ?? $nota->emit_cnpj }}</p>
+                    <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Nota Fiscal {{ $nota->numero_nota }}</h1>
+                    <p class="text-xs text-gray-500 mt-1">{{ $nota->emit_razao_social ?? $nota->emit_cnpj }}</p>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
                     @if($validacao['preview'] ?? false)
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
-                            Preview (nao salvo)
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
+                            Preview
                         </span>
-                        <button type="button" id="btn-salvar-validacao" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm hover:bg-blue-700 transition" data-nota-id="{{ $nota->id }}">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Salvar Validacao
+                        <button type="button" id="btn-salvar-validacao" class="px-4 py-2 bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium" data-nota-id="{{ $nota->id }}">
+                            Salvar validação
                         </button>
                     @else
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $nota->validacao_badge_class }}">
-                            {{ $nota->validacao_classificacao_label }}
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $classificacaoHex }}">
+                            {{ strtoupper($nota->validacao_classificacao_label ?? 'VALIDADA') }}
                         </span>
                     @endif
                 </div>
             </div>
         </div>
 
-        {{-- Score Card --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-900">Score de Validacao</h3>
-                    <p class="text-sm text-gray-500">Quanto menor o score, mais conforme esta a nota</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-4xl font-bold {{ ($validacao['score_total'] ?? 0) >= 50 ? 'text-red-600' : (($validacao['score_total'] ?? 0) >= 30 ? 'text-orange-600' : (($validacao['score_total'] ?? 0) >= 10 ? 'text-yellow-600' : 'text-green-600')) }}">
-                        {{ $validacao['score_total'] ?? 0 }}
-                    </p>
-                    <p class="text-sm text-gray-500">de 100</p>
-                </div>
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Score de Validação</span>
             </div>
-
-            {{-- Barra de Score --}}
-            <div class="relative h-4 bg-gray-200 rounded-full overflow-hidden mb-6">
-                <div class="absolute inset-0 bg-gradient-to-r from-green-500 via-yellow-500 to-red-500"></div>
-                <div class="absolute top-0 h-full bg-gray-200" style="left: {{ $validacao['score_total'] ?? 0 }}%; right: 0;"></div>
-                <div class="absolute top-0 w-1 h-full bg-gray-800" style="left: {{ $validacao['score_total'] ?? 0 }}%;"></div>
-            </div>
-
-            {{-- Scores por Categoria --}}
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                @foreach($categorias ?? [] as $key => $categoria)
-                @php $scoreCategoria = $validacao['scores'][$key] ?? 0; @endphp
-                <div class="text-center p-3 bg-gray-50 rounded-lg">
-                    <p class="text-xs text-gray-500 mb-1">{{ $categoria['nome'] }}</p>
-                    <p class="text-lg font-bold {{ $scoreCategoria >= 50 ? 'text-red-600' : ($scoreCategoria >= 30 ? 'text-orange-600' : ($scoreCategoria >= 10 ? 'text-yellow-600' : 'text-green-600')) }}">
-                        {{ $scoreCategoria }}
-                    </p>
-                </div>
-                @endforeach
-            </div>
-        </div>
-
-        {{-- Alertas --}}
-        @if(count($validacao['alertas'] ?? []) > 0)
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">Alertas ({{ count($validacao['alertas']) }})</h3>
-            </div>
-
-            <div class="divide-y divide-gray-200">
-                @foreach($validacao['alertas'] as $alerta)
-                @php
-                    $nivelClass = match($alerta['nivel']) {
-                        'bloqueante' => 'bg-red-100 text-red-800 border-red-200',
-                        'atencao' => 'bg-yellow-100 text-yellow-800 border-yellow-200',
-                        'info' => 'bg-blue-100 text-blue-800 border-blue-200',
-                        default => 'bg-gray-100 text-gray-800 border-gray-200',
-                    };
-                    $iconClass = match($alerta['nivel']) {
-                        'bloqueante' => 'text-red-500',
-                        'atencao' => 'text-yellow-500',
-                        'info' => 'text-blue-500',
-                        default => 'text-gray-500',
-                    };
-                @endphp
-                <div class="px-6 py-4">
-                    <div class="flex items-start gap-4">
-                        <div class="flex-shrink-0 mt-0.5">
-                            @if($alerta['nivel'] === 'bloqueante')
-                            <svg class="w-5 h-5 {{ $iconClass }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                            </svg>
-                            @elseif($alerta['nivel'] === 'atencao')
-                            <svg class="w-5 h-5 {{ $iconClass }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            @else
-                            <svg class="w-5 h-5 {{ $iconClass }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            @endif
+            <div class="p-4 sm:p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-[220px,1fr] gap-6 items-start">
+                    <div class="border border-gray-200 rounded p-4">
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Score Total</p>
+                        <p class="text-4xl font-bold mt-2" style="color: {{ $scoreHex }}">{{ $scoreTotal }}</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Quanto menor o score, mais conforme está a nota.</p>
+                    </div>
+                    <div>
+                        <div class="h-3 bg-gray-200 rounded overflow-hidden">
+                            <div class="h-3" style="width: {{ max(0, min(100, $scoreTotal)) }}%; background-color: {{ $scoreHex }}"></div>
                         </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $nivelClass }}">
-                                    {{ ucfirst($alerta['nivel']) }}
-                                </span>
-                                <span class="text-xs text-gray-500">{{ $alerta['categoria'] }}</span>
-                                <span class="text-xs text-gray-400">{{ $alerta['codigo'] }}</span>
-                            </div>
-                            <p class="text-sm font-medium text-gray-900">{{ $alerta['mensagem'] }}</p>
-                            @if(!empty($alerta['detalhe']))
-                            <p class="text-sm text-gray-600 mt-1">{{ $alerta['detalhe'] }}</p>
-                            @endif
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mt-4">
+                            @foreach($categorias as $key => $categoria)
+                                @php
+                                    $scoreCategoria = (int) ($validacao['scores'][$key] ?? 0);
+                                    $scoreCategoriaHex = match (true) {
+                                        $scoreCategoria >= 50 => '#dc2626',
+                                        $scoreCategoria >= 30 => '#d97706',
+                                        $scoreCategoria >= 10 => '#b45309',
+                                        default => '#047857',
+                                    };
+                                @endphp
+                                <div class="border border-gray-200 rounded p-3 bg-gray-50/60">
+                                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{{ $categoria['nome'] }}</p>
+                                    <p class="text-lg font-bold mt-1" style="color: {{ $scoreCategoriaHex }}">{{ $scoreCategoria }}</p>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
                 </div>
-                @endforeach
             </div>
         </div>
-        @else
-        <div class="bg-green-50 border border-green-200 rounded-xl p-6 mb-6">
-            <div class="flex items-center gap-3">
-                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <div>
-                    <h4 class="font-semibold text-green-800">Nenhum alerta encontrado</h4>
-                    <p class="text-sm text-green-700">Esta nota fiscal esta conforme com as regras de validacao.</p>
+
+        @if(count($validacao['alertas'] ?? []) > 0)
+            <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Alertas</span>
+                    <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ count($validacao['alertas']) }}</span>
+                </div>
+                <div class="divide-y divide-gray-100">
+                    @foreach($validacao['alertas'] as $alerta)
+                        @php
+                            $nivelHex = match ($alerta['nivel']) {
+                                'bloqueante' => '#dc2626',
+                                'atencao' => '#d97706',
+                                'info' => '#374151',
+                                default => '#9ca3af',
+                            };
+                        @endphp
+                        <div class="px-4 py-4 border-l-4" style="border-left-color: {{ $nivelHex }}">
+                            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                <div class="min-w-0">
+                                    <div class="flex flex-wrap items-center gap-2 mb-1">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $nivelHex }}">
+                                            {{ strtoupper($alerta['nivel']) }}
+                                        </span>
+                                        <span class="text-[11px] text-gray-400 uppercase tracking-wide">{{ $alerta['categoria'] }}</span>
+                                        <span class="text-[11px] font-mono text-gray-400">{{ $alerta['codigo'] }}</span>
+                                    </div>
+                                    <p class="text-sm text-gray-900">{{ $alerta['mensagem'] }}</p>
+                                    @if(!empty($alerta['detalhe']))
+                                        <p class="text-sm text-gray-600 mt-1">{{ $alerta['detalhe'] }}</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             </div>
-        </div>
+        @else
+            <div class="bg-white rounded border border-gray-300 p-4 mb-6 border-l-4 border-l-green-600">
+                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Sem Ocorrências</p>
+                <p class="mt-2 text-sm text-gray-700">Esta nota fiscal está conforme com as regras de validação disponíveis.</p>
+            </div>
         @endif
 
-        {{-- Dados da Nota --}}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {{-- Identificacao --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <h4 class="font-semibold text-gray-900 mb-4">Identificacao</h4>
-                <dl class="space-y-3 text-sm">
-                    <div class="flex justify-between">
-                        <dt class="text-gray-500">Numero</dt>
+            <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Identificação</span>
+                </div>
+                <dl class="p-4 space-y-3 text-sm">
+                    <div class="flex justify-between gap-3">
+                        <dt class="text-gray-500">Número</dt>
                         <dd class="font-medium text-gray-900">{{ $nota->numero_nota }}</dd>
                     </div>
-                    <div class="flex justify-between">
-                        <dt class="text-gray-500">Serie</dt>
+                    <div class="flex justify-between gap-3">
+                        <dt class="text-gray-500">Série</dt>
                         <dd class="font-medium text-gray-900">{{ $nota->serie }}</dd>
                     </div>
-                    <div class="flex justify-between">
-                        <dt class="text-gray-500">Emissao</dt>
+                    <div class="flex justify-between gap-3">
+                        <dt class="text-gray-500">Emissão</dt>
                         <dd class="font-medium text-gray-900">{{ $nota->data_emissao?->format('d/m/Y H:i') }}</dd>
                     </div>
-                    <div class="flex justify-between">
+                    <div class="flex justify-between gap-3">
                         <dt class="text-gray-500">Tipo</dt>
                         <dd class="font-medium text-gray-900">{{ $nota->tipo_nota_descricao }}</dd>
                     </div>
-                    <div class="flex justify-between">
+                    <div class="flex justify-between gap-3">
                         <dt class="text-gray-500">Finalidade</dt>
                         <dd class="font-medium text-gray-900">{{ $nota->finalidade_descricao }}</dd>
                     </div>
-                    <div class="flex justify-between">
-                        <dt class="text-gray-500">Chave de Acesso</dt>
+                    <div>
+                        <dt class="text-gray-500 mb-1">Chave de acesso</dt>
                         <dd class="font-mono text-xs text-gray-900 break-all">{{ $nota->nfe_id }}</dd>
                     </div>
                 </dl>
             </div>
 
-            {{-- Valores --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <h4 class="font-semibold text-gray-900 mb-4">Valores</h4>
-                <dl class="space-y-3 text-sm">
-                    <div class="flex justify-between">
-                        <dt class="text-gray-500">Valor Total</dt>
+            <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Valores</span>
+                </div>
+                <dl class="p-4 space-y-3 text-sm">
+                    <div class="flex justify-between gap-3">
+                        <dt class="text-gray-500">Valor total</dt>
                         <dd class="font-medium text-gray-900">{{ $nota->valor_formatado }}</dd>
                     </div>
-                    <div class="flex justify-between">
+                    <div class="flex justify-between gap-3">
                         <dt class="text-gray-500">ICMS</dt>
-                        <dd class="font-medium text-gray-900">R$ {{ number_format($nota->icms_valor ?? 0, 2, ',', '.') }}</dd>
+                        <dd class="font-medium text-gray-900 font-mono">R$ {{ number_format($nota->icms_valor ?? 0, 2, ',', '.') }}</dd>
                     </div>
-                    <div class="flex justify-between">
+                    <div class="flex justify-between gap-3">
                         <dt class="text-gray-500">ICMS-ST</dt>
-                        <dd class="font-medium text-gray-900">R$ {{ number_format($nota->icms_st_valor ?? 0, 2, ',', '.') }}</dd>
+                        <dd class="font-medium text-gray-900 font-mono">R$ {{ number_format($nota->icms_st_valor ?? 0, 2, ',', '.') }}</dd>
                     </div>
-                    <div class="flex justify-between">
+                    <div class="flex justify-between gap-3">
                         <dt class="text-gray-500">PIS</dt>
-                        <dd class="font-medium text-gray-900">R$ {{ number_format($nota->pis_valor ?? 0, 2, ',', '.') }}</dd>
+                        <dd class="font-medium text-gray-900 font-mono">R$ {{ number_format($nota->pis_valor ?? 0, 2, ',', '.') }}</dd>
                     </div>
-                    <div class="flex justify-between">
+                    <div class="flex justify-between gap-3">
                         <dt class="text-gray-500">COFINS</dt>
-                        <dd class="font-medium text-gray-900">R$ {{ number_format($nota->cofins_valor ?? 0, 2, ',', '.') }}</dd>
+                        <dd class="font-medium text-gray-900 font-mono">R$ {{ number_format($nota->cofins_valor ?? 0, 2, ',', '.') }}</dd>
                     </div>
-                    <div class="flex justify-between">
+                    <div class="flex justify-between gap-3">
                         <dt class="text-gray-500">IPI</dt>
-                        <dd class="font-medium text-gray-900">R$ {{ number_format($nota->ipi_valor ?? 0, 2, ',', '.') }}</dd>
+                        <dd class="font-medium text-gray-900 font-mono">R$ {{ number_format($nota->ipi_valor ?? 0, 2, ',', '.') }}</dd>
                     </div>
-                    <div class="flex justify-between pt-3 border-t border-gray-200">
-                        <dt class="text-gray-700 font-medium">Total Tributos</dt>
-                        <dd class="font-bold text-gray-900">R$ {{ number_format($nota->tributos_total ?? 0, 2, ',', '.') }}</dd>
+                    <div class="flex justify-between gap-3 pt-3 border-t border-gray-200">
+                        <dt class="text-gray-700 font-medium">Total tributos</dt>
+                        <dd class="font-bold text-gray-900 font-mono">R$ {{ number_format($nota->tributos_total ?? 0, 2, ',', '.') }}</dd>
                     </div>
                 </dl>
             </div>
 
-            {{-- Emitente --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <h4 class="font-semibold text-gray-900 mb-4">Emitente</h4>
-                <dl class="space-y-3 text-sm">
-                    <div class="flex justify-between">
+            <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Emitente</span>
+                </div>
+                <dl class="p-4 space-y-3 text-sm">
+                    <div class="flex justify-between gap-3">
                         <dt class="text-gray-500">CNPJ</dt>
                         <dd class="font-medium text-gray-900">{{ $nota->emit_cnpj_formatado }}</dd>
                     </div>
                     <div>
-                        <dt class="text-gray-500">Razao Social</dt>
-                        <dd class="font-medium text-gray-900 mt-0.5">{{ $nota->emit_razao_social ?? '-' }}</dd>
+                        <dt class="text-gray-500 mb-1">Razão social</dt>
+                        <dd class="font-medium text-gray-900">{{ $nota->emit_razao_social ?? '-' }}</dd>
                     </div>
-                    <div class="flex justify-between">
+                    <div class="flex justify-between gap-3">
                         <dt class="text-gray-500">UF</dt>
                         <dd class="font-medium text-gray-900">{{ $nota->emit_uf ?? '-' }}</dd>
                     </div>
                     @if($nota->emitente)
-                    <div class="pt-2">
-                        <a href="/app/score-fiscal/participante/{{ $nota->emit_participante_id }}" data-link class="text-sm text-blue-600 hover:text-blue-800">
+                        <a href="/app/score-fiscal/participante/{{ $nota->emit_participante_id }}" data-link class="inline-flex text-xs text-gray-600 hover:text-gray-900 hover:underline">
                             Ver score de risco do emitente
                         </a>
-                    </div>
                     @endif
                 </dl>
             </div>
 
-            {{-- Destinatario --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <h4 class="font-semibold text-gray-900 mb-4">Destinatario</h4>
-                <dl class="space-y-3 text-sm">
-                    <div class="flex justify-between">
+            <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Destinatário</span>
+                </div>
+                <dl class="p-4 space-y-3 text-sm">
+                    <div class="flex justify-between gap-3">
                         <dt class="text-gray-500">CNPJ</dt>
                         <dd class="font-medium text-gray-900">{{ $nota->dest_cnpj_formatado }}</dd>
                     </div>
                     <div>
-                        <dt class="text-gray-500">Razao Social</dt>
-                        <dd class="font-medium text-gray-900 mt-0.5">{{ $nota->dest_razao_social ?? '-' }}</dd>
+                        <dt class="text-gray-500 mb-1">Razão social</dt>
+                        <dd class="font-medium text-gray-900">{{ $nota->dest_razao_social ?? '-' }}</dd>
                     </div>
-                    <div class="flex justify-between">
+                    <div class="flex justify-between gap-3">
                         <dt class="text-gray-500">UF</dt>
                         <dd class="font-medium text-gray-900">{{ $nota->dest_uf ?? '-' }}</dd>
                     </div>
                     @if($nota->destinatario)
-                    <div class="pt-2">
-                        <a href="/app/score-fiscal/participante/{{ $nota->dest_participante_id }}" data-link class="text-sm text-blue-600 hover:text-blue-800">
-                            Ver score de risco do destinatario
+                        <a href="/app/score-fiscal/participante/{{ $nota->dest_participante_id }}" data-link class="inline-flex text-xs text-gray-600 hover:text-gray-900 hover:underline">
+                            Ver score de risco do destinatário
                         </a>
-                    </div>
                     @endif
                 </dl>
             </div>
         </div>
 
-        {{-- Metadados da Validacao --}}
-        @if(!($validacao['preview'] ?? false))
-        <div class="mt-6 text-sm text-gray-500 text-center">
-            Validado em {{ \Carbon\Carbon::parse($validacao['validado_em'])->format('d/m/Y H:i:s') }}
-        </div>
+        @if(!($validacao['preview'] ?? false) && !empty($validacao['validado_em']))
+            <div class="mt-6 text-center text-[11px] text-gray-500 uppercase tracking-wide">
+                Validado em {{ \Carbon\Carbon::parse($validacao['validado_em'])->format('d/m/Y H:i:s') }}
+            </div>
         @endif
     </div>
 </div>

@@ -13,7 +13,7 @@ use App\Http\Controllers\Dashboard\EfdImportacaoController;
 use App\Http\Controllers\Dashboard\MonitoramentoController;
 use App\Http\Controllers\Dashboard\NotaFiscalController;
 use App\Http\Controllers\Dashboard\CatalogoController;
-use App\Http\Controllers\Dashboard\ClearanceController;
+use App\Http\Controllers\Dashboard\ValidacaoController;
 use App\Http\Controllers\Dashboard\ParticipanteController;
 use App\Http\Controllers\Dashboard\ParticipanteGrupoController;
 use App\Http\Controllers\Dashboard\SupportController;
@@ -221,10 +221,16 @@ Route::middleware('auth')->group(function () {
     // Redirect legado: /app/risk/* -> /app/score-fiscal/*
     Route::get('app/risk/{any?}', fn ($any = '') => redirect("/app/score-fiscal/{$any}"))->where('any', '.*');
 
-    // Clearance NF-e
-    Route::get('app/validacao', [ClearanceController::class, 'index'])->name('app.clearance.index');
-    Route::get('app/validacao/notas', [ClearanceController::class, 'notas'])->name('app.clearance.notas');
-    Route::get('app/validacao/notas/todos-ids', [ClearanceController::class, 'todosIds'])->name('app.clearance.todos-ids');
+    // Clearance NF-e (servido por ValidacaoController)
+    Route::get('app/validacao', [ValidacaoController::class, 'index'])->name('app.clearance.index');
+    Route::get('app/validacao/notas', [ValidacaoController::class, 'notas'])->name('app.clearance.notas');
+    Route::get('app/validacao/buscar-nfe', [ValidacaoController::class, 'buscarNfe'])->name('app.clearance.buscar-nfe');
+    Route::get('app/validacao/notas/todos-ids', [ValidacaoController::class, 'todosIds'])->name('app.clearance.todos-ids');
+    Route::post('app/validacao/notas/validar', [ValidacaoController::class, 'validarNotas'])->name('app.clearance.validar');
+    Route::post('app/validacao/importacao/{id}/validar', [ValidacaoController::class, 'validarImportacao'])->name('app.clearance.validar-importacao');
+    Route::post('app/validacao/calcular-custo', [ValidacaoController::class, 'calcularCusto'])->name('app.clearance.calcular-custo');
+    Route::get('app/validacao/nota/{id}', [ValidacaoController::class, 'notaDetalhes'])->name('app.clearance.nota');
+    Route::get('app/validacao/alertas', [ValidacaoController::class, 'alertas'])->name('app.clearance.alertas');
 
     // Catálogo de Produtos/Serviços
     Route::get('app/catalogo', [CatalogoController::class, 'index'])->name('app.catalogo.index');

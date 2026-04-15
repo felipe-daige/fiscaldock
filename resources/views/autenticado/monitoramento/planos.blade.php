@@ -10,30 +10,26 @@
         'validacao' => [
             'cor' => 'blue',
             'icone' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
-            'consultas_display' => ['Tudo do Gratuito', 'Simples Nacional', 'MEI'],
-            'casos_uso' => ['Qualificação fiscal', 'Regime tributário', 'Homologação de fornecedor'],
+            'consultas_display' => ['Tudo do Gratuito', 'Simples Nacional', 'MEI', 'SINTEGRA básico'],
+            'casos_uso' => ['Qualificação fiscal', 'Regime tributário', 'Homologação inicial'],
         ],
         'licitacao' => [
             'cor' => 'blue',
             'icone' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-            'consultas_display' => ['Tudo do Validação', 'CND Federal (PGFN/RFB)'],
-            'casos_uso' => ['Editais e licitação', 'Regularidade federal', 'Credenciamento'],
-            'promo' => true,
-            'preco_original' => 4,
+            'consultas_display' => ['Tudo do Validação', 'CND Federal (PGFN/RFB)', 'CNDT', 'FGTS'],
+            'casos_uso' => ['Editais e licitação', 'Contratos públicos', 'Credenciamento'],
         ],
         'compliance' => [
             'cor' => 'purple',
             'icone' => 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
-            'consultas_display' => [],
-            'casos_uso' => [],
-            'coming_soon' => true,
+            'consultas_display' => ['Tudo do Licitação', 'CND Estadual', 'CND Municipal'],
+            'casos_uso' => ['Regularidade completa', 'Auditoria de fornecedor', 'Contratos recorrentes'],
         ],
         'due_diligence' => [
             'cor' => 'amber',
             'icone' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7',
-            'consultas_display' => [],
-            'casos_uso' => [],
-            'coming_soon' => true,
+            'consultas_display' => ['Tudo do Compliance', 'Sanções', 'CNJ', 'Protestos e processos'],
+            'casos_uso' => ['Risco ampliado', 'Due diligence comercial', 'Fornecedores críticos'],
         ],
         'enterprise' => [
             'cor' => 'slate',
@@ -44,13 +40,17 @@
         ],
     ];
 
+    $hasMadeFirstPurchase = $hasMadeFirstPurchase ?? false;
+    $firstPurchaseLockedProducts = $firstPurchaseLockedProducts ?? ['compliance', 'due_diligence'];
     $planosDetalhados = [];
     foreach ($planos->where('is_active', true) as $p) {
         $meta = $planoMeta[$p->codigo] ?? ['cor' => 'gray', 'icone' => 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'consultas_display' => [], 'casos_uso' => []];
-        if ($meta['coming_soon'] ?? false) {
+        if ($p->codigo === 'enterprise' || ($meta['coming_soon'] ?? false)) {
             continue;
         }
 
+        $requiresFirstPurchase = in_array($p->codigo, $firstPurchaseLockedProducts, true);
+        $isLocked = $requiresFirstPurchase && ! $hasMadeFirstPurchase;
         $planosDetalhados[] = [
             'codigo' => $p->codigo,
             'nome' => $p->nome,
@@ -65,33 +65,12 @@
             'gratuito' => $p->is_gratuito,
             'promo' => $meta['promo'] ?? false,
             'preco_original' => $meta['preco_original'] ?? null,
-        ];
-    }
-
-    foreach (['compliance', 'due_diligence', 'enterprise'] as $comingSoonCodigo) {
-        $meta = $planoMeta[$comingSoonCodigo];
-        $dbPlano = $planos->firstWhere('codigo', $comingSoonCodigo);
-        $planosDetalhados[] = [
-            'codigo' => $comingSoonCodigo,
-            'nome' => $dbPlano->nome ?? ucfirst(str_replace('_', ' ', $comingSoonCodigo)),
-            'creditos' => 0,
-            'descricao' => $dbPlano->descricao ?? '',
-            'cor' => $meta['cor'],
-            'icone' => $meta['icone'],
-            'consultas' => [],
-            'casos_uso' => [],
-            'popular' => false,
-            'coming_soon' => true,
-            'gratuito' => false,
-            'promo' => false,
-            'preco_original' => null,
+            'requires_first_purchase' => $requiresFirstPurchase,
+            'locked' => $isLocked,
         ];
     }
 
     $planosAtivos = collect($planosDetalhados)->where('coming_soon', false)->values();
-    $menorCusto = $planosAtivos->where('gratuito', false)->min('creditos') ?? 0;
-    $planosGratuitos = $planosAtivos->where('gratuito', true)->count();
-    $planosEmBreve = collect($planosDetalhados)->where('coming_soon', true)->count();
 @endphp
 
 <div class="bg-gray-100 min-h-screen" id="monitoramento-planos-container">
@@ -111,34 +90,6 @@
                 </svg>
                 Voltar para Consulta
             </a>
-        </div>
-
-        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
-            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo Operacional</span>
-            </div>
-            <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-200">
-                <div class="p-4">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Planos ativos</p>
-                    <p class="text-lg font-bold text-gray-900">{{ number_format($planosAtivos->count(), 0, ',', '.') }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">disponíveis para uso</p>
-                </div>
-                <div class="p-4">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Menor custo</p>
-                    <p class="text-lg font-bold text-gray-900">{{ number_format($menorCusto, 0, ',', '.') }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">créditos por CNPJ</p>
-                </div>
-                <div class="p-4">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Gratuitos</p>
-                    <p class="text-lg font-bold text-gray-900">{{ number_format($planosGratuitos, 0, ',', '.') }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">consultas sem débito</p>
-                </div>
-                <div class="p-4">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Em breve</p>
-                    <p class="text-lg font-bold text-gray-900">{{ number_format($planosEmBreve, 0, ',', '.') }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">módulos planejados</p>
-                </div>
-            </div>
         </div>
 
         <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
@@ -175,12 +126,16 @@
                     <tbody class="divide-y divide-gray-100">
                         @foreach($planosDetalhados as $plano)
                             @php
-                                $statusHex = $plano['coming_soon']
+                                $statusHex = ($plano['locked'] ?? false)
                                     ? '#9ca3af'
-                                    : ($plano['promo'] ? '#d97706' : ($plano['gratuito'] ? '#047857' : '#374151'));
-                                $statusLabel = $plano['coming_soon']
+                                    : ($plano['coming_soon']
+                                    ? '#9ca3af'
+                                    : ($plano['promo'] ? '#d97706' : ($plano['gratuito'] ? '#047857' : '#374151')));
+                                $statusLabel = ($plano['locked'] ?? false)
+                                    ? 'Após recarga'
+                                    : ($plano['coming_soon']
                                     ? 'Em breve'
-                                    : ($plano['promo'] ? 'Promoção' : ($plano['gratuito'] ? 'Grátis' : 'Ativo'));
+                                    : ($plano['promo'] ? 'Promoção' : ($plano['gratuito'] ? 'Grátis' : 'Ativo')));
                             @endphp
                             <tr class="hover:bg-gray-50/50 transition-colors">
                                 <td class="px-3 py-3">
@@ -192,6 +147,9 @@
                                     </div>
                                     @if($plano['descricao'])
                                         <p class="text-[11px] text-gray-500 mt-1">{{ $plano['descricao'] }}</p>
+                                    @endif
+                                    @if($plano['locked'] ?? false)
+                                        <p class="text-[11px] text-gray-500 mt-1">Disponível após a primeira recarga de créditos.</p>
                                     @endif
                                 </td>
                                 <td class="px-3 py-3 text-sm text-gray-700">
@@ -224,7 +182,9 @@
                                     <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusHex }}">{{ $statusLabel }}</span>
                                 </td>
                                 <td class="px-3 py-3 text-right">
-                                    @if($plano['coming_soon'])
+                                    @if($plano['locked'] ?? false)
+                                        <a href="/app/creditos" data-link class="text-xs text-gray-900 hover:text-gray-600 hover:underline">Comprar créditos</a>
+                                    @elseif($plano['coming_soon'])
                                         <span class="text-xs text-gray-400">Indisponível</span>
                                     @else
                                         <a href="/app/consulta/nova" data-link class="text-xs text-gray-900 hover:text-gray-600 hover:underline">Usar plano</a>
@@ -239,12 +199,16 @@
             <div class="divide-y divide-gray-100 md:hidden">
                 @foreach($planosDetalhados as $plano)
                     @php
-                        $statusHex = $plano['coming_soon']
+                        $statusHex = ($plano['locked'] ?? false)
                             ? '#9ca3af'
-                            : ($plano['promo'] ? '#d97706' : ($plano['gratuito'] ? '#047857' : '#374151'));
-                        $statusLabel = $plano['coming_soon']
+                            : ($plano['coming_soon']
+                            ? '#9ca3af'
+                            : ($plano['promo'] ? '#d97706' : ($plano['gratuito'] ? '#047857' : '#374151')));
+                        $statusLabel = ($plano['locked'] ?? false)
+                            ? 'Após recarga'
+                            : ($plano['coming_soon']
                             ? 'Em breve'
-                            : ($plano['promo'] ? 'Promoção' : ($plano['gratuito'] ? 'Grátis' : 'Ativo'));
+                            : ($plano['promo'] ? 'Promoção' : ($plano['gratuito'] ? 'Grátis' : 'Ativo')));
                     @endphp
                     <div class="px-4 py-3">
                         <div class="flex items-start justify-between gap-3">
@@ -252,6 +216,9 @@
                                 <p class="text-sm font-medium text-gray-900">{{ $plano['nome'] }}</p>
                                 @if($plano['descricao'])
                                     <p class="text-xs text-gray-500 mt-1">{{ $plano['descricao'] }}</p>
+                                @endif
+                                @if($plano['locked'] ?? false)
+                                    <p class="text-[11px] text-gray-500 mt-1">Disponível após a primeira recarga de créditos.</p>
                                 @endif
                             </div>
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusHex }}">{{ $statusLabel }}</span>
@@ -281,7 +248,9 @@
                                 <p>{{ count($plano['casos_uso']) ? collect($plano['casos_uso'])->take(2)->implode(' • ') : 'Uso futuro' }}</p>
                             </div>
                             <div>
-                                @if($plano['coming_soon'])
+                                @if($plano['locked'] ?? false)
+                                    <a href="/app/creditos" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Comprar créditos</a>
+                                @elseif($plano['coming_soon'])
                                     <span class="text-xs text-gray-400">Indisponível</span>
                                 @else
                                     <a href="/app/consulta/nova" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Usar plano</a>
@@ -299,7 +268,9 @@
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                         <div class="flex items-center justify-between gap-2">
                             <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">{{ $plano['nome'] }}</span>
-                            @if($plano['promo'])
+                            @if($plano['locked'] ?? false)
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Após recarga</span>
+                            @elseif($plano['promo'])
                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Promoção</span>
                             @elseif($plano['gratuito'])
                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
@@ -310,6 +281,12 @@
                     </div>
                     <div class="px-4 py-4">
                         <p class="text-xs text-gray-500 mb-3">{{ $plano['descricao'] }}</p>
+                        @if($plano['locked'] ?? false)
+                            <div class="mb-3 rounded border border-gray-200 bg-gray-50 px-3 py-2">
+                                <p class="text-xs text-gray-600">Disponível após a primeira recarga de créditos.</p>
+                                <a href="/app/creditos" data-link class="text-xs font-semibold text-gray-900 hover:text-gray-600 hover:underline">Comprar créditos</a>
+                            </div>
+                        @endif
                         <div class="space-y-2">
                             @foreach($plano['consultas'] as $consulta)
                                 <div class="flex items-start gap-2 text-sm text-gray-700">

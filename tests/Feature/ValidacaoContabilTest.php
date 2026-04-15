@@ -57,6 +57,42 @@ test('pode acessar dashboard de validacao', function () {
     $response->assertOk();
 });
 
+test('pode acessar listagem de notas da validacao', function () {
+    $response = $this->get('/app/validacao/notas');
+    $response->assertOk();
+});
+
+test('listagem de notas respeita escopo do usuario autenticado', function () {
+    $outroUsuario = User::factory()->create();
+
+    XmlNota::create([
+        'user_id' => $outroUsuario->id,
+        'nfe_id' => str_repeat('9', 44),
+        'tipo_documento' => 'NFE',
+        'numero_nota' => 4321,
+        'serie' => 1,
+        'data_emissao' => now(),
+        'natureza_operacao' => 'VENDA',
+        'valor_total' => 250.00,
+        'tipo_nota' => 1,
+        'finalidade' => 1,
+        'emit_cnpj' => '99999999000199',
+        'emit_razao_social' => 'Outra Empresa Ltda',
+        'emit_uf' => 'SP',
+        'dest_cnpj' => '88888888000188',
+        'dest_razao_social' => 'Outro Cliente SA',
+        'dest_uf' => 'SP',
+        'tributos_total' => 0,
+        'payload' => [],
+    ]);
+
+    $response = $this->get('/app/validacao/notas');
+
+    $response->assertOk()
+        ->assertSee((string) $this->nota->numero_nota)
+        ->assertDontSee('4321/1');
+});
+
 test('pode acessar lista de alertas', function () {
     $response = $this->get('/app/validacao/alertas');
     $response->assertOk();
@@ -130,7 +166,7 @@ test('api calcular custo retorna dados corretos', function () {
 });
 
 test('api validar notas executa corretamente', function () {
-    $response = $this->postJson('/app/validacao/validar-notas', [
+    $response = $this->postJson('/app/validacao/notas/validar', [
         'nota_ids' => [$this->nota->id],
         'tipo' => 'local', // Gratuito
     ]);

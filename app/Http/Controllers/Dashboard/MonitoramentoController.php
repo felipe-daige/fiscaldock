@@ -8,6 +8,7 @@ use App\Models\MonitoramentoConsulta;
 use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Services\CreditService;
+use App\Services\PricingCatalogService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,6 +24,7 @@ class MonitoramentoController extends Controller
 
     public function __construct(
         protected CreditService $creditService,
+        protected PricingCatalogService $pricingCatalogService,
     ) {}
 
     /**
@@ -45,6 +47,8 @@ class MonitoramentoController extends Controller
         $data = [
             'credits' => $this->creditService->getBalance($user),
             'planos' => MonitoramentoPlano::ativos(),
+            'hasMadeFirstPurchase' => $this->pricingCatalogService->userHasFirstPurchase($user),
+            'firstPurchaseLockedProducts' => $this->pricingCatalogService->getFirstPurchaseLockedProducts(),
         ];
 
         if ($this->isAjaxRequest($request)) {

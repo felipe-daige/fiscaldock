@@ -105,6 +105,9 @@ class ConsultaController extends Controller
             'participantesUfs' => $participantesUfs,
             'clientesUfs' => $clientesUfs,
             'credits' => $this->creditService->getBalance($user),
+            'complianceSources' => $this->pricingCatalogService->getComplianceSources(),
+            'hasMadeFirstPurchase' => $this->pricingCatalogService->userHasFirstPurchase($user),
+            'firstPurchaseLockedProducts' => $this->pricingCatalogService->getFirstPurchaseLockedProducts(),
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -573,6 +576,15 @@ class ConsultaController extends Controller
             ], Response::HTTP_BAD_REQUEST);
         }
 
+        if (! $this->pricingCatalogService->userCanUseProduct($user, $plano->codigo)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Faça a primeira recarga para liberar Compliance e Due Diligence.',
+                'requires_first_purchase' => true,
+                'produto_codigo' => $plano->codigo,
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         $totalParticipantes = count($validated['participante_ids']);
         $custoUnitario = $this->pricingCatalogService->getProductCreditsByPlan($plano, $user);
         $custoTotal = $totalParticipantes * $custoUnitario;
@@ -639,6 +651,15 @@ class ConsultaController extends Controller
                 'success' => false,
                 'error' => 'Produto de consulta não disponível.',
             ], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (! $this->pricingCatalogService->userCanUseProduct($user, $plano->codigo)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Faça a primeira recarga para liberar Compliance e Due Diligence.',
+                'requires_first_purchase' => true,
+                'produto_codigo' => $plano->codigo,
+            ], Response::HTTP_FORBIDDEN);
         }
 
         // Calcular custo

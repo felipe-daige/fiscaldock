@@ -67,6 +67,144 @@ class ValidacaoController extends Controller
     }
 
     /**
+     * Listagem paginada de notas com filtros e bulk-select.
+     */
+    public function notas(Request $request)
+    {
+        if (! Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        $userId = Auth::id();
+        $filtros = $this->filtrosListagem($request);
+
+        $query = $this->queryListagem($userId, $filtros)
+            ->with(['emitente:id,cnpj,razao_social', 'destinatario:id,cnpj,razao_social']);
+
+        $notas = $query->orderByDesc('data_emissao')->orderByDesc('id')->paginate(50)->withQueryString();
+
+        $clientes = \App\Models\Cliente::where('user_id', $userId)
+            ->orderBy('razao_social')
+            ->get(['id', 'razao_social', 'documento']);
+
+        $data = [
+            'notas' => $notas,
+            'clientes' => $clientes,
+            'filtros' => $filtros,
+        ];
+
+        return $this->render($request, 'notas', $data);
+    }
+
+    /**
+     * Retorna todos os IDs que batem com os filtros atuais (cross-page select).
+     */
+    public function todosIds(Request $request)
+    {
+        if (! Auth::check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $userId = Auth::id();
+        $filtros = $this->filtrosListagem($request);
+
+        $ids = $this->queryListagem($userId, $filtros)->pluck('id');
+
+        return response()->json([
+            'success' => true,
+            'ids' => $ids,
+            'total' => $ids->count(),
+        ]);
+    }
+
+    /**
+     * Busca avulsa de NF-e por chave de acesso.
+     */
+    public function buscarNfe(Request $request)
+    {
+        if (! Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        $data = [
+            'saldoAtual' => $this->creditService->getBalance(Auth::user()),
+            'custoEstimadoCreditos' => 14,
+            'fornecedorMvp' => 'InfoSimples',
+            'clientes' => \App\Models\Cliente::where('user_id', Auth::id())
+                ->orderBy('razao_social')
+                ->get(['id', 'razao_social', 'documento']),
+            'ultimasConsultasDfe' => XmlNota::where('user_id', Auth::id())
+                ->with('cliente:id,razao_social,documento')
+                ->orderByDesc('updated_at')
+                ->orderByDesc('created_at')
+                ->limit(5)
+                ->get(),
+        ];
+
+        return $this->render($request, 'buscar-nfe', $data);
+    }
+
+    private function filtrosListagem(Request $request): array
+    {
+        return [
+            'periodo_de' => $request->input('periodo_de'),
+            'periodo_ate' => $request->input('periodo_ate'),
+            'cliente_id' => $request->input('cliente_id'),
+            'participante_cnpj' => $request->input('participante_cnpj'),
+            'tipo_nota' => $request->input('tipo_nota'),
+            'status_validacao' => $request->input('status_validacao', 'todos'),
+        ];
+    }
+
+    private function queryListagem(int $userId, array $f)
+    {
+        $q = XmlNota::where('user_id', $userId);
+
+        if (! empty($f['periodo_de']) && ! empty($f['periodo_ate'])) {
+            $q->whereBetween('data_emissao', [$f['periodo_de'].' 00:00:00', $f['periodo_ate'].' 23:59:59']);
+        } elseif (! empty($f['periodo_de'])) {
+            $q->where('data_emissao', '>=', $f['periodo_de'].' 00:00:00');
+        } elseif (! empty($f['periodo_ate'])) {
+            $q->where('data_emissao', '<=', $f['periodo_ate'].' 23:59:59');
+        }
+
+        if (! empty($f['cliente_id'])) {
+            $q->where(function ($sub) use ($f) {
+                $sub->where('emit_cliente_id', $f['cliente_id'])
+                    ->orWhere('dest_cliente_id', $f['cliente_id']);
+            });
+        }
+
+        if (! empty($f['participante_cnpj'])) {
+            $cnpj = preg_replace('/\D/', '', $f['participante_cnpj']);
+            $q->where(function ($sub) use ($cnpj) {
+                $sub->where('emit_cnpj', $cnpj)->orWhere('dest_cnpj', $cnpj);
+            });
+        }
+
+        if ($f['tipo_nota'] === 'entrada') {
+            $q->where('tipo_nota', XmlNota::TIPO_ENTRADA);
+        } elseif ($f['tipo_nota'] === 'saida') {
+            $q->where('tipo_nota', XmlNota::TIPO_SAIDA);
+        }
+
+        switch ($f['status_validacao']) {
+            case 'validadas':
+                $q->whereNotNull('validacao');
+                break;
+            case 'nao_validadas':
+                $q->whereNull('validacao');
+                break;
+            case 'com_alertas':
+                $q->whereNotNull('validacao')
+                  ->whereRaw("EXISTS (SELECT 1 FROM jsonb_array_elements(validacao->'alertas') AS a WHERE a->>'nivel' = 'bloqueante')");
+                break;
+        }
+
+        return $q;
+    }
+
+    /**
      * Calcula o custo de validacao.
      * Aceita nota_ids OU importacao_id.
      */
@@ -131,7 +269,7 @@ class ValidacaoController extends Controller
         $request->validate([
             'nota_ids' => 'required|array',
             'nota_ids.*' => 'integer',
-            'tipo' => 'in:completa,deep',
+            'tipo' => 'in:completa,deep,local',
         ]);
 
         $userId = Auth::id();
@@ -159,7 +297,7 @@ class ValidacaoController extends Controller
         }
 
         // Executar validacao
-        $resultado = $this->validacaoService->validarNotas($notaIds, $userId);
+        $resultado = $this->validacaoService->validarNotas($notaIds, $userId, $tipo);
 
         return response()->json(array_merge($resultado, [
             'creditos_utilizados' => $custo['custo_total'],
@@ -215,7 +353,7 @@ class ValidacaoController extends Controller
         }
 
         // Executar validacao
-        $resultado = $this->validacaoService->validarImportacao($id, $userId);
+        $resultado = $this->validacaoService->validarImportacao($id, $userId, $tipo);
 
         return response()->json(array_merge($resultado, [
             'creditos_utilizados' => $custo['custo_total'],
