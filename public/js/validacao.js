@@ -17,6 +17,8 @@
     const modalBackdrop = document.getElementById('modal-backdrop');
     const modalCancelar = document.getElementById('modal-cancelar');
     const modalConfirmar = document.getElementById('modal-confirmar');
+    const pageErrorRegion = document.getElementById('validacao-error-region');
+    const notaErrorRegion = document.getElementById('validacao-nota-error-region');
 
     /**
      * Initialize page handlers
@@ -63,6 +65,7 @@
         const btn = e.currentTarget;
         currentImportacaoId = btn.dataset.id;
         const notasCount = btn.dataset.notas || 0;
+        clearInlineError(pageErrorRegion);
 
         // Show modal with loading
         showModal();
@@ -79,7 +82,11 @@
             });
 
             if (custoResponse.success === false) {
-                setModalContent(`<p class="text-sm text-red-600">${custoResponse.message || 'Erro ao calcular custo'}</p>`);
+                closeModal();
+                renderInlineError(pageErrorRegion, custoResponse.message || 'Erro ao calcular custo', {
+                    action: 'validar-importacao',
+                    url: '/app/validacao'
+                });
                 return;
             }
 
@@ -155,7 +162,11 @@
 
         } catch (error) {
             console.error('Error calculating cost:', error);
-            setModalContent('<p class="text-sm text-red-600">Erro ao calcular custo. Tente novamente.</p>');
+            closeModal();
+            renderInlineError(pageErrorRegion, 'Erro ao calcular custo. Tente novamente.', {
+                action: 'validar-importacao',
+                url: '/app/validacao'
+            });
         }
     }
 
@@ -175,6 +186,7 @@
         }
 
         try {
+            clearInlineError(pageErrorRegion);
             const response = await fetchWithCsrf(`/app/validacao/importacao/${currentImportacaoId}/validar`, {
                 method: 'POST',
                 body: JSON.stringify({ tipo })
@@ -189,15 +201,19 @@
                     window.location.reload();
                 }, 1500);
             } else {
-                setModalContent(`
-                    <div class="bg-white border border-gray-300 rounded p-4 border-l-4" style="border-left-color: #dc2626;">
-                        <p class="text-sm text-red-700">${response.message || 'Erro ao validar'}</p>
-                    </div>
-                `);
+                closeModal();
+                renderInlineError(pageErrorRegion, response.message || 'Erro ao validar', {
+                    action: 'validar-importacao',
+                    url: '/app/validacao'
+                });
             }
         } catch (error) {
             console.error('Error validating:', error);
-            setModalContent('<p class="text-sm text-red-600">Erro ao executar validacao. Tente novamente.</p>');
+            closeModal();
+            renderInlineError(pageErrorRegion, 'Erro ao executar validacao. Tente novamente.', {
+                action: 'validar-importacao',
+                url: '/app/validacao'
+            });
         } finally {
             if (modalConfirmar) {
                 modalConfirmar.disabled = false;
@@ -219,6 +235,7 @@
         btn.textContent = 'Salvando...';
 
         try {
+            clearInlineError(notaErrorRegion);
             const response = await fetchWithCsrf('/app/validacao/notas/validar', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -233,13 +250,19 @@
                     window.location.reload();
                 }, 1000);
             } else {
-                showNotification('error', response.message || 'Erro ao salvar validacao');
+                renderInlineError(notaErrorRegion, response.message || 'Erro ao salvar validacao', {
+                    action: 'salvar-validacao',
+                    url: window.location.pathname
+                });
                 btn.disabled = false;
                 btn.textContent = 'Salvar Validacao';
             }
         } catch (error) {
             console.error('Error saving validation:', error);
-            showNotification('error', 'Erro ao salvar validacao');
+            renderInlineError(notaErrorRegion, 'Erro ao salvar validacao', {
+                action: 'salvar-validacao',
+                url: window.location.pathname
+            });
             btn.disabled = false;
             btn.textContent = 'Salvar Validacao';
         }
@@ -356,6 +379,24 @@
             notification.classList.add('opacity-0', '-translate-y-2');
             setTimeout(() => notification.remove(), 300);
         }, 3000);
+    }
+
+    function renderInlineError(container, message, context) {
+        if (window.showInlineError) {
+            window.showInlineError(container, {
+                message,
+                context,
+            });
+            return;
+        }
+
+        showNotification('error', message);
+    }
+
+    function clearInlineError(container) {
+        if (window.clearInlineError) {
+            window.clearInlineError(container);
+        }
     }
 
     // Initialize when DOM is ready

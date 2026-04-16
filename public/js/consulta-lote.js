@@ -194,6 +194,7 @@
             alertaCreditosInsuficientes: document.getElementById('alerta-creditos-insuficientes'),
 
             // Progresso inline
+            consultaInlineErrorRegion: document.getElementById('consulta-inline-error-region'),
             consultaFormSection: document.getElementById('consulta-form-section'),
             consultaProgressoSection: document.getElementById('consulta-progresso-section'),
             progressoTitulo: document.getElementById('progresso-titulo'),
@@ -204,6 +205,7 @@
             consultaProgressoCard: document.getElementById('consulta-progresso-card'),
             consultaProgressoErro: document.getElementById('consulta-progresso-erro'),
             consultaProgressoErroMsg: document.getElementById('consulta-progresso-erro-msg'),
+            consultaProgressoSuporteLink: document.getElementById('consulta-progresso-suporte-link'),
             btnTentarNovamente: document.getElementById('btn-tentar-novamente'),
             resultadoConsulta: document.getElementById('resultado-consulta'),
             resultadoConsultaInfo: document.getElementById('resultado-consulta-info'),
@@ -935,14 +937,15 @@
         const participanteIds = Array.from(state.selectedIds);
         const planoId = document.querySelector('input[name="plano_id"]:checked')?.value;
         const clienteId = state.filters.cliente_id || null;
+        clearInlineError();
 
         if (participanteIds.length === 0) {
-            alert('Selecione pelo menos um participante.');
+            showInlineErrorMessage('Selecione pelo menos um participante.', null, 'executar-consulta');
             return;
         }
 
         if (!planoId) {
-            alert('Selecione um tipo de analise.');
+            showInlineErrorMessage('Selecione um tipo de analise.', null, 'executar-consulta');
             return;
         }
 
@@ -1160,6 +1163,7 @@
         const barra = elements.progressoBarra;
         const erroDiv = elements.consultaProgressoErro;
         const erroMsg = elements.consultaProgressoErroMsg;
+        const suporteLink = elements.consultaProgressoSuporteLink;
 
         if (!icon || !card) return;
 
@@ -1178,6 +1182,9 @@
             if (barra) barra.className = 'bg-red-600 h-full rounded-full transition-all duration-500 ease-out';
             if (erroDiv) erroDiv.classList.remove('hidden');
             if (erroMsg && errorMessage) erroMsg.textContent = errorMessage;
+            if (suporteLink) {
+                suporteLink.href = buildSupportHref(errorMessage || 'Erro na consulta.', 'consulta-lote');
+            }
         } else {
             icon.className = 'w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0';
             icon.innerHTML = '<svg class="w-5 h-5 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>';
@@ -1385,6 +1392,7 @@
      */
     function onConsultaErro(mensagem) {
         atualizarIconeConsulta('erro', mensagem);
+        showInlineErrorMessage(mensagem, voltarParaFormulario, 'consulta-lote');
     }
 
     /**
@@ -1392,6 +1400,7 @@
      */
     function mostrarProgressoInline() {
         // Reset estado visual
+        clearInlineError();
         atualizarIconeConsulta('processando');
         updateProgresso(0, 'Iniciando consulta...');
         if (elements.consultaProgressoErro) elements.consultaProgressoErro.classList.add('hidden');
@@ -1424,6 +1433,7 @@
         }
 
         // Reset visual
+        clearInlineError();
         atualizarIconeConsulta('processando');
         updateProgresso(0, 'Iniciando...');
         if (elements.consultaProgressoErro) elements.consultaProgressoErro.classList.add('hidden');
@@ -1463,15 +1473,41 @@
      * Mostra erro generico.
      */
     function showError(message) {
+        showInlineErrorMessage(message, null, 'consulta-listagem');
         if (elements.tabelaBody) {
-            elements.tabelaBody.innerHTML = `
-                <tr>
-                    <td colspan="5" class="px-4 py-8 text-center text-sm text-red-500">
-                        ${message}
-                    </td>
-                </tr>
-            `;
+            elements.tabelaBody.innerHTML = '';
         }
+    }
+
+    function showInlineErrorMessage(message, retryFn, action) {
+        if (window.showInlineError) {
+            window.showInlineError(elements.consultaInlineErrorRegion, {
+                message: message,
+                retryFn: typeof retryFn === 'function' ? retryFn : undefined,
+                context: {
+                    action: action || 'consulta-lote',
+                    url: window.location.pathname + window.location.search
+                }
+            });
+            return;
+        }
+
+        alert(message);
+    }
+
+    function clearInlineError() {
+        if (window.clearInlineError) {
+            window.clearInlineError(elements.consultaInlineErrorRegion);
+        }
+    }
+
+    function buildSupportHref(message, action) {
+        var params = new URLSearchParams();
+        params.set('contexto', action || 'consulta-lote');
+        params.set('url', window.location.pathname + window.location.search);
+        params.set('mensagem', message || 'Erro na consulta.');
+
+        return '/app/suporte?' + params.toString();
     }
 
     /**

@@ -3,6 +3,7 @@
     $importacoes = $importacoes ?? collect();
     $notasCriticas = $notasCriticas ?? collect();
     $categorias = $categorias ?? [];
+    $escopoNotas = $escopoNotas ?? [];
 
     $classificacaoResumo = [
         'conforme' => ['label' => 'Conformes', 'valor' => $estatisticas['conforme'] ?? 0, 'hex' => '#047857'],
@@ -17,7 +18,7 @@
         <div class="mb-4 sm:mb-8 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
                 <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Validação Fiscal</h1>
-                <p class="text-xs text-gray-500 mt-1">Painel operacional para revisão de notas validadas, alertas e importações XML.</p>
+                <p class="text-xs text-gray-500 mt-1">Painel operacional para revisão de notas XML validadas, alertas e importações XML.</p>
             </div>
             <a href="/app/validacao/alertas" data-link class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-sm font-medium self-start">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,6 +26,30 @@
                 </svg>
                 Ver alertas
             </a>
+        </div>
+
+        <div id="validacao-error-region" class="mb-6"></div>
+
+        <div class="bg-white rounded border border-gray-300 p-4 mb-6 border-l-4 border-l-blue-500">
+            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Escopo da Tela</p>
+            <p class="mt-2 text-sm text-gray-700">A Validação Fiscal trabalha apenas com notas importadas via XML. Notas vindas de EFD/SPED aparecem nas telas de notas fiscais e BI, mas não entram nesta listagem.</p>
+            <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="bg-gray-50 border border-gray-200 rounded p-3">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas XML</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($escopoNotas['total_xml'] ?? 0, 0, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Disponíveis para validação</p>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded p-3">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas EFD</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($escopoNotas['total_efd'] ?? 0, 0, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Fora do escopo desta tela</p>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded p-3">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Base Unificada</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($escopoNotas['total_unificado'] ?? 0, 0, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Notas vistas em telas unificadas</p>
+                </div>
+            </div>
         </div>
 
         <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">

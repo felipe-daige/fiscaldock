@@ -14,6 +14,7 @@
     const btnSelTodas = document.getElementById('btn-selecionar-todas');
     const selLabel = document.getElementById('selecao-label');
     const tipoValidacao = document.getElementById('tipo-validacao');
+    const errorRegion = document.getElementById('clearance-notas-error');
 
     const selecionados = new Set();
 
@@ -91,6 +92,7 @@
     btnCusto.addEventListener('click', async () => {
         if (selecionados.size === 0) return;
         btnCusto.disabled = true;
+        clearInlineError();
         try {
             const resp = await fetch(custoUrl, {
                 method: 'POST',
@@ -107,10 +109,10 @@
                 const custo = data.custo || {};
                 alert(`Custo estimado: ${custo.custo_total ?? 0} crédito(s) para ${selecionados.size} nota(s) em ${custo.participantes_unicos ?? 0} participante(s).`);
             } else {
-                alert(data.message || 'Falha ao calcular custo.');
+                showError(data.message || 'Falha ao calcular custo.', 'clearance-calcular-custo');
             }
         } catch (err) {
-            alert('Erro de rede ao calcular custo.');
+            showError('Erro de rede ao calcular custo.', 'clearance-calcular-custo');
         } finally {
             btnCusto.disabled = selecionados.size === 0;
         }
@@ -121,6 +123,7 @@
         const tipo = getTipoValidacao();
         if (!confirm(`Confirmar validação de ${selecionados.size} nota(s) com a opção "${tipo}"?`)) return;
         btnValidar.disabled = true;
+        clearInlineError();
         try {
             const resp = await fetch(validarUrl, {
                 method: 'POST',
@@ -137,16 +140,37 @@
                 alert(`Validação concluída. ${data.creditos_utilizados ?? 0} crédito(s) debitado(s).`);
                 window.location.reload();
             } else if (resp.status === 402) {
-                alert(`Créditos insuficientes. Necessário: ${data.custo_necessario}. Saldo: ${data.saldo_atual}.`);
+                showError(`Créditos insuficientes. Necessário: ${data.custo_necessario}. Saldo: ${data.saldo_atual}.`, 'clearance-validar');
             } else {
-                alert(data.message || 'Falha ao validar notas.');
+                showError(data.message || 'Falha ao validar notas.', 'clearance-validar');
             }
         } catch (err) {
-            alert('Erro de rede ao validar.');
+            showError('Erro de rede ao validar.', 'clearance-validar');
         } finally {
             btnValidar.disabled = selecionados.size === 0;
         }
     });
+
+    function showError(message, action) {
+        if (window.showInlineError) {
+            window.showInlineError(errorRegion, {
+                message,
+                context: {
+                    action,
+                    url: window.location.pathname + window.location.search,
+                },
+            });
+            return;
+        }
+
+        alert(message);
+    }
+
+    function clearInlineError() {
+        if (window.clearInlineError) {
+            window.clearInlineError(errorRegion);
+        }
+    }
 
     atualizarSelecao();
 })();

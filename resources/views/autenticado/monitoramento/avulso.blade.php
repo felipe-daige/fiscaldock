@@ -16,6 +16,8 @@
             </a>
         </div>
 
+        <div id="monitoramento-avulso-error-region" class="mb-6"></div>
+
         {{-- Info Box --}}
         <div class="bg-white rounded border border-gray-300 border-l-4 border-l-blue-500 p-4 mb-6">
             <div class="flex items-start gap-3">
@@ -747,6 +749,7 @@
 
         const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         const form = document.getElementById('form-consulta-avulsa');
+        const errorRegion = document.getElementById('monitoramento-avulso-error-region');
         const cnpjInput = document.getElementById('cnpj-input');
         const custoTotal = document.getElementById('custo-total');
         const btnConsultar = document.getElementById('btn-consultar');
@@ -805,6 +808,32 @@
         function getCreditosPlano() {
             const planoSelecionado = document.querySelector('input[name="plano"]:checked');
             return planoSelecionado ? parseInt(planoSelecionado.dataset.creditos || 0) : 0;
+        }
+
+        function showInlineError(message, action) {
+            if (window.showInlineError) {
+                window.showInlineError(errorRegion, {
+                    message: message,
+                    context: {
+                        action: action || 'monitoramento-avulso',
+                        url: window.location.pathname + window.location.search,
+                    },
+                });
+                return;
+            }
+
+            if (window.showToast) {
+                window.showToast(message, 'warning');
+                return;
+            }
+
+            alert(message);
+        }
+
+        function clearInlineError() {
+            if (window.clearInlineError) {
+                window.clearInlineError(errorRegion);
+            }
         }
 
         function atualizarCalculos() {
@@ -1331,24 +1360,17 @@
         if (form) {
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
+                clearInlineError();
 
                 var cnpj = state.cnpjDigitos;
                 if (cnpj.length !== 14) {
-                    if (window.showToast) {
-                        window.showToast('Por favor, selecione ou insira um CNPJ válido.', 'warning');
-                    } else {
-                        alert('Por favor, selecione ou insira um CNPJ válido.');
-                    }
+                    showInlineError('Por favor, selecione ou insira um CNPJ válido.', 'monitoramento-avulso-validacao');
                     return;
                 }
 
                 const planoSelecionado = document.querySelector('input[name="plano"]:checked');
                 if (!planoSelecionado) {
-                    if (window.showToast) {
-                        window.showToast('Por favor, selecione um tipo de consulta.', 'warning');
-                    } else {
-                        alert('Por favor, selecione um tipo de consulta.');
-                    }
+                    showInlineError('Por favor, selecione um tipo de consulta.', 'monitoramento-avulso-validacao');
                     return;
                 }
 

@@ -23,6 +23,8 @@
                 </div>
             </div>
 
+            <div id="monitoramento-grupos-error-region"></div>
+
             <div class="bg-white rounded border border-gray-300 overflow-hidden">
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                     <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo Operacional</span>
@@ -252,6 +254,7 @@
         container.dataset.initialized = '1';
 
         var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        var errorRegion = document.getElementById('monitoramento-grupos-error-region');
         var modalGrupo = document.getElementById('modal-grupo');
         var formGrupo = document.getElementById('form-grupo');
         var modalTitulo = document.getElementById('modal-grupo-titulo');
@@ -328,6 +331,7 @@
                 submitBtn.textContent = 'Salvando...';
 
                 try {
+                    clearInlineError();
                     var response = await fetch(url, {
                         method: method,
                         headers: {
@@ -347,7 +351,7 @@
                     if (window.showToast) window.showToast(data.message || 'Grupo salvo com sucesso.', 'success');
                     window.location.reload();
                 } catch (err) {
-                    if (window.showToast) window.showToast(err.message || 'Erro ao salvar grupo', 'error');
+                    showInlineError(err.message || 'Erro ao salvar grupo', 'monitoramento-grupos-salvar');
                 } finally {
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Salvar';
@@ -365,6 +369,7 @@
                 }
 
                 try {
+                    clearInlineError();
                     var response = await fetch('/app/monitoramento/grupos/' + grupoId, {
                         method: 'DELETE',
                         headers: {
@@ -385,7 +390,7 @@
                         if (nextRow && nextRow.classList.contains('grupo-expand-row')) nextRow.remove();
                     }
                 } catch (err) {
-                    if (window.showToast) window.showToast(err.message || 'Erro ao excluir grupo', 'error');
+                    showInlineError(err.message || 'Erro ao excluir grupo', 'monitoramento-grupos-excluir');
                 }
             });
         });
@@ -469,3 +474,23 @@
     }
 })();
 </script>
+        function showInlineError(message, action) {
+            if (window.showInlineError) {
+                window.showInlineError(errorRegion, {
+                    message: message,
+                    context: {
+                        action: action || 'monitoramento-grupos',
+                        url: window.location.pathname + window.location.search,
+                    },
+                });
+                return;
+            }
+
+            if (window.showToast) window.showToast(message, 'error');
+        }
+
+        function clearInlineError() {
+            if (window.clearInlineError) {
+                window.clearInlineError(errorRegion);
+            }
+        }

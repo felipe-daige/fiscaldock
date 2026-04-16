@@ -27,228 +27,236 @@
         </div>
 
         <div id="efd-upload-workspace" class="space-y-4 sm:space-y-6">
-            <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo Operacional</span>
-                </div>
-                <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-200">
-                    <div class="p-4 sm:p-6">
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Participantes Base</p>
-                        <p class="text-lg font-bold text-gray-900">{{ number_format($totalParticipantes, 0, ',', '.') }}</p>
-                        <p class="text-[11px] text-gray-500 mt-1">cadastros disponíveis</p>
-                    </div>
-                    <div class="p-4 sm:p-6">
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Notas Base</p>
-                        <p class="text-lg font-bold text-gray-900">{{ number_format($totalNotas, 0, ',', '.') }}</p>
-                        <p class="text-[11px] text-gray-500 mt-1">documentos já importados</p>
-                    </div>
-                    <div class="p-4 sm:p-6">
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Créditos</p>
-                        <p class="text-lg font-bold text-gray-900">{{ number_format($credits, 0, ',', '.') }}</p>
-                        <p class="text-[11px] text-gray-500 mt-1">saldo disponível</p>
-                    </div>
-                    <div class="p-4 sm:p-6">
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Últimas Importações</p>
-                        <p class="text-lg font-bold text-gray-900">{{ number_format($importacoes->total() ?? $importacoes->count(), 0, ',', '.') }}</p>
-                        <p class="text-[11px] text-gray-500 mt-1">histórico desta conta</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="space-y-4">
-                <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Fluxo de Processamento</span>
-                    </div>
-                    <div class="p-4 sm:p-5 space-y-4">
-                        <div>
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">1. Envio</p>
-                            <p class="text-sm text-gray-700">Selecione o tipo de EFD e envie o arquivo bruto em `.txt`.</p>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 items-start">
+                <div class="space-y-4 lg:col-span-2">
+                    <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
+                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Upload do Arquivo</span>
+                            <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">TXT até 10 MB</span>
                         </div>
-                        <div>
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">2. Extração</p>
-                            <p class="text-sm text-gray-700">A importação consolida participantes, notas, catálogo e blocos fiscais compatíveis.</p>
-                        </div>
-                        <div>
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">3. Operação</p>
-                            <p class="text-sm text-gray-700">Ao concluir, você pode revisar o resultado, abrir a importação e monitorar participantes.</p>
-                        </div>
-                        <div class="pt-3 border-t border-gray-200">
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Orientação</p>
-                            <p class="text-sm text-gray-700">Priorize o período mais recente para refletir o cenário fiscal atual antes de importar arquivos antigos.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Upload do Arquivo</span>
-                        <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">TXT até 10 MB</span>
-                    </div>
-                    <div class="p-4 sm:p-5">
-                        <div class="mb-4">
-                            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Tipo de EFD</label>
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                                <label class="tipo-efd-label flex items-start gap-3 px-4 py-3 border border-gray-300 rounded cursor-pointer transition-colors bg-white hover:bg-gray-50" data-tipo="efd-fiscal">
-                                    <input type="radio" name="tipo-efd" value="efd-fiscal" class="mt-0.5 w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2 flex-wrap">
-                                            <span class="text-sm font-semibold text-gray-900">EFD Fiscal</span>
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
+                        <div class="p-4 sm:p-5">
+                            <div class="mb-4">
+                                <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Tipo de EFD</label>
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                    <label class="tipo-efd-label flex items-start gap-3 px-4 py-3 border border-gray-300 rounded cursor-pointer transition-colors bg-white hover:bg-gray-50" data-tipo="efd-fiscal">
+                                        <input type="radio" name="tipo-efd" value="efd-fiscal" class="mt-0.5 w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <span class="text-sm font-semibold text-gray-900">EFD Fiscal</span>
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-1">ICMS/IPI para escrituração fiscal digital.</p>
                                         </div>
-                                        <p class="text-xs text-gray-500 mt-1">ICMS/IPI para escrituração fiscal digital.</p>
-                                    </div>
-                                </label>
-                                <label class="tipo-efd-label flex items-start gap-3 px-4 py-3 border border-gray-300 rounded cursor-pointer transition-colors bg-white hover:bg-gray-50" data-tipo="efd-contrib">
-                                    <input type="radio" name="tipo-efd" value="efd-contrib" class="mt-0.5 w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2 flex-wrap">
-                                            <span class="text-sm font-semibold text-gray-900">EFD Contribuições</span>
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
+                                    </label>
+                                    <label class="tipo-efd-label flex items-start gap-3 px-4 py-3 border border-gray-300 rounded cursor-pointer transition-colors bg-white hover:bg-gray-50" data-tipo="efd-contrib">
+                                        <input type="radio" name="tipo-efd" value="efd-contrib" class="mt-0.5 w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <span class="text-sm font-semibold text-gray-900">EFD Contribuições</span>
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-1">PIS/COFINS para contribuições federais.</p>
                                         </div>
-                                        <p class="text-xs text-gray-500 mt-1">PIS/COFINS para contribuições federais.</p>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div id="efd-extraction-info" class="mb-4 hidden">
-                            <div class="bg-gray-50 border border-gray-200 rounded p-4">
-                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Escopo da Extração</p>
-                                <div id="info-efd-fiscal" class="hidden flex flex-wrap gap-2">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Participantes</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">NF-e Mercadorias</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">CT-e</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">Catálogo</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Apuração ICMS</span>
-                                </div>
-                                <div id="info-efd-contrib" class="hidden flex flex-wrap gap-2">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Participantes</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Notas Serviço</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">NF-e Mercadorias</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">Catálogo</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Apuração PIS/COFINS</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Retenções</span>
+                                    </label>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="mb-4">
-                            <div id="txt-dropzone" class="border-2 border-dashed border-gray-300 rounded p-6 min-h-[180px] flex flex-col items-center justify-center text-center transition-colors cursor-not-allowed bg-gray-100 opacity-60 pointer-events-none" role="button" tabindex="0" aria-disabled="true">
-                                <div class="mb-4">
-                                    <svg class="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                                    </svg>
+                            <div id="efd-extraction-info" class="mb-4 hidden">
+                                <div class="bg-gray-50 border border-gray-200 rounded p-4">
+                                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Escopo da Extração</p>
+                                    <div id="info-efd-fiscal" class="hidden flex flex-wrap gap-2">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Participantes</span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">NF-e Mercadorias</span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">CT-e</span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">Catálogo</span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Apuração ICMS</span>
+                                    </div>
+                                    <div id="info-efd-contrib" class="hidden flex flex-wrap gap-2">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Participantes</span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Notas Serviço</span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">NF-e Mercadorias</span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">Catálogo</span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Apuração PIS/COFINS</span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Retenções</span>
+                                    </div>
                                 </div>
-                                <div class="space-y-1">
-                                    <p class="text-sm font-medium text-gray-500" id="txt-dropzone-main-text">Selecione o tipo de EFD primeiro</p>
-                                    <p class="text-xs text-gray-400" id="txt-dropzone-sub-text">Depois arraste o arquivo .txt aqui ou clique para selecionar</p>
-                                    <p class="text-[11px] text-gray-400 mt-2">Formato .txt | Limite operacional de 10 MB</p>
+                            </div>
+
+                            <div class="mb-4">
+                                <div id="txt-dropzone" class="border-2 border-dashed border-gray-300 rounded p-6 min-h-[180px] flex flex-col items-center justify-center text-center transition-colors cursor-not-allowed bg-gray-100 opacity-60 pointer-events-none" role="button" tabindex="0" aria-disabled="true">
+                                    <div class="mb-4">
+                                        <svg class="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <p class="text-sm font-medium text-gray-500" id="txt-dropzone-main-text">Selecione o tipo de EFD primeiro</p>
+                                        <p class="text-xs text-gray-400" id="txt-dropzone-sub-text">Depois arraste o arquivo .txt aqui ou clique para selecionar</p>
+                                        <p class="text-[11px] text-gray-400 mt-2">Formato .txt | Limite operacional de 10 MB</p>
+                                    </div>
+                                    <input
+                                        type="file"
+                                        id="txt-file-input"
+                                        name="txt_file"
+                                        accept=".txt"
+                                        class="hidden"
+                                        disabled
+                                    >
                                 </div>
-                                <input
-                                    type="file"
-                                    id="txt-file-input"
-                                    name="txt_file"
-                                    accept=".txt"
-                                    class="hidden"
+                            </div>
+
+                            <div id="txt-file-meta" class="mb-4 hidden">
+                                <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                        <div class="min-w-0">
+                                            <div class="text-sm font-medium text-gray-900 truncate max-w-[280px]" id="txt-file-name">arquivo.txt</div>
+                                            <div class="text-[11px] text-gray-500" id="txt-file-size">0 MB</div>
+                                        </div>
+                                    </div>
+                                    <button type="button" id="txt-change-file" class="text-gray-500 hover:text-gray-700">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="txt-error-message" class="mb-4 hidden">
+                                <div class="bg-white rounded border border-gray-300 p-4 border-l-4 border-l-red-500">
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <p class="text-sm text-gray-700" id="txt-error-text"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end">
+                                <button
+                                    type="button"
+                                    id="txt-importar-btn"
+                                    class="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled
                                 >
-                            </div>
-                        </div>
-
-                        <div id="txt-file-meta" class="mb-4 hidden">
-                            <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                    </svg>
-                                    <div class="min-w-0">
-                                        <div class="text-sm font-medium text-gray-900 truncate max-w-[280px]" id="txt-file-name">arquivo.txt</div>
-                                        <div class="text-[11px] text-gray-500" id="txt-file-size">0 MB</div>
-                                    </div>
-                                </div>
-                                <button type="button" id="txt-change-file" class="text-gray-500 hover:text-gray-700">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
                                     </svg>
+                                    Importar
                                 </button>
                             </div>
                         </div>
+                    </div>
 
-                        <div id="txt-error-message" class="mb-4 hidden">
-                            <div class="bg-white rounded border border-gray-300 p-4 border-l-4 border-l-red-500">
-                                <div class="flex items-start gap-2">
-                                    <svg class="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                    <p class="text-sm text-gray-700" id="txt-error-text"></p>
-                                </div>
+                    <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Últimas Importações</span>
+                                <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ min($importacoes->count(), 4) }}</span>
                             </div>
+                            <a href="/app/importacao/historico" data-link class="text-[10px] font-semibold text-gray-600 hover:text-gray-900 hover:underline uppercase tracking-wide">Abrir histórico</a>
                         </div>
-
-                        <div class="flex justify-end">
-                            <button
-                                type="button"
-                                id="txt-importar-btn"
-                                class="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                                disabled
-                            >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                                </svg>
-                                Importar
-                            </button>
-                        </div>
+                        @if($importacoes->isEmpty())
+                            <div class="p-4 sm:p-5">
+                                <p class="text-sm text-gray-700">Nenhuma importação registrada ainda.</p>
+                                <p class="text-xs text-gray-500 mt-1">As próximas operações concluídas aparecerão aqui.</p>
+                            </div>
+                        @else
+                            <div class="divide-y divide-gray-100">
+                                @foreach($importacoes->take(4) as $recentImp)
+                                    @php
+                                        $recentTipoKey = $recentImp->tipo_efd === 'EFD PIS/COFINS' ? 'contrib' : 'fiscal';
+                                        $recentTipoBadge = $tipoEfdBadgeMap[$recentTipoKey];
+                                        $recentStatus = match($recentImp->status) {
+                                            'concluido' => ['label' => 'Concluído', 'hex' => '#047857'],
+                                            'processando' => ['label' => 'Processando', 'hex' => '#d97706'],
+                                            'erro' => ['label' => 'Erro', 'hex' => '#dc2626'],
+                                            default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
+                                        };
+                                    @endphp
+                                    <a href="/app/importacao/efd/{{ $recentImp->id }}" data-link class="block px-4 py-3 hover:bg-gray-50/50 transition-colors">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div class="min-w-0">
+                                                <div class="flex items-center gap-2 flex-wrap">
+                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $recentTipoBadge['hex'] }}">{{ $recentTipoBadge['label'] }}</span>
+                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $recentStatus['hex'] }}">{{ $recentStatus['label'] }}</span>
+                                                </div>
+                                                <p class="text-sm text-gray-900 mt-2 truncate">{{ $recentImp->arquivo ?? ('Importação #' . $recentImp->id) }}</p>
+                                                <p class="text-[11px] text-gray-500 mt-1">
+                                                    {{ optional($recentImp->created_at)->format('d/m/Y H:i') }}
+                                                    @if($recentImp->cliente?->razao_social)
+                                                        · {{ $recentImp->cliente->razao_social }}
+                                                    @endif
+                                                </p>
+                                            </div>
+                                            <span class="text-[10px] text-gray-500 uppercase tracking-wide whitespace-nowrap">{{ $recentImp->created_at->diffForHumans() }}</span>
+                                        </div>
+                                    </a>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 </div>
 
-                <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-2">
-                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Últimas Importações</span>
-                            <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ min($importacoes->count(), 4) }}</span>
-                        </div>
-                        <a href="/app/importacao/historico" data-link class="text-[10px] font-semibold text-gray-600 hover:text-gray-900 hover:underline uppercase tracking-wide">Abrir histórico</a>
+                <div class="bg-white rounded border border-gray-300 overflow-hidden lg:max-w-sm">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Fluxo de Processamento</span>
                     </div>
-                    @if($importacoes->isEmpty())
-                        <div class="p-4 sm:p-5">
-                            <p class="text-sm text-gray-700">Nenhuma importação registrada ainda.</p>
-                            <p class="text-xs text-gray-500 mt-1">As próximas operações concluídas aparecerão aqui.</p>
+                    <div class="p-3 sm:p-4 grid grid-cols-1 gap-2.5">
+                        <div class="rounded border border-gray-200 bg-gray-50 p-3">
+                            <div class="flex items-start gap-2.5">
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded text-[11px] font-bold text-white flex-shrink-0" style="background-color: #1f2937">1</span>
+                                <div>
+                                    <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Seleção</p>
+                                    <p class="text-xs font-semibold text-gray-900">Escolha o tipo de EFD</p>
+                                    <p class="text-xs text-gray-700 mt-0.5">Defina ICMS/IPI ou Contribuições para habilitar o envio.</p>
+                                </div>
+                            </div>
                         </div>
-                    @else
-                        <div class="divide-y divide-gray-100">
-                            @foreach($importacoes->take(4) as $recentImp)
-                                @php
-                                    $recentTipoKey = $recentImp->tipo_efd === 'EFD PIS/COFINS' ? 'contrib' : 'fiscal';
-                                    $recentTipoBadge = $tipoEfdBadgeMap[$recentTipoKey];
-                                    $recentStatus = match($recentImp->status) {
-                                        'concluido' => ['label' => 'Concluído', 'hex' => '#047857'],
-                                        'processando' => ['label' => 'Processando', 'hex' => '#d97706'],
-                                        'erro' => ['label' => 'Erro', 'hex' => '#dc2626'],
-                                        default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
-                                    };
-                                @endphp
-                                <a href="/app/importacao/efd/{{ $recentImp->id }}" data-link class="block px-4 py-3 hover:bg-gray-50/50 transition-colors">
-                                    <div class="flex items-start justify-between gap-3">
-                                        <div class="min-w-0">
-                                            <div class="flex items-center gap-2 flex-wrap">
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $recentTipoBadge['hex'] }}">{{ $recentTipoBadge['label'] }}</span>
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $recentStatus['hex'] }}">{{ $recentStatus['label'] }}</span>
-                                            </div>
-                                            <p class="text-sm text-gray-900 mt-2 truncate">{{ $recentImp->arquivo ?? ('Importação #' . $recentImp->id) }}</p>
-                                            <p class="text-[11px] text-gray-500 mt-1">
-                                                {{ optional($recentImp->created_at)->format('d/m/Y H:i') }}
-                                                @if($recentImp->cliente?->razao_social)
-                                                    · {{ $recentImp->cliente->razao_social }}
-                                                @endif
-                                            </p>
-                                        </div>
-                                        <span class="text-[10px] text-gray-500 uppercase tracking-wide whitespace-nowrap">{{ $recentImp->created_at->diffForHumans() }}</span>
-                                    </div>
-                                </a>
-                            @endforeach
+                        <div class="rounded border border-gray-200 bg-gray-50 p-3">
+                            <div class="flex items-start gap-2.5">
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded text-[11px] font-bold text-white flex-shrink-0" style="background-color: #1f2937">2</span>
+                                <div>
+                                    <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Envio</p>
+                                    <p class="text-xs font-semibold text-gray-900">Anexe o arquivo `.txt`</p>
+                                    <p class="text-xs text-gray-700 mt-0.5">Use o dropzone e respeite o limite de 10 MB.</p>
+                                </div>
+                            </div>
                         </div>
-                    @endif
+                        <div class="rounded border border-gray-200 bg-gray-50 p-3">
+                            <div class="flex items-start gap-2.5">
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded text-[11px] font-bold text-white flex-shrink-0" style="background-color: #1f2937">3</span>
+                                <div>
+                                    <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Extração</p>
+                                    <p class="text-xs font-semibold text-gray-900">Consolide os blocos fiscais</p>
+                                    <p class="text-xs text-gray-700 mt-0.5">A rotina extrai participantes, notas, catálogo e apurações.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rounded border border-gray-200 bg-gray-50 p-3">
+                            <div class="flex items-start gap-2.5">
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded text-[11px] font-bold text-white flex-shrink-0" style="background-color: #1f2937">4</span>
+                                <div>
+                                    <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Conferência</p>
+                                    <p class="text-xs font-semibold text-gray-900">Revise a importação</p>
+                                    <p class="text-xs text-gray-700 mt-0.5">Confira o período e priorize o arquivo mais recente.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rounded border border-gray-200 bg-gray-50 p-3">
+                            <div class="flex items-start gap-2.5">
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded text-[11px] font-bold text-white flex-shrink-0" style="background-color: #1f2937">5</span>
+                                <div>
+                                    <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Monitoramento</p>
+                                    <p class="text-xs font-semibold text-gray-900">Acompanhe os dados</p>
+                                    <p class="text-xs text-gray-700 mt-0.5">Abra a importação para navegar pelos dados extraídos.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

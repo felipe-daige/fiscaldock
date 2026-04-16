@@ -40,6 +40,8 @@
             </div>
         </div>
 
+        <div id="importacao-xml-error-region" class="mb-6"></div>
+
         {{-- Upload Section --}}
         <div id="upload-section" class="mb-6 space-y-4 sm:space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">

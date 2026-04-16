@@ -53,6 +53,10 @@
             <!-- Toast Container -->
             <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
+            <div class="px-4 sm:px-6 lg:px-8 pt-4">
+                <div id="global-error-region" class="max-w-7xl mx-auto"></div>
+            </div>
+
             <!-- Main Content Area -->
             <main id="app" class="flex-1">
                 @if(isset($initialView))
@@ -62,6 +66,6 @@
 
         </div>
     </div>
+    <script src="{{ asset('js/error-inline.js') }}?v={{ filemtime(public_path('js/error-inline.js')) }}"></script>
 </body>
 </html>
-

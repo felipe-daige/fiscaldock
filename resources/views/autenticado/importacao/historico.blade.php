@@ -62,8 +62,18 @@
             </div>
 
             <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                <div class="hidden md:block overflow-x-auto">
-                    <table class="min-w-full">
+                <div class="hidden md:block overflow-hidden">
+                    <table class="w-full table-fixed">
+                        <colgroup>
+                            <col style="width: 10%">
+                            <col style="width: 12%">
+                            <col style="width: 35%">
+                            <col style="width: 11%">
+                            <col style="width: 7%">
+                            <col style="width: 10%">
+                            <col style="width: 9%">
+                            <col style="width: 8%">
+                        </colgroup>
                         <thead>
                             <tr class="border-b border-gray-300">
                                 <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Origem</th>
@@ -131,7 +141,7 @@
                                     };
                                 @endphp
                                 <tr class="hist-row hover:bg-gray-50/50 transition-colors" data-tipo="{{ $tipo }}">
-                                    <td class="px-3 py-3">
+                                    <td class="pl-3 pr-4 py-3">
                                         <div class="flex items-center gap-2 whitespace-nowrap">
                                             <span class="inline-block whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemBadge['hex'] }}">{{ $origemBadge['label'] }}</span>
                                             @if($origemDetalhe)
@@ -139,23 +149,23 @@
                                             @endif
                                         </div>
                                     </td>
-                                    <td class="px-3 py-3 text-sm text-gray-700">
-                                        <a href="{{ $href }}" data-link class="text-gray-900 hover:text-gray-600 hover:underline">{{ $filename }}</a>
+                                    <td class="pl-4 pr-2 py-3 text-sm text-gray-700 max-w-0">
+                                        <a href="{{ $href }}" data-link class="block truncate text-gray-900 hover:text-gray-600 hover:underline" title="{{ $filename }}">{{ $filename }}</a>
                                     </td>
-                                    <td class="px-3 py-3 text-sm text-gray-700">
+                                    <td class="px-2 py-3 text-sm text-gray-700 max-w-0">
                                         @if($clienteId)
-                                            <a href="/app/cliente/{{ $clienteId }}" data-link class="text-gray-900 hover:text-gray-600 hover:underline">{{ $clienteNome }}</a>
+                                            <a href="/app/cliente/{{ $clienteId }}" data-link class="block truncate text-gray-900 hover:text-gray-600 hover:underline" title="{{ $clienteNome }}">{{ $clienteNome }}</a>
                                         @else
-                                            {{ $clienteNome }}
+                                            <span class="block truncate" title="{{ $clienteNome }}">{{ $clienteNome }}</span>
                                         @endif
                                     </td>
-                                    <td class="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">{{ $dataFormatada }}</td>
-                                    <td class="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">{{ $tempoProc }}</td>
-                                    <td class="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">{{ $volume }}</td>
-                                    <td class="px-3 py-3">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusBadge['hex'] }}">{{ $statusBadge['label'] }}</span>
+                                    <td class="px-2 py-3 text-sm text-gray-700 whitespace-nowrap">{{ $dataFormatada }}</td>
+                                    <td class="px-2 py-3 text-sm text-gray-700 whitespace-nowrap">{{ $tempoProc }}</td>
+                                    <td class="pl-2 pr-6 py-3 text-sm text-gray-700 whitespace-nowrap" title="{{ $volume }}">{{ $volume }}</td>
+                                    <td class="px-1 py-3 whitespace-nowrap">
+                                        <span class="inline-block max-w-full truncate px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white align-middle" style="background-color: {{ $statusBadge['hex'] }}">{{ $statusBadge['label'] }}</span>
                                     </td>
-                                    <td class="px-3 py-3 text-right">
+                                    <td class="pl-2 pr-3 py-3 text-right whitespace-nowrap">
                                         <a href="{{ $href }}" data-link class="text-xs text-blue-600 hover:text-blue-800 hover:underline">Abrir</a>
                                     </td>
                                 </tr>

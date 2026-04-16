@@ -28,6 +28,7 @@
     const timeCounterContainer = document.getElementById('time-counter-container');
     const timeManual = document.getElementById('time-manual');
     const timeRubi = document.getElementById('time-rubi');
+    const errorRegion = document.getElementById('importacao-xml-error-region');
 
     // Inicialização
     function init() {
@@ -75,7 +76,7 @@
         });
 
         if (xmlFiles.length === 0) {
-            showToast('Por favor, selecione apenas arquivos XML', 'error');
+            showErrorMessage('Por favor, selecione apenas arquivos XML', 'importacao-xml-validacao');
             return;
         }
 
@@ -273,9 +274,11 @@
     // Upload files
     async function uploadFiles() {
         if (selectedFiles.length === 0) {
-            showToast('Selecione pelo menos um arquivo', 'error');
+            showErrorMessage('Selecione pelo menos um arquivo', 'importacao-xml-upload');
             return;
         }
+
+        clearInlineError();
 
         btnUpload.disabled = true;
         btnUpload.textContent = 'Enviando...';
@@ -329,14 +332,14 @@
                 
                 loadDocumentos();
             } else {
-                showToast(data.message || 'Erro ao fazer upload', 'error');
+                showErrorMessage(data.message || 'Erro ao fazer upload', 'importacao-xml-upload');
                 if (data.erros && data.erros.length > 0) {
                     console.error('Erros:', data.erros);
                 }
             }
         } catch (error) {
             console.error('Erro:', error);
-            showToast('Erro ao fazer upload. Tente novamente.', 'error');
+            showErrorMessage('Erro ao fazer upload. Tente novamente.', 'importacao-xml-upload');
         } finally {
             btnUpload.disabled = false;
             btnUpload.textContent = 'Enviar Arquivos';
@@ -449,6 +452,7 @@
     btnProcessar.addEventListener('click', async () => {
         btnProcessar.disabled = true;
         btnProcessar.textContent = 'Processando...';
+        clearInlineError();
 
         try {
             const response = await fetch(`${API_BASE}/processar`, {
@@ -467,11 +471,11 @@
                 showToast(data.message, 'success');
                 loadDocumentos();
             } else {
-                showToast(data.message || 'Erro ao processar', 'error');
+                showErrorMessage(data.message || 'Erro ao processar', 'importacao-xml-processar');
             }
         } catch (error) {
             console.error('Erro:', error);
-            showToast('Erro ao processar documentos', 'error');
+            showErrorMessage('Erro ao processar documentos', 'importacao-xml-processar');
         } finally {
             btnProcessar.disabled = false;
             btnProcessar.textContent = 'Processar Pendentes';
@@ -481,6 +485,7 @@
     // Aceitar lançamento
     window.aceitarLancamento = async function(lancamentoId) {
         try {
+            clearInlineError();
             const response = await fetch(`${API_BASE}/aceitar`, {
                 method: 'POST',
                 headers: {
@@ -497,11 +502,11 @@
                 showToast('Lançamento aceito com sucesso', 'success');
                 loadDocumentos();
             } else {
-                showToast(data.message || 'Erro ao aceitar lançamento', 'error');
+                showErrorMessage(data.message || 'Erro ao aceitar lançamento', 'importacao-xml-aceitar');
             }
         } catch (error) {
             console.error('Erro:', error);
-            showToast('Erro ao aceitar lançamento', 'error');
+            showErrorMessage('Erro ao aceitar lançamento', 'importacao-xml-aceitar');
         }
     };
 
@@ -537,6 +542,7 @@
             };
 
             try {
+                clearInlineError();
                 const response = await fetch(`${API_BASE}/ajustar`, {
                     method: 'POST',
                     headers: {
@@ -555,11 +561,11 @@
                     loadDocumentos();
                     loadRegras();
                 } else {
-                    showToast(data.message || 'Erro ao salvar ajuste', 'error');
+                    showErrorMessage(data.message || 'Erro ao salvar ajuste', 'importacao-xml-ajuste');
                 }
             } catch (error) {
                 console.error('Erro:', error);
-                showToast('Erro ao salvar ajuste', 'error');
+                showErrorMessage('Erro ao salvar ajuste', 'importacao-xml-ajuste');
             }
         });
 
@@ -596,6 +602,7 @@
             };
 
             try {
+                clearInlineError();
                 const response = await fetch(`${API_BASE}/regras`, {
                     method: 'POST',
                     headers: {
@@ -614,11 +621,11 @@
                     formNovaRegra.reset();
                     loadRegras();
                 } else {
-                    showToast(result.message || 'Erro ao criar regra', 'error');
+                    showErrorMessage(result.message || 'Erro ao criar regra', 'importacao-xml-regra');
                 }
             } catch (error) {
                 console.error('Erro:', error);
-                showToast('Erro ao criar regra', 'error');
+                showErrorMessage('Erro ao criar regra', 'importacao-xml-regra');
             }
         });
     }
@@ -685,6 +692,27 @@
             window.showToast(message, type);
         } else {
             alert(message);
+        }
+    }
+
+    function showErrorMessage(message, action) {
+        if (window.showInlineError) {
+            window.showInlineError(errorRegion, {
+                message: message,
+                context: {
+                    action: action || 'importacao-xml',
+                    url: window.location.pathname + window.location.search,
+                },
+            });
+            return;
+        }
+
+        showToast(message, 'error');
+    }
+
+    function clearInlineError() {
+        if (window.clearInlineError) {
+            window.clearInlineError(errorRegion);
         }
     }
 

@@ -50,6 +50,8 @@
             </div>
         </div>
 
+        <div id="validacao-nota-error-region" class="mb-6"></div>
+
         <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Score de Validação</span>

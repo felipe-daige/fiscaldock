@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\EfdNota;
 use App\Models\XmlImportacao;
 use App\Models\XmlNota;
 use App\Services\CreditService;
@@ -61,6 +62,7 @@ class ValidacaoController extends Controller
             'importacoes' => $importacoes,
             'notasCriticas' => $notasCriticas,
             'categorias' => $categorias,
+            'escopoNotas' => $this->buildEscopoNotasResumo($userId),
         ];
 
         return $this->render($request, 'index', $data);
@@ -91,6 +93,7 @@ class ValidacaoController extends Controller
             'notas' => $notas,
             'clientes' => $clientes,
             'filtros' => $filtros,
+            'escopoNotas' => $this->buildEscopoNotasResumo($userId),
         ];
 
         return $this->render($request, 'notas', $data);
@@ -202,6 +205,19 @@ class ValidacaoController extends Controller
         }
 
         return $q;
+    }
+
+    private function buildEscopoNotasResumo(int $userId): array
+    {
+        $totalXml = XmlNota::where('user_id', $userId)->count();
+        $totalEfd = EfdNota::where('user_id', $userId)->count();
+
+        return [
+            'total_xml' => $totalXml,
+            'total_efd' => $totalEfd,
+            'total_unificado' => $totalXml + $totalEfd,
+            'possui_apenas_efd' => $totalXml === 0 && $totalEfd > 0,
+        ];
     }
 
     /**

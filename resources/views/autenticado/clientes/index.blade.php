@@ -21,6 +21,8 @@
                 </a>
             </div>
 
+            <div id="clientes-error-region"></div>
+
             <div class="bg-white rounded border border-gray-300 overflow-hidden">
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                     <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo Operacional</span>
@@ -531,6 +533,7 @@
         var container = document.getElementById('clientes-container');
         if (!container || container.dataset.initialized === '1') return;
         container.dataset.initialized = '1';
+        var errorRegion = document.getElementById('clientes-error-region');
 
         var clientesSelecionados = carregarSelecao();
         var selectAll = document.getElementById('select-all-clientes');
@@ -680,6 +683,7 @@
                 btnSelecionarTodos.textContent = 'Carregando...';
 
                 try {
+                    clearInlineError();
                     var params = new URLSearchParams();
                     var filtrosForm = container.querySelector('form[action="/app/clientes"]');
 
@@ -708,7 +712,7 @@
                     window.showToast && window.showToast(data.total + ' clientes selecionados', 'success');
                 } catch (err) {
                     console.error('[Clientes] Erro ao selecionar todos:', err);
-                    window.showToast && window.showToast('Erro ao selecionar todos os clientes', 'error');
+                    showInlineError('Erro ao selecionar todos os clientes', 'clientes-selecionar-todos');
                 } finally {
                     var totalEl = document.getElementById('total-filtrado-clientes');
                     var total = totalEl ? totalEl.textContent : '?';
@@ -1035,6 +1039,7 @@
                 })
                     .then(function(res) { return res.json(); })
                     .then(function(data) {
+                        clearInlineError();
                         if (!data.success) throw new Error(data.message || 'Erro ao excluir cliente');
                         removerClienteDaTela(clienteIdParaExcluir);
                         clientesSelecionados.delete(parseInt(clienteIdParaExcluir, 10));
@@ -1043,7 +1048,7 @@
                         if (window.showToast) window.showToast(data.message || 'Cliente excluído com sucesso.', 'success');
                     })
                     .catch(function(err) {
-                        if (window.showToast) window.showToast(err.message || 'Erro ao excluir cliente', 'error');
+                        showInlineError(err.message || 'Erro ao excluir cliente', 'clientes-excluir');
                     })
                     .finally(function() {
                         btnConfirmarExclusao.disabled = false;
@@ -1095,6 +1100,7 @@
                 })
                     .then(function(res) { return res.json(); })
                     .then(function(data) {
+                        clearInlineError();
                         if (!data.success) throw new Error(data.message || 'Erro ao excluir clientes');
                         ids.forEach(function(id) {
                             removerClienteDaTela(id);
@@ -1104,7 +1110,7 @@
                         if (window.showToast) window.showToast(data.message || 'Clientes excluídos com sucesso.', 'success');
                     })
                     .catch(function(err) {
-                        if (window.showToast) window.showToast(err.message || 'Erro ao excluir clientes', 'error');
+                        showInlineError(err.message || 'Erro ao excluir clientes', 'clientes-excluir-lote');
                     })
                     .finally(function() {
                         btnConfirmarBulkDelete.disabled = false;
@@ -1137,3 +1143,23 @@
     }
 })();
 </script>
+        function showInlineError(message, action) {
+            if (window.showInlineError) {
+                window.showInlineError(errorRegion, {
+                    message: message,
+                    context: {
+                        action: action || 'clientes',
+                        url: window.location.pathname + window.location.search,
+                    },
+                });
+                return;
+            }
+
+            if (window.showToast) window.showToast(message, 'error');
+        }
+
+        function clearInlineError() {
+            if (window.clearInlineError) {
+                window.clearInlineError(errorRegion);
+            }
+        }

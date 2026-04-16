@@ -5,7 +5,9 @@
 .env.production
 .env.development
 .env.local
+docker-compose.yml
 docker-stack-resolved.yml
+opcache-dev.ini
 .phpactor.json
 .phpunit.result.cache
 /.fleet

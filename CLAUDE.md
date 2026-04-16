@@ -25,7 +25,7 @@ docker exec fiscaldock-app-1 ./vendor/bin/pint
 
 - **NUNCA criar novas migrations** — sempre editar as existentes. Migration central de EFD: `2026_01_30_000002_create_notas_sped_table.php`.
 - **NUNCA editar `vendor/`** — vem da imagem Docker, não está montado do host.
-- **Volume mount seletivo** (`/root/fiscaldock/docker-compose.yml`): `resources/`, `routes/`, `app/`, `config/`, `database/`, `public/js|css|build/` são montados do host. OPcache com `validate_timestamps=1` — edições refletem sem restart.
+- **Volume mount seletivo** (`/var/www/html/docker-compose.yml`): `resources/`, `routes/`, `app/`, `config/`, `database/`, `public/js|css|build/` são montados do host. OPcache com `validate_timestamps=1` — edições refletem sem restart.
 - **Container principal:** `fiscaldock-app-1` | **Scheduler:** `fiscaldock-scheduler-1`.
 - `--force` só em `migrate` — outros comandos artisan não aceitam.
 - **`public/build/` não está no git.** Se der `ViteManifestNotFoundException`, rodar `npm run build` com Node compatível ao Vite atual.
