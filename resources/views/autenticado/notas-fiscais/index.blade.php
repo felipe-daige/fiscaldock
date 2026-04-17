@@ -221,7 +221,7 @@
                                     $numero = $n['numero'] ?? '—';
                                     $serie = $n['serie'] ? ' / ' . $n['serie'] : '';
                                 @endphp
-                                <tr class="hover:bg-gray-50/50 transition-colors nf-row" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}">
+                                <tr class="hover:bg-gray-50/50 transition-colors cursor-pointer nf-row" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}">
                                     <td class="px-3 py-3">
                                         <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemBadge['hex'] }}">{{ $origemBadge['label'] }}</span>
                                     </td>
@@ -282,7 +282,7 @@
                             $numero = $n['numero'] ?? '—';
                             $serie = $n['serie'] ? ' / ' . $n['serie'] : '';
                         @endphp
-                        <div class="px-4 py-4 nf-card" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}">
+                        <div class="px-4 py-4 nf-card cursor-pointer" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}">
                             <div class="flex items-start justify-between gap-2 mb-2">
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemBadge['hex'] }}">{{ $origemBadge['label'] }}</span>
@@ -448,11 +448,23 @@
     }
 
     function handleExpandClick(e) {
+        if (e.target.closest('a, button[type="submit"], input, select, textarea, label')) {
+            return;
+        }
+
         var btn = e.target.closest('.nf-expand-btn');
-        if (!btn) return;
-        e.preventDefault();
-        e.stopPropagation();
-        toggleDetail(btn.dataset.origem, btn.dataset.id, btn);
+        if (btn) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleDetail(btn.dataset.origem, btn.dataset.id, btn);
+            return;
+        }
+
+        var wrapper = e.target.closest('.nf-row, .nf-card');
+        if (!wrapper) return;
+        var chevron = wrapper.querySelector('.nf-expand-btn');
+        if (!chevron) return;
+        toggleDetail(chevron.dataset.origem, chevron.dataset.id, chevron);
     }
 
     function handleFormSubmit(e) {

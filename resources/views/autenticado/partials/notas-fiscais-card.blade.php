@@ -60,7 +60,7 @@
                             $serie = $n['serie'] ? ' / ' . $n['serie'] : '';
                             $modeloLabel = $n['modelo_label'] ?? '—';
                         @endphp
-                        <tr class="hover:bg-gray-50/50 transition-colors nf-card-row" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}">
+                        <tr class="hover:bg-gray-50/50 transition-colors cursor-pointer nf-card-row" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}">
                             <td class="px-3 py-3">
                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemHex }}">{{ $origemLabel }}</span>
                             </td>
@@ -132,7 +132,7 @@
                     $serie = $n['serie'] ? ' / ' . $n['serie'] : '';
                     $modeloLabel = $n['modelo_label'] ?? '—';
                 @endphp
-                <div class="px-4 py-3 nf-card-mobile" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}">
+                <div class="px-4 py-3 nf-card-mobile cursor-pointer" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}">
                     <div class="flex items-start justify-between gap-2 mb-2">
                         <div class="flex items-center gap-2 flex-wrap">
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemHex }}">{{ $origemLabel }}</span>
@@ -189,13 +189,58 @@
     @endif
 </div>
 
-@once
 <script>
 (function() {
+    if (window._cleanupFunctions && window._cleanupFunctions.notasFiscaisCard) {
+        window._cleanupFunctions.notasFiscaisCard();
+    }
+
     var ajaxUrl = @json($ajaxUrl);
     var detailCache = {};
 
-    document.addEventListener('click', function(e) {
+    function toggleDetail(container, origem, id, btnEl) {
+        var key = origem + '-' + id;
+        var detailRow = container.querySelector('tr.nf-card-detail-row[data-detail-for="' + key + '"]');
+        var detailMobile = container.querySelector('.nf-card-detail-mobile[data-detail-for="' + key + '"]');
+        var target = detailRow || detailMobile;
+        if (!target) return;
+
+        var icon = btnEl ? btnEl.querySelector('.nf-card-expand-icon') : null;
+        var isOpen = !target.classList.contains('hidden');
+
+        if (isOpen) {
+            target.classList.add('hidden');
+            if (icon) icon.style.transform = '';
+            return;
+        }
+
+        target.classList.remove('hidden');
+        if (icon) icon.style.transform = 'rotate(180deg)';
+
+        var contentEl = target.querySelector('.nf-card-detail-content');
+        if (!contentEl) return;
+
+        if (detailCache[key]) {
+            contentEl.innerHTML = detailCache[key];
+            return;
+        }
+
+        contentEl.innerHTML = '<div class="p-4 text-center text-sm text-gray-500">Carregando...</div>';
+
+        fetch('/app/notas-fiscais/' + origem + '/' + id, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' }
+        })
+        .then(function(r) { return r.text(); })
+        .then(function(html) {
+            detailCache[key] = html;
+            contentEl.innerHTML = html;
+        })
+        .catch(function() {
+            contentEl.innerHTML = '<div class="p-4 text-center text-sm text-red-500">Erro ao carregar detalhes</div>';
+        });
+    }
+
+    function handleClick(e) {
         var container = document.getElementById('notas-fiscais-card');
         if (!container || !container.contains(e.target)) return;
 
@@ -219,54 +264,30 @@
             return;
         }
 
+        if (e.target.closest('a, button[type="submit"], input, select, textarea, label')) {
+            return;
+        }
+
         var expandBtn = e.target.closest('.nf-card-expand-btn');
         if (expandBtn) {
             e.preventDefault();
             e.stopPropagation();
-            var origem = expandBtn.dataset.origem;
-            var id = expandBtn.dataset.id;
-            var key = origem + '-' + id;
-
-            var detailRow = container.querySelector('tr.nf-card-detail-row[data-detail-for="' + key + '"]');
-            var detailMobile = container.querySelector('.nf-card-detail-mobile[data-detail-for="' + key + '"]');
-            var target = detailRow || detailMobile;
-            if (!target) return;
-
-            var icon = expandBtn.querySelector('.nf-card-expand-icon');
-            var isOpen = !target.classList.contains('hidden');
-
-            if (isOpen) {
-                target.classList.add('hidden');
-                if (icon) icon.style.transform = '';
-                return;
-            }
-
-            target.classList.remove('hidden');
-            if (icon) icon.style.transform = 'rotate(180deg)';
-
-            var contentEl = target.querySelector('.nf-card-detail-content');
-            if (!contentEl) return;
-
-            if (detailCache[key]) {
-                contentEl.innerHTML = detailCache[key];
-                return;
-            }
-
-            contentEl.innerHTML = '<div class="p-4 text-center text-sm text-gray-500">Carregando...</div>';
-
-            fetch('/app/notas-fiscais/' + origem + '/' + id, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' }
-            })
-            .then(function(r) { return r.text(); })
-            .then(function(html) {
-                detailCache[key] = html;
-                contentEl.innerHTML = html;
-            })
-            .catch(function() {
-                contentEl.innerHTML = '<div class="p-4 text-center text-sm text-red-500">Erro ao carregar detalhes</div>';
-            });
+            toggleDetail(container, expandBtn.dataset.origem, expandBtn.dataset.id, expandBtn);
+            return;
         }
-    });
+
+        var wrapper = e.target.closest('.nf-card-row, .nf-card-mobile');
+        if (!wrapper) return;
+        var chevron = wrapper.querySelector('.nf-card-expand-btn');
+        if (!chevron) return;
+        toggleDetail(container, chevron.dataset.origem, chevron.dataset.id, chevron);
+    }
+
+    document.addEventListener('click', handleClick);
+
+    if (!window._cleanupFunctions) window._cleanupFunctions = {};
+    window._cleanupFunctions.notasFiscaisCard = function() {
+        document.removeEventListener('click', handleClick);
+    };
 })();
 </script>
-@endonce
