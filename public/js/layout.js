@@ -428,26 +428,44 @@ function updateActiveLink() {
         }
     });
 
+    let bestSidebarLink = null;
+    let bestSidebarLinkLen = -1;
     sidebarLinks.forEach(link => {
         if (matchesSidebarPath(link.getAttribute('href'), currentPath)) {
-            link.classList.add('sidebar__item--active');
+            const len = normalizePath(link.getAttribute('href')).length;
+            if (len > bestSidebarLinkLen) {
+                bestSidebarLinkLen = len;
+                bestSidebarLink = link;
+            }
         }
     });
+    if (bestSidebarLink) {
+        bestSidebarLink.classList.add('sidebar__item--active');
+    }
 
+    let bestGroupItem = null;
+    let bestGroupItemLen = -1;
     sidebarGroupItems.forEach(link => {
         if (matchesSidebarPath(link.getAttribute('href'), currentPath)) {
-            link.classList.add('sidebar__group-menu-item--active');
-
-            const group = link.closest('[data-sidebar-group]');
-            const trigger = group ? group.querySelector('[data-sidebar-group-trigger]') : null;
-            if (group) {
-                group.setAttribute('open', 'open');
-            }
-            if (trigger) {
-                trigger.classList.add('sidebar__group-trigger--active');
+            const len = normalizePath(link.getAttribute('href')).length;
+            if (len > bestGroupItemLen) {
+                bestGroupItemLen = len;
+                bestGroupItem = link;
             }
         }
     });
+    if (bestGroupItem) {
+        bestGroupItem.classList.add('sidebar__group-menu-item--active');
+
+        const group = bestGroupItem.closest('[data-sidebar-group]');
+        const trigger = group ? group.querySelector('[data-sidebar-group-trigger]') : null;
+        if (group) {
+            group.setAttribute('open', 'open');
+        }
+        if (trigger) {
+            trigger.classList.add('sidebar__group-trigger--active');
+        }
+    }
 
     sidebarUserLinks.forEach(link => {
         if (matchesSidebarPath(link.getAttribute('href'), currentPath)) {
@@ -554,10 +572,21 @@ function setActiveLink(path) {
 
     sidebarLinks.forEach(link => {
         link.classList.remove('sidebar__item--active');
+    });
+    let bestSpaLink = null;
+    let bestSpaLinkLen = -1;
+    sidebarLinks.forEach(link => {
         if (matchesSidebarPath(link.getAttribute('href'), path)) {
-            link.classList.add('sidebar__item--active');
+            const len = normalizePath(link.getAttribute('href')).length;
+            if (len > bestSpaLinkLen) {
+                bestSpaLinkLen = len;
+                bestSpaLink = link;
+            }
         }
     });
+    if (bestSpaLink) {
+        bestSpaLink.classList.add('sidebar__item--active');
+    }
 
     sidebarGroupItems.forEach(link => {
         link.classList.remove('sidebar__group-menu-item--active');
@@ -565,20 +594,29 @@ function setActiveLink(path) {
     sidebarGroupTriggers.forEach(trigger => {
         trigger.classList.remove('sidebar__group-trigger--active');
     });
+    let bestSpaGroupItem = null;
+    let bestSpaGroupItemLen = -1;
     sidebarGroupItems.forEach(link => {
         if (matchesSidebarPath(link.getAttribute('href'), path)) {
-            link.classList.add('sidebar__group-menu-item--active');
-
-            const group = link.closest('[data-sidebar-group]');
-            const trigger = group ? group.querySelector('[data-sidebar-group-trigger]') : null;
-            if (group) {
-                group.setAttribute('open', 'open');
-            }
-            if (trigger) {
-                trigger.classList.add('sidebar__group-trigger--active');
+            const len = normalizePath(link.getAttribute('href')).length;
+            if (len > bestSpaGroupItemLen) {
+                bestSpaGroupItemLen = len;
+                bestSpaGroupItem = link;
             }
         }
     });
+    if (bestSpaGroupItem) {
+        bestSpaGroupItem.classList.add('sidebar__group-menu-item--active');
+
+        const group = bestSpaGroupItem.closest('[data-sidebar-group]');
+        const trigger = group ? group.querySelector('[data-sidebar-group-trigger]') : null;
+        if (group) {
+            group.setAttribute('open', 'open');
+        }
+        if (trigger) {
+            trigger.classList.add('sidebar__group-trigger--active');
+        }
+    }
 
     sidebarUserLinks.forEach(link => {
         link.classList.remove('sidebar__user-menu-item--active');

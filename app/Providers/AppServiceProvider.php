@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\View\Composers\SidebarComposer;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -25,5 +27,7 @@ class AppServiceProvider extends ServiceProvider
         if (config('app.env') === 'production') {
             URL::forceScheme('https');
         }
+
+        View::composer('autenticado.partials.sidebar', SidebarComposer::class);
     }
 }

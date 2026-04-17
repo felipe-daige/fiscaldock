@@ -364,6 +364,13 @@
         @apply ml-auto w-1.5 h-1.5 rounded-full shrink-0;
         background-color: #d97706;
     }
+    .sidebar__item-badge-count {
+        @apply ml-auto inline-flex items-center justify-center px-1.5 h-5 rounded-full text-[10px] font-bold text-white shrink-0;
+        min-width: 1.25rem;
+    }
+    .sidebar__group-menu-item-pill {
+        @apply ml-auto inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide shrink-0;
+    }
 
     .sidebar__group {
         @apply space-y-1;

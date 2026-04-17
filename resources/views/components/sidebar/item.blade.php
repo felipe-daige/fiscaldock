@@ -7,6 +7,6 @@
     <span class="sidebar__item-label">{{ $slot }}</span>
 
     @if($badge)
-        <span class="sidebar__item-badge" aria-label="{{ $badgeLabel ?? $badge }}"></span>
+        <span class="sidebar__item-badge-count" aria-label="{{ $badgeLabel ?? $badge }}" style="background-color: #d97706;">{{ $badge }}</span>
     @endif
 </a>

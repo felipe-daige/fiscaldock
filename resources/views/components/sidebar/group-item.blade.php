@@ -1,4 +1,4 @@
-@props(['href', 'suffix' => null, 'suffixTitle' => null])
+@props(['href', 'suffix' => null, 'suffixTitle' => null, 'pill' => null])
 
 <a
     href="{{ $href }}"
@@ -8,7 +8,10 @@
     {{ $attributes->merge(['class' => 'sidebar__group-menu-item']) }}
 >
     <span class="sidebar__group-menu-item-label">{{ $slot }}</span>
-    @if($suffix)
+
+    @if($pill)
+        <span class="sidebar__group-menu-item-pill" style="background-color: #fef3c7; color: #92400e;">{{ $pill }}</span>
+    @elseif($suffix)
         <span class="sidebar__group-menu-item-suffix" aria-hidden="true">
             @if($suffix === 'development')
                 <svg class="sidebar__group-menu-item-suffix-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -19,7 +22,8 @@
             @endif
         </span>
     @endif
-    @if($suffixTitle)
+
+    @if($suffixTitle && ! $pill)
         <span class="sidebar__group-menu-item-tooltip" role="tooltip">{{ $suffixTitle }}</span>
     @endif
 </a>
