@@ -29,10 +29,10 @@ class MonitoramentoPlanoSeeder extends Seeder
             [
                 'codigo' => 'validacao',
                 'nome' => 'Validação',
-                'descricao' => 'CNPJ, Simples Nacional e SINTEGRA básico para qualificação fiscal',
+                'descricao' => 'CNPJ, Simples Nacional e MEI para qualificação fiscal',
                 'consultas_incluidas' => [
                     'situacao_cadastral', 'dados_cadastrais', 'endereco',
-                    'cnaes', 'qsa', 'simples_nacional', 'mei', 'sintegra',
+                    'cnaes', 'qsa', 'simples_nacional', 'mei',
                 ],
                 'custo_creditos' => 5,
                 'is_gratuito' => false,
@@ -45,7 +45,7 @@ class MonitoramentoPlanoSeeder extends Seeder
                 'descricao' => 'Validação com CND Federal, CNDT e FGTS para editais e contratos',
                 'consultas_incluidas' => [
                     'situacao_cadastral', 'dados_cadastrais', 'endereco',
-                    'cnaes', 'qsa', 'simples_nacional', 'mei', 'sintegra',
+                    'cnaes', 'qsa', 'simples_nacional', 'mei',
                     'cnd_federal', 'cndt', 'crf_fgts',
                 ],
                 'custo_creditos' => 10,
