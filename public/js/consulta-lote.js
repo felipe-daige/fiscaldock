@@ -842,13 +842,15 @@
                 'bg-blue-50/60',
                 'ring-2',
                 'ring-blue-100',
+                'ring-gray-900/10',
+                'shadow-sm',
                 'border-gray-200',
                 'hover:border-gray-300',
                 'hover:bg-gray-500/8'
             );
 
             if (radio.checked) {
-                label.classList.add('border-gray-800', 'bg-gray-50');
+                label.classList.add('border-gray-800', 'bg-gray-50', 'ring-2', 'ring-gray-900/10', 'shadow-sm');
             } else {
                 label.classList.add('border-gray-300', 'hover:border-gray-400', 'hover:bg-gray-50');
             }

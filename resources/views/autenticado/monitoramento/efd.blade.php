@@ -1029,52 +1029,65 @@
         function atualizarIconeStatus(status, errorMessage) {
             if (!progressoIcon || !progressoCard) return;
 
-            // Reset classes do card
-            progressoCard.className = 'bg-white rounded border p-4';
+            // Mapeia o status recebido para um estado visual estável
+            const visualState = status === 'concluido'
+                ? 'ok'
+                : (status === 'erro' || status === 'timeout') ? 'err' : 'loading';
 
-            switch (status) {
-                case 'concluido':
-                    progressoIcon.className = 'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0';
-                    progressoIcon.style.backgroundColor = '#d1fae5';
-                    progressoIcon.innerHTML = '<svg class="w-5 h-5" style="color: #047857" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
-                    progressoCard.classList.add('border-gray-300');
-                    if (barraProgresso) {
-                        barraProgresso.className = 'h-full rounded-full transition-all duration-500 ease-out';
-                        barraProgresso.style.backgroundColor = '#047857';
-                    }
-                    // Ocultar seção de erro, manter stats
-                    if (progressoErro) progressoErro.classList.add('hidden');
-                    break;
-                case 'erro':
-                case 'timeout':
-                    progressoIcon.className = 'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0';
-                    progressoIcon.style.backgroundColor = '#fee2e2';
-                    progressoIcon.innerHTML = '<svg class="w-5 h-5" style="color: #b91c1c" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
-                    progressoCard.classList.add('border-gray-300');
-                    if (barraProgresso) {
-                        barraProgresso.className = 'h-full rounded-full transition-all duration-500 ease-out';
-                        barraProgresso.style.backgroundColor = '#b91c1c';
-                    }
-                    // Mostrar seção de erro
-                    if (progressoErro) {
-                        progressoErro.classList.remove('hidden');
-                        // Atualizar mensagem de erro se fornecida
-                        if (progressoErroMsg && errorMessage) {
-                            progressoErroMsg.textContent = errorMessage;
-                        } else if (progressoErroMsg) {
-                            progressoErroMsg.textContent = status === 'timeout'
-                                ? 'O processamento demorou mais do que o esperado.'
-                                : 'Ocorreu um erro interno durante o processamento.';
+            const previousState = progressoIcon.dataset.visualState || null;
+            const stateChanged = visualState !== previousState;
+
+            // Enquanto o estado visual não muda, NÃO reescrever innerHTML/className/style
+            // (isso reiniciaria a animação CSS animate-spin a cada mensagem SSE).
+            // Exceção: no estado de erro, permitimos atualizar a mensagem de erro.
+            if (!stateChanged && visualState !== 'err') return;
+
+            if (stateChanged) {
+                progressoCard.className = 'bg-white rounded border p-4';
+
+                switch (visualState) {
+                    case 'ok':
+                        progressoIcon.className = 'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0';
+                        progressoIcon.style.backgroundColor = '#d1fae5';
+                        progressoIcon.innerHTML = '<svg class="w-5 h-5" style="color: #047857" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+                        progressoCard.classList.add('border-gray-300');
+                        if (barraProgresso) {
+                            barraProgresso.className = 'h-full rounded-full transition-all duration-500 ease-out';
+                            barraProgresso.style.backgroundColor = '#047857';
                         }
-                    }
-                    break;
-                default:
-                    progressoIcon.className = 'w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0';
-                    progressoIcon.innerHTML = '<svg class="w-5 h-5 text-gray-700 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>';
-                    progressoCard.classList.add('border-gray-200');
-                    if (barraProgresso) barraProgresso.className = 'bg-gray-800 h-full rounded-full transition-all duration-500 ease-out';
-                    // Ocultar seção de erro
-                    if (progressoErro) progressoErro.classList.add('hidden');
+                        if (progressoErro) progressoErro.classList.add('hidden');
+                        break;
+                    case 'err':
+                        progressoIcon.className = 'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0';
+                        progressoIcon.style.backgroundColor = '#fee2e2';
+                        progressoIcon.innerHTML = '<svg class="w-5 h-5" style="color: #b91c1c" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+                        progressoCard.classList.add('border-gray-300');
+                        if (barraProgresso) {
+                            barraProgresso.className = 'h-full rounded-full transition-all duration-500 ease-out';
+                            barraProgresso.style.backgroundColor = '#b91c1c';
+                        }
+                        if (progressoErro) progressoErro.classList.remove('hidden');
+                        break;
+                    default: // 'loading'
+                        progressoIcon.className = 'w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0';
+                        progressoIcon.innerHTML = '<svg class="w-5 h-5 text-gray-700 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>';
+                        progressoCard.classList.add('border-gray-200');
+                        if (barraProgresso) barraProgresso.className = 'bg-gray-800 h-full rounded-full transition-all duration-500 ease-out';
+                        if (progressoErro) progressoErro.classList.add('hidden');
+                }
+
+                progressoIcon.dataset.visualState = visualState;
+            }
+
+            // Atualização da mensagem de erro (pode chegar depois da primeira transição para 'err')
+            if (visualState === 'err' && progressoErroMsg) {
+                if (errorMessage) {
+                    progressoErroMsg.textContent = errorMessage;
+                } else if (stateChanged) {
+                    progressoErroMsg.textContent = status === 'timeout'
+                        ? 'O processamento demorou mais do que o esperado.'
+                        : 'Ocorreu um erro interno durante o processamento.';
+                }
             }
         }
 
@@ -1189,6 +1202,15 @@
             const item = document.querySelector('.etapa-item[data-etapa="' + etapa + '"]');
             if (!item) return;
 
+            // Normaliza 'inicio' e 'processando' para a mesma chave visual ('loading'),
+            // evitando re-render do SVG quando o backend alterna entre esses dois valores.
+            const visualStatus = (status === 'processando' || status === 'inicio')
+                ? 'loading'
+                : (status || 'pendente');
+
+            // Se o estado visual não mudou, não tocar no DOM — preserva a animação CSS.
+            if (item.dataset.renderedStatus === visualStatus) return;
+
             const iconEl = item.querySelector('.etapa-icon');
 
             const svgSpinner = '<svg class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>';
@@ -1196,17 +1218,17 @@
             const svgDash    = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>';
 
             const estados = {
-                pendente:    { pill: 'bg-gray-100 text-gray-400',   icon: svgDash },
-                processando: { pill: 'bg-gray-200 text-gray-700',   icon: svgSpinner },
-                inicio:      { pill: 'bg-gray-200 text-gray-700',   icon: svgSpinner },
-                concluido:   { pill: 'text-white', icon: svgCheck, style: 'background-color: #047857' },
-                skip:        { pill: 'bg-gray-100 text-gray-400',   icon: svgDash },
+                pendente:  { pill: 'bg-gray-100 text-gray-400', icon: svgDash },
+                loading:   { pill: 'bg-gray-200 text-gray-700', icon: svgSpinner },
+                concluido: { pill: 'text-white',                icon: svgCheck, style: 'background-color: #047857' },
+                skip:      { pill: 'bg-gray-100 text-gray-400', icon: svgDash },
             };
 
-            const estado = estados[status] || estados.pendente;
+            const estado = estados[visualStatus] || estados.pendente;
             item.className = 'etapa-item inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ' + estado.pill;
             item.style.cssText = estado.style || '';
             iconEl.innerHTML = estado.icon;
+            item.dataset.renderedStatus = visualStatus;
         }
 
         // Função para mostrar UI de progresso
@@ -1724,11 +1746,14 @@
                 return '';
             }
 
-            // Ordenar por quantidade de notas (desc) usando dados do resumo SSE
+            // Ordenar por volume de valor (entradas + saídas) desc, com qtd de notas como tiebreaker
             participantes.sort((a, b) => {
-                const aNotas = (participantesResumoMap[a.id] || {}).total_notas || 0;
-                const bNotas = (participantesResumoMap[b.id] || {}).total_notas || 0;
-                return bNotas - aNotas;
+                const ra = participantesResumoMap[a.id] || {};
+                const rb = participantesResumoMap[b.id] || {};
+                const aValor = (Number((ra.entradas || {}).valor) || 0) + (Number((ra.saidas || {}).valor) || 0);
+                const bValor = (Number((rb.entradas || {}).valor) || 0) + (Number((rb.saidas || {}).valor) || 0);
+                if (bValor !== aValor) return bValor - aValor;
+                return (rb.total_notas || 0) - (ra.total_notas || 0);
             });
 
             participantes.forEach(p => {

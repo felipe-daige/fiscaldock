@@ -35,7 +35,7 @@
                     'validacao' => [
                         'cor' => 'blue',
                         'icone' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
-                        'consultas_display' => ['Situação Cadastral', 'Dados Cadastrais', 'Simples Nacional', 'MEI', 'SINTEGRA básico'],
+                        'consultas_display' => ['Situação Cadastral', 'Dados Cadastrais', 'Simples Nacional', 'MEI'],
                         'casos_uso' => ['Conferir regime tributário', 'Validar inscrição estadual', 'Qualificar novos fornecedores'],
                     ],
                     'licitacao' => [
@@ -47,7 +47,7 @@
                     'compliance' => [
                         'cor' => 'purple',
                         'icone' => 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
-                        'consultas_display' => ['Tudo do Licitação', 'CND Estadual', 'CND Municipal'],
+                        'consultas_display' => ['Tudo do Licitação', 'CND Estadual', 'CND Municipal', 'SINTEGRA'],
                         'casos_uso' => ['Regularidade completa', 'Auditoria de fornecedor', 'Contratos recorrentes'],
                     ],
                     'due_diligence' => [
@@ -73,6 +73,14 @@
                     $meta = $planoMeta[$p->codigo] ?? ['cor' => 'gray', 'icone' => 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'consultas_display' => [], 'casos_uso' => []];
                     $requiresFirstPurchase = in_array($p->codigo, $firstPurchaseLockedProducts, true);
                     $isLocked = $requiresFirstPurchase && ! $hasMadeFirstPurchase;
+                    $badgeHex = match ($p->codigo) {
+                        'gratuito' => '#047857',
+                        'validacao' => '#4338ca',
+                        'licitacao' => '#0f766e',
+                        'compliance' => '#d97706',
+                        'due_diligence' => '#9a3412',
+                        default => '#374151',
+                    };
                     $planosDetalhados[] = [
                         'codigo' => $p->codigo,
                         'nome' => $p->nome,
@@ -88,6 +96,7 @@
                         'preco_original' => $meta['preco_original'] ?? null,
                         'requires_first_purchase' => $requiresFirstPurchase,
                         'locked' => $isLocked,
+                        'badge_hex' => $badgeHex,
                     ];
                 }
 
@@ -466,53 +475,33 @@
                                 <button type="button" id="btn-ver-detalhes-planos-lote" class="text-xs text-gray-600 hover:text-gray-900">Ver detalhes</button>
                             </div>
                         </div>
-                        <div class="p-4 space-y-2">
+                        <div class="p-3 flex flex-col gap-1.5">
                             @foreach($planosDetalhados as $idx => $pd)
                                 @php
-                                    $badgeHex = match ($pd['codigo']) {
-                                        'gratuito' => '#047857',
-                                        'validacao' => '#4338ca',
-                                        'licitacao' => '#0f766e',
-                                        'compliance' => '#d97706',
-                                        'due_diligence' => '#9a3412',
-                                        default => '#374151',
-                                    };
+                                    $badgeHex = $pd['badge_hex'];
                                     $isLocked = $pd['locked'] ?? false;
                                 @endphp
-                                <label class="flex items-center gap-3 p-3 border rounded transition plano-label {{ $isLocked ? 'border-gray-200 bg-gray-50 opacity-75 cursor-not-allowed' : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50 cursor-pointer' }}" data-plano-id="{{ $planosAtivos[$idx]->id }}" data-locked="{{ $isLocked ? '1' : '0' }}">
-                                    <input type="radio" name="plano_id" value="{{ $planosAtivos[$idx]->id }}" class="w-4 h-4 text-gray-600 border-gray-300" data-custo="{{ $pd['creditos'] }}" data-gratuito="{{ $pd['gratuito'] ? '1' : '0' }}" {{ $idx === 0 ? 'checked' : '' }} {{ $isLocked ? 'disabled' : '' }}>
-                                    <div class="flex-shrink-0 w-8 h-8 rounded bg-gray-100 flex items-center justify-center">
-                                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $pd['icone'] }}"></path>
+                                <label class="flex items-center gap-2 px-3 py-2 border rounded transition plano-label {{ $isLocked ? 'border-gray-200 bg-gray-50 opacity-75 cursor-not-allowed' : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50 cursor-pointer' }}" data-plano-id="{{ $planosAtivos[$idx]->id }}" data-locked="{{ $isLocked ? '1' : '0' }}">
+                                    <input type="radio" name="plano_id" value="{{ $planosAtivos[$idx]->id }}" class="w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0" data-custo="{{ $pd['creditos'] }}" data-gratuito="{{ $pd['gratuito'] ? '1' : '0' }}" {{ $idx === 0 ? 'checked' : '' }} {{ $isLocked ? 'disabled' : '' }}>
+                                    <div class="flex-shrink-0 w-6 h-6 rounded {{ $isLocked ? 'bg-gray-200' : 'bg-gray-100' }} flex items-center justify-center">
+                                        <svg class="w-3 h-3 {{ $isLocked ? 'text-gray-500' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            @if($isLocked)
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                            @else
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $pd['icone'] }}"></path>
+                                            @endif
                                         </svg>
                                     </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-start justify-between gap-3">
-                                            <span class="text-sm font-medium text-gray-900 min-w-0 pr-2">{{ $pd['nome'] }}</span>
-                                            @if($pd['gratuito'])
-                                                <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
-                                            @elseif($isLocked)
-                                                <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Bloqueado</span>
-                                            @else
-                                                <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeHex }}">{{ $pd['creditos'] }} cred.</span>
-                                            @endif
-                                        </div>
-                                        <p class="text-xs text-gray-500 mt-0.5">{{ $pd['descricao'] }}</p>
-                                        @if($isLocked)
-                                            <div class="mt-2 flex items-center justify-between gap-3 rounded border border-gray-200 bg-white px-3 py-2">
-                                                <span class="text-[11px] text-gray-600">Disponível após a primeira recarga.</span>
-                                                <a href="/app/creditos" data-link class="text-[11px] font-semibold text-gray-900 hover:text-gray-600 hover:underline">Comprar créditos</a>
-                                            </div>
-                                        @endif
-                                        @if($pd['codigo'] === 'compliance' && !empty($complianceSources))
-                                            <div class="mt-3 pt-3 border-t border-gray-200">
-                                                <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-2">Fontes incluídas</div>
-                                                @include('partials.compliance-sources', ['sources' => $complianceSources])
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <button type="button" class="btn-info-plano-lote flex-shrink-0 w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:border-gray-400 transition" data-slide-index="{{ $idx }}" onclick="event.preventDefault(); event.stopPropagation();">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <span class="flex-1 min-w-0 text-sm font-medium text-gray-900 truncate">{{ $pd['nome'] }}</span>
+                                    @if($pd['gratuito'])
+                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
+                                    @elseif($isLocked)
+                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Bloq.</span>
+                                    @else
+                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeHex }}">{{ $pd['creditos'] }} cred.</span>
+                                    @endif
+                                    <button type="button" class="btn-info-plano-lote flex-shrink-0 w-6 h-6 rounded-full border border-gray-400 bg-white flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 hover:border-gray-500 transition" data-slide-index="{{ $idx }}" onclick="event.preventDefault(); event.stopPropagation();">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
                                     </button>
@@ -558,15 +547,6 @@
                         </div>
                     </div>
 
-                    {{-- Card Consultas Incluidas --}}
-                    <div id="card-consultas-incluidas" class="bg-white rounded border border-gray-300 overflow-hidden">
-                        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Consultas Incluídas</span>
-                        </div>
-                        <div id="lista-consultas-incluidas" class="p-4 space-y-1">
-                            {{-- Preenchido via JS --}}
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -691,19 +671,14 @@
             </div>{{-- /consulta-progresso-section --}}
             {{-- Modal: Carousel de Planos --}}
             <div id="modal-planos-carousel-lote" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-                <div class="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] flex flex-col relative overflow-visible">
-                    {{-- Modal Header --}}
-                    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+                <div class="bg-white rounded border border-gray-300 shadow-lg max-w-lg w-full mx-4 max-h-[90vh] flex flex-col relative overflow-visible">
+                    {{-- Modal Header (DANFE) --}}
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Detalhes do Produto</span>
                         <div class="flex items-center gap-2">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                            </svg>
-                            <h3 class="text-base font-semibold text-gray-900">Detalhes dos Produtos</h3>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span id="carousel-counter-lote" class="text-xs text-gray-400">1 / {{ count($planosAtivos) }}</span>
-                            <button type="button" id="btn-fechar-carousel-lote" class="p-1 text-gray-400 hover:text-gray-600 transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <span id="carousel-counter-lote" class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">1 / {{ count($planosAtivos) }}</span>
+                            <button type="button" id="btn-fechar-carousel-lote" class="p-1 text-gray-400 hover:text-gray-700 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
                             </button>
@@ -711,12 +686,12 @@
                     </div>
 
                     {{-- Navigation arrows --}}
-                    <button type="button" id="swiper-planos-prev-lote" class="absolute -left-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:bg-white hover:text-gray-700 hover:shadow-lg transition-all cursor-pointer">
+                    <button type="button" id="swiper-planos-prev-lote" class="absolute -left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white border border-gray-300 flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors cursor-pointer">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                         </svg>
                     </button>
-                    <button type="button" id="swiper-planos-next-lote" class="absolute -right-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:bg-white hover:text-gray-700 hover:shadow-lg transition-all cursor-pointer">
+                    <button type="button" id="swiper-planos-next-lote" class="absolute -right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white border border-gray-300 flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors cursor-pointer">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                         </svg>
@@ -727,68 +702,58 @@
                         <div class="swiper h-full" id="swiper-planos-lote">
                             <div class="swiper-wrapper">
                                 @foreach($planosDetalhados as $idx => $pd)
-                                    @php $cores = $corClasses[$pd['cor']]; @endphp
+                                    @php $badgeHex = $pd['badge_hex']; @endphp
                                     <div class="swiper-slide">
-                                        <div class="p-5 overflow-y-auto" style="max-height: calc(90vh - 200px);">
-                                            {{-- Plan header --}}
-                                            <div class="flex items-center gap-3 mb-3">
-                                                <div class="flex-shrink-0 w-9 h-9 rounded-lg {{ $cores['bg'] }} flex items-center justify-center">
-                                                    <svg class="w-[18px] h-[18px] {{ $cores['icon'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $pd['icone'] }}"></path>
-                                                    </svg>
-                                                </div>
-                                                <div class="flex-1">
-                                                    <h4 class="text-base font-bold text-gray-900">{{ $pd['nome'] }}</h4>
-                                                    @if($pd['gratuito'])
-                                                        <span class="text-sm font-semibold text-green-600">Gratuito</span>
+                                        <div class="overflow-y-auto" style="max-height: calc(90vh - 180px);">
+                                            {{-- Seção: Produto --}}
+                                            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                                                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Produto</span>
+                                            </div>
+                                            <div class="px-4 py-3 border-b border-gray-200">
+                                                <div class="flex items-center gap-3 mb-2">
+                                                    <div class="flex-shrink-0 w-9 h-9 rounded border border-gray-200 bg-gray-100 flex items-center justify-center">
+                                                        <svg class="w-[18px] h-[18px] text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $pd['icone'] }}"></path>
+                                                        </svg>
+                                                    </div>
+                                                    <h4 class="flex-1 text-sm font-bold text-gray-900 uppercase tracking-wide">{{ $pd['nome'] }}</h4>
+                                                    @if($pd['locked'] ?? false)
+                                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Bloqueado</span>
+                                                    @elseif($pd['gratuito'])
+                                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
                                                     @elseif($pd['promo'])
-                                                        <span class="text-sm text-gray-400 line-through">{{ $pd['preco_original'] }} creditos/CNPJ</span>
-                                                        <span class="text-sm font-semibold text-amber-600 ml-1">{{ $pd['creditos'] }} creditos/CNPJ</span>
+                                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">{{ $pd['creditos'] }} cred.</span>
                                                     @else
-                                                        <span class="text-sm text-gray-500">{{ $pd['creditos'] }} creditos/CNPJ</span>
+                                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeHex }}">{{ $pd['creditos'] }} cred.</span>
                                                     @endif
                                                 </div>
+                                                <p class="text-sm text-gray-700">{{ $pd['descricao'] }}</p>
+
                                                 @if($pd['locked'] ?? false)
-                                                    <span class="inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Bloqueado</span>
-                                                @elseif($pd['gratuito'])
-                                                    <span class="inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
-                                                @elseif($pd['promo'])
-                                                    <span class="inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">{{ $pd['creditos'] }} cred.</span>
-                                                @else
-                                                    <span class="inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $pd['creditos'] }} cred.</span>
+                                                    <div class="mt-3 bg-white rounded border border-gray-300 border-l-4 p-3 text-sm text-gray-700" style="border-left-color: #9ca3af">
+                                                        <div class="flex items-center justify-between gap-3">
+                                                            <span>Disponível após a primeira recarga.</span>
+                                                            <a href="/app/creditos" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline whitespace-nowrap">Comprar créditos</a>
+                                                        </div>
+                                                    </div>
+                                                @endif
+
+                                                @if($pd['promo'])
+                                                    <div class="mt-3 bg-white rounded border border-gray-300 border-l-4 p-3 text-sm text-gray-700" style="border-left-color: #d97706">
+                                                        Promoção: de {{ $pd['preco_original'] }} por {{ $pd['creditos'] }} créditos/CNPJ
+                                                    </div>
                                                 @endif
                                             </div>
 
-                                            {{-- Description --}}
-                                            <p class="text-sm text-gray-600 mb-3">{{ $pd['descricao'] }}</p>
-
-                                            @if($pd['locked'] ?? false)
-                                                <div class="mb-3 p-3 bg-gray-50 border border-gray-200 rounded">
-                                                    <div class="flex items-center justify-between gap-3">
-                                                        <span class="text-xs font-semibold text-gray-700">Disponível após a primeira recarga.</span>
-                                                        <a href="/app/creditos" data-link class="text-xs font-semibold text-gray-900 hover:text-gray-600 hover:underline">Comprar créditos</a>
-                                                    </div>
-                                                </div>
-                                            @endif
-
-                                            @if($pd['promo'])
-                                                <div class="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                                                    <div class="flex items-center gap-2">
-                                                        <svg class="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                        </svg>
-                                                        <span class="text-xs font-semibold text-amber-800">Promocao: de {{ $pd['preco_original'] }} por {{ $pd['creditos'] }} creditos/CNPJ</span>
-                                                    </div>
-                                                </div>
-                                            @endif
-
-                                            {{-- Consultas incluidas --}}
-                                            <div class="mb-3">
-                                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Consultas incluidas</p>
-                                                <ul class="space-y-1">
+                                            {{-- Seção: Consultas Incluídas --}}
+                                            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                                                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Consultas Incluídas</span>
+                                            </div>
+                                            <div class="px-4 py-3 border-b border-gray-200">
+                                                <ul class="space-y-1.5">
                                                     @foreach($pd['consultas'] as $consulta)
                                                         <li class="flex items-start gap-2 text-sm text-gray-700">
-                                                            <svg class="w-4 h-4 {{ $cores['icon'] }} mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <svg class="w-4 h-4 text-gray-700 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                                             </svg>
                                                             <span>{{ $consulta }}</span>
@@ -797,10 +762,12 @@
                                                 </ul>
                                             </div>
 
-                                            {{-- Quando usar --}}
-                                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-100 mb-4">
-                                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Quando usar</p>
-                                                <ul class="space-y-1">
+                                            {{-- Seção: Quando Usar --}}
+                                            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                                                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Quando Usar</span>
+                                            </div>
+                                            <div class="px-4 py-3">
+                                                <ul class="space-y-1.5">
                                                     @foreach($pd['casos_uso'] as $caso)
                                                         <li class="flex items-start gap-2 text-xs text-gray-600">
                                                             <svg class="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -818,12 +785,13 @@
                         </div>
                     </div>
 
-                    {{-- Footer: botao selecionar --}}
-                    <div class="px-6 pb-4 pt-3 border-t border-gray-100 flex-shrink-0">
+                    {{-- Footer: botão selecionar --}}
+                    <div class="px-4 py-3 border-t border-gray-200 flex-shrink-0">
                         <button
                             type="button"
                             id="btn-selecionar-plano-footer-lote"
-                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-semibold transition-colors"
+                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded text-white text-sm font-semibold transition-colors hover:brightness-110"
+                            style="background-color: #1f2937"
                             data-plano-index="0"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -834,7 +802,7 @@
                     </div>
 
                     {{-- Pagination dots --}}
-                    <div class="px-6 py-3 border-t border-gray-100 flex-shrink-0">
+                    <div class="px-4 py-2 border-t border-gray-200 flex-shrink-0">
                         <div id="swiper-planos-pagination-lote" class="flex justify-center"></div>
                     </div>
                 </div>
@@ -854,7 +822,7 @@
         transition: all 0.2s;
     }
     #swiper-planos-pagination-lote .swiper-pagination-bullet-active {
-        background: #3b82f6;
+        background: #1f2937;
         width: 20px;
         border-radius: 4px;
     }
