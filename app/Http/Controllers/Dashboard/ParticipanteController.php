@@ -1020,13 +1020,13 @@ class ParticipanteController extends Controller
         $importacaoId = $request->input('importacao_id');
         if ($importacaoId) {
             $query->orderByDesc(
-                EfdNota::selectRaw('count(*)')
+                EfdNota::selectRaw('COALESCE(SUM(valor_total), 0)')
                     ->whereColumn('participante_id', 'participantes.id')
                     ->where('importacao_id', $importacaoId)
             );
         } else {
             $query->orderByDesc(
-                EfdNota::selectRaw('count(*)')
+                EfdNota::selectRaw('COALESCE(SUM(valor_total), 0)')
                     ->whereColumn('participante_id', 'participantes.id')
             )->orderBy('created_at', 'desc');
         }
@@ -1093,7 +1093,7 @@ class ParticipanteController extends Controller
         }
 
         $participantes = $query->orderByDesc(
-            EfdNota::selectRaw('count(*)')
+            EfdNota::selectRaw('COALESCE(SUM(valor_total), 0)')
                 ->whereColumn('participante_id', 'participantes.id')
                 ->where('importacao_id', $importacaoId)
         )->paginate($perPage);
