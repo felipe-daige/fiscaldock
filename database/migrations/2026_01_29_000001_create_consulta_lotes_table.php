@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('cliente_id')->nullable()->constrained()->onDelete('set null');
-            $table->foreignId('plano_id')->constrained('monitoramento_planos')->onDelete('restrict');
+            $table->foreignId('plano_id')->nullable()->constrained('monitoramento_planos')->onDelete('restrict');
             $table->string('status', 20)->default('pendente'); // pendente, processando, concluido, erro
             $table->integer('total_participantes');
             $table->integer('creditos_cobrados')->default(0);

@@ -1134,6 +1134,9 @@ class DataReceiverController extends Controller
                 'status'           => 'required|in:processando,concluido,erro',
                 'progresso'        => 'required_if:status,processando|integer|min:0|max:100',
                 'mensagem'         => 'nullable|string|max:255',
+                'etapa'            => 'nullable|integer|min:1',
+                'total_etapas'     => 'nullable|integer|min:1',
+                'etapa_label'      => 'nullable|string|max:50',
                 'consulta_lote_id' => 'required_if:status,concluido|required_if:status,erro|nullable|integer|exists:consulta_lotes,id',
                 'resultado_resumo' => 'nullable|array',
                 'error_code'       => 'required_if:status,erro|nullable|string|max:50',
@@ -1142,18 +1145,32 @@ class DataReceiverController extends Controller
                 'refund_amount'    => 'nullable|integer|min:1',
             ]);
 
+            if (
+                ! empty($validated['etapa']) && ! empty($validated['total_etapas'])
+                && $validated['etapa'] > $validated['total_etapas']
+            ) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro de validação.',
+                    'errors'  => ['etapa' => ['O número da etapa não pode ser maior que total_etapas.']],
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
             $cacheKey = "progresso:{$validated['user_id']}:{$validated['tab_id']}";
             $status = $validated['status'];
 
             // ── Cenário A: processando (só cache) ──
             if ($status === 'processando') {
                 $cacheData = [
-                    'user_id'    => $validated['user_id'],
-                    'tab_id'     => $validated['tab_id'],
-                    'progresso'  => $validated['progresso'],
-                    'mensagem'   => $validated['mensagem'] ?? null,
-                    'status'     => 'processando',
-                    'updated_at' => now()->toIso8601String(),
+                    'user_id'      => $validated['user_id'],
+                    'tab_id'       => $validated['tab_id'],
+                    'progresso'    => $validated['progresso'],
+                    'mensagem'     => $validated['mensagem'] ?? null,
+                    'etapa'        => $validated['etapa'] ?? null,
+                    'total_etapas' => $validated['total_etapas'] ?? null,
+                    'etapa_label'  => $validated['etapa_label'] ?? null,
+                    'status'       => 'processando',
+                    'updated_at'   => now()->toIso8601String(),
                 ];
 
                 Cache::put($cacheKey, $cacheData, 600);
@@ -1201,12 +1218,17 @@ class DataReceiverController extends Controller
 
                 $lote->update($updateData);
 
+                $totalEtapas = $validated['total_etapas'] ?? $validated['etapa'] ?? null;
+
                 Cache::put($cacheKey, [
                     'user_id'          => $validated['user_id'],
                     'tab_id'           => $validated['tab_id'],
                     'consulta_lote_id' => $lote->id,
                     'progresso'        => 100,
                     'mensagem'         => $validated['mensagem'] ?? 'Consulta concluída.',
+                    'etapa'            => $totalEtapas,
+                    'total_etapas'     => $totalEtapas,
+                    'etapa_label'      => $validated['etapa_label'] ?? null,
                     'status'           => 'concluido',
                     'updated_at'       => now()->toIso8601String(),
                 ], 600);
@@ -1235,15 +1257,18 @@ class DataReceiverController extends Controller
             }
 
             Cache::put($cacheKey, [
-                'user_id'       => $validated['user_id'],
-                'tab_id'        => $validated['tab_id'],
+                'user_id'          => $validated['user_id'],
+                'tab_id'           => $validated['tab_id'],
                 'consulta_lote_id' => $lote->id,
-                'progresso'     => $validated['progresso'] ?? 0,
-                'mensagem'      => $validated['error_message'] ?? 'Erro no processamento.',
-                'status'        => 'erro',
-                'error_code'    => $validated['error_code'] ?? 'UNKNOWN_ERROR',
-                'error_message' => $validated['error_message'] ?? 'Erro desconhecido',
-                'updated_at'    => now()->toIso8601String(),
+                'progresso'        => $validated['progresso'] ?? 0,
+                'mensagem'         => $validated['error_message'] ?? 'Erro no processamento.',
+                'etapa'            => $validated['etapa'] ?? null,
+                'total_etapas'     => $validated['total_etapas'] ?? null,
+                'etapa_label'      => $validated['etapa_label'] ?? null,
+                'status'           => 'erro',
+                'error_code'       => $validated['error_code'] ?? 'UNKNOWN_ERROR',
+                'error_message'    => $validated['error_message'] ?? 'Erro desconhecido',
+                'updated_at'       => now()->toIso8601String(),
             ], 600);
 
             Log::info('ConsultaLote marcado como erro', [

@@ -13,7 +13,7 @@ class EfdNota extends Model
     protected $fillable = [
         'user_id', 'cliente_id', 'participante_id', 'importacao_id', 'chave_acesso', 'modelo', 'numero',
         'serie', 'data_emissao', 'tipo_operacao', 'valor_total',
-        'valor_desconto', 'origem_arquivo', 'metadados',
+        'valor_desconto', 'origem_arquivo', 'metadados', 'validacao',
     ];
 
     protected function casts(): array
@@ -23,6 +23,7 @@ class EfdNota extends Model
             'valor_total'    => 'decimal:2',
             'valor_desconto' => 'decimal:2',
             'metadados'      => 'array',
+            'validacao'      => 'array',
         ];
     }
 

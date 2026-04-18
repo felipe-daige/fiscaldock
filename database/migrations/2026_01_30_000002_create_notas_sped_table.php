@@ -26,6 +26,7 @@ return new class extends Migration
             $table->decimal('valor_total', 15, 2);
             $table->decimal('valor_desconto', 15, 2)->default(0);
             $table->jsonb('metadados')->nullable();
+            $table->jsonb('validacao')->nullable();
             $table->timestamps();
 
             $table->index(['cliente_id', 'data_emissao', 'tipo_operacao'], 'efd_notas_cliente_data_tipo_idx');

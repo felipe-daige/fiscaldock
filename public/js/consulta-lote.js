@@ -74,6 +74,8 @@
         expandedParticipanteId: null, // ID do participante com metadados expandidos
         tabId: generateUUID(),
         consultaLoteId: null,
+        etapas: [],
+        etapaAtual: null,
         eventSource: null,
         credits: window.consultaData?.credits || 0,
         isExecuting: false,
@@ -1007,7 +1009,11 @@
             // Sucesso
             state.consultaLoteId = data.consulta_lote_id;
             state.credits = data.novo_saldo;
+            state.etapas = Array.isArray(data.etapas) ? data.etapas : [];
+            state.etapaAtual = null;
             if (elements.resumoSaldo) elements.resumoSaldo.textContent = `${data.novo_saldo} créditos`;
+
+            renderEtapasStrip(state.etapas);
 
             // Iniciar SSE para progresso
             iniciarSSE();
@@ -1082,6 +1088,7 @@
                     state.eventSource.close();
                     state.eventSource = null;
                     pararPolling();
+                    if (data.etapa) marcarEtapaStatus(data.etapa, 'erro');
                     onConsultaErro(data.error_message || 'Erro desconhecido');
                     return;
                 }
@@ -1098,6 +1105,7 @@
                 if (now - lastUpdate < throttleMs) return;
                 lastUpdate = now;
 
+                if (data.etapa) atualizarEtapasProcessando(data.etapa);
                 updateProgresso(data.progresso, data.mensagem);
             };
 
@@ -1157,6 +1165,99 @@
     }
 
     /**
+     * Monta o strip de etapas com base no array retornado por /executar.
+     * Esconde o strip quando o plano tem apenas 1 etapa (não agrega valor visual).
+     */
+    function renderEtapasStrip(etapas) {
+        const card = document.getElementById('etapas-consulta-card');
+        if (!card) return;
+
+        card.innerHTML = '';
+
+        if (!Array.isArray(etapas) || etapas.length < 2) {
+            card.classList.add('hidden');
+            return;
+        }
+
+        const svgSep = '<svg class="w-3 h-3 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
+
+        etapas.forEach(function(etapa, idx) {
+            if (idx > 0) card.insertAdjacentHTML('beforeend', svgSep);
+            const item = document.createElement('div');
+            item.className = 'etapa-item inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-400';
+            item.dataset.etapa = String(etapa.numero);
+            item.innerHTML =
+                '<span class="etapa-icon flex items-center justify-center w-3.5 h-3.5"></span>' +
+                '<span>' + escapeHtml(etapa.label || ('Etapa ' + etapa.numero)) + '</span>';
+            card.appendChild(item);
+            renderEtapa(item, 'pendente');
+        });
+
+        card.classList.remove('hidden');
+    }
+
+    function renderEtapa(item, status) {
+        if (!item) return;
+        const svgSpinner = '<svg class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>';
+        const svgCheck   = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+        const svgDash    = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>';
+        const svgX       = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>';
+
+        const estados = {
+            pendente:   { pill: 'bg-gray-100 text-gray-400',     icon: svgDash,    style: '' },
+            processando:{ pill: 'bg-gray-200 text-gray-700',     icon: svgSpinner, style: '' },
+            concluido:  { pill: 'text-white',                    icon: svgCheck,   style: 'background-color: #047857' },
+            erro:       { pill: 'text-white',                    icon: svgX,       style: 'background-color: #b91c1c' },
+        };
+
+        const estado = estados[status] || estados.pendente;
+        if (item.dataset.renderedStatus === status) return;
+
+        item.className = 'etapa-item inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ' + estado.pill;
+        item.style.cssText = estado.style;
+        const iconEl = item.querySelector('.etapa-icon');
+        if (iconEl) iconEl.innerHTML = estado.icon;
+        item.dataset.renderedStatus = status;
+    }
+
+    function atualizarEtapasProcessando(etapaAtual) {
+        const card = document.getElementById('etapas-consulta-card');
+        if (!card || card.classList.contains('hidden')) return;
+        state.etapaAtual = etapaAtual;
+
+        card.querySelectorAll('.etapa-item').forEach(function(item) {
+            const numero = parseInt(item.dataset.etapa, 10);
+            if (numero < etapaAtual) renderEtapa(item, 'concluido');
+            else if (numero === etapaAtual) renderEtapa(item, 'processando');
+            else renderEtapa(item, 'pendente');
+        });
+    }
+
+    function marcarEtapaStatus(etapa, status) {
+        const card = document.getElementById('etapas-consulta-card');
+        if (!card || card.classList.contains('hidden')) return;
+        const item = card.querySelector('.etapa-item[data-etapa="' + etapa + '"]');
+        if (item) renderEtapa(item, status);
+    }
+
+    function marcarTodasEtapasConcluidas() {
+        const card = document.getElementById('etapas-consulta-card');
+        if (!card || card.classList.contains('hidden')) return;
+        card.querySelectorAll('.etapa-item').forEach(function(item) {
+            renderEtapa(item, 'concluido');
+        });
+    }
+
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    /**
      * Atualiza ícone e estado visual do card de progresso da consulta.
      */
     function atualizarIconeConsulta(status, errorMessage) {
@@ -1201,6 +1302,7 @@
      */
     function onConsultaConcluida() {
         updateProgresso(100, 'Concluído');
+        marcarTodasEtapasConcluidas();
         atualizarIconeConsulta('concluido');
 
         // Mostrar seção de resultado inline
@@ -1440,6 +1542,14 @@
         updateProgresso(0, 'Iniciando...');
         if (elements.consultaProgressoErro) elements.consultaProgressoErro.classList.add('hidden');
         if (elements.resultadoConsulta) elements.resultadoConsulta.classList.add('hidden');
+
+        const etapasCard = document.getElementById('etapas-consulta-card');
+        if (etapasCard) {
+            etapasCard.innerHTML = '';
+            etapasCard.classList.add('hidden');
+        }
+        state.etapas = [];
+        state.etapaAtual = null;
         state.consultaLoteId = null;
 
         // Trocar seções (usar fallback direto ao DOM)

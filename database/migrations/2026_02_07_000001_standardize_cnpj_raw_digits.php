@@ -9,19 +9,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Limpar formatacao de clientes.documento
-        DB::statement("
-            UPDATE clientes
-            SET documento = REGEXP_REPLACE(documento, '[^0-9]', '', 'g')
-            WHERE documento ~ '[^0-9]'
-        ");
+        // Backfill usa REGEXP_REPLACE / operador ~ (PG only)
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            DB::statement("
+                UPDATE clientes
+                SET documento = REGEXP_REPLACE(documento, '[^0-9]', '', 'g')
+                WHERE documento ~ '[^0-9]'
+            ");
 
-        // Limpar formatacao de users.cnpj
-        DB::statement("
-            UPDATE users
-            SET cnpj = REGEXP_REPLACE(cnpj, '[^0-9]', '', 'g')
-            WHERE cnpj IS NOT NULL AND cnpj ~ '[^0-9]'
-        ");
+            DB::statement("
+                UPDATE users
+                SET cnpj = REGEXP_REPLACE(cnpj, '[^0-9]', '', 'g')
+                WHERE cnpj IS NOT NULL AND cnpj ~ '[^0-9]'
+            ");
+        }
 
         // Reduzir coluna de VARCHAR(18) para VARCHAR(14)
         Schema::table('users', function (Blueprint $table) {

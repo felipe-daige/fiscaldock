@@ -59,10 +59,10 @@ if [ -n "$WEBHOOK_IMPORTACAO_XML_URL" ]; then
 else
     echo "AVISO: WEBHOOK_IMPORTACAO_XML_URL vazio"
 fi
-if [ -n "$WEBHOOK_CONSULTAS_URL" ]; then
-    echo "Webhook Consultas: configurado"
+if [ -n "$WEBHOOK_CONSULTAS_CNPJ_URL" ]; then
+    echo "Webhook Consultas CNPJ: configurado"
 else
-    echo "AVISO: WEBHOOK_CONSULTAS_URL vazio"
+    echo "AVISO: WEBHOOK_CONSULTAS_CNPJ_URL vazio"
 fi
 
 # Gerar caches de produção

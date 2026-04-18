@@ -17,6 +17,7 @@ class MonitoramentoPlano extends Model
         'nome',
         'descricao',
         'consultas_incluidas',
+        'etapas',
         'custo_creditos',
         'is_gratuito',
         'is_active',
@@ -25,6 +26,7 @@ class MonitoramentoPlano extends Model
 
     protected $casts = [
         'consultas_incluidas' => 'array',
+        'etapas' => 'array',
         'custo_creditos' => 'integer',
         'is_gratuito' => 'boolean',
         'is_active' => 'boolean',

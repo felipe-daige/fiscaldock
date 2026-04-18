@@ -2,9 +2,12 @@
 
 namespace App\Services;
 
-use App\Models\XmlNota;
+use App\Models\Cliente;
+use App\Models\EfdNota;
 use App\Models\Participante;
 use App\Models\ParticipanteScore;
+use App\Models\XmlNota;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -39,34 +42,21 @@ class ValidacaoContabilService
     ) {}
 
     /**
-     * Valida uma nota fiscal individual.
+     * Valida uma nota (XML ou EFD).
      */
-    public function validarNota(XmlNota $nota, bool $incluirOperacoes = true): array
+    public function validarNota(Model $nota, bool $incluirOperacoes = true): array
     {
+        $ctx = $this->contextoValidacao($nota);
+
         $alertas = [];
         $scores = [];
 
-        // 1. Validacao Cadastral (CRT, situacao RF)
-        $scores['cadastral'] = $this->validarCadastral($nota, $alertas);
-
-        // 2. Validacao de Tributacao (aliquotas vs regime)
-        $scores['tributacao'] = $this->validarTributacao($nota, $alertas);
-
-        // 3. Validacao CFOP/CST (combinacoes validas)
-        $scores['cfop_cst'] = $this->validarCfopCst($nota, $alertas);
-
-        // 4. Validacao de Integridade de Valores
-        $scores['integridade'] = $this->validarIntegridade($nota, $alertas);
-
-        // 5. Validacao de NCM
-        $scores['ncm'] = $this->validarNcm($nota, $alertas);
-
-        // 6. Validacao de Operacoes com Participantes de Risco
-        if ($incluirOperacoes) {
-            $scores['operacoes'] = $this->validarOperacoes($nota, $alertas);
-        } else {
-            $scores['operacoes'] = 0;
-        }
+        $scores['cadastral'] = $this->validarCadastral($ctx, $alertas);
+        $scores['tributacao'] = $this->validarTributacao($ctx, $alertas);
+        $scores['cfop_cst'] = $this->validarCfopCst($ctx, $alertas);
+        $scores['integridade'] = $this->validarIntegridade($ctx, $alertas);
+        $scores['ncm'] = $this->validarNcm($ctx, $alertas);
+        $scores['operacoes'] = $incluirOperacoes ? $this->validarOperacoes($ctx, $alertas) : 0;
 
         $scoreTotal = $this->calcularScoreTotal($scores);
 
@@ -75,14 +65,15 @@ class ValidacaoContabilService
             'classificacao' => $this->classificar($scoreTotal, $alertas),
             'scores' => $scores,
             'alertas' => $alertas,
+            'origem' => $ctx['origem'],
             'validado_em' => now()->toISOString(),
         ];
     }
 
     /**
-     * Valida todas as notas de uma importacao.
+     * Valida todas as notas de uma importacao XML.
      */
-    public function validarImportacao(int $importacaoId, int $userId, string $tipo = 'completa'): array
+    public function validarImportacao(int $importacaoId, int $userId, string $tipo = 'basico'): array
     {
         $notas = XmlNota::where('importacao_xml_id', $importacaoId)
             ->where('user_id', $userId)
@@ -96,69 +87,17 @@ class ValidacaoContabilService
             ];
         }
 
-        $resultados = [];
-        $totais = [
-            'total' => $notas->count(),
-            'validadas' => 0,
-            'conforme' => 0,
-            'atencao' => 0,
-            'irregular' => 0,
-            'critico' => 0,
-            'alertas_bloqueantes' => 0,
-            'alertas_atencao' => 0,
-            'alertas_info' => 0,
-        ];
-
-        DB::beginTransaction();
-        try {
-            $incluirOperacoes = $tipo !== 'local';
-
-            foreach ($notas as $nota) {
-                $resultado = $this->validarNota($nota, $incluirOperacoes);
-                $nota->update(['validacao' => $resultado]);
-                $resultados[] = $resultado;
-
-                $totais['validadas']++;
-                $totais[$resultado['classificacao']]++;
-
-                foreach ($resultado['alertas'] as $alerta) {
-                    $key = 'alertas_' . strtolower($alerta['nivel']);
-                    if (isset($totais[$key])) {
-                        $totais[$key]++;
-                    }
-                }
-            }
-
-            DB::commit();
-
-            return [
-                'success' => true,
-                'message' => "{$totais['validadas']} nota(s) validada(s)",
-                'totais' => $totais,
-                'score_medio' => $this->calcularScoreMedio($resultados),
-            ];
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Erro ao validar importacao', [
-                'importacao_id' => $importacaoId,
-                'error' => $e->getMessage(),
-            ]);
-
-            return [
-                'success' => false,
-                'message' => 'Erro ao validar notas: ' . $e->getMessage(),
-            ];
-        }
+        return $this->processarNotas($notas, $tipo);
     }
 
     /**
-     * Valida notas por IDs especificos.
+     * Valida notas por IDs especificos, aceitando mapa de origens XML/EFD.
+     *
+     * @param  array<int,string>  $origens  Mapa id => 'xml'|'efd'
      */
-    public function validarNotas(array $notaIds, int $userId, string $tipo = 'completa'): array
+    public function validarNotas(array $notaIds, array $origens, int $userId, string $tipo = 'basico'): array
     {
-        $notas = XmlNota::whereIn('id', $notaIds)
-            ->where('user_id', $userId)
-            ->get();
+        $notas = $this->carregarNotasPorOrigem($notaIds, $origens, $userId);
 
         if ($notas->isEmpty()) {
             return [
@@ -168,97 +107,51 @@ class ValidacaoContabilService
             ];
         }
 
-        $resultados = [];
-        $totais = [
-            'total' => $notas->count(),
-            'validadas' => 0,
-            'conforme' => 0,
-            'atencao' => 0,
-            'irregular' => 0,
-            'critico' => 0,
-        ];
-
-        DB::beginTransaction();
-        try {
-            $incluirOperacoes = $tipo !== 'local';
-
-            foreach ($notas as $nota) {
-                $resultado = $this->validarNota($nota, $incluirOperacoes);
-                $nota->update(['validacao' => $resultado]);
-                $resultados[] = $resultado;
-
-                $totais['validadas']++;
-                $totais[$resultado['classificacao']]++;
-            }
-
-            DB::commit();
-
-            return [
-                'success' => true,
-                'message' => "{$totais['validadas']} nota(s) validada(s)",
-                'totais' => $totais,
-                'score_medio' => $this->calcularScoreMedio($resultados),
-            ];
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Erro ao validar notas', [
-                'nota_ids' => $notaIds,
-                'error' => $e->getMessage(),
-            ]);
-
-            return [
-                'success' => false,
-                'message' => 'Erro ao validar notas: ' . $e->getMessage(),
-            ];
-        }
+        return $this->processarNotas($notas, $tipo);
     }
 
     /**
-     * Calcula o custo de validacao baseado nos participantes unicos.
+     * Calcula o custo de clearance por tier, com cobranca por nota.
+     *
+     * @param  array<int,string>  $origens  Mapa id => 'xml'|'efd'
      */
-    public function calcularCusto(array $notaIds, int $userId, string $tipo = 'completa'): array
+    public function calcularCusto(array $notaIds, array $origens, int $userId, string $tipo = 'basico'): array
     {
-        $notas = XmlNota::whereIn('id', $notaIds)
-            ->where('user_id', $userId)
-            ->get();
-
-        // Coletar participantes unicos
-        $participanteIds = $notas
-            ->flatMap(fn ($nota) => [$nota->emit_participante_id, $nota->dest_participante_id])
-            ->filter()
-            ->unique()
-            ->values();
-
-        $totalParticipantes = $participanteIds->count();
+        $notas = $this->carregarNotasPorOrigem($notaIds, $origens, $userId);
         $totalNotas = $notas->count();
 
-        // Calcular custo (local = gratuito)
-        $custoUnitario = match ($tipo) {
-            'local' => 0,
-            'deep' => 3,
-            default => 1, // 'completa'
-        };
-        $custoTotal = $totalParticipantes * $custoUnitario;
+        $custoUnitario = self::custoUnitarioPorTier($tipo);
+        $custoTotal = $totalNotas * $custoUnitario;
 
         return [
             'notas' => $totalNotas,
-            'participantes_unicos' => $totalParticipantes,
             'tipo' => $tipo,
             'custo_unitario' => $custoUnitario,
             'custo_total' => $custoTotal,
-            'custo_reais' => number_format($custoTotal * 0.26, 2, ',', '.'),
+            'custo_reais' => number_format($custoTotal * 0.20, 2, ',', '.'),
         ];
     }
 
     /**
-     * Obtem estatisticas de validacao para um usuario.
+     * Custo unitario por nota conforme tier de clearance.
+     */
+    public static function custoUnitarioPorTier(string $tipo): int
+    {
+        return match ($tipo) {
+            'full' => 20,
+            default => 10,
+        };
+    }
+
+    /**
+     * Obtem estatisticas de validacao para um usuario (XML + EFD).
      */
     public function getEstatisticas(int $userId): array
     {
-        $totais = XmlNota::where('user_id', $userId)
+        $xml = XmlNota::where('user_id', $userId)
             ->select(
                 DB::raw('COUNT(*) as total'),
-                DB::raw("COUNT(CASE WHEN validacao IS NOT NULL THEN 1 END) as validadas"),
+                DB::raw('COUNT(CASE WHEN validacao IS NOT NULL THEN 1 END) as validadas'),
                 DB::raw("COUNT(CASE WHEN validacao->>'classificacao' = 'conforme' THEN 1 END) as conforme"),
                 DB::raw("COUNT(CASE WHEN validacao->>'classificacao' = 'atencao' THEN 1 END) as atencao"),
                 DB::raw("COUNT(CASE WHEN validacao->>'classificacao' = 'irregular' THEN 1 END) as irregular"),
@@ -267,31 +160,155 @@ class ValidacaoContabilService
             )
             ->first();
 
+        $efd = EfdNota::where('user_id', $userId)
+            ->select(
+                DB::raw('COUNT(*) as total'),
+                DB::raw('COUNT(CASE WHEN validacao IS NOT NULL THEN 1 END) as validadas'),
+                DB::raw("COUNT(CASE WHEN validacao->>'classificacao' = 'conforme' THEN 1 END) as conforme"),
+                DB::raw("COUNT(CASE WHEN validacao->>'classificacao' = 'atencao' THEN 1 END) as atencao"),
+                DB::raw("COUNT(CASE WHEN validacao->>'classificacao' = 'irregular' THEN 1 END) as irregular"),
+                DB::raw("COUNT(CASE WHEN validacao->>'classificacao' = 'critico' THEN 1 END) as critico"),
+                DB::raw("AVG((validacao->>'score_total')::int) as media_score")
+            )
+            ->first();
+
+        $total = (int) ($xml->total ?? 0) + (int) ($efd->total ?? 0);
+        $validadas = (int) ($xml->validadas ?? 0) + (int) ($efd->validadas ?? 0);
+
         return [
-            'total_notas' => (int) ($totais->total ?? 0),
-            'total_validadas' => (int) ($totais->validadas ?? 0),
-            'conforme' => (int) ($totais->conforme ?? 0),
-            'atencao' => (int) ($totais->atencao ?? 0),
-            'irregular' => (int) ($totais->irregular ?? 0),
-            'critico' => (int) ($totais->critico ?? 0),
-            'media_score' => round((float) ($totais->media_score ?? 0), 1),
-            'percentual_validado' => $totais->total > 0
-                ? round(($totais->validadas / $totais->total) * 100, 1)
-                : 0,
+            'total_notas' => $total,
+            'total_validadas' => $validadas,
+            'conforme' => (int) ($xml->conforme ?? 0) + (int) ($efd->conforme ?? 0),
+            'atencao' => (int) ($xml->atencao ?? 0) + (int) ($efd->atencao ?? 0),
+            'irregular' => (int) ($xml->irregular ?? 0) + (int) ($efd->irregular ?? 0),
+            'critico' => (int) ($xml->critico ?? 0) + (int) ($efd->critico ?? 0),
+            'media_score' => $this->mediaPonderada($xml, $efd),
+            'percentual_validado' => $total > 0 ? round(($validadas / $total) * 100, 1) : 0,
         ];
     }
 
     /**
-     * Retorna os pesos configurados.
+     * KPIs de clearance baseados em validacao->>'situacao' (Receita Federal/InfoSimples).
+     * Une XML + EFD deduplicando por chave de acesso (preferindo XML).
      */
+    public function getKpisStatusReceita(int $userId): array
+    {
+        $row = DB::selectOne("
+            WITH xml AS (
+                SELECT nfe_id AS chave, validacao->>'situacao' AS situacao
+                FROM xml_notas WHERE user_id = ?
+            ),
+            efd AS (
+                SELECT chave_acesso AS chave, validacao->>'situacao' AS situacao
+                FROM efd_notas WHERE user_id = ?
+                  AND NOT EXISTS (
+                    SELECT 1 FROM xml_notas xn
+                    WHERE xn.user_id = ? AND xn.nfe_id = efd_notas.chave_acesso
+                  )
+            ),
+            u AS (SELECT * FROM xml UNION ALL SELECT * FROM efd)
+            SELECT
+                COUNT(*)                                                    AS total,
+                COUNT(situacao)                                             AS verificadas,
+                COUNT(*) FILTER (WHERE situacao = 'AUTORIZADA')             AS autorizadas,
+                COUNT(*) FILTER (WHERE situacao = 'CANCELADA')              AS canceladas,
+                COUNT(*) FILTER (WHERE situacao = 'DENEGADA')               AS denegadas,
+                COUNT(*) FILTER (WHERE situacao = 'INUTILIZADA')            AS inutilizadas,
+                COUNT(*) FILTER (WHERE situacao = 'NAO_ENCONTRADA')         AS nao_encontradas,
+                COUNT(*) FILTER (WHERE situacao = 'INDETERMINADO')          AS indeterminadas,
+                COUNT(*) FILTER (WHERE situacao IS NULL)                    AS nao_verificadas
+            FROM u
+        ", [$userId, $userId, $userId]);
+
+        return [
+            'total' => (int) ($row->total ?? 0),
+            'verificadas' => (int) ($row->verificadas ?? 0),
+            'nao_verificadas' => (int) ($row->nao_verificadas ?? 0),
+            'autorizadas' => (int) ($row->autorizadas ?? 0),
+            'canceladas' => (int) ($row->canceladas ?? 0),
+            'denegadas' => (int) ($row->denegadas ?? 0),
+            'inutilizadas' => (int) ($row->inutilizadas ?? 0),
+            'nao_encontradas' => (int) ($row->nao_encontradas ?? 0),
+            'indeterminadas' => (int) ($row->indeterminadas ?? 0),
+        ];
+    }
+
+    /**
+     * Notas com situação bloqueante (CANCELADA/DENEGADA/INUTILIZADA), ordenadas por verificação mais recente.
+     */
+    public function getNotasComSituacaoBloqueante(int $userId, int $limit = 5): array
+    {
+        return $this->queryNotasUnificadasComSituacao($userId)
+            ->whereIn(DB::raw("validacao->>'situacao'"), ['CANCELADA', 'DENEGADA', 'INUTILIZADA'])
+            ->orderByDesc(DB::raw("validacao->>'consultado_em'"))
+            ->limit($limit)
+            ->get()
+            ->map(fn ($r) => (array) $r)
+            ->all();
+    }
+
+    /**
+     * Últimas notas verificadas (qualquer situação não-nula).
+     */
+    public function getUltimasVerificacoes(int $userId, int $limit = 10): array
+    {
+        return $this->queryNotasUnificadasComSituacao($userId)
+            ->whereNotNull(DB::raw("validacao->>'situacao'"))
+            ->orderByDesc(DB::raw("validacao->>'consultado_em'"))
+            ->limit($limit)
+            ->get()
+            ->map(fn ($r) => (array) $r)
+            ->all();
+    }
+
+    /**
+     * Subquery unificada XML+EFD com campos para cards de status.
+     * Dedupe: EFD só entra se não houver XML com mesma chave.
+     */
+    private function queryNotasUnificadasComSituacao(int $userId): \Illuminate\Database\Query\Builder
+    {
+        $xml = DB::table('xml_notas')
+            ->selectRaw("
+                'xml'::text AS origem,
+                xml_notas.id AS id,
+                xml_notas.nfe_id AS chave,
+                xml_notas.numero_nota::text AS numero,
+                xml_notas.serie::text AS serie,
+                xml_notas.emit_razao_social AS emit_razao_social,
+                xml_notas.validacao AS validacao
+            ")
+            ->where('user_id', $userId);
+
+        $efd = DB::table('efd_notas')
+            ->leftJoin('participantes', 'participantes.id', '=', 'efd_notas.participante_id')
+            ->leftJoin('clientes', 'clientes.id', '=', 'efd_notas.cliente_id')
+            ->selectRaw("
+                'efd'::text AS origem,
+                efd_notas.id AS id,
+                efd_notas.chave_acesso AS chave,
+                efd_notas.numero::text AS numero,
+                efd_notas.serie AS serie,
+                CASE WHEN efd_notas.tipo_operacao = 'entrada'
+                     THEN participantes.razao_social
+                     ELSE clientes.razao_social END AS emit_razao_social,
+                efd_notas.validacao AS validacao
+            ")
+            ->where('efd_notas.user_id', $userId)
+            ->whereNotExists(function ($q) use ($userId) {
+                $q->select(DB::raw(1))
+                    ->from('xml_notas')
+                    ->whereColumn('xml_notas.nfe_id', 'efd_notas.chave_acesso')
+                    ->where('xml_notas.user_id', $userId);
+            });
+
+        return DB::query()->fromSub($xml->unionAll($efd), 'u');
+    }
+
     public function getPesos(): array
     {
         return $this->pesos;
     }
 
-    /**
-     * Retorna descricao das categorias.
-     */
     public function getCategorias(): array
     {
         return [
@@ -328,23 +345,263 @@ class ValidacaoContabilService
         ];
     }
 
-    // ============ Metodos de validacao individual ============
+    // ============ Adapter ============
 
-    private function validarCadastral(XmlNota $nota, array &$alertas): int
+    /**
+     * Normaliza XmlNota ou EfdNota em contexto uniforme para as validacoes.
+     */
+    private function contextoValidacao(Model $nota): array
     {
-        $score = 0;
-        $payload = $nota->payload ?? [];
-
-        // Obter CRT do emitente
-        $crtXml = $payload['emit']['CRT'] ?? null;
-
-        // Buscar participante emitente
-        $participante = null;
-        if ($nota->emit_participante_id) {
-            $participante = Participante::find($nota->emit_participante_id);
+        if ($nota instanceof XmlNota) {
+            return $this->contextoXml($nota);
         }
 
-        // Validar situacao cadastral do emitente
+        if ($nota instanceof EfdNota) {
+            return $this->contextoEfd($nota);
+        }
+
+        throw new \InvalidArgumentException('Tipo de nota nao suportado: '.get_class($nota));
+    }
+
+    private function contextoXml(XmlNota $nota): array
+    {
+        $payload = $nota->payload ?? [];
+        $itensRaw = $payload['det'] ?? [];
+        if (! is_array($itensRaw)) {
+            $itensRaw = [];
+        }
+        if (isset($itensRaw['prod'])) {
+            $itensRaw = [$itensRaw];
+        }
+
+        $itens = array_map(function ($item, $index) {
+            $icms = $item['imposto']['ICMS'] ?? [];
+            $cst = null;
+            foreach ($icms as $dados) {
+                if (isset($dados['CST'])) {
+                    $cst = $dados['CST'];
+                    break;
+                }
+                if (isset($dados['CSOSN'])) {
+                    $cst = 'CSOSN_'.$dados['CSOSN'];
+                    break;
+                }
+            }
+
+            return [
+                'numero_item' => $index + 1,
+                'cfop' => $item['prod']['CFOP'] ?? null,
+                'ncm' => $item['prod']['NCM'] ?? null,
+                'cst_icms' => $cst,
+            ];
+        }, $itensRaw, array_keys($itensRaw));
+
+        return [
+            'origem' => 'xml',
+            'modelo_nota' => $nota,
+            'tipo_nota' => $nota->tipo_nota,
+            'tipo_documento' => $nota->tipo_documento,
+            'payload' => $payload,
+            'emit_participante_id' => $nota->emit_participante_id,
+            'dest_participante_id' => $nota->dest_participante_id,
+            'emit_cnpj' => $nota->emit_cnpj,
+            'dest_cnpj' => $nota->dest_cnpj,
+            'emit_uf' => $nota->emit_uf,
+            'dest_uf' => $nota->dest_uf,
+            'natureza_operacao' => $nota->natureza_operacao,
+            'valor_total' => (float) ($nota->valor_total ?? 0),
+            'icms_valor' => (float) ($nota->icms_valor ?? 0),
+            'icms_st_valor' => (float) ($nota->icms_st_valor ?? 0),
+            'pis_valor' => (float) ($nota->pis_valor ?? 0),
+            'cofins_valor' => (float) ($nota->cofins_valor ?? 0),
+            'ipi_valor' => (float) ($nota->ipi_valor ?? 0),
+            'tributos_total' => (float) ($nota->tributos_total ?? 0),
+            'vTotTrib' => (float) ($payload['total']['ICMSTot']['vTotTrib'] ?? 0),
+            'vNF' => (float) ($payload['total']['ICMSTot']['vNF'] ?? 0),
+            'crt' => $payload['emit']['CRT'] ?? null,
+            'itens' => $itens,
+        ];
+    }
+
+    private function contextoEfd(EfdNota $nota): array
+    {
+        $nota->loadMissing(['itens', 'cliente', 'participante']);
+
+        // Mapear emit/dest a partir de tipo_operacao e participante_id + cliente (empresa propria)
+        $empresaPropriaId = $this->participanteDaEmpresaPropriaId($nota->user_id, $nota->cliente);
+        $partnerId = $nota->participante_id;
+
+        if ($nota->tipo_operacao === 'entrada') {
+            // Emit = participante externo; Dest = empresa propria
+            $emitId = $partnerId;
+            $destId = $empresaPropriaId;
+            $emitCnpj = $nota->participante?->documento;
+            $destCnpj = $nota->cliente?->documento;
+            $tipoNota = 0;
+        } else {
+            // Saida: Emit = empresa propria; Dest = participante externo
+            $emitId = $empresaPropriaId;
+            $destId = $partnerId;
+            $emitCnpj = $nota->cliente?->documento;
+            $destCnpj = $nota->participante?->documento;
+            $tipoNota = 1;
+        }
+
+        $itens = $nota->itens->map(fn ($item) => [
+            'numero_item' => $item->numero_item,
+            'cfop' => $item->cfop,
+            'ncm' => null, // vira via catalogo no passo 4 se precisar
+            'cst_icms' => $item->cst_icms,
+        ])->all();
+
+        return [
+            'origem' => 'efd',
+            'modelo_nota' => $nota,
+            'tipo_nota' => $tipoNota,
+            'tipo_documento' => null,
+            'payload' => null,
+            'emit_participante_id' => $emitId,
+            'dest_participante_id' => $destId,
+            'emit_cnpj' => $emitCnpj,
+            'dest_cnpj' => $destCnpj,
+            'emit_uf' => null,
+            'dest_uf' => null,
+            'natureza_operacao' => null,
+            'valor_total' => (float) ($nota->valor_total ?? 0),
+            'icms_valor' => null,
+            'icms_st_valor' => null,
+            'pis_valor' => null,
+            'cofins_valor' => null,
+            'ipi_valor' => null,
+            'tributos_total' => null,
+            'vTotTrib' => null,
+            'vNF' => null,
+            'crt' => null,
+            'itens' => $itens,
+        ];
+    }
+
+    private function participanteDaEmpresaPropriaId(int $userId, ?Cliente $cliente): ?int
+    {
+        if (! $cliente?->documento) {
+            return null;
+        }
+
+        return Participante::where('user_id', $userId)
+            ->where('documento', $cliente->documento)
+            ->value('id');
+    }
+
+    /**
+     * Carrega notas XML e EFD baseado no mapa de origens.
+     */
+    private function carregarNotasPorOrigem(array $notaIds, array $origens, int $userId)
+    {
+        $xmlIds = [];
+        $efdIds = [];
+        foreach ($notaIds as $id) {
+            $origem = $origens[$id] ?? $origens[(string) $id] ?? 'xml';
+            if ($origem === 'efd') {
+                $efdIds[] = (int) $id;
+            } else {
+                $xmlIds[] = (int) $id;
+            }
+        }
+
+        $xml = $xmlIds
+            ? XmlNota::whereIn('id', $xmlIds)->where('user_id', $userId)->get()
+            : collect();
+
+        $efd = $efdIds
+            ? EfdNota::with('itens')->whereIn('id', $efdIds)->where('user_id', $userId)->get()
+            : collect();
+
+        return $xml->merge($efd);
+    }
+
+    private function processarNotas($notas, string $tipo): array
+    {
+        $resultados = [];
+        $totais = [
+            'total' => $notas->count(),
+            'validadas' => 0,
+            'conforme' => 0,
+            'atencao' => 0,
+            'irregular' => 0,
+            'critico' => 0,
+            'alertas_bloqueantes' => 0,
+            'alertas_atencao' => 0,
+            'alertas_info' => 0,
+        ];
+
+        DB::beginTransaction();
+        try {
+            // TODO: Full dispara CND Federal + CNDT do emitente via n8n em plano futuro. Hoje roda so Basico.
+            foreach ($notas as $nota) {
+                $resultado = $this->validarNota($nota, true);
+                $nota->update(['validacao' => $resultado]);
+                $resultados[] = $resultado;
+
+                $totais['validadas']++;
+                if (isset($totais[$resultado['classificacao']])) {
+                    $totais[$resultado['classificacao']]++;
+                }
+
+                foreach ($resultado['alertas'] as $alerta) {
+                    $key = 'alertas_'.strtolower($alerta['nivel']);
+                    if (isset($totais[$key])) {
+                        $totais[$key]++;
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'message' => "{$totais['validadas']} nota(s) validada(s)",
+                'totais' => $totais,
+                'score_medio' => $this->calcularScoreMedio($resultados),
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Erro ao validar notas', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Erro ao validar notas: '.$e->getMessage(),
+            ];
+        }
+    }
+
+    private function mediaPonderada($xml, $efd): float
+    {
+        $xmlTotal = (int) ($xml->validadas ?? 0);
+        $efdTotal = (int) ($efd->validadas ?? 0);
+        $total = $xmlTotal + $efdTotal;
+        if ($total === 0) {
+            return 0;
+        }
+        $soma = (float) ($xml->media_score ?? 0) * $xmlTotal + (float) ($efd->media_score ?? 0) * $efdTotal;
+
+        return round($soma / $total, 1);
+    }
+
+    // ============ Metodos de validacao individual ============
+
+    private function validarCadastral(array $ctx, array &$alertas): int
+    {
+        $score = 0;
+        $crtXml = $ctx['crt'];
+
+        $participante = null;
+        if ($ctx['emit_participante_id']) {
+            $participante = Participante::find($ctx['emit_participante_id']);
+        }
+
         if ($participante) {
             $situacao = strtoupper($participante->situacao_cadastral ?? 'ATIVA');
 
@@ -354,7 +611,7 @@ class ValidacaoContabilService
                     'nivel' => 'bloqueante',
                     'codigo' => 'EMIT_BAIXADA',
                     'mensagem' => "Emitente com situacao cadastral: {$situacao}",
-                    'detalhe' => "CNPJ {$nota->emit_cnpj} esta {$situacao} na Receita Federal",
+                    'detalhe' => "CNPJ {$ctx['emit_cnpj']} esta {$situacao} na Receita Federal",
                 ];
                 $score += 100;
             } elseif ($situacao === 'SUSPENSA') {
@@ -363,29 +620,25 @@ class ValidacaoContabilService
                     'nivel' => 'atencao',
                     'codigo' => 'EMIT_SUSPENSA',
                     'mensagem' => 'Emitente com situacao SUSPENSA',
-                    'detalhe' => "CNPJ {$nota->emit_cnpj} esta suspenso",
+                    'detalhe' => "CNPJ {$ctx['emit_cnpj']} esta suspenso",
                 ];
                 $score += 50;
             }
 
-            // Validar CRT vs regime real
-            if ($crtXml && $participante->crt) {
-                if ((int) $crtXml !== (int) $participante->crt) {
-                    $alertas[] = [
-                        'categoria' => 'cadastral',
-                        'nivel' => 'atencao',
-                        'codigo' => 'CRT_DIVERGENTE',
-                        'mensagem' => 'CRT no XML diverge do cadastro',
-                        'detalhe' => "XML: CRT={$crtXml}, Cadastro: CRT={$participante->crt}",
-                    ];
-                    $score += 30;
-                }
+            if ($crtXml && $participante->crt && (int) $crtXml !== (int) $participante->crt) {
+                $alertas[] = [
+                    'categoria' => 'cadastral',
+                    'nivel' => 'atencao',
+                    'codigo' => 'CRT_DIVERGENTE',
+                    'mensagem' => 'CRT no XML diverge do cadastro',
+                    'detalhe' => "XML: CRT={$crtXml}, Cadastro: CRT={$participante->crt}",
+                ];
+                $score += 30;
             }
         }
 
-        // Validar destinatario tambem
-        if ($nota->dest_participante_id) {
-            $destParticipante = Participante::find($nota->dest_participante_id);
+        if ($ctx['dest_participante_id']) {
+            $destParticipante = Participante::find($ctx['dest_participante_id']);
             if ($destParticipante) {
                 $situacaoDest = strtoupper($destParticipante->situacao_cadastral ?? 'ATIVA');
 
@@ -395,7 +648,7 @@ class ValidacaoContabilService
                         'nivel' => 'atencao',
                         'codigo' => 'DEST_BAIXADA',
                         'mensagem' => "Destinatario com situacao cadastral: {$situacaoDest}",
-                        'detalhe' => "CNPJ {$nota->dest_cnpj} esta {$situacaoDest}",
+                        'detalhe' => "CNPJ {$ctx['dest_cnpj']} esta {$situacaoDest}",
                     ];
                     $score += 40;
                 }
@@ -405,45 +658,50 @@ class ValidacaoContabilService
         return min(100, $score);
     }
 
-    private function validarTributacao(XmlNota $nota, array &$alertas): int
+    private function validarTributacao(array $ctx, array &$alertas): int
     {
-        $score = 0;
-        $payload = $nota->payload ?? [];
+        // EFD: tributos consolidados indisponiveis
+        if ($ctx['origem'] === 'efd') {
+            $alertas[] = [
+                'categoria' => 'tributacao',
+                'nivel' => 'info',
+                'codigo' => 'TRIBUTACAO_EFD_PARCIAL',
+                'mensagem' => 'Tributos consolidados nao disponiveis em EFD',
+                'detalhe' => 'Para cobertura tributaria completa, importe o XML da nota.',
+            ];
 
-        // Obter CRT do emitente
-        $crt = (int) ($payload['emit']['CRT'] ?? 3);
-
-        // Valores dos tributos
-        $icmsValor = (float) ($nota->icms_valor ?? 0);
-        $pisValor = (float) ($nota->pis_valor ?? 0);
-        $cofinsValor = (float) ($nota->cofins_valor ?? 0);
-        $ipiValor = (float) ($nota->ipi_valor ?? 0);
-        $valorTotal = (float) ($nota->valor_total ?? 0);
-
-        if ($valorTotal <= 0) {
-            return 50; // Nao e possivel validar sem valor
+            return 0;
         }
 
-        // Calcular aliquotas efetivas
+        $score = 0;
+        $crt = (int) ($ctx['crt'] ?? 3);
+
+        $valorTotal = $ctx['valor_total'];
+        $icmsValor = (float) $ctx['icms_valor'];
+        $pisValor = (float) $ctx['pis_valor'];
+        $cofinsValor = (float) $ctx['cofins_valor'];
+        $ipiValor = (float) $ctx['ipi_valor'];
+
+        if ($valorTotal <= 0) {
+            return 50;
+        }
+
         $aliquotaIcms = ($icmsValor / $valorTotal) * 100;
         $aliquotaPis = ($pisValor / $valorTotal) * 100;
         $aliquotaCofins = ($cofinsValor / $valorTotal) * 100;
 
-        // Simples Nacional (CRT = 1)
         if ($crt === 1) {
-            // Simples normalmente nao destaca ICMS (usa CSOSN)
             if ($aliquotaIcms > 5) {
                 $alertas[] = [
                     'categoria' => 'tributacao',
                     'nivel' => 'atencao',
                     'codigo' => 'SIMPLES_ICMS_ALTO',
                     'mensagem' => 'Simples Nacional com ICMS destacado acima de 5%',
-                    'detalhe' => "Aliquota efetiva: " . number_format($aliquotaIcms, 2) . "%",
+                    'detalhe' => 'Aliquota efetiva: '.number_format($aliquotaIcms, 2).'%',
                 ];
                 $score += 40;
             }
 
-            // Simples nao deve ter PIS/COFINS destacado separadamente (vai no DAS)
             if ($aliquotaPis > 0 || $aliquotaCofins > 0) {
                 $alertas[] = [
                     'categoria' => 'tributacao',
@@ -456,30 +714,25 @@ class ValidacaoContabilService
             }
         }
 
-        // Lucro Real/Presumido (CRT = 3)
-        if ($crt === 3) {
-            // Verificar se PIS/COFINS esta zerado (pode ser suspensao, isencao ou erro)
-            if ($aliquotaPis == 0 && $aliquotaCofins == 0 && $valorTotal > 1000) {
-                $alertas[] = [
-                    'categoria' => 'tributacao',
-                    'nivel' => 'info',
-                    'codigo' => 'PIS_COFINS_ZERO',
-                    'mensagem' => 'PIS/COFINS zerados em nota de Lucro Real/Presumido',
-                    'detalhe' => 'Verificar CST de PIS/COFINS (pode ser isento/suspenso)',
-                ];
-                $score += 10;
-            }
+        if ($crt === 3 && $aliquotaPis == 0 && $aliquotaCofins == 0 && $valorTotal > 1000) {
+            $alertas[] = [
+                'categoria' => 'tributacao',
+                'nivel' => 'info',
+                'codigo' => 'PIS_COFINS_ZERO',
+                'mensagem' => 'PIS/COFINS zerados em nota de Lucro Real/Presumido',
+                'detalhe' => 'Verificar CST de PIS/COFINS (pode ser isento/suspenso)',
+            ];
+            $score += 10;
         }
 
-        // IPI em operacao que normalmente nao tem
-        $natureza = strtoupper($nota->natureza_operacao ?? '');
+        $natureza = strtoupper($ctx['natureza_operacao'] ?? '');
         if ($ipiValor > 0 && (str_contains($natureza, 'SERVICO') || str_contains($natureza, 'SERVIÇO'))) {
             $alertas[] = [
                 'categoria' => 'tributacao',
                 'nivel' => 'bloqueante',
                 'codigo' => 'IPI_EM_SERVICO',
                 'mensagem' => 'IPI destacado em operacao de servico',
-                'detalhe' => "IPI: R$ " . number_format($ipiValor, 2, ',', '.'),
+                'detalhe' => 'IPI: R$ '.number_format($ipiValor, 2, ',', '.'),
             ];
             $score += 80;
         }
@@ -487,37 +740,22 @@ class ValidacaoContabilService
         return min(100, $score);
     }
 
-    private function validarCfopCst(XmlNota $nota, array &$alertas): int
+    private function validarCfopCst(array $ctx, array &$alertas): int
     {
         $score = 0;
-        $payload = $nota->payload ?? [];
+        $itens = $ctx['itens'];
 
-        // Extrair itens
-        $itens = $payload['det'] ?? [];
-        if (! is_array($itens)) {
-            return 0;
-        }
-
-        // Se nao for array de itens, encapsular
-        if (isset($itens['prod'])) {
-            $itens = [$itens];
-        }
-
-        foreach ($itens as $index => $item) {
-            $cfop = $item['prod']['CFOP'] ?? null;
-            $itemNum = $index + 1;
-
+        foreach ($itens as $item) {
+            $cfop = $item['cfop'] ?? null;
+            $itemNum = $item['numero_item'];
             if (! $cfop) {
                 continue;
             }
 
             $cfopStr = (string) $cfop;
             $primeiroDig = substr($cfopStr, 0, 1);
+            $tipoNota = $ctx['tipo_nota'];
 
-            // Verificar consistencia CFOP vs tipo_nota
-            $tipoNota = $nota->tipo_nota;
-
-            // Entrada (tipo_nota = 0) deve ter CFOPs de entrada (1, 2, 3)
             if ($tipoNota === 0 && in_array($primeiroDig, $this->cfopSaida)) {
                 $alertas[] = [
                     'categoria' => 'cfop_cst',
@@ -529,7 +767,6 @@ class ValidacaoContabilService
                 $score += 50;
             }
 
-            // Saida (tipo_nota = 1) deve ter CFOPs de saida (5, 6, 7)
             if ($tipoNota === 1 && in_array($primeiroDig, $this->cfopEntrada)) {
                 $alertas[] = [
                     'categoria' => 'cfop_cst',
@@ -541,14 +778,11 @@ class ValidacaoContabilService
                 $score += 50;
             }
 
-            // Verificar CFOP interestadual vs UFs
             $cfopInterestadual = in_array($primeiroDig, ['2', '6']);
-            $emitUf = $nota->emit_uf;
-            $destUf = $nota->dest_uf;
-
+            $emitUf = $ctx['emit_uf'];
+            $destUf = $ctx['dest_uf'];
             if ($emitUf && $destUf) {
                 $mesmoEstado = strtoupper($emitUf) === strtoupper($destUf);
-
                 if ($cfopInterestadual && $mesmoEstado) {
                     $alertas[] = [
                         'categoria' => 'cfop_cst',
@@ -573,23 +807,8 @@ class ValidacaoContabilService
                 }
             }
 
-            // Extrair CST do ICMS
-            $icms = $item['imposto']['ICMS'] ?? [];
-            $cst = null;
-            foreach ($icms as $tipo => $dados) {
-                if (isset($dados['CST'])) {
-                    $cst = $dados['CST'];
-                    break;
-                }
-                if (isset($dados['CSOSN'])) {
-                    $cst = 'CSOSN_' . $dados['CSOSN'];
-                    break;
-                }
-            }
-
-            // Validar combinacoes CFOP + CST
-            // CFOP 5102/6102 (venda) com CST 60 (ICMS cobrado por ST) e incomum
-            if (in_array($cfop, ['5102', '6102']) && $cst === '60') {
+            $cst = $item['cst_icms'] ?? null;
+            if (in_array((string) $cfop, ['5102', '6102']) && $cst === '60') {
                 $alertas[] = [
                     'categoria' => 'cfop_cst',
                     'nivel' => 'info',
@@ -604,40 +823,43 @@ class ValidacaoContabilService
         return min(100, $score);
     }
 
-    private function validarIntegridade(XmlNota $nota, array &$alertas): int
+    private function validarIntegridade(array $ctx, array &$alertas): int
     {
+        if ($ctx['origem'] === 'efd') {
+            $alertas[] = [
+                'categoria' => 'integridade',
+                'nivel' => 'info',
+                'codigo' => 'INTEGRIDADE_EFD_PARCIAL',
+                'mensagem' => 'Totais tributarios (vTotTrib) nao disponiveis em EFD',
+                'detalhe' => 'Para cobertura de integridade completa, importe o XML da nota.',
+            ];
+
+            return 0;
+        }
+
         $score = 0;
-        $payload = $nota->payload ?? [];
 
-        // Valores da nota
-        $valorTotal = (float) ($nota->valor_total ?? 0);
+        $valorTotal = $ctx['valor_total'];
+        $icmsValor = (float) $ctx['icms_valor'];
+        $icmsStValor = (float) $ctx['icms_st_valor'];
+        $pisValor = (float) $ctx['pis_valor'];
+        $cofinsValor = (float) $ctx['cofins_valor'];
+        $ipiValor = (float) $ctx['ipi_valor'];
+        $tributosTotal = (float) $ctx['tributos_total'];
+        $vTotTrib = (float) $ctx['vTotTrib'];
 
-        // Valores declarados nos campos resumidos
-        $icmsValor = (float) ($nota->icms_valor ?? 0);
-        $icmsStValor = (float) ($nota->icms_st_valor ?? 0);
-        $pisValor = (float) ($nota->pis_valor ?? 0);
-        $cofinsValor = (float) ($nota->cofins_valor ?? 0);
-        $ipiValor = (float) ($nota->ipi_valor ?? 0);
-        $tributosTotal = (float) ($nota->tributos_total ?? 0);
-
-        // Soma calculada
         $somaCalculada = $icmsValor + $icmsStValor + $pisValor + $cofinsValor + $ipiValor;
 
-        // Tributos do payload (vTotTrib)
-        $vTotTrib = (float) ($payload['total']['ICMSTot']['vTotTrib'] ?? 0);
-
-        // Verificar se tributos_total bate com vTotTrib
         if ($tributosTotal > 0 && $vTotTrib > 0) {
             $diferencaPerc = abs($tributosTotal - $vTotTrib) / max($vTotTrib, 0.01) * 100;
-
             if ($diferencaPerc > 5) {
                 $alertas[] = [
                     'categoria' => 'integridade',
                     'nivel' => 'bloqueante',
                     'codigo' => 'TRIBUTOS_DIVERGENTES',
                     'mensagem' => 'Divergencia superior a 5% nos tributos',
-                    'detalhe' => "Campo: R$ " . number_format($tributosTotal, 2, ',', '.') .
-                        " | XML vTotTrib: R$ " . number_format($vTotTrib, 2, ',', '.'),
+                    'detalhe' => 'Campo: R$ '.number_format($tributosTotal, 2, ',', '.').
+                        ' | XML vTotTrib: R$ '.number_format($vTotTrib, 2, ',', '.'),
                 ];
                 $score += 70;
             } elseif ($diferencaPerc > 1) {
@@ -646,38 +868,35 @@ class ValidacaoContabilService
                     'nivel' => 'atencao',
                     'codigo' => 'TRIBUTOS_DIVERGENTES_LEVE',
                     'mensagem' => 'Divergencia entre 1% e 5% nos tributos',
-                    'detalhe' => "Diferenca de " . number_format($diferencaPerc, 2) . "%",
+                    'detalhe' => 'Diferenca de '.number_format($diferencaPerc, 2).'%',
                 ];
                 $score += 30;
             }
         }
 
-        // Verificar se tributos > valor total (impossivel)
         if ($somaCalculada > $valorTotal && $valorTotal > 0) {
             $alertas[] = [
                 'categoria' => 'integridade',
                 'nivel' => 'bloqueante',
                 'codigo' => 'TRIBUTOS_MAIOR_TOTAL',
                 'mensagem' => 'Soma dos tributos maior que valor total',
-                'detalhe' => "Tributos: R$ " . number_format($somaCalculada, 2, ',', '.') .
-                    " | Total: R$ " . number_format($valorTotal, 2, ',', '.'),
+                'detalhe' => 'Tributos: R$ '.number_format($somaCalculada, 2, ',', '.').
+                    ' | Total: R$ '.number_format($valorTotal, 2, ',', '.'),
             ];
             $score += 100;
         }
 
-        // Verificar consistencia dos totais no payload
-        $vNF = (float) ($payload['total']['ICMSTot']['vNF'] ?? 0);
+        $vNF = (float) $ctx['vNF'];
         if ($vNF > 0 && $valorTotal > 0) {
             $diferencaVNF = abs($vNF - $valorTotal) / max($valorTotal, 0.01) * 100;
-
             if ($diferencaVNF > 1) {
                 $alertas[] = [
                     'categoria' => 'integridade',
                     'nivel' => 'atencao',
                     'codigo' => 'VALOR_TOTAL_DIVERGENTE',
                     'mensagem' => 'Valor total diverge do XML',
-                    'detalhe' => "Campo: R$ " . number_format($valorTotal, 2, ',', '.') .
-                        " | XML vNF: R$ " . number_format($vNF, 2, ',', '.'),
+                    'detalhe' => 'Campo: R$ '.number_format($valorTotal, 2, ',', '.').
+                        ' | XML vNF: R$ '.number_format($vNF, 2, ',', '.'),
                 ];
                 $score += 20;
             }
@@ -686,44 +905,33 @@ class ValidacaoContabilService
         return min(100, $score);
     }
 
-    private function validarNcm(XmlNota $nota, array &$alertas): int
+    private function validarNcm(array $ctx, array &$alertas): int
     {
         $score = 0;
-        $payload = $nota->payload ?? [];
+        $itens = $ctx['itens'];
 
-        // Extrair itens
-        $itens = $payload['det'] ?? [];
-        if (! is_array($itens)) {
-            return 0;
-        }
-
-        // Se nao for array de itens, encapsular
-        if (isset($itens['prod'])) {
-            $itens = [$itens];
-        }
-
-        $ncmsEncontrados = [];
-
-        foreach ($itens as $index => $item) {
-            $ncm = $item['prod']['NCM'] ?? null;
-            $itemNum = $index + 1;
+        foreach ($itens as $item) {
+            $ncm = $item['ncm'] ?? null;
+            $itemNum = $item['numero_item'];
 
             if (! $ncm) {
-                $alertas[] = [
-                    'categoria' => 'ncm',
-                    'nivel' => 'atencao',
-                    'codigo' => 'NCM_AUSENTE',
-                    'mensagem' => "Item {$itemNum}: NCM nao informado",
-                    'detalhe' => 'NCM e obrigatorio para NF-e',
-                ];
-                $score += 20;
+                // Em EFD, NCM pode vir do catalogo — nao penaliza sem esta informacao aqui.
+                if ($ctx['origem'] === 'xml') {
+                    $alertas[] = [
+                        'categoria' => 'ncm',
+                        'nivel' => 'atencao',
+                        'codigo' => 'NCM_AUSENTE',
+                        'mensagem' => "Item {$itemNum}: NCM nao informado",
+                        'detalhe' => 'NCM e obrigatorio para NF-e',
+                    ];
+                    $score += 20;
+                }
+
                 continue;
             }
 
             $ncmStr = preg_replace('/[^0-9]/', '', (string) $ncm);
-            $ncmsEncontrados[] = $ncmStr;
 
-            // NCMs problematicos (genericos ou invalidos)
             if (in_array($ncmStr, $this->ncmsProblematicos)) {
                 $alertas[] = [
                     'categoria' => 'ncm',
@@ -735,7 +943,6 @@ class ValidacaoContabilService
                 $score += 30;
             }
 
-            // NCM com menos de 8 digitos
             if (strlen($ncmStr) < 8) {
                 $alertas[] = [
                     'categoria' => 'ncm',
@@ -747,8 +954,7 @@ class ValidacaoContabilService
                 $score += 20;
             }
 
-            // Verificar se NCM de servico em NFe de mercadoria (comeca com 99)
-            if (substr($ncmStr, 0, 2) === '99' && $nota->tipo_documento === 'NFE') {
+            if (substr($ncmStr, 0, 2) === '99' && $ctx['tipo_documento'] === 'NFE') {
                 $alertas[] = [
                     'categoria' => 'ncm',
                     'nivel' => 'info',
@@ -763,40 +969,36 @@ class ValidacaoContabilService
         return min(100, $score);
     }
 
-    private function validarOperacoes(XmlNota $nota, array &$alertas): int
+    private function validarOperacoes(array $ctx, array &$alertas): int
     {
         $score = 0;
 
-        // Verificar emitente
-        if ($nota->emit_participante_id) {
-            $scoreEmit = ParticipanteScore::where('participante_id', $nota->emit_participante_id)->first();
+        if ($ctx['emit_participante_id']) {
+            $scoreEmit = ParticipanteScore::where('participante_id', $ctx['emit_participante_id'])->first();
 
             if ($scoreEmit) {
-                // Participante em lista restritiva (compliance = 100)
                 if ($scoreEmit->score_compliance >= 100) {
                     $alertas[] = [
                         'categoria' => 'operacoes',
                         'nivel' => 'bloqueante',
                         'codigo' => 'EMIT_LISTA_RESTRITIVA',
                         'mensagem' => 'Emitente em lista restritiva (CEIS/CNEP/TCU)',
-                        'detalhe' => "CNPJ {$nota->emit_cnpj} consta em cadastro de empresas inidoneas",
+                        'detalhe' => "CNPJ {$ctx['emit_cnpj']} consta em cadastro de empresas inidoneas",
                     ];
                     $score += 100;
                 }
 
-                // Trabalho escravo (ESG = 100)
                 if ($scoreEmit->score_esg >= 100) {
                     $alertas[] = [
                         'categoria' => 'operacoes',
                         'nivel' => 'bloqueante',
                         'codigo' => 'EMIT_TRABALHO_ESCRAVO',
                         'mensagem' => 'Emitente em lista de trabalho escravo',
-                        'detalhe' => "CNPJ {$nota->emit_cnpj} consta na lista suja",
+                        'detalhe' => "CNPJ {$ctx['emit_cnpj']} consta na lista suja",
                     ];
                     $score += 100;
                 }
 
-                // Risco critico
                 if ($scoreEmit->classificacao === 'critico') {
                     $alertas[] = [
                         'categoria' => 'operacoes',
@@ -810,17 +1012,15 @@ class ValidacaoContabilService
             }
         }
 
-        // Verificar destinatario (para notas de entrada, o dest pode ser problema tambem)
-        if ($nota->dest_participante_id && $nota->tipo_nota === 0) {
-            $scoreDest = ParticipanteScore::where('participante_id', $nota->dest_participante_id)->first();
-
+        if ($ctx['dest_participante_id'] && $ctx['tipo_nota'] === 0) {
+            $scoreDest = ParticipanteScore::where('participante_id', $ctx['dest_participante_id'])->first();
             if ($scoreDest && $scoreDest->score_compliance >= 100) {
                 $alertas[] = [
                     'categoria' => 'operacoes',
                     'nivel' => 'atencao',
                     'codigo' => 'DEST_LISTA_RESTRITIVA',
                     'mensagem' => 'Destinatario em lista restritiva',
-                    'detalhe' => "CNPJ {$nota->dest_cnpj} em cadastro restritivo",
+                    'detalhe' => "CNPJ {$ctx['dest_cnpj']} em cadastro restritivo",
                 ];
                 $score += 40;
             }
@@ -829,12 +1029,9 @@ class ValidacaoContabilService
         return min(100, $score);
     }
 
-    // ============ Metodos auxiliares ============
-
     private function calcularScoreTotal(array $scores): int
     {
         $total = 0;
-
         foreach ($this->pesos as $key => $peso) {
             $total += ($scores[$key] ?? 0) * $peso;
         }
@@ -844,7 +1041,6 @@ class ValidacaoContabilService
 
     private function classificar(int $scoreTotal, array $alertas): string
     {
-        // Se tem alerta bloqueante, automaticamente e critico ou irregular
         $temBloqueante = collect($alertas)->contains('nivel', 'bloqueante');
 
         if ($temBloqueante) {
@@ -864,7 +1060,6 @@ class ValidacaoContabilService
         if (empty($resultados)) {
             return 0;
         }
-
         $soma = array_sum(array_column($resultados, 'score_total'));
 
         return round($soma / count($resultados), 1);

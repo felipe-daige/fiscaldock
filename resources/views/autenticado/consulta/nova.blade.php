@@ -584,6 +584,8 @@
                             <div id="progresso-barra" class="bg-gray-800 h-full rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
                         </div>
                     </div>
+                    {{-- Strip horizontal de etapas (populado via JS com o array `etapas` do plano) --}}
+                    <div id="etapas-consulta-card" class="hidden mb-3 flex items-center gap-1.5 flex-wrap"></div>
                     {{-- Seção de erro (oculta por padrão) --}}
                     <div id="consulta-progresso-erro" class="hidden pt-3 border-t border-red-100">
                         <p id="consulta-progresso-erro-msg" class="text-sm text-gray-700 mb-3">Ocorreu um erro durante o processamento.</p>

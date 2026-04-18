@@ -21,6 +21,9 @@ class MonitoramentoPlanoSeeder extends Seeder
                     'situacao_cadastral', 'dados_cadastrais', 'endereco',
                     'cnaes', 'qsa',
                 ],
+                'etapas' => [
+                    ['numero' => 1, 'chave' => 'cadastrais', 'label' => 'Cadastrais'],
+                ],
                 'custo_creditos' => 0,
                 'is_gratuito' => true,
                 'is_active' => true,
@@ -33,6 +36,9 @@ class MonitoramentoPlanoSeeder extends Seeder
                 'consultas_incluidas' => [
                     'situacao_cadastral', 'dados_cadastrais', 'endereco',
                     'cnaes', 'qsa', 'simples_nacional', 'mei',
+                ],
+                'etapas' => [
+                    ['numero' => 1, 'chave' => 'cadastrais', 'label' => 'Cadastrais'],
                 ],
                 'custo_creditos' => 5,
                 'is_gratuito' => false,
@@ -47,6 +53,10 @@ class MonitoramentoPlanoSeeder extends Seeder
                     'situacao_cadastral', 'dados_cadastrais', 'endereco',
                     'cnaes', 'qsa', 'simples_nacional', 'mei',
                     'cnd_federal', 'cndt', 'crf_fgts',
+                ],
+                'etapas' => [
+                    ['numero' => 1, 'chave' => 'cadastrais', 'label' => 'Cadastrais'],
+                    ['numero' => 2, 'chave' => 'certidoes_federais', 'label' => 'Certidões Federais'],
                 ],
                 'custo_creditos' => 10,
                 'is_gratuito' => false,
@@ -63,6 +73,11 @@ class MonitoramentoPlanoSeeder extends Seeder
                     'sintegra', 'cnd_federal', 'crf_fgts', 'cndt',
                     'cnd_estadual', 'cnd_municipal',
                 ],
+                'etapas' => [
+                    ['numero' => 1, 'chave' => 'cadastrais', 'label' => 'Cadastrais'],
+                    ['numero' => 2, 'chave' => 'certidoes_federais', 'label' => 'Certidões Federais'],
+                    ['numero' => 3, 'chave' => 'certidoes_estaduais', 'label' => 'Certidões Estaduais/Municipais'],
+                ],
                 'custo_creditos' => 18,
                 'is_gratuito' => false,
                 'is_active' => true,
@@ -78,6 +93,12 @@ class MonitoramentoPlanoSeeder extends Seeder
                     'sintegra', 'cnd_federal', 'crf_fgts', 'cndt',
                     'cnd_estadual', 'cnd_municipal',
                     'cgu_cnc', 'cnj_improbidade', 'protestos', 'processos',
+                ],
+                'etapas' => [
+                    ['numero' => 1, 'chave' => 'cadastrais', 'label' => 'Cadastrais'],
+                    ['numero' => 2, 'chave' => 'certidoes_federais', 'label' => 'Certidões Federais'],
+                    ['numero' => 3, 'chave' => 'certidoes_estaduais', 'label' => 'Certidões Estaduais/Municipais'],
+                    ['numero' => 4, 'chave' => 'sancoes', 'label' => 'Sanções e Processos'],
                 ],
                 'custo_creditos' => 35,
                 'is_gratuito' => false,
@@ -96,6 +117,12 @@ class MonitoramentoPlanoSeeder extends Seeder
                     'protestos', 'lista_devedores_pgfn',
                     'trabalho_escravo', 'ibama_autuacoes',
                     'processos_cnj',
+                ],
+                'etapas' => [
+                    ['numero' => 1, 'chave' => 'cadastrais', 'label' => 'Cadastrais'],
+                    ['numero' => 2, 'chave' => 'certidoes_federais', 'label' => 'Certidões Federais'],
+                    ['numero' => 3, 'chave' => 'certidoes_estaduais', 'label' => 'Certidões Estaduais/Municipais'],
+                    ['numero' => 4, 'chave' => 'sancoes', 'label' => 'Sanções e Processos'],
                 ],
                 'custo_creditos' => 12,
                 'is_gratuito' => false,

@@ -3,6 +3,38 @@
     $clientes = $clientes ?? collect();
     $filtros = $filtros ?? [];
     $escopoNotas = $escopoNotas ?? [];
+    $saldoAtual = (int) ($saldoAtual ?? 0);
+    $custosTiers = $custosTiers ?? ['basico' => 10, 'full' => 20];
+    $sort = $sort ?? 'data_emissao';
+    $dir = $dir ?? 'desc';
+
+    $buildSortUrl = function (string $col) use ($filtros, $sort, $dir) {
+        $nextDir = ($sort === $col && $dir === 'asc') ? 'desc' : 'asc';
+        $params = array_filter(array_merge($filtros, ['sort' => $col, 'dir' => $nextDir]), fn ($v) => $v !== null && $v !== '');
+        return '/app/validacao/notas?'.http_build_query($params);
+    };
+
+    $sortArrow = function (string $col) use ($sort, $dir) {
+        if ($sort !== $col) {
+            return '<svg class="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/></svg>';
+        }
+        return $dir === 'asc'
+            ? '<svg class="w-3 h-3 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>'
+            : '<svg class="w-3 h-3 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>';
+    };
+
+    $sortCustom = $sort !== 'data_emissao' || $dir !== 'desc';
+    $resetSortUrl = '/app/validacao/notas?'.http_build_query(array_filter($filtros, fn ($v) => $v !== null && $v !== ''));
+    $sortLabels = [
+        'origem' => 'Origem',
+        'numero' => 'Nota',
+        'data_emissao' => 'Emissão',
+        'emit_razao_social' => 'Emitente',
+        'dest_razao_social' => 'Destinatário',
+        'valor_total' => 'Valor',
+        'tipo_nota' => 'Tipo',
+        'status' => 'Status',
+    ];
 
     $statusOptions = [
         'todos' => 'Todos',
@@ -30,12 +62,18 @@
     };
 @endphp
 
-<div class="min-h-screen bg-gray-100" id="validacao-notas-container" data-ids-url="{{ route('app.clearance.todos-ids') }}" data-validar-url="{{ route('app.clearance.validar') }}" data-custo-url="{{ route('app.clearance.calcular-custo') }}">
+<div class="min-h-screen bg-gray-100" id="validacao-notas-container"
+    data-ids-url="{{ route('app.clearance.todos-ids') }}"
+    data-validar-url="{{ route('app.clearance.validar') }}"
+    data-tem-mais-pagina="{{ $notas->lastPage() > 1 ? '1' : '0' }}"
+    data-saldo-atual="{{ $saldoAtual }}"
+    data-custo-basico="{{ $custosTiers['basico'] }}"
+    data-custo-full="{{ $custosTiers['full'] }}">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div class="mb-4 sm:mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
                 <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Verificar Notas</h1>
-                <p class="text-xs text-gray-500 mt-1">Selecione notas XML e dispare a validação contábil em lote.</p>
+                <p class="text-xs text-gray-500 mt-1">Selecione notas (XML ou EFD) e dispare a validação contábil em lote.</p>
             </div>
             <a href="/app/validacao" data-link class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-sm font-medium self-start">
                 Voltar ao Painel
@@ -44,13 +82,35 @@
 
         <div id="clearance-notas-error" class="mb-4"></div>
 
-        <div class="bg-white rounded border border-gray-300 p-4 mb-4 border-l-4 border-l-blue-500">
-            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Escopo da Listagem</p>
-            <p class="mt-2 text-sm text-gray-700">Esta grade exibe apenas `xml_notas`. Notas importadas por EFD/SPED não aparecem aqui.</p>
-            <div class="mt-3 flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-wide">
-                <span class="px-2 py-0.5 rounded text-white" style="background-color: #374151">XML: {{ number_format($escopoNotas['total_xml'] ?? 0, 0, ',', '.') }}</span>
-                <span class="px-2 py-0.5 rounded text-white" style="background-color: #9ca3af">EFD: {{ number_format($escopoNotas['total_efd'] ?? 0, 0, ',', '.') }}</span>
-                <span class="px-2 py-0.5 rounded text-white" style="background-color: #1f2937">Base Unificada: {{ number_format($escopoNotas['total_unificado'] ?? 0, 0, ',', '.') }}</span>
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo Operacional</span>
+                <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">XML + EFD unificadas por chave</span>
+            </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-gray-200">
+                <div class="px-4 py-4">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas XML</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($escopoNotas['total_xml'] ?? 0, 0, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Importadas pelo usuário</p>
+                </div>
+                <div class="px-4 py-4">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas EFD</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($escopoNotas['total_efd'] ?? 0, 0, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Extraídas do SPED</p>
+                </div>
+                <div class="px-4 py-4">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Base Unificada</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($escopoNotas['total_unificado'] ?? 0, 0, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Deduplicadas por chave</p>
+                </div>
+                <div class="px-4 py-4" style="background-color: #ecfdf5">
+                    <div class="flex items-center justify-between gap-2">
+                        <p class="text-[10px] font-semibold uppercase tracking-wide" style="color: #047857">Créditos</p>
+                        <span class="text-[9px] font-bold uppercase tracking-wide text-white px-1.5 py-0.5 rounded" style="background-color: #047857">Saldo</span>
+                    </div>
+                    <p class="text-xl font-bold mt-0.5" style="color: #047857">{{ number_format($saldoAtual, 0, ',', '.') }}</p>
+                    <p class="text-[11px] mt-1" style="color: #065f46">Disponível para validações</p>
+                </div>
             </div>
         </div>
 
@@ -104,24 +164,95 @@
             </div>
         </form>
 
-        {{-- Barra de ações bulk --}}
+        {{-- Status da seleção --}}
         <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
             <div class="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div class="text-sm text-gray-700">
+                <div class="flex items-center gap-3 text-sm text-gray-700">
+                    <button type="button" id="btn-selecionar-todas" class="px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide border border-gray-300 text-gray-700{{ $notas->lastPage() > 1 ? '' : ' hidden' }}">Selecionar Todos ({{ number_format($notas->total(), 0, ',', '.') }})</button>
                     <span id="selecao-label">Nenhuma nota selecionada</span>
-                    <span class="text-gray-400"> · {{ number_format($notas->total(), 0, ',', '.') }} resultado(s)</span>
-                    <button type="button" id="btn-selecionar-todas" class="ml-3 text-xs text-gray-600 hover:text-gray-900 hover:underline hidden">Selecionar todas ({{ number_format($notas->total(), 0, ',', '.') }}) dos filtros atuais</button>
                 </div>
-                <div class="flex flex-wrap gap-2">
-                    <select id="tipo-validacao" class="px-3 py-1.5 rounded text-[11px] font-medium border border-gray-300 text-gray-700">
-                        <option value="local">Regras locais</option>
-                        <option value="completa" selected>Validação completa</option>
-                        <option value="deep">Deep analysis</option>
-                    </select>
-                    <button type="button" id="btn-calcular-custo" class="px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide border border-gray-300 text-gray-700 disabled:opacity-40" disabled>Calcular custo</button>
-                    <button type="button" id="btn-validar" class="px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide text-white disabled:opacity-40" style="background-color: #047857" disabled>Validar selecionadas</button>
+                <div class="flex items-center gap-3">
+                    @if ($sortCustom)
+                        <a href="{{ $resetSortUrl }}" data-link class="inline-flex items-center gap-1 text-[10px] font-semibold text-gray-500 hover:text-gray-900 uppercase tracking-wide" title="Limpar ordenação">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            Limpar ordem · {{ $sortLabels[$sort] ?? $sort }}
+                            @if ($dir === 'asc')
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
+                            @else
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                            @endif
+                        </a>
+                    @endif
+                    <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded uppercase tracking-wide">{{ number_format($notas->total(), 0, ',', '.') }} resultado(s)</span>
                 </div>
             </div>
+        </div>
+
+        {{-- Plan cards + CTA (escondido sem seleção) --}}
+        <div id="clearance-planos" class="mb-4 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div id="plan-card-basico" class="bg-white rounded border p-4 cursor-pointer transition" role="radio" aria-checked="true" tabindex="0" data-tier="basico" style="border-color: #1f2937">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Clearance</p>
+                            <p class="text-base font-bold text-gray-900">Básico</p>
+                        </div>
+                        <span class="plan-chip px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #1f2937">Selecionado</span>
+                    </div>
+                    <ul class="space-y-1.5 text-xs text-gray-700 mb-3">
+                        <li class="flex items-start gap-2"><svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #047857"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>Status SEFAZ (NF-e)</li>
+                        <li class="flex items-start gap-2"><svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #047857"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>Validação contábil local</li>
+                        <li class="flex items-start gap-2"><svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #047857"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>Cruzamento com EFD</li>
+                    </ul>
+                    <div class="border-t border-gray-200 pt-3 flex items-center justify-between">
+                        <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded uppercase tracking-wide">{{ $custosTiers['basico'] }} créditos / nota</span>
+                        <span class="flex items-center gap-1.5">
+                            <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Total</span>
+                            <span class="text-[10px] font-bold text-white px-2 py-0.5 rounded uppercase tracking-wide" style="background-color: #374151"><span class="plan-total" data-tier="basico">0</span> créditos</span>
+                        </span>
+                    </div>
+                </div>
+                <div id="plan-card-full" class="bg-white rounded border p-4 cursor-pointer transition" role="radio" aria-checked="false" tabindex="0" data-tier="full" style="border-color: #e5e7eb">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Clearance</p>
+                            <p class="text-base font-bold text-gray-900">Full</p>
+                        </div>
+                        <span class="plan-chip hidden px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #1f2937">Selecionado</span>
+                    </div>
+                    <ul class="space-y-1.5 text-xs text-gray-700 mb-3">
+                        <li class="flex items-start gap-2"><svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #047857"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>Tudo do Básico</li>
+                        <li class="flex items-start gap-2"><svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #047857"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>CND Federal do emitente na data</li>
+                        <li class="flex items-start gap-2"><svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #047857"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>CNDT do emitente na data</li>
+                    </ul>
+                    <div class="border-t border-gray-200 pt-3 flex items-center justify-between">
+                        <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded uppercase tracking-wide">{{ $custosTiers['full'] }} créditos / nota</span>
+                        <span class="flex items-center gap-1.5">
+                            <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Total</span>
+                            <span class="text-[10px] font-bold text-white px-2 py-0.5 rounded uppercase tracking-wide" style="background-color: #374151"><span class="plan-total" data-tier="full">0</span> créditos</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white rounded border border-gray-300 px-4 py-3">
+                <span class="flex items-center gap-2">
+                    <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saldo após</span>
+                    <span id="saldo-apos-label" class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded">—</span>
+                </span>
+                <button type="button" id="btn-validar" class="px-4 py-2 rounded text-[11px] font-bold uppercase tracking-wide text-white disabled:opacity-40" style="background-color: #047857" disabled>Validar</button>
+            </div>
+        </div>
+
+        {{-- Progresso SSE do clearance externo --}}
+        <div id="clearance-progresso" class="mb-4 hidden bg-white rounded border border-gray-300 px-4 py-3">
+            <div class="flex items-center justify-between mb-2">
+                <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Clearance externo em andamento</p>
+                <p id="clearance-progresso-percent" class="text-[10px] text-gray-500 font-mono">0%</p>
+            </div>
+            <div style="width: 100%; height: 6px; background-color: #e5e7eb; border-radius: 9999px; overflow: hidden">
+                <div id="clearance-progresso-bar" style="height: 100%; background-color: #1f2937; width: 8%; transition: width 350ms ease-out"></div>
+            </div>
+            <p id="clearance-progresso-etapa" class="text-xs text-gray-600 mt-2">Iniciando clearance...</p>
         </div>
 
         {{-- Tabela --}}
@@ -131,50 +262,74 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-3 py-2 text-left"><input type="checkbox" id="chk-master" class="w-4 h-4"></th>
-                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Nota</th>
-                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Emissão</th>
-                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Emitente</th>
-                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Destinatário</th>
-                            <th class="px-3 py-2 text-right text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Valor</th>
-                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Tipo</th>
-                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Status</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+                                <a href="{{ $buildSortUrl('origem') }}" data-link class="inline-flex items-center gap-1 hover:text-gray-700">Origem {!! $sortArrow('origem') !!}</a>
+                            </th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+                                <a href="{{ $buildSortUrl('numero') }}" data-link class="inline-flex items-center gap-1 hover:text-gray-700">Nota {!! $sortArrow('numero') !!}</a>
+                            </th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+                                <a href="{{ $buildSortUrl('data_emissao') }}" data-link class="inline-flex items-center gap-1 hover:text-gray-700">Emissão {!! $sortArrow('data_emissao') !!}</a>
+                            </th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+                                <a href="{{ $buildSortUrl('emit_razao_social') }}" data-link class="inline-flex items-center gap-1 hover:text-gray-700">Emitente {!! $sortArrow('emit_razao_social') !!}</a>
+                            </th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+                                <a href="{{ $buildSortUrl('dest_razao_social') }}" data-link class="inline-flex items-center gap-1 hover:text-gray-700">Destinatário {!! $sortArrow('dest_razao_social') !!}</a>
+                            </th>
+                            <th class="px-3 py-2 text-right text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+                                <a href="{{ $buildSortUrl('valor_total') }}" data-link class="inline-flex items-center gap-1 hover:text-gray-700 justify-end w-full">Valor {!! $sortArrow('valor_total') !!}</a>
+                            </th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+                                <a href="{{ $buildSortUrl('tipo_nota') }}" data-link class="inline-flex items-center gap-1 hover:text-gray-700">Tipo {!! $sortArrow('tipo_nota') !!}</a>
+                            </th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+                                <a href="{{ $buildSortUrl('status') }}" data-link class="inline-flex items-center gap-1 hover:text-gray-700">Status {!! $sortArrow('status') !!}</a>
+                            </th>
                             <th class="px-3 py-2 text-right text-[10px] font-semibold text-gray-500 uppercase tracking-wide"></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200" id="tbody-notas">
                         @forelse($notas as $n)
-                            @php $s = $statusBadge($n); @endphp
-                            <tr data-nota-id="{{ $n->id }}" class="hover:bg-gray-50">
-                                <td class="px-3 py-2"><input type="checkbox" class="w-4 h-4 chk-nota" value="{{ $n->id }}"></td>
-                                <td class="px-3 py-2 font-mono text-xs">{{ $n->numero_nota }}/{{ $n->serie }}</td>
-                                <td class="px-3 py-2 text-xs">{{ optional($n->data_emissao)->format('d/m/Y') }}</td>
+                            @php
+                                $s = $statusBadge($n);
+                                $isXml = $n->origem === 'xml';
+                                $origemHex = $isXml ? '#374151' : '#9ca3af';
+                                $dataEmissao = $n->data_emissao ? \Illuminate\Support\Carbon::parse($n->data_emissao) : null;
+                                $detalheUrl = $isXml
+                                    ? "/app/validacao/nota/{$n->id}"
+                                    : "/app/notas-fiscais?chave={$n->chave}";
+                            @endphp
+                            <tr data-nota-id="{{ $n->id }}" data-origem="{{ $n->origem }}" class="hover:bg-gray-50">
+                                <td class="px-3 py-2">
+                                    <input type="checkbox" class="w-4 h-4 chk-nota" value="{{ $n->id }}">
+                                </td>
+                                <td class="px-3 py-2">
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemHex }}">
+                                        {{ strtoupper($n->origem) }}
+                                    </span>
+                                </td>
+                                <td class="px-3 py-2 font-mono text-xs">{{ $n->numero }}/{{ $n->serie }}</td>
+                                <td class="px-3 py-2 text-xs">{{ $dataEmissao?->format('d/m/Y') }}</td>
                                 <td class="px-3 py-2 text-xs text-gray-700 truncate max-w-[180px]">{{ $n->emit_razao_social }}</td>
                                 <td class="px-3 py-2 text-xs text-gray-700 truncate max-w-[180px]">{{ $n->dest_razao_social }}</td>
-                                <td class="px-3 py-2 text-xs text-right font-mono">R$ {{ number_format($n->valor_total, 2, ',', '.') }}</td>
+                                <td class="px-3 py-2 text-xs text-right font-mono">R$ {{ number_format((float) $n->valor_total, 2, ',', '.') }}</td>
                                 <td class="px-3 py-2 text-xs">
-                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $n->tipo_nota === 0 ? '#047857' : '#d97706' }}">
-                                        {{ $n->tipo_nota === 0 ? 'Entrada' : 'Saída' }}
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $n->tipo_nota === 'entrada' ? '#047857' : '#d97706' }}">
+                                        {{ ucfirst($n->tipo_nota) }}
                                     </span>
                                 </td>
                                 <td class="px-3 py-2 text-xs">
                                     <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white td-status" style="background-color: {{ $s['hex'] }}">{{ $s['label'] }}</span>
                                 </td>
                                 <td class="px-3 py-2 text-right">
-                                    <a href="/app/validacao/nota/{{ $n->id }}" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Detalhes</a>
+                                    <a href="{{ $detalheUrl }}" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Detalhes</a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="px-3 py-8 text-center">
-                                    @if(($escopoNotas['possui_apenas_efd'] ?? false) === true)
-                                        <p class="text-sm text-gray-700">Você possui notas em EFD/SPED, mas nenhuma nota XML disponível para esta tela.</p>
-                                        <p class="text-[11px] text-gray-500 mt-2">As {{ number_format($escopoNotas['total_efd'] ?? 0, 0, ',', '.') }} notas EFD aparecem nas telas unificadas de notas fiscais, não na Validação XML.</p>
-                                        <a href="/app/notas-fiscais" data-link class="mt-3 inline-flex text-xs text-gray-600 hover:text-gray-900 hover:underline">
-                                            Abrir Notas Fiscais
-                                        </a>
-                                    @else
-                                        <p class="text-sm text-gray-500">Nenhuma nota XML encontrada com os filtros atuais.</p>
-                                    @endif
+                                <td colspan="10" class="px-3 py-8 text-center">
+                                    <p class="text-sm text-gray-500">Nenhuma nota encontrada com os filtros atuais.</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -184,6 +339,61 @@
             <div class="px-4 py-3 border-t border-gray-200 bg-gray-50">
                 {{ $notas->links() }}
             </div>
+        </div>
+    </div>
+</div>
+
+{{-- Modal: Confirmar Clearance --}}
+<div id="modal-confirmar-validacao" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded border border-gray-300 shadow-lg max-w-md w-full">
+        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Confirmar Clearance</span>
+            <span id="modal-confirm-tier-chip" class="text-[9px] font-bold uppercase tracking-wide text-white px-2 py-0.5 rounded" style="background-color: #1f2937">Básico</span>
+        </div>
+        <div class="p-5 space-y-4">
+            <p class="text-sm text-gray-700">
+                Será executada a validação <strong id="modal-confirm-tier-label">Clearance Básico</strong>
+                em <strong id="modal-confirm-qtd">0</strong> nota(s).
+            </p>
+            <div class="grid grid-cols-2 divide-x divide-gray-200 border border-gray-200 rounded overflow-hidden">
+                <div class="px-3 py-3">
+                    <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Custo total</p>
+                    <p class="text-lg font-bold text-gray-900 mt-0.5"><span id="modal-confirm-custo">0</span> créditos</p>
+                </div>
+                <div class="px-3 py-3">
+                    <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Saldo após</p>
+                    <p class="text-lg font-bold mt-0.5" id="modal-confirm-saldo-apos">0 créditos</p>
+                </div>
+            </div>
+        </div>
+        <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-2">
+            <button type="button" id="modal-confirm-cancelar" class="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">Cancelar</button>
+            <button type="button" id="modal-confirm-ok" class="px-4 py-2 text-xs font-semibold text-white rounded" style="background-color: #1f2937">Confirmar validação</button>
+        </div>
+    </div>
+</div>
+
+{{-- Modal: Sucesso --}}
+<div id="modal-sucesso-validacao" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded border border-gray-300 shadow-lg max-w-md w-full">
+        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Validação concluída</span>
+            <span class="text-[9px] font-bold uppercase tracking-wide text-white px-2 py-0.5 rounded" style="background-color: #047857">OK</span>
+        </div>
+        <div class="p-5 space-y-3">
+            <div class="flex items-center gap-3">
+                <svg class="w-8 h-8" fill="none" stroke="#047857" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p class="text-sm text-gray-700">Todas as notas selecionadas foram processadas.</p>
+            </div>
+            <div class="border border-gray-200 rounded px-3 py-3" style="background-color: #ecfdf5">
+                <p class="text-[10px] font-semibold uppercase tracking-wide" style="color: #047857">Créditos debitados</p>
+                <p class="text-lg font-bold mt-0.5" style="color: #047857"><span id="modal-sucesso-creditos">0</span> créditos</p>
+            </div>
+        </div>
+        <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-end">
+            <button type="button" id="modal-sucesso-ok" class="px-4 py-2 text-xs font-semibold text-white rounded" style="background-color: #1f2937">OK</button>
         </div>
     </div>
 </div>

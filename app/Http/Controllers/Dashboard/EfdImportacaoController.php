@@ -257,8 +257,8 @@ class EfdImportacaoController extends Controller
 
         // Selecionar webhook baseado no tipo de EFD (extração completa sempre)
         $webhookUrl = $tipoEfd === 'EFD ICMS/IPI'
-            ? config('services.webhook.efd_fiscal_url')
-            : config('services.webhook.efd_contribuicoes_url');
+            ? config('services.webhook.importacao_efd_fiscal_url')
+            : config('services.webhook.importacao_efd_contribuicoes_url');
 
         // Validar que o cliente pertence ao usuário (se fornecido)
         $clienteId = $request->input('cliente_id');
@@ -276,8 +276,8 @@ class EfdImportacaoController extends Controller
 
         if (empty($webhookUrl)) {
             $configKey = $tipoEfd === 'EFD ICMS/IPI'
-                ? 'WEBHOOK_EFD_FISCAL_URL'
-                : 'WEBHOOK_EFD_CONTRIBUICOES_URL';
+                ? 'WEBHOOK_IMPORTACAO_EFD_FISCAL_URL'
+                : 'WEBHOOK_IMPORTACAO_EFD_CONTRIBUICOES_URL';
             Log::error("Webhook URL para importação .txt não configurada ({$configKey})", [
                 'tipo_efd' => $tipoEfd,
             ]);

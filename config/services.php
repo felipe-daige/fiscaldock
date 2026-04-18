@@ -36,16 +36,15 @@ return [
     ],
 
     'webhook' => [
-        // Webhooks EFD (extração completa por tipo)
-        'efd_contribuicoes_url' => env('WEBHOOK_EFD_CONTRIBUICOES_URL'),
-        'efd_fiscal_url' => env('WEBHOOK_EFD_FISCAL_URL'),
+        // Webhooks Importação EFD (extração completa por tipo)
+        'importacao_efd_contribuicoes_url' => env('WEBHOOK_IMPORTACAO_EFD_CONTRIBUICOES_URL'),
+        'importacao_efd_fiscal_url' => env('WEBHOOK_IMPORTACAO_EFD_FISCAL_URL'),
         // Webhook Importação de XMLs (NF-e, NFS-e, CT-e)
         'importacao_xml_url' => env('WEBHOOK_IMPORTACAO_XML_URL'),
-        // Webhook Consultas - endpoint unificado (avulsa e lote)
-        'consultas_url' => env('WEBHOOK_CONSULTAS_URL'),
-        // Credenciais
-        'username' => env('WEBHOOK_SPED_USERNAME'),
-        'password' => env('WEBHOOK_SPED_PASSWORD'),
+        // Webhook Consultas de CNPJ - endpoint unificado (avulsa e lote)
+        'consultas_cnpj_url' => env('WEBHOOK_CONSULTAS_CNPJ_URL'),
+        // Webhook Consultas de Notas Fiscais (InfoSimples receita-federal/nfe — MVP NF-e, prevê CT-e/NFS-e)
+        'consultas_notas_url' => env('WEBHOOK_CONSULTAS_NOTAS_URL'),
     ],
 
     'api' => [

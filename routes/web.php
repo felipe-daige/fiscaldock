@@ -225,6 +225,8 @@ Route::middleware('auth')->group(function () {
     Route::get('app/validacao', [ValidacaoController::class, 'index'])->name('app.clearance.index');
     Route::get('app/validacao/notas', [ValidacaoController::class, 'notas'])->name('app.clearance.notas');
     Route::get('app/validacao/buscar-nfe', [ValidacaoController::class, 'buscarNfe'])->name('app.clearance.buscar-nfe');
+    Route::post('app/validacao/buscar-nfe/consultar', [ValidacaoController::class, 'consultarNfe'])->name('app.clearance.buscar-nfe.consultar');
+    Route::get('app/validacao/buscar-nfe/resultado/{consultaLoteId}', [ValidacaoController::class, 'resultadoUltimaConsulta'])->name('app.clearance.buscar-nfe.resultado');
     Route::get('app/validacao/notas/todos-ids', [ValidacaoController::class, 'todosIds'])->name('app.clearance.todos-ids');
     Route::post('app/validacao/notas/validar', [ValidacaoController::class, 'validarNotas'])->name('app.clearance.validar');
     Route::post('app/validacao/importacao/{id}/validar', [ValidacaoController::class, 'validarImportacao'])->name('app.clearance.validar-importacao');

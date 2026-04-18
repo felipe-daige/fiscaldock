@@ -677,10 +677,10 @@ class ConsultaController extends Controller
             ], Response::HTTP_PAYMENT_REQUIRED);
         }
 
-        $webhookUrl = config('services.webhook.consultas_url');
+        $webhookUrl = config('services.webhook.consultas_cnpj_url');
 
         if (empty($webhookUrl)) {
-            Log::error('Consultas: webhook não configurado (WEBHOOK_CONSULTAS_URL)');
+            Log::error('Consultas: webhook não configurado (WEBHOOK_CONSULTAS_CNPJ_URL)');
 
             return response()->json([
                 'success' => false,
@@ -722,6 +722,10 @@ class ConsultaController extends Controller
                 'creditos_cobrados' => $custoTotal,
             ]);
 
+            $etapas = $plano->etapas ?? [
+                ['numero' => 1, 'chave' => 'cadastrais', 'label' => 'Cadastrais'],
+            ];
+
             // Preparar payload para n8n
             $payload = [
                 'user_id' => $user->id,
@@ -729,6 +733,7 @@ class ConsultaController extends Controller
                 'tab_id' => $validated['tab_id'],
                 'plano_codigo' => $plano->codigo,
                 'consultas_incluidas' => $plano->consultas_incluidas,
+                'etapas' => $etapas,
                 'participantes' => $participantes->map(function ($p) {
                     return [
                         'id' => $p->id,
@@ -761,6 +766,7 @@ class ConsultaController extends Controller
                     'message' => 'Consulta iniciada com sucesso.',
                     'creditos_cobrados' => $custoTotal,
                     'novo_saldo' => $this->creditService->getBalance($user),
+                    'etapas' => $etapas,
                 ]);
             } else {
                 // Falha no envio - estornar créditos e marcar erro
