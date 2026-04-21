@@ -10,20 +10,22 @@
         'validacao' => [
             'cor' => 'blue',
             'icone' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
-            'consultas_display' => ['Tudo do Gratuito', 'Simples Nacional', 'MEI', 'SINTEGRA básico'],
+            'consultas_display' => ['Tudo do Gratuito', 'Simples Nacional', 'MEI'],
             'casos_uso' => ['Qualificação fiscal', 'Regime tributário', 'Homologação inicial'],
         ],
         'licitacao' => [
             'cor' => 'blue',
             'icone' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
             'consultas_display' => ['Tudo do Validação', 'CND Federal (PGFN/RFB)', 'CNDT', 'FGTS'],
+            'consultas_em_breve' => ['CNDT', 'FGTS'],
             'casos_uso' => ['Editais e licitação', 'Contratos públicos', 'Credenciamento'],
         ],
         'compliance' => [
             'cor' => 'purple',
             'icone' => 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
             'consultas_display' => ['Tudo do Licitação', 'CND Estadual', 'CND Municipal'],
-            'casos_uso' => ['Regularidade completa', 'Auditoria de fornecedor', 'Contratos recorrentes'],
+            'consultas_quebra_antes' => ['CND Estadual'],
+            'casos_uso' => ['Regularidade fiscal', 'Auditoria', 'Contratos recorrentes'],
         ],
         'due_diligence' => [
             'cor' => 'amber',
@@ -42,6 +44,7 @@
 
     $hasMadeFirstPurchase = $hasMadeFirstPurchase ?? false;
     $firstPurchaseLockedProducts = $firstPurchaseLockedProducts ?? ['compliance', 'due_diligence'];
+    $planosEmBreve = ['compliance', 'due_diligence'];
     $planosDetalhados = [];
     foreach ($planos->where('is_active', true) as $p) {
         $meta = $planoMeta[$p->codigo] ?? ['cor' => 'gray', 'icone' => 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'consultas_display' => [], 'casos_uso' => []];
@@ -49,6 +52,7 @@
             continue;
         }
 
+        $isEmBreve = in_array($p->codigo, $planosEmBreve, true);
         $requiresFirstPurchase = in_array($p->codigo, $firstPurchaseLockedProducts, true);
         $isLocked = $requiresFirstPurchase && ! $hasMadeFirstPurchase;
         $planosDetalhados[] = [
@@ -59,9 +63,12 @@
             'cor' => $meta['cor'],
             'icone' => $meta['icone'],
             'consultas' => $meta['consultas_display'],
+            'consultas_em_breve' => $meta['consultas_em_breve'] ?? [],
+            'consultas_quebra_antes' => $meta['consultas_quebra_antes'] ?? [],
             'casos_uso' => $meta['casos_uso'],
             'popular' => $p->codigo === 'licitacao',
             'coming_soon' => false,
+            'is_em_breve' => $isEmBreve,
             'gratuito' => $p->is_gratuito,
             'promo' => $meta['promo'] ?? false,
             'preco_original' => $meta['preco_original'] ?? null,
@@ -126,16 +133,21 @@
                     <tbody class="divide-y divide-gray-100">
                         @foreach($planosDetalhados as $plano)
                             @php
-                                $statusHex = ($plano['locked'] ?? false)
+                                $isEmBreve = $plano['is_em_breve'] ?? false;
+                                $statusHex = $isEmBreve
+                                    ? '#ca8a04'
+                                    : (($plano['locked'] ?? false)
                                     ? '#9ca3af'
                                     : ($plano['coming_soon']
                                     ? '#9ca3af'
-                                    : ($plano['promo'] ? '#d97706' : ($plano['gratuito'] ? '#047857' : '#374151')));
-                                $statusLabel = ($plano['locked'] ?? false)
+                                    : ($plano['promo'] ? '#d97706' : ($plano['gratuito'] ? '#047857' : '#374151'))));
+                                $statusLabel = $isEmBreve
+                                    ? 'Em breve'
+                                    : (($plano['locked'] ?? false)
                                     ? 'Após recarga'
                                     : ($plano['coming_soon']
                                     ? 'Em breve'
-                                    : ($plano['promo'] ? 'Promoção' : ($plano['gratuito'] ? 'Grátis' : 'Ativo')));
+                                    : ($plano['promo'] ? 'Promoção' : ($plano['gratuito'] ? 'Grátis' : 'Ativo'))));
                             @endphp
                             <tr class="hover:bg-gray-50/50 transition-colors">
                                 <td class="px-3 py-3">
@@ -148,7 +160,7 @@
                                     @if($plano['descricao'])
                                         <p class="text-[11px] text-gray-500 mt-1">{{ $plano['descricao'] }}</p>
                                     @endif
-                                    @if($plano['locked'] ?? false)
+                                    @if(($plano['locked'] ?? false) && ! $isEmBreve)
                                         <p class="text-[11px] text-gray-500 mt-1">Disponível após a primeira recarga de créditos.</p>
                                     @endif
                                 </td>
@@ -168,7 +180,19 @@
                                     @if(count($plano['consultas']))
                                         <div class="flex flex-wrap gap-1">
                                             @foreach($plano['consultas'] as $consulta)
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium" style="background-color: #f3f4f6; color: #374151">{{ $consulta }}</span>
+                                                @php
+                                                    $consultaEmBreve = in_array($consulta, $plano['consultas_em_breve'] ?? [], true);
+                                                    $quebraAntes = in_array($consulta, $plano['consultas_quebra_antes'] ?? [], true);
+                                                @endphp
+                                                @if($quebraAntes)
+                                                    <div style="flex-basis: 100%; height: 0;"></div>
+                                                @endif
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium whitespace-nowrap" style="background-color: #f3f4f6; color: #374151">
+                                                    {{ $consulta }}
+                                                    @if($consultaEmBreve)
+                                                        <span class="inline-flex items-center px-1.5 py-0 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #ca8a04">Em breve</span>
+                                                    @endif
+                                                </span>
                                             @endforeach
                                         </div>
                                     @else
@@ -187,15 +211,17 @@
                                     @endif
                                 </td>
                                 <td class="px-3 py-3">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusHex }}">{{ $statusLabel }}</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: {{ $statusHex }}">{{ $statusLabel }}</span>
                                 </td>
                                 <td class="px-3 py-3 text-right">
-                                    @if($plano['locked'] ?? false)
+                                    @if($isEmBreve)
+                                        <span class="text-xs text-gray-400 whitespace-nowrap">Em breve</span>
+                                    @elseif($plano['locked'] ?? false)
                                         <a href="/app/creditos" data-link class="text-xs text-gray-900 hover:text-gray-600 hover:underline">Comprar créditos</a>
                                     @elseif($plano['coming_soon'])
                                         <span class="text-xs text-gray-400">Indisponível</span>
                                     @else
-                                        <a href="/app/consulta/nova" data-link class="text-xs text-gray-900 hover:text-gray-600 hover:underline">Usar plano</a>
+                                        <a href="/app/consulta/nova" data-link class="text-xs text-gray-900 hover:text-gray-600 hover:underline whitespace-nowrap">Usar plano</a>
                                     @endif
                                 </td>
                             </tr>
@@ -207,16 +233,21 @@
             <div class="divide-y divide-gray-100 md:hidden">
                 @foreach($planosDetalhados as $plano)
                     @php
-                        $statusHex = ($plano['locked'] ?? false)
+                        $isEmBreve = $plano['is_em_breve'] ?? false;
+                        $statusHex = $isEmBreve
+                            ? '#ca8a04'
+                            : (($plano['locked'] ?? false)
                             ? '#9ca3af'
                             : ($plano['coming_soon']
                             ? '#9ca3af'
-                            : ($plano['promo'] ? '#d97706' : ($plano['gratuito'] ? '#047857' : '#374151')));
-                        $statusLabel = ($plano['locked'] ?? false)
+                            : ($plano['promo'] ? '#d97706' : ($plano['gratuito'] ? '#047857' : '#374151'))));
+                        $statusLabel = $isEmBreve
+                            ? 'Em breve'
+                            : (($plano['locked'] ?? false)
                             ? 'Após recarga'
                             : ($plano['coming_soon']
                             ? 'Em breve'
-                            : ($plano['promo'] ? 'Promoção' : ($plano['gratuito'] ? 'Grátis' : 'Ativo')));
+                            : ($plano['promo'] ? 'Promoção' : ($plano['gratuito'] ? 'Grátis' : 'Ativo'))));
                     @endphp
                     <div class="px-4 py-3">
                         <div class="flex items-start justify-between gap-3">
@@ -225,11 +256,11 @@
                                 @if($plano['descricao'])
                                     <p class="text-xs text-gray-500 mt-1">{{ $plano['descricao'] }}</p>
                                 @endif
-                                @if($plano['locked'] ?? false)
+                                @if(($plano['locked'] ?? false) && ! $isEmBreve)
                                     <p class="text-[11px] text-gray-500 mt-1">Disponível após a primeira recarga de créditos.</p>
                                 @endif
                             </div>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusHex }}">{{ $statusLabel }}</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: {{ $statusHex }}">{{ $statusLabel }}</span>
                         </div>
                         <div class="grid grid-cols-1 gap-2 mt-3 text-sm text-gray-700">
                             <div>
@@ -252,7 +283,19 @@
                                 @if(count($plano['consultas']))
                                     <div class="flex flex-wrap gap-1">
                                         @foreach($plano['consultas'] as $consulta)
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium" style="background-color: #f3f4f6; color: #374151">{{ $consulta }}</span>
+                                            @php
+                                                $consultaEmBreve = in_array($consulta, $plano['consultas_em_breve'] ?? [], true);
+                                                $quebraAntes = in_array($consulta, $plano['consultas_quebra_antes'] ?? [], true);
+                                            @endphp
+                                            @if($quebraAntes)
+                                                <div style="flex-basis: 100%; height: 0;"></div>
+                                            @endif
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium whitespace-nowrap" style="background-color: #f3f4f6; color: #374151">
+                                                {{ $consulta }}
+                                                @if($consultaEmBreve)
+                                                    <span class="inline-flex items-center px-1.5 py-0 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #ca8a04">Em breve</span>
+                                                @endif
+                                            </span>
                                         @endforeach
                                     </div>
                                 @else
@@ -272,12 +315,14 @@
                                 @endif
                             </div>
                             <div>
-                                @if($plano['locked'] ?? false)
+                                @if($isEmBreve)
+                                    <span class="text-xs text-gray-400 whitespace-nowrap">Em breve</span>
+                                @elseif($plano['locked'] ?? false)
                                     <a href="/app/creditos" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Comprar créditos</a>
                                 @elseif($plano['coming_soon'])
                                     <span class="text-xs text-gray-400">Indisponível</span>
                                 @else
-                                    <a href="/app/consulta/nova" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Usar plano</a>
+                                    <a href="/app/consulta/nova" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline whitespace-nowrap">Usar plano</a>
                                 @endif
                             </div>
                         </div>

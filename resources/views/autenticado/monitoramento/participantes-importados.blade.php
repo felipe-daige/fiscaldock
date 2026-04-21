@@ -1,4 +1,7 @@
 {{-- Monitoramento - Lista de Participantes Importados --}}
+@php
+    $currentListUrl = $currentListUrl ?? request()->getRequestUri();
+@endphp
 <div class="bg-gray-100 min-h-screen" id="monitoramento-participantes-importados-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <style>
@@ -260,7 +263,7 @@
                             <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participante</th>
                             <th class="w-[260px] px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Situação / CND</th>
                             <th class="w-[220px] px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Status de Consulta</th>
-                            <th class="w-[120px] px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Origem</th>
+                            <th class="w-[140px] px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Origem</th>
                             <th class="w-20 px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ações</th>
                         </tr>
                     </thead>
@@ -268,6 +271,7 @@
                         @forelse($participantes ?? [] as $part)
                             @php
                                 $isCpf = $part->is_cpf;
+                                $participanteUrl = '/app/participante/'.$part->id.'?return_to='.urlencode($currentListUrl);
                                 $origemLabel = match($part->origem_tipo) {
                                     'SPED_EFD_FISCAL' => ['label' => 'EFD Fiscal', 'color' => '#4338ca'],
                                     'SPED_EFD_CONTRIB' => ['label' => 'EFD Contrib', 'color' => '#7c3aed'],
@@ -277,7 +281,7 @@
                                     default => ['label' => $part->origem_tipo, 'color' => '#6b7280'],
                                 };
                             @endphp
-                            <tr class="hover:bg-gray-50/50 transition-colors cursor-pointer" data-participante-id="{{ $part->id }}" data-href="/app/participante/{{ $part->id }}">
+                            <tr class="hover:bg-gray-50/50 transition-colors cursor-pointer" data-participante-id="{{ $part->id }}" data-href="{{ $participanteUrl }}">
                                 <td class="px-3 py-3">
                                     <input
                                         type="checkbox"
@@ -323,24 +327,31 @@
                                 </td>
                                 <td class="px-3 py-3 text-center">
                                     <div class="flex flex-col items-center gap-1" title="{{ $part->situacao_cadastral ?? '' }}">
-                                        <div class="flex items-center justify-center gap-2 flex-wrap">
-                                            @if($part->situacao_cadastral === 'ATIVA')
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857">
-                                                    Ativa
+                                        @if($part->situacao_cadastral)
+                                            <div class="flex items-center justify-center gap-2 flex-wrap">
+                                                @if($part->situacao_cadastral === 'ATIVA')
+                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857">
+                                                        Ativa
+                                                    </span>
+                                                @else
+                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #d97706">
+                                                        {{ $part->situacao_cadastral }}
+                                                    </span>
+                                                @endif
+                                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $part->cnd_federal_status_hex }}">
+                                                    {{ $part->cnd_federal_status_label }}
                                                 </span>
-                                            @elseif($part->situacao_cadastral)
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #d97706">
-                                                    {{ $part->situacao_cadastral }}
-                                                </span>
-                                            @else
+                                            </div>
+                                        @else
+                                            <div class="flex flex-col items-center gap-1">
                                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #9ca3af">
                                                     Sem Mov.
                                                 </span>
-                                            @endif
-                                            <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $part->cnd_federal_status_hex }}">
-                                                {{ $part->cnd_federal_status_label }}
-                                            </span>
-                                        </div>
+                                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $part->cnd_federal_status_hex }}">
+                                                    {{ $part->cnd_federal_status_label }}
+                                                </span>
+                                            </div>
+                                        @endif
                                         <div class="text-[11px] text-gray-500 leading-tight text-center">
                                             {{ $part->cnd_federal_meta }}
                                         </div>
@@ -354,8 +365,8 @@
                                     </div>
                                 </td>
                                 <td class="px-3 py-3 text-center">
-                                    <div class="min-w-0 flex flex-col items-center">
-                                        <span class="inline-flex max-w-full items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemLabel['color'] }}">
+                                    <div class="min-w-0 flex flex-col items-center px-1">
+                                        <span class="inline-flex max-w-full items-center justify-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemLabel['color'] }}">
                                             {{ $origemLabel['label'] }}
                                         </span>
                                         <div class="text-[11px] text-gray-500 mt-1 leading-tight text-center" title="Base: {{ $part->created_at?->format('d/m/Y') ?? '-' }}">
@@ -363,7 +374,7 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-3 py-3 text-right align-top">
+                                <td class="px-3 py-3 text-right align-middle">
                                     <button type="button" class="acoes-btn p-2 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                                         data-id="{{ $part->id }}"
                                         data-nome="{{ $part->razao_social }}"
@@ -420,6 +431,7 @@
             @forelse($participantes ?? [] as $part)
                 @php
                     $isCpf = $part->is_cpf;
+                    $participanteUrl = '/app/participante/'.$part->id.'?return_to='.urlencode($currentListUrl);
                     $cardOrigemLabel = match($part->origem_tipo) {
                         'SPED_EFD_FISCAL'  => ['label' => 'EFD Fiscal', 'color' => '#4338ca'],
                         'SPED_EFD_CONTRIB' => ['label' => 'EFD Contrib', 'color' => '#7c3aed'],
@@ -430,7 +442,7 @@
                     };
                 @endphp
                 <div class="participante-card bg-white border border-gray-300 rounded p-4 hover:bg-gray-50/50 transition-colors cursor-pointer flex flex-col gap-3"
-                     data-href="/app/participante/{{ $part->id }}">
+                     data-href="{{ $participanteUrl }}">
                     <div class="flex items-start justify-between gap-2">
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 min-w-0">
@@ -462,7 +474,7 @@
                                 @endif
                             </div>
                         </div>
-                        <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white flex-shrink-0" style="background-color: {{ $cardOrigemLabel['color'] }}">
+                        <span class="inline-flex max-w-full items-center justify-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white flex-shrink-0" style="background-color: {{ $cardOrigemLabel['color'] }}">
                             {{ $cardOrigemLabel['label'] }}
                         </span>
                     </div>
@@ -486,25 +498,32 @@
                         <div>
                             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide text-center">Situação / CND</p>
                             <div class="flex flex-col items-center">
-                                <div class="flex items-center justify-center gap-2 flex-wrap">
-                                    @if($part->situacao_cadastral === 'ATIVA')
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857">Ativa</span>
-                                    @elseif($part->situacao_cadastral)
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #d97706">{{ $part->situacao_cadastral }}</span>
-                                    @else
+                                @if($part->situacao_cadastral)
+                                    <div class="flex items-center justify-center gap-2 flex-wrap">
+                                        @if($part->situacao_cadastral === 'ATIVA')
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857">Ativa</span>
+                                        @else
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #d97706">{{ $part->situacao_cadastral }}</span>
+                                        @endif
+                                        <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $part->cnd_federal_status_hex }}">
+                                            {{ $part->cnd_federal_status_label }}
+                                        </span>
+                                    </div>
+                                @else
+                                    <div class="flex flex-col items-center gap-1">
                                         <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #9ca3af">Sem Mov.</span>
-                                    @endif
-                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $part->cnd_federal_status_hex }}">
-                                        {{ $part->cnd_federal_status_label }}
-                                    </span>
-                                </div>
+                                        <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $part->cnd_federal_status_hex }}">
+                                            {{ $part->cnd_federal_status_label }}
+                                        </span>
+                                    </div>
+                                @endif
                                 <p class="text-[11px] text-gray-500 mt-1 leading-tight text-center">{{ $part->cnd_federal_meta }}</p>
                             </div>
                         </div>
                         <div>
                             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide text-center">Origem</p>
-                            <div class="flex flex-col items-center">
-                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cardOrigemLabel['color'] }}">
+                            <div class="flex flex-col items-center px-1">
+                                <span class="inline-flex max-w-full items-center justify-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cardOrigemLabel['color'] }}">
                                     {{ $cardOrigemLabel['label'] }}
                                 </span>
                                 <p class="text-xs text-gray-500 text-center mt-1">{{ $part->created_at?->format('d/m/Y') ?? '-' }}</p>
@@ -1065,11 +1084,12 @@
                 fecharDropdownAcoes();
                 return;
             }
+            var returnTo = encodeURIComponent(window.location.pathname + window.location.search);
             acaoParticipanteId = id;
             dropdownBtnAtual = btnElement;
             if (dropdownAcoesNome) dropdownAcoesNome.textContent = nome || 'Sem razao social';
             if (dropdownAcoesCnpj) dropdownAcoesCnpj.textContent = cnpj || '';
-            if (dropdownAcoesVer) dropdownAcoesVer.href = '/app/participante/' + id;
+            if (dropdownAcoesVer) dropdownAcoesVer.href = '/app/participante/' + id + '?return_to=' + returnTo;
             if (dropdownAcoesEditar) dropdownAcoesEditar.href = '/app/participante/' + id + '/editar';
             posicionarDropdown(btnElement);
             dropdownAcoes.classList.remove('hidden');

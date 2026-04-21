@@ -1411,6 +1411,26 @@
     }
 
     /**
+     * Renderiza o parecer fiscal (array de sinalizações) como pills coloridas.
+     */
+    function formatParecer(parecer) {
+        if (!Array.isArray(parecer) || parecer.length === 0) {
+            return '<span class="text-gray-400 text-xs">—</span>';
+        }
+        var pills = parecer.map(function(item) {
+            var hex = item.hex || '#6b7280';
+            var titulo = escapeHtml(item.titulo || item.chave || '');
+            var descricao = escapeHtml(item.descricao || '');
+            return '<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold text-white"'
+                + ' style="background-color: ' + hex + '"'
+                + ' title="' + descricao + '">'
+                + titulo
+                + '</span>';
+        }).join(' ');
+        return '<div class="flex flex-wrap gap-1 max-w-xs">' + pills + '</div>';
+    }
+
+    /**
      * Renderiza a página N dos resultados (usa todosResultados global).
      */
     function renderResultadosPagina(pagina) {
@@ -1440,6 +1460,7 @@
                 + '<td class="px-3 py-2 text-xs text-center">' + formatRegularidade(r.cnd_federal) + '</td>'
                 + '<td class="px-3 py-2 text-xs text-center">' + formatRegularidade(r.crf_fgts) + '</td>'
                 + '<td class="px-3 py-2 text-xs text-center">' + formatRegularidade(r.cndt) + '</td>'
+                + '<td class="px-3 py-2 text-xs">' + formatParecer(r.parecer) + '</td>'
                 + '<td class="px-3 py-2 text-xs text-center">' + statusBadge + '</td>'
                 + '</tr>';
         }).join('');
@@ -1469,6 +1490,7 @@
             + '<th class="px-3 py-2 text-xs font-semibold text-gray-600 text-center">CND Federal</th>'
             + '<th class="px-3 py-2 text-xs font-semibold text-gray-600 text-center">FGTS</th>'
             + '<th class="px-3 py-2 text-xs font-semibold text-gray-600 text-center">CNDT</th>'
+            + '<th class="px-3 py-2 text-xs font-semibold text-gray-600">Parecer Fiscal</th>'
             + '<th class="px-3 py-2 text-xs font-semibold text-gray-600 text-center">Status</th>'
             + '</tr></thead>'
             + '<tbody>' + rows + '</tbody>'
@@ -3304,5 +3326,25 @@
 
     window.reloadParticipantes = function() {
         loadParticipantes();
+    };
+
+    window._cleanupFunctions = window._cleanupFunctions || {};
+    window._cleanupFunctions.initConsultaLote = function() {
+        if (state.eventSource) {
+            try { state.eventSource.close(); } catch (_) {}
+            state.eventSource = null;
+        }
+        if (typeof state._pararPolling === 'function') {
+            try { state._pararPolling(); } catch (_) {}
+            state._pararPolling = null;
+        }
+        if (state._pollingInterval) {
+            clearInterval(state._pollingInterval);
+            state._pollingInterval = null;
+        }
+        state.isExecuting = false;
+        state.consultaLoteId = null;
+        state.etapas = [];
+        state.etapaAtual = null;
     };
 })();

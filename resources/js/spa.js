@@ -205,16 +205,6 @@ document.addEventListener('DOMContentLoaded', () => {
             window._cleanupFunctions = {};
         }
         
-        // Desconectar SSE se existir (para páginas de consulta)
-        // Usar try-catch para evitar erro se disconnectSSE não estiver definida
-        try {
-            if (typeof window.disconnectSSE === 'function') {
-                window.disconnectSSE();
-            }
-        } catch (error) {
-            // Ignorar erro se disconnectSSE não estiver definida (página de consulta não foi carregada)
-        }
-
         // Destruir instâncias ApexCharts e resetar estado do módulo BI
         try {
             if (typeof window.cleanupBi === 'function') {
@@ -298,8 +288,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // 2. FUNÇÃO PRINCIPAL DE NAVEGAÇÃO
-    async function navegar(url) {
+    async function navegar(url, options = {}) {
+        const targetUrl = new URL(url, window.location.origin);
+        const browserUrl = `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
+
         try {
+            const { updateHistory = true } = options;
+
             // Fechar sidebar drawer no mobile antes de navegar
             if (window.closeSidebarDrawer) {
                 window.closeSidebarDrawer();
@@ -308,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Verificar se há mudança de contexto (autenticado <-> não autenticado)
             // URLs autenticadas: /dashboard, /app/*
             // URLs não autenticadas: /inicio, /login, etc.
-            const urlPath = new URL(url, window.location.origin).pathname;
+            const urlPath = targetUrl.pathname;
             const currentPath = window.location.pathname;
             
             // Detectar se estamos navegando para/da área autenticada
@@ -320,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Se há mudança entre área autenticada e não autenticada, recarregar página completa
             // para garantir que o header seja trocado corretamente
             if (currentIsDashboard !== targetIsDashboard) {
-                window.location.href = url;
+                window.location.href = targetUrl.toString();
                 return;
             }
             
@@ -331,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
             limparRecursos();
             
             // Buscar conteúdo da nova página
-            const resposta = await fetch(url, {
+            const resposta = await fetch(targetUrl.toString(), {
                 headers: { 
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
@@ -406,13 +401,15 @@ document.addEventListener('DOMContentLoaded', () => {
             app.innerHTML = html;
 
             // Atualizar URL do browser
-            history.pushState(null, '', url);
+            if (updateHistory) {
+                history.pushState(null, '', browserUrl);
+            }
 
             // Atualizar CSRF token após navegação SPA
             atualizarCsrfToken();
             
             // Destacar link ativo
-            destacarLinkAtivo(url);
+            destacarLinkAtivo(targetUrl.toString());
             
             // Executar scripts da nova página
             executarScripts();
@@ -441,13 +438,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (erro.message && !erro.message.includes('Failed to fetch')) {
                 // Erro de navegação - tentar recarregar a página completa como fallback
                 console.warn('[SPA] Erro na navegação SPA, recarregando página completa:', url);
-                window.location.href = url;
+                window.location.href = targetUrl.toString();
                 return;
             }
         } finally {
             esconderLoading();
         }
     }
+
+    window.navigateTo = function(url, options = {}) {
+        return navegar(url, options);
+    };
     
     // 3. DESTACAR LINK ATIVO
     function destacarLinkAtivo(url) {
@@ -676,7 +677,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('popstate', () => {
         // Só navegar se não for a página inicial
         if (location.pathname !== '/') {
-            navegar(location.pathname);
+            navegar(window.location.href, { updateHistory: false });
         }
     });
     

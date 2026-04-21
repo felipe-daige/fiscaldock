@@ -109,6 +109,140 @@
                 ];
             @endphp
 
+            <details class="bg-white rounded border border-gray-300 border-l-4 mb-4 group" style="border-left-color: #2563eb;">
+                <summary class="cursor-pointer px-4 py-3 flex items-center justify-between list-none hover:bg-gray-50">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span class="text-sm font-semibold text-gray-900">Como funciona a Consulta de CNPJ em Lote</span>
+                    </div>
+                    <span class="text-[11px] font-semibold text-gray-500 group-open:hidden">Abrir</span>
+                    <span class="text-[11px] font-semibold text-gray-500 hidden group-open:inline">Fechar</span>
+                </summary>
+
+                <div class="border-t border-gray-200">
+                    <div class="px-4 py-4">
+                        <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-3">Fluxo em 4 etapas</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="relative pl-10">
+                                <span class="absolute left-0 top-0 w-7 h-7 rounded-full text-white text-xs font-bold flex items-center justify-center" style="background-color: #2563eb;">1</span>
+                                <p class="text-sm font-semibold text-gray-900">Selecionar participantes</p>
+                                <p class="text-xs text-gray-600 mt-0.5">Use as abas Participantes, Clientes ou Grupos — com filtros avançados e seleção em massa por página.</p>
+                            </div>
+                            <div class="relative pl-10">
+                                <span class="absolute left-0 top-0 w-7 h-7 rounded-full text-white text-xs font-bold flex items-center justify-center" style="background-color: #2563eb;">2</span>
+                                <p class="text-sm font-semibold text-gray-900">Escolher o produto</p>
+                                <p class="text-xs text-gray-600 mt-0.5">Cinco planos cobrindo desde dados cadastrais básicos até due diligence completa com sanções e CNJ.</p>
+                            </div>
+                            <div class="relative pl-10">
+                                <span class="absolute left-0 top-0 w-7 h-7 rounded-full text-white text-xs font-bold flex items-center justify-center" style="background-color: #2563eb;">3</span>
+                                <p class="text-sm font-semibold text-gray-900">Confirmar custo</p>
+                                <p class="text-xs text-gray-600 mt-0.5">O resumo à direita mostra créditos totais e seu saldo antes de executar — sem cobrança surpresa.</p>
+                            </div>
+                            <div class="relative pl-10">
+                                <span class="absolute left-0 top-0 w-7 h-7 rounded-full text-white text-xs font-bold flex items-center justify-center" style="background-color: #2563eb;">4</span>
+                                <p class="text-sm font-semibold text-gray-900">Acompanhar e exportar</p>
+                                <p class="text-xs text-gray-600 mt-0.5">Progresso em tempo real (etapa a etapa) e resultados exportáveis em CSV ao final.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="px-4 py-4 border-t border-gray-200">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Matriz de produtos</p>
+                            <span class="text-[10px] font-semibold text-gray-400">O que cada plano consulta</span>
+                        </div>
+                        <div class="overflow-x-auto border border-gray-200 rounded">
+                            <table class="w-full text-xs">
+                                <thead style="background-color: #f9fafb;">
+                                    <tr class="text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+                                        <th class="py-2 px-3">Produto</th>
+                                        <th class="py-2 px-3">Inclui</th>
+                                        <th class="py-2 px-3">Custo</th>
+                                        <th class="py-2 px-3">Quando usar</th>
+                                        <th class="py-2 px-3">Acesso</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100 text-gray-700">
+                                    @foreach ($planosDetalhados as $pd)
+                                        @if (! empty($pd['coming_soon']))
+                                            @continue
+                                        @endif
+                                        <tr>
+                                            <td class="py-2 px-3">
+                                                <span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold whitespace-nowrap" style="background-color: {{ $pd['badge_hex'] }};">{{ $pd['nome'] }}</span>
+                                            </td>
+                                            <td class="py-2 px-3 text-gray-600">{{ implode(' · ', $pd['consultas']) }}</td>
+                                            <td class="py-2 px-3 font-medium text-gray-900 whitespace-nowrap">
+                                                @if ($pd['gratuito'])
+                                                    Gratuito
+                                                @else
+                                                    {{ $pd['creditos'] }} créditos/CNPJ
+                                                @endif
+                                            </td>
+                                            <td class="py-2 px-3 text-gray-500">{{ $pd['casos_uso'][0] ?? '—' }}</td>
+                                            <td class="py-2 px-3">
+                                                @if ($pd['locked'])
+                                                    <span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold whitespace-nowrap" style="background-color: #d97706;">Requer 1ª compra</span>
+                                                @else
+                                                    <span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold whitespace-nowrap" style="background-color: #047857;">Liberado</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="px-4 py-4 border-t border-gray-200">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Como é cobrado</p>
+                            <span class="text-[10px] font-semibold text-gray-400">Modelo prepago em créditos</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div class="border border-gray-300 rounded p-3">
+                                <p class="text-sm font-semibold text-gray-900">1 crédito = R$ 0,20</p>
+                                <p class="text-[11px] text-gray-500 mt-1">Escada comercial atual: Validação 5, Licitação 10, Compliance 18, Due Diligence 35 créditos por CNPJ.</p>
+                            </div>
+                            <div class="border border-gray-300 rounded p-3">
+                                <p class="text-sm font-semibold text-gray-900">Cobrança só na confirmação</p>
+                                <p class="text-[11px] text-gray-500 mt-1">O botão Executar mostra o total antes de debitar. Nada é descontado enquanto você monta o lote.</p>
+                            </div>
+                            <div class="border border-gray-300 rounded p-3">
+                                <p class="text-sm font-semibold text-gray-900">Estorno automático em falha</p>
+                                <p class="text-[11px] text-gray-500 mt-1">Se o provedor externo falhar em algum CNPJ, os créditos correspondentes voltam para sua conta.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="px-4 py-4 border-t border-gray-200">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Onde os dados vêm</p>
+                            <span class="text-[10px] font-semibold text-gray-400">Fontes oficiais</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="border border-gray-300 rounded p-3">
+                                <p class="text-sm font-semibold text-gray-900">Consultas feitas em fontes oficiais</p>
+                                <p class="text-[11px] text-gray-600 leading-relaxed mt-1">Receita Federal (situação cadastral, QSA, Simples/MEI, CND Federal), PGFN (CNDT), Caixa (FGTS), SEFAZ (CND Estadual), prefeituras (CND Municipal), SINTEGRA, Portal da Transparência (sanções), CNJ (processos) e cartórios (protestos) — intermediadas via InfoSimples.</p>
+                            </div>
+                            <div class="border border-gray-300 rounded p-3">
+                                <p class="text-sm font-semibold text-gray-900">Toda consulta no fornecedor é paga</p>
+                                <p class="text-[11px] text-gray-600 leading-relaxed mt-1">Mesmo as do plano Gratuito custam para o FiscalDock — são subsidiadas para você experimentar o produto. Não existe chamada "de graça" no fornecedor.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="px-4 py-4 border-t border-gray-200">
+                        <div class="rounded border border-gray-200 p-3" style="background-color: #fffbeb;">
+                            <p class="text-[11px] font-semibold text-gray-700 mb-1">O que significa "Indeterminado" numa CND?</p>
+                            <p class="text-xs text-gray-600 leading-relaxed">Quando a Receita Federal retorna o código <code class="px-1 py-0.5 rounded bg-gray-100 text-[11px]">611</code>, a certidão <strong>não pode ser emitida pela internet</strong> por insuficiência de dados na origem — isso <strong>não quer dizer que o CNPJ está irregular</strong>. O FiscalDock preserva esse status como <strong>INDETERMINADO</strong> (nunca como "pendente" ou "irregular") e mantém a mensagem original da Receita no resultado para você auditar.</p>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
             <div id="consulta-form-section">
 
             <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
@@ -134,10 +268,13 @@
                         <p class="text-lg font-bold text-gray-900">{{ number_format(($grupos ?? collect())->count(), 0, ',', '.') }}</p>
                         <p class="text-[11px] text-gray-500 mt-1">Segmentações cadastradas</p>
                     </div>
-                    <div class="px-4 py-4">
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Créditos</p>
-                        <p class="text-lg font-bold text-gray-900">{{ number_format($credits ?? 0, 0, ',', '.') }}</p>
-                        <p class="text-[11px] text-gray-500 mt-1">Saldo disponível para consulta</p>
+                    <div class="px-4 py-4" style="background-color: #ecfdf5">
+                        <div class="flex items-center justify-between gap-2">
+                            <p class="text-[10px] font-semibold uppercase tracking-wide" style="color: #047857">Créditos</p>
+                            <span class="text-[9px] font-bold uppercase tracking-wide text-white px-1.5 py-0.5 rounded" style="background-color: #047857">Saldo</span>
+                        </div>
+                        <p class="text-xl font-bold mt-0.5" style="color: #047857">{{ number_format($credits ?? 0, 0, ',', '.') }}</p>
+                        <p class="text-[11px] mt-1" style="color: #065f46">Disponível para consulta</p>
                     </div>
                 </div>
             </div>
