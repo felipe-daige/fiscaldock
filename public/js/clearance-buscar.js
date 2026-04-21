@@ -50,6 +50,11 @@ function initClearanceBuscar() {
     let currentTimeoutHandle = null;
     let inFlight = false;
 
+    window._cleanupFunctions = window._cleanupFunctions || {};
+    window._cleanupFunctions.initClearanceBuscar = function() {
+        try { fecharSseEexpirar(); } catch (_) {}
+    };
+
     function onlyDigits(value) {
         return (value || '').replace(/\D/g, '').slice(0, 44);
     }

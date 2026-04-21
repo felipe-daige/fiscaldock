@@ -10,9 +10,10 @@ use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\ParticipanteGrupo;
-use App\Services\CreditService;
-use App\Services\PricingCatalogService;
 use App\Services\ConsultaReportService;
+use App\Services\CreditService;
+use App\Services\ParecerFiscalService;
+use App\Services\PricingCatalogService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -1415,6 +1416,8 @@ class ConsultaController extends Controller
             ->with('participante:id,cnpj,razao_social,uf')
             ->get();
 
+        $parecerService = app(ParecerFiscalService::class);
+
         return response()->json([
             'success' => true,
             'lote_id' => $lote->id,
@@ -1434,6 +1437,9 @@ class ConsultaController extends Controller
                 'crf_fgts'           => $r->getDado('crf_fgts'),
                 'cndt'               => $r->getDado('cndt'),
                 'cnd_estadual'       => $r->getDado('cnd_estadual'),
+                'parecer'            => $r->isSucesso()
+                    ? $parecerService->gerar($r->resultado_dados ?? [])
+                    : [],
             ]),
         ]);
     }

@@ -14,6 +14,10 @@
         'LUCRO REAL' => ['label' => $regimeUpper, 'hex' => '#374151'],
         default => $regimeUpper ? ['label' => $regimeUpper, 'hex' => '#6b7280'] : null,
     };
+    $returnToUrl = $returnToUrl ?? '/app/dashboard';
+    $returnToLabel = str_starts_with($returnToUrl, '/app/participantes')
+        ? 'Voltar para participantes'
+        : 'Voltar para o dashboard';
 @endphp
 <div class="min-h-screen bg-gray-100" id="monitoramento-participante-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -22,11 +26,11 @@
                 <div>
                     <div class="flex items-center gap-3 flex-wrap">
                     <a
-                        href="/app/dashboard"
+                        href="{{ $returnToUrl }}"
                         class="text-xs text-gray-600 hover:text-gray-900 hover:underline"
                         data-link
                     >
-                        Voltar para o dashboard
+                        {{ $returnToLabel }}
                     </a>
                         <span class="text-gray-300 hidden sm:inline">|</span>
                         <span class="text-xs text-gray-500">Detalhe operacional do participante</span>
@@ -208,6 +212,40 @@
                             </div>
                         </div>
                         <div class="p-4 sm:p-6 space-y-6">
+                            {{-- Parecer Fiscal Automático (planos pagos) --}}
+                            @if(!empty($parecerFiscal ?? []))
+                                @php
+                                    $severidadeLabels = [
+                                        'alta' => 'Crítico',
+                                        'media' => 'Atenção',
+                                        'baixa' => 'Informativo',
+                                        'info' => 'Contexto',
+                                    ];
+                                @endphp
+                                <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-300 flex items-center justify-between">
+                                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Parecer Fiscal Automático</span>
+                                        <span class="text-[10px] text-gray-500">{{ count($parecerFiscal) }} {{ count($parecerFiscal) === 1 ? 'sinalização' : 'sinalizações' }}</span>
+                                    </div>
+                                    <ul class="divide-y divide-gray-200">
+                                        @foreach($parecerFiscal as $item)
+                                            <li class="flex gap-3 px-4 py-3">
+                                                <span class="shrink-0 w-1 rounded-sm" style="background-color: {{ $item['hex'] }}"></span>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="flex items-center gap-2 flex-wrap">
+                                                        <span class="text-sm font-semibold text-gray-900">{{ $item['titulo'] }}</span>
+                                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $item['hex'] }}">
+                                                            {{ $severidadeLabels[$item['severidade']] ?? $item['severidade'] }}
+                                                        </span>
+                                                    </div>
+                                                    <p class="mt-1 text-xs text-gray-600 leading-relaxed">{{ $item['descricao'] }}</p>
+                                                </div>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+
                             {{-- Situação Cadastral e Regime Tributário — DANFE Modernizado --}}
                             @php
                                 $situacao = strtoupper(trim((string) ($dados['situacao_cadastral'] ?? '')));

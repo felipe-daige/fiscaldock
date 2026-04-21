@@ -51,6 +51,26 @@ if [ -f /var/www/html/.env ]; then
     echo "Arquivo .env encontrado"
     WEBHOOK_COUNT=$(grep -c "^WEBHOOK_" /var/www/html/.env 2>/dev/null || echo "0")
     echo "Webhooks no .env: ${WEBHOOK_COUNT}"
+
+    # Sanity check: .env precisa ser legível pelo www-data (usuário do PHP-FPM).
+    # Se não for, Dotenv falha silencioso e só enxerga envs do docker-compose,
+    # fazendo endpoints retornarem "Configuração de webhook ausente".
+    if ! su -s /bin/sh www-data -c "test -r /var/www/html/.env"; then
+        echo ""
+        echo "ERRO CRÍTICO: /var/www/html/.env não é legível pelo usuário www-data."
+        echo "             PHP-FPM não conseguirá carregar as variáveis do .env"
+        echo "             (Dotenv falha em silêncio), e consultas/importações vão"
+        echo "             retornar 'Configuração de webhook ausente'."
+        echo ""
+        echo "Permissões atuais:"
+        ls -la /var/www/html/.env || true
+        echo ""
+        echo "Corrija no HOST (mount é :ro, entrypoint não pode alterar):"
+        echo "  sudo chgrp www-data /caminho/host/.env"
+        echo "  sudo chmod 640 /caminho/host/.env"
+        echo ""
+        exit 1
+    fi
 else
     echo "AVISO: Arquivo .env NAO encontrado - dependendo apenas de env vars do container"
 fi

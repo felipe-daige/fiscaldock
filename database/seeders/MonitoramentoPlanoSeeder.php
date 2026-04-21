@@ -16,10 +16,9 @@ class MonitoramentoPlanoSeeder extends Seeder
             [
                 'codigo' => 'gratuito',
                 'nome' => 'Gratuito',
-                'descricao' => 'Consulta cadastral simples sem custo variável relevante',
+                'descricao' => 'Cartão de visita do CNPJ: confirma que a empresa existe, está ativa e tem endereço válido',
                 'consultas_incluidas' => [
                     'situacao_cadastral', 'dados_cadastrais', 'endereco',
-                    'cnaes', 'qsa',
                 ],
                 'etapas' => [
                     ['numero' => 1, 'chave' => 'cadastrais', 'label' => 'Cadastrais'],
@@ -32,13 +31,18 @@ class MonitoramentoPlanoSeeder extends Seeder
             [
                 'codigo' => 'validacao',
                 'nome' => 'Validação',
-                'descricao' => 'CNPJ, Simples Nacional e MEI para qualificação fiscal',
+                'descricao' => 'Raio-X cadastral completo com parecer fiscal automático: regime tributário, histórico no Simples, QSA detalhado, CNAEs secundários e sinalizações para o contador',
                 'consultas_incluidas' => [
                     'situacao_cadastral', 'dados_cadastrais', 'endereco',
-                    'cnaes', 'qsa', 'simples_nacional', 'mei',
+                    'cnaes', 'cnaes_secundarios', 'qsa', 'qsa_detalhado',
+                    'simples_nacional', 'mei',
+                    'regime_tributario', 'historico_simples',
+                    'capital_social', 'natureza_juridica', 'porte', 'data_inicio_atividade',
+                    'parecer_fiscal',
                 ],
                 'etapas' => [
                     ['numero' => 1, 'chave' => 'cadastrais', 'label' => 'Cadastrais'],
+                    ['numero' => 2, 'chave' => 'parecer', 'label' => 'Parecer fiscal'],
                 ],
                 'custo_creditos' => 5,
                 'is_gratuito' => false,
@@ -66,7 +70,7 @@ class MonitoramentoPlanoSeeder extends Seeder
             [
                 'codigo' => 'compliance',
                 'nome' => 'Compliance',
-                'descricao' => 'Regularidade fiscal e trabalhista completa com CNDs federal, estadual e municipal',
+                'descricao' => 'Regularidade fiscal e trabalhista completa',
                 'consultas_incluidas' => [
                     'situacao_cadastral', 'dados_cadastrais', 'endereco',
                     'cnaes', 'qsa', 'simples_nacional', 'mei',

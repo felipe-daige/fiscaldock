@@ -15,6 +15,7 @@ use App\Models\Participante;
 use App\Models\XmlNota;
 use App\Services\CreditService;
 use App\Services\NotaFiscalService;
+use App\Services\ParecerFiscalService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -534,6 +535,7 @@ class ParticipanteController extends Controller
             'clientes' => $clientes,
             'origens' => $origens,
             'ufs' => $ufs,
+            'currentListUrl' => $request->getRequestUri(),
             'totalParticipantes' => $totalParticipantes,
             'totalAtiva' => $totalAtiva,
             'totalIrregular' => $totalIrregular,
@@ -733,6 +735,7 @@ class ParticipanteController extends Controller
 
         // Saldo de créditos do usuário
         $credits = $this->creditService->getBalance($user);
+        $returnToUrl = $this->resolveReturnToUrl($request, (string) $request->query('return_to', ''));
 
         $data = [
             'participante' => $participante,
@@ -746,8 +749,12 @@ class ParticipanteController extends Controller
             'notasAjaxUrl' => "/app/participante/{$id}/notas",
             'notasContexto' => 'participante',
             'notasEntityId' => $participante->id,
+            'returnToUrl' => $returnToUrl,
             'ultimaConsulta' => $ultimaConsulta,
             'lotesDoParticipante' => $lotesDoParticipante,
+            'parecerFiscal' => $ultimaConsulta
+                ? app(ParecerFiscalService::class)->gerar($ultimaConsulta->resultado_dados ?? [])
+                : [],
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -1160,5 +1167,46 @@ class ParticipanteController extends Controller
         return $wantsJson
             || $expectsJson
             || $xRequestedWith === 'XMLHttpRequest';
+    }
+
+    /**
+     * Normaliza a URL de retorno para evitar open redirects e manter apenas rotas internas do app.
+     */
+    private function resolveReturnToUrl(Request $request, string $candidate): string
+    {
+        $fallback = '/app/dashboard';
+        $candidate = trim($candidate);
+
+        if ($candidate === '' || preg_match('/[\r\n]/', $candidate)) {
+            return $fallback;
+        }
+
+        $parsed = parse_url($candidate);
+
+        if ($parsed === false) {
+            return $fallback;
+        }
+
+        $scheme = $parsed['scheme'] ?? null;
+        $host = $parsed['host'] ?? null;
+        $path = $parsed['path'] ?? '';
+        $query = isset($parsed['query']) ? '?'.$parsed['query'] : '';
+        $fragment = isset($parsed['fragment']) ? '#'.$parsed['fragment'] : '';
+
+        if ($scheme !== null || $host !== null) {
+            if ($host !== $request->getHost()) {
+                return $fallback;
+            }
+
+            if ($scheme !== null && $scheme !== $request->getScheme()) {
+                return $fallback;
+            }
+        }
+
+        if (! is_string($path) || ! str_starts_with($path, '/app/')) {
+            return $fallback;
+        }
+
+        return $path.$query.$fragment;
     }
 }

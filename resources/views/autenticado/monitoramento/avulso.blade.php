@@ -1590,6 +1590,11 @@
             }
         }
 
+        window._cleanupFunctions = window._cleanupFunctions || {};
+        window._cleanupFunctions.initMonitoramentoAvulso = function() {
+            try { fecharSSE(); } catch (_) {}
+        };
+
         console.log('[Monitoramento Avulso] Inicializacao concluida');
     }
 
