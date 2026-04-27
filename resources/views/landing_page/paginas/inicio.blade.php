@@ -455,7 +455,7 @@
     }
 
     .hero-grid {
-        grid-template-columns: minmax(0, 35rem) minmax(0, 1fr);
+        grid-template-columns: clamp(34rem, 24vw, 38rem) minmax(0, 1fr);
         gap: 5rem;
     }
 
@@ -477,13 +477,70 @@
     }
 
     .hero-visual-glow {
-        inset: 4% 0 6% 22%;
-        transform: scale(1.18);
+        inset: 6% 4% 8% 18%;
+        transform: scale(1.1);
     }
 
     .hero-mockup {
-        width: min(82rem, 100%);
-        transform: translateX(8%) scale(1.14);
+        width: clamp(64rem, 56vw, 78rem);
+        transform: none;
+    }
+}
+
+@media (min-width: 2200px) {
+    .hero-shell {
+        max-width: min(95vw, 156rem);
+    }
+
+    .hero-grid {
+        grid-template-columns: clamp(36rem, 22vw, 44rem) minmax(0, 1fr);
+        gap: clamp(5rem, 5vw, 8rem);
+    }
+
+    .hero-copy > * {
+        max-width: clamp(36rem, 24vw, 44rem);
+    }
+
+    .hero-copy h1 {
+        font-size: clamp(4.3rem, 3.6vw, 5.4rem);
+        line-height: 1.02;
+    }
+
+    .hero-copy p {
+        max-width: clamp(34rem, 22vw, 42rem);
+    }
+
+    .hero-visual {
+        padding-right: clamp(2.5rem, 3vw, 5rem);
+    }
+
+    .hero-visual-glow {
+        inset: 6% 6% 8% 16%;
+        transform: scale(1.05);
+    }
+
+    .hero-mockup {
+        width: clamp(77rem, 52vw, 96rem);
+    }
+}
+
+@media (max-height: 820px) and (min-width: 1024px) {
+    .hero-first-fold,
+    .hero-shell {
+        min-height: 0;
+    }
+
+    .hero-shell {
+        padding-top: 1.5rem;
+        padding-bottom: 2rem;
+    }
+
+    .hero-visual {
+        min-height: 32rem;
+    }
+
+    .hero-mockup {
+        width: clamp(48rem, 50vw, 70rem);
     }
 }
 
