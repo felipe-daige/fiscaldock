@@ -203,6 +203,7 @@
                                 <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">SEFAZ</th>
                                 <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Δ</th>
                                 <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Severidade</th>
+                                <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Comparar</th>
                                 <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50"></th>
                             </tr>
                         </thead>
@@ -230,6 +231,13 @@
                                     </td>
                                     <td class="px-3 py-3">
                                         <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $sevHex }}">{{ $sevLabel }}</span>
+                                    </td>
+                                    <td class="px-3 py-3 text-center whitespace-nowrap">
+                                        @if($linha->chave_acesso ?? null)
+                                            <a href="{{ route('app.clearance.nota.comparar', ['chave' => $linha->chave_acesso]) }}?lote_id={{ $consultaLoteId ?? request('lote_id') ?? '' }}"
+                                               data-link
+                                               class="text-xs font-medium text-blue-700 hover:text-blue-900 hover:underline">Comparar ↗</a>
+                                        @endif
                                     </td>
                                     <td class="px-3 py-3 text-right whitespace-nowrap">
                                         @if($linha->detalhe_url ?? null)

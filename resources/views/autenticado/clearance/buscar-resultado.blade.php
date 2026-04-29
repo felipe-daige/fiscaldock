@@ -137,6 +137,13 @@
                     </div>
 
                     <div class="flex flex-col sm:flex-row gap-2 pt-1">
+                        @php $chaveCompararBA = $notaResultado['nfe_id'] ?? $chaveConsultada ?? null; @endphp
+                        @if($chaveCompararBA)
+                            <a href="{{ route('app.clearance.nota.comparar', ['chave' => $chaveCompararBA]) }}"
+                               data-link
+                               class="px-4 py-2 rounded text-sm font-medium text-white text-center"
+                               style="background-color: #1d4ed8;">Comparar com declarado ↗</a>
+                        @endif
                         @if(!empty($notaResultado['detalhe_url']))
                             <a href="{{ $notaResultado['detalhe_url'] }}" data-link class="px-4 py-2 rounded text-sm font-medium text-white text-center" style="background-color: #374151">Ver detalhe do documento</a>
                         @endif

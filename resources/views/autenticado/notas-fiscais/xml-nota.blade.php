@@ -80,6 +80,34 @@
                     @endif
                 </div>
             </div>
+
+            @if($nota->nfe_id)
+                <div class="mt-3 flex flex-wrap items-center gap-2">
+                    @if($nota->situacao_sefaz)
+                        <a href="{{ route('app.clearance.nota.comparar', ['chave' => $nota->nfe_id]) }}"
+                           data-link
+                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium text-white"
+                           style="background-color: #1d4ed8;">
+                            Comparar declarado vs SEFAZ ↗
+                        </a>
+                    @else
+                        <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium border border-gray-300 text-gray-500">
+                            Sem snapshot SEFAZ
+                        </span>
+                        <a href="{{ route('app.clearance.buscar') }}?chave={{ $nota->nfe_id }}"
+                           data-link
+                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium text-white"
+                           style="background-color: #d97706;">
+                            Fazer busca avulsa (1 crédito) ↗
+                        </a>
+                        <a href="{{ route('app.clearance.notas') }}?selecionar={{ $nota->nfe_id }}"
+                           data-link
+                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium border border-gray-300 text-gray-700 hover:bg-gray-50">
+                            Incluir em lote ↗
+                        </a>
+                    @endif
+                </div>
+            @endif
         </div>
 
         <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
