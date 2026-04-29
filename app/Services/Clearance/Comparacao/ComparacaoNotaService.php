@@ -43,13 +43,15 @@ class ComparacaoNotaService
 
         $headerDivergencias = collect($headerDiff)->filter(fn ($c) => $c->divergente)->count();
 
+        $partesDiff = $this->compararPartes($declarado->partes, $sefaz->partes, $tipoDocumento);
+
         return new Comparacao(
             chave: $chave,
             tipoDocumento: $tipoDocumento,
             declarado: $declarado,
             sefaz: $sefaz,
             headerDiff: $headerDiff,
-            partesDiff: [],
+            partesDiff: $partesDiff,
             totaisDiff: [],
             itensPareados: [],
             resumo: new ResumoComparacao(
@@ -72,6 +74,42 @@ class ComparacaoNotaService
         'modelo' => 'Modelo',
         'natureza_operacao' => 'Natureza operação',
     ];
+
+    private const LABELS_PARTE = [
+        'cnpj' => 'CNPJ',
+        'cpf' => 'CPF',
+        'razao_social' => 'Razão social',
+        'ie' => 'Inscrição estadual',
+        'uf' => 'UF',
+    ];
+
+    private const PARTES_NFE = ['emit', 'dest'];
+
+    private const PARTES_CTE = ['emit', 'dest', 'tomador', 'remetente'];
+
+    /**
+     * @param  array<string, array<string, mixed>>  $declarado
+     * @param  array<string, array<string, mixed>>  $sefaz
+     * @return array<string, array<int, CampoComparado>>
+     */
+    private function compararPartes(array $declarado, array $sefaz, string $tipoDocumento): array
+    {
+        $partes = $tipoDocumento === 'CTE' ? self::PARTES_CTE : self::PARTES_NFE;
+        $resultado = [];
+
+        foreach ($partes as $parte) {
+            $valoresDec = $declarado[$parte] ?? [];
+            $valoresSef = $sefaz[$parte] ?? [];
+
+            if ($valoresDec === [] && $valoresSef === []) {
+                continue;
+            }
+
+            $resultado[$parte] = $this->compararCampos($valoresDec, $valoresSef, self::LABELS_PARTE);
+        }
+
+        return $resultado;
+    }
 
     /**
      * @param  array<string, mixed>  $declarado

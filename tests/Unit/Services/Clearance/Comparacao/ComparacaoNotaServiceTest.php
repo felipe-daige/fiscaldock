@@ -78,3 +78,28 @@ it('marca campo divergente quando header diverge', function () {
     expect($numeroComparado->sefaz)->toBe('9999');
     expect($resultado->resumo->headerDivergencias)->toBe(1);
 });
+
+it('compara partes (emit e dest) e gera CampoComparado por sub-campo', function () {
+    $service = new ComparacaoNotaService;
+    $declarado = notaMinima();
+    $sefazPartes = $declarado->partes;
+    $sefazPartes['emit']['razao_social'] = 'OUTRA RAZAO';
+    $sefaz = new \App\Services\Clearance\Comparacao\NotaNormalizada(
+        chave: $declarado->chave,
+        tipoDocumento: 'NFE',
+        header: $declarado->header,
+        metaSefaz: [],
+        partes: $sefazPartes,
+        totais: $declarado->totais,
+        itens: [],
+        origemLabel: 'sefaz',
+    );
+
+    $resultado = $service->comparar($declarado, $sefaz, 'NFE');
+
+    expect(array_keys($resultado->partesDiff))->toContain('emit', 'dest');
+    $razaoEmit = collect($resultado->partesDiff['emit'])->firstWhere('chave', 'razao_social');
+    expect($razaoEmit->divergente)->toBeTrue();
+    $cnpjEmit = collect($resultado->partesDiff['emit'])->firstWhere('chave', 'cnpj');
+    expect($cnpjEmit->divergente)->toBeFalse();
+});
