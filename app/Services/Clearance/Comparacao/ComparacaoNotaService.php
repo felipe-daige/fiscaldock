@@ -13,6 +13,30 @@ class ComparacaoNotaService
         $chave = $declarado->chave ?? $sefaz->chave;
 
         if ($declarado === null || $sefaz === null) {
+            $itensPareados = [];
+            if ($declarado === null && $sefaz !== null) {
+                foreach ($sefaz->itens as $it) {
+                    $itensPareados[] = new ItemPareado(
+                        declarado: null,
+                        sefaz: $it,
+                        matchType: 'fantasma_sefaz',
+                        diffs: [],
+                        temDivergencia: true,
+                    );
+                }
+            }
+            if ($sefaz === null && $declarado !== null) {
+                foreach ($declarado->itens as $it) {
+                    $itensPareados[] = new ItemPareado(
+                        declarado: $it,
+                        sefaz: null,
+                        matchType: 'fantasma_declarado',
+                        diffs: [],
+                        temDivergencia: true,
+                    );
+                }
+            }
+
             return new Comparacao(
                 chave: $chave,
                 tipoDocumento: $tipoDocumento,
@@ -21,13 +45,13 @@ class ComparacaoNotaService
                 headerDiff: [],
                 partesDiff: [],
                 totaisDiff: [],
-                itensPareados: [],
+                itensPareados: $itensPareados,
                 resumo: new ResumoComparacao(
                     headerDivergencias: 0,
                     totaisDivergencias: 0,
                     itensDivergentes: 0,
-                    itensFantasmaDeclarado: 0,
-                    itensFantasmaSefaz: 0,
+                    itensFantasmaDeclarado: $sefaz === null ? count($itensPareados) : 0,
+                    itensFantasmaSefaz: $declarado === null ? count($itensPareados) : 0,
                     severidade: 'ok',
                     sefazAusente: $sefaz === null,
                     declaradoAusente: $declarado === null,
