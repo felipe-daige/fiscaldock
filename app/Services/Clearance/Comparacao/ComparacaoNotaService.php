@@ -204,6 +204,36 @@ class ComparacaoNotaService
             }
         }
 
+        $itensSemCprodDec = array_values(array_filter($declarado, fn ($it) => $it->cProd === null || $it->cProd === ''));
+        $itensSemCprodSef = array_values(array_filter($sefaz, fn ($it) => $it->cProd === null || $it->cProd === ''));
+        $countMin = min(count($itensSemCprodDec), count($itensSemCprodSef));
+
+        for ($i = 0; $i < $countMin; $i++) {
+            $diffs = $this->compararItensCampos($itensSemCprodDec[$i], $itensSemCprodSef[$i]);
+            $pares[] = new ItemPareado(
+                declarado: $itensSemCprodDec[$i],
+                sefaz: $itensSemCprodSef[$i],
+                matchType: 'sequencia',
+                diffs: $diffs,
+                temDivergencia: collect($diffs)->contains(fn ($c) => $c->divergente),
+            );
+        }
+
+        for ($i = $countMin; $i < count($itensSemCprodDec); $i++) {
+            $pares[] = new ItemPareado(
+                declarado: $itensSemCprodDec[$i], sefaz: null,
+                matchType: 'fantasma_declarado',
+                diffs: [], temDivergencia: true,
+            );
+        }
+        for ($i = $countMin; $i < count($itensSemCprodSef); $i++) {
+            $pares[] = new ItemPareado(
+                declarado: null, sefaz: $itensSemCprodSef[$i],
+                matchType: 'fantasma_sefaz',
+                diffs: [], temDivergencia: true,
+            );
+        }
+
         return $pares;
     }
 

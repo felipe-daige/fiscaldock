@@ -220,3 +220,40 @@ it('marca cProd presente em só um lado como fantasma', function () {
     expect($fantasmas)->toContain('fantasma_declarado');
     expect($fantasmas)->toContain('fantasma_sefaz');
 });
+
+it('faz fallback para nItem quando ambos os lados têm itens sem cProd', function () {
+    $service = new ComparacaoNotaService;
+    $declarado = notaComItens([
+        itemNFE(['cProd' => null, 'nItem' => 1, 'vProd' => 100]),
+        itemNFE(['cProd' => null, 'nItem' => 2, 'vProd' => 200]),
+    ]);
+    $sefaz = notaComItens([
+        itemNFE(['cProd' => null, 'nItem' => 1, 'vProd' => 100]),
+        itemNFE(['cProd' => null, 'nItem' => 2, 'vProd' => 250]),
+    ], 'sefaz');
+
+    $resultado = $service->comparar($declarado, $sefaz, 'NFE');
+
+    expect($resultado->itensPareados)->toHaveCount(2);
+    expect($resultado->itensPareados[0]->matchType)->toBe('sequencia');
+    expect($resultado->itensPareados[1]->matchType)->toBe('sequencia');
+    expect($resultado->itensPareados[1]->temDivergencia)->toBeTrue();
+});
+
+it('marca sobras como fantasma quando quantidades diferem no fallback nItem', function () {
+    $service = new ComparacaoNotaService;
+    $declarado = notaComItens([
+        itemNFE(['cProd' => null, 'nItem' => 1, 'vProd' => 100]),
+        itemNFE(['cProd' => null, 'nItem' => 2, 'vProd' => 200]),
+        itemNFE(['cProd' => null, 'nItem' => 3, 'vProd' => 300]),
+    ]);
+    $sefaz = notaComItens([
+        itemNFE(['cProd' => null, 'nItem' => 1, 'vProd' => 100]),
+    ], 'sefaz');
+
+    $resultado = $service->comparar($declarado, $sefaz, 'NFE');
+
+    expect($resultado->itensPareados)->toHaveCount(3);
+    $tipos = collect($resultado->itensPareados)->pluck('matchType')->all();
+    expect($tipos)->toBe(['sequencia', 'fantasma_declarado', 'fantasma_declarado']);
+});
