@@ -21,6 +21,18 @@ return new class extends Migration
                 ->after('dest_participante_id')
                 ->constrained('clientes')
                 ->nullOnDelete();
+
+            // Snapshot SEFAZ (acervo único xml_notas — busca avulsa e clearance em lote
+            // gravam aqui via upsert por (user_id, nfe_id), preservando dados do contador).
+            $table->foreignId('consulta_lote_id')
+                ->nullable()
+                ->constrained('consulta_lotes')
+                ->nullOnDelete();
+            $table->string('situacao_sefaz', 30)->nullable();
+            $table->timestamp('verificado_sefaz_em')->nullable();
+
+            $table->index('situacao_sefaz');
+            $table->index('consulta_lote_id');
         });
 
         // Backfill from participantes.cliente_id
@@ -42,6 +54,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('xml_notas', function (Blueprint $table) {
+            $table->dropIndex(['situacao_sefaz']);
+            $table->dropIndex(['consulta_lote_id']);
+            $table->dropColumn(['situacao_sefaz', 'verificado_sefaz_em']);
+            $table->dropConstrainedForeignId('consulta_lote_id');
             $table->dropConstrainedForeignId('emit_cliente_id');
             $table->dropConstrainedForeignId('dest_cliente_id');
         });

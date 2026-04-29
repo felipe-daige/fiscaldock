@@ -42,6 +42,9 @@ class XmlNota extends Model
         'tributos_total',
         'payload',
         'validacao',
+        'consulta_lote_id',
+        'situacao_sefaz',
+        'verificado_sefaz_em',
     ];
 
     protected function casts(): array
@@ -61,6 +64,7 @@ class XmlNota extends Model
             'tributos_total' => 'decimal:2',
             'payload' => 'array',
             'validacao' => 'array',
+            'verificado_sefaz_em' => 'datetime',
         ];
     }
 

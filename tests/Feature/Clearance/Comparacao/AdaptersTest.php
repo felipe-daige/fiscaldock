@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\XmlNota;
 use App\Services\Clearance\Comparacao\Adapters\EfdNotaDeclaradoAdapter;
 use App\Services\Clearance\Comparacao\Adapters\XmlNotaDeclaradoAdapter;
+use App\Services\Clearance\Comparacao\Adapters\XmlNotaSefazNfeAdapter;
 use App\Services\Clearance\Comparacao\NotaNormalizada;
 use Illuminate\Support\Facades\DB;
 
@@ -242,4 +243,114 @@ it('EfdNotaDeclaradoAdapter inverte emit/dest para entrada (emit=participante, d
     expect($normalizada->partes['emit']['uf'])->toBe('PR');
     expect($normalizada->partes['dest']['cnpj'])->toBe('11111111000111');
     expect($normalizada->partes['dest']['uf'])->toBe('MG');
+});
+
+it('XmlNotaSefazNfeAdapter mapeia payload nfe_clearance + colunas snapshot', function () use (&$testUserIds) {
+    $user = adapterCriarUser($testUserIds);
+    $chave = '35202404123456789012555678901234567890123456';
+
+    $loteId = DB::table('consulta_lotes')->insertGetId([
+        'user_id' => $user->id,
+        'status' => 'concluido',
+        'total_participantes' => 1,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $nota = XmlNota::create([
+        'user_id' => $user->id,
+        'nfe_id' => $chave,
+        'origem' => 'busca_avulsa',
+        'tipo_documento' => 'NFE',
+        'numero_nota' => 1234,
+        'serie' => 1,
+        'data_emissao' => '2026-04-12 10:00:00',
+        'valor_total' => 1000.00,
+        'tipo_nota' => XmlNota::TIPO_SAIDA,
+        'emit_cnpj' => '12345678000190',
+        'emit_razao_social' => 'ACME',
+        'dest_cnpj' => '98765432000110',
+        'dest_razao_social' => 'XYZ',
+        'payload' => [
+            'nfe_clearance' => [
+                'serie' => '1',
+                'modelo' => '55',
+                'numero' => '1234',
+                'status' => 'AUTORIZADA',
+                'valor_total' => 1000.00,
+                'natureza_operacao' => 'Venda',
+                'totais' => [
+                    'normalizado_valor_nfe' => 1000.0,
+                    'normalizado_valor_icms' => 180.0,
+                    'normalizado_valor_pis' => 6.5,
+                    'normalizado_valor_cofins' => 30.0,
+                ],
+                'emitente' => ['cnpj' => '12345678000190', 'nome' => 'ACME', 'ie' => '111', 'uf' => 'SP'],
+                'destinatario' => ['cnpj' => '98765432000110', 'nome' => 'XYZ', 'ie' => '222', 'uf' => 'RJ'],
+                'eventos' => [
+                    ['evento' => 'Autorização de Uso', 'protocolo' => '135240412345', 'data_autorizacao' => '12/04/2026 às 14:32:00'],
+                ],
+                'produtos' => [
+                    ['num' => 1, 'descricao' => 'Produto A', 'quantidade' => '10,0000', 'valor_produto' => '1000,000', 'valor_unidade' => '100,000', 'unidade_comercial' => 'UN'],
+                ],
+            ],
+        ],
+    ]);
+    DB::table('xml_notas')->where('id', $nota->id)->update([
+        'consulta_lote_id' => $loteId,
+        'situacao_sefaz' => 'AUTORIZADA',
+        'verificado_sefaz_em' => now(),
+    ]);
+    $nota->refresh();
+
+    $adapter = new XmlNotaSefazNfeAdapter($nota);
+    $normalizada = $adapter->carregar();
+
+    expect($normalizada)->toBeInstanceOf(NotaNormalizada::class);
+    expect($normalizada->chave)->toBe($chave);
+    expect($normalizada->tipoDocumento)->toBe('NFE');
+    expect($normalizada->header['numero'])->toBe('1234');
+    expect($normalizada->header['modelo'])->toBe('55');
+    expect($normalizada->metaSefaz['situacao'])->toBe('AUTORIZADA');
+    expect($normalizada->metaSefaz['protocolo'])->toBe('135240412345');
+    expect($normalizada->partes['emit']['cnpj'])->toBe('12345678000190');
+    expect($normalizada->partes['dest']['uf'])->toBe('RJ');
+    expect($normalizada->totais['valor_total'])->toBe(1000.0);
+    expect($normalizada->totais['valor_icms'])->toBe(180.0);
+    expect($normalizada->itens)->toHaveCount(1);
+    expect($normalizada->itens[0]->nItem)->toBe(1);
+    expect($normalizada->itens[0]->xProd)->toBe('Produto A');
+    expect($normalizada->itens[0]->qCom)->toBe(10.0);
+    expect($normalizada->itens[0]->vProd)->toBe(1000.0);
+    expect($normalizada->itens[0]->cProd)->toBeNull();
+    expect($normalizada->itens[0]->ncm)->toBeNull();
+    expect($adapter->origemLabel())->toContain('SEFAZ');
+});
+
+it('XmlNotaSefazNfeAdapter funciona sem snapshot (situacao_sefaz null)', function () use (&$testUserIds) {
+    $user = adapterCriarUser($testUserIds);
+    $chave = '35202404123456789012555678901234567890123499';
+
+    $nota = XmlNota::create([
+        'user_id' => $user->id,
+        'nfe_id' => $chave,
+        'origem' => 'busca_avulsa',
+        'tipo_documento' => 'NFE',
+        'numero_nota' => 99,
+        'serie' => 1,
+        'data_emissao' => '2026-04-15 09:00:00',
+        'valor_total' => 50.00,
+        'tipo_nota' => XmlNota::TIPO_SAIDA,
+        'emit_cnpj' => '12345678000190',
+        'dest_cnpj' => '98765432000110',
+        'payload' => [
+            'nfe_clearance' => ['status' => 'CANCELADA', 'numero' => '99'],
+        ],
+    ]);
+
+    $adapter = new XmlNotaSefazNfeAdapter($nota);
+    $normalizada = $adapter->carregar();
+
+    expect($normalizada->metaSefaz['situacao'])->toBe('CANCELADA');
+    expect($normalizada->itens)->toBe([]);
 });
