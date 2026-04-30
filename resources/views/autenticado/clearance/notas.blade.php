@@ -35,7 +35,23 @@
         'tipo_nota' => 'Tipo',
         'modelo' => 'Modelo',
         'status' => 'Status',
+        'divergencia' => 'Divergência',
     ];
+
+    $divergenciaBadge = function ($nota) {
+        $sev = strtoupper((string) ($nota->divergencia_severidade ?? ''));
+        $count = (int) ($nota->divergencia_count ?? 0);
+        $hasSnapshot = ! empty($nota->situacao_sefaz);
+        if (! $hasSnapshot) {
+            return ['label' => 'Sem SEFAZ', 'hex' => '#9ca3af', 'tooltip' => 'Sem snapshot SEFAZ — esta nota ainda não foi verificada via clearance.'];
+        }
+        return match ($sev) {
+            'CRITICA' => ['label' => '🚩 Crítica', 'hex' => '#b91c1c', 'tooltip' => "{$count} campo(s) divergente(s) — divergência crítica"],
+            'REVISAR' => ['label' => '⚠ Revisar', 'hex' => '#d97706', 'tooltip' => "{$count} campo(s) divergente(s) — revisar"],
+            'OK' => ['label' => '✓ OK', 'hex' => '#047857', 'tooltip' => 'Declarado bate com SEFAZ dentro da tolerância'],
+            default => ['label' => '—', 'hex' => '#6b7280', 'tooltip' => 'Comparação ainda não calculada'],
+        };
+    };
 
     $statusOptions = [
         'todos' => 'Todos',
@@ -274,6 +290,18 @@
                         @endforeach
                     </select>
                 </div>
+                <div>
+                    <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Divergência SEFAZ</label>
+                    <select name="divergencia" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                        @php $divFiltro = strtoupper((string) ($filtros['divergencia'] ?? '')); @endphp
+                        <option value="">Todas</option>
+                        <option value="CRITICA" {{ $divFiltro === 'CRITICA' ? 'selected' : '' }}>Crítica</option>
+                        <option value="REVISAR" {{ $divFiltro === 'REVISAR' ? 'selected' : '' }}>Revisar</option>
+                        <option value="COM_DIVERGENCIA" {{ $divFiltro === 'COM_DIVERGENCIA' ? 'selected' : '' }}>Qualquer divergência</option>
+                        <option value="OK" {{ $divFiltro === 'OK' ? 'selected' : '' }}>Sem divergência</option>
+                        <option value="SEM_SNAPSHOT" {{ $divFiltro === 'SEM_SNAPSHOT' ? 'selected' : '' }}>Sem snapshot SEFAZ</option>
+                    </select>
+                </div>
             </div>
             <div class="bg-gray-50 px-4 py-2 border-t border-gray-200 flex gap-2">
                 <button type="submit" class="px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Aplicar</button>
@@ -418,6 +446,9 @@
                             <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
                                 <a href="{{ $buildSortUrl('status') }}" data-link data-clearance-preserve-scroll class="inline-flex items-center gap-1 hover:text-gray-700">Status {!! $sortArrow('status') !!}</a>
                             </th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+                                <a href="{{ $buildSortUrl('divergencia') }}" data-link data-clearance-preserve-scroll class="inline-flex items-center gap-1 hover:text-gray-700" title="Divergência declarado vs SEFAZ">Divergência {!! $sortArrow('divergencia') !!}</a>
+                            </th>
                             <th class="px-3 py-2 text-right text-[10px] font-semibold text-gray-500 uppercase tracking-wide"></th>
                         </tr>
                     </thead>
@@ -483,6 +514,19 @@
                                 <td class="px-3 py-2 text-xs">
                                     <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white td-status" style="background-color: {{ $s['hex'] }}">{{ $s['label'] }}</span>
                                 </td>
+                                <td class="px-3 py-2 text-xs">
+                                    @php $div = $divergenciaBadge($n); @endphp
+                                    @if ($n->chave && strlen($n->chave) === 44 && ! empty($n->situacao_sefaz))
+                                        <a href="{{ route('app.clearance.nota.comparar', ['chave' => $n->chave]) }}" data-link
+                                           class="inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white hover:opacity-90"
+                                           style="background-color: {{ $div['hex'] }}"
+                                           title="{{ $div['tooltip'] }}">{{ $div['label'] }}</a>
+                                    @else
+                                        <span class="inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white"
+                                              style="background-color: {{ $div['hex'] }}"
+                                              title="{{ $div['tooltip'] }}">{{ $div['label'] }}</span>
+                                    @endif
+                                </td>
                                 <td class="px-3 py-2 text-right">
                                     <button type="button" class="nota-details-toggle inline-flex items-center gap-1 text-xs text-gray-600 hover:text-gray-900" data-nota-id="{{ $n->id }}" aria-expanded="false">
                                         <span>Detalhes</span>
@@ -493,7 +537,7 @@
                                 </td>
                             </tr>
                             <tr class="nota-expand-row hidden" data-expand-for="{{ $n->id }}">
-                                <td colspan="11" class="px-4 py-3 bg-gray-50">
+                                <td colspan="12" class="px-4 py-3 bg-gray-50">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                                         <div class="rounded border border-gray-200 bg-white px-3 py-2.5">
                                             <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Participante</p>
@@ -555,7 +599,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="11" class="px-3 py-8 text-center">
+                                <td colspan="12" class="px-3 py-8 text-center">
                                     <p class="text-sm text-gray-500">Nenhuma nota encontrada com os filtros atuais.</p>
                                 </td>
                             </tr>

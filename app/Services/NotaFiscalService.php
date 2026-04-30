@@ -19,6 +19,9 @@ class NotaFiscalService
         [7200, 7211],
     ];
 
+    /** @var array<int, array<string, array{severidade: ?string, count: ?int, situacao_sefaz: ?string}>> */
+    private array $divergenciaCache = [];
+
     public function listarUnificadas(int $userId, array $filtros, int $perPage = 25, int $page = 1, ?string $paginatorPath = null): LengthAwarePaginator
     {
         $origem = $filtros['origem'] ?? null;
@@ -110,6 +113,7 @@ class NotaFiscalService
             'participante_doc' => $nota->participante?->cnpj_formatado,
             'cliente_id' => $nota->cliente_id,
             'cliente_nome' => $nota->cliente?->razao_social,
+            'divergencia' => $this->divergenciaPorChave($nota->user_id, $nota->chave_acesso),
         ];
     }
 
@@ -150,7 +154,43 @@ class NotaFiscalService
             'participante_doc' => $partDoc,
             'cliente_id' => $nota->cliente_id,
             'cliente_nome' => $nota->cliente?->razao_social,
+            'divergencia' => [
+                'severidade' => $nota->divergencia_severidade,
+                'count' => $nota->divergencia_count !== null ? (int) $nota->divergencia_count : null,
+                'situacao_sefaz' => $nota->situacao_sefaz,
+            ],
         ];
+    }
+
+    /**
+     * Recupera o snapshot de divergência persistido em xml_notas para uma chave EFD.
+     * Mantém cache por usuário pra evitar N+1 quando a listagem repete chaves.
+     *
+     * @return array{severidade: ?string, count: ?int, situacao_sefaz: ?string}
+     */
+    public function divergenciaPorChave(int $userId, ?string $chave): array
+    {
+        if (! $chave) {
+            return ['severidade' => null, 'count' => null, 'situacao_sefaz' => null];
+        }
+
+        $bucket = $this->divergenciaCache[$userId] ?? [];
+
+        if (! array_key_exists($chave, $bucket)) {
+            $row = DB::table('xml_notas')
+                ->where('user_id', $userId)
+                ->where('nfe_id', $chave)
+                ->select('divergencia_severidade as severidade', 'divergencia_count as count', 'situacao_sefaz')
+                ->first();
+
+            $bucket[$chave] = $row
+                ? ['severidade' => $row->severidade, 'count' => $row->count !== null ? (int) $row->count : null, 'situacao_sefaz' => $row->situacao_sefaz]
+                : ['severidade' => null, 'count' => null, 'situacao_sefaz' => null];
+
+            $this->divergenciaCache[$userId] = $bucket;
+        }
+
+        return $bucket[$chave];
     }
 
     // ─── KPI helpers ─────────────────────────────────────────

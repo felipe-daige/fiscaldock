@@ -257,6 +257,37 @@
                                     </td>
                                     <td class="px-3 py-3 text-center">
                                         <div class="inline-flex items-center gap-1">
+                                            @php
+                                                $div = $n['divergencia'] ?? null;
+                                                $sev = is_array($div) ? strtoupper((string) ($div['severidade'] ?? '')) : '';
+                                                $count = is_array($div) ? (int) ($div['count'] ?? 0) : 0;
+                                                $temSnap = is_array($div) && ! empty($div['situacao_sefaz']);
+                                                $divHex = match ($sev) {
+                                                    'CRITICA' => '#b91c1c',
+                                                    'REVISAR' => '#d97706',
+                                                    'OK' => '#047857',
+                                                    default => null,
+                                                };
+                                                $divLabel = match ($sev) {
+                                                    'CRITICA' => '🚩',
+                                                    'REVISAR' => '⚠',
+                                                    'OK' => '✓',
+                                                    default => null,
+                                                };
+                                                $divTooltip = match ($sev) {
+                                                    'CRITICA' => "Divergência crítica ({$count} campo(s))",
+                                                    'REVISAR' => "Revisar ({$count} campo(s) divergente(s))",
+                                                    'OK' => 'Declarado bate com SEFAZ',
+                                                    default => null,
+                                                };
+                                            @endphp
+                                            @if ($temSnap && $divHex && ! empty($n['chave_acesso']) && strlen($n['chave_acesso']) === 44)
+                                                <a href="{{ route('app.clearance.nota.comparar', ['chave' => $n['chave_acesso']]) }}"
+                                                   data-link
+                                                   title="{{ $divTooltip }}"
+                                                   class="px-1.5 py-0.5 rounded text-[10px] font-bold text-white"
+                                                   style="background-color: {{ $divHex }};">{{ $divLabel }}</a>
+                                            @endif
                                             @if (! empty($n['chave_acesso']) && strlen($n['chave_acesso']) === 44)
                                                 <a href="{{ route('app.clearance.nota.comparar', ['chave' => $n['chave_acesso']]) }}"
                                                    data-link

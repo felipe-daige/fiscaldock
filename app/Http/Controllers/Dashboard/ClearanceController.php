@@ -91,6 +91,7 @@ class ClearanceController extends Controller
             'tipo_nota' => 'tipo_nota',
             'modelo' => 'modelo',
             'status' => null,
+            'divergencia' => null,
         ];
 
         if (! array_key_exists($sort, $sortMap)) {
@@ -113,6 +114,15 @@ class ClearanceController extends Controller
                     ) THEN 2
                     ELSE 1
                  END $dir"
+            )->orderByDesc('data_emissao')->orderByDesc('id');
+        } elseif ($sort === 'divergencia') {
+            $query->orderByRaw(
+                "CASE divergencia_severidade
+                    WHEN 'CRITICA' THEN 3
+                    WHEN 'REVISAR' THEN 2
+                    WHEN 'OK' THEN 1
+                    ELSE 0
+                 END $dir, COALESCE(divergencia_count, 0) $dir"
             )->orderByDesc('data_emissao')->orderByDesc('id');
         } else {
             $query->orderBy($sortMap[$sort], $dir)->orderByDesc('id');
@@ -1101,6 +1111,7 @@ class ClearanceController extends Controller
             'tipo_nota' => $request->input('tipo_nota'),
             'status_validacao' => $request->input('status_validacao', 'todos'),
             'situacao_receita' => $request->input('situacao_receita'),
+            'divergencia' => $request->input('divergencia'),
         ];
     }
 
@@ -1170,12 +1181,16 @@ class ClearanceController extends Controller
                 xml_notas.ipi_valor                            as ipi_valor,
                 xml_notas.tributos_total                       as tributos_total,
                 NULL::text                                     as situacao_cadastral,
-                xml_notas.validacao::text                      as validacao_json
+                xml_notas.validacao::text                      as validacao_json,
+                xml_notas.situacao_sefaz                        as situacao_sefaz,
+                xml_notas.divergencia_severidade                as divergencia_severidade,
+                xml_notas.divergencia_count                     as divergencia_count
             ")
             ->where('xml_notas.user_id', $userId)
             ->whereRaw("UPPER(COALESCE(xml_notas.tipo_documento, '')) NOT IN ('NFSE', 'NFS-E')");
 
         $this->applyCommonFiltersXml($q, $f);
+        $this->applyDivergenciaFilterXml($q, $f);
 
         return $q;
     }
@@ -1185,6 +1200,10 @@ class ClearanceController extends Controller
         $q = DB::table('efd_notas')
             ->leftJoin('participantes', 'participantes.id', '=', 'efd_notas.participante_id')
             ->leftJoin('clientes', 'clientes.id', '=', 'efd_notas.cliente_id')
+            ->leftJoin('xml_notas as xn_snap', function ($join) use ($userId) {
+                $join->on('xn_snap.nfe_id', '=', 'efd_notas.chave_acesso')
+                    ->where('xn_snap.user_id', $userId);
+            })
             ->selectRaw("
                 'efd'::text                                   as origem,
                 efd_notas.id                                   as id,
@@ -1209,14 +1228,42 @@ class ClearanceController extends Controller
                 NULL::numeric                                  as ipi_valor,
                 NULL::numeric                                  as tributos_total,
                 participantes.situacao_cadastral               as situacao_cadastral,
-                NULL::text                                     as validacao_json
+                NULL::text                                     as validacao_json,
+                xn_snap.situacao_sefaz                          as situacao_sefaz,
+                xn_snap.divergencia_severidade                  as divergencia_severidade,
+                xn_snap.divergencia_count                       as divergencia_count
             ")
             ->where('efd_notas.user_id', $userId)
             ->whereRaw("UPPER(COALESCE(efd_notas.modelo, '')) NOT IN ('00', 'NFSE', 'NFS-E')");
 
         $this->applyCommonFiltersEfd($q, $f);
+        $this->applyDivergenciaFilterEfd($q, $f);
 
         return $q;
+    }
+
+    private function applyDivergenciaFilterXml(\Illuminate\Database\Query\Builder $q, array $f): void
+    {
+        $val = strtoupper((string) ($f['divergencia'] ?? ''));
+        if (in_array($val, ['OK', 'REVISAR', 'CRITICA'], true)) {
+            $q->where('xml_notas.divergencia_severidade', $val);
+        } elseif ($val === 'COM_DIVERGENCIA') {
+            $q->whereIn('xml_notas.divergencia_severidade', ['REVISAR', 'CRITICA']);
+        } elseif ($val === 'SEM_SNAPSHOT') {
+            $q->whereNull('xml_notas.situacao_sefaz');
+        }
+    }
+
+    private function applyDivergenciaFilterEfd(\Illuminate\Database\Query\Builder $q, array $f): void
+    {
+        $val = strtoupper((string) ($f['divergencia'] ?? ''));
+        if (in_array($val, ['OK', 'REVISAR', 'CRITICA'], true)) {
+            $q->where('xn_snap.divergencia_severidade', $val);
+        } elseif ($val === 'COM_DIVERGENCIA') {
+            $q->whereIn('xn_snap.divergencia_severidade', ['REVISAR', 'CRITICA']);
+        } elseif ($val === 'SEM_SNAPSHOT') {
+            $q->whereNull('xn_snap.situacao_sefaz');
+        }
     }
 
     private function applyCommonFiltersXml(\Illuminate\Database\Query\Builder $q, array $f): void
