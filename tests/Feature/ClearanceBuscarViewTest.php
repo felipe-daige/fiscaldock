@@ -53,6 +53,8 @@ it('renderiza a view parcial de busca de clearance para requisicao ajax', functi
 });
 
 it('bloqueia a busca quando a conta nao possui cliente disponivel', function () {
+    config(['clearance.busca_avulsa.habilitada' => true]);
+
     $user = User::factory()->create();
 
     actingAs($user)
@@ -60,4 +62,22 @@ it('bloqueia a busca quando a conta nao possui cliente disponivel', function () 
         ->assertOk()
         ->assertSee('Cliente obrigatório para consultar')
         ->assertSee('/app/cliente/novo', false);
+});
+
+it('exibe banner em desenvolvimento quando busca avulsa esta desabilitada', function () {
+    config(['clearance.busca_avulsa.habilitada' => false]);
+
+    $user = User::factory()->create();
+    Cliente::create([
+        'user_id' => $user->id,
+        'tipo_pessoa' => 'PJ',
+        'documento' => '00000000000191',
+        'razao_social' => 'Empresa Propria',
+        'is_empresa_propria' => true,
+    ]);
+
+    actingAs($user)
+        ->get('/app/clearance/buscar')
+        ->assertOk()
+        ->assertSee('Em desenvolvimento');
 });
