@@ -4,6 +4,8 @@
     $filtroNivel = $filtroNivel ?? '';
     $filtroCategoria = $filtroCategoria ?? '';
     $categorias = $categorias ?? [];
+    $divergenciaResumo = $divergenciaResumo ?? ['critica' => 0, 'revisar' => 0, 'valor_exposto' => 0];
+    $notasCriticasDivergencia = $notasCriticasDivergencia ?? [];
 
     $cards = [
         'bloqueante' => ['label' => 'Bloqueantes', 'hex' => '#dc2626', 'valor' => $contadores['bloqueante'] ?? 0],
@@ -31,6 +33,74 @@
             <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Alertas de Validação</h1>
             <p class="text-xs text-gray-500 mt-1">Notas fiscais validadas com ocorrências classificadas por severidade e categoria.</p>
         </div>
+
+        @if(($divergenciaResumo['critica'] ?? 0) > 0 || ($divergenciaResumo['revisar'] ?? 0) > 0)
+            <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Divergências declarado vs SEFAZ</span>
+                    <span class="text-[10px] font-semibold text-gray-400">Snapshot persistido</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-200">
+                    <a href="/app/clearance/notas?divergencia=CRITICA" data-link class="block p-4 hover:bg-gray-50/50 transition-colors">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Críticas</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">{{ number_format($divergenciaResumo['critica'], 0, ',', '.') }}</span>
+                        </div>
+                        <p class="text-lg font-bold text-gray-900">{{ number_format($divergenciaResumo['critica'], 0, ',', '.') }}</p>
+                        <p class="text-[11px] text-gray-500 mt-1">NCM/CFOP, cancelamento ou Δ valor &gt; 10%</p>
+                    </a>
+                    <a href="/app/clearance/notas?divergencia=REVISAR" data-link class="block p-4 hover:bg-gray-50/50 transition-colors">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Revisar</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">{{ number_format($divergenciaResumo['revisar'], 0, ',', '.') }}</span>
+                        </div>
+                        <p class="text-lg font-bold text-gray-900">{{ number_format($divergenciaResumo['revisar'], 0, ',', '.') }}</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Diferenças menores ou cabeçalho</p>
+                    </a>
+                    <div class="block p-4">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Valor exposto</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Críticas</span>
+                        </div>
+                        <p class="text-lg font-bold text-gray-900 font-mono">R$ {{ number_format($divergenciaResumo['valor_exposto'], 2, ',', '.') }}</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Soma do valor total das notas críticas</p>
+                    </div>
+                </div>
+
+                @if(count($notasCriticasDivergencia) > 0)
+                    <div class="border-t border-gray-200">
+                        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Notas críticas mais recentes</span>
+                            <span class="text-[10px] font-semibold text-gray-400">Top {{ count($notasCriticasDivergencia) }}</span>
+                        </div>
+                        <div class="divide-y divide-gray-100">
+                            @foreach($notasCriticasDivergencia as $nc)
+                                <div class="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between hover:bg-gray-50/50">
+                                    <div class="min-w-0">
+                                        <p class="text-sm text-gray-900 truncate">NF {{ $nc['numero'] ?? '—' }} — {{ $nc['emit_razao_social'] ?: 'Emitente desconhecido' }}</p>
+                                        <p class="text-[11px] text-gray-500 mt-0.5">
+                                            @if(! empty($nc['divergencia_count']))
+                                                {{ $nc['divergencia_count'] }} campo(s) divergente(s)
+                                            @endif
+                                            @if(! empty($nc['situacao_sefaz']))
+                                                · SEFAZ: {{ $nc['situacao_sefaz'] }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center gap-2 self-start">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">Crítica</span>
+                                        <span class="text-xs text-gray-700 font-mono">R$ {{ number_format($nc['valor_total'], 2, ',', '.') }}</span>
+                                        @if(! empty($nc['chave']) && strlen($nc['chave']) === 44)
+                                            <a href="{{ route('app.clearance.nota.comparar', ['chave' => $nc['chave']]) }}" data-link class="text-[11px] text-blue-700 hover:underline">Comparar ↗</a>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            </div>
+        @endif
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             @foreach($cards as $nivel => $card)

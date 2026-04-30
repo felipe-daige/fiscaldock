@@ -8,6 +8,16 @@
     $ultimasVerificacoes = $ultimasVerificacoes ?? [];
     $saldoCreditos = $saldoCreditos ?? 0;
     $custoConsultaUnitaria = $custoConsultaUnitaria ?? 14;
+    $divergenciaResumo = $divergenciaResumo ?? ['total_geral' => 0, 'total_com_snapshot' => 0, 'sem_snapshot' => 0, 'ok' => 0, 'revisar' => 0, 'critica' => 0, 'valor_exposto' => 0];
+    $divergenciaTopEmitentes = $divergenciaTopEmitentes ?? [];
+
+    $formatCnpj = function (?string $cnpj) {
+        $raw = preg_replace('/\D/', '', (string) $cnpj);
+        if (strlen($raw) === 14) {
+            return preg_replace('/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/', '$1.$2.$3/$4-$5', $raw);
+        }
+        return $cnpj;
+    };
 
     $statusReceita = [
         ['key' => 'autorizadas',     'label' => 'Autorizadas',     'hex' => '#047857', 'situacao' => 'AUTORIZADA',     'descricao' => 'Reconhecidas pela Receita Federal'],
@@ -118,6 +128,86 @@
                 @endforeach
             </div>
         </div>
+
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Declarado vs SEFAZ</span>
+                <span class="text-[10px] font-semibold text-gray-400">{{ number_format($divergenciaResumo['total_com_snapshot'], 0, ',', '.') }} de {{ number_format($divergenciaResumo['total_geral'], 0, ',', '.') }} comparadas</span>
+            </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-200">
+                <a href="/app/clearance/notas?divergencia=OK" data-link class="block p-4 sm:p-6 hover:bg-gray-50/50 transition-colors">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Sem divergência</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($divergenciaResumo['ok'], 0, ',', '.') }}</p>
+                    <p class="text-[11px] mt-1">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">OK</span>
+                    </p>
+                    <p class="text-[11px] text-gray-500 mt-2">Declarado bate com SEFAZ na tolerância</p>
+                </a>
+                <a href="/app/clearance/notas?divergencia=REVISAR" data-link class="block p-4 sm:p-6 hover:bg-gray-50/50 transition-colors">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Revisar</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($divergenciaResumo['revisar'], 0, ',', '.') }}</p>
+                    <p class="text-[11px] mt-1">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Revisar</span>
+                    </p>
+                    <p class="text-[11px] text-gray-500 mt-2">Diferenças menores ou cabeçalho</p>
+                </a>
+                <a href="/app/clearance/notas?divergencia=CRITICA" data-link class="block p-4 sm:p-6 hover:bg-gray-50/50 transition-colors">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Crítica</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($divergenciaResumo['critica'], 0, ',', '.') }}</p>
+                    <p class="text-[11px] mt-1">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">Crítica</span>
+                    </p>
+                    <p class="text-[11px] text-gray-500 mt-2">NCM/CFOP, cancelamento ou Δ valor &gt; 10%</p>
+                </a>
+                <div class="block p-4 sm:p-6">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Valor exposto</p>
+                    <p class="text-lg font-bold text-gray-900 font-mono">R$ {{ number_format($divergenciaResumo['valor_exposto'], 2, ',', '.') }}</p>
+                    <p class="text-[11px] mt-1">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Soma críticas</span>
+                    </p>
+                    <p class="text-[11px] text-gray-500 mt-2">{{ number_format($divergenciaResumo['critica'], 0, ',', '.') }} nota(s) somada(s) pelo valor total</p>
+                </div>
+            </div>
+        </div>
+
+        @if(count($divergenciaTopEmitentes) > 0)
+            <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Top emitentes com divergência</span>
+                    <span class="text-[10px] font-semibold text-gray-400">Top {{ count($divergenciaTopEmitentes) }}</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50/60">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Emitente</th>
+                                <th class="px-4 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">CNPJ</th>
+                                <th class="px-4 py-2 text-right text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Divergências</th>
+                                <th class="px-4 py-2 text-right text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Críticas</th>
+                                <th class="px-4 py-2 text-right text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Valor exposto</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach($divergenciaTopEmitentes as $emit)
+                                <tr class="hover:bg-gray-50/50">
+                                    <td class="px-4 py-2 text-xs text-gray-900 truncate max-w-[260px]" title="{{ $emit['razao_social'] }}">{{ $emit['razao_social'] ?: '—' }}</td>
+                                    <td class="px-4 py-2 text-[11px] font-mono text-gray-700">{{ $formatCnpj($emit['cnpj']) }}</td>
+                                    <td class="px-4 py-2 text-xs text-right font-mono">{{ number_format($emit['divergencias'], 0, ',', '.') }}</td>
+                                    <td class="px-4 py-2 text-xs text-right">
+                                        @if($emit['criticas'] > 0)
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">{{ $emit['criticas'] }}</span>
+                                        @else
+                                            <span class="text-gray-400">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-2 text-xs text-right font-mono">R$ {{ number_format($emit['valor_exposto'], 2, ',', '.') }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
 
         @if(count($notasBloqueantes) > 0)
             <div class="bg-white rounded border border-gray-300 p-4 mb-6 border-l-4 border-l-red-500">

@@ -55,12 +55,16 @@ class ClearanceController extends Controller
         $userId = Auth::id();
         $user = Auth::user();
 
+        $indicadores = app(\App\Services\Clearance\Comparacao\DivergenciaIndicadoresService::class);
+
         $data = [
             'kpis' => $this->validacaoService->getKpisStatusReceita($userId),
             'notasBloqueantes' => $this->validacaoService->getNotasComSituacaoBloqueante($userId, 5),
             'ultimasVerificacoes' => $this->validacaoService->getUltimasVerificacoes($userId, 10),
             'saldoCreditos' => $this->creditService->getBalance($user),
             'custoConsultaUnitaria' => 14,
+            'divergenciaResumo' => $indicadores->resumo($userId),
+            'divergenciaTopEmitentes' => $indicadores->topEmitentes($userId, 5),
         ];
 
         return $this->render($request, 'index', $data);
@@ -1918,6 +1922,8 @@ class ClearanceController extends Controller
             )
             ->first();
 
+        $indicadores = app(\App\Services\Clearance\Comparacao\DivergenciaIndicadoresService::class);
+
         $data = [
             'notas' => $notas,
             'contadores' => [
@@ -1928,6 +1934,8 @@ class ClearanceController extends Controller
             'filtroNivel' => $nivel,
             'filtroCategoria' => $categoria,
             'categorias' => $this->validacaoService->getCategorias(),
+            'divergenciaResumo' => $indicadores->resumo($userId),
+            'notasCriticasDivergencia' => $indicadores->notasCriticas($userId, 10),
         ];
 
         return $this->render($request, 'alertas', $data);
