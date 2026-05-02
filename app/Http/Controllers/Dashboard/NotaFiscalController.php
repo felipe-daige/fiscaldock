@@ -7,6 +7,7 @@ use App\Models\Cliente;
 use App\Models\EfdNota;
 use App\Models\Participante;
 use App\Models\XmlNota;
+use App\Services\Catalogo\CatalogoComparacaoService;
 use App\Services\NotaFiscalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,7 +16,10 @@ class NotaFiscalController extends Controller
 {
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
 
-    public function __construct(private NotaFiscalService $service) {}
+    public function __construct(
+        private NotaFiscalService $service,
+        private CatalogoComparacaoService $catalogoComparacao,
+    ) {}
 
     public function index(Request $request)
     {
@@ -79,6 +83,11 @@ class NotaFiscalController extends Controller
                 return response('Nota não encontrada', 404);
             }
 
+            $catalogoPorItem = $this->catalogoComparacao->indexarComparacaoPorItem(
+                $userId,
+                $nota->itens
+            );
+
             if ($this->isAjaxRequest($request)) {
                 return view('autenticado.notas-fiscais.partials.efd-inline', compact('nota'));
             }
@@ -86,18 +95,24 @@ class NotaFiscalController extends Controller
             return view(self::AUTH_LAYOUT_VIEW, [
                 'initialView' => 'autenticado.importacao.efd-nota',
                 'nota' => $nota,
+                'catalogoPorItem' => $catalogoPorItem,
             ]);
         }
 
         if ($origem === 'xml') {
             $nota = XmlNota::where('id', $id)
                 ->where('user_id', $userId)
-                ->with(['emitCliente', 'destCliente', 'cliente'])
+                ->with(['emitCliente', 'destCliente', 'cliente', 'itens'])
                 ->first();
 
             if (! $nota) {
                 return response('Nota não encontrada', 404);
             }
+
+            $catalogoPorItem = $this->catalogoComparacao->indexarComparacaoPorItem(
+                $userId,
+                $nota->itens
+            );
 
             if ($this->isAjaxRequest($request)) {
                 return view('autenticado.notas-fiscais.partials.xml-inline', compact('nota'));
@@ -106,6 +121,7 @@ class NotaFiscalController extends Controller
             return view(self::AUTH_LAYOUT_VIEW, [
                 'initialView' => 'autenticado.notas-fiscais.xml-nota',
                 'nota' => $nota,
+                'catalogoPorItem' => $catalogoPorItem,
             ]);
         }
 

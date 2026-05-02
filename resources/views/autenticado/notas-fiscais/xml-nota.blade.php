@@ -281,6 +281,152 @@
             </div>
         @endif
 
+        @php
+            $catalogoPorItem = $catalogoPorItem ?? [];
+            $badgeDivergenciaXml = [
+                'ncm' => ['label' => 'NCM', 'hex' => '#d97706'],
+                'unidade' => ['label' => 'UN', 'hex' => '#d97706'],
+                'aliquota' => ['label' => 'Alíq.', 'hex' => '#b45309'],
+            ];
+        @endphp
+
+        @if($nota->itens->isNotEmpty())
+            <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Itens</span>
+                    <span class="text-[11px] text-gray-400">{{ $nota->itens->count() }} {{ $nota->itens->count() === 1 ? 'item declarado' : 'itens declarados' }}</span>
+                </div>
+
+                <div class="md:hidden divide-y divide-gray-100">
+                    @foreach($nota->itens as $item)
+                        @php
+                            $cmp = $catalogoPorItem[$item->id] ?? ['cadastro' => null, 'divergencias' => []];
+                            $cad = $cmp['cadastro'];
+                            $divs = $cmp['divergencias'] ?? [];
+                        @endphp
+                        <div class="px-4 py-3">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <p class="text-sm text-gray-900">{{ $item->descricao ?? '—' }}</p>
+                                    <p class="text-[11px] text-gray-500 mt-1">
+                                        Item {{ $item->numero_item ?? '—' }} · Cod. {{ $item->codigo_item ?? '—' }}
+                                    </p>
+                                    <div class="flex flex-wrap items-center gap-1 mt-1.5">
+                                        @if($cad === null)
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #dc2626">Sem cadastro</span>
+                                        @else
+                                            @foreach($divs as $div)
+                                                @php $b = $badgeDivergenciaXml[$div] ?? null; @endphp
+                                                @if($b)
+                                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $b['hex'] }}">{{ $b['label'] }}</span>
+                                                @endif
+                                            @endforeach
+                                        @endif
+                                    </div>
+                                </div>
+                                @if($item->cfop)
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">{{ $item->cfop }}</span>
+                                @endif
+                            </div>
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-3">
+                                <div>
+                                    <p class="text-[10px] text-gray-400 uppercase">Quantidade</p>
+                                    <p class="text-sm text-gray-700">{{ $item->quantidade !== null ? number_format($item->quantidade, 2, ',', '.') : '—' }} {{ $item->unidade_medida ?? '' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-gray-400 uppercase">Total</p>
+                                    <p class="text-sm font-mono font-semibold text-gray-900">R$ {{ $item->valor_total !== null ? number_format($item->valor_total, 2, ',', '.') : '—' }}</p>
+                                </div>
+                                @if($cad)
+                                    <div class="col-span-2 border-t border-gray-100 pt-2 mt-1">
+                                        <p class="text-[10px] text-gray-400 uppercase">Catálogo (cad. 0200)</p>
+                                        <p class="text-[11px] text-gray-600 mt-0.5">
+                                            NCM: <span class="font-mono {{ in_array('ncm', $divs, true) ? 'text-orange-700 font-semibold' : '' }}">{{ $cad['cod_ncm'] ?? '—' }}</span>
+                                            · UN: <span class="font-mono {{ in_array('unidade', $divs, true) ? 'text-orange-700 font-semibold' : '' }}">{{ $cad['unid_inv'] ?? '—' }}</span>
+                                            · Alíq: <span class="font-mono {{ in_array('aliquota', $divs, true) ? 'text-orange-700 font-semibold' : '' }}">{{ $cad['aliq_icms'] !== null ? number_format($cad['aliq_icms'], 2, ',', '.').'%' : '—' }}</span>
+                                        </p>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="hidden md:block overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="border-b border-gray-300">
+                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">N</th>
+                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Codigo</th>
+                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Descricao</th>
+                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">NCM</th>
+                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">NCM (cad.)</th>
+                                <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Qtd</th>
+                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">UN</th>
+                                <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Vlr Total</th>
+                                <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">CFOP</th>
+                                <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">CST ICMS</th>
+                                <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Alíq.</th>
+                                <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">ICMS</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach($nota->itens as $item)
+                                @php
+                                    $cmp = $catalogoPorItem[$item->id] ?? ['cadastro' => null, 'divergencias' => []];
+                                    $cad = $cmp['cadastro'];
+                                    $divs = $cmp['divergencias'] ?? [];
+                                @endphp
+                                <tr class="hover:bg-gray-50/50 transition-colors">
+                                    <td class="px-3 py-2 text-sm text-gray-700">{{ $item->numero_item ?? '—' }}</td>
+                                    <td class="px-3 py-2 text-sm font-mono text-gray-700">
+                                        <div class="flex flex-wrap items-center gap-1">
+                                            <span>{{ $item->codigo_item ?? '—' }}</span>
+                                            @if($cad === null)
+                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #dc2626" title="Item não está no catálogo (registro 0200)">Sem cadastro</span>
+                                            @else
+                                                @foreach($divs as $div)
+                                                    @php $b = $badgeDivergenciaXml[$div] ?? null; @endphp
+                                                    @if($b)
+                                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $b['hex'] }}" title="{{ $b['label'] }} divergente do catálogo">{{ $b['label'] }}</span>
+                                                    @endif
+                                                @endforeach
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-2 text-sm text-gray-700 max-w-xs truncate">{{ $item->descricao ?? '—' }}</td>
+                                    <td class="px-3 py-2 text-sm font-mono {{ in_array('ncm', $divs, true) ? 'text-orange-700 font-semibold' : 'text-gray-700' }}">{{ $item->ncm ?? '—' }}</td>
+                                    <td class="px-3 py-2 text-sm font-mono whitespace-nowrap">
+                                        @if($cad && $cad['cod_ncm'])
+                                            <span class="{{ in_array('ncm', $divs, true) ? 'text-orange-700 font-semibold' : 'text-gray-500' }}">{{ $cad['cod_ncm'] }}</span>
+                                        @else
+                                            <span class="text-gray-300">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-3 py-2 text-sm text-right text-gray-700">{{ $item->quantidade !== null ? number_format($item->quantidade, 2, ',', '.') : '—' }}</td>
+                                    <td class="px-3 py-2 text-sm text-gray-700">{{ $item->unidade_medida ?? '—' }}</td>
+                                    <td class="px-3 py-2 text-sm font-semibold text-gray-900 text-right font-mono">{{ $item->valor_total !== null ? number_format($item->valor_total, 2, ',', '.') : '—' }}</td>
+                                    <td class="px-3 py-2 text-sm text-center font-mono text-gray-700">{{ $item->cfop ?? '—' }}</td>
+                                    <td class="px-3 py-2 text-sm text-center text-gray-700">{{ $item->cst_icms ?? '—' }}</td>
+                                    <td class="px-3 py-2 text-sm text-right font-mono {{ in_array('aliquota', $divs, true) ? 'text-orange-700 font-semibold' : 'text-gray-700' }}">{{ $item->aliquota_icms !== null ? number_format($item->aliquota_icms, 2, ',', '.').'%' : '—' }}</td>
+                                    <td class="px-3 py-2 text-sm text-right font-mono text-gray-700">{{ $item->valor_icms !== null ? number_format($item->valor_icms, 2, ',', '.') : '—' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @else
+            <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Itens</span>
+                </div>
+                <div class="p-4">
+                    <p class="text-sm text-gray-500">Itens ainda não foram tipados para esta nota. Rode <code class="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">php artisan xml:backfill-itens</code> ou aguarde a próxima importação.</p>
+                </div>
+            </div>
+        @endif
+
         @if($notaRef || $nota->chave_referenciada)
             <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
