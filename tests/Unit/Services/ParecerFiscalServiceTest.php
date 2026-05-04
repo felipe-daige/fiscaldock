@@ -45,35 +45,13 @@ it('ignora regime tributário quando vazio', function () {
     expect($parecer)->toBe([]);
 });
 
-it('dispara histórico Simples quando ambas as datas estão preenchidas', function () {
+it('ignora histórico do Simples e não gera parecer só por datas antigas', function () {
     $parecer = parecerService()->gerar([
         'data_opcao_simples' => '2013-11-06',
         'data_exclusao_simples' => '2016-07-31',
     ]);
 
-    $historico = collect($parecer)->firstWhere('chave', 'historico_simples');
-
-    expect($historico)->not->toBeNull();
-    expect($historico['severidade'])->toBe('media');
-    expect($historico['descricao'])->toContain('06/11/2013');
-    expect($historico['descricao'])->toContain('31/07/2016');
-});
-
-it('não dispara histórico Simples quando só uma data está preenchida', function () {
-    $parecer = parecerService()->gerar([
-        'data_opcao_simples' => '2013-11-06',
-    ]);
-
-    expect(chavesDoParecer($parecer))->not->toContain('historico_simples');
-});
-
-it('não dispara histórico Simples com data inválida', function () {
-    $parecer = parecerService()->gerar([
-        'data_opcao_simples' => 'nao-e-data',
-        'data_exclusao_simples' => 'tambem-nao',
-    ]);
-
-    expect(chavesDoParecer($parecer))->not->toContain('historico_simples');
+    expect(chavesDoParecer($parecer))->toBe([]);
 });
 
 it('detecta sócio PJ quando cpf_cnpj tem 14 dígitos unmasked', function () {
@@ -215,13 +193,12 @@ it('ordena itens por severidade decrescente (alta → info)', function () {
     expect(chavesDoParecer($parecer))->toBe([
         'situacao_inativa',
         'socio_pj',
-        'historico_simples',
         'divergencia_cnae',
         'regime_tributario',
     ]);
 });
 
-it('cenário realista TE LOG LOGISTICA produz 4 alertas', function () {
+it('cenário realista TE LOG LOGISTICA produz 3 alertas e o regime informativo', function () {
     $parecer = parecerService()->gerar([
         'situacao_cadastral' => 'ATIVA',
         'simples_nacional' => false,
@@ -253,7 +230,6 @@ it('cenário realista TE LOG LOGISTICA produz 4 alertas', function () {
 
     expect(chavesDoParecer($parecer))->toBe([
         'socio_pj',
-        'historico_simples',
         'divergencia_cnae',
         'regime_tributario',
     ]);
@@ -265,6 +241,28 @@ it('gera resumo sem itens apenas contextuais', function () {
     ]);
 
     expect($parecer)->toBe([]);
+});
+
+it('gera resumo com badge de Simples Nacional quando esse é o regime atual', function () {
+    $parecer = parecerService()->gerarResumo([
+        'regime_tributario' => 'Simples Nacional',
+        'simples_nacional' => true,
+    ]);
+
+    expect($parecer)->toHaveCount(1);
+    expect($parecer[0]['chave'])->toBe('regime_tributario');
+    expect($parecer[0]['badge_label'])->toBe('Simples Nacional');
+});
+
+it('gera resumo com badge de MEI quando esse é o regime atual', function () {
+    $parecer = parecerService()->gerarResumo([
+        'regime_tributario' => 'MEI',
+        'mei' => true,
+    ]);
+
+    expect($parecer)->toHaveCount(1);
+    expect($parecer[0]['chave'])->toBe('regime_tributario');
+    expect($parecer[0]['badge_label'])->toBe('MEI');
 });
 
 it('gera resumo com badge curto e tooltip completo para listagens', function () {

@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use Carbon\Carbon;
-
 class ParecerFiscalService
 {
     private const COR_ALTA = '#dc2626';
@@ -18,7 +16,7 @@ class ParecerFiscalService
      * Gera o parecer fiscal a partir do payload de uma consulta bem-sucedida.
      *
      * Retorna lista ordenada por severidade decrescente. Cada item:
-     *   - chave      (string)  ex: 'historico_simples'
+     *   - chave      (string)  ex: 'regime_tributario'
      *   - severidade (string)  'info'|'baixa'|'media'|'alta'
      *   - titulo     (string)
      *   - descricao  (string)
@@ -37,7 +35,6 @@ class ParecerFiscalService
         $itens = array_filter([
             $this->detectSituacaoInativa($resultadoDados),
             $this->detectSocioPj($resultadoDados),
-            $this->detectHistoricoSimples($resultadoDados),
             $this->detectDivergenciaCnae($resultadoDados),
             $this->detectRegimeTributario($resultadoDados),
         ]);
@@ -122,32 +119,6 @@ class ParecerFiscalService
         ];
     }
 
-    private function detectHistoricoSimples(array $dados): ?array
-    {
-        $dataOpcao = $dados['data_opcao_simples'] ?? null;
-        $dataExclusao = $dados['data_exclusao_simples'] ?? null;
-
-        if (empty($dataOpcao) || empty($dataExclusao)) {
-            return null;
-        }
-
-        try {
-            $inicio = Carbon::parse((string) $dataOpcao)->format('d/m/Y');
-            $fim = Carbon::parse((string) $dataExclusao)->format('d/m/Y');
-        } catch (\Exception $e) {
-            return null;
-        }
-
-        return [
-            'chave' => 'historico_simples',
-            'severidade' => 'media',
-            'titulo' => 'Histórico no Simples Nacional',
-            'descricao' => "Empresa foi optante do Simples Nacional entre {$inicio} e {$fim}. Operações nesse período têm tratamento diferente de PIS/COFINS e ICMS — conferir alíquotas e créditos por período.",
-            'hex' => self::COR_MEDIA,
-            'icone' => 'clock',
-        ];
-    }
-
     private function detectDivergenciaCnae(array $dados): ?array
     {
         $cnaes = $dados['cnaes'] ?? null;
@@ -226,6 +197,7 @@ class ParecerFiscalService
             'descricao' => $descricao,
             'hex' => self::COR_INFO,
             'icone' => 'info-circle',
+            'badge_label' => $this->resolveRegimeBadgeLabel($dados),
         ];
     }
 
@@ -254,15 +226,38 @@ class ParecerFiscalService
             $titulo = trim((string) ($item['titulo'] ?? 'Parecer'));
             $descricao = trim((string) ($item['descricao'] ?? ''));
 
-            $item['badge_label'] = $this->resolveBadgeLabel($item);
+            $item['badge_label'] = trim((string) ($item['badge_label'] ?? '')) !== ''
+                ? (string) $item['badge_label']
+                : $this->resolveBadgeLabel($item);
             $item['tooltip'] = $descricao !== ''
                 ? "{$titulo}: {$descricao}"
                 : $titulo;
 
             return $item;
         }, array_filter($itens, function (array $item): bool {
-            return ($item['severidade'] ?? null) !== 'info';
+            if (($item['severidade'] ?? null) !== 'info') {
+                return true;
+            }
+
+            return ($item['chave'] ?? null) === 'regime_tributario'
+                && trim((string) ($item['badge_label'] ?? '')) !== '';
         })));
+    }
+
+    /**
+     * @param  array<string, mixed>  $dados
+     */
+    private function resolveRegimeBadgeLabel(array $dados): ?string
+    {
+        if (($dados['mei'] ?? null) === true) {
+            return 'MEI';
+        }
+
+        if (($dados['simples_nacional'] ?? null) === true) {
+            return 'Simples Nacional';
+        }
+
+        return null;
     }
 
     /**
@@ -273,7 +268,6 @@ class ParecerFiscalService
         return match ($item['chave'] ?? null) {
             'situacao_inativa' => 'Inativa na RF',
             'socio_pj' => 'QSA com PJ',
-            'historico_simples' => 'Histórico Simples',
             'divergencia_cnae' => 'CNAEs diversos',
             default => trim((string) ($item['titulo'] ?? 'Parecer')),
         };

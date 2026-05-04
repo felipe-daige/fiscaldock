@@ -34,7 +34,7 @@ final class PlanoCatalog
             [
                 'codigo' => 'validacao',
                 'nome' => 'Validação',
-                'descricao' => 'Raio-X cadastral completo com parecer fiscal automático: regime tributário, histórico no Simples, QSA detalhado, CNAEs secundários e sinalizações para o contador',
+                'descricao' => 'Raio-X cadastral completo com parecer fiscal automático: regime tributário, QSA detalhado, CNAEs secundários e sinalizações para o contador',
                 'consultas_incluidas' => [
                     'situacao_cadastral',
                     'dados_cadastrais',
@@ -46,7 +46,6 @@ final class PlanoCatalog
                     'simples_nacional',
                     'mei',
                     'regime_tributario',
-                    'historico_simples',
                     'capital_social',
                     'natureza_juridica',
                     'porte',

@@ -13,7 +13,8 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     config()->set('services.api.token', 'token-cnpj-teste');
-    config()->set('services.webhook.consultas_cnpj_url', 'https://n8n.test/webhook/consultas-cnpj');
+    config()->set('services.webhook.consultas_cnpj_participante_url', 'https://n8n.test/webhook/consulta/cnpj/participante');
+    config()->set('services.webhook.consultas_cnpj_url', null);
 });
 
 it('migrations sobem os planos com o catalogo atual', function () {
@@ -136,7 +137,7 @@ it('executar envia payload canonico mesmo com linha legada no banco', function (
     Http::assertSent(function ($request) {
         $body = $request->data();
 
-        return $request->url() === 'https://n8n.test/webhook/consultas-cnpj'
+        return $request->url() === 'https://n8n.test/webhook/consulta/cnpj/participante'
             && $request->hasHeader('X-API-Token', 'token-cnpj-teste')
             && ($body['plano_codigo'] ?? null) === 'gratuito'
             && ($body['consultas_incluidas'] ?? null) === [
