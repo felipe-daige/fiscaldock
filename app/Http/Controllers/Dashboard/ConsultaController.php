@@ -40,6 +40,104 @@ class ConsultaController extends Controller
         return 'autenticado.consulta.';
     }
 
+    private function resolveConsultasParticipanteWebhookUrl(): ?string
+    {
+        return config('services.webhook.consultas_cnpj_participante_url')
+            ?: config('services.webhook.consultas_cnpj_url');
+    }
+
+    private function clientePodeConsultar(Cliente $cliente): bool
+    {
+        $documento = preg_replace('/\D/', '', (string) $cliente->documento);
+
+        return $cliente->tipo_pessoa === 'PJ' && strlen($documento) === 14;
+    }
+
+    private function buildClienteMirrorDefaults(Cliente $cliente): array
+    {
+        return [
+            'cliente_id' => $cliente->id,
+            'tipo_documento' => 'PJ',
+            'razao_social' => $cliente->razao_social,
+            'nome_fantasia' => $cliente->nome_fantasia ?: $cliente->nome,
+            'situacao_cadastral' => $cliente->situacao_cadastral,
+            'regime_tributario' => $cliente->regime_tributario,
+            'uf' => $cliente->uf,
+            'cep' => $cliente->cep,
+            'municipio' => $cliente->municipio,
+            'telefone' => $cliente->telefone,
+            'crt' => $cliente->crt,
+            'inscricao_estadual' => $cliente->inscricao_estadual,
+            'endereco' => $cliente->endereco,
+            'numero' => $cliente->numero,
+            'complemento' => $cliente->complemento,
+            'bairro' => $cliente->bairro,
+            'capital_social' => $cliente->capital_social,
+            'natureza_juridica' => $cliente->natureza_juridica,
+            'porte' => $cliente->porte,
+            'data_inicio_atividade' => $cliente->data_inicio_atividade,
+            'cnae_principal' => $cliente->cnae_principal,
+            'cnae_principal_descricao' => $cliente->cnae_principal_descricao,
+            'cnaes_secundarios' => $cliente->cnaes_secundarios,
+            'qsa' => $cliente->qsa,
+            'origem_tipo' => 'MANUAL',
+            'origem_ref' => [
+                'source' => 'cliente',
+                'cliente_id' => $cliente->id,
+                'created_via' => 'consulta_cliente_selection',
+            ],
+        ];
+    }
+
+    private function ensureParticipanteEspelhoDoCliente(Cliente $cliente, int $userId): ?Participante
+    {
+        if (! $this->clientePodeConsultar($cliente)) {
+            return null;
+        }
+
+        $documento = preg_replace('/\D/', '', (string) $cliente->documento);
+        $defaults = $this->buildClienteMirrorDefaults($cliente);
+
+        $participante = Participante::firstOrCreate(
+            [
+                'user_id' => $userId,
+                'documento' => $documento,
+            ],
+            $defaults
+        );
+
+        $updates = [];
+
+        if ((int) $participante->cliente_id !== (int) $cliente->id) {
+            $updates['cliente_id'] = $cliente->id;
+        }
+
+        foreach ($defaults as $field => $value) {
+            if (in_array($field, ['cliente_id', 'origem_ref'], true)) {
+                continue;
+            }
+
+            $current = $participante->{$field};
+            $isEmptyArray = is_array($current) && count($current) === 0;
+            $isEmptyScalar = $current === null || $current === '';
+
+            if (($isEmptyScalar || $isEmptyArray) && $value !== null && $value !== '') {
+                $updates[$field] = $value;
+            }
+        }
+
+        if (empty($participante->origem_ref)) {
+            $updates['origem_ref'] = $defaults['origem_ref'];
+        }
+
+        if (! empty($updates)) {
+            $participante->fill($updates);
+            $participante->save();
+        }
+
+        return $participante->fresh();
+    }
+
     /**
      * Página principal de consulta.
      */
@@ -680,10 +778,10 @@ class ConsultaController extends Controller
             ], Response::HTTP_PAYMENT_REQUIRED);
         }
 
-        $webhookUrl = config('services.webhook.consultas_cnpj_url');
+        $webhookUrl = $this->resolveConsultasParticipanteWebhookUrl();
 
         if (empty($webhookUrl)) {
-            Log::error('Consultas: webhook não configurado (WEBHOOK_CONSULTAS_CNPJ_URL)');
+            Log::error('Consultas: webhook não configurado (WEBHOOK_CONSULTAS_CNPJ_PARTICIPANTE_URL / WEBHOOK_CONSULTAS_CNPJ_URL)');
 
             return response()->json([
                 'success' => false,
@@ -1116,10 +1214,16 @@ class ConsultaController extends Controller
             'cliente_ids.*' => 'integer',
         ]);
 
-        $ids = Participante::where('user_id', auth()->id())
-            ->whereIn('cliente_id', $validated['cliente_ids'])
-            ->somenteCnpj()
-            ->pluck('id');
+        $clientes = Cliente::query()
+            ->where('user_id', auth()->id())
+            ->whereIn('id', $validated['cliente_ids'])
+            ->get();
+
+        $ids = $clientes
+            ->map(fn (Cliente $cliente) => $this->ensureParticipanteEspelhoDoCliente($cliente, (int) auth()->id()))
+            ->filter()
+            ->pluck('id')
+            ->values();
 
         return response()->json([
             'success' => true,
@@ -1233,6 +1337,7 @@ class ConsultaController extends Controller
                     'situacao_cadastral' => $c->situacao_cadastral,
                     'uf' => $c->uf,
                     'participantes_count' => $c->participantes_count,
+                    'pode_consultar' => $this->clientePodeConsultar($c),
                     'alerta_nivel' => $alerta['nivel'],
                     'alerta_label' => $alerta['label'],
                     'alerta_hex' => $alerta['hex'],
@@ -1903,10 +2008,10 @@ class ConsultaController extends Controller
             ], Response::HTTP_PAYMENT_REQUIRED);
         }
 
-        $webhookUrl = config('services.webhook.consultas_cnpj_url');
+        $webhookUrl = $this->resolveConsultasParticipanteWebhookUrl();
 
         if (empty($webhookUrl)) {
-            Log::error('Retry consulta: webhook não configurado');
+            Log::error('Retry consulta: webhook não configurado (WEBHOOK_CONSULTAS_CNPJ_PARTICIPANTE_URL / WEBHOOK_CONSULTAS_CNPJ_URL)');
 
             return response()->json([
                 'success' => false,

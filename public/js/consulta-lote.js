@@ -2805,6 +2805,19 @@
             var ids = data.ids || [];
 
             if (checked) {
+                if (ids.length === 0) {
+                    document.querySelectorAll('.checkbox-cliente[data-cliente-id="' + clienteId + '"]').forEach(function(cb) {
+                        cb.checked = false;
+                    });
+                    state.selectedClienteIds.delete(clienteId);
+                    state.bulkSelectionState.clientes = false;
+                    updateCheckboxTodosClientes();
+                    updateClientesSelectionSummary();
+                    syncBulkActionButtons();
+                    showInlineErrorMessage('Esse cliente não pode ser consultado agora.', null, 'cliente-nao-consultavel');
+                    return;
+                }
+
                 state.selectedClienteIds.add(clienteId);
                 ids.forEach(function(id) { state.selectedIds.add(id); });
             } else {
@@ -2844,7 +2857,9 @@
         // Coletar IDs de clientes visiveis no DOM (dedup: cada cliente tem 2 checkboxes mobile/desktop)
         var clienteIdSet = new Set();
         document.querySelectorAll('.checkbox-cliente').forEach(function(cb) {
-            clienteIdSet.add(parseInt(cb.dataset.clienteId));
+            if (!cb.disabled) {
+                clienteIdSet.add(parseInt(cb.dataset.clienteId));
+            }
         });
         var clienteIds = Array.from(clienteIdSet);
 
@@ -2919,15 +2934,19 @@
     function updateCheckboxTodosClientes() {
         if (!elements.checkboxTodosClientes) return;
 
-        var checkboxes = document.querySelectorAll('.checkbox-cliente');
+        var checkboxes = Array.from(document.querySelectorAll('.checkbox-cliente')).filter(function(cb) {
+            return !cb.disabled;
+        });
         if (checkboxes.length === 0) {
             elements.checkboxTodosClientes.checked = false;
             elements.checkboxTodosClientes.indeterminate = false;
+            elements.checkboxTodosClientes.disabled = true;
             state.bulkSelectionState.clientes = false;
             return;
         }
 
-        var checkedCount = Array.from(checkboxes).filter(function(cb) { return cb.checked; }).length;
+        elements.checkboxTodosClientes.disabled = false;
+        var checkedCount = checkboxes.filter(function(cb) { return cb.checked; }).length;
 
         if (checkedCount === 0) {
             elements.checkboxTodosClientes.checked = false;
@@ -3090,10 +3109,11 @@
         elements.listaClientes.innerHTML = '';
 
         clientes.forEach(function(c) {
+            var canSelect = clientePodeConsultar(c);
             var isClienteSelected = state.selectedClienteIds.has(c.id);
             var alertaIconHtml = getAlertaIconHtml(c, 'cliente-row');
             var tr = document.createElement('tr');
-            tr.className = 'hover:bg-gray-50 cursor-pointer transition flex flex-col gap-1 px-4 py-3 md:table-row md:px-0 md:py-0 md:gap-0' + (isClienteSelected ? ' bg-gray-50' : '');
+            tr.className = 'hover:bg-gray-50 cursor-pointer transition flex flex-col gap-1 px-4 py-3 md:table-row md:px-0 md:py-0 md:gap-0' + (isClienteSelected ? ' bg-gray-50' : '') + (!canSelect ? ' opacity-75' : '');
             tr.dataset.clienteId = c.id;
             tr.dataset.clienteLabel = (c.razao_social || '').replace(/"/g, '&quot;');
 
@@ -3112,20 +3132,22 @@
 
             tr.innerHTML =
                 '<td class="hidden md:table-cell md:w-10 md:px-4 md:py-3">'
-                + '<input type="checkbox" class="checkbox-cliente w-4 h-4 text-gray-600 rounded border-gray-300" data-cliente-id="' + c.id + '"' + (isClienteSelected ? ' checked' : '') + '>'
+                + '<input type="checkbox" class="checkbox-cliente w-4 h-4 text-gray-600 rounded border-gray-300 disabled:cursor-not-allowed disabled:opacity-50" data-cliente-id="' + c.id + '"' + (isClienteSelected ? ' checked' : '') + (canSelect ? '' : ' disabled') + '>'
                 + '</td>'
                 + '<td class="block overflow-hidden md:table-cell md:px-3 md:py-3 md:max-w-0">'
                 + '<div class="flex items-start justify-between gap-3 min-w-0 max-w-full overflow-hidden">'
                 + '<div class="min-w-0 max-w-full overflow-hidden flex-1">'
                 + '<div class="flex items-center gap-2 min-w-0 max-w-full">'
-                + '<input type="checkbox" class="checkbox-cliente w-4 h-4 text-gray-600 rounded border-gray-300 md:hidden flex-shrink-0" data-cliente-id="' + c.id + '"' + (isClienteSelected ? ' checked' : '') + '>'
+                + '<input type="checkbox" class="checkbox-cliente w-4 h-4 text-gray-600 rounded border-gray-300 md:hidden flex-shrink-0 disabled:cursor-not-allowed disabled:opacity-50" data-cliente-id="' + c.id + '"' + (isClienteSelected ? ' checked' : '') + (canSelect ? '' : ' disabled') + '>'
                 + propriaDot
                 + '<a href="/app/cliente/' + c.id + '" class="block max-w-full truncate text-sm font-semibold text-gray-900 hover:text-gray-600 hover:underline" title="' + nomeTitle.replace(/"/g, '&quot;') + '" onclick="event.stopPropagation()">' + (c.razao_social || '-') + '</a>'
                 + alertaIconHtml
                 + tipoBadge
+                + (canSelect ? '' : '<span class="inline-flex shrink-0 items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Sem CNPJ</span>')
                 + '</div>'
                 + '<div class="mt-1 flex items-center gap-2 text-xs text-gray-500 min-w-0 overflow-hidden">'
                 + '<span class="truncate">' + totalParticipantesLabel + '</span>'
+                + (canSelect ? '' : '<span class="truncate">Consulta disponível apenas para PJ</span>')
                 + '</div>'
                 + (c.nome ? '<div class="mt-0.5 text-xs text-gray-500 truncate">' + c.nome + '</div>' : '')
                 + '</div>'
@@ -3150,6 +3172,10 @@
                     e.stopPropagation(); // Prevent row click (expansion)
                 });
                 cb.addEventListener('change', function() {
+                    if (cb.disabled) {
+                        cb.checked = false;
+                        return;
+                    }
                     clienteCheckboxes.forEach(function(other) { other.checked = cb.checked; });
                     toggleClienteSelection(c.id, cb.checked);
                 });
@@ -3178,7 +3204,7 @@
 
         initAlertTooltipTriggers(elements.listaClientes);
         state.bulkSelectionState.clientes = clientes.length > 0 && clientes.every(function(c) {
-            return state.selectedClienteIds.has(c.id);
+            return !clientePodeConsultar(c) || state.selectedClienteIds.has(c.id);
         });
         updateCheckboxTodosClientes();
         updateClientesSelectionSummary();
@@ -3308,6 +3334,17 @@
         ).replace(/\D/g, '');
 
         return documento.length === 14;
+    }
+
+    function clientePodeConsultar(cliente) {
+        if (typeof cliente?.pode_consultar !== 'undefined') {
+            return Boolean(cliente.pode_consultar);
+        }
+
+        var tipoPessoa = String(cliente?.tipo_pessoa || '').toUpperCase();
+        var documento = String(cliente?.documento || '').replace(/\D/g, '');
+
+        return tipoPessoa === 'PJ' && documento.length === 14;
     }
 
     function setFilterContext(type, id, label) {

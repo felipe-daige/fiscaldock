@@ -111,7 +111,8 @@ function retryCriarXmlNota(
 }
 
 beforeEach(function () {
-    config()->set('services.webhook.consultas_cnpj_url', 'https://n8n.test/webhook/consultas-cnpj');
+    config()->set('services.webhook.consultas_cnpj_participante_url', 'https://n8n.test/webhook/consulta/cnpj/participante');
+    config()->set('services.webhook.consultas_cnpj_url', null);
     config()->set('services.webhook.consultas_notas_url', 'https://n8n.test/webhook/consultas-notas');
     config()->set('services.api.token', 'token-retry-teste');
 });
@@ -156,7 +157,7 @@ it('compliance: retry cria novo lote com parent_lote_id e despacha webhook', fun
     $lote = retryCriarLoteCompliance($user, $plano, ['total_participantes' => 1]);
     $pendente = retryAdicionarParticipanteComStatus($lote, $user, '44444444000144', ConsultaResultado::STATUS_ERRO);
 
-    Http::fake(['n8n.test/*' => Http::response(['ok' => true], 200)]);
+    Http::fake(['https://n8n.test/webhook/consulta/cnpj/participante' => Http::response(['ok' => true], 200)]);
 
     $response = actingAs($user)->postJson("/app/consulta/lote/{$lote->id}/retentar", [
         'participante_ids' => [$pendente->id],
@@ -177,7 +178,7 @@ it('compliance: retry cria novo lote com parent_lote_id e despacha webhook', fun
     Http::assertSent(function ($request) use ($novoLoteId) {
         $body = $request->data();
 
-        return $request->url() === 'https://n8n.test/webhook/consultas-cnpj'
+        return $request->url() === 'https://n8n.test/webhook/consulta/cnpj/participante'
             && $body['consulta_lote_id'] === $novoLoteId
             && $body['is_retry'] === true;
     });
@@ -189,7 +190,7 @@ it('compliance: retry estorna créditos quando webhook falha', function () {
     $lote = retryCriarLoteCompliance($user, $plano);
     $pendente = retryAdicionarParticipanteComStatus($lote, $user, '55555555000155', ConsultaResultado::STATUS_ERRO);
 
-    Http::fake(['n8n.test/*' => Http::response(['error' => 'down'], 502)]);
+    Http::fake(['https://n8n.test/webhook/consulta/cnpj/participante' => Http::response(['error' => 'down'], 502)]);
 
     $saldoInicial = $user->fresh()->credits;
 

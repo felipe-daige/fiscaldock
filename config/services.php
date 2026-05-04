@@ -41,7 +41,10 @@ return [
         'importacao_efd_fiscal_url' => env('WEBHOOK_IMPORTACAO_EFD_FISCAL_URL'),
         // Webhook Importação de XMLs (NF-e, NFS-e, CT-e)
         'importacao_xml_url' => env('WEBHOOK_IMPORTACAO_XML_URL'),
-        // Webhook Consultas de CNPJ - endpoint unificado (avulsa e lote)
+        // Webhooks Consultas de CNPJ - nomes canônicos por escopo.
+        'consultas_cnpj_participante_url' => env('WEBHOOK_CONSULTAS_CNPJ_PARTICIPANTE_URL'),
+        'consultas_cnpj_cliente_url' => env('WEBHOOK_CONSULTAS_CNPJ_CLIENTE_URL'),
+        // Compatibilidade legada com o endpoint unificado antigo.
         'consultas_cnpj_url' => env('WEBHOOK_CONSULTAS_CNPJ_URL'),
         // Webhook Consultas de Notas Fiscais — clearance em lote (snapshot de verificação SEFAZ sobre acervo)
         'consultas_notas_url' => env('WEBHOOK_CONSULTAS_NOTAS_URL'),
