@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
+use App\Services\Bi\BiConsultasEfdService;
 use App\Services\BiService;
 use App\Services\Catalogo\BiCatalogoItensService;
 use Illuminate\Http\Request;
@@ -18,6 +19,7 @@ class BiController extends Controller
     public function __construct(
         protected BiService $biService,
         protected BiCatalogoItensService $biCatalogoItensService,
+        protected BiConsultasEfdService $biConsultasEfdService,
     ) {}
 
     /**
@@ -285,6 +287,33 @@ class BiController extends Controller
         ];
 
         return $this->render($request, 'catalogo-itens', $data);
+    }
+
+    public function consultasEfd(Request $request)
+    {
+        if (! Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        $userId = (int) Auth::id();
+        $filtros = array_filter([
+            'data_inicio' => $request->get('data_inicio'),
+            'data_fim' => $request->get('data_fim'),
+            'cliente_id' => $request->get('cliente_id'),
+        ], fn ($v) => $v !== null && $v !== '');
+
+        $clientes = Cliente::where('user_id', $userId)
+            ->where('ativo', true)
+            ->orderByDesc('is_empresa_propria')
+            ->orderBy('nome')
+            ->get(['id', 'nome', 'documento', 'is_empresa_propria']);
+
+        $painel = $this->biConsultasEfdService->painel($userId, $filtros);
+
+        return $this->render($request, 'consultas-efd', array_merge([
+            'clientes' => $clientes,
+            'filtros' => $filtros,
+        ], $painel));
     }
 
     /**
