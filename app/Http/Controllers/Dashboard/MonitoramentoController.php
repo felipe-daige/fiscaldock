@@ -201,7 +201,7 @@ class MonitoramentoController extends Controller
 
         $userId = (int) Auth::id();
         $q = trim($validated['q'] ?? '');
-        $modelo = $validated['tipo'] === 'cliente' ? \App\Models\Cliente::class : \App\Models\Participante::class;
+        $modelo = $validated['tipo'] === 'cliente' ? Cliente::class : Participante::class;
 
         $documento = preg_replace('/\D/', '', $q);
 
