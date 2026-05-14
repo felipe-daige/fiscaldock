@@ -1164,10 +1164,9 @@
                 <div>
                     <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Frequência</label>
                     <select name="frequencia" id="select-frequencia" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400" required>
-                        <option value="diario">Diaria</option>
-                        <option value="semanal">Semanal</option>
-                        <option value="quinzenal" selected>Quinzenal</option>
-                        <option value="mensal">Mensal</option>
+                        <option value="mensal" selected>Mensal</option>
+                        <option value="quinzenal" disabled>Quinzenal (em breve)</option>
+                        <option value="60dias" disabled>60 dias (em breve)</option>
                     </select>
                 </div>
                 <div class="bg-gray-50 border border-gray-200 rounded p-4">
