@@ -17,6 +17,13 @@
             </a>
         </div>
 
+        {{-- Sub-abas Tipo --}}
+        @include('autenticado.monitoramento._sub-tabs-tipo', [
+            'tipoAtivo' => $tipoAtivo ?? 'tudo',
+            'contagens' => $contagens ?? ['tudo' => 0, 'cliente' => 0, 'participante' => 0],
+            'rota' => 'app.monitoramento.historico',
+        ])
+
         {{-- KPIs --}}
         <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
@@ -100,6 +107,7 @@
                 <table class="min-w-full">
                     <thead>
                         <tr class="border-b border-gray-300">
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Alvo</th>
                             <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Data</th>
                             <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">CNPJ</th>
                             <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Razão Social</th>
@@ -112,15 +120,28 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100" id="historico-tbody">
                         @forelse($consultas ?? [] as $consulta)
+                            @php
+                                $tipoAlvo = $consulta->cliente_id ? 'cliente' : ($consulta->participante_id ? 'participante' : null);
+                                $corTipoAlvo = $tipoAlvo === 'cliente' ? '#1e40af' : '#7c3aed';
+                                $alvo = $consulta->cliente ?? $consulta->participante;
+                            @endphp
                             <tr class="hover:bg-gray-50/50 transition-colors" data-consulta-id="{{ $consulta->id }}">
+                                <td class="px-3 py-3 whitespace-nowrap">
+                                    @if ($tipoAlvo)
+                                        <span class="text-[10px] font-semibold text-white uppercase px-2 py-1 rounded"
+                                              style="background-color: {{ $corTipoAlvo }};">{{ $tipoAlvo }}</span>
+                                    @else
+                                        <span class="text-[10px] text-gray-400">—</span>
+                                    @endif
+                                </td>
                                 <td class="px-3 py-3 text-sm text-gray-700 font-mono whitespace-nowrap">
                                     {{ $consulta->created_at->format('d/m/Y H:i') }}
                                 </td>
                                 <td class="px-3 py-3 text-sm font-mono text-gray-900 whitespace-nowrap">
-                                    {{ preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $consulta->participante->cnpj ?? '') }}
+                                    {{ preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $alvo->documento ?? '') }}
                                 </td>
                                 <td class="px-3 py-3 text-sm text-gray-900 max-w-xs truncate">
-                                    {{ $consulta->participante->razao_social ?? '-' }}
+                                    {{ $alvo->razao_social ?? '-' }}
                                 </td>
                                 <td class="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
                                     {{ $consulta->plano->nome ?? '-' }}
@@ -156,7 +177,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-6 py-12 text-center">
+                                <td colspan="9" class="px-6 py-12 text-center">
                                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
                                     </svg>
@@ -237,11 +258,11 @@
             const linhas = document.querySelectorAll('#historico-tbody tr[data-consulta-id]');
 
             linhas.forEach(function(linha) {
-                const cnpj = linha.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                const razaoSocial = linha.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                const tipoCell = linha.querySelector('td:nth-child(5)').textContent.toLowerCase();
-                const statusCell = linha.querySelector('td:nth-child(6)').textContent.toLowerCase();
-                const planoCell = linha.querySelector('td:nth-child(4)').textContent.toLowerCase();
+                const cnpj = linha.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                const razaoSocial = linha.querySelector('td:nth-child(4)').textContent.toLowerCase();
+                const tipoCell = linha.querySelector('td:nth-child(6)').textContent.toLowerCase();
+                const statusCell = linha.querySelector('td:nth-child(7)').textContent.toLowerCase();
+                const planoCell = linha.querySelector('td:nth-child(5)').textContent.toLowerCase();
 
                 let mostrar = true;
 

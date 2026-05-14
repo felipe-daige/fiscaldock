@@ -81,16 +81,23 @@ class MonitoramentoController extends Controller
         $user = Auth::user();
         $userId = (int) $user->id;
 
-        // Buscar consultas com relacionamentos
-        $consultas = MonitoramentoConsulta::where('user_id', $userId)
-            ->with(['participante', 'plano', 'assinatura'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $tipoAtivo = $this->normalizarTipo($request);
+
+        $query = MonitoramentoConsulta::query()
+            ->where('user_id', $userId)
+            ->with(['participante', 'cliente', 'plano', 'assinatura']);
+        $this->aplicarFiltroTipo($query, $tipoAtivo);
+
+        $consultas = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+
+        $contagens = $this->contagensPorTipo($userId, MonitoramentoConsulta::class);
 
         $data = [
             'consultas' => $consultas,
             'planos' => MonitoramentoPlano::ativos(),
             'credits' => $this->creditService->getBalance($user),
+            'tipoAtivo' => $tipoAtivo,
+            'contagens' => $contagens,
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -99,9 +106,7 @@ class MonitoramentoController extends Controller
             return response($renderedView)->header('Content-Type', 'text/html');
         }
 
-        return view(self::AUTH_LAYOUT_VIEW, array_merge([
-            'initialView' => $historicoView,
-        ], $data));
+        return view(self::AUTH_LAYOUT_VIEW, array_merge(['initialView' => $historicoView], $data));
     }
 
     public function painel(Request $request)
