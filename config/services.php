@@ -47,6 +47,9 @@ return [
         'consultas_notas_url' => env('WEBHOOK_CONSULTAS_NOTAS_URL'),
         // Webhook Busca avulsa de Notas Fiscais — aquisição no acervo (xml_notas com origem='busca_avulsa')
         'busca_nota_url' => env('WEBHOOK_BUSCA_NOTA_URL'),
+        // Webhooks Monitoramento Contínuo — consulta recorrente disparada pelo scheduler.
+        'monitoramento_cnpj_participante_url' => env('WEBHOOK_MONITORAMENTO_CNPJ_PARTICIPANTE_URL'),
+        'monitoramento_cnpj_cliente_url' => env('WEBHOOK_MONITORAMENTO_CNPJ_CLIENTE_URL'),
     ],
 
     'api' => [
