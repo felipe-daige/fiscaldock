@@ -111,9 +111,13 @@
                                 $alvoTipo = $a->alvoTipo();
                                 $alvo = $a->alvo();
                                 $corTipo = $alvoTipo === 'cliente' ? '#1e40af' : '#7c3aed';
-                                $corStatus = $a->status === 'ativo' ? '#047857' : '#d97706';
+                                $corStatus = match ($a->status) {
+                                    'ativo' => '#047857',
+                                    'pausado' => '#d97706',
+                                    default => '#6b7280',
+                                };
                                 $ultima = $ultimasConsultas[$a->id] ?? null;
-                                $href = $alvoTipo === 'cliente' ? "/app/clientes/{$alvo?->id}" : "/app/participantes/{$alvo?->id}";
+                                $href = $alvoTipo === 'cliente' ? "/app/cliente/{$alvo?->id}" : "/app/participante/{$alvo?->id}";
                             @endphp
                             <tr>
                                 <td class="px-4 py-2">
@@ -125,7 +129,7 @@
                                     <a href="{{ $href }}" data-link class="text-gray-900 hover:underline">{{ $alvo?->razao_social ?? '—' }}</a>
                                 </td>
                                 <td class="px-4 py-2">{{ $a->plano?->nome }}</td>
-                                <td class="px-4 py-2 text-xs">{{ $a->frequencia ?? 'mensal' }}</td>
+                                <td class="px-4 py-2 text-xs">{{ $a->frequencia }}</td>
                                 <td class="px-4 py-2">
                                     <span class="text-[10px] font-semibold text-white uppercase px-2 py-1 rounded"
                                           style="background-color: {{ $corStatus }};">{{ $a->status }}</span>
