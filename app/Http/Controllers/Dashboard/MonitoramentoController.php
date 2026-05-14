@@ -270,35 +270,11 @@ class MonitoramentoController extends Controller
     }
 
     /**
-     * Monitoramento de clientes - visualiza status dos clientes monitorados.
+     * Rota legada — redireciona para o painel central.
      */
     public function clientes(Request $request)
     {
-        $clientesView = self::AUTH_VIEW_PREFIX.'clientes';
-
-        if (! view()->exists($clientesView)) {
-            abort(404);
-        }
-
-        if (! Auth::check()) {
-            return $this->redirectToLogin($request);
-        }
-
-        $user = Auth::user();
-
-        $data = [
-            'credits' => $this->creditService->getBalance($user),
-        ];
-
-        if ($this->isAjaxRequest($request)) {
-            $renderedView = view($clientesView, $data)->render();
-
-            return response($renderedView)->header('Content-Type', 'text/html');
-        }
-
-        return view(self::AUTH_LAYOUT_VIEW, array_merge([
-            'initialView' => $clientesView,
-        ], $data));
+        return redirect()->route('app.monitoramento.painel', $request->query(), 301);
     }
 
     /**
