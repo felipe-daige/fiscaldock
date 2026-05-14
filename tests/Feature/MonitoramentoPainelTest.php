@@ -6,7 +6,6 @@ use App\Models\MonitoramentoConsulta;
 use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\User;
-use Carbon\Carbon;
 use Database\Seeders\MonitoramentoPlanoSeeder;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
