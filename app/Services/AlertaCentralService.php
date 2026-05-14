@@ -201,6 +201,46 @@ class AlertaCentralService
     }
 
     /**
+     * Registra (ou atualiza) um alerta in-app do monitoramento contínuo.
+     *
+     * $data exige: user_id, tipo, severidade, titulo, descricao.
+     * Opcional: participante_id, cliente_id, monitoramento_consulta_id, total_afetados.
+     */
+    public function registrarAlertaMonitoramento(array $data): \App\Models\Alerta
+    {
+        $hash = hash('sha256', implode(':', [
+            $data['user_id'],
+            $data['tipo'],
+            $data['participante_id'] ?? 'np',
+            $data['cliente_id'] ?? 'nc',
+            $data['monitoramento_consulta_id'] ?? 'nx',
+        ]));
+
+        $detalhes = $data['detalhes'] ?? [];
+        if (! empty($data['monitoramento_consulta_id'])) {
+            $detalhes['monitoramento_consulta_id'] = $data['monitoramento_consulta_id'];
+        }
+
+        $attrs = [
+            'tipo' => $data['tipo'],
+            'categoria' => 'monitoramento',
+            'severidade' => $data['severidade'],
+            'titulo' => $data['titulo'],
+            'descricao' => $data['descricao'],
+            'participante_id' => $data['participante_id'] ?? null,
+            'cliente_id' => $data['cliente_id'] ?? null,
+            'total_afetados' => $data['total_afetados'] ?? 1,
+            'detalhes' => $detalhes,
+            'status' => 'ativo',
+        ];
+
+        return \App\Models\Alerta::updateOrCreate(
+            ['user_id' => $data['user_id'], 'hash' => $hash],
+            array_merge($attrs, ['user_id' => $data['user_id'], 'hash' => $hash])
+        );
+    }
+
+    /**
      * Obtém alertas paginados com filtros.
      */
     public function obterAlertas(int $userId, array $filtros): LengthAwarePaginator
