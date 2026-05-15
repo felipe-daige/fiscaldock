@@ -230,6 +230,30 @@
     </div>
 
     @include('autenticado.monitoramento._modal-nova-assinatura')
+
+    {{-- Modal de confirmação de ação --}}
+    <div id="modal-confirmar-acao" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <div class="bg-white rounded border border-gray-300 max-w-md w-full overflow-hidden">
+            <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Confirmar ação</span>
+            </div>
+            <div class="p-4">
+                <h2 id="modal-confirmar-titulo" class="text-sm font-semibold text-gray-900 mb-2">—</h2>
+                <p id="modal-confirmar-mensagem" class="text-xs text-gray-600">—</p>
+            </div>
+            <div class="px-4 py-3 border-t border-gray-200 bg-gray-50 flex justify-end gap-2">
+                <button type="button" id="modal-confirmar-cancelar"
+                        class="px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50">
+                    Cancelar
+                </button>
+                <button type="button" id="modal-confirmar-ok"
+                        class="px-4 py-2 rounded text-white text-xs font-semibold"
+                        style="background-color: #1f2937;">
+                    Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="/js/monitoramento-modal-nova-assinatura.js?v={{ filemtime(public_path('js/monitoramento-modal-nova-assinatura.js')) }}"></script>
@@ -240,8 +264,38 @@
 
     var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
-    function acaoAssinatura(url, method, confirmMsg) {
-        if (confirmMsg && !confirm(confirmMsg)) return;
+    var modal = document.getElementById('modal-confirmar-acao');
+    var modalTitulo = document.getElementById('modal-confirmar-titulo');
+    var modalMensagem = document.getElementById('modal-confirmar-mensagem');
+    var modalCancelar = document.getElementById('modal-confirmar-cancelar');
+    var modalOk = document.getElementById('modal-confirmar-ok');
+    var pendingCallback = null;
+
+    function abrirConfirmacao(opts) {
+        modalTitulo.textContent = opts.titulo || 'Confirmar ação';
+        modalMensagem.textContent = opts.mensagem || '';
+        modalOk.textContent = opts.textoConfirmar || 'Confirmar';
+        modalOk.style.backgroundColor = opts.destrutivo ? '#b91c1c' : '#1f2937';
+        pendingCallback = opts.onConfirm || null;
+        modal.classList.remove('hidden');
+    }
+
+    function fecharConfirmacao() {
+        modal.classList.add('hidden');
+        pendingCallback = null;
+    }
+
+    modalCancelar.addEventListener('click', fecharConfirmacao);
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) fecharConfirmacao();
+    });
+    modalOk.addEventListener('click', function() {
+        var cb = pendingCallback;
+        fecharConfirmacao();
+        if (typeof cb === 'function') cb();
+    });
+
+    function acaoAssinatura(url, method) {
         fetch(url, {
             method: method,
             headers: {
@@ -270,17 +324,40 @@
 
     document.querySelectorAll('#monitoramento-painel-container .btn-pausar').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            acaoAssinatura('/app/monitoramento/assinatura/' + this.dataset.assinaturaId + '/pausar', 'POST', 'Deseja pausar esta assinatura?');
+            var id = this.dataset.assinaturaId;
+            abrirConfirmacao({
+                titulo: 'Pausar assinatura',
+                mensagem: 'A checagem recorrente fica suspensa até você reativar. Nenhum crédito é cobrado enquanto estiver pausada.',
+                textoConfirmar: 'Pausar',
+                destrutivo: false,
+                onConfirm: function() { acaoAssinatura('/app/monitoramento/assinatura/' + id + '/pausar', 'POST'); },
+            });
         });
     });
+
     document.querySelectorAll('#monitoramento-painel-container .btn-reativar').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            acaoAssinatura('/app/monitoramento/assinatura/' + this.dataset.assinaturaId + '/reativar', 'POST', null);
+            var id = this.dataset.assinaturaId;
+            abrirConfirmacao({
+                titulo: 'Reativar assinatura',
+                mensagem: 'A próxima execução é agendada conforme a frequência do plano. Créditos voltam a ser debitados a cada ciclo.',
+                textoConfirmar: 'Reativar',
+                destrutivo: false,
+                onConfirm: function() { acaoAssinatura('/app/monitoramento/assinatura/' + id + '/reativar', 'POST'); },
+            });
         });
     });
+
     document.querySelectorAll('#monitoramento-painel-container .btn-cancelar').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            acaoAssinatura('/app/monitoramento/assinatura/' + this.dataset.assinaturaId, 'DELETE', 'Tem certeza que deseja cancelar esta assinatura? Esta ação não pode ser desfeita.');
+            var id = this.dataset.assinaturaId;
+            abrirConfirmacao({
+                titulo: 'Cancelar assinatura',
+                mensagem: 'A assinatura é desativada permanentemente. O histórico de execuções fica preservado, mas você precisa criar uma nova assinatura para retomar.',
+                textoConfirmar: 'Cancelar assinatura',
+                destrutivo: true,
+                onConfirm: function() { acaoAssinatura('/app/monitoramento/assinatura/' + id, 'DELETE'); },
+            });
         });
     });
 })();
