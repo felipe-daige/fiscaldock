@@ -91,69 +91,137 @@
                     <p class="text-xs text-gray-500 mt-2">Crie a primeira pelo botão acima ou direto no detalhe de um cliente/participante.</p>
                 </div>
             @else
-                <table class="min-w-full text-sm">
-                    <thead class="bg-gray-50 border-b border-gray-200">
-                        <tr class="text-left text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
-                            <th class="px-4 py-2">Tipo</th>
-                            <th class="px-4 py-2">CNPJ</th>
-                            <th class="px-4 py-2">Razão Social</th>
-                            <th class="px-4 py-2">Plano</th>
-                            <th class="px-4 py-2">Freq.</th>
-                            <th class="px-4 py-2">Status</th>
-                            <th class="px-4 py-2">Última situação</th>
-                            <th class="px-4 py-2">Próx. exec.</th>
-                            <th class="px-4 py-2 text-right">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                        @foreach ($assinaturas as $a)
-                            @php
-                                $alvoTipo = $a->alvoTipo();
-                                $alvo = $a->alvo();
-                                $corTipo = $alvoTipo === 'cliente' ? '#1e40af' : '#7c3aed';
-                                $corStatus = match ($a->status) {
-                                    'ativo' => '#047857',
-                                    'pausado' => '#d97706',
-                                    default => '#6b7280',
-                                };
-                                $ultima = $ultimasConsultas[$a->id] ?? null;
-                                $href = $alvoTipo === 'cliente' ? "/app/cliente/{$alvo?->id}" : "/app/participante/{$alvo?->id}";
-                            @endphp
-                            <tr>
-                                <td class="px-4 py-2">
-                                    <span class="text-[10px] font-semibold text-white uppercase px-2 py-1 rounded"
-                                          style="background-color: {{ $corTipo }};">{{ $alvoTipo }}</span>
-                                </td>
-                                <td class="px-4 py-2 font-mono text-xs">{{ $alvo?->documento }}</td>
-                                <td class="px-4 py-2">
-                                    <a href="{{ $href }}" data-link class="text-gray-900 hover:underline">{{ $alvo?->razao_social ?? '—' }}</a>
-                                </td>
-                                <td class="px-4 py-2">{{ $a->plano?->nome }}</td>
-                                <td class="px-4 py-2 text-xs">{{ $a->frequencia }}</td>
-                                <td class="px-4 py-2">
-                                    <span class="text-[10px] font-semibold text-white uppercase px-2 py-1 rounded"
-                                          style="background-color: {{ $corStatus }};">{{ $a->status }}</span>
-                                </td>
-                                <td class="px-4 py-2 text-xs">
-                                    {{ $ultima?->situacao_geral ?? '—' }}
-                                </td>
-                                <td class="px-4 py-2 text-xs">
-                                    {{ $a->proxima_execucao_em?->diffForHumans() ?? '—' }}
-                                </td>
-                                <td class="px-4 py-2 text-right">
-                                    <div class="inline-flex gap-1">
-                                        @if ($a->status === 'ativo')
-                                            <button type="button" class="btn-pausar text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-50" data-assinatura-id="{{ $a->id }}">Pausar</button>
-                                        @else
-                                            <button type="button" class="btn-reativar text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-50" data-assinatura-id="{{ $a->id }}">Reativar</button>
-                                        @endif
-                                        <button type="button" class="btn-cancelar text-xs px-2 py-1 rounded border border-red-300 text-red-700 hover:bg-red-50" data-assinatura-id="{{ $a->id }}">Cancelar</button>
-                                    </div>
-                                </td>
+                {{-- Desktop: tabela --}}
+                <div class="hidden md:block overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr class="text-left text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
+                                <th class="px-4 py-2">Tipo</th>
+                                <th class="px-4 py-2">CNPJ</th>
+                                <th class="px-4 py-2">Razão Social</th>
+                                <th class="px-4 py-2">Plano</th>
+                                <th class="px-4 py-2">Freq.</th>
+                                <th class="px-4 py-2">Status</th>
+                                <th class="px-4 py-2">Última situação</th>
+                                <th class="px-4 py-2">Próx. exec.</th>
+                                <th class="px-4 py-2 text-right">Ações</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            @foreach ($assinaturas as $a)
+                                @php
+                                    $alvoTipo = $a->alvoTipo();
+                                    $alvo = $a->alvo();
+                                    $corTipo = $alvoTipo === 'cliente' ? '#1e40af' : '#7c3aed';
+                                    $corStatus = match ($a->status) {
+                                        'ativo' => '#047857',
+                                        'pausado' => '#d97706',
+                                        default => '#6b7280',
+                                    };
+                                    $ultima = $ultimasConsultas[$a->id] ?? null;
+                                    $href = $alvoTipo === 'cliente' ? "/app/cliente/{$alvo?->id}" : "/app/participante/{$alvo?->id}";
+                                    $docFormatado = $alvoTipo === 'cliente' ? $alvo?->documento_formatado : $alvo?->cnpj_formatado;
+                                @endphp
+                                <tr>
+                                    <td class="px-4 py-2">
+                                        <span class="text-[10px] font-semibold text-white uppercase px-2 py-1 rounded"
+                                              style="background-color: {{ $corTipo }};">{{ $alvoTipo }}</span>
+                                    </td>
+                                    <td class="px-4 py-2 font-mono text-xs whitespace-nowrap">{{ $docFormatado ?? $alvo?->documento ?? '—' }}</td>
+                                    <td class="px-4 py-2">
+                                        <a href="{{ $href }}" data-link class="text-gray-900 hover:underline">{{ $alvo?->razao_social ?? '—' }}</a>
+                                    </td>
+                                    <td class="px-4 py-2">{{ $a->plano?->nome }}</td>
+                                    <td class="px-4 py-2 text-xs">{{ $a->frequencia }}</td>
+                                    <td class="px-4 py-2">
+                                        <span class="text-[10px] font-semibold text-white uppercase px-2 py-1 rounded"
+                                              style="background-color: {{ $corStatus }};">{{ $a->status }}</span>
+                                    </td>
+                                    <td class="px-4 py-2 text-xs">
+                                        {{ $ultima?->situacao_geral ?? '—' }}
+                                    </td>
+                                    <td class="px-4 py-2 text-xs">
+                                        {{ $a->proxima_execucao_em?->diffForHumans() ?? '—' }}
+                                    </td>
+                                    <td class="px-4 py-2 text-right">
+                                        <div class="inline-flex gap-1">
+                                            @if ($a->status === 'ativo')
+                                                <button type="button" class="btn-pausar text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-50" data-assinatura-id="{{ $a->id }}">Pausar</button>
+                                            @else
+                                                <button type="button" class="btn-reativar text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-50" data-assinatura-id="{{ $a->id }}">Reativar</button>
+                                            @endif
+                                            <button type="button" class="btn-cancelar text-xs px-2 py-1 rounded border border-red-300 text-red-700 hover:bg-red-50" data-assinatura-id="{{ $a->id }}">Cancelar</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- Mobile: cards --}}
+                <div class="divide-y divide-gray-200 md:hidden">
+                    @foreach ($assinaturas as $a)
+                        @php
+                            $alvoTipo = $a->alvoTipo();
+                            $alvo = $a->alvo();
+                            $corTipo = $alvoTipo === 'cliente' ? '#1e40af' : '#7c3aed';
+                            $corStatus = match ($a->status) {
+                                'ativo' => '#047857',
+                                'pausado' => '#d97706',
+                                default => '#6b7280',
+                            };
+                            $ultima = $ultimasConsultas[$a->id] ?? null;
+                            $href = $alvoTipo === 'cliente' ? "/app/cliente/{$alvo?->id}" : "/app/participante/{$alvo?->id}";
+                            $docFormatado = $alvoTipo === 'cliente' ? $alvo?->documento_formatado : $alvo?->cnpj_formatado;
+                        @endphp
+                        <div class="p-4">
+                            <div class="flex items-start justify-between gap-2 mb-2">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-[10px] font-semibold text-white uppercase px-2 py-0.5 rounded"
+                                              style="background-color: {{ $corTipo }};">{{ $alvoTipo }}</span>
+                                        <span class="text-[10px] font-semibold text-white uppercase px-2 py-0.5 rounded"
+                                              style="background-color: {{ $corStatus }};">{{ $a->status }}</span>
+                                    </div>
+                                    <a href="{{ $href }}" data-link class="text-sm font-medium text-gray-900 hover:underline block truncate">
+                                        {{ $alvo?->razao_social ?? '—' }}
+                                    </a>
+                                    <p class="text-xs font-mono text-gray-500 mt-0.5">{{ $docFormatado ?? $alvo?->documento ?? '—' }}</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3 mt-3 text-xs">
+                                <div>
+                                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Plano</p>
+                                    <p class="text-gray-900 mt-0.5">{{ $a->plano?->nome ?? '—' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Frequência</p>
+                                    <p class="text-gray-900 mt-0.5">{{ $a->frequencia }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Última situação</p>
+                                    <p class="text-gray-900 mt-0.5">{{ $ultima?->situacao_geral ?? '—' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Próx. exec.</p>
+                                    <p class="text-gray-900 mt-0.5">{{ $a->proxima_execucao_em?->diffForHumans() ?? '—' }}</p>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                                @if ($a->status === 'ativo')
+                                    <button type="button" class="btn-pausar flex-1 text-xs px-3 py-2 rounded border border-gray-300 hover:bg-gray-50" data-assinatura-id="{{ $a->id }}">Pausar</button>
+                                @else
+                                    <button type="button" class="btn-reativar flex-1 text-xs px-3 py-2 rounded border border-gray-300 hover:bg-gray-50" data-assinatura-id="{{ $a->id }}">Reativar</button>
+                                @endif
+                                <button type="button" class="btn-cancelar flex-1 text-xs px-3 py-2 rounded border border-red-300 text-red-700 hover:bg-red-50" data-assinatura-id="{{ $a->id }}">Cancelar</button>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
                 <div class="px-4 py-3 border-t border-gray-200 bg-gray-50">
                     {{ $assinaturas->links() }}
                 </div>
