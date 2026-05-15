@@ -140,8 +140,13 @@
                                     <td class="px-4 py-2 text-xs">
                                         {{ $ultima?->situacao_geral ?? '—' }}
                                     </td>
-                                    <td class="px-4 py-2 text-xs">
-                                        {{ $a->proxima_execucao_em?->diffForHumans() ?? '—' }}
+                                    <td class="px-4 py-2 text-xs whitespace-nowrap">
+                                        @if ($a->proxima_execucao_em)
+                                            <div class="font-mono text-gray-900">{{ $a->proxima_execucao_em->format('d/m/Y H:i') }}</div>
+                                            <div class="text-[10px] text-gray-500">{{ $a->proxima_execucao_em->locale('pt_BR')->diffForHumans() }}</div>
+                                        @else
+                                            —
+                                        @endif
                                     </td>
                                     <td class="px-4 py-2 text-right">
                                         <div class="inline-flex gap-1">
@@ -205,8 +210,13 @@
                                     <p class="text-gray-900 mt-0.5">{{ $ultima?->situacao_geral ?? '—' }}</p>
                                 </div>
                                 <div>
-                                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Próx. exec.</p>
-                                    <p class="text-gray-900 mt-0.5">{{ $a->proxima_execucao_em?->diffForHumans() ?? '—' }}</p>
+                                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Próxima execução</p>
+                                    @if ($a->proxima_execucao_em)
+                                        <p class="text-gray-900 mt-0.5 font-mono">{{ $a->proxima_execucao_em->format('d/m/Y H:i') }}</p>
+                                        <p class="text-[10px] text-gray-500">{{ $a->proxima_execucao_em->locale('pt_BR')->diffForHumans() }}</p>
+                                    @else
+                                        <p class="text-gray-900 mt-0.5">—</p>
+                                    @endif
                                 </div>
                             </div>
 
