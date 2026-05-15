@@ -4,7 +4,7 @@
     <nav class="flex border-b border-gray-200" aria-label="Filtro por tipo de alvo">
         @foreach (['tudo' => 'Tudo', 'cliente' => 'Clientes', 'participante' => 'Participantes'] as $valor => $rotulo)
             <a href="{{ route($rota, ['tipo' => $valor]) }}"
-               data-link
+               data-sub-tab="{{ $valor }}"
                data-tipo="{{ $valor }}"
                class="px-4 py-3 text-xs font-semibold uppercase tracking-wide transition
                       {{ ($tipoAtivo ?? 'tudo') === $valor
