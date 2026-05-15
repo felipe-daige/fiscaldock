@@ -438,8 +438,10 @@ class ResumoFiscalService
                     $codigo = (string) ($ob['cod_or'] ?? $ob['codigo_obrigacao'] ?? '');
                     $descricao = (string) ($ob['desc_or'] ?? $ob['descricao_obrigacao'] ?? '');
 
-                    if ($vencimento->isPast()) {
-                        $diasAtraso = (int) $vencimento->diffInDays(now());
+                    $diasDiff = (int) now()->diffInDays($vencimento, false); // signed: negativo = vencida, positivo = futura
+
+                    if ($diasDiff < 0) {
+                        $diasAtraso = -$diasDiff;
                         $alertas[] = [
                             'tipo' => 'obrigacao_vencida',
                             'severidade' => 'alta',
@@ -453,19 +455,18 @@ class ResumoFiscalService
                                     'descricao' => $descricao,
                                     'valor_obrigacao' => $valorObrigacao,
                                     'data_vencimento' => $vencimento->format('Y-m-d'),
-                                    'dias' => -$diasAtraso,
+                                    'dias' => $diasDiff,
                                     'dias_label' => $diasAtraso.' dias em atraso',
                                 ],
                             ],
                         ];
-                    } elseif ($vencimento->diffInDays(now()) <= 7) {
-                        $diasRestantes = (int) $vencimento->diffInDays(now());
+                    } elseif ($diasDiff <= 7) {
                         $alertas[] = [
                             'tipo' => 'obrigacao_proxima',
                             'severidade' => 'media',
                             'categoria' => 'Obrigações',
                             'titulo' => 'Obrigação ICMS próxima ao vencimento',
-                            'descricao' => 'Vence em '.$vencimento->format('d/m/Y').' ('.$diasRestantes.' dias) — valor R$ '.number_format($valorObrigacao, 2, ',', '.'),
+                            'descricao' => 'Vence em '.$vencimento->format('d/m/Y').' ('.$diasDiff.' dias) — valor R$ '.number_format($valorObrigacao, 2, ',', '.'),
                             'valor' => $valorObrigacao,
                             'detalhe' => [
                                 'obrigacao' => [
@@ -473,8 +474,8 @@ class ResumoFiscalService
                                     'descricao' => $descricao,
                                     'valor_obrigacao' => $valorObrigacao,
                                     'data_vencimento' => $vencimento->format('Y-m-d'),
-                                    'dias' => $diasRestantes,
-                                    'dias_label' => $diasRestantes.' dias restantes',
+                                    'dias' => $diasDiff,
+                                    'dias_label' => $diasDiff.' dias restantes',
                                 ],
                             ],
                         ];

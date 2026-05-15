@@ -66,5 +66,6 @@ it('alerta de obrigacao ICMS vencida traz tipo e detalhe.obrigacao', function ()
         ->and($obrigacao['detalhe']['obrigacao']['codigo'])->toBe('000')
         ->and($obrigacao['detalhe']['obrigacao']['descricao'])->toBe('ICMS Próprio')
         ->and($obrigacao['detalhe']['obrigacao']['valor_obrigacao'])->toBe(5000.00)
-        ->and($obrigacao['detalhe']['obrigacao']['dias'])->toBeLessThan(0);
+        ->and($obrigacao['detalhe']['obrigacao']['dias'])->toBeLessThan(0)
+        ->and(abs($obrigacao['detalhe']['obrigacao']['dias']))->toBeGreaterThanOrEqual(14);
 });
