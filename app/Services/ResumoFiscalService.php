@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\DB;
 
 class ResumoFiscalService
 {
+    /** @var array<string, array<string, mixed>> Memoization request-scoped por (userId, clienteId, competencia). */
+    private array $retencoesDataCache = [];
+
     private function periodoDates(string $competencia): array
     {
         $inicio = Carbon::parse($competencia.'-01')->startOfMonth();
@@ -222,6 +225,11 @@ class ResumoFiscalService
 
     public function getRetencoesData(int $userId, int $clienteId, string $competencia): array
     {
+        $cacheKey = "{$userId}:{$clienteId}:{$competencia}";
+        if (isset($this->retencoesDataCache[$cacheKey])) {
+            return $this->retencoesDataCache[$cacheKey];
+        }
+
         [$inicio, $fim] = $this->periodoDates($competencia);
 
         $retencoes = EfdRetencaoFonte::doUsuario($userId)
@@ -231,7 +239,10 @@ class ResumoFiscalService
             ->get();
 
         if ($retencoes->isEmpty()) {
-            return ['tem_dados' => false, 'kpis' => ['total_retido' => 0, 'qtd_retencoes' => 0, 'cnpjs_unicos' => 0], 'retencoes' => [], 'por_natureza' => []];
+            $result = ['tem_dados' => false, 'kpis' => ['total_retido' => 0, 'qtd_retencoes' => 0, 'cnpjs_unicos' => 0], 'retencoes' => [], 'por_natureza' => []];
+            $this->retencoesDataCache[$cacheKey] = $result;
+
+            return $result;
         }
 
         $items = $retencoes->map(fn ($r) => [
@@ -255,7 +266,7 @@ class ResumoFiscalService
             'total' => $group->sum('total'),
         ])->values();
 
-        return [
+        $result = [
             'tem_dados' => true,
             'kpis' => [
                 'total_retido' => $totalRetido,
@@ -265,6 +276,10 @@ class ResumoFiscalService
             'retencoes' => $items->values()->toArray(),
             'por_natureza' => $porNatureza->toArray(),
         ];
+
+        $this->retencoesDataCache[$cacheKey] = $result;
+
+        return $result;
     }
 
     // ─── Seção 5: Cruzamentos e Divergências ───

@@ -75,7 +75,7 @@ it('alerta de retencoes nao compensadas traz tipo e detalhe.breakdown + detalhe.
     $cliente = rfFazerClienteProprio($user);
     $importacao = rfFazerImportacaoFiscal($user, $cliente);
 
-    // EfdApuracaoContribuicao.scopePeriodo filtra por importacao_id de EfdNota com data_emissao no período
+    // Necessário: EfdApuracaoContribuicao::scopePeriodo filtra pelo período via JOIN com EfdNota.data_emissao.
     \App\Models\EfdNota::create([
         'user_id' => $user->id,
         'cliente_id' => $cliente->id,
