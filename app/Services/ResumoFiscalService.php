@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\EfdApuracaoContribuicao;
 use App\Models\EfdApuracaoIcms;
-use App\Models\EfdNota;
 use App\Models\EfdRetencaoFonte;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +12,7 @@ class ResumoFiscalService
 {
     private function periodoDates(string $competencia): array
     {
-        $inicio = Carbon::parse($competencia . '-01')->startOfMonth();
+        $inicio = Carbon::parse($competencia.'-01')->startOfMonth();
         $fim = $inicio->copy()->endOfMonth();
 
         return [$inicio, $fim];
@@ -60,7 +59,7 @@ class ResumoFiscalService
         $saldoLiquido = $icmsRecolher + $pisRecolher + $cofinsRecolher - $retencoesVal;
 
         // Mês anterior para deltas
-        $prevComp = Carbon::parse($competencia . '-01')->subMonth()->format('Y-m');
+        $prevComp = Carbon::parse($competencia.'-01')->subMonth()->format('Y-m');
         $prevIcms = $this->getApuracaoIcms($userId, $clienteId, $prevComp);
         $prevContrib = $this->getApuracaoContrib($userId, $clienteId, $prevComp);
         [$prevInicio, $prevFim] = $this->periodoDates($prevComp);
@@ -377,7 +376,7 @@ class ResumoFiscalService
                 'severidade' => 'alta',
                 'categoria' => 'ICMS',
                 'titulo' => 'Divergência ICMS débitos',
-                'descricao' => 'Diferença de ' . number_format($cruzamentos['icms']['divergencia_debito_pct'], 1) . '% entre apuração declarada e soma dos itens das notas fiscais.',
+                'descricao' => 'Diferença de '.number_format($cruzamentos['icms']['divergencia_debito_pct'], 1).'% entre apuração declarada e soma dos itens das notas fiscais.',
                 'valor' => $cruzamentos['icms']['divergencia_debito'],
             ];
         }
@@ -388,7 +387,7 @@ class ResumoFiscalService
                 'severidade' => 'alta',
                 'categoria' => 'ICMS',
                 'titulo' => 'Divergência ICMS créditos',
-                'descricao' => 'Diferença de ' . number_format($cruzamentos['icms']['divergencia_credito_pct'], 1) . '% entre créditos declarados e soma dos itens das notas de entrada.',
+                'descricao' => 'Diferença de '.number_format($cruzamentos['icms']['divergencia_credito_pct'], 1).'% entre créditos declarados e soma dos itens das notas de entrada.',
                 'valor' => $cruzamentos['icms']['divergencia_credito'],
             ];
         }
@@ -399,7 +398,7 @@ class ResumoFiscalService
                 'severidade' => 'media',
                 'categoria' => 'PIS/COFINS',
                 'titulo' => 'Divergência PIS a recolher vs notas',
-                'descricao' => 'O PIS a recolher na apuração diverge em ' . number_format($cruzamentos['pis_cofins']['pis_divergencia_pct'], 1) . '% do PIS calculado nos itens das notas.',
+                'descricao' => 'O PIS a recolher na apuração diverge em '.number_format($cruzamentos['pis_cofins']['pis_divergencia_pct'], 1).'% do PIS calculado nos itens das notas.',
             ];
         }
 
@@ -409,7 +408,7 @@ class ResumoFiscalService
                 'severidade' => 'media',
                 'categoria' => 'PIS/COFINS',
                 'titulo' => 'Divergência COFINS a recolher vs notas',
-                'descricao' => 'O COFINS a recolher na apuração diverge em ' . number_format($cruzamentos['pis_cofins']['cofins_divergencia_pct'], 1) . '% do COFINS calculado nos itens.',
+                'descricao' => 'O COFINS a recolher na apuração diverge em '.number_format($cruzamentos['pis_cofins']['cofins_divergencia_pct'], 1).'% do COFINS calculado nos itens.',
             ];
         }
 
@@ -419,7 +418,7 @@ class ResumoFiscalService
                 'severidade' => 'media',
                 'categoria' => 'Retenções',
                 'titulo' => 'Retenções na fonte não compensadas',
-                'descricao' => 'R$ ' . number_format($cruzamentos['retencoes']['nao_compensado'], 2, ',', '.') . ' em retenções PIS/COFINS que não foram deduzidas na apuração do período.',
+                'descricao' => 'R$ '.number_format($cruzamentos['retencoes']['nao_compensado'], 2, ',', '.').' em retenções PIS/COFINS que não foram deduzidas na apuração do período.',
                 'valor' => $cruzamentos['retencoes']['nao_compensado'],
             ];
         }
@@ -431,25 +430,54 @@ class ResumoFiscalService
             if (is_array($obrigacoes)) {
                 foreach ($obrigacoes as $ob) {
                     $dtVcto = $ob['dt_vcto'] ?? $ob['data_vencimento'] ?? null;
-                    if ($dtVcto) {
-                        $vencimento = Carbon::parse($dtVcto);
-                        if ($vencimento->isPast()) {
-                            $alertas[] = [
-                                'severidade' => 'alta',
-                                'categoria' => 'Obrigações',
-                                'titulo' => 'Obrigação ICMS vencida',
-                                'descricao' => 'Vencimento em ' . $vencimento->format('d/m/Y') . ' — valor R$ ' . number_format((float) ($ob['vl_or'] ?? $ob['valor_obrigacao'] ?? 0), 2, ',', '.'),
-                                'valor' => (float) ($ob['vl_or'] ?? $ob['valor_obrigacao'] ?? 0),
-                            ];
-                        } elseif ($vencimento->diffInDays(now()) <= 7) {
-                            $alertas[] = [
-                                'severidade' => 'media',
-                                'categoria' => 'Obrigações',
-                                'titulo' => 'Obrigação ICMS próxima ao vencimento',
-                                'descricao' => 'Vence em ' . $vencimento->format('d/m/Y') . ' (' . $vencimento->diffInDays(now()) . ' dias) — valor R$ ' . number_format((float) ($ob['vl_or'] ?? $ob['valor_obrigacao'] ?? 0), 2, ',', '.'),
-                                'valor' => (float) ($ob['vl_or'] ?? $ob['valor_obrigacao'] ?? 0),
-                            ];
-                        }
+                    if (! $dtVcto) {
+                        continue;
+                    }
+                    $vencimento = Carbon::parse($dtVcto);
+                    $valorObrigacao = (float) ($ob['vl_or'] ?? $ob['valor_obrigacao'] ?? 0);
+                    $codigo = (string) ($ob['cod_or'] ?? $ob['codigo_obrigacao'] ?? '');
+                    $descricao = (string) ($ob['desc_or'] ?? $ob['descricao_obrigacao'] ?? '');
+
+                    if ($vencimento->isPast()) {
+                        $diasAtraso = (int) $vencimento->diffInDays(now());
+                        $alertas[] = [
+                            'tipo' => 'obrigacao_vencida',
+                            'severidade' => 'alta',
+                            'categoria' => 'Obrigações',
+                            'titulo' => 'Obrigação ICMS vencida',
+                            'descricao' => 'Vencimento em '.$vencimento->format('d/m/Y').' — valor R$ '.number_format($valorObrigacao, 2, ',', '.'),
+                            'valor' => $valorObrigacao,
+                            'detalhe' => [
+                                'obrigacao' => [
+                                    'codigo' => $codigo,
+                                    'descricao' => $descricao,
+                                    'valor_obrigacao' => $valorObrigacao,
+                                    'data_vencimento' => $vencimento->format('Y-m-d'),
+                                    'dias' => -$diasAtraso,
+                                    'dias_label' => $diasAtraso.' dias em atraso',
+                                ],
+                            ],
+                        ];
+                    } elseif ($vencimento->diffInDays(now()) <= 7) {
+                        $diasRestantes = (int) $vencimento->diffInDays(now());
+                        $alertas[] = [
+                            'tipo' => 'obrigacao_proxima',
+                            'severidade' => 'media',
+                            'categoria' => 'Obrigações',
+                            'titulo' => 'Obrigação ICMS próxima ao vencimento',
+                            'descricao' => 'Vence em '.$vencimento->format('d/m/Y').' ('.$diasRestantes.' dias) — valor R$ '.number_format($valorObrigacao, 2, ',', '.'),
+                            'valor' => $valorObrigacao,
+                            'detalhe' => [
+                                'obrigacao' => [
+                                    'codigo' => $codigo,
+                                    'descricao' => $descricao,
+                                    'valor_obrigacao' => $valorObrigacao,
+                                    'data_vencimento' => $vencimento->format('Y-m-d'),
+                                    'dias' => $diasRestantes,
+                                    'dias_label' => $diasRestantes.' dias restantes',
+                                ],
+                            ],
+                        ];
                     }
                 }
             }
