@@ -414,12 +414,22 @@ class ResumoFiscalService
 
         // Retenções não compensadas
         if ($cruzamentos['retencoes']['tem_dados'] && $cruzamentos['retencoes']['nao_compensado'] > 0.01) {
+            $retData = $this->getRetencoesData($userId, $clienteId, $competencia);
             $alertas[] = [
+                'tipo' => 'retencoes',
                 'severidade' => 'media',
                 'categoria' => 'Retenções',
                 'titulo' => 'Retenções na fonte não compensadas',
                 'descricao' => 'R$ '.number_format($cruzamentos['retencoes']['nao_compensado'], 2, ',', '.').' em retenções PIS/COFINS que não foram deduzidas na apuração do período.',
                 'valor' => $cruzamentos['retencoes']['nao_compensado'],
+                'detalhe' => [
+                    'breakdown' => [
+                        'total_retido' => (float) $cruzamentos['retencoes']['total_retido'],
+                        'deduzido_apuracao' => (float) $cruzamentos['retencoes']['deduzido_apuracao'],
+                        'nao_compensado' => (float) $cruzamentos['retencoes']['nao_compensado'],
+                    ],
+                    'retencoes' => $retData['retencoes'] ?? [],
+                ],
             ];
         }
 
