@@ -285,10 +285,12 @@ class AuthController extends Controller
                 'documento' => 'required|string|max:18',
                 'faturamento' => 'required|string|max:255',
                 'desafio_principal' => 'required|string|max:100',
-                'terms_aceitos' => 'accepted',
+                'termos_aceitos' => 'accepted',
+                'privacidade_aceita' => 'accepted',
                 'marketing_opt_in' => 'nullable|boolean',
             ], [
-                'terms_aceitos.accepted' => 'Você precisa aceitar os Termos de Uso e a Política de Privacidade.',
+                'termos_aceitos.accepted' => 'Você precisa aceitar os Termos de Uso.',
+                'privacidade_aceita.accepted' => 'Você precisa aceitar a Política de Privacidade.',
             ]);
 
             $validated['telefone'] = $this->normalizePhone($validated['telefone']);
@@ -307,7 +309,7 @@ class AuthController extends Controller
                 ]);
             }
         } catch (ValidationException $e) {
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Dados inválidos',
@@ -383,7 +385,7 @@ class AuthController extends Controller
 
             $message = 'Conta criada com sucesso. Você recebeu 100 créditos grátis por 30 dias.';
 
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->expectsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => $message,
@@ -399,7 +401,7 @@ class AuthController extends Controller
                 'message' => $e->getMessage(),
             ]);
 
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Erro ao criar a conta. Tente novamente.',

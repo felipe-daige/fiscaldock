@@ -119,13 +119,29 @@
                             </div>
 
                             <div class="border-t border-gray-200 pt-5 space-y-3">
-                                <label for="terms_aceitos" class="flex items-start gap-2 text-sm text-gray-600">
-                                    <input type="checkbox" id="terms_aceitos" name="terms_aceitos" value="1" @checked(old('terms_aceitos')) required class="mt-0.5 h-4 w-4 border border-gray-300 rounded text-gray-800 focus:ring-1 focus:ring-gray-400">
+                                <div class="rounded border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+                                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Sobre seus dados (LGPD)</p>
+                                    <ul class="space-y-1 text-[13px] leading-relaxed list-disc list-inside">
+                                        <li>Tratamos seus dados para prestar o serviço e cumprir obrigações legais.</li>
+                                        <li>Você pode acessar, corrigir ou pedir exclusão a qualquer momento por <a href="mailto:contato@fiscaldock.com.br" class="hover:underline" style="color: #1e4fa0">contato@fiscaldock.com.br</a>.</li>
+                                        <li>Dados fiscais (XML/SPED) ficam armazenados por 5 anos por exigência legal.</li>
+                                        <li>Não vendemos seus dados.</li>
+                                    </ul>
+                                </div>
+
+                                <label for="termos_aceitos" class="flex items-start gap-2 text-sm text-gray-600">
+                                    <input type="checkbox" id="termos_aceitos" name="termos_aceitos" value="1" @checked(old('termos_aceitos')) required class="mt-0.5 h-4 w-4 border border-gray-300 rounded text-gray-800 focus:ring-1 focus:ring-gray-400">
                                     <span>
-                                        Concordo com os
-                                        <a href="{{ route('termos') }}" class="hover:underline" style="color: #1e4fa0">Termos de Uso</a>
-                                        e a
-                                        <a href="{{ route('privacidade') }}" class="hover:underline" style="color: #1e4fa0">Política de Privacidade</a>.
+                                        Li e aceito os
+                                        <a href="{{ route('termos') }}" target="_blank" rel="noopener" class="hover:underline" style="color: #1e4fa0">Termos de Uso</a>.
+                                    </span>
+                                </label>
+
+                                <label for="privacidade_aceita" class="flex items-start gap-2 text-sm text-gray-600">
+                                    <input type="checkbox" id="privacidade_aceita" name="privacidade_aceita" value="1" @checked(old('privacidade_aceita')) required class="mt-0.5 h-4 w-4 border border-gray-300 rounded text-gray-800 focus:ring-1 focus:ring-gray-400">
+                                    <span>
+                                        Li e aceito a
+                                        <a href="{{ route('privacidade') }}" target="_blank" rel="noopener" class="hover:underline" style="color: #1e4fa0">Política de Privacidade</a>.
                                     </span>
                                 </label>
 
