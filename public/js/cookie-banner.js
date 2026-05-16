@@ -107,6 +107,11 @@
                 if (event.target === modal) hideEl(modal);
             });
         }
+
+        // Fechar modal com a tecla Escape
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') hideEl(modal);
+        });
     }
 
     if (document.readyState === 'loading') {
