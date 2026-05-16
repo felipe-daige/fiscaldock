@@ -688,7 +688,7 @@
         html += '<th class="px-3 py-2 text-right font-semibold text-gray-500 uppercase tracking-wide">Contribuição</th>';
         html += '</tr></thead><tbody>';
         notas.forEach(function(n) {
-            var dt = n.data_emissao ? new Date(n.data_emissao).toLocaleDateString('pt-BR') : '—';
+            var dt = n.data_emissao ? String(n.data_emissao).slice(0, 10).split('-').reverse().join('/') : '—';
             html += '<tr class="rf-alerta-nota-row border-t border-gray-100 hover:bg-gray-50/80 cursor-pointer" data-nota-id="' + n.id + '">';
             html += '<td class="px-3 py-2 text-gray-900 font-mono">' + n.numero + '/' + n.serie + '</td>';
             html += '<td class="px-3 py-2 text-gray-700">' + dt + '</td>';
@@ -731,7 +731,7 @@
 
     function renderObrigacaoCard(ob, vencida) {
         var hex = vencida ? '#b91c1c' : '#d97706';
-        var dt = ob.data_vencimento ? new Date(ob.data_vencimento).toLocaleDateString('pt-BR') : '—';
+        var dt = ob.data_vencimento ? String(ob.data_vencimento).slice(0, 10).split('-').reverse().join('/') : '—';
         return '<div class="bg-white rounded border border-gray-200 p-3">' +
             '<div class="grid grid-cols-2 md:grid-cols-4 gap-3">' +
             '<div><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Código</p><p class="text-sm font-bold text-gray-900 font-mono">' + (ob.codigo || '—') + '</p></div>' +
@@ -742,6 +742,8 @@
     }
 
     function wireAlertaToggles(container) {
+        if (container.dataset.alertasWired) return;
+        container.dataset.alertasWired = '1';
         container.addEventListener('click', function(e) {
             var notaRow = e.target.closest('.rf-alerta-nota-row');
             if (notaRow) {
