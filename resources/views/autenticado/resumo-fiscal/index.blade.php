@@ -28,8 +28,8 @@
         </div>
         <div class="p-4 flex flex-col sm:flex-row items-start sm:items-end gap-3">
             <div class="flex-1 min-w-0 w-full sm:w-auto">
-                <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Cliente</label>
-                <select id="rf-cliente" class="w-full border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Cliente</label>
+                <select id="rf-cliente" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                     @foreach($clientes as $c)
                         <option value="{{ $c->id }}" {{ $c->id == ($defaultClienteId ?? '') ? 'selected' : '' }}>
                             {{ $c->razao_social ?? $c->nome }}
@@ -39,8 +39,8 @@
                 </select>
             </div>
             <div class="w-full sm:w-44">
-                <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Competência</label>
-                <select id="rf-competencia" class="w-full border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Competência</label>
+                <select id="rf-competencia" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                     @foreach($competencias as $comp)
                         <option value="{{ $comp }}" {{ $comp == ($defaultCompetencia ?? '') ? 'selected' : '' }}>
                             {{ \Carbon\Carbon::parse($comp . '-01')->translatedFormat('M/Y') }}
@@ -612,7 +612,6 @@
         }
 
         var html = '';
-
         html += '<div class="grid grid-cols-3 gap-3 mb-4">';
         var mkKpi = function(label, valor, hex) {
             return '<div class="bg-white rounded border border-gray-300 p-3 text-center">' +
@@ -626,26 +625,141 @@
         html += '</div>';
 
         html += '<div class="space-y-3">';
-        data.alertas.forEach(function(a) {
-            var sevBorder = { alta: '#b91c1c', media: '#d97706', info: '#3b82f6' };
-            var sevBadge = { alta: '#b91c1c', media: '#d97706', info: '#3b82f6' };
-            var borderHex = sevBorder[a.severidade] || '#9ca3af';
-            var badgeHex = sevBadge[a.severidade] || '#9ca3af';
-            html += '<div class="bg-white rounded border border-gray-300 border-l-4 p-4" style="border-left-color: ' + borderHex + '">';
-            html += '<div class="flex items-start justify-between gap-2">';
-            html += '<div>';
+        data.alertas.forEach(function(a, idx) {
+            var sevHex = { alta: '#b91c1c', media: '#d97706', info: '#3b82f6' };
+            var hex = sevHex[a.severidade] || '#9ca3af';
+            html += '<div class="rf-alerta-card bg-white rounded border border-gray-300 border-l-4 cursor-pointer select-none" style="border-left-color: ' + hex + '" data-alerta-idx="' + idx + '">';
+            html += '<div class="p-4 flex items-start justify-between gap-2">';
+            html += '<div class="flex-1 min-w-0">';
             html += '<div class="flex items-center gap-2 mb-1">';
-            html += '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + badgeHex + '">' + a.categoria + '</span>';
+            html += '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + hex + '">' + a.categoria + '</span>';
             html += '<h4 class="text-sm font-semibold text-gray-900">' + a.titulo + '</h4>';
             html += '</div>';
             html += '<p class="text-sm text-gray-600">' + a.descricao + '</p>';
             html += '</div>';
-            if (a.valor) html += '<span class="text-sm font-bold text-gray-900 font-mono whitespace-nowrap">' + fBrl(a.valor) + '</span>';
+            html += '<div class="flex items-center gap-3 whitespace-nowrap">';
+            if (a.valor) html += '<span class="text-sm font-bold text-gray-900 font-mono">' + fBrl(a.valor) + '</span>';
+            html += '<svg class="rf-alerta-chevron w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
             html += '</div></div>';
+            html += '<div class="rf-alerta-detalhe hidden border-t border-gray-200 p-4 bg-gray-50/50">' + renderAlertaDetalhe(a) + '</div>';
+            html += '</div>';
         });
         html += '</div>';
 
         el.innerHTML = html;
+        wireAlertaToggles(el);
+    }
+
+    function renderAlertaDetalhe(a) {
+        if (!a.detalhe) return '<p class="text-xs text-gray-500">Sem detalhe disponível.</p>';
+
+        if (a.tipo === 'icms_debito' || a.tipo === 'icms_credito' || a.tipo === 'pis' || a.tipo === 'cofins') {
+            return renderBreakdown(a.detalhe.breakdown) + renderNotasTabela(a.detalhe.notas, a.detalhe.notas_total);
+        }
+        if (a.tipo === 'retencoes') {
+            return renderBreakdownRetencoes(a.detalhe.breakdown) + renderRetencoesTabela(a.detalhe.retencoes);
+        }
+        if (a.tipo === 'obrigacao_vencida' || a.tipo === 'obrigacao_proxima') {
+            return renderObrigacaoCard(a.detalhe.obrigacao, a.tipo === 'obrigacao_vencida');
+        }
+        return '';
+    }
+
+    function renderBreakdown(b) {
+        var pctHex = b.divergencia_pct > 5 ? '#b91c1c' : (b.divergencia_pct > 1 ? '#d97706' : '#047857');
+        return '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">' +
+            '<div class="bg-white rounded border border-gray-200 p-3"><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">' + (b.rotulo_declarado || 'Declarado') + '</p><p class="text-sm font-bold text-gray-900 font-mono">' + fBrl(b.declarado) + '</p></div>' +
+            '<div class="bg-white rounded border border-gray-200 p-3"><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">' + (b.rotulo_notas || 'Notas') + '</p><p class="text-sm font-bold text-gray-900 font-mono">' + fBrl(b.soma_notas) + '</p></div>' +
+            '<div class="bg-white rounded border border-gray-200 p-3"><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Diferença</p><p class="text-sm font-bold text-gray-900 font-mono">' + fBrl(b.diferenca) + '</p></div>' +
+            '<div class="bg-white rounded border border-gray-200 p-3"><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Divergência</p><p class="text-sm font-bold font-mono" style="color: ' + pctHex + '">' + (b.divergencia_pct || 0).toFixed(1) + '%</p></div>' +
+        '</div>';
+    }
+
+    function renderNotasTabela(notas, total) {
+        if (!notas || notas.length === 0) {
+            return '<p class="text-xs text-gray-500">Sem notas contribuintes para este período.</p>';
+        }
+        var html = '<div class="bg-white rounded border border-gray-200 overflow-hidden">';
+        html += '<table class="w-full text-xs"><thead class="bg-gray-50"><tr>';
+        html += '<th class="px-3 py-2 text-left font-semibold text-gray-500 uppercase tracking-wide">Número/Série</th>';
+        html += '<th class="px-3 py-2 text-left font-semibold text-gray-500 uppercase tracking-wide">Data</th>';
+        html += '<th class="px-3 py-2 text-left font-semibold text-gray-500 uppercase tracking-wide">Participante</th>';
+        html += '<th class="px-3 py-2 text-right font-semibold text-gray-500 uppercase tracking-wide">Valor da nota</th>';
+        html += '<th class="px-3 py-2 text-right font-semibold text-gray-500 uppercase tracking-wide">Contribuição</th>';
+        html += '</tr></thead><tbody>';
+        notas.forEach(function(n) {
+            var dt = n.data_emissao ? new Date(n.data_emissao).toLocaleDateString('pt-BR') : '—';
+            html += '<tr class="rf-alerta-nota-row border-t border-gray-100 hover:bg-gray-50/80 cursor-pointer" data-nota-id="' + n.id + '">';
+            html += '<td class="px-3 py-2 text-gray-900 font-mono">' + n.numero + '/' + n.serie + '</td>';
+            html += '<td class="px-3 py-2 text-gray-700">' + dt + '</td>';
+            html += '<td class="px-3 py-2 text-gray-700 truncate max-w-[240px]">' + (n.participante || '—') + '</td>';
+            html += '<td class="px-3 py-2 text-right text-gray-700 font-mono">' + fBrl(n.valor_total) + '</td>';
+            html += '<td class="px-3 py-2 text-right text-gray-900 font-bold font-mono">' + fBrl(n.valor_contribuicao) + '</td>';
+            html += '</tr>';
+        });
+        html += '</tbody></table></div>';
+        if (total && total > notas.length) {
+            var faltam = total - notas.length;
+            html += '<p class="text-[11px] text-gray-500 mt-2 text-right">+' + faltam + ' notas não exibidas — <a href="/app/notas-fiscais" data-link class="text-gray-700 hover:text-gray-900 underline">ver todas na listagem</a></p>';
+        }
+        return html;
+    }
+
+    function renderBreakdownRetencoes(b) {
+        return '<div class="grid grid-cols-3 gap-3 mb-3">' +
+            '<div class="bg-white rounded border border-gray-200 p-3"><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Total retido</p><p class="text-sm font-bold text-gray-900 font-mono">' + fBrl(b.total_retido) + '</p></div>' +
+            '<div class="bg-white rounded border border-gray-200 p-3"><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Deduzido na apuração</p><p class="text-sm font-bold text-gray-900 font-mono">' + fBrl(b.deduzido_apuracao) + '</p></div>' +
+            '<div class="bg-white rounded border border-gray-200 p-3"><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Não compensado</p><p class="text-sm font-bold font-mono" style="color: #d97706">' + fBrl(b.nao_compensado) + '</p></div>' +
+        '</div>';
+    }
+
+    function renderRetencoesTabela(retencoes) {
+        if (!retencoes || retencoes.length === 0) return '';
+        var html = '<div class="bg-white rounded border border-gray-200 overflow-hidden"><table class="w-full text-xs"><thead class="bg-gray-50"><tr>';
+        html += '<th class="px-3 py-2 text-left font-semibold text-gray-500 uppercase tracking-wide">Natureza</th>';
+        html += '<th class="px-3 py-2 text-right font-semibold text-gray-500 uppercase tracking-wide">Total retido</th>';
+        html += '</tr></thead><tbody>';
+        retencoes.forEach(function(r) {
+            html += '<tr class="border-t border-gray-100">';
+            html += '<td class="px-3 py-2 text-gray-900">' + (r.natureza || r.natureza_label || '—') + '</td>';
+            html += '<td class="px-3 py-2 text-right text-gray-900 font-mono">' + fBrl(r.total || 0) + '</td>';
+            html += '</tr>';
+        });
+        html += '</tbody></table></div>';
+        return html;
+    }
+
+    function renderObrigacaoCard(ob, vencida) {
+        var hex = vencida ? '#b91c1c' : '#d97706';
+        var dt = ob.data_vencimento ? new Date(ob.data_vencimento).toLocaleDateString('pt-BR') : '—';
+        return '<div class="bg-white rounded border border-gray-200 p-3">' +
+            '<div class="grid grid-cols-2 md:grid-cols-4 gap-3">' +
+            '<div><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Código</p><p class="text-sm font-bold text-gray-900 font-mono">' + (ob.codigo || '—') + '</p></div>' +
+            '<div><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Descrição</p><p class="text-sm text-gray-900">' + (ob.descricao || '—') + '</p></div>' +
+            '<div><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Valor</p><p class="text-sm font-bold text-gray-900 font-mono">' + fBrl(ob.valor_obrigacao) + '</p></div>' +
+            '<div><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Vencimento</p><p class="text-sm font-bold font-mono" style="color: ' + hex + '">' + dt + ' · ' + (ob.dias_label || '') + '</p></div>' +
+            '</div></div>';
+    }
+
+    function wireAlertaToggles(container) {
+        container.addEventListener('click', function(e) {
+            var notaRow = e.target.closest('.rf-alerta-nota-row');
+            if (notaRow) {
+                var id = notaRow.getAttribute('data-nota-id');
+                if (id) {
+                    e.stopPropagation();
+                    window.location.href = '/app/notas-fiscais/efd/' + id;
+                }
+                return;
+            }
+            var card = e.target.closest('.rf-alerta-card');
+            if (!card) return;
+            if (e.target.closest('a')) return;
+            var det = card.querySelector('.rf-alerta-detalhe');
+            var chev = card.querySelector('.rf-alerta-chevron');
+            if (det) det.classList.toggle('hidden');
+            if (chev) chev.style.transform = det && !det.classList.contains('hidden') ? 'rotate(180deg)' : '';
+        });
     }
 
     // ── Section map ──
