@@ -136,6 +136,8 @@
                     <a href="{{ route('termos') }}" class="text-[11px] text-gray-400 uppercase tracking-wide hover:text-gray-600 transition-colors">Termos de Uso</a>
                     <span class="text-gray-300">·</span>
                     <a href="{{ route('privacidade') }}" class="text-[11px] text-gray-400 uppercase tracking-wide hover:text-gray-600 transition-colors">Privacidade</a>
+                    <span class="text-gray-300">·</span>
+                    <a href="{{ route('cookies') }}" class="text-[11px] text-gray-400 uppercase tracking-wide hover:text-gray-600 transition-colors">Cookies</a>
                 </div>
             </div>
         </div>
