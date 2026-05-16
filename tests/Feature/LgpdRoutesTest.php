@@ -39,3 +39,20 @@ it('Termos de Uso contém identificação do controlador, foro e seções LGPD-e
         ->assertSee('Trial', false)
         ->assertSee('Limitação de responsabilidade', false);
 });
+
+it('Política de Privacidade contém marcadores LGPD essenciais', function () {
+    $response = $this->get('/privacidade');
+
+    $response->assertOk()
+        ->assertSee('Política de Privacidade', false)
+        ->assertSee('Encarregado', false)
+        ->assertSee('controlador', false)
+        ->assertSee('operador', false)
+        ->assertSee('base legal', false)
+        ->assertSee('Retenção', false)
+        ->assertSee('Direitos do titular', false)
+        ->assertSee('ANPD', false)
+        ->assertSee('15 dias', false)
+        ->assertSee('Mercado Pago', false)
+        ->assertSee('InfoSimples', false);
+});
