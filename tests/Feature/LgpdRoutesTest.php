@@ -25,3 +25,17 @@ it('Política de Cookies contém as 4 categorias e a tabela canônica', function
         ->assertSee('fd-cookies-consent', false)
         ->assertSee('Configurar cookies', false);
 });
+
+it('Termos de Uso contém identificação do controlador, foro e seções LGPD-essenciais', function () {
+    $response = $this->get('/termos');
+
+    $response->assertOk()
+        ->assertSee('Termos de Uso', false)
+        ->assertSee('F. DEVECCHI DAIGE E CIA LTDA', false)
+        ->assertSee('63.112.970/0001-07', false)
+        ->assertSee('Dourados', false)
+        ->assertSee('Comarca de Dourados/MS', false)
+        ->assertSee('contato@fiscaldock.com.br', false)
+        ->assertSee('Trial', false)
+        ->assertSee('Limitação de responsabilidade', false);
+});
