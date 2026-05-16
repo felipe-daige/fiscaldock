@@ -499,7 +499,7 @@ class ResumoFiscalService
                         'deduzido_apuracao' => (float) $cruzamentos['retencoes']['deduzido_apuracao'],
                         'nao_compensado' => (float) $cruzamentos['retencoes']['nao_compensado'],
                     ],
-                    'retencoes' => $retData['retencoes'] ?? [],
+                    'retencoes' => $retData['por_natureza'] ?? [],
                 ],
             ];
         }

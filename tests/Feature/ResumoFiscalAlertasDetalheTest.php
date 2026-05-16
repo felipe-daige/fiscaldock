@@ -155,16 +155,34 @@ it('alerta de retencoes nao compensadas traz tipo e detalhe.breakdown + detalhe.
         'valor_cofins' => 200.00,
     ]);
 
+    // Segunda retenção com a mesma natureza mas cnpj diferente — para garantir que o agrupamento
+    // retorna 1 grupo (não 2 linhas brutas), provando que 'por_natureza' é usado, não 'retencoes'.
+    \App\Models\EfdRetencaoFonte::create([
+        'user_id' => $user->id,
+        'cliente_id' => $cliente->id,
+        'importacao_id' => $importacao->id,
+        'natureza' => '01',
+        'data_retencao' => '2026-04-15',
+        'base_calculo' => 1000.00,
+        'valor_total' => 300.00,
+        'cod_receita' => '5979',
+        'natureza_receita' => '01',
+        'cnpj' => '11111111000191',
+        'valor_pis' => 100.00,
+        'valor_cofins' => 200.00,
+    ]);
+
     $data = rfService()->getAlertasFiscaisData($user->id, $cliente->id, '2026-04');
 
     $alerta = collect($data['alertas'])->firstWhere('tipo', 'retencoes');
 
     expect($alerta)->not->toBeNull()
-        ->and($alerta['detalhe']['breakdown']['total_retido'])->toBe(300.00)
+        ->and($alerta['detalhe']['breakdown']['total_retido'])->toBe(600.00)
         ->and($alerta['detalhe']['breakdown']['deduzido_apuracao'])->toBe(0.0)
-        ->and($alerta['detalhe']['breakdown']['nao_compensado'])->toBe(300.00)
+        ->and($alerta['detalhe']['breakdown']['nao_compensado'])->toBe(600.00)
         ->and($alerta['detalhe']['retencoes'])->toBeArray()
-        ->and(count($alerta['detalhe']['retencoes']))->toBeGreaterThan(0);
+        ->and(count($alerta['detalhe']['retencoes']))->toBe(1)  // 1 grupo (mesma natureza), não 2 docs
+        ->and((float) $alerta['detalhe']['retencoes'][0]['total'])->toBe(600.00); // 300 + 300 dos 2 docs
 });
 
 it('alerta de divergencia ICMS debito traz tipo + breakdown + notas contribuintes', function () {
