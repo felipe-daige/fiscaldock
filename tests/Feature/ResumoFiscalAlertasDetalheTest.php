@@ -200,3 +200,81 @@ it('alerta de divergencia ICMS debito traz tipo + breakdown + notas contribuinte
         ->and($alerta['detalhe']['notas'][0]['valor_contribuicao'])->toBe(800.00)
         ->and($alerta['detalhe']['notas'][0]['participante'])->toBe('FORNECEDOR LTDA');
 });
+
+it('cap em 25 notas; notas_total reflete o total real', function () {
+    $user = User::factory()->create();
+    $cliente = rfFazerClienteProprio($user);
+    $importacao = rfFazerImportacaoFiscal($user, $cliente);
+
+    EfdApuracaoIcms::create([
+        'user_id' => $user->id,
+        'cliente_id' => $cliente->id,
+        'importacao_id' => $importacao->id,
+        'periodo_inicio' => '2026-04-01',
+        'periodo_fim' => '2026-04-30',
+        'icms_tot_debitos' => 100.00,
+        'icms_tot_creditos' => 0,
+        'icms_obrigacoes' => [],
+    ]);
+
+    for ($i = 1; $i <= 30; $i++) {
+        rfFazerNotaIcmsSaida($user, $cliente, $importacao, [
+            'numero' => (string) $i,
+            'valor_icms' => 10.00 + $i,
+            'participante_doc' => str_pad((string) $i, 14, '0', STR_PAD_LEFT),
+        ]);
+    }
+
+    $data = rfService()->getAlertasFiscaisData($user->id, $cliente->id, '2026-04');
+    $alerta = collect($data['alertas'])->firstWhere('tipo', 'icms_debito');
+
+    expect($alerta['detalhe']['notas_total'])->toBe(30)
+        ->and(count($alerta['detalhe']['notas']))->toBe(25)
+        ->and($alerta['detalhe']['notas'][0]['valor_contribuicao'])->toBe(40.00);
+});
+
+it('alertas de divergencia PIS e COFINS trazem detalhe com notas', function () {
+    $user = User::factory()->create();
+    $cliente = rfFazerClienteProprio($user);
+    $importacao = rfFazerImportacaoFiscal($user, $cliente);
+
+    \App\Models\EfdApuracaoContribuicao::create([
+        'user_id' => $user->id,
+        'cliente_id' => $cliente->id,
+        'importacao_id' => $importacao->id,
+        'periodo_inicio' => '2026-04-01',
+        'periodo_fim' => '2026-04-30',
+        'pis_total_recolher' => 100.00,
+        'cofins_total_recolher' => 400.00,
+        'pis_retencao_nc' => 0,
+        'pis_retencao_cum' => 0,
+        'cofins_retencao_nc' => 0,
+        'cofins_retencao_cum' => 0,
+    ]);
+
+    // Itens somam PIS 330 e COFINS 1520 (165*2 e 760*2 dos defaults do helper) → divergências > 5%
+    rfFazerNotaIcmsSaida($user, $cliente, $importacao, ['numero' => '10', 'participante_doc' => '11111111000100']);
+    rfFazerNotaIcmsSaida($user, $cliente, $importacao, ['numero' => '11', 'participante_doc' => '22222222000100']);
+
+    $data = rfService()->getAlertasFiscaisData($user->id, $cliente->id, '2026-04');
+
+    $pis = collect($data['alertas'])->firstWhere('tipo', 'pis');
+    $cofins = collect($data['alertas'])->firstWhere('tipo', 'cofins');
+
+    expect($pis)->not->toBeNull()
+        ->and($pis['detalhe']['breakdown']['rotulo_declarado'])->toBe('Apuração M200')
+        ->and($pis['detalhe']['notas_total'])->toBe(2)
+        ->and($cofins)->not->toBeNull()
+        ->and($cofins['detalhe']['breakdown']['rotulo_declarado'])->toBe('Apuração M600')
+        ->and($cofins['detalhe']['notas_total'])->toBe(2);
+});
+
+it('sem dados, retorna alertas vazio sem regressao', function () {
+    $user = User::factory()->create();
+    $cliente = rfFazerClienteProprio($user);
+
+    $data = rfService()->getAlertasFiscaisData($user->id, $cliente->id, '2026-04');
+
+    expect($data['alertas'])->toBe([])
+        ->and($data['resumo']['total'])->toBe(0);
+});

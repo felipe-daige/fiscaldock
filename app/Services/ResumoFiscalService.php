@@ -412,32 +412,74 @@ class ResumoFiscalService
 
         // Divergência ICMS créditos
         if ($cruzamentos['icms']['tem_dados'] && ($cruzamentos['icms']['divergencia_credito_pct'] ?? 0) > 1) {
+            $notas = $this->notasContribuintesIcms($userId, $clienteId, $competencia, 'entrada');
             $alertas[] = [
+                'tipo' => 'icms_credito',
                 'severidade' => 'alta',
                 'categoria' => 'ICMS',
                 'titulo' => 'Divergência ICMS créditos',
                 'descricao' => 'Diferença de '.number_format($cruzamentos['icms']['divergencia_credito_pct'], 1).'% entre créditos declarados e soma dos itens das notas de entrada.',
                 'valor' => $cruzamentos['icms']['divergencia_credito'],
+                'detalhe' => [
+                    'breakdown' => [
+                        'declarado' => (float) $cruzamentos['icms']['declarado_credito'],
+                        'soma_notas' => (float) $cruzamentos['icms']['notas_credito'],
+                        'diferenca' => (float) $cruzamentos['icms']['divergencia_credito'],
+                        'divergencia_pct' => (float) $cruzamentos['icms']['divergencia_credito_pct'],
+                        'rotulo_declarado' => 'Apuração E110',
+                        'rotulo_notas' => 'Soma das notas de entrada',
+                    ],
+                    'notas_total' => $notas['notas_total'],
+                    'notas' => $notas['notas'],
+                ],
             ];
         }
 
         // Divergência PIS
         if ($cruzamentos['pis_cofins']['tem_dados'] && ($cruzamentos['pis_cofins']['pis_divergencia_pct'] ?? 0) > 5) {
+            $notas = $this->notasContribuintesContrib($userId, $clienteId, $competencia, 'valor_pis');
             $alertas[] = [
+                'tipo' => 'pis',
                 'severidade' => 'media',
                 'categoria' => 'PIS/COFINS',
                 'titulo' => 'Divergência PIS a recolher vs notas',
                 'descricao' => 'O PIS a recolher na apuração diverge em '.number_format($cruzamentos['pis_cofins']['pis_divergencia_pct'], 1).'% do PIS calculado nos itens das notas.',
+                'detalhe' => [
+                    'breakdown' => [
+                        'declarado' => (float) $cruzamentos['pis_cofins']['pis_declarado'],
+                        'soma_notas' => (float) $cruzamentos['pis_cofins']['pis_notas'],
+                        'diferenca' => abs((float) $cruzamentos['pis_cofins']['pis_declarado'] - (float) $cruzamentos['pis_cofins']['pis_notas']),
+                        'divergencia_pct' => (float) $cruzamentos['pis_cofins']['pis_divergencia_pct'],
+                        'rotulo_declarado' => 'Apuração M200',
+                        'rotulo_notas' => 'Soma dos itens',
+                    ],
+                    'notas_total' => $notas['notas_total'],
+                    'notas' => $notas['notas'],
+                ],
             ];
         }
 
         // Divergência COFINS
         if ($cruzamentos['pis_cofins']['tem_dados'] && ($cruzamentos['pis_cofins']['cofins_divergencia_pct'] ?? 0) > 5) {
+            $notas = $this->notasContribuintesContrib($userId, $clienteId, $competencia, 'valor_cofins');
             $alertas[] = [
+                'tipo' => 'cofins',
                 'severidade' => 'media',
                 'categoria' => 'PIS/COFINS',
                 'titulo' => 'Divergência COFINS a recolher vs notas',
                 'descricao' => 'O COFINS a recolher na apuração diverge em '.number_format($cruzamentos['pis_cofins']['cofins_divergencia_pct'], 1).'% do COFINS calculado nos itens.',
+                'detalhe' => [
+                    'breakdown' => [
+                        'declarado' => (float) $cruzamentos['pis_cofins']['cofins_declarado'],
+                        'soma_notas' => (float) $cruzamentos['pis_cofins']['cofins_notas'],
+                        'diferenca' => abs((float) $cruzamentos['pis_cofins']['cofins_declarado'] - (float) $cruzamentos['pis_cofins']['cofins_notas']),
+                        'divergencia_pct' => (float) $cruzamentos['pis_cofins']['cofins_divergencia_pct'],
+                        'rotulo_declarado' => 'Apuração M600',
+                        'rotulo_notas' => 'Soma dos itens',
+                    ],
+                    'notas_total' => $notas['notas_total'],
+                    'notas' => $notas['notas'],
+                ],
             ];
         }
 
@@ -580,6 +622,65 @@ class ResumoFiscalService
                 $q->select(DB::raw(1))
                     ->from('efd_notas_itens as i')
                     ->whereColumn('i.efd_nota_id', 'n.id');
+            })
+            ->count();
+
+        return [
+            'notas_total' => $total,
+            'notas' => $linhas->map(fn ($r) => [
+                'id' => (int) $r->id,
+                'numero' => (string) $r->numero,
+                'serie' => (string) $r->serie,
+                'modelo' => (string) $r->modelo,
+                'data_emissao' => $r->data_emissao,
+                'participante' => $r->participante,
+                'participante_documento' => $r->participante_documento,
+                'valor_total' => (float) $r->valor_total,
+                'valor_contribuicao' => (float) $r->valor_contribuicao,
+            ])->all(),
+        ];
+    }
+
+    private function notasContribuintesContrib(
+        int $userId,
+        int $clienteId,
+        string $competencia,
+        string $colunaItem
+    ): array {
+        if (! in_array($colunaItem, ['valor_pis', 'valor_cofins'], true)) {
+            throw new \InvalidArgumentException("colunaItem inválida: {$colunaItem}");
+        }
+
+        [$inicio, $fim] = $this->periodoDates($competencia);
+
+        // PIS/COFINS soma itens de qualquer origem (a apuração consolida).
+        $linhas = DB::table('efd_notas_itens as i')
+            ->join('efd_notas as n', 'n.id', '=', 'i.efd_nota_id')
+            ->leftJoin('participantes as p', 'p.id', '=', 'n.participante_id')
+            ->where('n.user_id', $userId)
+            ->where('n.cliente_id', $clienteId)
+            ->whereBetween('n.data_emissao', [$inicio, $fim])
+            ->groupBy('n.id', 'n.numero', 'n.serie', 'n.modelo', 'n.data_emissao', 'n.valor_total', 'p.razao_social', 'p.documento')
+            ->selectRaw("
+                n.id, n.numero, n.serie, n.modelo, n.data_emissao, n.valor_total,
+                p.razao_social as participante,
+                p.documento as participante_documento,
+                SUM(COALESCE(i.{$colunaItem}, 0)) as valor_contribuicao
+            ")
+            ->orderByRaw("SUM(COALESCE(i.{$colunaItem}, 0)) DESC")
+            ->orderBy('n.data_emissao')
+            ->limit(self::NOTAS_CONTRIBUINTES_CAP)
+            ->get();
+
+        $total = DB::table('efd_notas as n')
+            ->where('n.user_id', $userId)
+            ->where('n.cliente_id', $clienteId)
+            ->whereBetween('n.data_emissao', [$inicio, $fim])
+            ->whereExists(function ($q) use ($colunaItem) {
+                $q->select(DB::raw(1))
+                    ->from('efd_notas_itens as i')
+                    ->whereColumn('i.efd_nota_id', 'n.id')
+                    ->where("i.{$colunaItem}", '>', 0);
             })
             ->count();
 
