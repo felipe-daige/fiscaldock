@@ -3,6 +3,9 @@
 use App\Models\Cliente;
 use App\Models\EfdApuracaoIcms;
 use App\Models\EfdImportacao;
+use App\Models\EfdNota;
+use App\Models\EfdNotaItem;
+use App\Models\Participante;
 use App\Models\User;
 use App\Services\ResumoFiscalService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -70,6 +73,43 @@ it('alerta de obrigacao ICMS vencida traz tipo e detalhe.obrigacao', function ()
         ->and(abs($obrigacao['detalhe']['obrigacao']['dias']))->toBeGreaterThanOrEqual(14);
 });
 
+function rfFazerNotaIcmsSaida(User $user, Cliente $cliente, EfdImportacao $importacao, array $overrides = []): EfdNota
+{
+    $participante = Participante::create([
+        'user_id' => $user->id,
+        'documento' => $overrides['participante_doc'] ?? '12345678000199',
+        'razao_social' => $overrides['participante_razao'] ?? 'FORNECEDOR LTDA',
+    ]);
+
+    $nota = EfdNota::create(array_merge([
+        'user_id' => $user->id,
+        'cliente_id' => $cliente->id,
+        'importacao_id' => $importacao->id,
+        'participante_id' => $participante->id,
+        'origem_arquivo' => 'fiscal',
+        'tipo_operacao' => 'saida',
+        'numero' => '1234',
+        'serie' => '1',
+        'modelo' => '55',
+        'data_emissao' => '2026-04-15',
+        'valor_total' => 10000.00,
+    ], $overrides));
+
+    EfdNotaItem::create([
+        'efd_nota_id' => $nota->id,
+        'user_id' => $user->id,
+        'numero_item' => 1,
+        'codigo_item' => 'ITEM001',
+        'descricao' => 'Item de teste',
+        'valor_total' => 10000.00,
+        'valor_icms' => $overrides['valor_icms'] ?? 1800.00,
+        'valor_pis' => 165.00,
+        'valor_cofins' => 760.00,
+    ]);
+
+    return $nota;
+}
+
 it('alerta de retencoes nao compensadas traz tipo e detalhe.breakdown + detalhe.retencoes', function () {
     $user = User::factory()->create();
     $cliente = rfFazerClienteProprio($user);
@@ -125,4 +165,38 @@ it('alerta de retencoes nao compensadas traz tipo e detalhe.breakdown + detalhe.
         ->and($alerta['detalhe']['breakdown']['nao_compensado'])->toBe(300.00)
         ->and($alerta['detalhe']['retencoes'])->toBeArray()
         ->and(count($alerta['detalhe']['retencoes']))->toBeGreaterThan(0);
+});
+
+it('alerta de divergencia ICMS debito traz tipo + breakdown + notas contribuintes', function () {
+    $user = User::factory()->create();
+    $cliente = rfFazerClienteProprio($user);
+    $importacao = rfFazerImportacaoFiscal($user, $cliente);
+
+    // Apuração declara 1000 de débito
+    EfdApuracaoIcms::create([
+        'user_id' => $user->id,
+        'cliente_id' => $cliente->id,
+        'importacao_id' => $importacao->id,
+        'periodo_inicio' => '2026-04-01',
+        'periodo_fim' => '2026-04-30',
+        'icms_tot_debitos' => 1000.00,
+        'icms_tot_creditos' => 0,
+        'icms_obrigacoes' => [],
+    ]);
+
+    // Notas somam 1500 → divergência de 50%
+    rfFazerNotaIcmsSaida($user, $cliente, $importacao, ['numero' => '1', 'valor_icms' => 800.00, 'participante_doc' => '11111111000191']);
+    rfFazerNotaIcmsSaida($user, $cliente, $importacao, ['numero' => '2', 'valor_icms' => 700.00, 'participante_doc' => '22222222000191']);
+
+    $data = rfService()->getAlertasFiscaisData($user->id, $cliente->id, '2026-04');
+
+    $alerta = collect($data['alertas'])->firstWhere('tipo', 'icms_debito');
+
+    expect($alerta)->not->toBeNull()
+        ->and($alerta['detalhe']['breakdown']['declarado'])->toBe(1000.00)
+        ->and($alerta['detalhe']['breakdown']['soma_notas'])->toBe(1500.00)
+        ->and($alerta['detalhe']['notas_total'])->toBe(2)
+        ->and(count($alerta['detalhe']['notas']))->toBe(2)
+        ->and($alerta['detalhe']['notas'][0]['valor_contribuicao'])->toBe(800.00)
+        ->and($alerta['detalhe']['notas'][0]['participante'])->toBe('FORNECEDOR LTDA');
 });

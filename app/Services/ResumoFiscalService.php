@@ -387,12 +387,26 @@ class ResumoFiscalService
 
         // Divergência ICMS débitos
         if ($cruzamentos['icms']['tem_dados'] && ($cruzamentos['icms']['divergencia_debito_pct'] ?? 0) > 1) {
+            $notas = $this->notasContribuintesIcms($userId, $clienteId, $competencia, 'saida');
             $alertas[] = [
+                'tipo' => 'icms_debito',
                 'severidade' => 'alta',
                 'categoria' => 'ICMS',
                 'titulo' => 'Divergência ICMS débitos',
                 'descricao' => 'Diferença de '.number_format($cruzamentos['icms']['divergencia_debito_pct'], 1).'% entre apuração declarada e soma dos itens das notas fiscais.',
                 'valor' => $cruzamentos['icms']['divergencia_debito'],
+                'detalhe' => [
+                    'breakdown' => [
+                        'declarado' => (float) $cruzamentos['icms']['declarado_debito'],
+                        'soma_notas' => (float) $cruzamentos['icms']['notas_debito'],
+                        'diferenca' => (float) $cruzamentos['icms']['divergencia_debito'],
+                        'divergencia_pct' => (float) $cruzamentos['icms']['divergencia_debito_pct'],
+                        'rotulo_declarado' => 'Apuração E110',
+                        'rotulo_notas' => 'Soma das notas de saída',
+                    ],
+                    'notas_total' => $notas['notas_total'],
+                    'notas' => $notas['notas'],
+                ],
             ];
         }
 
@@ -525,6 +539,65 @@ class ResumoFiscalService
     }
 
     // ─── Helpers ───
+
+    private const NOTAS_CONTRIBUINTES_CAP = 25;
+
+    private function notasContribuintesIcms(
+        int $userId,
+        int $clienteId,
+        string $competencia,
+        string $tipoOperacao
+    ): array {
+        [$inicio, $fim] = $this->periodoDates($competencia);
+
+        $linhas = DB::table('efd_notas_itens as i')
+            ->join('efd_notas as n', 'n.id', '=', 'i.efd_nota_id')
+            ->leftJoin('participantes as p', 'p.id', '=', 'n.participante_id')
+            ->where('n.user_id', $userId)
+            ->where('n.cliente_id', $clienteId)
+            ->where('n.origem_arquivo', 'fiscal')
+            ->where('n.tipo_operacao', $tipoOperacao)
+            ->whereBetween('n.data_emissao', [$inicio, $fim])
+            ->groupBy('n.id', 'n.numero', 'n.serie', 'n.modelo', 'n.data_emissao', 'n.valor_total', 'p.razao_social', 'p.documento')
+            ->selectRaw('
+                n.id, n.numero, n.serie, n.modelo, n.data_emissao, n.valor_total,
+                p.razao_social as participante,
+                p.documento as participante_documento,
+                SUM(COALESCE(i.valor_icms, 0)) as valor_contribuicao
+            ')
+            ->orderByRaw('SUM(COALESCE(i.valor_icms, 0)) DESC')
+            ->orderBy('n.data_emissao')
+            ->limit(self::NOTAS_CONTRIBUINTES_CAP)
+            ->get();
+
+        $total = DB::table('efd_notas as n')
+            ->where('n.user_id', $userId)
+            ->where('n.cliente_id', $clienteId)
+            ->where('n.origem_arquivo', 'fiscal')
+            ->where('n.tipo_operacao', $tipoOperacao)
+            ->whereBetween('n.data_emissao', [$inicio, $fim])
+            ->whereExists(function ($q) {
+                $q->select(DB::raw(1))
+                    ->from('efd_notas_itens as i')
+                    ->whereColumn('i.efd_nota_id', 'n.id');
+            })
+            ->count();
+
+        return [
+            'notas_total' => $total,
+            'notas' => $linhas->map(fn ($r) => [
+                'id' => (int) $r->id,
+                'numero' => (string) $r->numero,
+                'serie' => (string) $r->serie,
+                'modelo' => (string) $r->modelo,
+                'data_emissao' => $r->data_emissao,
+                'participante' => $r->participante,
+                'participante_documento' => $r->participante_documento,
+                'valor_total' => (float) $r->valor_total,
+                'valor_contribuicao' => (float) $r->valor_contribuicao,
+            ])->all(),
+        ];
+    }
 
     private function calcularDelta(float $atual, float $anterior): ?array
     {
