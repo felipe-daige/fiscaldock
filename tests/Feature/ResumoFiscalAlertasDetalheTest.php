@@ -103,8 +103,8 @@ function rfFazerNotaIcmsSaida(User $user, Cliente $cliente, EfdImportacao $impor
         'descricao' => 'Item de teste',
         'valor_total' => 10000.00,
         'valor_icms' => $overrides['valor_icms'] ?? 1800.00,
-        'valor_pis' => 165.00,
-        'valor_cofins' => 760.00,
+        'valor_pis' => $overrides['valor_pis'] ?? 165.00,
+        'valor_cofins' => $overrides['valor_cofins'] ?? 760.00,
     ]);
 
     return $nota;
@@ -252,9 +252,19 @@ it('alertas de divergencia PIS e COFINS trazem detalhe com notas', function () {
         'cofins_retencao_cum' => 0,
     ]);
 
-    // Itens somam PIS 330 e COFINS 1520 (165*2 e 760*2 dos defaults do helper) → divergências > 5%
-    rfFazerNotaIcmsSaida($user, $cliente, $importacao, ['numero' => '10', 'participante_doc' => '11111111000100']);
-    rfFazerNotaIcmsSaida($user, $cliente, $importacao, ['numero' => '11', 'participante_doc' => '22222222000100']);
+    // Itens definidos explicitamente: PIS soma 330 (vs declarado 100 = ~230%) e COFINS soma 1520 (vs declarado 400 = ~280%) — ambas > 5%.
+    rfFazerNotaIcmsSaida($user, $cliente, $importacao, [
+        'numero' => '10',
+        'participante_doc' => '11111111000100',
+        'valor_pis' => 165.00,
+        'valor_cofins' => 760.00,
+    ]);
+    rfFazerNotaIcmsSaida($user, $cliente, $importacao, [
+        'numero' => '11',
+        'participante_doc' => '22222222000100',
+        'valor_pis' => 165.00,
+        'valor_cofins' => 760.00,
+    ]);
 
     $data = rfService()->getAlertasFiscaisData($user->id, $cliente->id, '2026-04');
 
@@ -266,7 +276,9 @@ it('alertas de divergencia PIS e COFINS trazem detalhe com notas', function () {
         ->and($pis['detalhe']['notas_total'])->toBe(2)
         ->and($cofins)->not->toBeNull()
         ->and($cofins['detalhe']['breakdown']['rotulo_declarado'])->toBe('Apuração M600')
-        ->and($cofins['detalhe']['notas_total'])->toBe(2);
+        ->and($cofins['detalhe']['notas_total'])->toBe(2)
+        ->and($pis['detalhe']['notas'][0]['valor_contribuicao'])->toBe(165.00)
+        ->and($cofins['detalhe']['notas'][0]['valor_contribuicao'])->toBe(760.00);
 });
 
 it('sem dados, retorna alertas vazio sem regressao', function () {
