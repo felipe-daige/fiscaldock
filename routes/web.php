@@ -3,19 +3,19 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CreditController;
 use App\Http\Controllers\Dashboard\BiController;
+use App\Http\Controllers\Dashboard\CatalogoController;
+use App\Http\Controllers\Dashboard\ClearanceController;
 use App\Http\Controllers\Dashboard\ClienteController;
 use App\Http\Controllers\Dashboard\ConsultaController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\DashboardNotasFiscaisController;
-use App\Http\Controllers\Dashboard\ResumoFiscalController;
-use App\Http\Controllers\Dashboard\MinhaEmpresaController;
 use App\Http\Controllers\Dashboard\EfdImportacaoController;
+use App\Http\Controllers\Dashboard\MinhaEmpresaController;
 use App\Http\Controllers\Dashboard\MonitoramentoController;
 use App\Http\Controllers\Dashboard\NotaFiscalController;
-use App\Http\Controllers\Dashboard\CatalogoController;
-use App\Http\Controllers\Dashboard\ClearanceController;
 use App\Http\Controllers\Dashboard\ParticipanteController;
 use App\Http\Controllers\Dashboard\ParticipanteGrupoController;
+use App\Http\Controllers\Dashboard\ResumoFiscalController;
 use App\Http\Controllers\Dashboard\SupportController;
 use App\Http\Controllers\Landing\BlogController;
 use App\Http\Controllers\Landing\LandingPageController;
@@ -60,6 +60,7 @@ Route::get('/agendar', [AuthController::class, 'showAgendar'])->name('agendar');
 Route::post('/agendar', [AuthController::class, 'agendar'])->name('agendar.post');
 Route::get('/termos', [AuthController::class, 'showTerms'])->name('termos');
 Route::get('/privacidade', [AuthController::class, 'showPrivacy'])->name('privacidade');
+Route::get('/cookies', [AuthController::class, 'showCookies'])->name('cookies');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::post('/lead/banner-contato', [LandingPageController::class, 'capturarLead'])
