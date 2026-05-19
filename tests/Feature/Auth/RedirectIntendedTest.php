@@ -173,3 +173,19 @@ test('showLogin com ?intended= fora de /app ignora', function () {
 
     $response->assertOk()->assertJson(['redirect' => '/app/dashboard']);
 });
+
+test('F5 em /app/* sem sessão redireciona para login e depois volta para a página', function () {
+    makeLoginUser();
+
+    // 1. GET protegido sem sessão → 302 pra /login e Laravel grava url.intended
+    $response = $this->get('/app/clearance/notas');
+    $response->assertRedirect('/login');
+
+    // 2. POST /login válido → redireciona pra URL original
+    $response = $this->post('/login', [
+        'email' => 'user@example.com',
+        'password' => 'password123',
+    ]);
+
+    $response->assertRedirect('/app/clearance/notas');
+});
