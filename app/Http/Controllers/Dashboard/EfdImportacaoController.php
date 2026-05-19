@@ -456,6 +456,19 @@ class EfdImportacaoController extends Controller
             ], Response::HTTP_BAD_REQUEST);
         }
 
+        // importacao_id opcional: usado para refletir status=erro do banco
+        // (importações marcadas como travadas pelo comando importacao:expirar-travadas).
+        $importacaoId = $request->query('importacao_id');
+        if ($importacaoId !== null) {
+            $importacaoId = (int) $importacaoId;
+            $pertence = EfdImportacao::where('id', $importacaoId)
+                ->where('user_id', $userId)
+                ->exists();
+            if (! $pertence) {
+                $importacaoId = null;
+            }
+        }
+
         // Chave do cache: progresso:{user_id}:{tab_id}
         $cacheKey = "progresso:{$userId}:{$tabId}";
 
@@ -465,7 +478,7 @@ class EfdImportacaoController extends Controller
             'cache_key' => $cacheKey,
         ]);
 
-        return response()->stream(function () use ($cacheKey, $userId, $tabId) {
+        return response()->stream(function () use ($cacheKey, $userId, $tabId, $importacaoId) {
             $tentativas = 0;
             $maxTentativas = 3600; // 30 minutos (3600 × 0.5s)
             $lastDataHash = null; // Para evitar enviar dados repetidos
@@ -481,6 +494,29 @@ class EfdImportacaoController extends Controller
 
             while ($tentativas < $maxTentativas) {
                 try {
+                    // Se a importação foi marcada como erro no banco (ex.: comando
+                    // importacao:expirar-travadas), encerrar o stream refletindo isso.
+                    if ($importacaoId !== null && $tentativas % 4 === 0) {
+                        $statusBanco = EfdImportacao::where('id', $importacaoId)->value('status');
+                        if ($statusBanco === 'erro') {
+                            echo 'data: '.json_encode([
+                                'status' => 'erro',
+                                'progresso' => 0,
+                                'mensagem' => 'Importação interrompida — o processamento ficou sem resposta.',
+                            ])."\n\n";
+                            if (ob_get_level() > 0) {
+                                ob_flush();
+                            }
+                            flush();
+                            Log::info('SSE streamProgresso: importação marcada como erro no banco', [
+                                'user_id' => $userId,
+                                'tab_id' => $tabId,
+                                'importacao_id' => $importacaoId,
+                            ]);
+                            break;
+                        }
+                    }
+
                     // Lê dados do cache (n8n envia via API)
                     $data = Cache::get($cacheKey);
 
