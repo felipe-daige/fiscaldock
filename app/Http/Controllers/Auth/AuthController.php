@@ -26,6 +26,13 @@ class AuthController extends Controller
             abort(404);
         }
 
+        if ($request->filled('intended')) {
+            $intended = $this->normalizeIntendedPath((string) $request->query('intended'));
+            if ($intended !== null) {
+                $request->session()->put('url.intended', url($intended));
+            }
+        }
+
         if(Auth::check()){
             if($request->ajax()){
                 return response()->json([
@@ -467,5 +474,30 @@ class AuthController extends Controller
         }
 
         return $path;
+    }
+
+    private function normalizeIntendedPath(?string $value): ?string
+    {
+        if (! is_string($value) || $value === '') {
+            return null;
+        }
+
+        if (str_contains($value, "\n") || str_contains($value, "\r")) {
+            return null;
+        }
+
+        if (str_starts_with($value, '//')) {
+            return null;
+        }
+
+        if (! str_starts_with($value, '/app/')) {
+            return null;
+        }
+
+        if (str_contains($value, '/../') || str_contains($value, '/..')) {
+            return null;
+        }
+
+        return $value;
     }
 }

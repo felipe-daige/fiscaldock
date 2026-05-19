@@ -121,3 +121,55 @@ test('resolveIntendedPath preserva query string', function () {
 
     $response->assertOk()->assertJson(['redirect' => '/app/clearance/notas?status=ok&page=2']);
 });
+
+test('showLogin com ?intended=/app/x grava url.intended e POST redireciona pra lá (AJAX)', function () {
+    makeLoginUser();
+
+    $this->get('/login?intended=' . urlencode('/app/notas/dashboard'))->assertOk();
+
+    $response = $this->postJson('/login', [
+        'email' => 'user@example.com',
+        'password' => 'password123',
+    ], ['X-Requested-With' => 'XMLHttpRequest']);
+
+    $response->assertOk()->assertJson(['redirect' => '/app/notas/dashboard']);
+});
+
+test('showLogin com ?intended= URL absoluta externa ignora', function () {
+    makeLoginUser();
+
+    $this->get('/login?intended=' . urlencode('https://evil.com/x'))->assertOk();
+
+    $response = $this->postJson('/login', [
+        'email' => 'user@example.com',
+        'password' => 'password123',
+    ], ['X-Requested-With' => 'XMLHttpRequest']);
+
+    $response->assertOk()->assertJson(['redirect' => '/app/dashboard']);
+});
+
+test('showLogin com ?intended= protocol-relative ignora', function () {
+    makeLoginUser();
+
+    $this->get('/login?intended=' . urlencode('//evil.com/x'))->assertOk();
+
+    $response = $this->postJson('/login', [
+        'email' => 'user@example.com',
+        'password' => 'password123',
+    ], ['X-Requested-With' => 'XMLHttpRequest']);
+
+    $response->assertOk()->assertJson(['redirect' => '/app/dashboard']);
+});
+
+test('showLogin com ?intended= fora de /app ignora', function () {
+    makeLoginUser();
+
+    $this->get('/login?intended=' . urlencode('/inicio'))->assertOk();
+
+    $response = $this->postJson('/login', [
+        'email' => 'user@example.com',
+        'password' => 'password123',
+    ], ['X-Requested-With' => 'XMLHttpRequest']);
+
+    $response->assertOk()->assertJson(['redirect' => '/app/dashboard']);
+});
