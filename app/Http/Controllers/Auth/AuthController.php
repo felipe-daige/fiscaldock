@@ -480,7 +480,7 @@ class AuthController extends Controller
             return $default;
         }
 
-        if (str_contains($path, '/../')) {
+        if (str_contains($path, '/..')) {
             return $default;
         }
 
