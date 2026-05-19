@@ -189,3 +189,26 @@ test('F5 em /app/* sem sessão redireciona para login e depois volta para a pág
 
     $response->assertRedirect('/app/clearance/notas');
 });
+
+test('login consome url.intended e remove da sessão para não vazar em login subsequente', function () {
+    makeLoginUser();
+
+    $first = $this->withSession(['url.intended' => url('/app/clearance/notas')])
+        ->postJson('/login', [
+            'email' => 'user@example.com',
+            'password' => 'password123',
+        ], ['X-Requested-With' => 'XMLHttpRequest']);
+
+    $first->assertOk()->assertJson(['redirect' => '/app/clearance/notas']);
+
+    // Logout para simular nova sessão
+    $this->post('/logout');
+
+    // Segundo login na mesma sessão de teste (sem novo intended) deve cair no default
+    $second = $this->postJson('/login', [
+        'email' => 'user@example.com',
+        'password' => 'password123',
+    ], ['X-Requested-With' => 'XMLHttpRequest']);
+
+    $second->assertOk()->assertJson(['redirect' => '/app/dashboard']);
+});
