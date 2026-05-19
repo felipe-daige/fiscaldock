@@ -41,3 +41,35 @@ test('login sem intended redireciona para /app/dashboard (web)', function () {
 
     $response->assertRedirect('/app/dashboard');
 });
+
+test('login lê url.intended da sessão e redireciona (AJAX)', function () {
+    makeLoginUser();
+
+    $intended = url('/app/clearance/notas');
+
+    $response = $this->withSession(['url.intended' => $intended])
+        ->postJson('/login', [
+            'email' => 'user@example.com',
+            'password' => 'password123',
+        ], ['X-Requested-With' => 'XMLHttpRequest']);
+
+    $response->assertOk()
+        ->assertJson([
+            'success' => true,
+            'redirect' => '/app/clearance/notas',
+        ]);
+});
+
+test('login lê url.intended da sessão e redireciona (web)', function () {
+    makeLoginUser();
+
+    $intended = url('/app/clearance/notas');
+
+    $response = $this->withSession(['url.intended' => $intended])
+        ->post('/login', [
+            'email' => 'user@example.com',
+            'password' => 'password123',
+        ]);
+
+    $response->assertRedirect('/app/clearance/notas');
+});

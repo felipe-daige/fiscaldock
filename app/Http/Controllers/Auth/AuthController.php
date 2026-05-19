@@ -227,14 +227,18 @@ class AuthController extends Controller
             'email' => Auth::user()->email
         ]);
 
+        $intended = $request->session()->pull('url.intended');
+        $redirectPath = $this->resolveIntendedPath($intended, '/app/dashboard');
+
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Login realizado com sucesso',
-                'redirect' => '/app/dashboard'
+                'redirect' => $redirectPath,
             ]);
         }
-        return redirect('/app/dashboard');
+
+        return redirect($redirectPath);
     }
 
     public function signup(Request $request)
@@ -432,5 +436,36 @@ class AuthController extends Controller
         }
         
         return redirect('/inicio');
+    }
+
+    private function resolveIntendedPath(?string $intended, string $default): string
+    {
+        if (! is_string($intended) || $intended === '') {
+            return $default;
+        }
+
+        $parsed = parse_url($intended);
+        if ($parsed === false || ! isset($parsed['path'])) {
+            return $default;
+        }
+
+        if (isset($parsed['host']) && $parsed['host'] !== request()->getHost()) {
+            return $default;
+        }
+
+        $path = $parsed['path'];
+        if (isset($parsed['query']) && $parsed['query'] !== '') {
+            $path .= '?' . $parsed['query'];
+        }
+
+        if (! str_starts_with($path, '/app/')) {
+            return $default;
+        }
+
+        if (str_contains($path, '/../')) {
+            return $default;
+        }
+
+        return $path;
     }
 }
