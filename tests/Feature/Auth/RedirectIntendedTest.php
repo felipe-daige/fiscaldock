@@ -73,3 +73,51 @@ test('login lê url.intended da sessão e redireciona (web)', function () {
 
     $response->assertRedirect('/app/clearance/notas');
 });
+
+test('resolveIntendedPath rejeita host externo', function () {
+    makeLoginUser();
+
+    $response = $this->withSession(['url.intended' => 'https://evil.com/app/x'])
+        ->postJson('/login', [
+            'email' => 'user@example.com',
+            'password' => 'password123',
+        ], ['X-Requested-With' => 'XMLHttpRequest']);
+
+    $response->assertOk()->assertJson(['redirect' => '/app/dashboard']);
+});
+
+test('resolveIntendedPath rejeita path fora de /app/', function () {
+    makeLoginUser();
+
+    $response = $this->withSession(['url.intended' => url('/inicio')])
+        ->postJson('/login', [
+            'email' => 'user@example.com',
+            'password' => 'password123',
+        ], ['X-Requested-With' => 'XMLHttpRequest']);
+
+    $response->assertOk()->assertJson(['redirect' => '/app/dashboard']);
+});
+
+test('resolveIntendedPath rejeita path traversal', function () {
+    makeLoginUser();
+
+    $response = $this->withSession(['url.intended' => url('/app/../admin')])
+        ->postJson('/login', [
+            'email' => 'user@example.com',
+            'password' => 'password123',
+        ], ['X-Requested-With' => 'XMLHttpRequest']);
+
+    $response->assertOk()->assertJson(['redirect' => '/app/dashboard']);
+});
+
+test('resolveIntendedPath preserva query string', function () {
+    makeLoginUser();
+
+    $response = $this->withSession(['url.intended' => url('/app/clearance/notas?status=ok&page=2')])
+        ->postJson('/login', [
+            'email' => 'user@example.com',
+            'password' => 'password123',
+        ], ['X-Requested-With' => 'XMLHttpRequest']);
+
+    $response->assertOk()->assertJson(['redirect' => '/app/clearance/notas?status=ok&page=2']);
+});
