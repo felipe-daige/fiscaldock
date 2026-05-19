@@ -296,7 +296,7 @@ class EfdImportacaoController extends Controller
 
             return response()->json([
                 'success' => false,
-                'error' => 'Serviço de importação não configurado. Verifique as variáveis de ambiente.',
+                'error' => 'Não conseguimos iniciar sua importação agora. Tente novamente em alguns instantes — se persistir, fale com o suporte.',
             ], Response::HTTP_SERVICE_UNAVAILABLE);
         }
 
