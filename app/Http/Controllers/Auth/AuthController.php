@@ -21,8 +21,9 @@ class AuthController extends Controller
         protected CreditService $creditService
     ) {}
 
-    public function showLogin(Request $request){
-        if(!view()->exists("landing_page.auth.login")){
+    public function showLogin(Request $request)
+    {
+        if (! view()->exists('landing_page.auth.login')) {
             abort(404);
         }
 
@@ -33,21 +34,23 @@ class AuthController extends Controller
             }
         }
 
-        if(Auth::check()){
-            if($request->ajax()){
+        if (Auth::check()) {
+            if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Você já está logado',
-                    'redirect' => '/app/dashboard'
+                    'redirect' => '/app/dashboard',
                 ]);
             }
+
             return redirect('/app/dashboard');
         }
 
-        if($request->ajax()){
-            return view("landing_page.auth.login");
+        if ($request->ajax()) {
+            return view('landing_page.auth.login');
         }
-        return view("landing_page.layouts.public", [
+
+        return view('landing_page.layouts.public', [
             'initialView' => 'auth.login',
             'seo' => [
                 'title' => 'Login — FiscalDock',
@@ -57,8 +60,10 @@ class AuthController extends Controller
             ],
         ]);
     }
-    public function showAgendar(Request $request){
-        if(!view()->exists("landing_page.auth.agendar")){
+
+    public function showAgendar(Request $request)
+    {
+        if (! view()->exists('landing_page.auth.agendar')) {
             abort(404);
         }
 
@@ -69,12 +74,13 @@ class AuthController extends Controller
             $whatsAppMessage = "Olá! Quero falar com a FiscalDock sobre a plataforma. Meu e-mail é {$email}.";
         }
 
-        if($request->ajax()){
-            return view("landing_page.auth.agendar", [
-                'whatsAppUrl' => 'https://wa.me/5567999844366?text=' . rawurlencode($whatsAppMessage),
+        if ($request->ajax()) {
+            return view('landing_page.auth.agendar', [
+                'whatsAppUrl' => 'https://wa.me/5567999844366?text='.rawurlencode($whatsAppMessage),
             ]);
         }
-        return view("landing_page.layouts.public", [
+
+        return view('landing_page.layouts.public', [
             'initialView' => 'auth.agendar',
             'seo' => [
                 'title' => 'Contato Comercial — FiscalDock',
@@ -85,7 +91,7 @@ class AuthController extends Controller
                 'og_title' => 'Contato comercial — FiscalDock',
                 'og_image' => 'https://fiscaldock.com/binary_files/logo/Logo FiscalDock.png',
             ],
-            'whatsAppUrl' => 'https://wa.me/5567999844366?text=' . rawurlencode($whatsAppMessage),
+            'whatsAppUrl' => 'https://wa.me/5567999844366?text='.rawurlencode($whatsAppMessage),
         ]);
     }
 
@@ -177,7 +183,8 @@ class AuthController extends Controller
         ]);
     }
 
-    public function login(Request $request){
+    public function login(Request $request)
+    {
         try {
             $request->validate([
                 'email' => 'required|email',
@@ -194,9 +201,10 @@ class AuthController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Dados inválidos',
-                    'errors' => $e->errors()
+                    'errors' => $e->errors(),
                 ], 422);
             }
+
             return back()->withErrors($e->errors())->withInput();
         }
 
@@ -206,18 +214,18 @@ class AuthController extends Controller
         Log::info('Tentativa de login', [
             'email' => $credentials['email'] ?? 'não fornecido',
             'password_length' => isset($credentials['password']) ? strlen($credentials['password']) : 0,
-            'credentials_keys' => array_keys($credentials)
+            'credentials_keys' => array_keys($credentials),
         ]);
 
         $user = Auth::attempt($credentials);
 
-        if(!$user){
+        if (! $user) {
             // Verificar se o usuário existe
             $userExists = User::where('email', $credentials['email'] ?? '')->first();
             Log::warning('Falha no login', [
                 'email' => $credentials['email'] ?? 'não fornecido',
                 'user_exists' => $userExists ? 'sim' : 'não',
-                'user_id' => $userExists?->id
+                'user_id' => $userExists?->id,
             ]);
 
             if ($request->ajax()) {
@@ -226,12 +234,13 @@ class AuthController extends Controller
                     'message' => 'Email ou senha inválidos',
                 ], 401);
             }
+
             return back()->withErrors(['email' => 'Email ou senha inválidos'])->withInput();
         }
 
         Log::info('Login bem-sucedido', [
             'user_id' => Auth::id(),
-            'email' => Auth::user()->email
+            'email' => Auth::user()->email,
         ]);
 
         $intended = $request->session()->pull('url.intended');
@@ -298,7 +307,8 @@ class AuthController extends Controller
         return $this->createTrialAccount($request, $validated);
     }
 
-    public function agendar(Request $request){
+    public function agendar(Request $request)
+    {
         $message = 'O cadastro direto por /agendar foi desativado. Fale com a FiscalDock pelo WhatsApp ou e-mail nesta página.';
 
         if ($request->ajax() || $request->expectsJson()) {
@@ -429,19 +439,20 @@ class AuthController extends Controller
         return preg_replace('/\D/', '', (string) $value);
     }
 
-    public function logout(Request $request){
+    public function logout(Request $request)
+    {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        
-        if($request->ajax()){
+
+        if ($request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Logout realizado com sucesso',
-                'redirect' => '/inicio'
+                'redirect' => '/inicio',
             ]);
         }
-        
+
         return redirect('/inicio');
     }
 
@@ -462,7 +473,7 @@ class AuthController extends Controller
 
         $path = $parsed['path'];
         if (isset($parsed['query']) && $parsed['query'] !== '') {
-            $path .= '?' . $parsed['query'];
+            $path .= '?'.$parsed['query'];
         }
 
         if (! str_starts_with($path, '/app/')) {
