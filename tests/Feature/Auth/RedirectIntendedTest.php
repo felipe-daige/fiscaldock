@@ -2,7 +2,9 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+
+use function Pest\Laravel\post;
+use function Pest\Laravel\postJson;
 
 uses(RefreshDatabase::class);
 
@@ -17,11 +19,10 @@ function makeLoginUser(): User
 test('login sem intended redireciona para /app/dashboard (AJAX)', function () {
     makeLoginUser();
 
-    $response = $this->withoutMiddleware(ValidateCsrfToken::class)
-        ->postJson('/login', [
-            'email' => 'user@example.com',
-            'password' => 'password123',
-        ], ['X-Requested-With' => 'XMLHttpRequest']);
+    $response = postJson('/login', [
+        'email' => 'user@example.com',
+        'password' => 'password123',
+    ], ['X-Requested-With' => 'XMLHttpRequest']);
 
     $response->assertOk()
         ->assertJson([
@@ -33,11 +34,10 @@ test('login sem intended redireciona para /app/dashboard (AJAX)', function () {
 test('login sem intended redireciona para /app/dashboard (web)', function () {
     makeLoginUser();
 
-    $response = $this->withoutMiddleware(ValidateCsrfToken::class)
-        ->post('/login', [
-            'email' => 'user@example.com',
-            'password' => 'password123',
-        ]);
+    $response = post('/login', [
+        'email' => 'user@example.com',
+        'password' => 'password123',
+    ]);
 
     $response->assertRedirect('/app/dashboard');
 });
