@@ -344,8 +344,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Verificar se é erro de autenticação (sessão expirada)
             if (resposta.status === 401 || resposta.status === 419) {
-                console.warn('[SPA] Erro de autenticação, redirecionando para login');
-                window.location.href = '/login';
+                console.warn('[SPA] Sessão expirada, redirecionando para login');
+                const atual = window.location.pathname + window.location.search;
+                const loginUrl = atual.startsWith('/app/')
+                    ? '/login?intended=' + encodeURIComponent(atual)
+                    : '/login';
+                window.location.href = loginUrl;
                 return;
             }
             
