@@ -46,7 +46,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->integer('numero_item');
             $table->string('codigo_item')->index();
-            $table->text('descricao');
+            $table->text('descricao')->nullable();
             $table->decimal('quantidade', 15, 4)->nullable();
             $table->string('unidade_medida', 6)->nullable();
             $table->decimal('valor_unitario', 15, 4)->nullable();

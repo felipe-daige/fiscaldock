@@ -43,7 +43,7 @@
                 </svg>
             </x-slot:icon>
 
-            <x-sidebar.group-item href="/app/importacao/efd">EFD</x-sidebar.group-item>
+            <x-sidebar.group-item href="/app/importacao/efd" :pill="config('importacao.efd_manutencao.ativa') ? 'Manutenção' : null">EFD</x-sidebar.group-item>
             <x-sidebar.group-item href="/app/importacao/xml" pill="Em Breve">XML</x-sidebar.group-item>
             <x-sidebar.group-item href="/app/importacao/historico">Histórico</x-sidebar.group-item>
         </x-sidebar.group>

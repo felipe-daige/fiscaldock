@@ -56,6 +56,8 @@ class EfdImportacaoController extends Controller
             'importacoes' => $importacoes,
             'totalParticipantes' => Participante::where('user_id', $userId)->count(),
             'totalNotas' => EfdNota::where('user_id', $userId)->count(),
+            'efdManutencaoAtiva' => (bool) config('importacao.efd_manutencao.ativa'),
+            'podeImportarEfd' => ! $this->efdEmManutencaoPara($userId),
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -67,6 +69,17 @@ class EfdImportacaoController extends Controller
         return view(self::AUTH_LAYOUT_VIEW, array_merge([
             'initialView' => $efdView,
         ], $data));
+    }
+
+    private function efdEmManutencaoPara(?int $userId): bool
+    {
+        if (! config('importacao.efd_manutencao.ativa')) {
+            return false;
+        }
+
+        $permitidos = (array) config('importacao.efd_manutencao.usuarios_permitidos', []);
+
+        return ! in_array((int) $userId, array_map('intval', $permitidos), true);
     }
 
     /**
@@ -254,6 +267,13 @@ class EfdImportacaoController extends Controller
                 'success' => false,
                 'error' => 'Usuário não autenticado.',
             ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if ($this->efdEmManutencaoPara(Auth::id())) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Módulo de Importação EFD em manutenção. Estamos reestruturando o pipeline de extração e novos uploads estão temporariamente desativados.',
+            ], Response::HTTP_SERVICE_UNAVAILABLE);
         }
 
         $request->validate([
