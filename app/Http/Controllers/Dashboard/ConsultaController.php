@@ -869,7 +869,7 @@ class ConsultaController extends Controller
                 ini_set('zlib.output_compression', 'Off');
             }
             // Padding inicial para forçar flush em proxies que ainda bufferizam
-            echo str_repeat(' ', 2048) . "\n";
+            echo str_repeat(' ', 2048)."\n";
 
             $tentativas = 0;
             $maxTentativas = 600; // 5 minutos com 0.5s de intervalo
@@ -1590,23 +1590,23 @@ class ConsultaController extends Controller
                 return [
                     'participante' => [
                         'id' => $r->participante?->id,
-                        'cnpj'         => $r->participante?->documento,
+                        'cnpj' => $r->participante?->documento,
                         'documento_formatado' => $r->participante?->cnpj_formatado ?: $r->participante?->documento,
                         'razao_social' => $r->participante?->razao_social,
-                        'uf'           => $r->participante?->uf,
+                        'uf' => $r->participante?->uf,
                     ],
-                    'status'             => $r->status,
-                    'error_message'      => $r->publicErrorMessage(),
-                    'mensagem_exibivel'  => $r->getMensagemExibivel(),
+                    'status' => $r->status,
+                    'error_message' => $r->publicErrorMessage(),
+                    'mensagem_exibivel' => $r->getMensagemExibivel(),
                     'situacao_cadastral' => $r->getDado('situacao_cadastral'),
-                    'regime_tributario'  => $r->getRegimeTributarioLabel(),
-                    'simples_nacional'   => $r->getDado('simples_nacional'),
-                    'mei'                => $r->getDado('mei'),
-                    'cnd_federal'        => $this->cndFederalComAnalise($r->getDado('cnd_federal')),
-                    'crf_fgts'           => $r->getDado('crf_fgts'),
-                    'cndt'               => $r->getDado('cndt'),
-                    'cnd_estadual'       => $r->getDado('cnd_estadual'),
-                    'parecer'            => $parecerResumo,
+                    'regime_tributario' => $r->getRegimeTributarioLabel(),
+                    'simples_nacional' => $r->getDado('simples_nacional'),
+                    'mei' => $r->getDado('mei'),
+                    'cnd_federal' => $this->cndFederalComAnalise($r->getDado('cnd_federal')),
+                    'crf_fgts' => $r->getDado('crf_fgts'),
+                    'cndt' => $r->getDado('cndt'),
+                    'cnd_estadual' => $r->getDado('cnd_estadual'),
+                    'parecer' => $parecerResumo,
                 ];
             }),
         ]);

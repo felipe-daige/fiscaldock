@@ -5,6 +5,7 @@ namespace App\Support;
 class CndFederal
 {
     public const LABEL_INDETERMINADO = 'Indeterminada';
+
     public const HEX_INDETERMINADO = '#d97706';
 
     /**
