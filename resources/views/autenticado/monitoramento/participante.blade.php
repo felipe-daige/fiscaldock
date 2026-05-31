@@ -436,6 +436,9 @@
 
                                     $mensagemCnd = $d['mensagem'] ?? null;
                                     if (! $mensagemCnd && ! empty($d['errors']) && is_array($d['errors'])) $mensagemCnd = $d['errors'][0] ?? null;
+                                    if ($cfg['key'] === 'cnd_federal') {
+                                        $mensagemCnd = \App\Support\CndFederal::analisar($d)['motivo'] ?? $mensagemCnd;
+                                    }
 
                                     $certidoes[] = [
                                         'titulo'        => $cfg['titulo'],
