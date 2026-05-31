@@ -71,3 +71,17 @@ it('endpoint resultadosLote retorna cnd indeterminado com motivo normalizado', f
             'Inscrição no CNPJ 72.983.711/0001-34 Inapta - Omissão de declarações, emissão de certidão não permitida.'
         );
 });
+
+it('endpoint getParticipantes expoe motivo do cnd indeterminado no meta', function () {
+    $user = User::factory()->create();
+    [, $participante] = loteComCndIndeterminado($user);
+
+    actingAs($user)
+        ->getJson('/app/consulta/nova/participantes')
+        ->assertOk()
+        ->assertJsonFragment(['cnd_federal_status_label' => 'Indeterminada'])
+        ->assertJsonFragment(['cnd_federal_status_hex' => '#d97706'])
+        ->assertJsonFragment([
+            'cnd_federal_meta' => 'Inscrição no CNPJ 72.983.711/0001-34 Inapta - Omissão de declarações, emissão de certidão não permitida.',
+        ]);
+});

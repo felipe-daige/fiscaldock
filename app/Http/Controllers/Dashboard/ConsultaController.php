@@ -253,7 +253,13 @@ class ConsultaController extends Controller
                 $cndStatusHex = '#9ca3af';
                 $cndMeta = 'CND: não consultada';
 
-                if ($cndStatus !== '') {
+                $cndAnalise = CndFederal::analisar($cndFederal);
+
+                if ($cndAnalise['indeterminado']) {
+                    $cndStatusLabel = $cndAnalise['label'];
+                    $cndStatusHex = $cndAnalise['hex'];
+                    $cndMeta = $cndAnalise['motivo'] ?? 'Certidão não emitida pela fonte oficial.';
+                } elseif ($cndStatus !== '') {
                     if (in_array($cndStatus, ['NEGATIVA', 'REGULAR', 'REGULARIDADE'])) {
                         $cndStatusLabel = 'Negativa';
                         $cndStatusHex = '#047857';

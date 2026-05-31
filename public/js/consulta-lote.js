@@ -1981,8 +1981,11 @@
     }
 
     function getCndBadgeHtml(participante) {
+        var motivo = participante.cnd_federal_status_label === 'Indeterminada' && participante.cnd_federal_meta
+            ? ' title="' + escapeHtml(String(participante.cnd_federal_meta)) + '"'
+            : '';
         return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: '
-            + (participante.cnd_federal_status_hex || '#9ca3af') + '">'
+            + (participante.cnd_federal_status_hex || '#9ca3af') + '"' + motivo + '>'
             + escapeHtml(participante.cnd_federal_status_label || 'Não consultada') + '</span>';
     }
 
