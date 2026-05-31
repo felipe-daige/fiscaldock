@@ -1674,7 +1674,7 @@ class ConsultaController extends Controller
                 };
                 $situacaoCadastral = trim((string) $resultado->getDado('situacao_cadastral'));
                 $regimeTributario = $resultado->getRegimeTributarioLabel();
-                $cndFederal = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('cnd_federal'));
+                $cndFederal = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('cnd_federal'), true);
                 $fgts = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('crf_fgts'));
                 $cndt = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('cndt'));
 
@@ -1701,8 +1701,20 @@ class ConsultaController extends Controller
             });
     }
 
-    private function normalizeConsultaLoteRegularidadeBadge(mixed $valor): array
+    private function normalizeConsultaLoteRegularidadeBadge(mixed $valor, bool $aplicarIndeterminado = false): array
     {
+        if ($aplicarIndeterminado) {
+            $analise = CndFederal::analisar($valor);
+            if ($analise['indeterminado']) {
+                return [
+                    'label' => $analise['label'],
+                    'hex' => $analise['hex'],
+                    'indeterminado' => true,
+                    'motivo' => $analise['motivo'],
+                ];
+            }
+        }
+
         if ($valor === null || $valor === '') {
             return ['label' => '—', 'hex' => '#9ca3af'];
         }

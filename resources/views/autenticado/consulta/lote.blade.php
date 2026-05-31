@@ -225,7 +225,12 @@
                                         </td>
                                         <td class="px-3 py-3 text-sm text-gray-700 text-center">{{ $resultado['situacao_cadastral'] ?: '—' }}</td>
                                         <td class="px-3 py-3 text-sm text-gray-700 text-center whitespace-nowrap">{{ $regimeTributario ?: '—' }}</td>
-                                        <td class="px-3 py-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cndFederal['hex'] }}">{{ $cndFederal['label'] }}</span></td>
+                                        <td class="px-3 py-3 text-center">
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cndFederal['hex'] }}"@if(!empty($cndFederal['indeterminado']) && !empty($cndFederal['motivo'])) title="{{ $cndFederal['motivo'] }}"@endif>{{ $cndFederal['label'] }}</span>
+                                            @if(!empty($cndFederal['indeterminado']) && !empty($cndFederal['motivo']))
+                                                <p class="text-[11px] text-gray-500 mt-1 leading-snug">{{ $cndFederal['motivo'] }}</p>
+                                            @endif
+                                        </td>
                                         <td class="px-3 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $fgts['hex'] }}">{{ $fgts['label'] }}</span></td>
                                         <td class="px-3 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cndt['hex'] }}">{{ $cndt['label'] }}</span></td>
                                         <td class="px-3 py-3">
@@ -290,6 +295,9 @@
                                         <div class="mt-1 flex justify-center">
                                             <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cndFederal['hex'] }}">{{ $cndFederal['label'] }}</span>
                                         </div>
+                                        @if(!empty($cndFederal['indeterminado']) && !empty($cndFederal['motivo']))
+                                            <p class="text-[11px] text-gray-500 mt-1 leading-snug text-center">{{ $cndFederal['motivo'] }}</p>
+                                        @endif
                                     </div>
                                     <div>
                                         <p class="text-[10px] text-gray-400 uppercase">FGTS</p>
