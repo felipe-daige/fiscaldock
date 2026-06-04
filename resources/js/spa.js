@@ -231,8 +231,16 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.addEventListener('click', async (e) => {
         const link = e.target.closest('[data-link]');
         if (link) {
+            const linkUrl = new URL(link.href, window.location.origin);
+
+            // Paginação dentro de [data-spa-list] é tratada pelo navegarLista (swap parcial
+            // do container), não pelo swap completo do #app. Deixar o handler dedicado pegar.
+            if (linkUrl.searchParams.has('page') && link.closest('[data-spa-list]')) {
+                return;
+            }
+
             // Ignorar navegação SPA para rotas que NÃO começam com /app/
-            const linkPath = new URL(link.href, window.location.origin).pathname;
+            const linkPath = linkUrl.pathname;
             if (!linkPath.startsWith('/app/')) {
                 return; // Deixar o browser fazer navegação normal (full page reload)
             }
@@ -418,7 +426,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Pegar HTML da resposta
             const html = await resposta.text();
-            
+
+            // Se a navegação é na MESMA página (só mudou a query string — ex: paginação,
+            // ordenação ou filtros de uma lista), preservar a posição de scroll em vez de
+            // jogar a tela pro topo. Captura ANTES de trocar o conteúdo.
+            const mesmaPagina = urlPath === currentPath;
+            const scrollAnterior = window.scrollY;
+
             // Trocar conteúdo
             app.innerHTML = html;
 
@@ -445,9 +459,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             
-            // Voltar ao topo
-            window.scrollTo(0, 0);
-            
+            // Mesma página (paginação/filtros/ordenação) → mantém o scroll onde estava.
+            // Página diferente → volta ao topo.
+            window.scrollTo(0, mesmaPagina ? scrollAnterior : 0);
+
         } catch (erro) {
             // Log do erro para debug
             console.error('[SPA] Erro ao navegar:', {
