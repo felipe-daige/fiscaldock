@@ -173,7 +173,10 @@
             setKpi('kpi-faturamento-notas', (resumo.total_notas || 0).toLocaleString('pt-BR') + ' notas emitidas');
             setKpi('kpi-faturamento-aliquota', (resumo.aliquota_media || 0) + '%');
             setKpi('kpi-aquisicoes', formatCompactCurrency(resumo.total_compras || 0));
+            setKpi('kpi-aquisicoes-merc', formatCompactCurrency(resumo.total_compras_mercadoria || 0));
+            setKpi('kpi-aquisicoes-frete', formatCompactCurrency(resumo.total_frete || 0));
             setKpi('kpi-tributacao', formatCompactCurrency(resumo.total_tributos || 0));
+            setKpi('kpi-tributacao-arecolher', formatCompactCurrency(resumo.total_a_recolher || 0));
             setKpi('kpi-sec-fornecedores', resumo.total_fornecedores || 0);
             setKpi('kpi-sec-clientes', resumo.total_clientes || 0);
         } catch (e) {
@@ -510,7 +513,6 @@
 
         // Atualiza KPIs consolidados (dados EFD)
         setKpi('kpi-aquisicoes-notas', (kpis.total_entradas_notas || 0).toLocaleString('pt-BR') + ' notas recebidas');
-        setKpi('kpi-aquisicoes-ticket', formatCompactCurrency(kpis.ticket_medio || 0));
         setKpi('kpi-tributacao-efd', formatCompactCurrency(kpis.carga_tributaria || 0));
         setKpi('kpi-saldo-entradas', formatCompactCurrency(kpis.total_entradas_valor || 0));
         setKpi('kpi-saldo-saidas', formatCompactCurrency(kpis.total_saidas_valor || 0));

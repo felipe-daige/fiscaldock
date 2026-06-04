@@ -452,11 +452,26 @@ class BiService
 
         $totalVendas = (float) ($totais->total_vendas ?? 0) + $efdVendas;
         $totalTributos = (float) ($totais->total_tributos ?? 0) + $efdTributos;
+        $totalCompras = (float) ($totais->total_compras ?? 0) + $efdCompras;
+
+        // A recolher (líquido declarado, das apurações E110/M) e frete CT-e (modelo 57)
+        // separado das compras (que somam mercadoria + serviço de transporte).
+        $efdARecolher = $this->efd->cargaTributariaApurada($userId, null, null, $clienteId)['total'];
+        $efdFrete = (float) DB::table('efd_notas')
+            ->where('user_id', $userId)
+            ->where('cancelada', false)
+            ->where('tipo_operacao', 'entrada')
+            ->where('modelo', '57')
+            ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
+            ->sum('valor_total');
 
         return [
             'total_notas' => (int) ($totais->total_notas ?? 0) + $efdNotas,
             'total_vendas' => $totalVendas,
-            'total_compras' => (float) ($totais->total_compras ?? 0) + $efdCompras,
+            'total_compras' => $totalCompras,
+            'total_frete' => $efdFrete,
+            'total_compras_mercadoria' => $totalCompras - $efdFrete,
+            'total_a_recolher' => $efdARecolher,
             'total_devolucoes' => (float) ($totais->total_devolucoes ?? 0),
             'total_tributos' => $totalTributos,
             'aliquota_media' => $totalVendas > 0 ? round(($totalTributos / $totalVendas) * 100, 2) : 0,

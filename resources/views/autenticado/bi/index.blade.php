@@ -54,15 +54,15 @@
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Aquisições</p>
                     <p class="text-lg font-bold text-gray-900" id="kpi-aquisicoes">{{ $compactBrl($resumo['total_compras'] ?? 0) }}</p>
                     <p class="text-[11px] text-gray-500 mt-1" id="kpi-aquisicoes-notas">{{ number_format(($resumoEfd['total_entradas_notas'] ?? 0), 0, ',', '.') }} notas recebidas</p>
-                    <p class="text-[11px] text-gray-500">Ticket médio: <span id="kpi-aquisicoes-ticket" class="font-medium text-gray-700">{{ $compactBrl($resumoEfd['ticket_medio'] ?? 0) }}</span></p>
+                    <p class="text-[11px] text-gray-500">Merc.: <span id="kpi-aquisicoes-merc" class="font-medium text-gray-700">{{ $compactBrl($resumo['total_compras_mercadoria'] ?? 0) }}</span> · Frete: <span id="kpi-aquisicoes-frete" class="font-medium text-gray-700">{{ $compactBrl($resumo['total_frete'] ?? 0) }}</span></p>
                 </div>
 
                 {{-- Tributação --}}
                 <div class="p-4 sm:p-6 hover:bg-gray-50/50 transition-colors">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Tributação</p>
                     <p class="text-lg font-bold text-gray-900" id="kpi-tributacao">{{ $compactBrl($resumo['total_tributos'] ?? 0) }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">Carga EFD: <span id="kpi-tributacao-efd" class="font-medium text-gray-700">{{ $compactBrl($resumoEfd['carga_tributaria'] ?? 0) }}</span></p>
-                    <p class="text-[11px] text-gray-500">ICMS, PIS, COFINS</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Carga bruta: <span id="kpi-tributacao-efd" class="font-medium text-gray-700">{{ $compactBrl($resumoEfd['carga_tributaria'] ?? 0) }}</span></p>
+                    <p class="text-[11px] text-gray-500">A recolher: <span id="kpi-tributacao-arecolher" class="font-medium text-gray-700">{{ $compactBrl($resumo['total_a_recolher'] ?? 0) }}</span></p>
                 </div>
 
                 {{-- Saldo Líquido --}}

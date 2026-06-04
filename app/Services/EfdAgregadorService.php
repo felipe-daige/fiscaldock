@@ -377,10 +377,11 @@ class EfdAgregadorService
      * IPI a recolher vive em jsonb (E520) — fora do escopo do perfil comercial
      * (0 na massa atual); tratado como 0 até haver EFD de indústria.
      */
-    public function cargaTributariaApurada(int $userId, ?string $dataInicio = null, ?string $dataFim = null): array
+    public function cargaTributariaApurada(int $userId, ?string $dataInicio = null, ?string $dataFim = null, ?int $clienteId = null): array
     {
         $icms = DB::table('efd_apuracoes_icms')
             ->where('user_id', $userId)
+            ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
             ->when($dataInicio, fn ($q) => $q->where('periodo_inicio', '>=', $dataInicio))
             ->when($dataFim, fn ($q) => $q->where('periodo_inicio', '<=', $dataFim))
             ->selectRaw('SUM(COALESCE(icms_a_recolher,0)) icms, SUM(COALESCE(st_icms_recolher,0)) st')
@@ -388,6 +389,7 @@ class EfdAgregadorService
 
         $pc = DB::table('efd_apuracoes_contribuicoes as a')
             ->where('a.user_id', $userId)
+            ->when($clienteId, fn ($q) => $q->where('a.cliente_id', $clienteId))
             ->when($dataInicio || $dataFim, function ($q) use ($userId, $dataInicio, $dataFim) {
                 $q->whereExists(function ($sub) use ($userId, $dataInicio, $dataFim) {
                     $sub->select(DB::raw(1))
