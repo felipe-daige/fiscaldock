@@ -334,7 +334,11 @@ class AuthController extends Controller
                 'is_empresa_propria' => true,
             ]);
 
-            $this->creditService->grantTrial($user, 100, now()->addDays(30));
+            $this->creditService->grantTrial(
+                $user,
+                (int) config('trial.creditos'),
+                now()->addDays((int) config('trial.validade_dias'))
+            );
 
             Auth::login($user);
 
