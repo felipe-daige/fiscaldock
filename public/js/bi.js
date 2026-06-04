@@ -1096,174 +1096,190 @@
         setupScrollFade(el);
     }
 
-    function renderTabelaIrregulares(lista) {
-        const el = document.getElementById('tabela-irregulares-container');
+    // =========================================================================
+    // Paginação client-side genérica para tabelas renderizadas em container.
+    // Fatia o array já carregado e monta um rodapé de paginação num elemento
+    // irmão (fora do overflow-x). Sem reload, sem mover a tela.
+    // =========================================================================
+    const _tabelaPaginadaState = {}; // { [containerId]: { lista, pagina } }
+
+    function renderTabelaPaginada(cfg) {
+        // cfg: { containerId, paginacaoId, lista, perPage, emptyHtml, buildTableHtml(pageItems, inicioFatia) }
+        const el = document.getElementById(cfg.containerId);
+        const box = cfg.paginacaoId ? document.getElementById(cfg.paginacaoId) : null;
         if (!el) return;
 
-        if (!lista.length) {
-            el.innerHTML = '<p class="text-sm text-gray-500 py-4">Nenhum participante irregular encontrado no período.</p>';
-            return;
-        }
+        const st = _tabelaPaginadaState[cfg.containerId] || { pagina: 1 };
+        st.lista = Array.isArray(cfg.lista) ? cfg.lista : [];
+        _tabelaPaginadaState[cfg.containerId] = st;
 
-        const linhas = lista.map(p => `<tr class="hover:bg-gray-50">
-            <td class="px-2 sm:px-4 py-2 sm:py-3">
-                <div class="font-medium text-gray-900">${p.razao_social || p.cnpj_cpf || '—'}</div>
-                <div class="text-xs text-gray-400">${p.cnpj_cpf || ''}</div>
-            </td>
-            <td class="px-2 sm:px-4 py-2 sm:py-3 text-center">
-                <span class="px-2 py-0.5 rounded text-xs text-white" style="background-color: #dc2626">${p.situacao || '—'}</span>
-            </td>
-            <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs text-gray-500">${p.regime || '—'}</td>
-            <td class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-red-700">${formatCurrency(p.valor_em_risco)}</td>
-            <td class="px-2 sm:px-4 py-2 sm:py-3 text-right text-gray-600">${p.total_notas}</td>
-            <td class="px-2 sm:px-4 py-2 sm:py-3 text-right text-gray-400 text-xs">${p.ultima_nota || '—'}</td>
-        </tr>`).join('');
+        function paint() {
+            const listaCompleta = st.lista;
+            if (!listaCompleta.length) {
+                el.innerHTML = cfg.emptyHtml;
+                if (box) { box.innerHTML = ''; box.classList.add('hidden'); }
+                return;
+            }
 
-        el.innerHTML = `<table class="min-w-[650px] w-full divide-y divide-gray-200 text-xs sm:text-sm">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participante</th>
-                        <th class="px-2 sm:px-4 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação</th>
-                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Regime</th>
-                        <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Valor em Risco</th>
-                        <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas</th>
-                        <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Última Nota</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">${linhas}</tbody>
-            </table>`;
-        setupScrollFade(el);
-    }
+            const totalPaginas = Math.max(1, Math.ceil(listaCompleta.length / cfg.perPage));
+            if (st.pagina > totalPaginas) st.pagina = totalPaginas;
+            if (st.pagina < 1) st.pagina = 1;
 
-    function renderTabelaMudancas(lista) {
-        const el = document.getElementById('tabela-mudancas-container');
-        if (!el) return;
+            const inicioFatia = (st.pagina - 1) * cfg.perPage;
+            const pageItems = listaCompleta.slice(inicioFatia, inicioFatia + cfg.perPage);
 
-        if (!lista.length) {
-            el.innerHTML = '<p class="text-sm text-gray-400 py-4">Nenhuma atualização de cadastro nos últimos 90 dias.</p>';
-            return;
-        }
+            el.innerHTML = cfg.buildTableHtml(pageItems, inicioFatia);
+            setupScrollFade(el);
 
-        const linhas = lista.map(p => {
-            const situacaoUpper = (p.situacao_atual || '').toUpperCase();
-            const irregular = p.situacao_atual && !['02', 'ATIVA'].includes(situacaoUpper);
-            const badge = irregular
-                ? `<span class="ml-1 px-1.5 py-0.5 rounded text-xs text-white" style="background-color: #dc2626">Irregular</span>`
-                : '';
-            return `<tr class="hover:bg-gray-50">
-                <td class="px-2 sm:px-4 py-2 sm:py-3">
-                    <div class="font-medium text-gray-900">${p.razao_social || p.cnpj_cpf || '—'}${badge}</div>
-                    <div class="text-xs text-gray-400">${p.cnpj_cpf || ''}</div>
-                </td>
-                <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs text-gray-600">${p.regime_atual || '—'}</td>
-                <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs text-gray-600">${p.situacao_atual || '—'}</td>
-                <td class="px-2 sm:px-4 py-2 sm:py-3 text-right text-gray-400 text-xs">${p.ultima_atualizacao || '—'}</td>
-                <td class="px-2 sm:px-4 py-2 sm:py-3 text-right text-gray-600">${p.total_notas}</td>
-            </tr>`;
-        }).join('');
-
-        el.innerHTML = `<table class="min-w-[600px] w-full divide-y divide-gray-200 text-xs sm:text-sm">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participante</th>
-                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Regime</th>
-                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação</th>
-                        <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Atualizado em</th>
-                        <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">${linhas}</tbody>
-            </table>`;
-        setupScrollFade(el);
-    }
-
-    let notasRiscoLista = [];
-    let notasRiscoPagina = 1;
-    const NOTAS_RISCO_POR_PAGINA = 12;
-
-    function renderTabelaNotasRisco(lista) {
-        notasRiscoLista = Array.isArray(lista) ? lista : [];
-        notasRiscoPagina = 1;
-        renderNotasRiscoPagina();
-    }
-
-    function renderNotasRiscoPagina() {
-        const el = document.getElementById('tabela-notas-risco-container');
-        const box = document.getElementById('notas-risco-paginacao');
-        if (!el) return;
-
-        const listaCompleta = notasRiscoLista;
-        if (!listaCompleta.length) {
-            el.innerHTML = '<p class="text-sm text-gray-500 py-4">Nenhuma nota com participante irregular no período.</p>';
-            if (box) { box.innerHTML = ''; box.classList.add('hidden'); }
-            return;
-        }
-
-        const totalPaginas = Math.max(1, Math.ceil(listaCompleta.length / NOTAS_RISCO_POR_PAGINA));
-        if (notasRiscoPagina > totalPaginas) notasRiscoPagina = totalPaginas;
-        if (notasRiscoPagina < 1) notasRiscoPagina = 1;
-        const inicioFatia = (notasRiscoPagina - 1) * NOTAS_RISCO_POR_PAGINA;
-        const lista = listaCompleta.slice(inicioFatia, inicioFatia + NOTAS_RISCO_POR_PAGINA);
-
-        const linhas = lista.map(n => {
-            const corTipoStyle = n.tipo_nota === 'E' ? 'background-color: #047857' : 'background-color: #d97706';
-            return `<tr class="hover:bg-gray-50/50 transition-colors">
-                <td class="px-2 sm:px-4 py-2 sm:py-3 text-gray-400 text-xs">${n.data_emissao || '—'}</td>
-                <td class="px-2 sm:px-4 py-2 sm:py-3"><span class="px-1.5 py-0.5 rounded text-xs font-medium text-white" style="${corTipoStyle}">${n.tipo_nota}</span></td>
-                <td class="px-2 sm:px-4 py-2 sm:py-3">
-                    <div class="font-medium text-gray-900 text-sm">${n.razao_social || n.cnpj_cpf || '—'}</div>
-                    <div class="text-xs text-gray-400">${n.cnpj_cpf || ''}</div>
-                </td>
-                <td class="px-2 sm:px-4 py-2 sm:py-3 text-center">
-                    <span class="px-2 py-0.5 rounded text-xs text-white" style="background-color: #dc2626">${n.situacao || '—'}</span>
-                </td>
-                <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs text-gray-500">${{notas_servicos:'Serviços',notas_mercadorias:'Mercadorias',notas_transportes:'Transportes'}[n.bloco] || n.bloco}</td>
-                <td class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-gray-900">${formatCurrency(n.vl_doc)}</td>
-            </tr>`;
-        }).join('');
-
-        el.innerHTML = `<table class="min-w-[650px] w-full divide-y divide-gray-200 text-xs sm:text-sm">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Data</th>
-                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Tipo</th>
-                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participante</th>
-                        <th class="px-2 sm:px-4 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação</th>
-                        <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Bloco</th>
-                        <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Valor</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">${linhas}</tbody>
-            </table>`;
-        setupScrollFade(el);
-
-        // Paginação no irmão FORA do overflow-x (não rola horizontalmente junto com a tabela)
-        if (box) {
+            if (!box) return;
             if (totalPaginas <= 1) {
                 box.innerHTML = '';
                 box.classList.add('hidden');
-            } else {
-                box.classList.remove('hidden');
-                const de = inicioFatia + 1;
-                const ate = inicioFatia + lista.length;
-                const prevDisabled = notasRiscoPagina <= 1;
-                const nextDisabled = notasRiscoPagina >= totalPaginas;
-                const btnCls = 'px-3 py-1.5 text-[10px] rounded border transition';
-                const btnAtivo = 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50';
-                const btnInativo = 'text-gray-400 bg-gray-100 border-gray-200 cursor-default';
-                box.innerHTML = `
-                    <span class="text-[10px] text-gray-500 uppercase tracking-wide">Mostrando ${de}-${ate} de ${listaCompleta.length}</span>
-                    <div class="flex items-center gap-1">
-                        <button type="button" id="notas-risco-prev" class="${btnCls} ${prevDisabled ? btnInativo : btnAtivo}" ${prevDisabled ? 'disabled' : ''}>Anterior</button>
-                        <span class="px-2 text-[10px] text-gray-500">${notasRiscoPagina}/${totalPaginas}</span>
-                        <button type="button" id="notas-risco-next" class="${btnCls} ${nextDisabled ? btnInativo : btnAtivo}" ${nextDisabled ? 'disabled' : ''}>Próxima</button>
-                    </div>`;
-                const prev = document.getElementById('notas-risco-prev');
-                const next = document.getElementById('notas-risco-next');
-                if (prev) prev.onclick = () => { if (notasRiscoPagina > 1) { notasRiscoPagina--; renderNotasRiscoPagina(); } };
-                if (next) next.onclick = () => { if (notasRiscoPagina < totalPaginas) { notasRiscoPagina++; renderNotasRiscoPagina(); } };
+                return;
             }
+            box.classList.remove('hidden');
+            const de = inicioFatia + 1;
+            const ate = inicioFatia + pageItems.length;
+            const prevDisabled = st.pagina <= 1;
+            const nextDisabled = st.pagina >= totalPaginas;
+            const btnCls = 'px-3 py-1.5 text-[10px] rounded border transition';
+            const btnAtivo = 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50';
+            const btnInativo = 'text-gray-400 bg-gray-100 border-gray-200 cursor-default';
+            box.innerHTML = `
+                <span class="text-[10px] text-gray-500 uppercase tracking-wide">Mostrando ${de}-${ate} de ${listaCompleta.length}</span>
+                <div class="flex items-center gap-1">
+                    <button type="button" class="bi-pag-prev ${btnCls} ${prevDisabled ? btnInativo : btnAtivo}" ${prevDisabled ? 'disabled' : ''}>Anterior</button>
+                    <span class="px-2 text-[10px] text-gray-500">${st.pagina}/${totalPaginas}</span>
+                    <button type="button" class="bi-pag-next ${btnCls} ${nextDisabled ? btnInativo : btnAtivo}" ${nextDisabled ? 'disabled' : ''}>Próxima</button>
+                </div>`;
+            const prev = box.querySelector('.bi-pag-prev');
+            const next = box.querySelector('.bi-pag-next');
+            if (prev) prev.onclick = () => { if (st.pagina > 1) { st.pagina--; paint(); } };
+            if (next) next.onclick = () => { if (st.pagina < totalPaginas) { st.pagina++; paint(); } };
         }
+
+        st.pagina = 1; // nova lista → volta pra primeira página
+        paint();
+    }
+
+    function renderTabelaIrregulares(lista) {
+        renderTabelaPaginada({
+            containerId: 'tabela-irregulares-container',
+            paginacaoId: 'irregulares-paginacao',
+            lista,
+            perPage: 10,
+            emptyHtml: '<p class="text-sm text-gray-500 py-4">Nenhum participante irregular encontrado no período.</p>',
+            buildTableHtml: (pageItems) => {
+                const linhas = pageItems.map(p => `<tr class="hover:bg-gray-50">
+                    <td class="px-2 sm:px-4 py-2 sm:py-3">
+                        <div class="font-medium text-gray-900">${p.razao_social || p.cnpj_cpf || '—'}</div>
+                        <div class="text-xs text-gray-400">${p.cnpj_cpf || ''}</div>
+                    </td>
+                    <td class="px-2 sm:px-4 py-2 sm:py-3 text-center">
+                        <span class="px-2 py-0.5 rounded text-xs text-white" style="background-color: #dc2626">${p.situacao || '—'}</span>
+                    </td>
+                    <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs text-gray-500">${p.regime || '—'}</td>
+                    <td class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-red-700">${formatCurrency(p.valor_em_risco)}</td>
+                    <td class="px-2 sm:px-4 py-2 sm:py-3 text-right text-gray-600">${p.total_notas}</td>
+                    <td class="px-2 sm:px-4 py-2 sm:py-3 text-right text-gray-400 text-xs">${p.ultima_nota || '—'}</td>
+                </tr>`).join('');
+                return `<table class="min-w-[650px] w-full divide-y divide-gray-200 text-xs sm:text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participante</th>
+                                <th class="px-2 sm:px-4 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação</th>
+                                <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Regime</th>
+                                <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Valor em Risco</th>
+                                <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas</th>
+                                <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Última Nota</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">${linhas}</tbody>
+                    </table>`;
+            },
+        });
+    }
+
+    function renderTabelaMudancas(lista) {
+        renderTabelaPaginada({
+            containerId: 'tabela-mudancas-container',
+            paginacaoId: 'mudancas-paginacao',
+            lista,
+            perPage: 10,
+            emptyHtml: '<p class="text-sm text-gray-400 py-4">Nenhuma atualização de cadastro nos últimos 90 dias.</p>',
+            buildTableHtml: (pageItems) => {
+                const linhas = pageItems.map(p => {
+                    const situacaoUpper = (p.situacao_atual || '').toUpperCase();
+                    const irregular = p.situacao_atual && !['02', 'ATIVA'].includes(situacaoUpper);
+                    const badge = irregular
+                        ? `<span class="ml-1 px-1.5 py-0.5 rounded text-xs text-white" style="background-color: #dc2626">Irregular</span>`
+                        : '';
+                    return `<tr class="hover:bg-gray-50">
+                        <td class="px-2 sm:px-4 py-2 sm:py-3">
+                            <div class="font-medium text-gray-900">${p.razao_social || p.cnpj_cpf || '—'}${badge}</div>
+                            <div class="text-xs text-gray-400">${p.cnpj_cpf || ''}</div>
+                        </td>
+                        <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs text-gray-600">${p.regime_atual || '—'}</td>
+                        <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs text-gray-600">${p.situacao_atual || '—'}</td>
+                        <td class="px-2 sm:px-4 py-2 sm:py-3 text-right text-gray-400 text-xs">${p.ultima_atualizacao || '—'}</td>
+                        <td class="px-2 sm:px-4 py-2 sm:py-3 text-right text-gray-600">${p.total_notas}</td>
+                    </tr>`;
+                }).join('');
+                return `<table class="min-w-[600px] w-full divide-y divide-gray-200 text-xs sm:text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participante</th>
+                                <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Regime</th>
+                                <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação</th>
+                                <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Atualizado em</th>
+                                <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">${linhas}</tbody>
+                    </table>`;
+            },
+        });
+    }
+
+    function renderTabelaNotasRisco(lista) {
+        renderTabelaPaginada({
+            containerId: 'tabela-notas-risco-container',
+            paginacaoId: 'notas-risco-paginacao',
+            lista,
+            perPage: 12,
+            emptyHtml: '<p class="text-sm text-gray-500 py-4">Nenhuma nota com participante irregular no período.</p>',
+            buildTableHtml: (pageItems) => {
+                const linhas = pageItems.map(n => {
+                    const corTipoStyle = n.tipo_nota === 'E' ? 'background-color: #047857' : 'background-color: #d97706';
+                    return `<tr class="hover:bg-gray-50/50 transition-colors">
+                        <td class="px-2 sm:px-4 py-2 sm:py-3 text-gray-400 text-xs">${n.data_emissao || '—'}</td>
+                        <td class="px-2 sm:px-4 py-2 sm:py-3"><span class="px-1.5 py-0.5 rounded text-xs font-medium text-white" style="${corTipoStyle}">${n.tipo_nota}</span></td>
+                        <td class="px-2 sm:px-4 py-2 sm:py-3">
+                            <div class="font-medium text-gray-900 text-sm">${n.razao_social || n.cnpj_cpf || '—'}</div>
+                            <div class="text-xs text-gray-400">${n.cnpj_cpf || ''}</div>
+                        </td>
+                        <td class="px-2 sm:px-4 py-2 sm:py-3 text-center">
+                            <span class="px-2 py-0.5 rounded text-xs text-white" style="background-color: #dc2626">${n.situacao || '—'}</span>
+                        </td>
+                        <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs text-gray-500">${{notas_servicos:'Serviços',notas_mercadorias:'Mercadorias',notas_transportes:'Transportes'}[n.bloco] || n.bloco}</td>
+                        <td class="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-gray-900">${formatCurrency(n.vl_doc)}</td>
+                    </tr>`;
+                }).join('');
+                return `<table class="min-w-[650px] w-full divide-y divide-gray-200 text-xs sm:text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Data</th>
+                                <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Tipo</th>
+                                <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participante</th>
+                                <th class="px-2 sm:px-4 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação</th>
+                                <th class="px-2 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Bloco</th>
+                                <th class="px-2 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">${linhas}</tbody>
+                    </table>`;
+            },
+        });
     }
 
     // =========================================================================
@@ -1523,8 +1539,8 @@
         participantesData = null;
         participantesListaAtual = [];
         participantesPagina = 1;
-        notasRiscoLista = [];
-        notasRiscoPagina = 1;
+        // Limpa o estado de paginação das tabelas genéricas (irregulares, mudanças, notas em risco)
+        Object.keys(_tabelaPaginadaState).forEach((k) => delete _tabelaPaginadaState[k]);
         participanteAberto = null;
         menuUltimaNotaAberto = null;
         _initRetries = 0;

@@ -446,6 +446,7 @@
                 </div>
                 <div class="p-4 sm:p-5">
                     <div id="tabela-irregulares-container" class="overflow-x-auto scroll-fade-right-white"></div>
+                    <div id="irregulares-paginacao" class="hidden border-t border-gray-200 mt-3 pt-3 flex items-center justify-between gap-3"></div>
                 </div>
             </div>
 
@@ -456,6 +457,7 @@
                 </div>
                 <div class="p-4 sm:p-5">
                     <div id="tabela-mudancas-container" class="overflow-x-auto scroll-fade-right-white"></div>
+                    <div id="mudancas-paginacao" class="hidden border-t border-gray-200 mt-3 pt-3 flex items-center justify-between gap-3"></div>
                 </div>
             </div>
 
