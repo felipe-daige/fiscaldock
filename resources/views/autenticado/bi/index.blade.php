@@ -134,6 +134,9 @@
                     <button data-tab="apuracao-notas" class="{{ $tabClassMobile('apuracao-notas') }}">
                         Apuração × Notas
                     </button>
+                    <button data-tab="cfop" class="{{ $tabClassMobile('cfop') }}">
+                        CFOP
+                    </button>
                 </nav>
             </div>
         </div>
@@ -564,6 +567,40 @@
                             <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase">Δ%</th>
                         </tr></thead>
                         <tbody id="tabela-apn" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{-- Tab CFOP --}}
+        <div id="tab-cfop" class="bi-tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
+                <div class="bg-white rounded border border-gray-300">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200"><h3 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Top CFOPs por Valor</h3></div>
+                    <div class="p-4 sm:p-5"><div id="chart-cfop-valor" class="h-56 sm:h-72 lg:h-80"></div></div>
+                </div>
+                <div class="bg-white rounded border border-gray-300">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200"><h3 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Tendência Top 5 CFOPs</h3></div>
+                    <div class="p-4 sm:p-5"><div id="chart-cfop-tendencia" class="h-56 sm:h-72 lg:h-80"></div></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+                    <h3 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Ranking por CFOP</h3>
+                    <button data-export="cfop" class="text-[11px] font-medium text-gray-600 hover:text-gray-900 border border-gray-300 rounded px-2 py-1">Exportar CSV</button>
+                </div>
+                <div class="overflow-x-auto scroll-fade-right-white">
+                    <table class="min-w-[820px] w-full divide-y divide-gray-200 text-xs sm:text-sm">
+                        <thead class="bg-gray-50"><tr>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase">CFOP / Natureza</th>
+                            <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase">Tipo</th>
+                            <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase">Valor</th>
+                            <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase">Notas</th>
+                            <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase">Tributos</th>
+                            <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase">% Total</th>
+                        </tr></thead>
+                        <tbody id="tabela-cfop" class="divide-y divide-gray-100"></tbody>
                     </table>
                 </div>
             </div>

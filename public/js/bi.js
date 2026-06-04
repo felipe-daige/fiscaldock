@@ -217,6 +217,9 @@
             case 'apuracao-notas':
                 endpoint = '/app/bi/apuracao-notas';
                 break;
+            case 'cfop':
+                endpoint = '/app/bi/cfop';
+                break;
         }
 
         try {
@@ -264,6 +267,9 @@
                 break;
             case 'apuracao-notas':
                 renderApuracaoNotasCharts(data);
+                break;
+            case 'cfop':
+                renderCfopCharts(data);
                 break;
         }
     }
@@ -1348,6 +1354,53 @@
             });
         } else {
             setEmptyChart('chart-apn-mensal');
+        }
+    }
+
+    function renderCfopCharts(data) {
+        const ranking = data.ranking || [];
+        const tbody = document.getElementById('tabela-cfop');
+        if (tbody) {
+            tbody.innerHTML = ranking.map(r => {
+                const hex = r.tipo === 'entrada' ? '#2563eb' : (r.tipo === 'saida' ? '#16a34a' : '#9ca3af');
+                const tipoLabel = r.tipo === 'entrada' ? 'Entrada' : (r.tipo === 'saida' ? 'Saída' : '—');
+                return `<tr>
+                    <td class="px-3 py-2 text-gray-700">${r.descricao}</td>
+                    <td class="px-3 py-2 text-center"><span class="inline-block px-2 py-0.5 rounded text-white text-[11px]" style="background-color:${hex}">${tipoLabel}</span></td>
+                    <td class="px-3 py-2 text-right text-gray-700">${formatCurrency(r.valor)}</td>
+                    <td class="px-3 py-2 text-right text-gray-700">${r.qtd}</td>
+                    <td class="px-3 py-2 text-right text-gray-700">${formatCurrency(r.tributos)}</td>
+                    <td class="px-3 py-2 text-right text-gray-700">${r.percentual}%</td>
+                </tr>`;
+            }).join('');
+        }
+
+        const top = ranking.slice(0, 10);
+        if (top.length > 0) {
+            renderChart('chart-cfop-valor', {
+                chart: { type: 'bar', height: 320, toolbar: { show: false } },
+                plotOptions: { bar: { horizontal: true } },
+                series: [{ name: 'Valor', data: top.map(r => Math.round(r.valor)) }],
+                xaxis: { categories: top.map(r => r.cfop), labels: { formatter: (val) => formatAxisCurrency(val) } },
+                colors: ['#111827'],
+                dataLabels: { enabled: false },
+                tooltip: { y: { formatter: (val) => formatCurrency(val) } },
+            });
+        } else {
+            setEmptyChart('chart-cfop-valor');
+        }
+
+        const t = data.tendencia || { categorias: [], series: [] };
+        if (t.series && t.series.length > 0) {
+            renderChart('chart-cfop-tendencia', {
+                chart: { type: 'line', height: 320, toolbar: { show: false } },
+                series: t.series,
+                xaxis: { categories: t.categorias },
+                yaxis: { labels: { formatter: (val) => formatAxisCurrency(val) } },
+                tooltip: { y: { formatter: (val) => formatCurrency(val) } },
+            });
+        } else {
+            setEmptyChart('chart-cfop-tendencia');
         }
     }
 
