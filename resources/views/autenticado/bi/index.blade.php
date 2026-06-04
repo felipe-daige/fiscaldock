@@ -333,6 +333,7 @@
                 <div id="participantes-empty" class="hidden py-10 text-center text-gray-400 text-sm">
                     Nenhum participante encontrado no período.
                 </div>
+                <div id="participantes-paginacao" class="hidden border-t border-gray-200 px-4 py-3 flex items-center justify-between gap-3"></div>
             </div>
 
             {{-- Ficha inline --}}
@@ -465,6 +466,7 @@
                 </div>
                 <div class="p-4 sm:p-5">
                     <div id="tabela-notas-risco-container" class="overflow-x-auto scroll-fade-right-white"></div>
+                    <div id="notas-risco-paginacao" class="hidden border-t border-gray-200 mt-3 pt-3 flex items-center justify-between gap-3"></div>
                 </div>
             </div>
         </div>

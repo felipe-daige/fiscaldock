@@ -12,6 +12,10 @@
     let csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
     let participantesData = null;
     let tipoAtivo = 'fornecedores';
+    // Paginação client-side da tabela de participantes (sem reload, sem rolar a tela)
+    let participantesListaAtual = [];
+    let participantesPagina = 1;
+    const PARTICIPANTES_POR_PAGINA = 10;
     let participanteAberto = null;
     let menuUltimaNotaAberto = null;
     let _initRetries = 0;
@@ -790,21 +794,42 @@
         }).join('');
     }
 
+    // Recebe a lista completa, reseta pra página 1 e renderiza a fatia.
     function renderTabelaParticipantes(lista) {
+        participantesListaAtual = Array.isArray(lista) ? lista : [];
+        participantesPagina = 1;
+        renderParticipantesPagina();
+    }
+
+    // Renderiza só a página atual da lista (paginação client-side: sem reload, sem rolar a tela).
+    function renderParticipantesPagina() {
         const tbody = document.getElementById('tabela-participantes');
         const empty = document.getElementById('participantes-empty');
         if (!tbody) return;
 
+        const lista = participantesListaAtual;
+
         if (!lista || lista.length === 0) {
             tbody.innerHTML = '';
             if (empty) empty.classList.remove('hidden');
+            renderParticipantesPaginacao(0, 0);
             return;
         }
         if (empty) empty.classList.add('hidden');
 
-        const maxValor = lista.length > 0 ? lista[0].total_valor : 1;
+        const totalPaginas = Math.max(1, Math.ceil(lista.length / PARTICIPANTES_POR_PAGINA));
+        if (participantesPagina > totalPaginas) participantesPagina = totalPaginas;
+        if (participantesPagina < 1) participantesPagina = 1;
 
-        tbody.innerHTML = lista.map((p, i) => {
+        const inicio = (participantesPagina - 1) * PARTICIPANTES_POR_PAGINA;
+        const fim = inicio + PARTICIPANTES_POR_PAGINA;
+        const pagina = lista.slice(inicio, fim);
+
+        // maxValor é global (1º colocado), pra barra de proporção ficar consistente entre páginas.
+        const maxValor = lista[0].total_valor || 1;
+
+        tbody.innerHTML = pagina.map((p, idx) => {
+            const rank = inicio + idx + 1; // rank global, não reinicia por página
             const pctBarra = maxValor > 0 ? Math.round((p.total_valor / maxValor) * 100) : 0;
             const irregularBadge = p.irregular
                 ? '<span class="ml-1 px-1.5 py-0.5 rounded text-xs text-white" style="background-color: #dc2626">Irregular</span>'
@@ -814,7 +839,7 @@
                 : '';
 
             return `<tr class="hover:bg-gray-50 transition-colors participante-row" data-id="${p.participante_id}">
-                <td class="px-2 sm:px-4 py-2 sm:py-3 text-gray-400 font-mono text-xs">${i + 1}</td>
+                <td class="px-2 sm:px-4 py-2 sm:py-3 text-gray-400 font-mono text-xs">${rank}</td>
                 <td class="px-2 sm:px-4 py-2 sm:py-3">
                     <div class="font-medium text-gray-900">${p.razao_social || p.cnpj_cpf || '—'}${irregularBadge}${regimeBadge}</div>
                     <div class="text-xs text-gray-400 mt-0.5">${p.cnpj_cpf || ''}</div>
@@ -833,6 +858,43 @@
                 </td>
             </tr>`;
         }).join('');
+
+        renderParticipantesPaginacao(totalPaginas, lista.length);
+    }
+
+    // Monta os controles de paginação (Anterior / página x de y / Próxima).
+    function renderParticipantesPaginacao(totalPaginas, totalItens) {
+        const box = document.getElementById('participantes-paginacao');
+        if (!box) return;
+
+        if (totalPaginas <= 1) {
+            box.innerHTML = '';
+            box.classList.add('hidden');
+            return;
+        }
+        box.classList.remove('hidden');
+
+        const inicio = (participantesPagina - 1) * PARTICIPANTES_POR_PAGINA + 1;
+        const fim = Math.min(participantesPagina * PARTICIPANTES_POR_PAGINA, totalItens);
+        const prevDisabled = participantesPagina <= 1;
+        const nextDisabled = participantesPagina >= totalPaginas;
+
+        const btnCls = 'px-3 py-1.5 text-[10px] rounded border transition';
+        const btnAtivo = 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50';
+        const btnInativo = 'text-gray-400 bg-gray-100 border-gray-200 cursor-default';
+
+        box.innerHTML = `
+            <span class="text-[10px] text-gray-500 uppercase tracking-wide">Mostrando ${inicio}-${fim} de ${totalItens}</span>
+            <div class="flex items-center gap-1">
+                <button type="button" id="participantes-prev" class="${btnCls} ${prevDisabled ? btnInativo : btnAtivo}" ${prevDisabled ? 'disabled' : ''}>Anterior</button>
+                <span class="px-2 text-[10px] text-gray-500">${participantesPagina}/${totalPaginas}</span>
+                <button type="button" id="participantes-next" class="${btnCls} ${nextDisabled ? btnInativo : btnAtivo}" ${nextDisabled ? 'disabled' : ''}>Próxima</button>
+            </div>`;
+
+        const prev = document.getElementById('participantes-prev');
+        const next = document.getElementById('participantes-next');
+        if (prev) prev.onclick = () => { if (participantesPagina > 1) { participantesPagina--; renderParticipantesPagina(); } };
+        if (next) next.onclick = () => { if (participantesPagina < totalPaginas) { participantesPagina++; renderParticipantesPagina(); } };
     }
 
     async function abrirFicha(participanteId) {
@@ -1115,14 +1177,33 @@
         setupScrollFade(el);
     }
 
+    let notasRiscoLista = [];
+    let notasRiscoPagina = 1;
+    const NOTAS_RISCO_POR_PAGINA = 12;
+
     function renderTabelaNotasRisco(lista) {
+        notasRiscoLista = Array.isArray(lista) ? lista : [];
+        notasRiscoPagina = 1;
+        renderNotasRiscoPagina();
+    }
+
+    function renderNotasRiscoPagina() {
         const el = document.getElementById('tabela-notas-risco-container');
+        const box = document.getElementById('notas-risco-paginacao');
         if (!el) return;
 
-        if (!lista.length) {
+        const listaCompleta = notasRiscoLista;
+        if (!listaCompleta.length) {
             el.innerHTML = '<p class="text-sm text-gray-500 py-4">Nenhuma nota com participante irregular no período.</p>';
+            if (box) { box.innerHTML = ''; box.classList.add('hidden'); }
             return;
         }
+
+        const totalPaginas = Math.max(1, Math.ceil(listaCompleta.length / NOTAS_RISCO_POR_PAGINA));
+        if (notasRiscoPagina > totalPaginas) notasRiscoPagina = totalPaginas;
+        if (notasRiscoPagina < 1) notasRiscoPagina = 1;
+        const inicioFatia = (notasRiscoPagina - 1) * NOTAS_RISCO_POR_PAGINA;
+        const lista = listaCompleta.slice(inicioFatia, inicioFatia + NOTAS_RISCO_POR_PAGINA);
 
         const linhas = lista.map(n => {
             const corTipoStyle = n.tipo_nota === 'E' ? 'background-color: #047857' : 'background-color: #d97706';
@@ -1155,6 +1236,34 @@
                 <tbody class="divide-y divide-gray-100">${linhas}</tbody>
             </table>`;
         setupScrollFade(el);
+
+        // Paginação no irmão FORA do overflow-x (não rola horizontalmente junto com a tabela)
+        if (box) {
+            if (totalPaginas <= 1) {
+                box.innerHTML = '';
+                box.classList.add('hidden');
+            } else {
+                box.classList.remove('hidden');
+                const de = inicioFatia + 1;
+                const ate = inicioFatia + lista.length;
+                const prevDisabled = notasRiscoPagina <= 1;
+                const nextDisabled = notasRiscoPagina >= totalPaginas;
+                const btnCls = 'px-3 py-1.5 text-[10px] rounded border transition';
+                const btnAtivo = 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50';
+                const btnInativo = 'text-gray-400 bg-gray-100 border-gray-200 cursor-default';
+                box.innerHTML = `
+                    <span class="text-[10px] text-gray-500 uppercase tracking-wide">Mostrando ${de}-${ate} de ${listaCompleta.length}</span>
+                    <div class="flex items-center gap-1">
+                        <button type="button" id="notas-risco-prev" class="${btnCls} ${prevDisabled ? btnInativo : btnAtivo}" ${prevDisabled ? 'disabled' : ''}>Anterior</button>
+                        <span class="px-2 text-[10px] text-gray-500">${notasRiscoPagina}/${totalPaginas}</span>
+                        <button type="button" id="notas-risco-next" class="${btnCls} ${nextDisabled ? btnInativo : btnAtivo}" ${nextDisabled ? 'disabled' : ''}>Próxima</button>
+                    </div>`;
+                const prev = document.getElementById('notas-risco-prev');
+                const next = document.getElementById('notas-risco-next');
+                if (prev) prev.onclick = () => { if (notasRiscoPagina > 1) { notasRiscoPagina--; renderNotasRiscoPagina(); } };
+                if (next) next.onclick = () => { if (notasRiscoPagina < totalPaginas) { notasRiscoPagina++; renderNotasRiscoPagina(); } };
+            }
+        }
     }
 
     // =========================================================================
@@ -1412,6 +1521,10 @@
         currentTab = 'faturamento';
         tipoAtivo = 'fornecedores';
         participantesData = null;
+        participantesListaAtual = [];
+        participantesPagina = 1;
+        notasRiscoLista = [];
+        notasRiscoPagina = 1;
         participanteAberto = null;
         menuUltimaNotaAberto = null;
         _initRetries = 0;
