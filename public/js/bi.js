@@ -179,6 +179,16 @@
             setKpi('kpi-tributacao-arecolher', formatCompactCurrency(resumo.total_a_recolher || 0));
             setKpi('kpi-sec-fornecedores', resumo.total_fornecedores || 0);
             setKpi('kpi-sec-clientes', resumo.total_clientes || 0);
+            // KPIs EFD (Saldo Líquido + barra secundária) — period-aware via /resumo.
+            const efd = resumo.kpis_efd || {};
+            setKpi('kpi-aquisicoes-notas', (efd.total_entradas_notas || 0).toLocaleString('pt-BR') + ' notas recebidas');
+            setKpi('kpi-tributacao-efd', formatCompactCurrency(efd.carga_tributaria || 0));
+            setKpi('kpi-saldo', formatCompactCurrency(efd.saldo_liquido || 0));
+            setKpi('kpi-saldo-entradas', formatCompactCurrency(efd.total_entradas_valor || 0));
+            setKpi('kpi-saldo-saidas', formatCompactCurrency(efd.total_saidas_valor || 0));
+            setKpi('kpi-sec-participantes', efd.participantes_ativos || 0);
+            setKpi('kpi-sec-risco', efd.notas_em_risco || 0);
+            setKpi('kpi-sec-sem-itens', efd.notas_sem_itens || 0);
         } catch (e) {
             console.error('Erro ao atualizar resumo KPIs:', e);
         }

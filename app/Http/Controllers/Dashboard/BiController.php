@@ -327,8 +327,12 @@ class BiController extends Controller
 
         $userId = Auth::id();
         $clienteId = $request->get('cliente_id');
+        $dataInicio = $request->get('data_inicio');
+        $dataFim = $request->get('data_fim');
 
-        $resumo = $this->biService->getResumoGeral($userId, $clienteId);
+        $resumo = $this->biService->getResumoGeral($userId, $clienteId, $dataInicio, $dataFim);
+        // KPIs EFD (Saldo Líquido + barra secundária) também respeitam o período.
+        $resumo['kpis_efd'] = $this->biService->getKpisEfd($userId, $dataInicio, $dataFim);
 
         return response()->json($resumo);
     }

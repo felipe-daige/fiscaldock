@@ -414,12 +414,18 @@ class BiService
     /**
      * Resumo geral para o dashboard.
      */
-    public function getResumoGeral(int $userId, ?int $clienteId = null): array
+    public function getResumoGeral(int $userId, ?int $clienteId = null, ?string $dataInicio = null, ?string $dataFim = null): array
     {
         $query = XmlNota::where('user_id', $userId);
 
         if ($clienteId) {
             $query->where('cliente_id', $clienteId);
+        }
+        if ($dataInicio) {
+            $query->where('data_emissao', '>=', $dataInicio);
+        }
+        if ($dataFim) {
+            $query->where('data_emissao', '<=', $dataFim);
         }
 
         $totais = $query->select(
@@ -434,15 +440,17 @@ class BiService
 
         // EFD canônico: vendas/compras dedup de origem (P1), tributo = débito-saída
         // (incidência sobre receita), total de notas dedup por chave. Ver F1.
-        $efdVendas = $this->efd->faturamento($userId, 'saida', null, null, $clienteId);
-        $efdCompras = $this->efd->faturamento($userId, 'entrada', null, null, $clienteId);
-        $efdTributos = $this->efd->cargaTributariaDebitoSaida($userId, null, null, $clienteId)['total'];
-        $efdNotas = $this->efd->totalNotas($userId, null, null, $clienteId);
+        $efdVendas = $this->efd->faturamento($userId, 'saida', $dataInicio, $dataFim, $clienteId);
+        $efdCompras = $this->efd->faturamento($userId, 'entrada', $dataInicio, $dataFim, $clienteId);
+        $efdTributos = $this->efd->cargaTributariaDebitoSaida($userId, $dataInicio, $dataFim, $clienteId)['total'];
+        $efdNotas = $this->efd->totalNotas($userId, $dataInicio, $dataFim, $clienteId);
 
         // Participantes distintos não dobram (mesmo participante_id nas 2 origens).
         $efdParticipantes = DB::table('efd_notas')
             ->where('user_id', $userId)
             ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
+            ->when($dataInicio, fn ($q) => $q->where('data_emissao', '>=', $dataInicio))
+            ->when($dataFim, fn ($q) => $q->where('data_emissao', '<=', $dataFim))
             ->where('cancelada', false)
             ->select([
                 DB::raw('COUNT(DISTINCT CASE WHEN tipo_operacao = \'entrada\' THEN participante_id END) as total_fornecedores'),
@@ -456,13 +464,15 @@ class BiService
 
         // A recolher (líquido declarado, das apurações E110/M) e frete CT-e (modelo 57)
         // separado das compras (que somam mercadoria + serviço de transporte).
-        $efdARecolher = $this->efd->cargaTributariaApurada($userId, null, null, $clienteId)['total'];
+        $efdARecolher = $this->efd->cargaTributariaApurada($userId, $dataInicio, $dataFim, $clienteId)['total'];
         $efdFrete = (float) DB::table('efd_notas')
             ->where('user_id', $userId)
             ->where('cancelada', false)
             ->where('tipo_operacao', 'entrada')
             ->where('modelo', '57')
             ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
+            ->when($dataInicio, fn ($q) => $q->where('data_emissao', '>=', $dataInicio))
+            ->when($dataFim, fn ($q) => $q->where('data_emissao', '<=', $dataFim))
             ->sum('valor_total');
 
         return [
@@ -952,29 +962,37 @@ class BiService
 
     public function getGapImportacoes(int $userId): array
     {
+        // Gap por COMPETÊNCIA (data_emissao), ancorado ao range real dos dados —
+        // não a now() (senão massa de 2024 vista em 2026 cai fora da janela) e não
+        // por created_at do import (a data do upload não é a competência). Origem
+        // 'fiscal' = EFD ICMS/IPI; 'contribuicoes' = EFD PIS/COFINS.
+        $min = DB::table('efd_notas')->where('user_id', $userId)->min('data_emissao');
+        $max = DB::table('efd_notas')->where('user_id', $userId)->max('data_emissao');
+
+        if (! $min || ! $max) {
+            return [];
+        }
+
+        $porMes = DB::table('efd_notas')
+            ->where('user_id', $userId)
+            ->where('cancelada', false)
+            ->selectRaw("TO_CHAR(DATE_TRUNC('month', data_emissao), 'YYYY-MM') as mes, BOOL_OR(origem_arquivo = 'fiscal') as tem_fiscal, BOOL_OR(origem_arquivo = 'contribuicoes') as tem_contrib")
+            ->groupBy(DB::raw("DATE_TRUNC('month', data_emissao)"))
+            ->get()
+            ->keyBy('mes');
+
+        $inicio = Carbon::parse($min)->startOfMonth();
+        $fim = Carbon::parse($max)->startOfMonth();
+
         $resultado = [];
-        $inicio = Carbon::now()->subMonths(11)->startOfMonth();
-        $fim = Carbon::now()->startOfMonth();
-
-        $period = CarbonPeriod::create($inicio, '1 month', $fim);
-
-        foreach ($period as $mes) {
-            $mesStr = $mes->format('Y-m');
-
-            $temFiscal = DB::table('efd_importacoes')
-                ->where('user_id', $userId)
-                ->where('tipo_efd', 'EFD ICMS/IPI')
-                ->whereRaw("DATE_TRUNC('month', created_at) = ?", [$mes->startOfMonth()->toDateString()])
-                ->exists();
-
-            $temContrib = DB::table('efd_importacoes')
-                ->where('user_id', $userId)
-                ->where('tipo_efd', 'EFD PIS/COFINS')
-                ->whereRaw("DATE_TRUNC('month', created_at) = ?", [$mes->startOfMonth()->toDateString()])
-                ->exists();
+        foreach (CarbonPeriod::create($inicio, '1 month', $fim) as $mes) {
+            $key = $mes->format('Y-m');
+            $row = $porMes->get($key);
+            $temFiscal = (bool) ($row->tem_fiscal ?? false);
+            $temContrib = (bool) ($row->tem_contrib ?? false);
 
             $resultado[] = [
-                'mes' => $mesStr,
+                'mes' => $key,
                 'label' => $mes->locale('pt_BR')->isoFormat('MMM/YY'),
                 'tem_fiscal' => $temFiscal,
                 'tem_contrib' => $temContrib,
