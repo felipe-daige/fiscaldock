@@ -292,6 +292,80 @@ class EfdAgregadorService
     }
 
     /**
+     * Ranking por CFOP. Valor/ICMS/ST/IPI do C190 (efd_notas_consolidados — canon
+     * perfil B); PIS/COFINS dos itens origem 'contribuicoes' por CFOP. Exclui
+     * canceladas. `tipo` derivado de efd_notas.tipo_operacao da nota dona do C190.
+     */
+    public function cfopRanking(int $userId, ?string $dataInicio, ?string $dataFim, ?int $clienteId): array
+    {
+        $c190 = DB::table('efd_notas_consolidados as c')
+            ->join('efd_notas as n', 'n.id', '=', 'c.efd_nota_id')
+            ->where('c.user_id', $userId)
+            ->where('n.cancelada', false)
+            ->whereNotNull('c.cfop')
+            ->when($clienteId, fn ($q) => $q->where('n.cliente_id', $clienteId))
+            ->when($dataInicio, fn ($q) => $q->where('n.data_emissao', '>=', $dataInicio))
+            ->when($dataFim, fn ($q) => $q->where('n.data_emissao', '<=', $dataFim))
+            ->selectRaw("c.cfop, n.tipo_operacao, COUNT(DISTINCT n.id) qtd, SUM(COALESCE(c.valor_operacao,0)) valor, SUM(COALESCE(c.valor_icms,0)) icms, SUM(COALESCE(c.valor_icms_st,0)) icms_st, SUM(COALESCE(c.valor_ipi,0)) ipi")
+            ->groupBy('c.cfop', 'n.tipo_operacao')
+            ->get();
+
+        $pc = DB::table('efd_notas_itens as i')
+            ->join('efd_notas as n', 'n.id', '=', 'i.efd_nota_id')
+            ->where('i.user_id', $userId)
+            ->where('n.origem_arquivo', 'contribuicoes')
+            ->where('n.cancelada', false)
+            ->whereNotNull('i.cfop')
+            ->when($clienteId, fn ($q) => $q->where('n.cliente_id', $clienteId))
+            ->when($dataInicio, fn ($q) => $q->where('n.data_emissao', '>=', $dataInicio))
+            ->when($dataFim, fn ($q) => $q->where('n.data_emissao', '<=', $dataFim))
+            ->selectRaw('i.cfop, SUM(COALESCE(i.valor_pis,0)) pis, SUM(COALESCE(i.valor_cofins,0)) cofins')
+            ->groupBy('i.cfop')
+            ->get()->keyBy('cfop');
+
+        return $c190->map(function ($r) use ($pc) {
+            $p = $pc->get($r->cfop);
+
+            return [
+                'cfop' => (string) $r->cfop,
+                'tipo' => $r->tipo_operacao,
+                'qtd' => (int) $r->qtd,
+                'valor' => (float) $r->valor,
+                'icms' => (float) $r->icms,
+                'icms_st' => (float) $r->icms_st,
+                'ipi' => (float) $r->ipi,
+                'pis' => (float) ($p->pis ?? 0),
+                'cofins' => (float) ($p->cofins ?? 0),
+            ];
+        })->sortByDesc('valor')->values()->toArray();
+    }
+
+    /**
+     * Valor por CFOP por mês (tendência). Mesma fonte C190.
+     */
+    public function cfopMensal(int $userId, ?string $dataInicio, ?string $dataFim, ?int $clienteId, array $cfops): array
+    {
+        if (empty($cfops)) {
+            return [];
+        }
+
+        return DB::table('efd_notas_consolidados as c')
+            ->join('efd_notas as n', 'n.id', '=', 'c.efd_nota_id')
+            ->where('c.user_id', $userId)
+            ->where('n.cancelada', false)
+            ->whereIn('c.cfop', $cfops)
+            ->when($clienteId, fn ($q) => $q->where('n.cliente_id', $clienteId))
+            ->when($dataInicio, fn ($q) => $q->where('n.data_emissao', '>=', $dataInicio))
+            ->when($dataFim, fn ($q) => $q->where('n.data_emissao', '<=', $dataFim))
+            ->selectRaw("c.cfop, DATE_TRUNC('month', n.data_emissao) mes, SUM(COALESCE(c.valor_operacao,0)) valor")
+            ->groupBy('c.cfop', DB::raw("DATE_TRUNC('month', n.data_emissao)"))
+            ->orderBy('mes')
+            ->get()
+            ->map(fn ($r) => ['cfop' => (string) $r->cfop, 'mes' => $r->mes, 'valor' => (float) $r->valor])
+            ->toArray();
+    }
+
+    /**
      * Q-CARGA (apurada) — carga líquida a recolher, declarada ao fisco (gold).
      *   ICMS/ST: efd_apuracoes_icms (E110/ST), filtrável por periodo_inicio.
      *   PIS/COFINS: efd_apuracoes_contribuicoes (M). Não tem coluna de período;
