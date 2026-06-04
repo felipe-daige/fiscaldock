@@ -1369,6 +1369,31 @@
         }
     }
 
+    // "Clicar fora limpa o realce": clicar em qualquer lugar que não seja uma
+    // barra/ponto dos gráficos de CFOP desfaz a seleção (realce grudado do
+    // ApexCharts). Bind único (dataset no body) e self-contained (só window +
+    // DOM) → imune à re-execução do IIFE pela navegação SPA.
+    function setupCfopDeselect() {
+        if (document.body.dataset.biCfopDeselBound) return;
+        document.body.dataset.biCfopDeselBound = '1';
+        document.addEventListener('click', function (e) {
+            if (!window._biCfopSel) return;
+            if (e.target.closest('.apexcharts-bar-area, .apexcharts-marker, .apexcharts-series-markers')) return;
+            const cfopCharts = window._biCfopCharts || {};
+            Object.keys(cfopCharts).forEach(function (id) {
+                const c = cfopCharts[id];
+                if (!c || !c.w || !c.w.globals) return;
+                const sel = c.w.globals.selectedDataPoints || [];
+                sel.forEach(function (pts, s) {
+                    (pts ? pts.slice() : []).forEach(function (i) {
+                        try { c.toggleDataPointSelection(s, i); } catch (err) { /* noop */ }
+                    });
+                });
+            });
+            window._biCfopSel = false;
+        });
+    }
+
     function renderCfopCharts(data) {
         const ranking = data.ranking || [];
 
@@ -1405,10 +1430,18 @@
             },
         });
 
+        // Rastreia se há realce ativo (seleção) em qualquer um dos gráficos CFOP.
+        const cfopSelEvent = {
+            dataPointSelection: function (event, chartContext, config) {
+                const sel = config.selectedDataPoints || [];
+                window._biCfopSel = sel.some(function (s) { return s && s.length; });
+            },
+        };
+
         const top = ranking.slice(0, 10);
         if (top.length > 0) {
             renderChart('chart-cfop-valor', {
-                chart: { type: 'bar', height: 320, toolbar: { show: false } },
+                chart: { type: 'bar', height: 320, toolbar: { show: false }, events: cfopSelEvent },
                 plotOptions: { bar: { horizontal: true } },
                 series: [{ name: 'Valor', data: top.map(r => Math.round(r.valor)) }],
                 xaxis: { categories: top.map(r => r.cfop), labels: { formatter: (val) => formatAxisCurrency(val) } },
@@ -1423,7 +1456,7 @@
         const t = data.tendencia || { categorias: [], series: [] };
         if (t.series && t.series.length > 0) {
             renderChart('chart-cfop-tendencia', {
-                chart: { type: 'line', height: 320, toolbar: { show: false } },
+                chart: { type: 'line', height: 320, toolbar: { show: false }, events: cfopSelEvent },
                 series: t.series,
                 xaxis: { categories: t.categorias },
                 yaxis: { labels: { formatter: (val) => formatAxisCurrency(val) } },
@@ -1432,6 +1465,13 @@
         } else {
             setEmptyChart('chart-cfop-tendencia');
         }
+
+        // Expõe instâncias num global estável e arma o "clicar fora limpa o realce".
+        window._biCfopCharts = {
+            'chart-cfop-valor': charts['chart-cfop-valor'],
+            'chart-cfop-tendencia': charts['chart-cfop-tendencia'],
+        };
+        setupCfopDeselect();
     }
 
     function renderTabelaTributarioConsolidado(consolidado) {
