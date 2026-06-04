@@ -84,6 +84,7 @@
         // Tabs e filtros não dependem de ApexCharts — configurar imediatamente
         setupTabs();
         setupFilters();
+        setupExport();
 
         setupParticipantes();
 
@@ -146,6 +147,17 @@
             filtroPeriodo._biListenerAdded = true;
             filtroPeriodo.addEventListener('change', () => { loadData(currentTab); updateResumoKpis(); });
         }
+    }
+
+    // Configura botões de exportação CSV
+    function setupExport() {
+        document.querySelectorAll('[data-export]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const aba = btn.getAttribute('data-export');
+                const params = getFilterParams();
+                window.location.href = `/app/bi/exportar?aba=${encodeURIComponent(aba)}&${params}`;
+            });
+        });
     }
 
     // Atualiza KPIs do resumo geral via AJAX

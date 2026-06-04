@@ -15,7 +15,8 @@ class BiController extends Controller
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
 
     public function __construct(
-        protected BiService $biService
+        protected BiService $biService,
+        protected \App\Services\BiExportService $biExport,
     ) {}
 
     /**
@@ -287,6 +288,32 @@ class BiController extends Controller
             $request->get('data_fim'),
             $request->get('cliente_id'),
         ));
+    }
+
+    /**
+     * Export CSV por aba (UTF-8 BOM + separador ;).
+     */
+    public function exportar(Request $request)
+    {
+        if (! Auth::check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $aba = (string) $request->get('aba', '');
+        $ds = $this->biExport->dataset($aba, Auth::id(), $request->get('data_inicio'), $request->get('data_fim'), $request->get('cliente_id'));
+
+        if (empty($ds['colunas'])) {
+            abort(404, 'Aba sem exportação disponível');
+        }
+
+        $csv = $this->biExport->toCsv($ds['colunas'], $ds['linhas']);
+        $filename = 'bi-'.$aba.'-'.now()->format('Ymd').'.csv';
+
+        return response()->streamDownload(function () use ($csv) {
+            echo $csv;
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 
     /**

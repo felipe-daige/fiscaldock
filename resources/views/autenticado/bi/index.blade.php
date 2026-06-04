@@ -146,8 +146,9 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {{-- Grafico Faturamento Mensal --}}
                 <div class="bg-white rounded border border-gray-300 lg:col-span-2">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
                         <h3 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Faturamento Mensal</h3>
+                        <button data-export="faturamento" class="text-[11px] font-medium text-gray-600 hover:text-gray-900 border border-gray-300 rounded px-2 py-1">Exportar CSV</button>
                     </div>
                     <div class="p-4 sm:p-5">
                         <div id="chart-faturamento" class="h-56 sm:h-72 lg:h-80"></div>
@@ -216,8 +217,9 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {{-- Carga Tributária --}}
                 <div class="bg-white rounded border border-gray-300 lg:col-span-2">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
                         <h3 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Carga Tributária Mensal</h3>
+                        <button data-export="tributos" class="text-[11px] font-medium text-gray-600 hover:text-gray-900 border border-gray-300 rounded px-2 py-1">Exportar CSV</button>
                     </div>
                     <div class="p-4 sm:p-5">
                         <div id="chart-carga-tributaria" class="h-56 sm:h-72 lg:h-80"></div>
