@@ -319,12 +319,15 @@ class EfdAgregadorService
             ->when($clienteId, fn ($q) => $q->where('n.cliente_id', $clienteId))
             ->when($dataInicio, fn ($q) => $q->where('n.data_emissao', '>=', $dataInicio))
             ->when($dataFim, fn ($q) => $q->where('n.data_emissao', '<=', $dataFim))
-            ->selectRaw('i.cfop, SUM(COALESCE(i.valor_pis,0)) pis, SUM(COALESCE(i.valor_cofins,0)) cofins')
-            ->groupBy('i.cfop')
-            ->get()->keyBy('cfop');
+            ->selectRaw('i.cfop, n.tipo_operacao, SUM(COALESCE(i.valor_pis,0)) pis, SUM(COALESCE(i.valor_cofins,0)) cofins')
+            ->groupBy('i.cfop', 'n.tipo_operacao')
+            ->get()->keyBy(fn ($r) => $r->cfop.'|'.$r->tipo_operacao);
 
+        // PIS/COFINS atribuído por (cfop, tipo_operacao) — espelha o group do C190.
+        // Senão, um CFOP que aparecesse em entrada E saída receberia a contribuição
+        // inteira nas duas linhas (double count). Ver review 2026-06-04.
         return $c190->map(function ($r) use ($pc) {
-            $p = $pc->get($r->cfop);
+            $p = $pc->get($r->cfop.'|'.$r->tipo_operacao);
 
             return [
                 'cfop' => (string) $r->cfop,

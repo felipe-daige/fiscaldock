@@ -74,3 +74,29 @@ it('endpoint cfop responde json autenticado', function () {
     $res = $this->actingAs($user)->getJson('/app/bi/cfop');
     $res->assertOk()->assertJsonStructure(['ranking', 'tendencia' => ['categorias', 'series']]);
 });
+
+it('nao duplica pis/cofins quando o mesmo cfop aparece em entrada e saida', function () {
+    $user = \App\Models\User::factory()->create();
+    $userId = $user->id;
+    $clienteId = \DB::table('clientes')->insertGetId([
+        'user_id' => $userId, 'documento' => '00000000000191', 'razao_social' => 'Empresa Teste',
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $impF = \DB::table('efd_importacoes')->insertGetId(['user_id' => $userId, 'cliente_id' => $clienteId, 'tipo_efd' => 'EFD ICMS/IPI', 'status' => 'concluido', 'created_at' => now(), 'updated_at' => now()]);
+    $impC = \DB::table('efd_importacoes')->insertGetId(['user_id' => $userId, 'cliente_id' => $clienteId, 'tipo_efd' => 'EFD PIS/COFINS', 'status' => 'concluido', 'created_at' => now(), 'updated_at' => now()]);
+
+    // C190 fiscal: mesmo CFOP 5102 numa nota saida E numa entrada (anomalia de classificação)
+    foreach (['saida', 'entrada'] as $i => $tipo) {
+        $n = \DB::table('efd_notas')->insertGetId(['user_id' => $userId, 'cliente_id' => $clienteId, 'importacao_id' => $impF, 'origem_arquivo' => 'fiscal', 'modelo' => '55', 'tipo_operacao' => $tipo, 'cancelada' => false, 'valor_total' => 100, 'data_emissao' => '2024-03-10', 'numero' => $i + 1, 'created_at' => now(), 'updated_at' => now()]);
+        \DB::table('efd_notas_consolidados')->insert(['efd_nota_id' => $n, 'user_id' => $userId, 'cst_icms' => '000', 'cfop' => '5102', 'valor_operacao' => 100, 'valor_icms' => 0, 'created_at' => now(), 'updated_at' => now()]);
+    }
+    // PIS/COFINS: 1 item contribuicoes CFOP 5102 numa nota SAIDA, pis=10
+    $nc = \DB::table('efd_notas')->insertGetId(['user_id' => $userId, 'cliente_id' => $clienteId, 'importacao_id' => $impC, 'origem_arquivo' => 'contribuicoes', 'modelo' => '55', 'tipo_operacao' => 'saida', 'cancelada' => false, 'valor_total' => 100, 'data_emissao' => '2024-03-10', 'numero' => 9, 'created_at' => now(), 'updated_at' => now()]);
+    \DB::table('efd_notas_itens')->insert(['efd_nota_id' => $nc, 'user_id' => $userId, 'numero_item' => 1, 'codigo_item' => 'X', 'valor_total' => 100, 'cfop' => '5102', 'valor_pis' => 10, 'valor_cofins' => 0, 'created_at' => now(), 'updated_at' => now()]);
+
+    $rows = collect(app(\App\Services\EfdAgregadorService::class)->cfopRanking($userId, null, null, null))->where('cfop', '5102');
+
+    // PIS deve ser atribuído só à linha 'saida' (origem real do item), total = 10 — não 20
+    expect($rows->sum('pis'))->toBe(10.0);
+    expect($rows->firstWhere('tipo', 'entrada')['pis'])->toBe(0.0);
+});
