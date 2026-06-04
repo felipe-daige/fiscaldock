@@ -1,6 +1,9 @@
 <?php
 
 use App\Support\Cfop;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
 
 it('resolve descricao de cfop comum pelo mapa', function () {
     expect(Cfop::descricao('5102'))->toContain('Venda de mercadoria adquirida');
