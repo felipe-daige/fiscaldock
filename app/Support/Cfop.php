@@ -29,7 +29,7 @@ class Cfop
             return "{$codigo} — {$desc}";
         }
 
-        $familia = config('cfop.familias.' . substr($codigo, 0, 1));
+        $familia = config('cfop.familias.'.substr($codigo, 0, 1));
 
         return $familia ? "{$codigo} — {$familia}" : $codigo;
     }

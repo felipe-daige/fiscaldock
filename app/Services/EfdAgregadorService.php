@@ -306,7 +306,7 @@ class EfdAgregadorService
             ->when($clienteId, fn ($q) => $q->where('n.cliente_id', $clienteId))
             ->when($dataInicio, fn ($q) => $q->where('n.data_emissao', '>=', $dataInicio))
             ->when($dataFim, fn ($q) => $q->where('n.data_emissao', '<=', $dataFim))
-            ->selectRaw("c.cfop, n.tipo_operacao, COUNT(DISTINCT n.id) qtd, SUM(COALESCE(c.valor_operacao,0)) valor, SUM(COALESCE(c.valor_icms,0)) icms, SUM(COALESCE(c.valor_icms_st,0)) icms_st, SUM(COALESCE(c.valor_ipi,0)) ipi")
+            ->selectRaw('c.cfop, n.tipo_operacao, COUNT(DISTINCT n.id) qtd, SUM(COALESCE(c.valor_operacao,0)) valor, SUM(COALESCE(c.valor_icms,0)) icms, SUM(COALESCE(c.valor_icms_st,0)) icms_st, SUM(COALESCE(c.valor_ipi,0)) ipi')
             ->groupBy('c.cfop', 'n.tipo_operacao')
             ->get();
 
