@@ -586,16 +586,25 @@ class ConsultaController extends Controller
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        if (! $this->pricingCatalogService->userCanUseProduct($user, $plano->codigo)) {
+        $totalParticipantes = count($validated['participante_ids']);
+
+        $trialCap = $this->pricingCatalogService->trialCapStatus($user, $plano, $totalParticipantes);
+
+        if ($trialCap['bloqueado']) {
             return response()->json([
                 'success' => false,
-                'error' => 'Faça a primeira recarga para liberar Compliance e Due Diligence.',
-                'requires_first_purchase' => true,
+                'error' => sprintf(
+                    'Você usou %d de %d consultas %s no período de teste. Faça um depósito para liberar mais.',
+                    $trialCap['usados'],
+                    $trialCap['limite'],
+                    $plano->nome
+                ),
+                'trial_cap_atingido' => true,
+                'trial_cap' => $trialCap,
                 'produto_codigo' => $plano->codigo,
             ], Response::HTTP_FORBIDDEN);
         }
 
-        $totalParticipantes = count($validated['participante_ids']);
         $custoUnitario = $this->pricingCatalogService->getProductCreditsByPlan($plano, $user);
         $custoTotal = $totalParticipantes * $custoUnitario;
         $saldoAtual = $this->creditService->getBalance($user);
@@ -603,6 +612,7 @@ class ConsultaController extends Controller
 
         return response()->json([
             'success' => true,
+            'trial_cap' => $trialCap,
             'calculo' => [
                 'total_participantes' => $totalParticipantes,
                 'produto_codigo' => $plano->codigo,
@@ -663,17 +673,26 @@ class ConsultaController extends Controller
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        if (! $this->pricingCatalogService->userCanUseProduct($user, $plano->codigo)) {
+        // Calcular custo
+        $totalParticipantes = $participantes->count();
+
+        $trialCap = $this->pricingCatalogService->trialCapStatus($user, $plano, $totalParticipantes);
+
+        if ($trialCap['bloqueado']) {
             return response()->json([
                 'success' => false,
-                'error' => 'Faça a primeira recarga para liberar Compliance e Due Diligence.',
-                'requires_first_purchase' => true,
+                'error' => sprintf(
+                    'Você usou %d de %d consultas %s no período de teste. Faça um depósito para liberar mais.',
+                    $trialCap['usados'],
+                    $trialCap['limite'],
+                    $plano->nome
+                ),
+                'trial_cap_atingido' => true,
+                'trial_cap' => $trialCap,
                 'produto_codigo' => $plano->codigo,
             ], Response::HTTP_FORBIDDEN);
         }
 
-        // Calcular custo
-        $totalParticipantes = $participantes->count();
         $custoUnitario = $this->pricingCatalogService->getProductCreditsByPlan($plano, $user);
         $custoTotal = $totalParticipantes * $custoUnitario;
 
