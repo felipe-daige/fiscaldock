@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\DB;
 
 class BiService
 {
+    /** Limiares de divergência |Δ%| para flag de cruzamento (ajustável). */
+    private const FLAG_VERDE = 2.0;   // |Δ| <= 2%
+
+    private const FLAG_AMARELO = 10.0; // <= 10%
+
     public function __construct(
         protected EfdAgregadorService $efd
     ) {}
@@ -1089,6 +1094,52 @@ class BiService
                 ];
             })
             ->toArray();
+    }
+
+    /**
+     * Apuração × Notas (gold) — declarado BRUTO (efd_apuracoes_*) vs computado
+     * débito-saída (C190 + itens contribuicoes), por mês + totais + flags.
+     * ICMS/PIS/COFINS apenas (ST/IPI fora — perfil comercial, ver doc).
+     */
+    public function getApuracaoVsNotas(int $userId, ?string $dataInicio, ?string $dataFim, ?int $clienteId): array
+    {
+        $declarado = collect($this->efd->cargaDeclaradaBrutaMensal($userId, $dataInicio, $dataFim, $clienteId))
+            ->mapWithKeys(fn ($r) => [Carbon::parse($r['mes'])->format('Y-m') => $r]);
+        $computado = collect($this->efd->cargaTributariaDebitoSaidaMensal($userId, $dataInicio, $dataFim, $clienteId))
+            ->mapWithKeys(fn ($r) => [Carbon::parse($r['mes'])->format('Y-m') => $r]);
+
+        $meses = $declarado->keys()->merge($computado->keys())->unique()->sort()->values();
+        $impostos = ['icms', 'pis', 'cofins'];
+
+        $linha = function (float $dec, float $com): array {
+            $delta = $com - $dec;
+            $pct = $dec != 0.0 ? round(($delta / $dec) * 100, 2) : ($com != 0.0 ? 100.0 : 0.0);
+            $abs = abs($pct);
+            $flag = ($dec == 0.0 && $com == 0.0) ? 'neutro'
+                : ($abs <= self::FLAG_VERDE ? 'verde' : ($abs <= self::FLAG_AMARELO ? 'amarelo' : 'vermelho'));
+
+            return ['declarado' => $dec, 'computado' => $com, 'delta' => $delta, 'delta_pct' => $pct, 'flag' => $flag];
+        };
+
+        $mensal = $meses->map(function ($mes) use ($declarado, $computado, $impostos, $linha) {
+            $dec = $declarado->get($mes);
+            $com = $computado->get($mes);
+            $out = ['mes' => $mes, 'label' => Carbon::parse($mes.'-01')->locale('pt_BR')->isoFormat('MMM/YY')];
+            foreach ($impostos as $imp) {
+                $out[$imp] = $linha((float) ($dec[$imp] ?? 0), (float) ($com[$imp] ?? 0));
+            }
+
+            return $out;
+        })->values()->toArray();
+
+        $totais = [];
+        foreach ($impostos as $imp) {
+            $dec = (float) $declarado->sum($imp);
+            $com = (float) $computado->sum($imp);
+            $totais[$imp] = $linha($dec, $com);
+        }
+
+        return ['mensal' => $mensal, 'totais' => $totais];
     }
 
     /**
