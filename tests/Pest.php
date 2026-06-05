@@ -21,6 +21,9 @@ pest()->extend(Tests\TestCase::class)
 pest()->extend(Tests\TestCase::class)
     ->in('Unit/Efd');
 
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit/Consultas');
+
 /*
 |--------------------------------------------------------------------------
 | Expectations
@@ -133,4 +136,24 @@ function montarMassaFechamento(): array
     ]);
 
     return [$user->id, $clienteId];
+}
+
+function montarLoteParticipante(): array
+{
+    $user = \App\Models\User::factory()->create();
+    $clienteId = \Illuminate\Support\Facades\DB::table('clientes')->insertGetId([
+        'user_id' => $user->id, 'razao_social' => 'EMP', 'documento' => '00000000000100',
+        'is_empresa_propria' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $participanteId = \Illuminate\Support\Facades\DB::table('participantes')->insertGetId([
+        'user_id' => $user->id, 'documento' => '19131243000197', 'razao_social' => 'PART',
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $loteId = \Illuminate\Support\Facades\DB::table('consulta_lotes')->insertGetId([
+        'user_id' => $user->id, 'cliente_id' => $clienteId, 'status' => 'processando',
+        'total_participantes' => 1, 'creditos_cobrados' => 0, 'tab_id' => 'tab-test',
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    return [$loteId, $participanteId, $user->id];
 }
