@@ -158,5 +158,7 @@ return [
         'cgu_cnc' => (int) env('CONSULTA_CREDITOS_CGU_CNC', 2),
         'cnj_improbidade' => (int) env('CONSULTA_CREDITOS_CNJ_IMPROBIDADE', 2),
         'cnd_municipal' => (int) env('CONSULTA_CREDITOS_CND_MUNICIPAL', 2),
+        'protestos' => (int) env('CONSULTA_CREDITOS_PROTESTOS', 2),
+        'processos' => (int) env('CONSULTA_CREDITOS_PROCESSOS', 2),
     ],
 ];
