@@ -67,13 +67,18 @@ class ProcessarConsultaJob implements ShouldQueue
             $throttle->aguardar($fonte->provider());
 
             $provider = $this->resolverProvider($fonte->provider());
-            $resp = $provider->consultar($fonte->slug(), $fonte->params($alvo));
+            $resp = $provider->consultar($fonte->slugPara($alvo), $fonte->params($alvo));
 
             $dados = $fonte->normalizar($resp->raw, $resp->status);
 
-            // A UF do cadastro é autoritativa para as próximas fontes UF-dependentes.
-            if ($fonte->chave() === 'cadastro' && ! empty($dados['endereco']['uf'])) {
-                $alvo['uf'] = $dados['endereco']['uf'];
+            // UF e município do cadastro são autoritativos p/ as fontes UF/cidade-dependentes.
+            if ($fonte->chave() === 'cadastro') {
+                if (! empty($dados['endereco']['uf'])) {
+                    $alvo['uf'] = $dados['endereco']['uf'];
+                }
+                if (! empty($dados['endereco']['municipio'])) {
+                    $alvo['municipio'] = $dados['endereco']['municipio'];
+                }
             }
 
             $resultado = new ResultadoFonte(

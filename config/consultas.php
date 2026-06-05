@@ -51,6 +51,29 @@ return [
         ))),
     ],
 
+    // Cobertura CND Municipal: mapa "{uf}:{cidade-normalizada}" → slug InfoSimples. O slug NÃO
+    // é gerável do nome (ex: "Rio de Janeiro" → pref/rj/rio-janeiro/cnd, sem "de"), então é
+    // explícito. Cidade do alvo vem do cadastro (minhareceita). Cidade fora do mapa → INDISPONÍVEL.
+    // Inicial = cidades com slug /cnd explícito no catálogo do repo; COMPLETAR/validar via InfoSimples.
+    'cnd_municipal' => [
+        'slugs' => [
+            'ap:macapa' => 'pref/ap/macapa/cnd',
+            'ap:santana' => 'pref/ap/santana/cnd',
+            'ba:salvador' => 'pref/ba/salvador/cnd',
+            'ce:fortaleza' => 'pref/ce/fortaleza/cnd',
+            'go:goiania' => 'pref/go/goiania/cnd',
+            'ma:sao-luis' => 'pref/ma/sao-luis/cnd',
+            'mg:belo-horizonte' => 'pref/mg/belo-horizonte/cnd',
+            'mt:cuiaba' => 'pref/mt/cuiaba/cnd',
+            'pe:recife' => 'pref/pe/recife/cnd',
+            'pr:curitiba' => 'pref/pr/curitiba/cnd',
+            'rj:rio-de-janeiro' => 'pref/rj/rio-janeiro/cnd',
+            'rs:porto-alegre' => 'pref/rs/porto-alegre/cnd',
+            'sp:campinas' => 'pref/sp/campinas/cnd',
+            'sp:guarulhos' => 'pref/sp/guarulhos/cnd',
+        ],
+    ],
+
     // Custo em créditos por fonte paga (usado no estorno preciso). 1 crédito = R$ 0,20.
     'fontes' => [
         'cnd_federal' => (int) env('CONSULTA_CREDITOS_CND_FEDERAL', 2),
@@ -60,5 +83,6 @@ return [
         'sintegra' => (int) env('CONSULTA_CREDITOS_SINTEGRA', 1),
         'cgu_cnc' => (int) env('CONSULTA_CREDITOS_CGU_CNC', 2),
         'cnj_improbidade' => (int) env('CONSULTA_CREDITOS_CNJ_IMPROBIDADE', 2),
+        'cnd_municipal' => (int) env('CONSULTA_CREDITOS_CND_MUNICIPAL', 2),
     ],
 ];

@@ -41,6 +41,11 @@ class CadastroFonte implements Fonte
         return ''; // minhareceita monta a URL pelo CNPJ
     }
 
+    public function slugPara(array $alvo): string
+    {
+        return '';
+    }
+
     public function params(array $alvo): array
     {
         return ['cnpj' => preg_replace('/[^0-9]/', '', (string) ($alvo['cnpj'] ?? ''))];

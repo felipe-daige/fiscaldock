@@ -37,6 +37,11 @@ abstract class FonteInfoSimplesBase implements Fonte
             && filled(config('consultas.providers.infosimples.token'));
     }
 
+    public function slugPara(array $alvo): string
+    {
+        return $this->slug();
+    }
+
     public function aplicavelPara(array $alvo): bool
     {
         return true; // por padrão, aplica-se a todo CNPJ (cobertura nacional)

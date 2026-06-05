@@ -22,6 +22,12 @@ interface Fonte
     /** Slug do endpoint no provider (vazio quando o provider monta a URL pelo CNPJ). */
     public function slug(): string;
 
+    /**
+     * Slug resolvido para ESTE alvo. Para a maioria é o slug fixo; fontes com slug
+     * dinâmico (ex: CND Municipal `pref/{uf}/{cidade}/cnd`) resolvem por UF/cidade do alvo.
+     */
+    public function slugPara(array $alvo): string;
+
     /** Monta os params da chamada a partir do alvo (participante normalizado). */
     public function params(array $alvo): array;
 
