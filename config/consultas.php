@@ -21,6 +21,15 @@ return [
     // confirmar o estorno preciso por fonte. ENV: CONSULTAS_INFOSIMPLES_ATIVO.
     'infosimples_ativo' => (bool) env('CONSULTAS_INFOSIMPLES_ATIVO', false),
 
+    // GUARD DE TESTE: se NÃO vazio, só estes CNPJs (14 dígitos, CSV) realmente chamam o
+    // InfoSimples — qualquer outro é bloqueado ANTES da chamada (sem cobrança). Use durante os
+    // testes pagos p/ não queimar crédito por engano. Vazio = produção normal (todos passam).
+    // ENV: CONSULTAS_INFOSIMPLES_TESTE_CNPJS.
+    'infosimples_teste_cnpjs' => array_values(array_filter(array_map(
+        fn ($c) => preg_replace('/[^0-9]/', '', (string) $c),
+        explode(',', (string) env('CONSULTAS_INFOSIMPLES_TESTE_CNPJS', ''))
+    ))),
+
     // Grupos de código InfoSimples → status canônico (fonte: docs/infosimples/endpoints-catalog.md)
     'codigos' => [
         'sucesso' => [200, 201],
