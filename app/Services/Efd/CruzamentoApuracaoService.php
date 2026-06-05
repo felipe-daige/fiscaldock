@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
 class CruzamentoApuracaoService
 {
     public const FLAG_VERDE = 2.0;    // |Δ%| <= 2
+
     public const FLAG_AMARELO = 10.0; // <= 10
 
     public function __construct(private EfdAgregadorService $efd) {}

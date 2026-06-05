@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 class ResumoFiscalController extends Controller
 {
     private const VIEW = 'autenticado.resumo-fiscal.index';
+
     private const LAYOUT = 'autenticado.layouts.app';
 
     public function __construct(private ResumoFiscalService $service) {}
@@ -31,7 +32,7 @@ class ResumoFiscalController extends Controller
         // Competências disponíveis (meses com dados EFD)
         $competencias = EfdNota::where('user_id', $userId)
             ->selectRaw("DISTINCT TO_CHAR(data_emissao, 'YYYY-MM') as competencia")
-            ->orderByRaw("competencia DESC")
+            ->orderByRaw('competencia DESC')
             ->pluck('competencia');
 
         $defaultCompetencia = $competencias->first() ?? now()->subMonth()->format('Y-m');
@@ -93,6 +94,29 @@ class ResumoFiscalController extends Controller
         return response()->json(
             $this->service->getARecolherData($userId, $clienteId, $competencia)
         );
+    }
+
+    public function exportar(Request $request, \App\Services\BiExportService $export)
+    {
+        [$userId, $clienteId, $competencia] = $this->validarParams($request);
+        $data = $this->service->getARecolherData($userId, $clienteId, $competencia);
+
+        $colunas = ['Tributo', 'Valor', 'Vencimento', 'Vencimento estimado', 'Fonte'];
+        $linhas = array_map(fn ($l) => [
+            $l['tributo'],
+            number_format($l['valor'], 2, ',', '.'),
+            $l['vencimento'] ? \Illuminate\Support\Carbon::parse($l['vencimento'])->format('d/m/Y') : '',
+            $l['vencimento_estimado'] ? 'sim' : 'não',
+            $l['fonte'] ?? '',
+        ], $data['linhas']);
+        $linhas[] = ['Total do mês', number_format($data['total'], 2, ',', '.'), '', '', ''];
+
+        $csv = $export->toCsv($colunas, $linhas);
+        $filename = 'fechamento-a-recolher-'.$competencia.'.csv';
+
+        return response()->streamDownload(function () use ($csv) {
+            echo $csv;
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     public function cruzamentos(Request $request)

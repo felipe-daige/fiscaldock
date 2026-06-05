@@ -13,16 +13,37 @@
         .rf-nav-link { color: #6b7280; background-color: transparent; }
         .rf-nav-link:hover { background-color: #f3f4f6; color: #111827; }
         .rf-nav-link.active { background-color: #1f2937 !important; color: #ffffff !important; }
+        @media print {
+            .rf-nav, .rf-actions, #rf-filtros, #rf-btn-filtrar, aside, #sidebar, nav.sidebar { display: none !important; }
+            #rf-print-header { display: block !important; }
+            .rf-section-content.collapsed { max-height: none !important; opacity: 1 !important; overflow: visible !important; }
+            .rf-chevron { display: none !important; }
+            #resumo-fiscal-container, body { background: #ffffff !important; }
+            .rf-section { break-inside: avoid; }
+            @page { margin: 1.2cm; }
+        }
     </style>
 
     {{-- Header --}}
-    <div class="mb-6">
-        <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Painel Fiscal por Competência</h1>
-        <p class="text-xs text-gray-500 mt-1">Apuração consolidada por período</p>
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+            <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Fechamento Fiscal</h1>
+            <p class="text-xs text-gray-500 mt-1">Apuração, divergências e o que recolher — por empresa e competência</p>
+        </div>
+        <div class="flex items-center gap-2 rf-actions">
+            <a id="rf-btn-exportar" href="#" class="px-3 py-2 border border-gray-300 rounded text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors">Exportar CSV</a>
+            <button id="rf-btn-imprimir" type="button" class="px-3 py-2 border border-gray-300 rounded text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors">Imprimir</button>
+        </div>
+    </div>
+
+    {{-- Cabeçalho de impressão (some na tela, aparece no print) --}}
+    <div id="rf-print-header" class="hidden mb-4">
+        <h2 class="text-base font-bold text-gray-900">Fechamento Fiscal — <span id="rf-print-empresa"></span></h2>
+        <p class="text-xs text-gray-600">Competência: <span id="rf-print-competencia"></span> · emitido em {{ now()->format('d/m/Y') }}</p>
     </div>
 
     {{-- Filtros --}}
-    <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+    <div id="rf-filtros" class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
         <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
             <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
         </div>
@@ -56,12 +77,13 @@
 
     {{-- Navegacao sticky --}}
     <nav class="rf-nav sticky top-0 z-20 bg-gray-100/95 backdrop-blur-sm py-2 mb-4 flex items-center gap-1 overflow-x-auto border-b border-gray-300" id="rf-nav">
-        <a href="#secao-resumo" class="rf-nav-link active whitespace-nowrap px-3 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors">Resumo</a>
-        <a href="#secao-icms" class="rf-nav-link whitespace-nowrap px-3 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors">ICMS/IPI</a>
-        <a href="#secao-pis-cofins" class="rf-nav-link whitespace-nowrap px-3 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors">PIS/COFINS</a>
-        <a href="#secao-retencoes" class="rf-nav-link whitespace-nowrap px-3 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors">Retenções</a>
-        <a href="#secao-cruzamentos" class="rf-nav-link whitespace-nowrap px-3 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors">Cruzamentos</a>
+        <a href="#secao-resumo" class="rf-nav-link active whitespace-nowrap px-3 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors">Visão do Mês</a>
+        <a href="#secao-a-recolher" class="rf-nav-link whitespace-nowrap px-3 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors">A Recolher</a>
+        <a href="#secao-cruzamentos" class="rf-nav-link whitespace-nowrap px-3 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors">Está Batendo?</a>
         <a href="#secao-alertas" class="rf-nav-link whitespace-nowrap px-3 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors">Alertas</a>
+        <a href="#secao-icms" class="rf-nav-link whitespace-nowrap px-3 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors">Espelho ICMS/IPI</a>
+        <a href="#secao-pis-cofins" class="rf-nav-link whitespace-nowrap px-3 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors">Espelho PIS/COFINS</a>
+        <a href="#secao-retencoes" class="rf-nav-link whitespace-nowrap px-3 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors">Retenções</a>
     </nav>
 
     {{-- Estado vazio global --}}
@@ -75,12 +97,13 @@
 
     @php
         $secoes = [
-            ['id' => 'resumo', 'label' => 'Resumo Executivo', 'hex' => '#4338ca', 'content_id' => 'rf-resumo-content'],
-            ['id' => 'icms', 'label' => 'Apuração ICMS/IPI', 'hex' => '#047857', 'content_id' => 'rf-icms-content'],
-            ['id' => 'pis-cofins', 'label' => 'Apuração PIS/COFINS', 'hex' => '#7c3aed', 'content_id' => 'rf-piscofins-content'],
-            ['id' => 'retencoes', 'label' => 'Retenções na Fonte', 'hex' => '#d97706', 'content_id' => 'rf-retencoes-content'],
-            ['id' => 'cruzamentos', 'label' => 'Cruzamentos e Divergências', 'hex' => '#b91c1c', 'content_id' => 'rf-cruzamentos-content'],
+            ['id' => 'resumo', 'label' => 'Visão do Mês', 'hex' => '#4338ca', 'content_id' => 'rf-resumo-content'],
+            ['id' => 'a-recolher', 'label' => 'A Recolher & Vencimentos', 'hex' => '#b45309', 'content_id' => 'rf-a-recolher-content'],
+            ['id' => 'cruzamentos', 'label' => 'Está Batendo? (Declarado × Notas)', 'hex' => '#b91c1c', 'content_id' => 'rf-cruzamentos-content'],
             ['id' => 'alertas', 'label' => 'Alertas Fiscais', 'hex' => '#b91c1c', 'content_id' => 'rf-alertas-content', 'badge' => true],
+            ['id' => 'icms', 'label' => 'Espelho — Apuração ICMS/IPI', 'hex' => '#047857', 'content_id' => 'rf-icms-content', 'collapsed' => true],
+            ['id' => 'pis-cofins', 'label' => 'Espelho — Apuração PIS/COFINS', 'hex' => '#7c3aed', 'content_id' => 'rf-piscofins-content', 'collapsed' => true],
+            ['id' => 'retencoes', 'label' => 'Retenções na Fonte (F600)', 'hex' => '#d97706', 'content_id' => 'rf-retencoes-content', 'collapsed' => true],
         ];
     @endphp
 
@@ -95,9 +118,9 @@
                         <span id="rf-alertas-badge" class="hidden ml-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">0</span>
                     @endif
                 </div>
-                <svg class="rf-chevron w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                <svg class="rf-chevron w-4 h-4 text-gray-400 {{ ($sec['collapsed'] ?? false) ? 'rotated' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </div>
-            <div class="rf-section-content p-4" data-section="{{ $sec['id'] }}">
+            <div class="rf-section-content p-4 {{ ($sec['collapsed'] ?? false) ? 'collapsed' : '' }}" data-section="{{ $sec['id'] }}">
                 <div id="{{ $sec['content_id'] }}">
                     @if($sec['id'] === 'resumo')
                         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -163,7 +186,7 @@
     }
 
     function semaforoHtml(status, label) {
-        var hex = { verde: '#047857', amarelo: '#d97706', vermelho: '#b91c1c', sem_dados: '#9ca3af' };
+        var hex = { verde: '#047857', amarelo: '#d97706', vermelho: '#b91c1c', sem_dado: '#9ca3af', sem_dados: '#9ca3af', neutro: '#9ca3af' };
         var h = hex[status] || hex.sem_dados;
         return '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + h + '">' + (label || status) + '</span>';
     }
@@ -205,6 +228,19 @@
         document.getElementById('rf-empty-state')?.classList.add('hidden');
 
         var kpis = data.kpis;
+        var html = '';
+
+        // Completude do mês: banner honesto quando falta uma das EFDs.
+        var falta = [];
+        if (data.tem_icms === false) falta.push('EFD ICMS/IPI');
+        if (data.tem_contribuicoes === false) falta.push('EFD Contribuições');
+        if (falta.length) {
+            html += '<div class="rounded border border-gray-300 border-l-4 p-3 mb-4" style="border-left-color:#d97706;background-color:#fffbeb">';
+            html += '<p class="text-sm font-semibold text-gray-800">Competência incompleta</p>';
+            html += '<p class="text-xs text-gray-600 mt-0.5">Falta importar: ' + falta.join(' · ') + '. Os valores abaixo são parciais.</p>';
+            html += '</div>';
+        }
+
         var cards = [
             { label: 'ICMS a Recolher', key: 'icms_a_recolher' },
             { label: 'PIS a Recolher', key: 'pis_a_recolher' },
@@ -213,19 +249,60 @@
             { label: 'Saldo Líquido', key: 'saldo_liquido' }
         ];
 
-        var html = '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">';
+        html += '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">';
         cards.forEach(function(c) {
             var k = kpis[c.key];
             var val = k ? k.valor : 0;
+            var parcial = (c.key === 'saldo_liquido' && k && k.parcial);
 
             html += '<div class="bg-white rounded border border-gray-300 p-4">';
-            html += '<p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">' + c.label + '</p>';
+            html += '<p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">' + c.label;
+            if (parcial) html += ' <span style="color:#d97706">· parcial</span>';
+            html += '</p>';
             html += '<p class="text-lg font-bold text-gray-900 font-mono truncate">' + fBrl(val) + '</p>';
             html += '<div class="mt-1">' + deltaHtml(k ? k.delta : null) + '</div>';
             html += '</div>';
         });
         html += '</div>';
         el.innerHTML = html;
+    }
+
+    function renderARecolher(data) {
+        var el = document.getElementById('rf-a-recolher-content');
+        if (!data.linhas || data.linhas.length === 0) { semDados(el, 'Nada a recolher nesta competência.'); return; }
+
+        var rows = '';
+        data.linhas.forEach(function(l) {
+            var venc = '—';
+            if (l.vencimento) {
+                var d = new Date(l.vencimento + 'T00:00:00');
+                venc = d.toLocaleDateString('pt-BR');
+                if (l.vencimento_estimado) venc += ' <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color:#d97706">estimado</span>';
+            }
+            rows += '<tr class="hover:bg-gray-50/50 transition-colors">';
+            rows += '<td class="px-3 py-2 text-sm text-gray-800">' + l.tributo + '</td>';
+            rows += '<td class="px-3 py-2 text-right font-mono text-sm font-semibold text-gray-900">' + fBrl(l.valor) + '</td>';
+            rows += '<td class="px-3 py-2 text-center text-sm text-gray-700 whitespace-nowrap">' + venc + '</td>';
+            rows += '<td class="px-3 py-2 text-center font-mono text-[11px] text-gray-500">' + (l.fonte || '—') + '</td>';
+            rows += '</tr>';
+        });
+
+        var tbl = '<div class="overflow-x-auto"><table class="w-full">';
+        tbl += '<thead><tr class="border-b border-gray-300">';
+        tbl += '<th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Tributo</th>';
+        tbl += '<th class="px-3 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">A Recolher</th>';
+        tbl += '<th class="px-3 py-2 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Vencimento</th>';
+        tbl += '<th class="px-3 py-2 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Fonte</th>';
+        tbl += '</tr></thead><tbody class="divide-y divide-gray-100">' + rows;
+        tbl += '<tr class="border-t-2 border-gray-300 bg-gray-50 font-bold">';
+        tbl += '<td class="px-3 py-2 text-[10px] uppercase tracking-wide text-gray-900">Total do mês</td>';
+        tbl += '<td class="px-3 py-2 text-right font-mono text-base text-gray-900">' + fBrl(data.total) + '</td>';
+        tbl += '<td colspan="2"></td></tr>';
+        tbl += '</tbody></table></div>';
+
+        var nota = '<p class="text-[11px] text-gray-400 mt-2">Vencimentos de ICMS/ICMS-ST vêm das obrigações declaradas (E116/E250). PIS/COFINS usam a data legal estimada (dia 25 do mês seguinte).</p>';
+
+        el.innerHTML = bloco('Guias do Mês', tbl + nota);
     }
 
     function renderIcms(data) {
@@ -652,6 +729,7 @@
 
     var sectionMap = {
         'resumo': { url: '/app/resumo-fiscal/resumo-executivo', render: renderResumo },
+        'a-recolher': { url: '/app/resumo-fiscal/a-recolher', render: renderARecolher },
         'icms': { url: '/app/resumo-fiscal/apuracao-icms', render: renderIcms },
         'pis-cofins': { url: '/app/resumo-fiscal/apuracao-pis-cofins', render: renderPisCofins },
         'retencoes': { url: '/app/resumo-fiscal/retencoes', render: renderRetencoes },
@@ -705,12 +783,32 @@
         });
     });
 
+    // ── Ações (exportar / imprimir) refletem os filtros atuais ──
+
+    function atualizarAcoes() {
+        var clienteSel = document.getElementById('rf-cliente');
+        var compSel = document.getElementById('rf-competencia');
+        var exportar = document.getElementById('rf-btn-exportar');
+        if (exportar) exportar.setAttribute('href', '/app/resumo-fiscal/exportar?' + getParams());
+        var empresa = clienteSel ? (clienteSel.options[clienteSel.selectedIndex] || {}).text || '' : '';
+        var comp = compSel ? (compSel.options[compSel.selectedIndex] || {}).text || '' : '';
+        var pe = document.getElementById('rf-print-empresa');
+        var pc = document.getElementById('rf-print-competencia');
+        if (pe) pe.textContent = empresa.trim();
+        if (pc) pc.textContent = comp.trim();
+    }
+
+    document.getElementById('rf-btn-imprimir')?.addEventListener('click', function() {
+        window.print();
+    });
+
     // ── Filter button ──
 
     document.getElementById('rf-btn-filtrar')?.addEventListener('click', function() {
         loadedSections = {};
         document.getElementById('rf-empty-state')?.classList.add('hidden');
         document.getElementById('rf-alertas-badge')?.classList.add('hidden');
+        atualizarAcoes();
 
         Object.keys(sectionMap).forEach(function(id) {
             var el = document.getElementById('secao-' + id);
@@ -735,6 +833,7 @@
 
     // ── Initial load ──
 
+    atualizarAcoes();
     loadSection('resumo', sectionMap.resumo.url, sectionMap.resumo.render);
 
 })();

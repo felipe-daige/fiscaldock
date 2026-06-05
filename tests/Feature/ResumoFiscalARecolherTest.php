@@ -68,3 +68,27 @@ it('endpoint a-recolher responde JSON autenticado', function () {
     $resp->assertOk()->assertJsonStructure(['linhas', 'total', 'tem_icms', 'tem_contribuicoes']);
     expect((float) $resp->json('total'))->toBe(196.0);
 });
+
+it('a página do fechamento renderiza (blade compila) com a nova IA', function () {
+    $user = \App\Models\User::find($this->userId);
+    $resp = $this->actingAs($user)->get('/app/resumo-fiscal', ['X-Requested-With' => 'XMLHttpRequest']);
+
+    $resp->assertOk();
+    $resp->assertSee('Fechamento Fiscal', false);
+    $resp->assertSee('secao-a-recolher', false);
+    $resp->assertSee('rf-a-recolher-content', false);
+    $resp->assertSee('rf-btn-imprimir', false);
+    $resp->assertSee('renderARecolher', false);
+});
+
+it('exporta CSV do a-recolher com BOM e separador ;', function () {
+    $user = \App\Models\User::find($this->userId);
+    $resp = $this->actingAs($user)->get("/app/resumo-fiscal/exportar?cliente_id={$this->clienteId}&competencia=2024-01");
+
+    $resp->assertOk();
+    expect($resp->headers->get('content-type'))->toContain('text/csv');
+    $content = $resp->streamedContent();
+    expect($content)->toContain('Tributo;Valor;Vencimento');
+    expect($content)->toContain('ICMS apuração');
+    expect($content)->toContain('Total do mês');
+});

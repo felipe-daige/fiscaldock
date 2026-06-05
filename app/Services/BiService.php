@@ -1166,8 +1166,7 @@ class BiService
 
         // Flag de divergência vem do service ÚNICO (mesma regra do Resumo Fiscal).
         // $temFonte=false → mês sem o arquivo de apuração daquele imposto: 'sem_dado'.
-        $linha = fn (float $dec, float $com, bool $temFonte = true): array =>
-            $this->cruzamento->classificarFlag($dec, $com, $temFonte);
+        $linha = fn (float $dec, float $com, bool $temFonte = true): array => $this->cruzamento->classificarFlag($dec, $com, $temFonte);
 
         $mensal = $meses->map(function ($mes) use ($declarado, $computado, $impostos, $linha) {
             $dec = $declarado->get($mes);
