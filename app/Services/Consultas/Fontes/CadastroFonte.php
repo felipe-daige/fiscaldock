@@ -28,6 +28,8 @@ class CadastroFonte implements Fonte
             'natureza_juridica',
             'porte',
             'data_inicio_atividade',
+            'regime_tributario',
+            'historico_simples',
         ];
     }
 
@@ -128,7 +130,30 @@ class CadastroFonte implements Fonte
             'data_opcao_simples' => $raw['data_opcao_pelo_simples'] ?? null,
             'data_exclusao_simples' => $raw['data_exclusao_do_simples'] ?? null,
             'mei' => (bool) ($raw['opcao_pelo_mei'] ?? false),
-            'consultas_realizadas' => ['situacao_cadastral', 'dados_cadastrais', 'endereco', 'cnaes', 'qsa', 'simples_nacional', 'mei'],
+            // Derivados do cadastro (minhareceita) — usados pelo plano Validação.
+            'regime_tributario' => $this->regimeTributario($raw),
+            'historico_simples' => [
+                'optante' => (bool) ($raw['opcao_pelo_simples'] ?? false),
+                'data_opcao' => $raw['data_opcao_pelo_simples'] ?? null,
+                'data_exclusao' => $raw['data_exclusao_do_simples'] ?? null,
+                'mei_optante' => (bool) ($raw['opcao_pelo_mei'] ?? false),
+                'mei_data_opcao' => $raw['data_opcao_pelo_mei'] ?? null,
+                'mei_data_exclusao' => $raw['data_exclusao_do_mei'] ?? null,
+            ],
+            'consultas_realizadas' => ['situacao_cadastral', 'dados_cadastrais', 'endereco', 'cnaes', 'qsa', 'simples_nacional', 'mei', 'regime_tributario', 'historico_simples'],
         ];
+    }
+
+    /** Regime derivado do cadastro RFB (minhareceita): MEI > Simples Nacional > Normal. */
+    private function regimeTributario(array $raw): string
+    {
+        if ((bool) ($raw['opcao_pelo_mei'] ?? false)) {
+            return 'MEI';
+        }
+        if ((bool) ($raw['opcao_pelo_simples'] ?? false)) {
+            return 'Simples Nacional';
+        }
+
+        return 'Normal'; // Lucro Presumido/Real não é distinguível no cadastro RFB
     }
 }

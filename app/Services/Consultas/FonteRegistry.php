@@ -38,7 +38,13 @@ class FonteRegistry
             return false;
         }
 
+        $inline = (array) config('consultas.atributos_inline', []);
+
         foreach ($atributos as $atributo) {
+            // Atributos inline (ex: parecer_fiscal) são renderizados dos dados — não exigem fonte.
+            if (in_array($atributo, $inline, true)) {
+                continue;
+            }
             $fonte = $this->porAtributo[$atributo] ?? null;
             if (! $fonte || ! $fonte->pronta()) {
                 return false;

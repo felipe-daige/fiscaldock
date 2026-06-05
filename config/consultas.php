@@ -30,6 +30,11 @@ return [
         explode(',', (string) env('CONSULTAS_INFOSIMPLES_TESTE_CNPJS', ''))
     ))),
 
+    // Atributos de consultas_incluidas que NÃO são fontes — renderizados inline a partir dos
+    // dados já obtidos (ex: parecer_fiscal é um parecer gerado dos dados cadastrais). Não
+    // bloqueiam o roteamento pro Laravel nem geram chamada externa.
+    'atributos_inline' => ['parecer_fiscal'],
+
     // Grupos de código InfoSimples → status canônico (fonte: docs/infosimples/endpoints-catalog.md)
     'codigos' => [
         'sucesso' => [200, 201],

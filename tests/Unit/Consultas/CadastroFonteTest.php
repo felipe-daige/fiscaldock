@@ -19,6 +19,22 @@ it('normaliza o raw da minhareceita para o shape achatado de prod', function () 
     expect($out['qsa'][0])->toHaveKeys(['nome', 'cpf_cnpj', 'data_entrada', 'qualificacao']);
     expect($out['cnaes'][0]['principal'])->toBeTrue();
     expect($out['consultas_realizadas'])->toContain('situacao_cadastral');
+    // derivados do cadastro (plano Validação)
+    expect($out)->toHaveKey('regime_tributario')->toHaveKey('historico_simples');
+    expect($out['regime_tributario'])->toBeString();
+    expect($out['historico_simples'])->toHaveKey('optante');
+});
+
+it('deriva regime_tributario do cadastro (MEI > Simples > Normal)', function () {
+    $f = new CadastroFonte();
+    expect($f->normalizar(['opcao_pelo_mei' => true, 'opcao_pelo_simples' => true])['regime_tributario'])->toBe('MEI');
+    expect($f->normalizar(['opcao_pelo_simples' => true])['regime_tributario'])->toBe('Simples Nacional');
+    expect($f->normalizar([])['regime_tributario'])->toBe('Normal');
+});
+
+it('fornece regime_tributario e historico_simples (plano Validação)', function () {
+    $fornece = (new CadastroFonte())->fornece();
+    expect($fornece)->toContain('regime_tributario')->toContain('historico_simples');
 });
 
 it('expõe chave/provider/custo da fonte cadastro', function () {

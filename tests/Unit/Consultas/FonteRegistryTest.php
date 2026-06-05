@@ -31,6 +31,16 @@ it('não cobre fonte InfoSimples enquanto não estiver pronta (gate de cutover)'
     expect($reg->cobre(['cnd_federal']))->toBeTrue(); // ativado → migra
 });
 
+it('atributo inline (parecer_fiscal) não bloqueia o roteamento', function () {
+    config()->set('consultas.atributos_inline', ['parecer_fiscal']);
+    $reg = new FonteRegistry([new CadastroFonte()]);
+
+    // cadastro (fonte) + parecer_fiscal (inline) → coberto
+    expect($reg->cobre(['situacao_cadastral', 'parecer_fiscal']))->toBeTrue();
+    // atributo desconhecido (não-inline, sem fonte) → não cobre
+    expect($reg->cobre(['situacao_cadastral', 'cnd_federal']))->toBeFalse();
+});
+
 it('devolve fontes deduplicadas para os sub-atributos do plano', function () {
     $reg = new FonteRegistry([new CadastroFonte()]);
     // 3 atributos, todos do cadastro → 1 fonte só (deduplicada)
