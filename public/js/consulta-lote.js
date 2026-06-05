@@ -3113,6 +3113,47 @@
         }
     }
 
+    // Aplica os participante_ids resolvidos à seleção e atualiza a UI (compartilhado por
+    // grupos manuais e grupos automáticos de cliente).
+    function aplicarParticipantesResolvidos(ids, checked) {
+        (ids || []).forEach(function (id) {
+            if (checked) {
+                state.selectedIds.add(id);
+            } else {
+                state.selectedIds.delete(id);
+            }
+        });
+
+        document.querySelectorAll('.checkbox-participante').forEach(function (cb) {
+            var pid = parseInt(cb.dataset.id);
+            cb.checked = state.selectedIds.has(pid);
+            updateRowHighlight(pid, cb.checked);
+        });
+
+        updateContadorSelecionados();
+        updateResumo();
+        updateCheckboxTodos();
+    }
+
+    // Grupo manual: resolve os participantes do grupo p/ a seleção (escopo participante).
+    async function toggleParticipantesDoGrupo(grupoId, checked) {
+        try {
+            var response = await fetch(window.consultaData.routes.getParticipantesGrupo + grupoId, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': window.consultaData.csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            var data = await response.json();
+            if (!data.success) return;
+            aplicarParticipantesResolvidos(data.participante_ids || [], checked);
+        } catch (error) {
+            console.error('Erro ao selecionar participantes do grupo:', error);
+        }
+    }
+
     // Grupo automático "Participantes de <cliente>": resolve os participantes do cliente
     // e adiciona/remove da seleção (escopo participante).
     async function toggleParticipantesDoCliente(clienteId, checked) {
@@ -3130,24 +3171,7 @@
 
             var data = await response.json();
             if (!data.success) return;
-
-            (data.ids || []).forEach(function (id) {
-                if (checked) {
-                    state.selectedIds.add(id);
-                } else {
-                    state.selectedIds.delete(id);
-                }
-            });
-
-            document.querySelectorAll('.checkbox-participante').forEach(function (cb) {
-                var pid = parseInt(cb.dataset.id);
-                cb.checked = state.selectedIds.has(pid);
-                updateRowHighlight(pid, cb.checked);
-            });
-
-            updateContadorSelecionados();
-            updateResumo();
-            updateCheckboxTodos();
+            aplicarParticipantesResolvidos(data.ids || [], checked);
         } catch (error) {
             console.error('Erro ao selecionar participantes do cliente:', error);
         }
@@ -3206,6 +3230,8 @@
                         item.classList.remove('bg-gray-50');
                         state.bulkSelectionState.grupos = false;
                     }
+                    // Resolve os participantes do grupo p/ a seleção (escopo participante).
+                    toggleParticipantesDoGrupo(grupoId, checkbox.checked);
                     updateGruposSelectionSummary();
                     syncBulkActionButtons();
                 });
@@ -3232,8 +3258,14 @@
         setBulkActionLoading('grupos', true);
         elements.listaGrupos.querySelectorAll('.checkbox-grupo').forEach(function(cb) {
             cb.checked = true;
-            state.selectedGrupoIds.add(parseInt(cb.dataset.grupoId));
             cb.closest('.grupo-item')?.classList.add('bg-gray-50');
+            // Resolve os participantes de cada grupo (manual ou automático de cliente).
+            if (cb.dataset.grupoTipo === 'cliente') {
+                toggleParticipantesDoCliente(parseInt(cb.dataset.clienteId), true);
+            } else {
+                state.selectedGrupoIds.add(parseInt(cb.dataset.grupoId));
+                toggleParticipantesDoGrupo(parseInt(cb.dataset.grupoId), true);
+            }
         });
         state.bulkSelectionState.grupos = true;
         updateGruposSelectionSummary();
