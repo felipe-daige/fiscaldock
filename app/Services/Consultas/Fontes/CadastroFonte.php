@@ -51,8 +51,13 @@ class CadastroFonte implements Fonte
         return 0;
     }
 
-    public function normalizar(array $raw): array
+    public function normalizar(array $raw, string $status = 'sucesso'): array
     {
+        // Cadastro (minhareceita) é sucesso-ou-nada: sem dado em qualquer não-sucesso.
+        if ($status !== 'sucesso') {
+            return [];
+        }
+
         $qsa = array_map(fn ($s) => [
             'nome' => $s['nome_socio'] ?? null,
             'cpf_cnpj' => $s['cnpj_cpf_do_socio'] ?? null,

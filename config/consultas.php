@@ -20,8 +20,16 @@ return [
     'codigos' => [
         'sucesso' => [200, 201],
         'nao_encontrado' => [612],
-        'erro_participante' => [608, 611, 619, 620],
+        // 611 = a fonte oficial não conseguiu emitir pela internet (dados insuficientes).
+        // NÃO é irregularidade — vira INDETERMINADO, preservando a mensagem. Não estorna.
+        'indeterminado' => [611],
+        'erro_participante' => [608, 619, 620],
         'retry' => [600, 605, 609, 610, 613, 614, 615, 618],
         'fatal' => [601, 602, 603, 604, 606, 607, 617, 621, 622],
+    ],
+
+    // Custo em créditos por fonte paga (usado no estorno preciso). 1 crédito = R$ 0,20.
+    'fontes' => [
+        'cnd_federal' => (int) env('CONSULTA_CREDITOS_CND_FEDERAL', 2),
     ],
 ];

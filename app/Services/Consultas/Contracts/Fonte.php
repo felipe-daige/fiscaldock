@@ -25,8 +25,13 @@ interface Fonte
     /** Monta os params da chamada a partir do alvo (participante normalizado). */
     public function params(array $alvo): array;
 
-    /** Converte o raw do provider no shape canônico mergeado em resultado_dados. */
-    public function normalizar(array $raw): array;
+    /**
+     * Converte o raw do provider no shape canônico mergeado em resultado_dados.
+     * Recebe o $status canônico (sucesso/nao_encontrado/indeterminado/erro_participante/
+     * retry/fatal) para a fonte interpretar não-sucessos (ex: 611→INDETERMINADO).
+     * Deve retornar [] quando não há nada a persistir (ex: falha técnica).
+     */
+    public function normalizar(array $raw, string $status = 'sucesso'): array;
 
     /** Custo em créditos desta fonte (0 = grátis, ex: cadastro/minhareceita). */
     public function custoCreditos(): int;

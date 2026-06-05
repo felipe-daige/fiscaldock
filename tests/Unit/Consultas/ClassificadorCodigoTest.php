@@ -7,7 +7,8 @@ it('classifica cada grupo de código InfoSimples', function () {
     expect($c->classificar(200))->toBe('sucesso');
     expect($c->classificar(201))->toBe('sucesso');
     expect($c->classificar(612))->toBe('nao_encontrado');
-    expect($c->classificar(611))->toBe('erro_participante');
+    expect($c->classificar(611))->toBe('indeterminado'); // CND: nunca irregular
+    expect($c->classificar(608))->toBe('erro_participante');
     expect($c->classificar(620))->toBe('erro_participante');
     expect($c->classificar(613))->toBe('retry');
     expect($c->classificar(601))->toBe('fatal');

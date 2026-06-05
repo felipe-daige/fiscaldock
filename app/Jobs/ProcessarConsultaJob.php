@@ -46,7 +46,7 @@ class ProcessarConsultaJob implements ShouldQueue
             $provider = $this->resolverProvider($fonte->provider());
             $resp = $provider->consultar($fonte->slug(), $fonte->params($this->alvo));
 
-            $dados = $resp->status === 'sucesso' ? $fonte->normalizar($resp->raw) : [];
+            $dados = $fonte->normalizar($resp->raw, $resp->status);
             $persistencia->gravar($this->loteId, $this->participanteId, new ResultadoFonte(
                 $fonte->chave(), $dados, $resp->status, $fonte->custoCreditos(), $resp->mensagem,
             ));
@@ -62,7 +62,8 @@ class ProcessarConsultaJob implements ShouldQueue
     {
         return match ($nome) {
             'minhareceita' => app(MinhaReceitaProvider::class),
-            default => throw new \RuntimeException("Provider não suportado nesta fatia: {$nome}"),
+            'infosimples' => app(\App\Services\Consultas\Providers\InfoSimplesProvider::class),
+            default => throw new \RuntimeException("Provider não suportado: {$nome}"),
         };
     }
 
