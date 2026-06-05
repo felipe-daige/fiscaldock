@@ -19,6 +19,10 @@ class AppServiceProvider extends ServiceProvider
             new \App\Services\Consultas\Fontes\CndFederalFonte(),
             new \App\Services\Consultas\Fontes\CndtFonte(),
             new \App\Services\Consultas\Fontes\CrfFgtsFonte(),
+            new \App\Services\Consultas\Fontes\CndEstadualFonte(),
+            new \App\Services\Consultas\Fontes\SintegraFonte(),
+            new \App\Services\Consultas\Fontes\CguCncFonte(),
+            new \App\Services\Consultas\Fontes\CnjImprobidadeFonte(),
         ]));
     }
 

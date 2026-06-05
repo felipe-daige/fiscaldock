@@ -38,5 +38,9 @@ return [
         'cnd_federal' => (int) env('CONSULTA_CREDITOS_CND_FEDERAL', 2),
         'cndt' => (int) env('CONSULTA_CREDITOS_CNDT', 2),
         'crf_fgts' => (int) env('CONSULTA_CREDITOS_CRF_FGTS', 2),
+        'cnd_estadual' => (int) env('CONSULTA_CREDITOS_CND_ESTADUAL', 2),
+        'sintegra' => (int) env('CONSULTA_CREDITOS_SINTEGRA', 1),
+        'cgu_cnc' => (int) env('CONSULTA_CREDITOS_CGU_CNC', 2),
+        'cnj_improbidade' => (int) env('CONSULTA_CREDITOS_CNJ_IMPROBIDADE', 2),
     ],
 ];
