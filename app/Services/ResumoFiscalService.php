@@ -10,7 +10,8 @@ use Illuminate\Support\Carbon;
 class ResumoFiscalService
 {
     public function __construct(
-        protected EfdAgregadorService $efd
+        protected EfdAgregadorService $efd,
+        protected \App\Services\Efd\CruzamentoApuracaoService $cruzamento,
     ) {}
 
     private function periodoDates(string $competencia): array
@@ -277,76 +278,27 @@ class ResumoFiscalService
 
     public function getCruzamentosData(int $userId, int $clienteId, string $competencia): array
     {
-        [$inicio, $fim] = $this->periodoDates($competencia);
+        // ICMS/PIS/COFINS declarado×notas vêm do service ÚNICO (mesma fonte do BI).
+        $cruz = $this->cruzamento->paraCompetencia($userId, $clienteId, $competencia);
 
-        $di = $inicio->toDateString();
-        $df = $fim->toDateString();
+        // divergência absoluta (R$) é usada como 'valor' nos alertas — derivar aqui.
+        $icms = $cruz['icms'];
+        $icms['divergencia_debito'] = $icms['tem_dados'] ? abs($icms['declarado_debito'] - $icms['notas_debito']) : null;
+        $icms['divergencia_credito'] = $icms['tem_dados'] ? abs($icms['declarado_credito'] - $icms['notas_credito']) : null;
 
-        // 5a. ICMS declarado (E110) vs notas. Lado "notas" vem do C190 (consolidado
-        // fiscal), NÃO dos itens — no perfil B o ICMS do item é ~0 (P2), o que dava
-        // notas=0 e falsa divergência de 100%. C190 saída bate 1:1 com E110. Ver F2.
-        $icms = $this->getApuracaoIcms($userId, $clienteId, $competencia);
-        $icmsNotas = $this->efd->tributarioCreditoDebito($userId, $di, $df, $clienteId)['icms'];
-
-        $icmsDecDebito = $icms ? (float) $icms->icms_tot_debitos : null;
-        $icmsDecCredito = $icms ? (float) $icms->icms_tot_creditos : null;
-        $icmsNotasDebito = $icmsNotas['debito'];
-        $icmsNotasCredito = $icmsNotas['credito'];
-
-        // 5b. PIS/COFINS declarado vs notas. Compara GROSS×GROSS: lado "notas" é o
-        // débito sobre saídas (itens da origem contribuicoes), e lado "declarado" é
-        // o devido bruto da apuração (M200/M600 = nao_cumulativo + cumulativo), NÃO
-        // o "a recolher" (que é líquido de retenção → divergência falsa). Antes
-        // somava itens de todas as origens (entrada+saída) → inflado. Ver F2.
+        // Retenções vs deduzido na apuração (específico do fechamento; F600 × M).
         $contrib = $this->getApuracaoContrib($userId, $clienteId, $competencia);
-        $pcNotas = $this->efd->tributarioCreditoDebito($userId, $di, $df, $clienteId);
-
-        $pisDeclarado = $contrib ? (float) $contrib->pis_nao_cumulativo + (float) $contrib->pis_cumulativo : null;
-        $cofinsDeclarado = $contrib ? (float) $contrib->cofins_nao_cumulativo + (float) $contrib->cofins_cumulativo : null;
-        $pisNotas = $pcNotas['pis']['debito'];
-        $cofinsNotas = $pcNotas['cofins']['debito'];
-
-        // 5c. Retenções vs deduzido na apuração
-        $retencoesTotal = 0;
         $retData = $this->getRetencoesData($userId, $clienteId, $competencia);
-        if ($retData['tem_dados']) {
-            $retencoesTotal = $retData['kpis']['total_retido'];
-        }
-
-        $deduzidoPis = $contrib
+        $retencoesTotal = $retData['tem_dados'] ? $retData['kpis']['total_retido'] : 0;
+        $totalDeduzido = $contrib
             ? (float) $contrib->pis_retencao_nc + (float) $contrib->pis_retencao_cum
+              + (float) $contrib->cofins_retencao_nc + (float) $contrib->cofins_retencao_cum
             : 0;
-        $deduzidoCofins = $contrib
-            ? (float) $contrib->cofins_retencao_nc + (float) $contrib->cofins_retencao_cum
-            : 0;
-        $totalDeduzido = $deduzidoPis + $deduzidoCofins;
         $naoCompensado = $retencoesTotal - $totalDeduzido;
 
         return [
-            'icms' => [
-                'tem_dados' => $icms !== null,
-                'declarado_debito' => $icmsDecDebito,
-                'notas_debito' => $icmsNotasDebito,
-                'divergencia_debito' => $icmsDecDebito !== null ? abs($icmsDecDebito - $icmsNotasDebito) : null,
-                'divergencia_debito_pct' => $this->calcularDivergencia($icmsDecDebito, $icmsNotasDebito),
-                'status_debito' => $this->statusSemaforo($this->calcularDivergencia($icmsDecDebito, $icmsNotasDebito)),
-                'declarado_credito' => $icmsDecCredito,
-                'notas_credito' => $icmsNotasCredito,
-                'divergencia_credito' => $icmsDecCredito !== null ? abs($icmsDecCredito - $icmsNotasCredito) : null,
-                'divergencia_credito_pct' => $this->calcularDivergencia($icmsDecCredito, $icmsNotasCredito),
-                'status_credito' => $this->statusSemaforo($this->calcularDivergencia($icmsDecCredito, $icmsNotasCredito)),
-            ],
-            'pis_cofins' => [
-                'tem_dados' => $contrib !== null,
-                'pis_declarado' => $pisDeclarado,
-                'pis_notas' => $pisNotas,
-                'pis_divergencia_pct' => $this->calcularDivergencia($pisDeclarado, $pisNotas),
-                'pis_status' => $this->statusSemaforo($this->calcularDivergencia($pisDeclarado, $pisNotas)),
-                'cofins_declarado' => $cofinsDeclarado,
-                'cofins_notas' => $cofinsNotas,
-                'cofins_divergencia_pct' => $this->calcularDivergencia($cofinsDeclarado, $cofinsNotas),
-                'cofins_status' => $this->statusSemaforo($this->calcularDivergencia($cofinsDeclarado, $cofinsNotas)),
-            ],
+            'icms' => $icms,
+            'pis_cofins' => $cruz['pis_cofins'],
             'retencoes' => [
                 'tem_dados' => $retencoesTotal > 0 || $totalDeduzido > 0,
                 'total_retido' => $retencoesTotal,
@@ -481,39 +433,5 @@ class ResumoFiscalService
             'valor' => $diff,
             'percentual' => round(($diff / abs($anterior)) * 100, 1),
         ];
-    }
-
-    private function calcularDivergencia(?float $declarado, float $notas): ?float
-    {
-        if ($declarado === null) {
-            return null;
-        }
-
-        if ($declarado == 0 && $notas == 0) {
-            return 0;
-        }
-
-        if ($declarado == 0) {
-            return 100;
-        }
-
-        return round(abs($declarado - $notas) / abs($declarado) * 100, 2);
-    }
-
-    private function statusSemaforo(?float $divergenciaPct): string
-    {
-        if ($divergenciaPct === null) {
-            return 'sem_dados';
-        }
-
-        if ($divergenciaPct <= 1) {
-            return 'verde';
-        }
-
-        if ($divergenciaPct <= 5) {
-            return 'amarelo';
-        }
-
-        return 'vermelho';
     }
 }
