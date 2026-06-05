@@ -677,8 +677,12 @@
                                     <span class="text-gray-500">Participantes</span>
                                     <span id="resumo-participantes" class="text-gray-900 font-medium">0</span>
                                 </div>
+                                <div class="flex justify-between items-center hidden" id="resumo-empresa-propria-row">
+                                    <span class="text-gray-500">Empresa própria</span>
+                                    <span id="resumo-empresa-propria" class="text-gray-900 font-medium">0</span>
+                                </div>
                                 <div class="flex justify-between items-center hidden" id="resumo-clientes-row">
-                                    <span class="text-gray-500">Clientes (CNPJ próprio)</span>
+                                    <span class="text-gray-500">Clientes</span>
                                     <span id="resumo-clientes" class="text-gray-900 font-medium">0</span>
                                 </div>
                                 <div class="flex justify-between items-center">

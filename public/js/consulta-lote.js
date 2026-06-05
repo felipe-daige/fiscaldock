@@ -44,6 +44,9 @@
     const state = {
         selectedIds: new Set(),
         selectedClienteIds: new Set(),
+        // Subconjunto de selectedClienteIds que são a "empresa própria" do usuário,
+        // para separar a contagem no resumo.
+        selectedClientePropriaIds: new Set(),
         selectedGrupoIds: new Set(),
         currentPage: 1,
         perPage: 50,
@@ -196,6 +199,8 @@
             resumoParticipantes: document.getElementById('resumo-participantes'),
             resumoClientes: document.getElementById('resumo-clientes'),
             resumoClientesRow: document.getElementById('resumo-clientes-row'),
+            resumoEmpresaPropria: document.getElementById('resumo-empresa-propria'),
+            resumoEmpresaPropriaRow: document.getElementById('resumo-empresa-propria-row'),
             resumoCustoUnitario: document.getElementById('resumo-custo-unitario'),
             resumoCustoTotal: document.getElementById('resumo-custo-total'),
             resumoSaldo: document.getElementById('resumo-saldo'),
@@ -726,6 +731,7 @@
     function limparSelecao() {
         state.selectedIds.clear();
         state.selectedClienteIds.clear();
+        state.selectedClientePropriaIds.clear();
         state.selectedGrupoIds.clear();
         state.bulkSelectionState.participantes = false;
         state.bulkSelectionState.clientes = false;
@@ -899,11 +905,12 @@
      * Atualiza resumo de custos.
      */
     function updateResumo() {
-        // Contagens separadas: participantes (contrapartes) e clientes (CNPJ próprio).
+        // Contagens separadas: participantes (contrapartes), empresa própria e clientes.
         const numParticipantes = state.selectedIds.size;
-        const numClientes = state.selectedClienteIds.size;
+        const numEmpresaPropria = state.selectedClientePropriaIds.size;
+        const numClientes = state.selectedClienteIds.size - numEmpresaPropria;
         // Total de alvos (cada um é uma consulta) define o custo.
-        const totalParticipantes = numParticipantes + numClientes;
+        const totalParticipantes = numParticipantes + numEmpresaPropria + numClientes;
         const planoSelecionado = document.querySelector('input[name="plano_id"]:checked');
         const custoUnitario = planoSelecionado ? parseInt(planoSelecionado.dataset.custo) : 0;
         const isGratuito = planoSelecionado && planoSelecionado.dataset.gratuito === '1';
@@ -911,6 +918,8 @@
         const creditosSuficientes = isGratuito || state.credits >= custoTotal;
 
         if (elements.resumoParticipantes) elements.resumoParticipantes.textContent = numParticipantes;
+        if (elements.resumoEmpresaPropria) elements.resumoEmpresaPropria.textContent = numEmpresaPropria;
+        if (elements.resumoEmpresaPropriaRow) elements.resumoEmpresaPropriaRow.classList.toggle('hidden', numEmpresaPropria === 0);
         if (elements.resumoClientes) elements.resumoClientes.textContent = numClientes;
         if (elements.resumoClientesRow) elements.resumoClientesRow.classList.toggle('hidden', numClientes === 0);
 
@@ -2808,11 +2817,13 @@
      */
     // Aba Clientes = escopo cliente: consulta o CNPJ do PRÓPRIO cliente (não os participantes
     // dele). Selecionar contrapartes é feito na aba Participantes (filtro por cliente).
-    function toggleClienteSelection(clienteId, checked) {
+    function toggleClienteSelection(clienteId, checked, ehPropria) {
         if (checked) {
             state.selectedClienteIds.add(clienteId);
+            if (ehPropria) state.selectedClientePropriaIds.add(clienteId);
         } else {
             state.selectedClienteIds.delete(clienteId);
+            state.selectedClientePropriaIds.delete(clienteId);
             state.bulkSelectionState.clientes = false;
         }
         updateContadorSelecionados();
@@ -2845,11 +2856,17 @@
         });
 
         // Escopo cliente: registra/remove os CNPJs dos próprios clientes (sem participantes).
+        var propriaPorId = {};
+        document.querySelectorAll('.checkbox-cliente').forEach(function (cb) {
+            propriaPorId[parseInt(cb.dataset.clienteId)] = cb.dataset.empresaPropria === '1';
+        });
         clienteIds.forEach(function (cid) {
             if (isChecked) {
                 state.selectedClienteIds.add(cid);
+                if (propriaPorId[cid]) state.selectedClientePropriaIds.add(cid);
             } else {
                 state.selectedClienteIds.delete(cid);
+                state.selectedClientePropriaIds.delete(cid);
             }
         });
 
@@ -2911,6 +2928,7 @@
 
         // Escopo cliente — só limpa os clientes, sem mexer em participantes.
         state.selectedClienteIds.clear();
+        state.selectedClientePropriaIds.clear();
         state.bulkSelectionState.clientes = false;
         document.querySelectorAll('.checkbox-cliente').forEach(function (cb) { cb.checked = false; });
         updateContadorSelecionados();
@@ -3030,13 +3048,13 @@
 
             tr.innerHTML =
                 '<td class="hidden md:table-cell md:w-10 md:px-4 md:py-3">'
-                + '<input type="checkbox" class="checkbox-cliente w-4 h-4 text-gray-600 rounded border-gray-300" data-cliente-id="' + c.id + '"' + (isClienteSelected ? ' checked' : '') + '>'
+                + '<input type="checkbox" class="checkbox-cliente w-4 h-4 text-gray-600 rounded border-gray-300" data-cliente-id="' + c.id + '" data-empresa-propria="' + (c.is_empresa_propria ? '1' : '0') + '"' + (isClienteSelected ? ' checked' : '') + '>'
                 + '</td>'
                 + '<td class="block overflow-hidden md:table-cell md:px-3 md:py-3 md:max-w-0">'
                 + '<div class="flex items-start justify-between gap-3 min-w-0 max-w-full overflow-hidden">'
                 + '<div class="min-w-0 max-w-full overflow-hidden flex-1">'
                 + '<div class="flex items-center gap-2 min-w-0 max-w-full">'
-                + '<input type="checkbox" class="checkbox-cliente w-4 h-4 text-gray-600 rounded border-gray-300 md:hidden flex-shrink-0" data-cliente-id="' + c.id + '"' + (isClienteSelected ? ' checked' : '') + '>'
+                + '<input type="checkbox" class="checkbox-cliente w-4 h-4 text-gray-600 rounded border-gray-300 md:hidden flex-shrink-0" data-cliente-id="' + c.id + '" data-empresa-propria="' + (c.is_empresa_propria ? '1' : '0') + '"' + (isClienteSelected ? ' checked' : '') + '>'
                 + propriaDot
                 + '<a href="/app/cliente/' + c.id + '" class="block max-w-full truncate text-sm font-semibold text-gray-900 hover:text-gray-600 hover:underline" title="' + nomeTitle.replace(/"/g, '&quot;') + '" onclick="event.stopPropagation()">' + (c.razao_social || '-') + '</a>'
                 + alertaIconHtml
@@ -3069,7 +3087,7 @@
                 });
                 cb.addEventListener('change', function() {
                     clienteCheckboxes.forEach(function(other) { other.checked = cb.checked; });
-                    toggleClienteSelection(c.id, cb.checked);
+                    toggleClienteSelection(c.id, cb.checked, !!c.is_empresa_propria);
                 });
             });
 
@@ -3584,6 +3602,7 @@
         // Reset state for SPA re-navigation
         state.selectedIds = new Set();
         state.selectedClienteIds = new Set();
+        state.selectedClientePropriaIds = new Set();
         state.selectedGrupoIds = new Set();
         state.currentPage = 1;
         state.totalPages = 1;
