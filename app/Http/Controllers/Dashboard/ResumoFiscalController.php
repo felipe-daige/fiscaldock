@@ -29,11 +29,10 @@ class ResumoFiscalController extends Controller
 
         $defaultCliente = $clientes->firstWhere('is_empresa_propria', true) ?? $clientes->first();
 
-        // Competências disponíveis (meses com dados EFD)
-        $competencias = EfdNota::where('user_id', $userId)
-            ->selectRaw("DISTINCT TO_CHAR(data_emissao, 'YYYY-MM') as competencia")
-            ->orderByRaw('competencia DESC')
-            ->pluck('competencia');
+        // Competências disponíveis (meses com dados EFD) do cliente selecionado
+        $competencias = $defaultCliente
+            ? $this->competenciasDoCliente($userId, $defaultCliente->id)
+            : collect();
 
         $defaultCompetencia = $competencias->first() ?? now()->subMonth()->format('Y-m');
 
@@ -42,6 +41,7 @@ class ResumoFiscalController extends Controller
             'competencias' => $competencias,
             'defaultClienteId' => $defaultCliente?->id,
             'defaultCompetencia' => $defaultCompetencia,
+            'temDados' => $competencias->isNotEmpty(),
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -49,6 +49,30 @@ class ResumoFiscalController extends Controller
         }
 
         return view(self::LAYOUT, ['initialView' => self::VIEW, ...$data]);
+    }
+
+    public function competencias(Request $request)
+    {
+        $userId = Auth::id();
+        $clienteId = (int) $request->query('cliente_id');
+
+        if (! $clienteId) {
+            abort(422, 'Parâmetro obrigatório: cliente_id');
+        }
+
+        $cliente = Cliente::where('user_id', $userId)->where('id', $clienteId)->first();
+        if (! $cliente) {
+            abort(404, 'Cliente não encontrado');
+        }
+
+        $competencias = $this->competenciasDoCliente($userId, $clienteId)
+            ->map(fn ($comp) => [
+                'value' => $comp,
+                'label' => \Carbon\Carbon::parse($comp.'-01')->translatedFormat('M/Y'),
+            ])
+            ->values();
+
+        return response()->json(['competencias' => $competencias]);
     }
 
     public function resumoExecutivo(Request $request)
@@ -153,6 +177,20 @@ class ResumoFiscalController extends Controller
         }
 
         return [$userId, $clienteId, $competencia];
+    }
+
+    /**
+     * Competências (YYYY-MM) com notas EFD para um cliente, mais recentes primeiro.
+     *
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    private function competenciasDoCliente(int $userId, int $clienteId)
+    {
+        return EfdNota::where('user_id', $userId)
+            ->where('cliente_id', $clienteId)
+            ->selectRaw("DISTINCT TO_CHAR(data_emissao, 'YYYY-MM') as competencia")
+            ->orderByRaw('competencia DESC')
+            ->pluck('competencia');
     }
 
     private function isAjaxRequest(Request $request): bool

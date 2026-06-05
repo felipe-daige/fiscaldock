@@ -62,11 +62,13 @@
             <div class="w-full sm:w-44">
                 <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Competência</label>
                 <select id="rf-competencia" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
-                    @foreach($competencias as $comp)
+                    @forelse($competencias as $comp)
                         <option value="{{ $comp }}" {{ $comp == ($defaultCompetencia ?? '') ? 'selected' : '' }}>
                             {{ \Carbon\Carbon::parse($comp . '-01')->translatedFormat('M/Y') }}
                         </option>
-                    @endforeach
+                    @empty
+                        <option value="">Sem dados</option>
+                    @endforelse
                 </select>
             </div>
             <button id="rf-btn-filtrar" class="w-full sm:w-auto px-4 py-2.5 bg-gray-800 text-white rounded text-[13px] font-medium hover:bg-gray-700 transition-colors">
@@ -75,6 +77,32 @@
         </div>
     </div>
 
+    {{-- Estado: cliente sem nenhuma importacao analisavel --}}
+    <div id="rf-sem-importacao" class="{{ ($temDados ?? true) ? 'hidden' : '' }}">
+        <div class="bg-white rounded border border-gray-300 overflow-hidden">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Fechamento Fiscal</span>
+            </div>
+            <div class="px-6 py-16 text-center">
+                <svg class="mx-auto w-16 h-16 text-gray-300 mb-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.25" d="M12 16v-8m0 0l-3 3m3-3l3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/>
+                </svg>
+                <h3 class="text-base font-semibold text-gray-800 mb-2">Nenhum dado para esta empresa ainda</h3>
+                <p class="text-sm text-gray-500 max-w-md mx-auto mb-6">
+                    O Fechamento Fiscal é montado a partir dos arquivos EFD (SPED Fiscal e Contribuições).
+                    Importe um arquivo desta empresa para liberar apuração, guias a recolher, cruzamento
+                    declarado&nbsp;×&nbsp;notas e alertas.
+                </p>
+                <a href="/app/importacao/efd"
+                   class="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-800 text-white rounded text-[13px] font-medium hover:bg-gray-700 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>
+                    Importar EFD
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div id="rf-conteudo" class="{{ ($temDados ?? true) ? '' : 'hidden' }}">
     {{-- Navegacao sticky --}}
     <nav class="rf-nav sticky top-0 z-20 bg-gray-100/95 backdrop-blur-sm py-2 mb-4 flex items-center gap-1 overflow-x-auto border-b border-gray-300" id="rf-nav">
         <a href="#secao-resumo" class="rf-nav-link active whitespace-nowrap px-3 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors">Visão do Mês</a>
@@ -141,6 +169,7 @@
         </div>
     </section>
     @endforeach
+    </div>{{-- /#rf-conteudo --}}
 
 </div>
 </div>
@@ -802,9 +831,75 @@
         window.print();
     });
 
+    // ── Competências dependem do cliente selecionado ──
+
+    function recarregarCompetencias() {
+        var clienteSel = document.getElementById('rf-cliente');
+        var compSel = document.getElementById('rf-competencia');
+        if (!clienteSel || !compSel) return;
+
+        var clienteId = clienteSel.value;
+        if (!clienteId) return;
+
+        var anterior = compSel.value;
+        compSel.disabled = true;
+
+        fetch('/app/resumo-fiscal/competencias?cliente_id=' + encodeURIComponent(clienteId), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(function(r) { return r.ok ? r.json() : { competencias: [] }; })
+            .then(function(data) {
+                var comps = (data && data.competencias) || [];
+                compSel.innerHTML = '';
+
+                if (comps.length === 0) {
+                    var opt = document.createElement('option');
+                    opt.value = '';
+                    opt.textContent = 'Sem dados';
+                    compSel.appendChild(opt);
+                } else {
+                    comps.forEach(function(c) {
+                        var opt = document.createElement('option');
+                        opt.value = c.value;
+                        opt.textContent = c.label;
+                        compSel.appendChild(opt);
+                    });
+                    // Preserva a competência anterior se ainda existir; senão usa a mais recente
+                    var manter = comps.some(function(c) { return c.value === anterior; });
+                    compSel.value = manter ? anterior : comps[0].value;
+                }
+
+                compSel.disabled = false;
+                aplicarEstadoSemImportacao(comps.length === 0);
+
+                // Cliente com dados: recarrega o fechamento da competência selecionada.
+                if (comps.length > 0) {
+                    carregarFechamento();
+                }
+                atualizarAcoes();
+            })
+            .catch(function() {
+                compSel.disabled = false;
+            });
+    }
+
+    // Mostra a tela padrão de "precisa importar" e esconde o conteúdo (ou vice-versa).
+    function aplicarEstadoSemImportacao(semImportacao) {
+        var semImp = document.getElementById('rf-sem-importacao');
+        var conteudo = document.getElementById('rf-conteudo');
+        var acoes = document.querySelector('.rf-actions');
+        if (semImp) semImp.classList.toggle('hidden', !semImportacao);
+        if (conteudo) conteudo.classList.toggle('hidden', semImportacao);
+        if (acoes) acoes.classList.toggle('hidden', semImportacao);
+        var btnFiltrar = document.getElementById('rf-btn-filtrar');
+        if (btnFiltrar) btnFiltrar.disabled = semImportacao;
+    }
+
+    document.getElementById('rf-cliente')?.addEventListener('change', recarregarCompetencias);
+
     // ── Filter button ──
 
-    document.getElementById('rf-btn-filtrar')?.addEventListener('click', function() {
+    function carregarFechamento() {
         loadedSections = {};
         document.getElementById('rf-empty-state')?.classList.add('hidden');
         document.getElementById('rf-alertas-badge')?.classList.add('hidden');
@@ -819,7 +914,9 @@
         });
 
         loadSection('resumo', sectionMap.resumo.url, sectionMap.resumo.render);
-    });
+    }
+
+    document.getElementById('rf-btn-filtrar')?.addEventListener('click', carregarFechamento);
 
     // ── Cleanup for SPA ──
 
@@ -834,7 +931,12 @@
     // ── Initial load ──
 
     atualizarAcoes();
-    loadSection('resumo', sectionMap.resumo.url, sectionMap.resumo.render);
+    var compInicial = document.getElementById('rf-competencia');
+    var temDadosInicial = compInicial && compInicial.value !== '';
+    aplicarEstadoSemImportacao(!temDadosInicial);
+    if (temDadosInicial) {
+        loadSection('resumo', sectionMap.resumo.url, sectionMap.resumo.render);
+    }
 
 })();
 </script>
