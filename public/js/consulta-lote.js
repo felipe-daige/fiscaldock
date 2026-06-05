@@ -44,9 +44,6 @@
     const state = {
         selectedIds: new Set(),
         selectedClienteIds: new Set(),
-        // Modo da aba Clientes: 'contrapartes' (seleciona os participantes do cliente,
-        // comportamento padrão) ou 'proprio' (consulta o CNPJ do próprio cliente — escopo cliente).
-        modoCliente: 'contrapartes',
         selectedGrupoIds: new Set(),
         currentPage: 1,
         perPage: 50,
@@ -260,18 +257,6 @@
                 var tab = e.target.closest('.search-tab');
                 if (tab && tab.dataset.tab) {
                     switchTab(tab.dataset.tab);
-                }
-            });
-        }
-
-        // Modo da aba Clientes: contrapartes (padrão) vs CNPJ próprio (escopo cliente)
-        var modoClienteTabs = document.getElementById('modo-cliente-tabs');
-        if (modoClienteTabs && !modoClienteTabs._delegated) {
-            modoClienteTabs._delegated = true;
-            modoClienteTabs.addEventListener('click', function (e) {
-                var btn = e.target.closest('.modo-cliente-tab');
-                if (btn && btn.dataset.modoCliente) {
-                    setModoCliente(btn.dataset.modoCliente);
                 }
             });
         }
@@ -912,9 +897,8 @@
      * Atualiza resumo de custos.
      */
     function updateResumo() {
-        // Alvos = participantes selecionados + (escopo cliente, quando no modo 'proprio').
-        const totalClientes = state.modoCliente === 'proprio' ? state.selectedClienteIds.size : 0;
-        const totalParticipantes = state.selectedIds.size + totalClientes;
+        // Alvos = participantes selecionados + CNPJs de clientes (escopo cliente, aba Clientes).
+        const totalParticipantes = state.selectedIds.size + state.selectedClienteIds.size;
         const planoSelecionado = document.querySelector('input[name="plano_id"]:checked');
         const custoUnitario = planoSelecionado ? parseInt(planoSelecionado.dataset.custo) : 0;
         const isGratuito = planoSelecionado && planoSelecionado.dataset.gratuito === '1';
@@ -961,7 +945,7 @@
         if (state.isExecuting) return;
 
         const participanteIds = Array.from(state.selectedIds);
-        const clienteIds = state.modoCliente === 'proprio' ? Array.from(state.selectedClienteIds) : [];
+        const clienteIds = Array.from(state.selectedClienteIds);
         const planoId = document.querySelector('input[name="plano_id"]:checked')?.value;
         const clienteId = state.filters.cliente_id || null;
         clearInlineError();
@@ -2815,28 +2799,15 @@
     /**
      * Alterna selecao de um cliente (adiciona/remove todos seus participantes).
      */
-    function setModoCliente(modo) {
-        if ((modo !== 'contrapartes' && modo !== 'proprio') || state.modoCliente === modo) return;
-        state.modoCliente = modo;
-
-        document.querySelectorAll('.modo-cliente-tab').forEach(function (b) {
-            var ativo = b.dataset.modoCliente === modo;
-            b.classList.toggle('bg-gray-800', ativo);
-            b.classList.toggle('text-white', ativo);
-            b.classList.toggle('text-gray-600', !ativo);
-        });
-        var hint = document.getElementById('modo-cliente-hint');
-        if (hint) {
-            hint.textContent = modo === 'proprio'
-                ? 'Consulta a regularidade do CNPJ da própria empresa (cliente) selecionada.'
-                : 'Seleciona os participantes (contrapartes) que aparecem nas notas desse cliente.';
+    // Aba Clientes = escopo cliente: consulta o CNPJ do PRÓPRIO cliente (não os participantes
+    // dele). Selecionar contrapartes é feito na aba Participantes (filtro por cliente).
+    function toggleClienteSelection(clienteId, checked) {
+        if (checked) {
+            state.selectedClienteIds.add(clienteId);
+        } else {
+            state.selectedClienteIds.delete(clienteId);
+            state.bulkSelectionState.clientes = false;
         }
-
-        // Trocar de modo zera a seleção da aba Clientes (o significado da seleção muda).
-        state.selectedClienteIds.clear();
-        state.bulkSelectionState.clientes = false;
-        document.querySelectorAll('.checkbox-cliente').forEach(function (cb) { cb.checked = false; });
-
         updateContadorSelecionados();
         updateResumo();
         updateCheckboxTodosClientes();
@@ -2844,76 +2815,10 @@
         syncBulkActionButtons();
     }
 
-    async function toggleClienteSelection(clienteId, checked) {
-        if (state.bulkSelectionLoading.clientes) return;
-
-        // Modo 'proprio': consulta o CNPJ do próprio cliente (escopo cliente). Não resolve
-        // participantes nem chama o backend — só registra o cliente como alvo.
-        if (state.modoCliente === 'proprio') {
-            if (checked) {
-                state.selectedClienteIds.add(clienteId);
-            } else {
-                state.selectedClienteIds.delete(clienteId);
-                state.bulkSelectionState.clientes = false;
-            }
-            updateContadorSelecionados();
-            updateResumo();
-            updateCheckboxTodosClientes();
-            updateClientesSelectionSummary();
-            syncBulkActionButtons();
-            return;
-        }
-
-        try {
-            var response = await fetch(window.consultaData.routes.participantesPorClientes, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': window.consultaData.csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({ cliente_ids: [clienteId] })
-            });
-
-            var data = await response.json();
-            if (!data.success) return;
-
-            var ids = data.ids || [];
-
-            if (checked) {
-                state.selectedClienteIds.add(clienteId);
-                ids.forEach(function(id) { state.selectedIds.add(id); });
-            } else {
-                state.selectedClienteIds.delete(clienteId);
-                ids.forEach(function(id) { state.selectedIds.delete(id); });
-                state.bulkSelectionState.clientes = false;
-            }
-
-            // Atualizar checkboxes visiveis na aba participantes
-            document.querySelectorAll('.checkbox-participante').forEach(function(cb) {
-                var pid = parseInt(cb.dataset.id);
-                cb.checked = state.selectedIds.has(pid);
-                updateRowHighlight(pid, cb.checked);
-            });
-
-            updateContadorSelecionados();
-            updateResumo();
-            updateCheckboxTodos();
-            updateCheckboxTodosClientes();
-            updateClientesSelectionSummary();
-            syncBulkActionButtons();
-        } catch (error) {
-            console.error('Erro ao selecionar cliente:', error);
-        }
-    }
-
     /**
      * Alterna selecao de todos os clientes visiveis.
      */
-    async function toggleTodosClientes(forceChecked) {
-        if (state.bulkSelectionLoading.clientes) return;
-
+    function toggleTodosClientes(forceChecked) {
         var isChecked = typeof forceChecked === 'boolean'
             ? forceChecked
             : (elements.checkboxTodosClientes ? elements.checkboxTodosClientes.checked : false);
@@ -2927,81 +2832,25 @@
 
         if (clienteIds.length === 0) return;
 
-        // Reflect the intended selection immediately; participant IDs sync after the request.
         state.bulkSelectionState.clientes = isChecked;
         document.querySelectorAll('.checkbox-cliente').forEach(function(cb) {
             cb.checked = isChecked;
         });
+
+        // Escopo cliente: registra/remove os CNPJs dos próprios clientes (sem participantes).
+        clienteIds.forEach(function (cid) {
+            if (isChecked) {
+                state.selectedClienteIds.add(cid);
+            } else {
+                state.selectedClienteIds.delete(cid);
+            }
+        });
+
+        updateContadorSelecionados();
+        updateResumo();
         updateCheckboxTodosClientes();
         updateClientesSelectionSummary();
         syncBulkActionButtons();
-
-        // Modo 'proprio': escopo cliente — sem resolver participantes nem backend.
-        if (state.modoCliente === 'proprio') {
-            clienteIds.forEach(function (cid) {
-                if (isChecked) {
-                    state.selectedClienteIds.add(cid);
-                } else {
-                    state.selectedClienteIds.delete(cid);
-                }
-            });
-            updateContadorSelecionados();
-            updateResumo();
-            return;
-        }
-
-        try {
-            setBulkActionLoading('clientes', true);
-            var response = await fetch(window.consultaData.routes.participantesPorClientes, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': window.consultaData.csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({ cliente_ids: clienteIds })
-            });
-
-            var data = await response.json();
-            if (!data.success) return;
-
-            var ids = data.ids || [];
-
-            if (isChecked) {
-                clienteIds.forEach(function(cid) { state.selectedClienteIds.add(cid); });
-                ids.forEach(function(id) { state.selectedIds.add(id); });
-            } else {
-                clienteIds.forEach(function(cid) { state.selectedClienteIds.delete(cid); });
-                ids.forEach(function(id) { state.selectedIds.delete(id); });
-            }
-            state.bulkSelectionState.clientes = isChecked;
-
-            // Atualizar checkboxes de participantes visiveis
-            document.querySelectorAll('.checkbox-participante').forEach(function(cb) {
-                var pid = parseInt(cb.dataset.id);
-                cb.checked = state.selectedIds.has(pid);
-                updateRowHighlight(pid, cb.checked);
-            });
-
-            updateContadorSelecionados();
-            updateResumo();
-            updateCheckboxTodos();
-            updateCheckboxTodosClientes();
-            updateClientesSelectionSummary();
-            syncBulkActionButtons();
-        } catch (error) {
-            state.bulkSelectionState.clientes = false;
-            document.querySelectorAll('.checkbox-cliente').forEach(function(cb) {
-                cb.checked = false;
-            });
-            updateCheckboxTodosClientes();
-            updateClientesSelectionSummary();
-            syncBulkActionButtons();
-            console.error('Erro ao selecionar todos clientes:', error);
-        } finally {
-            setBulkActionLoading('clientes', false);
-        }
     }
 
     /**
@@ -3053,57 +2902,15 @@
             return;
         }
 
-        // Modo 'proprio': escopo cliente — só limpa os clientes, sem mexer em participantes.
-        if (state.modoCliente === 'proprio') {
-            state.selectedClienteIds.clear();
-            state.bulkSelectionState.clientes = false;
-            document.querySelectorAll('.checkbox-cliente').forEach(function (cb) { cb.checked = false; });
-            updateContadorSelecionados();
-            updateResumo();
-            updateClientesSelectionSummary();
-            updateCheckboxTodosClientes();
-            syncBulkActionButtons();
-            return;
-        }
-
-        try {
-            var clienteIds = Array.from(state.selectedClienteIds);
-            var response = await fetch(window.consultaData.routes.participantesPorClientes, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': window.consultaData.csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({ cliente_ids: clienteIds })
-            });
-
-            var data = await response.json();
-            if (!data.success) return;
-
-            (data.ids || []).forEach(function(id) { state.selectedIds.delete(id); });
-            state.selectedClienteIds.clear();
-            state.bulkSelectionState.clientes = false;
-
-            document.querySelectorAll('.checkbox-cliente').forEach(function(cb) {
-                cb.checked = false;
-            });
-            document.querySelectorAll('.checkbox-participante').forEach(function(cb) {
-                var pid = parseInt(cb.dataset.id);
-                cb.checked = state.selectedIds.has(pid);
-                updateRowHighlight(pid, cb.checked);
-            });
-
-            updateContadorSelecionados();
-            updateResumo();
-            updateCheckboxTodos();
-            updateCheckboxTodosClientes();
-            updateClientesSelectionSummary();
-            syncBulkActionButtons();
-        } catch (error) {
-            console.error('Erro ao limpar selecao de clientes:', error);
-        }
+        // Escopo cliente — só limpa os clientes, sem mexer em participantes.
+        state.selectedClienteIds.clear();
+        state.bulkSelectionState.clientes = false;
+        document.querySelectorAll('.checkbox-cliente').forEach(function (cb) { cb.checked = false; });
+        updateContadorSelecionados();
+        updateResumo();
+        updateClientesSelectionSummary();
+        updateCheckboxTodosClientes();
+        syncBulkActionButtons();
     }
 
     // ==========================================
