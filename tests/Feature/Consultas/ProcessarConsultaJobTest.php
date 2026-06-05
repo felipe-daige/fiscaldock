@@ -19,7 +19,8 @@ it('consulta cadastro, persiste e posta progresso', function () {
 
     ProcessarConsultaJob::dispatchSync(
         loteId: $loteId,
-        participanteId: $participanteId,
+        alvoTipo: 'participante',
+        alvoId: $participanteId,
         userId: $userId,
         tabId: 'tab-test',
         consultasIncluidas: ['situacao_cadastral', 'dados_cadastrais', 'endereco'],
@@ -36,7 +37,7 @@ it('consulta cadastro, persiste e posta progresso', function () {
     expect($cache)->not->toBeNull();
     expect($cache['total_etapas'])->toBe(2);
     // cadastro é grátis → nada a estornar
-    expect((int) Cache::get("consulta_estorno:{$loteId}:{$participanteId}"))->toBe(0);
+    expect((int) Cache::get("consulta_estorno:{$loteId}:participante:{$participanteId}"))->toBe(0);
 });
 
 it('acumula estorno no cache quando uma fonte paga falha (fatal)', function () {
@@ -45,12 +46,32 @@ it('acumula estorno no cache quando uma fonte paga falha (fatal)', function () {
     Http::fake(['api.infosimples.com/*' => Http::response(['code' => 601, 'code_message' => 'token inválido'], 200)]);
 
     ProcessarConsultaJob::dispatchSync(
-        loteId: $loteId, participanteId: $participanteId, userId: $userId, tabId: 'tab-test',
+        loteId: $loteId, alvoTipo: 'participante', alvoId: $participanteId, userId: $userId, tabId: 'tab-test',
         consultasIncluidas: ['cnd_federal'], alvo: ['cnpj' => '19131243000197'],
         etapas: ['Preparando consulta', 'Certidões Federais'],
     );
 
     // cnd_federal custoCreditos (config, default 2) deve ir pro estorno
-    expect((int) Cache::get("consulta_estorno:{$loteId}:{$participanteId}"))
+    expect((int) Cache::get("consulta_estorno:{$loteId}:participante:{$participanteId}"))
         ->toBe((int) config('consultas.fontes.cnd_federal', 2));
+});
+
+it('processa escopo cliente gravando cliente_id', function () {
+    [$loteId, , $userId] = montarLoteParticipante();
+    $clienteId = \Illuminate\Support\Facades\DB::table('clientes')->where('user_id', $userId)->value('id');
+
+    Http::fake(['minhareceita.org/*' => Http::response([
+        'razao_social' => 'EMPRESA PROPRIA', 'descricao_situacao_cadastral' => 'ATIVA', 'situacao_cadastral' => 2,
+        'qsa' => [], 'cnaes_secundarios' => [],
+    ], 200)]);
+
+    ProcessarConsultaJob::dispatchSync(
+        loteId: $loteId, alvoTipo: 'cliente', alvoId: $clienteId, userId: $userId, tabId: 'tab-test',
+        consultasIncluidas: ['situacao_cadastral', 'endereco'], alvo: ['cnpj' => '00000000000100'],
+        etapas: ['Preparando consulta', 'Dados cadastrais'],
+    );
+
+    $r = ConsultaResultado::where('consulta_lote_id', $loteId)->where('cliente_id', $clienteId)->firstOrFail();
+    expect($r->participante_id)->toBeNull();
+    expect($r->resultado_dados['razao_social'])->toBe('EMPRESA PROPRIA');
 });

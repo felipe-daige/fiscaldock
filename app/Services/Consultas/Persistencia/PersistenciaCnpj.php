@@ -7,11 +7,16 @@ use App\Services\Consultas\Dto\ResultadoFonte;
 
 class PersistenciaCnpj
 {
-    public function gravar(int $loteId, int $participanteId, ResultadoFonte $resultado): void
+    /**
+     * @param  string  $alvoTipo  'participante' | 'cliente'
+     */
+    public function gravar(int $loteId, string $alvoTipo, int $alvoId, ResultadoFonte $resultado): void
     {
+        $chaveEscopo = $alvoTipo === 'cliente' ? 'cliente_id' : 'participante_id';
+
         $linha = ConsultaResultado::firstOrNew([
             'consulta_lote_id' => $loteId,
-            'participante_id' => $participanteId,
+            $chaveEscopo => $alvoId,
         ]);
 
         $dados = $linha->resultado_dados ?? [];

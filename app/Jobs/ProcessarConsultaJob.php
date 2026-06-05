@@ -22,7 +22,8 @@ class ProcessarConsultaJob implements ShouldQueue
 
     public function __construct(
         public int $loteId,
-        public int $participanteId,
+        public string $alvoTipo,   // 'participante' | 'cliente'
+        public int $alvoId,
         public int $userId,
         public string $tabId,
         public array $consultasIncluidas,
@@ -51,7 +52,7 @@ class ProcessarConsultaJob implements ShouldQueue
                 $fonte->chave(), $fonte->normalizar($resp->raw, $resp->status),
                 $resp->status, $fonte->custoCreditos(), $resp->mensagem,
             );
-            $persistencia->gravar($this->loteId, $this->participanteId, $resultado);
+            $persistencia->gravar($this->loteId, $this->alvoTipo, $this->alvoId, $resultado);
 
             if ($resultado->ehFalhaEstornavel()) {
                 $creditosFalhos += $resultado->custoCreditos;
@@ -65,7 +66,7 @@ class ProcessarConsultaJob implements ShouldQueue
 
         // Estorno preciso: total por participante (overwrite = idempotente em retry do job).
         // Somado por FecharLoteService ao fechar o lote. Ver project_camada_consultas_laravel.
-        Cache::put("consulta_estorno:{$this->loteId}:{$this->participanteId}", $creditosFalhos, 86400);
+        Cache::put("consulta_estorno:{$this->loteId}:{$this->alvoTipo}:{$this->alvoId}", $creditosFalhos, 86400);
     }
 
     private function resolverProvider(string $nome)

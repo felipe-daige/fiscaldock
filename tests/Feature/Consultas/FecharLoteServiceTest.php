@@ -21,11 +21,11 @@ it('fecha o lote como concluido e grava resumo', function () {
     expect($lote->processado_em)->not->toBeNull();
 });
 
-it('estorna a soma do estorno por participante (cache) das fontes que falharam', function () {
+it('estorna a soma do estorno por alvo (cache) das fontes que falharam', function () {
     [$loteId, $participanteId, $userId] = montarLoteParticipante();
-    // precisa existir uma linha consulta_resultados p/ o participante ser somado
-    app(PersistenciaCnpj::class)->gravar($loteId, $participanteId, new ResultadoFonte('cnd_federal', [], 'fatal', 4, 'erro'));
-    Cache::put("consulta_estorno:{$loteId}:{$participanteId}", 4, 600);
+    // precisa existir uma linha consulta_resultados p/ o alvo ser somado
+    app(PersistenciaCnpj::class)->gravar($loteId, 'participante', $participanteId, new ResultadoFonte('cnd_federal', [], 'fatal', 4, 'erro'));
+    Cache::put("consulta_estorno:{$loteId}:participante:{$participanteId}", 4, 600);
 
     $user = User::find($userId);
     $saldoAntes = app(CreditService::class)->getBalance($user);
@@ -37,7 +37,7 @@ it('estorna a soma do estorno por participante (cache) das fontes que falharam',
 
 it('não estorna quando não houve falha estornável', function () {
     [$loteId, $participanteId, $userId] = montarLoteParticipante();
-    app(PersistenciaCnpj::class)->gravar($loteId, $participanteId, new ResultadoFonte('cadastro', ['razao_social' => 'X'], 'sucesso', 0));
+    app(PersistenciaCnpj::class)->gravar($loteId, 'participante', $participanteId, new ResultadoFonte('cadastro', ['razao_social' => 'X'], 'sucesso', 0));
 
     $user = User::find($userId);
     $saldoAntes = app(CreditService::class)->getBalance($user);

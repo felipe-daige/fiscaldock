@@ -653,23 +653,50 @@ class ConsultaController extends Controller
         $user = Auth::user();
 
         $validated = $request->validate([
-            'participante_ids' => 'required|array|min:1|max:1000',
+            // Consulta serve dois escopos: participantes (contrapartes) e/ou clientes (empresas
+            // geridas, incl. empresa própria). Pelo menos um dos dois precisa vir preenchido.
+            'participante_ids' => 'nullable|array|max:1000',
             'participante_ids.*' => 'integer|exists:participantes,id',
+            'cliente_ids' => 'nullable|array|max:1000',
+            'cliente_ids.*' => 'integer|exists:clientes,id',
             'plano_id' => 'required|integer|exists:monitoramento_planos,id',
             'cliente_id' => 'nullable|integer|exists:clientes,id',
             'tab_id' => 'required|string|max:36',
         ]);
 
+        $participanteIds = $validated['participante_ids'] ?? [];
+        $clienteIds = $validated['cliente_ids'] ?? [];
+
+        if (empty($participanteIds) && empty($clienteIds)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Selecione ao menos um participante ou cliente para consultar.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         // Verificar que os participantes pertencem ao usuário
         $participantes = Participante::where('user_id', $user->id)
             ->somenteCnpj()
-            ->whereIn('id', $validated['participante_ids'])
+            ->whereIn('id', $participanteIds)
             ->get(['id', 'documento', 'razao_social', 'uf', 'crt']);
 
-        if ($participantes->count() !== count($validated['participante_ids'])) {
+        if ($participantes->count() !== count($participanteIds)) {
             return response()->json([
                 'success' => false,
                 'error' => 'Alguns participantes selecionados são inválidos para consulta.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        // Clientes (CNPJ próprio): exige documento com 14 dígitos (CNPJ).
+        $clientes = \App\Models\Cliente::where('user_id', $user->id)
+            ->whereIn('id', $clienteIds)
+            ->whereRaw("length(regexp_replace(coalesce(documento, ''), '[^0-9]', '', 'g')) = 14")
+            ->get(['id', 'documento', 'razao_social']);
+
+        if ($clientes->count() !== count($clienteIds)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Alguns clientes selecionados são inválidos (CNPJ ausente) para consulta.',
             ], Response::HTTP_FORBIDDEN);
         }
 
@@ -682,8 +709,17 @@ class ConsultaController extends Controller
             ], Response::HTTP_BAD_REQUEST);
         }
 
+        // Lista unificada de alvos {tipo, id, cnpj, uf, crt}
+        $alvos = $participantes->map(fn ($p) => [
+            'tipo' => 'participante', 'id' => $p->id,
+            'cnpj' => preg_replace('/[^0-9]/', '', (string) $p->documento), 'uf' => $p->uf, 'crt' => $p->crt,
+        ])->concat($clientes->map(fn ($c) => [
+            'tipo' => 'cliente', 'id' => $c->id,
+            'cnpj' => preg_replace('/[^0-9]/', '', (string) $c->documento), 'uf' => $c->uf ?? null, 'crt' => null,
+        ]))->values();
+
         // Calcular custo
-        $totalParticipantes = $participantes->count();
+        $totalParticipantes = $alvos->count();
 
         $trialCap = $this->pricingCatalogService->trialCapStatus($user, $plano, $totalParticipantes);
 
@@ -715,10 +751,25 @@ class ConsultaController extends Controller
             ], Response::HTTP_PAYMENT_REQUIRED);
         }
 
+        // Roteamento da transição: se a camada de consultas do Laravel cobre TODAS as fontes
+        // do plano (e prontas), processa em casa (fila). Senão, segue no n8n.
+        $consultasIncluidas = $plano->resolvedConsultasIncluidas();
+        $registry = app(\App\Services\Consultas\FonteRegistry::class);
+        $routeLaravel = $registry->cobre($consultasIncluidas);
+
+        // Escopo cliente (CNPJ próprio) só é suportado pela camada Laravel — o n8n não tem
+        // cliente_id em consulta_resultados. Bloqueia antes de debitar.
+        if (! $routeLaravel && $clientes->isNotEmpty()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Consulta de clientes (CNPJ próprio) ainda não disponível para este plano. Ative o InfoSimples ou use um plano já migrado.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         $webhookUrl = config('services.webhook.consultas_cnpj_participante_url')
             ?: config('services.webhook.consultas_cnpj_url');
 
-        if (empty($webhookUrl)) {
+        if (! $routeLaravel && empty($webhookUrl)) {
             Log::error('Consultas: webhook não configurado (WEBHOOK_CONSULTAS_CNPJ_PARTICIPANTE_URL nem WEBHOOK_CONSULTAS_CNPJ_URL)');
 
             return response()->json([
@@ -750,36 +801,37 @@ class ConsultaController extends Controller
                 'tab_id' => $validated['tab_id'],
             ]);
 
-            // Associar participantes
-            $lote->participantes()->attach($validated['participante_ids']);
+            // Associar participantes (pivot é participante-específico; clientes ficam no
+            // consulta_resultados.cliente_id, sem pivot).
+            if (! empty($participanteIds)) {
+                $lote->participantes()->attach($participanteIds);
+            }
 
             Log::info('Consulta: lote criado', [
                 'consulta_lote_id' => $lote->id,
                 'user_id' => $user->id,
                 'produto' => $plano->codigo,
-                'total_participantes' => $totalParticipantes,
+                'total_alvos' => $totalParticipantes,
+                'participantes' => count($participanteIds),
+                'clientes' => count($clienteIds),
                 'creditos_cobrados' => $custoTotal,
             ]);
 
             $etapas = $plano->resolvedEtapas();
             $totalEtapas = $plano->resolvedTotalEtapas();
 
-            // Roteamento da transição: se a camada de consultas do Laravel cobre TODAS as
-            // fontes do plano, processa em casa (fila database). Senão, segue no n8n.
-            $consultasIncluidas = $plano->resolvedConsultasIncluidas();
-            $registry = app(\App\Services\Consultas\FonteRegistry::class);
-
-            if ($registry->cobre($consultasIncluidas)) {
-                $jobs = $participantes->map(fn ($p) => new \App\Jobs\ProcessarConsultaJob(
+            if ($routeLaravel) {
+                $jobs = $alvos->map(fn ($alvo) => new \App\Jobs\ProcessarConsultaJob(
                     loteId: $lote->id,
-                    participanteId: $p->id,
+                    alvoTipo: $alvo['tipo'],
+                    alvoId: $alvo['id'],
                     userId: $user->id,
                     tabId: $validated['tab_id'],
                     consultasIncluidas: $consultasIncluidas,
                     alvo: [
-                        'cnpj' => preg_replace('/[^0-9]/', '', (string) $p->documento),
-                        'uf' => $p->uf,
-                        'crt' => $p->crt,
+                        'cnpj' => $alvo['cnpj'],
+                        'uf' => $alvo['uf'],
+                        'crt' => $alvo['crt'],
                     ],
                     etapas: $etapas,
                 ))->all();

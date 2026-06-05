@@ -22,6 +22,7 @@ class ConsultaResultado extends Model
     protected $fillable = [
         'consulta_lote_id',
         'participante_id',
+        'cliente_id',
         'resultado_dados',
         'status',
         'error_message',

@@ -14,14 +14,17 @@ class FecharLoteService
 
     public function fechar(int $loteId, array $resumo = []): void
     {
-        // Estorno preciso: soma o total por participante acumulado pelos jobs (cache,
-        // overwrite por participante → idempotente). Só fontes em falha estornável contam.
-        $participanteIds = ConsultaResultado::where('consulta_lote_id', $loteId)
-            ->pluck('participante_id');
+        // Estorno preciso: soma o total por alvo (participante OU cliente) acumulado pelos
+        // jobs (cache, overwrite por alvo → idempotente). Só fontes em falha estornável contam.
+        $alvos = ConsultaResultado::where('consulta_lote_id', $loteId)
+            ->get(['participante_id', 'cliente_id']);
 
         $creditosFalhos = 0;
-        foreach ($participanteIds as $pid) {
-            $creditosFalhos += (int) Cache::pull("consulta_estorno:{$loteId}:{$pid}", 0);
+        foreach ($alvos as $alvo) {
+            [$tipo, $id] = $alvo->cliente_id
+                ? ['cliente', $alvo->cliente_id]
+                : ['participante', $alvo->participante_id];
+            $creditosFalhos += (int) Cache::pull("consulta_estorno:{$loteId}:{$tipo}:{$id}", 0);
         }
 
         DB::transaction(function () use ($loteId, $creditosFalhos, $resumo) {
