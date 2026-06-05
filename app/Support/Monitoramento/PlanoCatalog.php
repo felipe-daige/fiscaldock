@@ -66,7 +66,7 @@ final class PlanoCatalog
             [
                 'codigo' => 'licitacao',
                 'nome' => 'Licitação',
-                'descricao' => 'Validação com CND Federal, CNDT e FGTS para editais e contratos',
+                'descricao' => 'Validação com CND Federal para editais e contratos',
                 'consultas_incluidas' => [
                     'situacao_cadastral',
                     'dados_cadastrais',
@@ -76,8 +76,6 @@ final class PlanoCatalog
                     'simples_nacional',
                     'mei',
                     'cnd_federal',
-                    'cndt',
-                    'crf_fgts',
                 ],
                 'etapas' => [
                     ['numero' => 1, 'chave' => 'inicializacao', 'label' => 'Preparando consulta'],

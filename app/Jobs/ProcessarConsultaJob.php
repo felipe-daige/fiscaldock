@@ -39,6 +39,7 @@ class ProcessarConsultaJob implements ShouldQueue
         $this->progresso(etapa: 1, total: $total, label: $this->etapas[0] ?? 'Preparando consulta', status: 'processando');
 
         $passo = 1;
+        $creditosFalhos = 0;
         foreach ($registry->fontesDe($this->consultasIncluidas) as $fonte) {
             $passo++;
             $throttle->aguardar($fonte->provider());
@@ -46,16 +47,25 @@ class ProcessarConsultaJob implements ShouldQueue
             $provider = $this->resolverProvider($fonte->provider());
             $resp = $provider->consultar($fonte->slug(), $fonte->params($this->alvo));
 
-            $dados = $fonte->normalizar($resp->raw, $resp->status);
-            $persistencia->gravar($this->loteId, $this->participanteId, new ResultadoFonte(
-                $fonte->chave(), $dados, $resp->status, $fonte->custoCreditos(), $resp->mensagem,
-            ));
+            $resultado = new ResultadoFonte(
+                $fonte->chave(), $fonte->normalizar($resp->raw, $resp->status),
+                $resp->status, $fonte->custoCreditos(), $resp->mensagem,
+            );
+            $persistencia->gravar($this->loteId, $this->participanteId, $resultado);
+
+            if ($resultado->ehFalhaEstornavel()) {
+                $creditosFalhos += $resultado->custoCreditos;
+            }
 
             $this->progresso(
                 etapa: min($passo, $total), total: $total,
                 label: $this->etapas[$passo - 1] ?? $fonte->chave(), status: 'processando',
             );
         }
+
+        // Estorno preciso: total por participante (overwrite = idempotente em retry do job).
+        // Somado por FecharLoteService ao fechar o lote. Ver project_camada_consultas_laravel.
+        Cache::put("consulta_estorno:{$this->loteId}:{$this->participanteId}", $creditosFalhos, 86400);
     }
 
     private function resolverProvider(string $nome)

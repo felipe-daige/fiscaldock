@@ -788,7 +788,7 @@ class ConsultaController extends Controller
                     ->name("consulta-lote-{$lote->id}")
                     ->then(function () use ($lote) {
                         app(\App\Services\Consultas\FecharLoteService::class)
-                            ->fechar($lote->id, creditosFalhos: 0, resumo: ['engine' => 'laravel']);
+                            ->fechar($lote->id, resumo: ['engine' => 'laravel']);
                     })
                     ->dispatch();
 

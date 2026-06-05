@@ -35,4 +35,22 @@ it('consulta cadastro, persiste e posta progresso', function () {
     $cache = Cache::get("progresso:{$userId}:tab-test");
     expect($cache)->not->toBeNull();
     expect($cache['total_etapas'])->toBe(2);
+    // cadastro é grátis → nada a estornar
+    expect((int) Cache::get("consulta_estorno:{$loteId}:{$participanteId}"))->toBe(0);
+});
+
+it('acumula estorno no cache quando uma fonte paga falha (fatal)', function () {
+    [$loteId, $participanteId, $userId] = montarLoteParticipante();
+
+    Http::fake(['api.infosimples.com/*' => Http::response(['code' => 601, 'code_message' => 'token inválido'], 200)]);
+
+    ProcessarConsultaJob::dispatchSync(
+        loteId: $loteId, participanteId: $participanteId, userId: $userId, tabId: 'tab-test',
+        consultasIncluidas: ['cnd_federal'], alvo: ['cnpj' => '19131243000197'],
+        etapas: ['Preparando consulta', 'Certidões Federais'],
+    );
+
+    // cnd_federal custoCreditos (config, default 2) deve ir pro estorno
+    expect((int) Cache::get("consulta_estorno:{$loteId}:{$participanteId}"))
+        ->toBe((int) config('consultas.fontes.cnd_federal', 2));
 });
