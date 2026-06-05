@@ -9,16 +9,19 @@ it('resolve fonte por chave', function () {
     expect($reg->get('inexistente'))->toBeNull();
 });
 
-it('diz se cobre todas as chaves de um plano', function () {
+it('cobre o plano quando todos os sub-atributos têm fonte', function () {
     $reg = new FonteRegistry([new CadastroFonte()]);
-    expect($reg->cobre(['cadastro']))->toBeTrue();
-    expect($reg->cobre(['cadastro', 'cnd_federal']))->toBeFalse();
+    // plano Gratuito real
+    expect($reg->cobre(['situacao_cadastral', 'dados_cadastrais', 'endereco']))->toBeTrue();
+    // tem um atributo sem fonte (cnd_federal) → não cobre
+    expect($reg->cobre(['situacao_cadastral', 'cnd_federal']))->toBeFalse();
     expect($reg->cobre([]))->toBeFalse();
 });
 
-it('devolve as fontes de uma lista de chaves (só as conhecidas)', function () {
+it('devolve fontes deduplicadas para os sub-atributos do plano', function () {
     $reg = new FonteRegistry([new CadastroFonte()]);
-    $fontes = $reg->fontesDe(['cadastro', 'cnd_federal']);
+    // 3 atributos, todos do cadastro → 1 fonte só (deduplicada)
+    $fontes = $reg->fontesDe(['situacao_cadastral', 'dados_cadastrais', 'endereco', 'cnd_federal']);
     expect($fontes)->toHaveCount(1);
     expect($fontes[0]->chave())->toBe('cadastro');
 });

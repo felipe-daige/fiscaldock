@@ -22,7 +22,7 @@ it('consulta cadastro, persiste e posta progresso', function () {
         participanteId: $participanteId,
         userId: $userId,
         tabId: 'tab-test',
-        chavesFontes: ['cadastro'],
+        consultasIncluidas: ['situacao_cadastral', 'dados_cadastrais', 'endereco'],
         alvo: ['cnpj' => '00000000000191'],
         etapas: ['Preparando consulta', 'Dados cadastrais'],
     );

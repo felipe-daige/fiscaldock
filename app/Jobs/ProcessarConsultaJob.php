@@ -25,7 +25,7 @@ class ProcessarConsultaJob implements ShouldQueue
         public int $participanteId,
         public int $userId,
         public string $tabId,
-        public array $chavesFontes,
+        public array $consultasIncluidas,
         public array $alvo,
         public array $etapas,
     ) {}
@@ -39,7 +39,7 @@ class ProcessarConsultaJob implements ShouldQueue
         $this->progresso(etapa: 1, total: $total, label: $this->etapas[0] ?? 'Preparando consulta', status: 'processando');
 
         $passo = 1;
-        foreach ($registry->fontesDe($this->chavesFontes) as $fonte) {
+        foreach ($registry->fontesDe($this->consultasIncluidas) as $fonte) {
             $passo++;
             $throttle->aguardar($fonte->provider());
 

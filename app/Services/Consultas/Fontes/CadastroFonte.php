@@ -11,6 +11,26 @@ class CadastroFonte implements Fonte
         return 'cadastro';
     }
 
+    public function fornece(): array
+    {
+        // Sub-atributos de consultas_incluidas cobertos pelos dados da minhareceita.
+        return [
+            'situacao_cadastral',
+            'dados_cadastrais',
+            'endereco',
+            'cnaes',
+            'cnaes_secundarios',
+            'qsa',
+            'qsa_detalhado',
+            'simples_nacional',
+            'mei',
+            'capital_social',
+            'natureza_juridica',
+            'porte',
+            'data_inicio_atividade',
+        ];
+    }
+
     public function provider(): string
     {
         return 'minhareceita';

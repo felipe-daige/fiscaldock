@@ -6,14 +6,20 @@ use App\Services\Consultas\Contracts\Fonte;
 
 class FonteRegistry
 {
-    /** @var array<string, Fonte> */
+    /** @var array<string, Fonte> chave da fonte => Fonte */
     private array $fontes = [];
+
+    /** @var array<string, Fonte> sub-atributo de consultas_incluidas => Fonte que o fornece */
+    private array $porAtributo = [];
 
     /** @param Fonte[] $fontes */
     public function __construct(array $fontes = [])
     {
         foreach ($fontes as $f) {
             $this->fontes[$f->chave()] = $f;
+            foreach ($f->fornece() as $atributo) {
+                $this->porAtributo[$atributo] = $f;
+            }
         }
     }
 
@@ -22,15 +28,18 @@ class FonteRegistry
         return $this->fontes[$chave] ?? null;
     }
 
-    /** True se TODAS as chaves existem no registry (e a lista não é vazia). */
-    public function cobre(array $chaves): bool
+    /**
+     * True se TODOS os sub-atributos do plano (consultas_incluidas) são fornecidos
+     * por alguma fonte registrada (e a lista não é vazia). Roteamento Laravel×n8n.
+     */
+    public function cobre(array $atributos): bool
     {
-        if (empty($chaves)) {
+        if (empty($atributos)) {
             return false;
         }
 
-        foreach ($chaves as $chave) {
-            if (! isset($this->fontes[$chave])) {
+        foreach ($atributos as $atributo) {
+            if (! isset($this->porAtributo[$atributo])) {
                 return false;
             }
         }
@@ -38,16 +47,21 @@ class FonteRegistry
         return true;
     }
 
-    /** @return Fonte[] */
-    public function fontesDe(array $chaves): array
+    /**
+     * Fontes (deduplicadas) necessárias para atender os sub-atributos do plano.
+     *
+     * @return Fonte[]
+     */
+    public function fontesDe(array $atributos): array
     {
         $out = [];
-        foreach ($chaves as $chave) {
-            if (isset($this->fontes[$chave])) {
-                $out[] = $this->fontes[$chave];
+        foreach ($atributos as $atributo) {
+            $fonte = $this->porAtributo[$atributo] ?? null;
+            if ($fonte) {
+                $out[$fonte->chave()] = $fonte;
             }
         }
 
-        return $out;
+        return array_values($out);
     }
 }

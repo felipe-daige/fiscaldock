@@ -764,6 +764,45 @@ class ConsultaController extends Controller
             $etapas = $plano->resolvedEtapas();
             $totalEtapas = $plano->resolvedTotalEtapas();
 
+            // Roteamento da transição: se a camada de consultas do Laravel cobre TODAS as
+            // fontes do plano, processa em casa (fila database). Senão, segue no n8n.
+            $consultasIncluidas = $plano->resolvedConsultasIncluidas();
+            $registry = app(\App\Services\Consultas\FonteRegistry::class);
+
+            if ($registry->cobre($consultasIncluidas)) {
+                $jobs = $participantes->map(fn ($p) => new \App\Jobs\ProcessarConsultaJob(
+                    loteId: $lote->id,
+                    participanteId: $p->id,
+                    userId: $user->id,
+                    tabId: $validated['tab_id'],
+                    consultasIncluidas: $consultasIncluidas,
+                    alvo: [
+                        'cnpj' => preg_replace('/[^0-9]/', '', (string) $p->documento),
+                        'uf' => $p->uf,
+                        'crt' => $p->crt,
+                    ],
+                    etapas: $etapas,
+                ))->all();
+
+                \Illuminate\Support\Facades\Bus::batch($jobs)
+                    ->name("consulta-lote-{$lote->id}")
+                    ->then(function () use ($lote) {
+                        app(\App\Services\Consultas\FecharLoteService::class)
+                            ->fechar($lote->id, creditosFalhos: 0, resumo: ['engine' => 'laravel']);
+                    })
+                    ->dispatch();
+
+                return response()->json([
+                    'success' => true,
+                    'consulta_lote_id' => $lote->id,
+                    'redirect_url' => route('app.consulta.lote.show', ['id' => $lote->id]),
+                    'message' => 'Consulta iniciada com sucesso.',
+                    'creditos_cobrados' => $custoTotal,
+                    'novo_saldo' => $this->creditService->getBalance($user),
+                    'etapas' => $etapas,
+                ]);
+            }
+
             // Preparar payload para n8n
             $payload = [
                 'user_id' => $user->id,

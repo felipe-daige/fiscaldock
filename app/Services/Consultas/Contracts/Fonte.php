@@ -7,6 +7,15 @@ interface Fonte
     /** Chave canônica usada em resultado_dados / consultas_realizadas (ex: 'cadastro'). */
     public function chave(): string;
 
+    /**
+     * Sub-atributos de `monitoramento_planos.consultas_incluidas` que esta fonte
+     * fornece (ex: cadastro fornece 'situacao_cadastral', 'endereco', 'qsa'...).
+     * Usado pelo Registry para mapear plano → fontes necessárias.
+     *
+     * @return string[]
+     */
+    public function fornece(): array;
+
     /** Provider responsável: 'minhareceita' | 'infosimples'. */
     public function provider(): string;
 
