@@ -4,6 +4,7 @@ namespace App\Services\Consultas;
 
 use App\Models\ConsultaResultado;
 use App\Support\CertidaoBadge;
+use App\Support\MensagemPublica;
 
 /**
  * Transforma o `resultado_dados` (jsonb por fonte) de um ConsultaResultado em blocos
@@ -37,6 +38,10 @@ class ResultadoDetalhePresenter
         $dados = is_array($resultado->resultado_dados) ? $resultado->resultado_dados : [];
         $blocos = [];
 
+        // UF do alvo (endereço cadastral) p/ completar certidões cuja resposta vem sem UF
+        // (ex.: SEFAZ/CND Estadual costuma retornar uf=null, mas foi consultada para a UF do alvo).
+        $ufFallback = trim((string) ($dados['endereco']['uf'] ?? $dados['uf'] ?? '')) ?: null;
+
         if ($cadastro = $this->blocoCadastro($dados)) {
             $blocos[] = $cadastro;
         }
@@ -49,8 +54,8 @@ class ResultadoDetalhePresenter
             $bloco = match ($chave) {
                 'cgu_cnc' => $this->blocoSancoes($dados[$chave]),
                 'cnj_improbidade' => $this->blocoImprobidade($dados[$chave]),
-                'sintegra' => $this->blocoSintegra($dados[$chave]),
-                default => $this->blocoCertidao($chave, $dados[$chave]),
+                'sintegra' => $this->blocoSintegra($dados[$chave], $ufFallback),
+                default => $this->blocoCertidao($chave, $dados[$chave], $ufFallback),
             };
 
             if ($bloco) {
@@ -325,13 +330,16 @@ class ResultadoDetalhePresenter
     // Certidões (CND Federal/Estadual/Municipal, FGTS, CNDT)
     // ──────────────────────────────────────────────────────────────────────────
 
-    private function blocoCertidao(string $chave, array $d): array
+    private function blocoCertidao(string $chave, array $d, ?string $ufFallback = null): array
     {
         $badge = CertidaoBadge::classificar($d, $chave === 'cnd_federal');
 
+        // CND Estadual/Municipal: a resposta pode vir sem UF — completa com a UF do alvo.
+        $uf = trim((string) ($d['uf'] ?? '')) ?: ($chave === 'cnd_estadual' || $chave === 'cnd_municipal' ? $ufFallback : null);
+
         $itens = [
             $this->item('Situação informada', $d['status'] ?? null),
-            $this->item('UF', $d['uf'] ?? null),
+            $this->item('UF', $uf),
             $this->item('Município', $d['municipio'] ?? null),
             $this->item('Certidão nº', $d['certidao_codigo'] ?? null),
             $this->item('Emissão', $d['emissao_data'] ?? null),
@@ -345,15 +353,18 @@ class ResultadoDetalhePresenter
 
         $mensagem = $d['mensagem'] ?? ($badge['motivo'] ?? null);
 
-        return $this->bloco($chave, $this->tituloCertidao($chave), $badge, $itens, [], $mensagem);
+        return $this->bloco($chave, $this->tituloCertidao($chave, $uf), $badge, $itens, [], $mensagem);
     }
 
-    private function tituloCertidao(string $chave): string
+    private function tituloCertidao(string $chave, ?string $uf = null): string
     {
+        // SEFAZ é estadual: mostrar a UF no título dá contexto imediato (ex.: "CND Estadual (SEFAZ-MS)").
+        $sufixoUf = $uf ? '-'.strtoupper($uf) : '';
+
         return match ($chave) {
             'cnd_federal' => 'CND Federal (Receita/PGFN)',
-            'cnd_estadual' => 'CND Estadual (SEFAZ)',
-            'cnd_municipal' => 'CND Municipal',
+            'cnd_estadual' => 'CND Estadual (SEFAZ'.$sufixoUf.')',
+            'cnd_municipal' => 'CND Municipal'.($uf ? ' ('.strtoupper($uf).')' : ''),
             'crf_fgts' => 'CRF FGTS (Caixa)',
             'cndt' => 'CNDT (débitos trabalhistas)',
             default => $this->nomeFonte($chave),
@@ -364,14 +375,14 @@ class ResultadoDetalhePresenter
     // SINTEGRA
     // ──────────────────────────────────────────────────────────────────────────
 
-    private function blocoSintegra(array $d): array
+    private function blocoSintegra(array $d, ?string $ufFallback = null): array
     {
         $badge = CertidaoBadge::classificar(['situacao' => $d['situacao'] ?? null]);
 
         $itens = [
             $this->item('Situação', $d['situacao'] ?? null),
             $this->item('Inscrição estadual', $d['inscricao_estadual'] ?? null),
-            $this->item('UF', $d['uf'] ?? null),
+            $this->item('UF', trim((string) ($d['uf'] ?? '')) ?: $ufFallback),
             $this->item('Regime de apuração', $d['regime_apuracao'] ?? null),
             $this->item('Atividade econômica', $d['atividade_economica'] ?? null),
             $this->item('Data da situação', $d['data_situacao'] ?? null),
@@ -508,7 +519,8 @@ class ResultadoDetalhePresenter
         if ($texto === null) {
             return null;
         }
-        $texto = preg_replace('/\s+/u', ' ', trim($texto));
+        // Neutraliza qualquer referência ao provedor terceirizado antes de exibir.
+        $texto = preg_replace('/\s+/u', ' ', trim((string) MensagemPublica::neutralizar($texto)));
 
         return $texto !== '' ? $texto : null;
     }

@@ -17,7 +17,7 @@
     'itemListElement' => [
         ['@type' => 'ListItem', 'position' => 1, 'name' => 'Importação SPED/EFD', 'description' => 'Importe arquivos SPED Fiscal e Contribuições e extraia notas, participantes e apurações automaticamente.', 'url' => url('/solucoes#produto-sped')],
         ['@type' => 'ListItem', 'position' => 2, 'name' => 'Monitoramento de Participantes', 'description' => 'Acompanhe situação cadastral, regime tributário e regularidade dos seus fornecedores.', 'url' => url('/solucoes#produto-monitoramento')],
-        ['@type' => 'ListItem', 'position' => 3, 'name' => 'Consultas CNPJ', 'description' => 'Consultas tributárias em lote via integração InfoSimples com débito de créditos.', 'url' => url('/solucoes#produto-consultas')],
+        ['@type' => 'ListItem', 'position' => 3, 'name' => 'Consultas CNPJ', 'description' => 'Consultas tributárias em lote com débito de créditos.', 'url' => url('/solucoes#produto-consultas')],
         ['@type' => 'ListItem', 'position' => 4, 'name' => 'BI Fiscal', 'description' => 'Dashboards de notas, CFOP, participantes e apuração tributária.', 'url' => url('/solucoes#produto-bi')],
         ['@type' => 'ListItem', 'position' => 5, 'name' => 'Clearance de Notas', 'description' => 'Validação de NF-e/CT-e/NFS-e contra SEFAZ (em construção).', 'url' => url('/solucoes#produto-clearance')],
         ['@type' => 'ListItem', 'position' => 6, 'name' => 'Central de Alertas', 'description' => 'Alertas fiscais consolidados e priorizados por risco.', 'url' => url('/solucoes#produto-alertas')],

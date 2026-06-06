@@ -40,7 +40,7 @@ class CndMunicipalFonte extends FonteCertidaoInfoSimples
             return 'CND Municipal não consultada: município/UF do contribuinte não identificado.';
         }
 
-        return "CND Municipal não disponível para {$cidade}/{$uf} no provedor (InfoSimples).";
+        return "CND Municipal não disponível para {$cidade}/{$uf} no provedor.";
     }
 
     public function params(array $alvo): array

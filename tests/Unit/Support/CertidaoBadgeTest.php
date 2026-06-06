@@ -22,6 +22,21 @@ it('classifica Positiva com efeitos de negativa como Regular (verde)', function 
         ->toMatchArray(['label' => 'Regular', 'hex' => '#047857']);
 });
 
+it('usa status (não situacao) para a regularidade — shape real da CND Federal', function () {
+    // CND Federal traz situacao="Válida" (validade do documento) + status=regularidade.
+    // A classificação tem que vir do status, senão "Válida" cai em cinza/neutro.
+    expect(CertidaoBadge::classificar([
+        'situacao' => 'Válida',
+        'status' => 'Positiva com efeitos de negativa',
+        'conseguiu_emitir' => true,
+    ], true))->toMatchArray(['label' => 'Regular', 'hex' => '#047857']);
+
+    expect(CertidaoBadge::classificar([
+        'situacao' => 'Válida',
+        'status' => 'Negativa',
+    ]))->toMatchArray(['label' => 'Regular', 'hex' => '#047857']);
+});
+
 it('classifica Positiva pura (com débitos) como Irregular (vermelho)', function () {
     expect(CertidaoBadge::classificar(['status' => 'Positiva']))->toMatchArray(['label' => 'Irregular', 'hex' => '#dc2626']);
     expect(CertidaoBadge::classificar(['status' => 'Irregular']))->toMatchArray(['label' => 'Irregular', 'hex' => '#dc2626']);

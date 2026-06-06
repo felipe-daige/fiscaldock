@@ -44,7 +44,7 @@ class CndEstadualFonte extends FonteCertidaoInfoSimples
 
         return $uf === ''
             ? 'CND Estadual não consultada: UF do contribuinte não identificada.'
-            : "CND Estadual não disponível para a UF {$uf} no provedor (InfoSimples).";
+            : "CND Estadual não disponível para a UF {$uf} no provedor.";
     }
 
     public function params(array $alvo): array

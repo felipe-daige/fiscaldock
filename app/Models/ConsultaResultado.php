@@ -338,7 +338,8 @@ class ConsultaResultado extends Model
             return null;
         }
 
-        $message = trim((string) $value);
+        // Neutraliza referência ao provedor terceirizado em qualquer mensagem exibida.
+        $message = trim((string) \App\Support\MensagemPublica::neutralizar((string) $value));
 
         return $message !== '' ? $message : null;
     }

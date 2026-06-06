@@ -764,7 +764,7 @@ class ConsultaController extends Controller
         if (! $routeLaravel && $clientes->isNotEmpty()) {
             return response()->json([
                 'success' => false,
-                'error' => 'Consulta de clientes (CNPJ próprio) ainda não disponível para este plano. Ative o InfoSimples ou use um plano já migrado.',
+                'error' => 'Consulta de clientes (CNPJ próprio) ainda não disponível para este plano.',
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 

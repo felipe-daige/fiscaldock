@@ -90,6 +90,18 @@ it('inclui CND Estadual e SINTEGRA que hoje não aparecem na tabela', function (
     expect($itens->get('Inscrição estadual')['valor'])->toBe('28.368.441-0');
 });
 
+it('completa a UF da CND Estadual a partir do endereço quando a resposta vem sem UF', function () {
+    $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
+        'endereco' => ['uf' => 'MS'],
+        'cnd_estadual' => ['uf' => null, 'status' => 'Negativa', 'certidao_codigo' => '573628/2026'],
+    ]));
+
+    $est = bloco($blocos, 'cnd_estadual');
+    expect($est['titulo'])->toBe('CND Estadual (SEFAZ-MS)');
+    $itens = collect($est['itens'])->keyBy('label');
+    expect($itens->get('UF')['valor'])->toBe('MS');
+});
+
 it('monta bloco de sanções (CGU) com bases e classificação regular quando nada consta', function () {
     $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
         'cgu_cnc' => [

@@ -97,7 +97,10 @@ class CertidaoBadge
         }
 
         if (is_array($valor)) {
-            return trim((string) ($valor['situacao'] ?? $valor['status'] ?? $valor['regularidade'] ?? ''));
+            // `status` primeiro: nas certidões é a REGULARIDADE (Negativa/Positiva/Regular).
+            // `situacao` costuma ser a validade do documento (ex.: CND Federal traz "Válida"),
+            // que não diz nada sobre regularidade — só serve de fallback (ex.: SINTEGRA).
+            return trim((string) ($valor['status'] ?? $valor['situacao'] ?? $valor['regularidade'] ?? ''));
         }
 
         if (is_bool($valor)) {

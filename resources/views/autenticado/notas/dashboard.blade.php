@@ -689,7 +689,7 @@
                         </select>
                         <button id="dnf-comp-consultar-todos" disabled
                             class="px-3 py-1.5 text-xs font-medium rounded bg-gray-100 text-gray-400 cursor-not-allowed"
-                            title="Em breve — consulta via InfoSimples">
+                            title="Em breve — consulta à fonte oficial">
                             Consultar todos pendentes
                         </button>
                     </div>
@@ -2151,7 +2151,7 @@
                 + '<td class="px-3 sm:px-4 py-3 text-right ' + volumeClass + '">' + formatBrl(p.volume) + '</td>'
                 + '<td class="px-3 sm:px-4 py-3 text-gray-600 text-xs">' + (p.ultima_consulta_em || '<span class="text-yellow-600">Nunca</span>') + '</td>'
                 + '<td class="px-3 sm:px-4 py-3 text-center">'
-                + '<button disabled class="px-2.5 py-1 text-xs font-medium rounded bg-gray-100 text-gray-400 cursor-not-allowed" title="Em breve — consulta via InfoSimples">Consultar</button>'
+                + '<button disabled class="px-2.5 py-1 text-xs font-medium rounded bg-gray-100 text-gray-400 cursor-not-allowed" title="Em breve — consulta à fonte oficial">Consultar</button>'
                 + '</td>'
                 + '</tr>';
         });

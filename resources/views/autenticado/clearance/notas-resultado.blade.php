@@ -298,7 +298,7 @@
             </details>
 
             <p class="text-[11px] text-gray-500 mt-2">
-                Dados confrontados com a Receita Federal via InfoSimples em
+                Dados confrontados com a Receita Federal em
                 {{ $lote->processado_em?->format('d/m/Y H:i') ?? '—' }}.
                 Snapshot arquivado por documento ({{ $divergencia['kpis']['existencia']['total'] }} chave(s)) para evidência de auditoria.
             </p>

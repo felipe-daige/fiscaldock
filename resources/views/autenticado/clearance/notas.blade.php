@@ -105,7 +105,7 @@
                         <div class="relative pl-10">
                             <span class="absolute left-0 top-0 w-7 h-7 rounded-full text-white text-xs font-bold flex items-center justify-center" style="background-color: #2563eb;">2</span>
                             <p class="text-sm font-semibold text-gray-900">Consulta oficial</p>
-                            <p class="text-xs text-gray-600 mt-0.5">O FiscalDock envia as chaves ao n8n, que consulta a Receita Federal via InfoSimples e normaliza o retorno.</p>
+                            <p class="text-xs text-gray-600 mt-0.5">O FiscalDock consulta a Receita Federal e normaliza o retorno automaticamente.</p>
                         </div>
                         <div class="relative pl-10">
                             <span class="absolute left-0 top-0 w-7 h-7 rounded-full text-white text-xs font-bold flex items-center justify-center" style="background-color: #2563eb;">3</span>

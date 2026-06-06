@@ -230,7 +230,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div class="border border-gray-300 rounded p-3">
                                 <p class="text-sm font-semibold text-gray-900">Consultas feitas em fontes oficiais</p>
-                                <p class="text-[11px] text-gray-600 leading-relaxed mt-1">Receita Federal (situação cadastral, QSA, Simples/MEI, CND Federal), PGFN (CNDT), Caixa (FGTS), SEFAZ (CND Estadual), prefeituras (CND Municipal), SINTEGRA, Portal da Transparência (sanções), CNJ (processos) e cartórios (protestos) — intermediadas via InfoSimples.</p>
+                                <p class="text-[11px] text-gray-600 leading-relaxed mt-1">Receita Federal (situação cadastral, QSA, Simples/MEI, CND Federal), PGFN (CNDT), Caixa (FGTS), SEFAZ (CND Estadual), prefeituras (CND Municipal), SINTEGRA, Portal da Transparência (sanções), CNJ (processos) e cartórios (protestos).</p>
                             </div>
                             <div class="border border-gray-300 rounded p-3">
                                 <p class="text-sm font-semibold text-gray-900">Toda consulta no fornecedor é paga</p>

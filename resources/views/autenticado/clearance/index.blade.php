@@ -203,7 +203,7 @@
                     </div>
                     <div>
                         <p class="font-semibold text-gray-900">2. Verificação por chave</p>
-                        <p class="text-[11px] text-gray-500 mt-1">Consulta direta à Receita Federal via InfoSimples. Retorna situação oficial: autorizada, cancelada, denegada, inutilizada ou indeterminada.</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Consulta direta à Receita Federal. Retorna situação oficial: autorizada, cancelada, denegada, inutilizada ou indeterminada.</p>
                     </div>
                     <div>
                         <p class="font-semibold text-gray-900">3. Cobrança por consulta</p>
