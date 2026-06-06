@@ -51,12 +51,41 @@ it('separa participantes em Consultados e Nao consultados', function () {
     app(FecharLoteService::class)->fechar($lote->id);
 
     actingAs($user)
-        ->get('/app/score-fiscal')
+        ->get('/app/score-fiscal?cliente_id=todos')
         ->assertOk()
         ->assertSee('Consultados')
         ->assertSee('Não consultados')
         ->assertSee('AVALIADA LTDA')
         ->assertSee('PENDENTE LTDA');
+});
+
+it('visualizacao por cliente e obrigatoria, com opcao Todos os CNPJs', function () {
+    $user = User::factory()->create();
+    $ep = \App\Models\Cliente::create(['user_id' => $user->id, 'documento' => '10000000000100', 'razao_social' => 'EMPRESA PROPRIA', 'is_empresa_propria' => true]);
+    $cliA = \App\Models\Cliente::create(['user_id' => $user->id, 'documento' => '20000000000200', 'razao_social' => 'CLIENTE A']);
+    $cliB = \App\Models\Cliente::create(['user_id' => $user->id, 'documento' => '30000000000300', 'razao_social' => 'CLIENTE B']);
+
+    $pa = Participante::create(['user_id' => $user->id, 'cliente_id' => $cliA->id, 'documento' => '44444444000144', 'razao_social' => 'PARTDOA']);
+    $pb = Participante::create(['user_id' => $user->id, 'cliente_id' => $cliB->id, 'documento' => '55555555000155', 'razao_social' => 'PARTDOB']);
+    foreach ([$pa->id, $pb->id] as $pid) {
+        \App\Models\ParticipanteScore::create([
+            'participante_id' => $pid, 'user_id' => $user->id,
+            'score_total' => 0, 'classificacao' => 'baixo', 'ultima_consulta_em' => now(),
+        ]);
+    }
+
+    // default = empresa própria -> não despeja participantes de outros clientes
+    actingAs($user)->get('/app/score-fiscal')
+        ->assertOk()->assertSee('Todos os CNPJs')
+        ->assertDontSee('PARTDOA')->assertDontSee('PARTDOB');
+
+    // cliente A -> só os do A
+    actingAs($user)->get('/app/score-fiscal?cliente_id='.$cliA->id)
+        ->assertOk()->assertSee('PARTDOA')->assertDontSee('PARTDOB');
+
+    // todos -> ambos
+    actingAs($user)->get('/app/score-fiscal?cliente_id=todos')
+        ->assertOk()->assertSee('PARTDOA')->assertSee('PARTDOB');
 });
 
 it('marca o papel do participante (fornecedor/comprador/ambos) pelas notas EFD', function () {
@@ -88,7 +117,7 @@ it('marca o papel do participante (fornecedor/comprador/ambos) pelas notas EFD',
     }
 
     actingAs($user)
-        ->get('/app/score-fiscal')
+        ->get('/app/score-fiscal?cliente_id=todos')
         ->assertOk()
         ->assertSee('Fornecedor')
         ->assertSee('Ambos');
@@ -123,7 +152,7 @@ it('mostra clientes consultados no score e exclui CPF da lista', function () {
     app(FecharLoteService::class)->fechar($lote->id);
 
     actingAs($user)
-        ->get('/app/score-fiscal')
+        ->get('/app/score-fiscal?cliente_id=todos')
         ->assertOk()
         ->assertSee('HIDRATOP LTDA')
         ->assertSee('Cliente')

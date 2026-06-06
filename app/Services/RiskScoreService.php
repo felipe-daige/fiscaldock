@@ -179,11 +179,18 @@ class RiskScoreService
     }
 
     /**
-     * Obtem estatisticas de risco para um usuario.
+     * Obtem estatisticas de risco para um usuario. O $escopo opcional permite filtrar
+     * (ex.: por cliente) — recebe o query builder de ParticipanteScore.
      */
-    public function getEstatisticas(int $userId): array
+    public function getEstatisticas(int $userId, ?\Closure $escopo = null): array
     {
-        $totais = ParticipanteScore::where('user_id', $userId)
+        $query = ParticipanteScore::where('user_id', $userId);
+
+        if ($escopo) {
+            $escopo($query);
+        }
+
+        $totais = $query
             ->select(
                 DB::raw('COUNT(CASE WHEN score_total IS NOT NULL THEN 1 END) as total'),
                 DB::raw("COUNT(CASE WHEN classificacao = 'baixo' THEN 1 END) as baixo"),

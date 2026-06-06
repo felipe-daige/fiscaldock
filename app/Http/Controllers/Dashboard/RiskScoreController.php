@@ -31,20 +31,54 @@ class RiskScoreController extends Controller
 
         $userId = Auth::id();
 
-        // Estatisticas gerais
-        $estatisticas = $this->riskScoreService->getEstatisticas($userId);
-
         $busca = trim((string) $request->input('busca', ''));
         $filtroClassificacao = $request->input('classificacao', 'todos');
 
         // SÓ CNPJ (14 dígitos) — CPF fica de fora das listas.
         $cnpjRaw = "length(regexp_replace(coalesce(documento, ''), '[^0-9]', '', 'g')) = 14";
 
+        // Visualização por cliente é OBRIGATÓRIA (não despejar todos os CNPJs do sistema).
+        // Default = empresa própria. "todos" é a opção explícita para ver tudo.
+        $clientes = Cliente::where('user_id', $userId)
+            ->orderByDesc('is_empresa_propria')
+            ->orderBy('razao_social')
+            ->get();
+        $empresaPropria = $clientes->firstWhere('is_empresa_propria', true) ?? $clientes->first();
+
+        $clienteParam = $request->query('cliente_id');
+        $verTodos = $clienteParam === 'todos';
+        $clienteSelecionadoId = null;
+        if (! $verTodos) {
+            if ($clienteParam !== null && ctype_digit((string) $clienteParam)) {
+                $clienteSelecionadoId = optional($clientes->firstWhere('id', (int) $clienteParam))->id;
+            }
+            $clienteSelecionadoId = $clienteSelecionadoId ?? optional($empresaPropria)->id;
+            // Sem nenhum cliente cadastrado: cai para "todos" para não quebrar.
+            if ($clienteSelecionadoId === null) {
+                $verTodos = true;
+            }
+        }
+
+        // Escopo de cliente para ParticipanteScore (alvo = cliente OU participante daquele cliente).
+        $escopoClienteScore = function ($query) use ($verTodos, $clienteSelecionadoId) {
+            if (! $verTodos && $clienteSelecionadoId) {
+                $query->where(function ($q) use ($clienteSelecionadoId) {
+                    $q->where('cliente_id', $clienteSelecionadoId)
+                        ->orWhereHas('participante', fn ($p) => $p->where('cliente_id', $clienteSelecionadoId));
+                });
+            }
+        };
+
+        // Estatisticas (KPIs) — escopadas pelo cliente selecionado.
+        $estatisticas = $this->riskScoreService->getEstatisticas($userId, $escopoClienteScore);
+
         // CONSULTADOS: têm score (participante OU cliente). Ordem por risco (maior 1º), null ao fim.
         $consultadosQuery = ParticipanteScore::where('user_id', $userId)
             ->with(['participante', 'cliente'])
             ->orderByRaw('score_total desc nulls last')
             ->orderByDesc('ultima_consulta_em');
+
+        $escopoClienteScore($consultadosQuery);
 
         if ($filtroClassificacao !== 'todos') {
             $consultadosQuery->where('classificacao', $filtroClassificacao);
@@ -62,12 +96,19 @@ class RiskScoreController extends Controller
         $consultados = $consultadosQuery->paginate(20, ['*'], 'page')->withQueryString();
 
         // NÃO CONSULTADOS: participantes + clientes (só CNPJ) ainda sem score — lista de "a consultar".
-        $buildNaoConsultados = function (string $model, string $tipo) use ($userId, $cnpjRaw, $busca) {
-            return $model::where('user_id', $userId)
+        // Escopo por cliente: participantes pela coluna cliente_id; o próprio cliente pela coluna id.
+        $buildNaoConsultados = function (string $model, string $tipo) use ($userId, $cnpjRaw, $busca, $verTodos, $clienteSelecionadoId) {
+            $query = $model::where('user_id', $userId)
                 ->whereRaw($cnpjRaw)
                 ->whereDoesntHave('score')
-                ->when($busca !== '', fn ($q) => $q->where(fn ($w) => $w->where('razao_social', 'ilike', "%{$busca}%")->orWhere('documento', 'like', "%{$busca}%")))
-                ->selectRaw("'{$tipo}' as tipo, id, razao_social, nome_fantasia, documento, uf");
+                ->when($busca !== '', fn ($q) => $q->where(fn ($w) => $w->where('razao_social', 'ilike', "%{$busca}%")->orWhere('documento', 'like', "%{$busca}%")));
+
+            if (! $verTodos && $clienteSelecionadoId) {
+                $coluna = $tipo === 'cliente' ? 'id' : 'cliente_id';
+                $query->where($coluna, $clienteSelecionadoId);
+            }
+
+            return $query->selectRaw("'{$tipo}' as tipo, id, razao_social, nome_fantasia, documento, uf");
         };
 
         $uniao = $buildNaoConsultados(Participante::class, 'participante')
@@ -106,12 +147,13 @@ class RiskScoreController extends Controller
             }
         }
 
-        // Em risco critico (para alerta) — participante ou cliente
-        $emRiscoCritico = ParticipanteScore::where('user_id', $userId)
+        // Em risco critico (para alerta) — participante ou cliente, escopado pelo cliente
+        $emRiscoCriticoQuery = ParticipanteScore::where('user_id', $userId)
             ->where('classificacao', 'critico')
             ->with(['participante', 'cliente'])
-            ->limit(5)
-            ->get();
+            ->limit(5);
+        $escopoClienteScore($emRiscoCriticoQuery);
+        $emRiscoCritico = $emRiscoCriticoQuery->get();
 
         $data = [
             'estatisticas' => $estatisticas,
@@ -121,6 +163,9 @@ class RiskScoreController extends Controller
             'emRiscoCritico' => $emRiscoCritico,
             'filtroClassificacao' => $filtroClassificacao,
             'filtroBusca' => $busca,
+            'clientes' => $clientes,
+            'clienteSelecionadoId' => $clienteSelecionadoId,
+            'verTodosCnpjs' => $verTodos,
         ];
 
         return $this->render($request, 'index', $data);

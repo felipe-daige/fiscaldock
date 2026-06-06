@@ -16,8 +16,15 @@
 
     // Configura filtros
     function setupFilters() {
+        const filtroCliente = document.getElementById('filtro-cliente');
         const filtroClassificacao = document.getElementById('filtro-classificacao');
         const buscaParticipante = document.getElementById('busca-participante');
+
+        if (filtroCliente) {
+            filtroCliente.addEventListener('change', function() {
+                applyFilters();
+            });
+        }
 
         if (filtroClassificacao) {
             filtroClassificacao.addEventListener('change', function() {
@@ -38,10 +45,13 @@
 
     // Aplica filtros via navegacao
     function applyFilters() {
+        const cliente = document.getElementById('filtro-cliente')?.value || '';
         const classificacao = document.getElementById('filtro-classificacao')?.value || 'todos';
         const busca = document.getElementById('busca-participante')?.value || '';
 
         const params = new URLSearchParams();
+        // Visualizacao por cliente e obrigatoria — sempre enviada (id ou "todos").
+        if (cliente) params.append('cliente_id', cliente);
         if (classificacao !== 'todos') params.append('classificacao', classificacao);
         if (busca) params.append('busca', busca);
 

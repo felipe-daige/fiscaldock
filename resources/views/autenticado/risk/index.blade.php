@@ -100,6 +100,17 @@
             </div>
             <div class="p-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-3">
                 <div class="w-full sm:w-auto">
+                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Cliente</label>
+                    <select id="filtro-cliente" class="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        @foreach(($clientes ?? collect()) as $cli)
+                            <option value="{{ $cli->id }}" {{ (! ($verTodosCnpjs ?? false) && (int)($clienteSelecionadoId ?? 0) === (int)$cli->id) ? 'selected' : '' }}>
+                                {{ $cli->is_empresa_propria ? '★ '.$cli->nome.' (Minha Empresa)' : $cli->nome }}
+                            </option>
+                        @endforeach
+                        <option value="todos" {{ ($verTodosCnpjs ?? false) ? 'selected' : '' }}>Todos os CNPJs</option>
+                    </select>
+                </div>
+                <div class="w-full sm:w-auto">
                     <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Classificação</label>
                     <select id="filtro-classificacao" class="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         <option value="todos" {{ ($filtroClassificacao ?? 'todos') === 'todos' ? 'selected' : '' }}>Todas as Classificações</option>
