@@ -17,20 +17,22 @@
             'cor' => 'blue',
             'icone' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
             'consultas_display' => ['Tudo do Validação', 'CND Federal (PGFN/RFB)', 'CNDT', 'FGTS'],
-            'consultas_em_breve' => ['CNDT', 'FGTS'],
             'casos_uso' => ['Editais e licitação', 'Contratos públicos', 'Credenciamento'],
         ],
         'compliance' => [
             'cor' => 'purple',
             'icone' => 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
-            'consultas_display' => ['Tudo do Licitação', 'CND Estadual', 'CND Municipal'],
+            'consultas_display' => ['Tudo do Licitação', 'CND Estadual', 'SINTEGRA', 'CND Municipal'],
+            'consultas_em_breve' => ['CND Municipal'],
             'consultas_quebra_antes' => ['CND Estadual'],
             'casos_uso' => ['Regularidade fiscal', 'Auditoria', 'Contratos recorrentes'],
         ],
         'due_diligence' => [
             'cor' => 'amber',
             'icone' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7',
-            'consultas_display' => ['Tudo do Compliance', 'Sanções', 'CNJ', 'Protestos e processos'],
+            'consultas_display' => ['Tudo do Compliance', 'Sanções (CGU)', 'Improbidade (CNJ)', 'Protestos', 'ESG'],
+            'consultas_em_breve' => ['Protestos', 'ESG'],
+            'consultas_quebra_antes' => ['Protestos'],
             'casos_uso' => ['Risco ampliado', 'Due diligence comercial', 'Fornecedores críticos'],
         ],
         'enterprise' => [
@@ -43,8 +45,11 @@
     ];
 
     $hasMadeFirstPurchase = $hasMadeFirstPurchase ?? false;
-    $firstPurchaseLockedProducts = $firstPurchaseLockedProducts ?? ['compliance', 'due_diligence'];
-    $planosEmBreve = ['compliance', 'due_diligence'];
+    // Em consultas avulsas todos os planos pagos são usáveis dentro do teto do período de teste
+    // (pool único de consultas antes da 1ª compra) — não há bloqueio/"em breve" por plano aqui.
+    $firstPurchaseLockedProducts = [];
+    $planosEmBreve = [];
+    $tetoTeste = (int) config('trial.limite_consultas_sem_compra', 5);
     $planosDetalhados = [];
     foreach ($planos->where('is_active', true) as $p) {
         $meta = $planoMeta[$p->codigo] ?? ['cor' => 'gray', 'icone' => 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'consultas_display' => [], 'casos_uso' => []];
@@ -107,6 +112,13 @@
                 <p class="text-sm text-gray-700">
                     Cada plano define o conjunto de consultas executadas por CNPJ. O custo é calculado por participante consultado e pela frequência de uso. O objetivo desta tela é facilitar a escolha do nível de cobertura mais adequado ao seu fluxo operacional.
                 </p>
+                @if(! $hasMadeFirstPurchase)
+                    <p class="text-xs text-gray-600 mt-2">
+                        <span class="font-semibold text-gray-800">Período de teste:</span>
+                        antes da primeira compra de créditos você tem até <strong>{{ $tetoTeste }} consultas</strong> no total
+                        (somando Validação, Licitação, Compliance e Due Diligence). Esgotado o teto, é só recarregar créditos para liberar consultas ilimitadas.
+                    </p>
+                @endif
             </div>
         </div>
 
