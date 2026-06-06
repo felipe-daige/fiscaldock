@@ -142,8 +142,6 @@
             eventSource: null,
             statusPollHandle: null,
             resultsPollHandle: null,
-            cronometroHandle: null,
-            cronometroBaseMs: null,
             fontesVistas: {},        // indice -> nome (revelados pelo stream conforme avançam)
             fonteIndiceAtual: 0,
             fonteTotalAtual: 0,
@@ -171,10 +169,7 @@
                 state.resultsPollHandle = null;
             }
 
-            if (state.cronometroHandle) {
-                clearInterval(state.cronometroHandle);
-                state.cronometroHandle = null;
-            }
+            progAuto.destruir();
         };
 
         function closeEventSource() {
@@ -184,51 +179,15 @@
             state.eventSource = null;
         }
 
-        function formatarTempo(totalSegundos) {
-            var s = Math.max(0, Math.floor(totalSegundos));
-            var h = Math.floor(s / 3600);
-            var m = Math.floor((s % 3600) / 60);
-            var seg = s % 60;
-            var pad = function(n) { return n < 10 ? '0' + n : String(n); };
-            return h > 0
-                ? h + ':' + pad(m) + ':' + pad(seg)
-                : pad(m) + ':' + pad(seg);
-        }
+        // Cronômetro + shimmer + microcopy via o módulo reutilizável (padrão de toda automação).
+        var progAuto = window.ProgressoAutomacao
+            ? window.ProgressoAutomacao.criar({ bar: progressBar, tempoValor: tempoValor, dica: dicaEl, iniciadoEm: iniciadoEm })
+            : { iniciar: function () {}, parar: function () {}, trabalhando: function () {}, destruir: function () {} };
 
-        function renderCronometro() {
-            if (!tempoValor || state.cronometroBaseMs === null) return;
-            tempoValor.textContent = formatarTempo((Date.now() - state.cronometroBaseMs) / 1000);
-        }
-
-        function iniciarCronometro() {
-            if (!tempoValor || state.cronometroHandle) return;
-            // Base = início do lote (servidor) quando disponível; senão, agora.
-            state.cronometroBaseMs = (Number.isFinite(iniciadoEm) && iniciadoEm > 0)
-                ? iniciadoEm * 1000
-                : Date.now();
-            renderCronometro();
-            state.cronometroHandle = window.setInterval(renderCronometro, 1000);
-        }
-
-        function pararCronometro() {
-            if (!state.cronometroHandle) return;
-            clearInterval(state.cronometroHandle);
-            state.cronometroHandle = null;
-            // Congela no último valor (não zera) — confirma quanto a consulta levou.
-            renderCronometro();
-        }
-
-        // Shimmer "trabalhando" na barra (#4): atividade honesta — a largura segue o % real.
-        function setBarTrabalhando(ativo) {
-            if (!progressBar) return;
-            progressBar.classList.toggle('consulta-lote-bar-working', !!ativo);
-        }
-
-        // Microcopy de expectativa (#1): explica a espera nas fontes oficiais.
-        function setDicaVisivel(visivel) {
-            if (!dicaEl) return;
-            dicaEl.classList.toggle('hidden', !visivel);
-        }
+        function iniciarCronometro() { progAuto.iniciar(); }
+        function pararCronometro() { progAuto.parar(); }
+        function setBarTrabalhando(ativo) { progAuto.trabalhando(ativo); }
+        function setDicaVisivel(visivel) { progAuto.trabalhando(visivel); }
 
         var FONTE_ICONS = {
             done: '<svg class="w-3.5 h-3.5" style="color:#047857" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>',

@@ -22,6 +22,17 @@
     const etapaAtual = document.getElementById('efd-progresso-etapa');
     const metaEtapa = document.getElementById('efd-progresso-meta');
 
+    // Cronômetro + shimmer + microcopy via o módulo reutilizável (padrão de toda automação).
+    // SPED leva minutos — o relógio é especialmente útil aqui pra mostrar que está vivo.
+    const progAuto = window.ProgressoAutomacao
+        ? window.ProgressoAutomacao.criar({
+            bar: barra,
+            tempoValor: document.getElementById('efd-progresso-tempo-valor'),
+            dica: document.getElementById('efd-progresso-dica'),
+            iniciadoEm: container.dataset.iniciadoEm,
+        })
+        : { iniciar: function () {}, parar: function () {}, trabalhando: function () {}, destruir: function () {} };
+
     let eventSource = null;
     let reconnectAttempts = 0;
     let reconnectTimer = null;
@@ -178,6 +189,7 @@
     function finalizar() {
         if (finalizado) return;
         finalizado = true;
+        progAuto.parar();
         if (eventSource) {
             eventSource.close();
             eventSource = null;
@@ -233,6 +245,7 @@
                     if (!finalizado) conectar();
                 }, delay);
             } else {
+                progAuto.parar();
                 if (etapaAtual) {
                     etapaAtual.textContent = 'Conexão perdida. Atualize a página para recarregar o progresso.';
                 }
@@ -251,5 +264,6 @@
         }
     });
 
+    progAuto.iniciar();
     conectar();
 })();

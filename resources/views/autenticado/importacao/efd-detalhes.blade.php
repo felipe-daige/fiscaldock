@@ -31,7 +31,8 @@
                  class="mb-4"
                  data-tab-id="{{ $tabIdQuery }}"
                  data-tipo="{{ $tipoEfdJs }}"
-                 data-importacao-id="{{ $importacao->id }}">
+                 data-importacao-id="{{ $importacao->id }}"
+                 data-iniciado-em="{{ optional($importacao->created_at)->timestamp }}">
 
                 <div id="efd-progresso-card" class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
@@ -44,6 +45,10 @@
                         </div>
                         <p id="efd-progresso-etapa" class="text-xs text-gray-600 mt-3">Preparando importação...</p>
                         <p id="efd-progresso-meta" class="text-[11px] text-gray-500 mt-1 hidden"></p>
+                        @include('autenticado.partials.progresso-tempo', [
+                            'prefixo' => 'efd-progresso',
+                            'dica' => 'processamos o arquivo SPED no servidor — pode levar alguns minutos.',
+                        ])
                         <div id="efd-progresso-steps" class="mt-3 flex flex-wrap gap-2">
                             @php
                                 $etapas = $tipoEfdJs === 'fiscal'
@@ -119,6 +124,7 @@
 </div>
 
 @if($emProcessamento)
+<script src="/js/progresso-automacao.js?v={{ @filemtime(public_path('js/progresso-automacao.js')) ?: time() }}"></script>
 <script src="/js/efd-importacao-progresso.js?v={{ filemtime(public_path('js/efd-importacao-progresso.js')) }}"></script>
 @endif
 

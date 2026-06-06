@@ -19,6 +19,16 @@ function initClearanceResultado() {
     const stepsContainer = document.getElementById('clearance-resultado-steps');
     const knownStepLabels = {};
 
+    // Cronômetro + shimmer + microcopy via o módulo reutilizável (padrão de toda automação).
+    const progAuto = window.ProgressoAutomacao
+        ? window.ProgressoAutomacao.criar({
+            bar: progressBar,
+            tempoValor: document.getElementById('clearance-resultado-tempo-valor'),
+            dica: document.getElementById('clearance-resultado-dica'),
+            iniciadoEm: root.dataset.iniciadoEm,
+        })
+        : { iniciar() {}, parar() {}, trabalhando() {}, destruir() {} };
+
     let currentEventSource = null;
     let currentTimeoutHandle = null;
     let currentPollHandle = null;
@@ -33,6 +43,7 @@ function initClearanceResultado() {
     window._cleanupFunctions.clearanceResultado = function () {
         closeEventSource();
         stopPolling();
+        progAuto.destruir();
     };
 
     function closeEventSource() {
@@ -349,6 +360,7 @@ function initClearanceResultado() {
 
         if (status === 'processando') {
             updateProgress(percent, currentMessage, currentStepLabel);
+            progAuto.trabalhando(true);
             if (!renderTrailSteps(trailSteps)) {
                 renderSteps(currentStep, totalSteps, currentStepLabel || null, percent, status, skippedSteps);
             }
@@ -365,6 +377,7 @@ function initClearanceResultado() {
 
         if (status === 'finalizado') {
             updateProgress(100, currentMessage || 'Resultados prontos', currentStepLabel);
+            progAuto.parar();
             if (!renderTrailSteps(trailSteps)) {
                 renderSteps(currentStep, totalSteps || currentStep, currentStepLabel || null, 100, status, skippedSteps);
             }
@@ -381,6 +394,7 @@ function initClearanceResultado() {
 
         if (status === 'erro' || status === 'timeout') {
             updateProgress(percent, currentMessage, currentStepLabel);
+            progAuto.parar();
             if (!renderTrailSteps(trailSteps)) {
                 renderSteps(currentStep, totalSteps, currentStepLabel || null, percent, status, skippedSteps);
             }
@@ -444,6 +458,7 @@ function initClearanceResultado() {
     }
 
     if (statusInicial === 'processando' || statusInicial === 'pendente') {
+        progAuto.iniciar();
         handleProgressSnapshot(initialProgressSnapshot);
         openProgressStream();
         if (pollResult && jsonUrl) {

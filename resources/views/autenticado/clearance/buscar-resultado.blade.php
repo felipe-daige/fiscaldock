@@ -21,6 +21,7 @@
     data-await-result="{{ $aguardaPersistencia ? '1' : '0' }}"
     data-poll-result="1"
     data-progress-snapshot='@json($progressSnapshot ?? null)'
+    data-iniciado-em="{{ optional($lote->created_at)->timestamp }}"
 >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div class="mb-4 sm:mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -78,6 +79,10 @@
                     <div class="w-full h-1.5 rounded-full overflow-hidden" style="background-color: #e5e7eb">
                         <div id="clearance-resultado-bar" class="h-full" style="background-color: #1f2937; width: 8%; transition: width 350ms ease-out"></div>
                     </div>
+                    @include('autenticado.partials.progresso-tempo', [
+                        'prefixo' => 'clearance-resultado',
+                        'dica' => 'consultamos a SEFAZ em tempo real — pode levar alguns segundos.',
+                    ])
                     <p id="clearance-resultado-etapa-label" class="text-[11px] text-gray-500 mt-2 hidden"></p>
                     <div id="clearance-resultado-steps" class="hidden mt-3 flex flex-wrap gap-2"></div>
                 </div>
@@ -153,4 +158,5 @@
     </div>
 </div>
 
+<script src="{{ asset('js/progresso-automacao.js') }}?v={{ @filemtime(public_path('js/progresso-automacao.js')) ?: time() }}"></script>
 <script src="{{ asset('js/clearance-resultado.js') }}?v={{ @filemtime(public_path('js/clearance-resultado.js')) ?: time() }}" defer></script>
