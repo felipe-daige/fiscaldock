@@ -31,7 +31,16 @@ class CndFederal
         $status = strtoupper(trim((string) ($cnd['status'] ?? '')));
         $conseguiuEmitir = $cnd['conseguiu_emitir'] ?? null;
 
-        $indeterminado = $status === 'INDETERMINADO' || $conseguiuEmitir === false;
+        // Um status REGULAR conclusivo (Negativa / "com efeitos de negativa" / Regular /
+        // Habilitado) manda sobre conseguiu_emitir=false — ex.: FGTS volta REGULAR com
+        // conseguiu_emitir=false, e é regular, não indeterminado. Já status vazio/positivo/
+        // inconclusivo + falha de emissão segue INDETERMINADO (nunca vira irregular — caso 611).
+        $statusRegular = $status !== ''
+            && (str_contains($status, 'NEGATIVA') || str_contains($status, 'REGULAR') || str_contains($status, 'HABILITAD'))
+            && ! str_contains($status, 'IRREGULAR');
+
+        $indeterminado = $status === 'INDETERMINADO'
+            || ($conseguiuEmitir === false && ! $statusRegular);
 
         if (! $indeterminado) {
             return $vazio;

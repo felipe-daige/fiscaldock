@@ -26,10 +26,61 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
         {{-- Header --}}
-        <div class="mb-6">
+        <div class="mb-4">
             <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Score Fiscal</h1>
-            <p class="text-xs text-gray-500 mt-1">Avalie o risco fiscal e de compliance dos seus participantes.</p>
+            <p class="text-xs text-gray-500 mt-1">Avalie o risco fiscal e de compliance dos CNPJs consultados.</p>
         </div>
+
+        {{-- Como funciona --}}
+        <details class="bg-white rounded border border-gray-300 border-l-4 mb-6 group" style="border-left-color: #2563eb;">
+            <summary class="cursor-pointer px-4 py-3 flex items-center justify-between list-none hover:bg-gray-50">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span class="text-sm font-semibold text-gray-900">Como funciona o Score Fiscal</span>
+                </div>
+                <span class="text-[11px] font-semibold text-gray-500 group-open:hidden">Abrir</span>
+                <span class="text-[11px] font-semibold text-gray-500 hidden group-open:inline">Fechar</span>
+            </summary>
+            <div class="border-t border-gray-200 px-4 py-4 space-y-4">
+                <p class="text-xs text-gray-600 leading-relaxed">
+                    O Score é uma nota de <strong>0 (ótimo)</strong> a <strong>100 (pior)</strong>, calculada
+                    automaticamente ao final de cada <a href="/app/consulta" data-link class="text-blue-600 hover:underline">Consulta de CNPJ</a>.
+                    Quanto menor, mais regular o CNPJ. Vale para participantes (contrapartes) e clientes (suas empresas).
+                </p>
+
+                <div>
+                    <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Faixas de classificação</p>
+                    <div class="flex flex-wrap gap-3 text-xs">
+                        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #047857"></span><span class="text-gray-600">0–20 Baixo</span></span>
+                        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #d97706"></span><span class="text-gray-600">21–50 Médio</span></span>
+                        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #ea580c"></span><span class="text-gray-600">51–80 Alto</span></span>
+                        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #b91c1c"></span><span class="text-gray-600">81–100 Crítico</span></span>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">O que entra na nota</p>
+                    <p class="text-xs text-gray-600 leading-relaxed">
+                        Situação cadastral, CND Federal, CND Estadual, FGTS, CNDT (trabalhista) e sanções (CGU/CNJ).
+                        A nota é a <strong>média ponderada só das categorias efetivamente consultadas</strong> — o que não
+                        foi consultado, ou veio indeterminado, não entra no cálculo.
+                    </p>
+                </div>
+
+                <div class="rounded border border-amber-200 bg-amber-50 px-3 py-2">
+                    <p class="text-[11px] text-amber-800 leading-relaxed">
+                        <strong>Importante:</strong> a profundidade do score depende do plano da consulta. Uma consulta
+                        apenas cadastral (Gratuito) avalia só a situação cadastral — pode dar <strong>0/Baixo</strong> por
+                        confirmar que a empresa está ativa, sem ter checado certidões. Para um score completo, use
+                        Licitação, Compliance ou Due Diligence.
+                    </p>
+                </div>
+
+                <p class="text-[11px] text-gray-400">ESG (trabalho escravo / IBAMA) e protestos em cartório entrarão no score em breve.</p>
+            </div>
+        </details>
 
         {{-- Filtros --}}
         <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">

@@ -20,6 +20,7 @@ it('a rota score-fiscal renderiza o dashboard real (nao mais placeholder)', func
         ->get('/app/score-fiscal')
         ->assertOk()
         ->assertSee('Score Fiscal')
+        ->assertSee('Como funciona o Score Fiscal')
         ->assertSee('Avaliados');
 });
 

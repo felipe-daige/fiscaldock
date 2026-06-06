@@ -37,6 +37,13 @@ it('retorna indeterminado=false para status regular', function () {
     expect($r['motivo'])->toBeNull();
 });
 
+it('status definitivo prevalece sobre conseguiu_emitir=false', function () {
+    // FGTS volta REGULAR mas com conseguiu_emitir=false — o status definitivo manda,
+    // não é indeterminado (senão o FGTS regular não pontuaria no score).
+    expect(CndFederal::analisar(['status' => 'REGULAR', 'conseguiu_emitir' => false])['indeterminado'])->toBeFalse();
+    expect(CndFederal::analisar(['status' => 'NEGATIVA', 'conseguiu_emitir' => false])['indeterminado'])->toBeFalse();
+});
+
 it('trata null e string sem quebrar', function () {
     expect(CndFederal::analisar(null)['indeterminado'])->toBeFalse();
     expect(CndFederal::analisar('regular')['indeterminado'])->toBeFalse();

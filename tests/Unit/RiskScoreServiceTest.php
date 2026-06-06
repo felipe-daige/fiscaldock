@@ -43,6 +43,12 @@ it('compliance: sancao CGU ou condenacao CNJ => 100; consultado e limpo => 0; so
     expect($this->svc->calcularScores(['cgu_cnc' => ['status' => 'INDISPONIVEL']])['compliance'])->toBeNull();
 });
 
+it('fgts REGULAR com conseguiu_emitir=false pontua como regular (0)', function () {
+    // bug real: o FGTS volta status REGULAR + conseguiu_emitir=false; não pode virar null.
+    $scores = $this->svc->calcularScores(['crf_fgts' => ['status' => 'REGULAR', 'conseguiu_emitir' => false]]);
+    expect($scores['fgts'])->toBe(0);
+});
+
 it('esg e protestos foram removidos do calculo', function () {
     $scores = $this->svc->calcularScores(['situacao_cadastral' => 'ATIVA']);
     expect($scores)->not->toHaveKey('esg');
