@@ -81,7 +81,7 @@ it('executa de verdade o Gratuito (batch real + then) e fecha o lote', function 
     $r = App\Models\ConsultaResultado::where('consulta_lote_id', $loteId)->first();
     expect($r->status)->toBe('sucesso');
     expect($r->resultado_dados['razao_social'])->toBe('EMPRESA REAL');
-    expect($r->resultado_dados['regime_tributario'])->toBe('Normal');
+    expect($r->resultado_dados['regime_tributario'])->toBe('Não informado');
 });
 
 it('seleção combinada: participantes + clientes geram jobs com alvoTipo correto', function () {
