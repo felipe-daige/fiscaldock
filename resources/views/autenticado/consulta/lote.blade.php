@@ -66,7 +66,10 @@
                     <div class="flex-1 flex items-center">
                         <p class="text-sm font-bold text-gray-900">{{ $lote->plano?->nome ?? 'Sem plano' }}</p>
                     </div>
-                    <p class="text-[11px] text-gray-500 mt-1">{{ $lote->plano?->codigo ?? '—' }}</p>
+                    @php $custoPlano = (int) ($lote->plano?->custo_creditos ?? 0); @endphp
+                    <span class="mt-1 inline-flex items-center self-start gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide" style="background-color: #eef2ff; color: #4338ca">
+                        {{ $custoPlano > 0 ? $custoPlano.' crédito'.($custoPlano > 1 ? 's' : '').'/consulta' : 'Grátis' }}
+                    </span>
                 </div>
                 <div class="px-4 py-3 min-h-[96px] flex flex-col">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participantes</p>

@@ -472,6 +472,28 @@ it('exibe detalhe expansível com TODAS as fontes consultadas, inclusive as ause
         ->assertSee('Distribuição');
 });
 
+it('exibe créditos por consulta como tag do produto em vez do código cru', function () {
+    $user = User::factory()->create();
+    $plano = MonitoramentoPlano::porCodigo('due_diligence') ?? detalhePlano();
+
+    $lote = ConsultaLote::create([
+        'user_id' => $user->id,
+        'plano_id' => $plano->id,
+        'status' => ConsultaLote::STATUS_FINALIZADO,
+        'total_participantes' => 1,
+        'creditos_cobrados' => 0,
+        'tab_id' => 'tab-produto-tag',
+        'processado_em' => now(),
+    ]);
+
+    $resp = actingAs($user)->get("/app/consulta/lote/{$lote->id}")->assertOk();
+
+    $resp->assertSee($plano->nome);
+    if ($plano->codigo === 'due_diligence') {
+        $resp->assertSee('35 créditos/consulta')->assertDontSee('due_diligence');
+    }
+});
+
 it('exibe razão social e CNPJ do CLIENTE quando o resultado é do escopo clientes', function () {
     $user = User::factory()->create();
 
