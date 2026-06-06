@@ -208,8 +208,9 @@ class ConsultaController extends Controller
             $buscaLimpa = preg_replace('/[^0-9]/', '', $busca);
 
             $query->where(function ($q) use ($busca, $buscaLimpa) {
-                $q->where('razao_social', 'ILIKE', "%{$busca}%")
-                    ->orWhere('nome_fantasia', 'ILIKE', "%{$busca}%");
+                // unaccent + ILIKE = busca insensível a acento E maiúscula/minúscula.
+                $q->whereRaw('unaccent(razao_social) ILIKE unaccent(?)', ["%{$busca}%"])
+                    ->orWhereRaw('unaccent(nome_fantasia) ILIKE unaccent(?)', ["%{$busca}%"]);
 
                 if (strlen($buscaLimpa) >= 3) {
                     $q->orWhere('documento', 'LIKE', "%{$buscaLimpa}%");
@@ -1284,8 +1285,9 @@ class ConsultaController extends Controller
         if ($busca) {
             $buscaLimpa = preg_replace('/[^0-9]/', '', $busca);
             $query->where(function ($q) use ($busca, $buscaLimpa) {
-                $q->where('razao_social', 'ILIKE', "%{$busca}%")
-                    ->orWhere('nome', 'ILIKE', "%{$busca}%");
+                // unaccent + ILIKE = busca insensível a acento E maiúscula/minúscula.
+                $q->whereRaw('unaccent(razao_social) ILIKE unaccent(?)', ["%{$busca}%"])
+                    ->orWhereRaw('unaccent(nome) ILIKE unaccent(?)', ["%{$busca}%"]);
                 if (strlen($buscaLimpa) >= 3) {
                     $q->orWhere('documento', 'LIKE', "%{$buscaLimpa}%");
                 }

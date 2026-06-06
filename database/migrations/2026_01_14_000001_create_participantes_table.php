@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,6 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Busca acento-insensível (unaccent) nas consultas de participantes/clientes.
+        DB::statement('CREATE EXTENSION IF NOT EXISTS unaccent');
+
         // Tabela principal de participantes (Monitoramento)
         Schema::create('participantes', function (Blueprint $table) {
             $table->id();
