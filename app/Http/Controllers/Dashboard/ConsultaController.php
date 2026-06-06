@@ -1810,7 +1810,10 @@ class ConsultaController extends Controller
         $detalhePresenter = app(\App\Services\Consultas\ResultadoDetalhePresenter::class);
 
         return $lote->resultados()
-            ->with('participante:id,documento,razao_social,uf,crt,regime_tributario')
+            ->with([
+                'participante:id,documento,razao_social,uf,crt,regime_tributario',
+                'cliente:id,documento,razao_social,uf',
+            ])
             ->orderByDesc('consultado_em')
             ->orderBy('id')
             ->get()
@@ -1831,12 +1834,25 @@ class ConsultaController extends Controller
                 $fgts = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('crf_fgts'));
                 $cndt = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('cndt'));
 
+                // O alvo pode ser participante OU cliente (escopo "clientes"). O Laravel não
+                // atualiza esses cadastros, então caímos no que a própria consulta trouxe
+                // (resultado_dados da minhareceita) quando o cadastro está sem nome/CNPJ.
+                $participante = $resultado->participante;
+                $cliente = $resultado->cliente;
+                $enderecoConsulta = is_array($resultado->getDado('endereco')) ? $resultado->getDado('endereco') : [];
+                $documento = $participante?->documento ?: $cliente?->documento;
+                $razaoSocial = $participante?->razao_social
+                    ?: ($cliente?->razao_social
+                    ?: ($resultado->getDado('razao_social') ?: $resultado->getDado('nome_fantasia')));
+                $uf = $participante?->uf ?: ($cliente?->uf ?: ($enderecoConsulta['uf'] ?? null));
+
                 return [
-                    'participante_id' => $resultado->participante?->id,
-                    'cnpj' => $resultado->participante?->documento,
-                    'documento_formatado' => $resultado->participante?->cnpj_formatado ?: $resultado->participante?->documento,
-                    'razao_social' => $resultado->participante?->razao_social,
-                    'uf' => $resultado->participante?->uf,
+                    'participante_id' => $participante?->id,
+                    'cliente_id' => $cliente?->id,
+                    'cnpj' => $documento,
+                    'documento_formatado' => $this->formatarDocumentoConsulta($documento),
+                    'razao_social' => $razaoSocial,
+                    'uf' => $uf,
                     'status' => $resultado->status,
                     'status_label' => $statusMeta['label'],
                     'status_hex' => $statusMeta['hex'],
@@ -1854,6 +1870,21 @@ class ConsultaController extends Controller
                     'resumo_texto' => $resultado->isSucesso() ? $detalhePresenter->resumoTextual($resultado) : null,
                 ];
             });
+    }
+
+    /** Formata CNPJ (14) / CPF (11) p/ exibição; devolve o original se não bater. */
+    private function formatarDocumentoConsulta(?string $documento): ?string
+    {
+        $doc = preg_replace('/\D/', '', (string) $documento);
+
+        if (strlen($doc) === 14) {
+            return preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $doc);
+        }
+        if (strlen($doc) === 11) {
+            return preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $doc);
+        }
+
+        return $documento ?: null;
     }
 
     private function normalizeConsultaLoteRegularidadeBadge(mixed $valor, bool $aplicarIndeterminado = false): array

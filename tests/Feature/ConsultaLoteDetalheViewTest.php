@@ -472,6 +472,41 @@ it('exibe detalhe expansível com TODAS as fontes consultadas, inclusive as ause
         ->assertSee('Distribuição');
 });
 
+it('exibe razão social e CNPJ do CLIENTE quando o resultado é do escopo clientes', function () {
+    $user = User::factory()->create();
+
+    $cliente = \App\Models\Cliente::create([
+        'user_id' => $user->id,
+        'documento' => '97551165000193',
+        'razao_social' => 'HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS LTDA',
+        'uf' => 'MS',
+    ]);
+
+    $lote = criarLoteDetalhe($user, [
+        'status' => ConsultaLote::STATUS_FINALIZADO,
+        'processado_em' => now(),
+    ]);
+
+    ConsultaResultado::create([
+        'consulta_lote_id' => $lote->id,
+        'participante_id' => null,
+        'cliente_id' => $cliente->id,
+        'status' => ConsultaResultado::STATUS_SUCESSO,
+        'resultado_dados' => [
+            'situacao_cadastral' => 'ATIVA',
+            'razao_social' => 'HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS LTDA',
+        ],
+        'consultado_em' => now(),
+    ]);
+
+    actingAs($user)
+        ->get("/app/consulta/lote/{$lote->id}")
+        ->assertOk()
+        ->assertSee('HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS LTDA')
+        ->assertSee('97.551.165/0001-93')
+        ->assertDontSee('Sem razão social');
+});
+
 it('classifica certidão Negativa como Regular na tabela (corrige bug str_contains negativa)', function () {
     $user = User::factory()->create();
     $participante = Participante::create([

@@ -51,6 +51,14 @@ class ConsultaResultado extends Model
     }
 
     /**
+     * Cliente consultado (escopo "clientes" — resultado sem participante_id).
+     */
+    public function cliente(): BelongsTo
+    {
+        return $this->belongsTo(Cliente::class);
+    }
+
+    /**
      * Retorna se a consulta foi bem sucedida.
      */
     public function isSucesso(): bool
