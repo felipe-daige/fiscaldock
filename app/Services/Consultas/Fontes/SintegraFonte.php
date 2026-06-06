@@ -54,6 +54,10 @@ class SintegraFonte extends FonteInfoSimplesBase
             return $this->bloco(['situacao' => 'NAO_ENCONTRADA', 'mensagem' => $this->mensagem($raw)]);
         }
 
+        if ($status === 'nao_aplicavel') {
+            return $this->bloco(['situacao' => 'INDISPONIVEL', 'mensagem' => $raw['_motivo'] ?? $this->mensagem($raw) ?? 'Não consultado.']);
+        }
+
         return [];
     }
 }

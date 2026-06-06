@@ -57,6 +57,18 @@ abstract class FonteInfoSimplesBase implements Fonte
         return ['cnpj' => preg_replace('/[^0-9]/', '', (string) ($alvo['cnpj'] ?? ''))];
     }
 
+    /**
+     * Bloco padrão para status não-consultado (nao_aplicavel: bloqueado por allowlist de teste
+     * ou cobertura). Fontes de lista usam isto para mostrar INDISPONIVEL em vez de sumir.
+     */
+    protected function blocoIndisponivel(array $raw): array
+    {
+        return $this->bloco([
+            'status' => 'INDISPONIVEL',
+            'mensagem' => $raw['_motivo'] ?? $this->mensagem($raw) ?? 'Não consultado.',
+        ]);
+    }
+
     protected function bloco(array $dados): array
     {
         return [

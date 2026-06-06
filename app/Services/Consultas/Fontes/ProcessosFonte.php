@@ -41,6 +41,10 @@ class ProcessosFonte extends FonteInfoSimplesBase
             return $this->bloco(['status' => 'INDETERMINADO', 'mensagem' => $this->mensagem($raw)]);
         }
 
+        if ($status === 'nao_aplicavel') {
+            return $this->blocoIndisponivel($raw);
+        }
+
         return [];
     }
 }
