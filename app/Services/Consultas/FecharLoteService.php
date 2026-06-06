@@ -5,12 +5,17 @@ namespace App\Services\Consultas;
 use App\Models\ConsultaLote;
 use App\Models\ConsultaResultado;
 use App\Services\CreditService;
+use App\Services\RiskScoreService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class FecharLoteService
 {
-    public function __construct(private CreditService $creditService) {}
+    public function __construct(
+        private CreditService $creditService,
+        private RiskScoreService $riskScoreService,
+    ) {}
 
     public function fechar(int $loteId, array $resumo = []): void
     {
@@ -46,5 +51,41 @@ class FecharLoteService
                 );
             }
         });
+
+        // Score Fiscal: recalcula/persiste o score de cada participante consultado a partir
+        // do resultado_dados. Fora da transação de crédito — falha aqui nunca desfaz o estorno.
+        $this->persistirScores($loteId);
+    }
+
+    /**
+     * Calcula e persiste o Score de Regularidade por alvo consultado no lote —
+     * participantes (contrapartes) E clientes (empresas geridas/própria).
+     */
+    private function persistirScores(int $loteId): void
+    {
+        $resultados = ConsultaResultado::query()
+            ->where('consulta_lote_id', $loteId)
+            ->whereNotNull('resultado_dados')
+            ->with(['participante', 'cliente'])
+            ->get();
+
+        foreach ($resultados as $resultado) {
+            $dados = (array) $resultado->resultado_dados;
+
+            try {
+                if ($resultado->participante) {
+                    $this->riskScoreService->atualizarScore($resultado->participante, $dados);
+                } elseif ($resultado->cliente) {
+                    $this->riskScoreService->atualizarScoreCliente($resultado->cliente, $dados);
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Falha ao persistir score do alvo da consulta', [
+                    'lote_id' => $loteId,
+                    'participante_id' => $resultado->participante_id,
+                    'cliente_id' => $resultado->cliente_id,
+                    'erro' => $e->getMessage(),
+                ]);
+            }
+        }
     }
 }

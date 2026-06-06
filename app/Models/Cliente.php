@@ -73,6 +73,11 @@ class Cliente extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function score()
+    {
+        return $this->hasOne(ParticipanteScore::class, 'cliente_id');
+    }
+
     public function participantes()
     {
         return $this->hasMany(Participante::class);

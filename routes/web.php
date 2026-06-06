@@ -231,8 +231,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/exportar', [BiController::class, 'exportar'])->name('exportar');
     });
 
-    // Score Fiscal (placeholder público)
-    Route::get('app/score-fiscal', [DashboardController::class, 'scoreFiscalPlaceholder'])->name('app.risk.index.placeholder');
+    // Score Fiscal (Score de Regularidade) — alimentado pelos scores persistidos a cada lote de consulta
+    Route::get('app/score-fiscal', [\App\Http\Controllers\Dashboard\RiskScoreController::class, 'index'])->name('app.risk.index');
+    Route::get('app/score-fiscal/participante/{id}', [\App\Http\Controllers\Dashboard\RiskScoreController::class, 'show'])->whereNumber('id')->name('app.risk.show');
 
     // Redirect legado: /app/risk/* -> /app/score-fiscal/*
     Route::get('app/risk/{any?}', fn ($any = '') => redirect("/app/score-fiscal/{$any}"))->where('any', '.*');

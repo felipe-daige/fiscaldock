@@ -53,7 +53,7 @@
                     'due_diligence' => [
                         'cor' => 'amber',
                         'icone' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7',
-                        'consultas_display' => ['Tudo do Compliance', 'Sanções', 'CNJ', 'Protestos e processos'],
+                        'consultas_display' => ['Tudo do Compliance', 'Sanções (CGU)', 'Improbidade (CNJ)', 'ESG e Protestos (em breve)'],
                         'casos_uso' => ['Risco ampliado', 'Due diligence comercial', 'Fornecedores críticos'],
                     ],
                     'enterprise' => [
@@ -230,7 +230,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div class="border border-gray-300 rounded p-3">
                                 <p class="text-sm font-semibold text-gray-900">Consultas feitas em fontes oficiais</p>
-                                <p class="text-[11px] text-gray-600 leading-relaxed mt-1">Receita Federal (situação cadastral, QSA, Simples/MEI, CND Federal), PGFN (CNDT), Caixa (FGTS), SEFAZ (CND Estadual), prefeituras (CND Municipal), SINTEGRA, Portal da Transparência (sanções), CNJ (processos) e cartórios (protestos).</p>
+                                <p class="text-[11px] text-gray-600 leading-relaxed mt-1">Receita Federal (situação cadastral, QSA, Simples/MEI, CND Federal), PGFN (CNDT), Caixa (FGTS), SEFAZ (CND Estadual), prefeituras (CND Municipal), SINTEGRA, sanções (CGU) e improbidade (CNJ). ESG e protestos em cartório em breve.</p>
                             </div>
                             <div class="border border-gray-300 rounded p-3">
                                 <p class="text-sm font-semibold text-gray-900">Toda consulta no fornecedor é paga</p>

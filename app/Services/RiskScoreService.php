@@ -2,15 +2,21 @@
 
 namespace App\Services;
 
+use App\Models\Cliente;
 use App\Models\Participante;
 use App\Models\ParticipanteScore;
+use App\Support\CertidaoBadge;
 use Illuminate\Support\Facades\DB;
 
 class RiskScoreService
 {
     /**
-     * Pesos para cada categoria de score.
-     * Soma total = 1.0
+     * Pesos por categoria. A soma NÃO precisa dar 1.0 — o total é renormalizado
+     * dinamicamente sobre as categorias efetivamente avaliadas (ver calcularScoreTotal).
+     *
+     * ESG (trabalho escravo / IBAMA) e Protestos foram removidos: ainda não há fonte de
+     * dado. Débito documentado em docs/score-fiscal/README.md — quando a fonte existir e
+     * passar a gravar o dado, basta reintroduzir o peso aqui (a renormalização cuida do resto).
      */
     private array $pesos = [
         'cadastral' => 0.15,
@@ -19,65 +25,74 @@ class RiskScoreService
         'fgts' => 0.10,
         'trabalhista' => 0.10,
         'compliance' => 0.15,
-        'esg' => 0.10,
-        'protestos' => 0.05,
     ];
 
     /**
-     * Calcula o score de um participante baseado nos dados consultados.
+     * Penalidade (subscore de risco) aplicada quando a fonte aponta IRREGULAR.
+     * Regular = 0; INDETERMINADO / não consultado = null (não avaliado, fora do cálculo).
+     */
+    private array $penalidadeIrregular = [
+        'cnd_federal' => 70,
+        'cnd_estadual' => 70,
+        'fgts' => 50,
+        'trabalhista' => 40,
+    ];
+
+    /**
+     * Subscores por categoria a partir do `resultado_dados` (shape aninhado real).
+     * Cada valor é 0..100 (0 = ótimo, 100 = pior) OU null = não avaliado.
      *
-     * @param  array  $dados  Dados retornados das consultas (InfoSimples, etc)
+     * @param  array  $dados  Conteúdo de consulta_resultados.resultado_dados
+     * @return array<string, int|null>
      */
     public function calcularScores(array $dados): array
     {
-        $scores = [];
-
-        // Score Cadastral (situacao_cadastral)
-        $scores['cadastral'] = $this->calcularScoreCadastral($dados);
-
-        // Score CND Federal
-        $scores['cnd_federal'] = $this->calcularScoreCndFederal($dados);
-
-        // Score CND Estadual
-        $scores['cnd_estadual'] = $this->calcularScoreCndEstadual($dados);
-
-        // Score FGTS/CRF
-        $scores['fgts'] = $this->calcularScoreFgts($dados);
-
-        // Score Trabalhista (CNDT)
-        $scores['trabalhista'] = $this->calcularScoreTrabalhista($dados);
-
-        // Score Compliance (CEIS/CNEP/TCU)
-        $scores['compliance'] = $this->calcularScoreCompliance($dados);
-
-        // Score ESG (trabalho escravo, IBAMA)
-        $scores['esg'] = $this->calcularScoreEsg($dados);
-
-        // Score Protestos
-        $scores['protestos'] = $this->calcularScoreProtestos($dados);
-
-        return $scores;
+        return [
+            'cadastral' => $this->scoreCadastral($dados),
+            'cnd_federal' => $this->subscoreCertidao($dados['cnd_federal'] ?? null, $this->penalidadeIrregular['cnd_federal']),
+            'cnd_estadual' => $this->subscoreCertidao($dados['cnd_estadual'] ?? null, $this->penalidadeIrregular['cnd_estadual']),
+            'fgts' => $this->subscoreCertidao($dados['crf_fgts'] ?? $dados['fgts'] ?? null, $this->penalidadeIrregular['fgts']),
+            'trabalhista' => $this->subscoreCertidao($dados['cndt'] ?? null, $this->penalidadeIrregular['trabalhista']),
+            'compliance' => $this->scoreCompliance($dados),
+        ];
     }
 
     /**
-     * Calcula o score total ponderado.
+     * Total ponderado com renormalização dinâmica: pondera apenas as categorias avaliadas
+     * (não-null), normalizando os pesos para somar 1.0 sobre elas. Nenhuma avaliada → null.
+     *
+     * @param  array<string, int|null>  $scores
      */
-    public function calcularScoreTotal(array $scores): int
+    public function calcularScoreTotal(array $scores): ?int
     {
-        $total = 0;
+        $somaPesos = 0.0;
+        $acumulado = 0.0;
 
-        foreach ($this->pesos as $key => $peso) {
-            $total += ($scores[$key] ?? 50) * $peso;
+        foreach ($this->pesos as $categoria => $peso) {
+            $valor = $scores[$categoria] ?? null;
+            if ($valor === null) {
+                continue;
+            }
+            $acumulado += $valor * $peso;
+            $somaPesos += $peso;
         }
 
-        return (int) round($total);
+        if ($somaPesos <= 0) {
+            return null;
+        }
+
+        return (int) round($acumulado / $somaPesos);
     }
 
     /**
-     * Classifica o risco baseado no score total.
+     * Classifica o risco baseado no score total. Total null = nada avaliado.
      */
-    public function classificar(int $scoreTotal): string
+    public function classificar(?int $scoreTotal): string
     {
+        if ($scoreTotal === null) {
+            return 'nao_avaliado';
+        }
+
         return match (true) {
             $scoreTotal <= 20 => 'baixo',
             $scoreTotal <= 50 => 'medio',
@@ -96,7 +111,7 @@ class RiskScoreService
             'medio' => 'yellow',
             'alto' => 'orange',
             'critico' => 'red',
-            default => 'gray',
+            default => 'gray', // nao_avaliado e desconhecidos
         };
     }
 
@@ -107,47 +122,60 @@ class RiskScoreService
     {
         return match ($classificacao) {
             'baixo' => 'Baixo Risco',
-            'medio' => 'Medio Risco',
+            'medio' => 'Médio Risco',
             'alto' => 'Alto Risco',
-            'critico' => 'Risco Critico',
-            default => 'Nao Avaliado',
+            'critico' => 'Risco Crítico',
+            default => 'Não Avaliado',
         };
     }
 
     /**
-     * Atualiza ou cria o score de um participante.
+     * Atualiza ou cria o score de um participante (contraparte).
      */
     public function atualizarScore(Participante $participante, array $dados): ParticipanteScore
+    {
+        return $this->persistirScore(['participante_id' => $participante->id], $participante->user_id, $dados);
+    }
+
+    /**
+     * Atualiza ou cria o score de um cliente (empresa gerida/própria).
+     */
+    public function atualizarScoreCliente(Cliente $cliente, array $dados): ParticipanteScore
+    {
+        return $this->persistirScore(['cliente_id' => $cliente->id], $cliente->user_id, $dados);
+    }
+
+    /**
+     * Persiste o score do alvo (participante OU cliente) — UPSERT pela chave do alvo.
+     * NÃO toca em campos do alvo (situacao/regime/razao/ultima_consulta_em) — ver CLAUDE.md
+     * "Laravel não atualiza participantes". A frescura vive em participante_scores.ultima_consulta_em.
+     *
+     * @param  array{participante_id?: int, cliente_id?: int}  $chaveAlvo
+     */
+    private function persistirScore(array $chaveAlvo, int $userId, array $dados): ParticipanteScore
     {
         $scores = $this->calcularScores($dados);
         $scoreTotal = $this->calcularScoreTotal($scores);
         $classificacao = $this->classificar($scoreTotal);
 
-        return DB::transaction(function () use ($participante, $scores, $scoreTotal, $classificacao, $dados) {
-            $score = ParticipanteScore::updateOrCreate(
-                ['participante_id' => $participante->id],
-                [
-                    'user_id' => $participante->user_id,
-                    'score_cadastral' => $scores['cadastral'],
-                    'score_cnd_federal' => $scores['cnd_federal'],
-                    'score_cnd_estadual' => $scores['cnd_estadual'],
-                    'score_fgts' => $scores['fgts'],
-                    'score_trabalhista' => $scores['trabalhista'],
-                    'score_compliance' => $scores['compliance'],
-                    'score_esg' => $scores['esg'],
-                    'score_protestos' => $scores['protestos'],
-                    'score_total' => $scoreTotal,
-                    'classificacao' => $classificacao,
-                    'ultima_consulta_em' => now(),
-                    'dados_consultados' => $dados,
-                ]
-            );
-
-            // Atualiza ultima_consulta_em no participante
-            $participante->update(['ultima_consulta_em' => now()]);
-
-            return $score;
-        });
+        return ParticipanteScore::updateOrCreate(
+            $chaveAlvo,
+            [
+                'user_id' => $userId,
+                'score_cadastral' => $scores['cadastral'],
+                'score_cnd_federal' => $scores['cnd_federal'],
+                'score_cnd_estadual' => $scores['cnd_estadual'],
+                'score_fgts' => $scores['fgts'],
+                'score_trabalhista' => $scores['trabalhista'],
+                'score_compliance' => $scores['compliance'],
+                'score_esg' => null,       // dívida: sem fonte (docs/score-fiscal/README.md)
+                'score_protestos' => null, // dívida: sem fonte (docs/score-fiscal/README.md)
+                'score_total' => $scoreTotal,
+                'classificacao' => $classificacao,
+                'ultima_consulta_em' => now(),
+                'dados_consultados' => $dados,
+            ]
+        );
     }
 
     /**
@@ -157,11 +185,12 @@ class RiskScoreService
     {
         $totais = ParticipanteScore::where('user_id', $userId)
             ->select(
-                DB::raw('COUNT(*) as total'),
+                DB::raw('COUNT(CASE WHEN score_total IS NOT NULL THEN 1 END) as total'),
                 DB::raw("COUNT(CASE WHEN classificacao = 'baixo' THEN 1 END) as baixo"),
                 DB::raw("COUNT(CASE WHEN classificacao = 'medio' THEN 1 END) as medio"),
                 DB::raw("COUNT(CASE WHEN classificacao = 'alto' THEN 1 END) as alto"),
                 DB::raw("COUNT(CASE WHEN classificacao = 'critico' THEN 1 END) as critico"),
+                DB::raw("COUNT(CASE WHEN classificacao = 'nao_avaliado' OR score_total IS NULL THEN 1 END) as nao_avaliado"),
                 DB::raw('AVG(score_total) as media_score')
             )
             ->first();
@@ -172,6 +201,7 @@ class RiskScoreService
             'medio_risco' => (int) ($totais->medio ?? 0),
             'alto_risco' => (int) ($totais->alto ?? 0),
             'critico' => (int) ($totais->critico ?? 0),
+            'nao_avaliado' => (int) ($totais->nao_avaliado ?? 0),
             'media_score' => round((float) ($totais->media_score ?? 0), 1),
         ];
     }
@@ -184,145 +214,71 @@ class RiskScoreService
         return $this->pesos;
     }
 
-    // ============ Metodos de calculo individual ============
+    // ============ Adapter: resultado_dados (aninhado) -> subscore por categoria ============
 
-    private function calcularScoreCadastral(array $dados): int
+    /**
+     * Situação cadastral → subscore. Ausente/desconhecida = null (não avaliado).
+     * null nunca é tratado como irregular (ver Participante::classificarSituacao).
+     */
+    private function scoreCadastral(array $dados): ?int
     {
-        $situacao = strtoupper($dados['situacao_cadastral'] ?? 'ATIVA');
+        $situacao = $dados['situacao_cadastral'] ?? null;
 
-        return match ($situacao) {
+        if (empty($situacao)) {
+            return null;
+        }
+
+        return match (mb_strtoupper((string) $situacao)) {
             'ATIVA' => 0,
             'SUSPENSA' => 50,
             'INAPTA', 'BAIXADA', 'NULA' => 100,
-            default => 30,
+            default => null,
         };
     }
 
-    private function calcularScoreCndFederal(array $dados): int
+    /**
+     * Certidão (CND/CRF/CNDT) → subscore, classificada pelo padrão canônico CertidaoBadge.
+     * Regular → 0; Irregular → penalidade; INDETERMINADA/indisponível/ausente → null.
+     */
+    private function subscoreCertidao(mixed $valor, int $penalidade): ?int
     {
-        $status = strtoupper($dados['cnd_federal'] ?? '');
-
-        if (empty($status)) {
-            return 50; // Nao consultado
+        if ($valor === null || $valor === '' || $valor === []) {
+            return null;
         }
 
-        return match ($status) {
-            'NEGATIVA', 'REGULAR' => 0,
-            'POSITIVA_COM_EFEITO', 'POSITIVA COM EFEITO DE NEGATIVA' => 20,
-            'POSITIVA', 'IRREGULAR' => 70,
-            default => 50,
+        $hex = CertidaoBadge::classificar($valor, aplicarIndeterminado: true)['hex'];
+
+        return match ($hex) {
+            CertidaoBadge::HEX_REGULAR => 0,
+            CertidaoBadge::HEX_IRREGULAR => $penalidade,
+            default => null, // indeterminado, neutro, não encontrada → não avaliado
         };
     }
 
-    private function calcularScoreCndEstadual(array $dados): int
+    /**
+     * Sanções (CGU CNC: CEIS/CNEP/CEPIM) + improbidade (CNJ) → subscore.
+     * Sanção/condenação presente → 100; consultado e limpo → 0; só indisponível → null.
+     */
+    private function scoreCompliance(array $dados): ?int
     {
-        $status = strtoupper($dados['cnd_estadual'] ?? '');
+        $cgu = $dados['cgu_cnc'] ?? null;
+        $cnj = $dados['cnj_improbidade'] ?? null;
 
-        if (empty($status)) {
-            return 50; // Nao consultado
+        $temSancao = is_array($cgu) && (($cgu['possui_sancao'] ?? null) === true);
+        $temCondenacao = is_array($cnj) && (($cnj['possui_condenacao'] ?? null) === true);
+
+        if ($temSancao || $temCondenacao) {
+            return 100;
         }
 
-        return match ($status) {
-            'NEGATIVA', 'REGULAR' => 0,
-            'POSITIVA_COM_EFEITO', 'POSITIVA COM EFEITO DE NEGATIVA' => 20,
-            'POSITIVA', 'IRREGULAR' => 70,
-            default => 50,
-        };
-    }
+        // Respondeu (chave de resultado presente) e nada encontrado → limpo.
+        $cguRespondeu = is_array($cgu) && array_key_exists('possui_sancao', $cgu);
+        $cnjRespondeu = is_array($cnj) && array_key_exists('possui_condenacao', $cnj);
 
-    private function calcularScoreFgts(array $dados): int
-    {
-        $status = strtoupper($dados['crf_fgts'] ?? $dados['fgts'] ?? '');
-
-        if (empty($status)) {
-            return 50; // Nao consultado
-        }
-
-        return match ($status) {
-            'REGULAR', 'REGULARIDADE' => 0,
-            'IRREGULAR', 'IRREGULARIDADE' => 50,
-            default => 30,
-        };
-    }
-
-    private function calcularScoreTrabalhista(array $dados): int
-    {
-        $status = strtoupper($dados['cndt'] ?? '');
-
-        if (empty($status)) {
-            return 50; // Nao consultado
-        }
-
-        return match ($status) {
-            'NEGATIVA', 'REGULAR' => 0,
-            'POSITIVA', 'IRREGULAR' => 40,
-            default => 30,
-        };
-    }
-
-    private function calcularScoreCompliance(array $dados): int
-    {
-        $ceis = $dados['ceis'] ?? false;
-        $cnep = $dados['cnep'] ?? false;
-        $tcu = $dados['tcu_inidoenos'] ?? $dados['tcu'] ?? false;
-
-        if ($ceis === true || $cnep === true || $tcu === true) {
-            return 100; // Presente em lista restritiva
-        }
-
-        // Se foi consultado e nao encontrado
-        if (isset($dados['ceis']) || isset($dados['cnep']) || isset($dados['tcu'])) {
+        if ($cguRespondeu || $cnjRespondeu) {
             return 0;
         }
 
-        return 50; // Nao consultado
-    }
-
-    private function calcularScoreEsg(array $dados): int
-    {
-        $trabalhoEscravo = $dados['trabalho_escravo'] ?? false;
-        $ibama = $dados['ibama_autuacoes'] ?? [];
-
-        $score = 0;
-
-        // Lista suja de trabalho escravo - muito grave
-        if ($trabalhoEscravo === true) {
-            $score += 100;
-        }
-
-        // Autuacoes IBAMA
-        if (is_array($ibama) && count($ibama) > 0) {
-            $score += min(50, count($ibama) * 10);
-        }
-
-        return min(100, $score);
-    }
-
-    private function calcularScoreProtestos(array $dados): int
-    {
-        $protestos = $dados['protestos'] ?? [];
-        $qtdProtestos = is_array($protestos) ? count($protestos) : (int) $protestos;
-        $valorProtestos = $dados['valor_protestos'] ?? 0;
-
-        if ($qtdProtestos === 0) {
-            return 0;
-        }
-
-        // Score baseado em quantidade e valor
-        $scorePorQtd = match (true) {
-            $qtdProtestos <= 2 => 20,
-            $qtdProtestos <= 5 => 40,
-            $qtdProtestos <= 10 => 60,
-            default => 80,
-        };
-
-        $scorePorValor = match (true) {
-            $valorProtestos < 10000 => 0,
-            $valorProtestos < 50000 => 10,
-            $valorProtestos < 100000 => 20,
-            default => 30,
-        };
-
-        return min(100, $scorePorQtd + $scorePorValor);
+        return null; // não consultado ou só veio INDISPONIVEL
     }
 }

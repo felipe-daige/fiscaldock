@@ -11,6 +11,7 @@ class ParticipanteScore extends Model
 
     protected $fillable = [
         'participante_id',
+        'cliente_id',
         'user_id',
         'score_cadastral',
         'score_cnd_federal',
@@ -52,9 +53,56 @@ class ParticipanteScore extends Model
         return $this->belongsTo(Participante::class);
     }
 
+    public function cliente(): BelongsTo
+    {
+        return $this->belongsTo(Cliente::class);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Entidade pontuada: participante (contraparte) OU cliente (empresa gerida/própria).
+     */
+    public function alvo(): ?Model
+    {
+        return $this->participante ?: $this->cliente;
+    }
+
+    public function getAlvoTipoAttribute(): string
+    {
+        return $this->participante_id ? 'participante' : 'cliente';
+    }
+
+    public function getAlvoNomeAttribute(): string
+    {
+        return $this->alvo()?->razao_social ?? 'N/A';
+    }
+
+    public function getAlvoNomeFantasiaAttribute(): ?string
+    {
+        return $this->alvo()?->nome_fantasia;
+    }
+
+    public function getAlvoUfAttribute(): ?string
+    {
+        return $this->alvo()?->uf;
+    }
+
+    /**
+     * CNPJ formatado do alvo (00.000.000/0000-00). Sem formatar se não tiver 14 dígitos.
+     */
+    public function getAlvoDocumentoAttribute(): string
+    {
+        $doc = preg_replace('/\D/', '', (string) ($this->alvo()?->documento ?? ''));
+
+        if (strlen($doc) !== 14) {
+            return $doc;
+        }
+
+        return preg_replace('/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/', '$1.$2.$3/$4-$5', $doc);
     }
 
     // Acessores
@@ -102,42 +150,42 @@ class ParticipanteScore extends Model
     }
 
     /**
-     * Retorna os scores individuais como array.
+     * Categorias avaliáveis com seus subscores. `score = null` → não avaliado nesta consulta
+     * (fonte não consultada / INDETERMINADA). ESG e Protestos ficam de fora (sem fonte —
+     * exibidos como "em breve" na UI; ver docs/score-fiscal/README.md).
      */
     public function getScoresDetalhadosAttribute(): array
     {
         return [
             'cadastral' => [
-                'label' => 'Situacao Cadastral',
+                'label' => 'Situação Cadastral',
                 'score' => $this->score_cadastral,
+                'avaliado' => $this->score_cadastral !== null,
             ],
             'cnd_federal' => [
                 'label' => 'CND Federal',
                 'score' => $this->score_cnd_federal,
+                'avaliado' => $this->score_cnd_federal !== null,
             ],
             'cnd_estadual' => [
                 'label' => 'CND Estadual',
                 'score' => $this->score_cnd_estadual,
+                'avaliado' => $this->score_cnd_estadual !== null,
             ],
             'fgts' => [
                 'label' => 'FGTS/CRF',
                 'score' => $this->score_fgts,
+                'avaliado' => $this->score_fgts !== null,
             ],
             'trabalhista' => [
-                'label' => 'CNDT',
+                'label' => 'CNDT (Trabalhista)',
                 'score' => $this->score_trabalhista,
+                'avaliado' => $this->score_trabalhista !== null,
             ],
             'compliance' => [
-                'label' => 'Compliance (CEIS/CNEP)',
+                'label' => 'Sanções (CGU/CNJ)',
                 'score' => $this->score_compliance,
-            ],
-            'esg' => [
-                'label' => 'ESG',
-                'score' => $this->score_esg,
-            ],
-            'protestos' => [
-                'label' => 'Protestos',
-                'score' => $this->score_protestos,
+                'avaliado' => $this->score_compliance !== null,
             ],
         ];
     }

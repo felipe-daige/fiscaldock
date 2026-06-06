@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\Cliente;
 use App\Models\Participante;
 use App\Models\ParticipanteScore;
 use App\Services\RiskScoreService;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 class RiskScoreController extends Controller
 {
     private const AUTH_VIEW_PREFIX = 'autenticado.risk.';
+
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
 
     public function __construct(
@@ -32,42 +34,65 @@ class RiskScoreController extends Controller
         // Estatisticas gerais
         $estatisticas = $this->riskScoreService->getEstatisticas($userId);
 
-        // Participantes com scores (paginado)
-        $participantesQuery = Participante::where('user_id', $userId)
-            ->with('score')
-            ->orderBy('razao_social');
+        $busca = trim((string) $request->input('busca', ''));
+        $filtroClassificacao = $request->input('classificacao', 'todos');
 
-        // Filtro por classificacao
-        if ($request->has('classificacao') && $request->classificacao !== 'todos') {
-            $participantesQuery->whereHas('score', function ($q) use ($request) {
-                $q->where('classificacao', $request->classificacao);
+        // SÓ CNPJ (14 dígitos) — CPF fica de fora das listas.
+        $cnpjRaw = "length(regexp_replace(coalesce(documento, ''), '[^0-9]', '', 'g')) = 14";
+
+        // CONSULTADOS: têm score (participante OU cliente). Ordem por risco (maior 1º), null ao fim.
+        $consultadosQuery = ParticipanteScore::where('user_id', $userId)
+            ->with(['participante', 'cliente'])
+            ->orderByRaw('score_total desc nulls last')
+            ->orderByDesc('ultima_consulta_em');
+
+        if ($filtroClassificacao !== 'todos') {
+            $consultadosQuery->where('classificacao', $filtroClassificacao);
+        }
+
+        if ($busca !== '') {
+            $filtroAlvo = function ($q) use ($busca) {
+                $q->where('razao_social', 'ilike', "%{$busca}%")->orWhere('documento', 'like', "%{$busca}%");
+            };
+            $consultadosQuery->where(function ($q) use ($filtroAlvo) {
+                $q->whereHas('participante', $filtroAlvo)->orWhereHas('cliente', $filtroAlvo);
             });
         }
 
-        // Filtro por busca
-        if ($request->has('busca') && ! empty($request->busca)) {
-            $busca = $request->busca;
-            $participantesQuery->where(function ($q) use ($busca) {
-                $q->where('razao_social', 'ilike', "%{$busca}%")
-                  ->orWhere('documento', 'like', "%{$busca}%");
-            });
-        }
+        $consultados = $consultadosQuery->paginate(20, ['*'], 'page')->withQueryString();
 
-        $participantes = $participantesQuery->paginate(20);
+        // NÃO CONSULTADOS: participantes + clientes (só CNPJ) ainda sem score — lista de "a consultar".
+        $buildNaoConsultados = function (string $model, string $tipo) use ($userId, $cnpjRaw, $busca) {
+            return $model::where('user_id', $userId)
+                ->whereRaw($cnpjRaw)
+                ->whereDoesntHave('score')
+                ->when($busca !== '', fn ($q) => $q->where(fn ($w) => $w->where('razao_social', 'ilike', "%{$busca}%")->orWhere('documento', 'like', "%{$busca}%")))
+                ->selectRaw("'{$tipo}' as tipo, id, razao_social, nome_fantasia, documento, uf");
+        };
 
-        // Participantes em risco critico (para alerta)
+        $uniao = $buildNaoConsultados(Participante::class, 'participante')
+            ->unionAll($buildNaoConsultados(Cliente::class, 'cliente'));
+
+        $naoConsultados = \Illuminate\Support\Facades\DB::query()
+            ->fromSub($uniao, 'nc')
+            ->orderBy('razao_social')
+            ->paginate(20, ['*'], 'nc')
+            ->withQueryString();
+
+        // Em risco critico (para alerta) — participante ou cliente
         $emRiscoCritico = ParticipanteScore::where('user_id', $userId)
             ->where('classificacao', 'critico')
-            ->with('participante')
+            ->with(['participante', 'cliente'])
             ->limit(5)
             ->get();
 
         $data = [
             'estatisticas' => $estatisticas,
-            'participantes' => $participantes,
+            'consultados' => $consultados,
+            'naoConsultados' => $naoConsultados,
             'emRiscoCritico' => $emRiscoCritico,
-            'filtroClassificacao' => $request->classificacao ?? 'todos',
-            'filtroBusca' => $request->busca ?? '',
+            'filtroClassificacao' => $filtroClassificacao,
+            'filtroBusca' => $busca,
         ];
 
         return $this->render($request, 'index', $data);
@@ -86,64 +111,21 @@ class RiskScoreController extends Controller
 
         $participante = Participante::where('user_id', $userId)
             ->where('id', $id)
-            ->with(['score', 'notasComoEmitente', 'notasComoDestinatario'])
+            ->with('score')
             ->firstOrFail();
 
-        // Calcular volume de transacoes
-        $volumeEmitente = $participante->notasComoEmitente()->sum('valor_total');
-        $volumeDestinatario = $participante->notasComoDestinatario()->sum('valor_total');
+        // Volume movimentado no acervo EFD auditado (efd_notas tem só participante_id — sem
+        // split emitente/destinatário, que é exclusivo do acervo XML).
+        $volumeEfd = (float) $participante->efdNotas()->sum('valor_total');
 
         $data = [
             'participante' => $participante,
             'score' => $participante->score,
             'pesos' => $this->riskScoreService->getPesos(),
-            'volumeEmitente' => $volumeEmitente,
-            'volumeDestinatario' => $volumeDestinatario,
+            'volumeEfd' => $volumeEfd,
         ];
 
         return $this->render($request, 'show', $data);
-    }
-
-    /**
-     * Executa consulta de risco para um participante.
-     * Por enquanto simula os dados - integracao com InfoSimples sera feita via n8n.
-     */
-    public function consultar(Request $request, int $id)
-    {
-        if (! Auth::check()) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
-
-        $userId = Auth::id();
-
-        $participante = Participante::where('user_id', $userId)
-            ->where('id', $id)
-            ->first();
-
-        if (! $participante) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Participante nao encontrado',
-            ], 404);
-        }
-
-        // Por enquanto, simular dados baseados na situacao cadastral existente
-        // A integracao real sera via webhook n8n
-        $dadosSimulados = $this->simularDadosConsulta($participante);
-
-        // Atualizar score
-        $score = $this->riskScoreService->atualizarScore($participante, $dadosSimulados);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Score atualizado com sucesso',
-            'score' => [
-                'total' => $score->score_total,
-                'classificacao' => $score->classificacao,
-                'classificacao_label' => $score->classificacao_label,
-                'detalhes' => $score->scores_detalhados,
-            ],
-        ]);
     }
 
     /**
@@ -188,64 +170,6 @@ class RiskScoreController extends Controller
             'maior_risco' => $maiorRisco,
             'distribuicao' => $distribuicao,
         ]);
-    }
-
-    /**
-     * Atualiza scores em lote.
-     */
-    public function atualizarEmLote(Request $request)
-    {
-        if (! Auth::check()) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
-
-        $userId = Auth::id();
-        $ids = $request->input('participante_ids', []);
-
-        if (empty($ids)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Nenhum participante selecionado',
-            ], 400);
-        }
-
-        $participantes = Participante::where('user_id', $userId)
-            ->whereIn('id', $ids)
-            ->get();
-
-        $atualizados = 0;
-        foreach ($participantes as $participante) {
-            $dados = $this->simularDadosConsulta($participante);
-            $this->riskScoreService->atualizarScore($participante, $dados);
-            $atualizados++;
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => "{$atualizados} participante(s) atualizado(s)",
-            'atualizados' => $atualizados,
-        ]);
-    }
-
-    /**
-     * Simula dados de consulta baseado nas informacoes existentes.
-     * TODO: Substituir por integracao real com InfoSimples via n8n.
-     */
-    private function simularDadosConsulta(Participante $participante): array
-    {
-        return [
-            'situacao_cadastral' => $participante->situacao_cadastral ?? 'ATIVA',
-            'cnd_federal' => null, // Nao consultado
-            'cnd_estadual' => null,
-            'crf_fgts' => null,
-            'cndt' => null,
-            'ceis' => false,
-            'cnep' => false,
-            'tcu' => false,
-            'trabalho_escravo' => false,
-            'ibama_autuacoes' => [],
-            'protestos' => [],
-        ];
     }
 
     /**

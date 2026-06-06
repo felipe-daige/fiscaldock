@@ -12,6 +12,15 @@
         'alto' => ['label' => 'ALTO', 'hex' => '#ea580c'],
         'critico' => ['label' => 'CRÍTICO', 'hex' => '#b91c1c'],
     ];
+    $fmtCnpj = function($doc) {
+        $d = preg_replace('/\D/', '', (string) $doc);
+        return strlen($d) === 14 ? preg_replace('/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/', '$1.$2.$3/$4-$5', $d) : $d;
+    };
+    $tipoBadge = function($tipo) {
+        return $tipo === 'cliente'
+            ? ['label' => 'Cliente', 'hex' => '#4338ca']
+            : ['label' => 'Participante', 'hex' => '#374151'];
+    };
 @endphp
 <div class="min-h-screen bg-gray-100" id="risk-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -27,10 +36,10 @@
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
             </div>
-            <div class="p-4 flex flex-wrap items-end gap-3">
-                <div>
+            <div class="p-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-3">
+                <div class="w-full sm:w-auto">
                     <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Classificação</label>
-                    <select id="filtro-classificacao" class="px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                    <select id="filtro-classificacao" class="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         <option value="todos" {{ ($filtroClassificacao ?? 'todos') === 'todos' ? 'selected' : '' }}>Todas as Classificações</option>
                         <option value="baixo" {{ ($filtroClassificacao ?? '') === 'baixo' ? 'selected' : '' }}>Baixo Risco</option>
                         <option value="medio" {{ ($filtroClassificacao ?? '') === 'medio' ? 'selected' : '' }}>Médio Risco</option>
@@ -38,7 +47,7 @@
                         <option value="critico" {{ ($filtroClassificacao ?? '') === 'critico' ? 'selected' : '' }}>Crítico</option>
                     </select>
                 </div>
-                <div class="flex-1 min-w-[240px]">
+                <div class="w-full sm:flex-1 sm:min-w-[240px]">
                     <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Buscar</label>
                     <div class="relative">
                         <input type="text" id="busca-participante" placeholder="CNPJ ou razão social..." value="{{ $filtroBusca ?? '' }}" class="w-full px-3 py-2 pl-9 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
@@ -91,13 +100,17 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                 </svg>
                 <div>
-                    <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wide">Participantes em Risco Crítico</h4>
+                    <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wide">CNPJs em Risco Crítico</h4>
                     <ul class="mt-2 space-y-1">
                         @foreach($emRiscoCritico as $scoreItem)
                             <li class="text-sm text-gray-700">
-                                <a href="/app/score-fiscal/participante/{{ $scoreItem->participante_id }}" data-link class="text-gray-900 hover:text-gray-600 hover:underline">
-                                    {{ $scoreItem->participante->razao_social ?? 'N/A' }} <span class="font-mono text-[11px] text-gray-500">({{ $scoreItem->participante->cnpj_formatado ?? '' }})</span> — Score: <span class="font-bold" style="color: #b91c1c">{{ $scoreItem->score_total }}</span>
-                                </a>
+                                @if($scoreItem->participante_id)
+                                    <a href="/app/score-fiscal/participante/{{ $scoreItem->participante_id }}" data-link class="text-gray-900 hover:text-gray-600 hover:underline">
+                                        {{ $scoreItem->alvo_nome }} <span class="font-mono text-[11px] text-gray-500">({{ $scoreItem->alvo_documento }})</span> — Score: <span class="font-bold" style="color: #b91c1c">{{ $scoreItem->score_total }}</span>
+                                    </a>
+                                @else
+                                    {{ $scoreItem->alvo_nome }} <span class="font-mono text-[11px] text-gray-500">({{ $scoreItem->alvo_documento }})</span> — Score: <span class="font-bold" style="color: #b91c1c">{{ $scoreItem->score_total }}</span>
+                                @endif
                             </li>
                         @endforeach
                     </ul>
@@ -106,20 +119,20 @@
         </div>
         @endif
 
-        {{-- Lista de Participantes --}}
-        <div class="bg-white rounded border border-gray-300 overflow-hidden">
+        {{-- CONSULTADOS — participantes que já têm score (ordenados por risco) --}}
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Participantes</span>
-                <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ $participantes->total() ?? 0 }}</span>
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Consultados</span>
+                <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ $consultados->total() ?? 0 }}</span>
             </div>
 
-            @if(($participantes ?? collect())->count() > 0)
-            <div class="overflow-x-auto">
+            @if(($consultados ?? collect())->count() > 0)
+            <div class="hidden md:block overflow-x-auto">
                 <table class="min-w-full">
                     <thead>
                         <tr class="border-b border-gray-300">
-                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participante</th>
-                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">CNPJ</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">CNPJ / Razão Social</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Tipo</th>
                             <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">UF</th>
                             <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Score</th>
                             <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Classificação</th>
@@ -128,32 +141,27 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        @foreach($participantes as $participante)
+                        @foreach($consultados as $sc)
+                        @php $tb = $tipoBadge($sc->alvo_tipo); @endphp
                         <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-3 py-3 whitespace-nowrap">
-                                <div class="text-sm text-gray-900 font-medium">{{ $participante->razao_social ?? 'N/A' }}</div>
-                                @if($participante->nome_fantasia)
-                                    <div class="text-[11px] text-gray-500">{{ $participante->nome_fantasia }}</div>
-                                @endif
+                                <div class="text-sm text-gray-900 font-medium">{{ $sc->alvo_nome }}</div>
+                                <div class="text-[11px] text-gray-500 font-mono">{{ $sc->alvo_documento }}</div>
                             </td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-700 font-mono">
-                                {{ $participante->cnpj_formatado }}
+                            <td class="px-3 py-3 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tb['hex'] }}">{{ $tb['label'] }}</span>
                             </td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-700">
-                                {{ $participante->uf ?? '—' }}
-                            </td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-700">{{ $sc->alvo_uf ?? '—' }}</td>
                             <td class="px-3 py-3 whitespace-nowrap text-center">
-                                @if($participante->score)
-                                    <span class="text-lg font-bold font-mono" style="color: {{ $scoreColor($participante->score->score_total) }}">
-                                        {{ $participante->score->score_total }}
-                                    </span>
+                                @if($sc->score_total !== null)
+                                    <span class="text-lg font-bold font-mono" style="color: {{ $scoreColor($sc->score_total) }}">{{ $sc->score_total }}</span>
                                 @else
                                     <span class="text-sm text-gray-400">—</span>
                                 @endif
                             </td>
                             <td class="px-3 py-3 whitespace-nowrap text-center">
-                                @if($participante->score && isset($classBadge[$participante->score->classificacao]))
-                                    @php $b = $classBadge[$participante->score->classificacao]; @endphp
+                                @if(isset($classBadge[$sc->classificacao]))
+                                    @php $b = $classBadge[$sc->classificacao]; @endphp
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $b['hex'] }}">
                                         {{ $b['label'] }}
                                     </span>
@@ -164,15 +172,17 @@
                                 @endif
                             </td>
                             <td class="px-3 py-3 whitespace-nowrap text-center text-sm text-gray-700 font-mono">
-                                @if($participante->score && $participante->score->ultima_consulta_em)
-                                    {{ $participante->score->ultima_consulta_em->format('d/m/Y') }}
+                                @if($sc->ultima_consulta_em)
+                                    {{ $sc->ultima_consulta_em->format('d/m/Y') }}
                                 @else
                                     —
                                 @endif
                             </td>
                             <td class="px-3 py-3 whitespace-nowrap text-right text-xs">
-                                <a href="/app/score-fiscal/participante/{{ $participante->id }}" data-link class="text-gray-600 hover:text-gray-900 hover:underline mr-3">Detalhes</a>
-                                <button type="button" class="btn-consultar text-gray-600 hover:text-gray-900 hover:underline" data-id="{{ $participante->id }}">Consultar</button>
+                                @if($sc->participante_id)
+                                    <a href="/app/score-fiscal/participante/{{ $sc->participante_id }}" data-link class="text-gray-600 hover:text-gray-900 hover:underline mr-3">Detalhes</a>
+                                @endif
+                                <a href="/app/consulta" data-link class="text-gray-600 hover:text-gray-900 hover:underline">Reconsultar</a>
                             </td>
                         </tr>
                         @endforeach
@@ -180,26 +190,133 @@
                 </table>
             </div>
 
-            {{-- Paginacao --}}
-            @if($participantes->hasPages())
+            {{-- Mobile: cards --}}
+            <div class="divide-y divide-gray-100 md:hidden">
+                @foreach($consultados as $sc)
+                @php $tb = $tipoBadge($sc->alvo_tipo); @endphp
+                <div class="px-4 py-3">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="text-sm text-gray-900 font-medium truncate">{{ $sc->alvo_nome }}</p>
+                            <p class="text-[11px] text-gray-500 font-mono">{{ $sc->alvo_documento }}</p>
+                        </div>
+                        <div class="flex-shrink-0 text-right">
+                            @if($sc->score_total !== null)
+                                <span class="text-xl font-bold font-mono" style="color: {{ $scoreColor($sc->score_total) }}">{{ $sc->score_total }}</span>
+                            @else
+                                <span class="text-sm text-gray-400">—</span>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 mt-2">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tb['hex'] }}">{{ $tb['label'] }}</span>
+                        @if(isset($classBadge[$sc->classificacao]))
+                            @php $b = $classBadge[$sc->classificacao]; @endphp
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $b['hex'] }}">{{ $b['label'] }}</span>
+                        @else
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Não Avaliado</span>
+                        @endif
+                        @if($sc->alvo_uf)
+                            <span class="text-[11px] text-gray-500">{{ $sc->alvo_uf }}</span>
+                        @endif
+                        @if($sc->ultima_consulta_em)
+                            <span class="text-[11px] text-gray-400">· {{ $sc->ultima_consulta_em->format('d/m/Y') }}</span>
+                        @endif
+                    </div>
+                    <div class="flex items-center gap-4 mt-2 text-xs">
+                        @if($sc->participante_id)
+                            <a href="/app/score-fiscal/participante/{{ $sc->participante_id }}" data-link class="text-gray-600 hover:text-gray-900 hover:underline">Detalhes</a>
+                        @endif
+                        <a href="/app/consulta" data-link class="text-gray-600 hover:text-gray-900 hover:underline">Reconsultar</a>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+
+            @if($consultados->hasPages())
             <div class="border-t border-gray-300 px-4 py-3">
-                {{ $participantes->withQueryString()->links() }}
+                {{ $consultados->links() }}
             </div>
             @endif
 
             @else
-            <div class="px-6 py-12 text-center">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-                <h3 class="mt-4 text-sm font-semibold text-gray-900 uppercase tracking-wide">Nenhum participante encontrado</h3>
-                <p class="mt-2 text-xs text-gray-500">Importe participantes via SPED ou XMLs.</p>
-                <a href="/app/importacao/xml" data-link class="mt-4 inline-flex items-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                    </svg>
-                    Importar XMLs
-                </a>
+            <div class="px-6 py-10 text-center">
+                <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide">Nenhum CNPJ consultado ainda</h3>
+                <p class="mt-2 text-xs text-gray-500">O score é calculado automaticamente ao final de cada Consulta de CNPJ.</p>
+                <a href="/app/consulta" data-link class="mt-4 inline-flex items-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">Fazer uma consulta</a>
+            </div>
+            @endif
+        </div>
+
+        {{-- NÃO CONSULTADOS — CNPJs (participantes + clientes) ainda sem score --}}
+        <div class="bg-white rounded border border-gray-300 overflow-hidden">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Não consultados</span>
+                <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ $naoConsultados->total() ?? 0 }}</span>
+            </div>
+
+            @if(($naoConsultados ?? collect())->count() > 0)
+            <div class="hidden md:block overflow-x-auto">
+                <table class="min-w-full">
+                    <thead>
+                        <tr class="border-b border-gray-300">
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">CNPJ / Razão Social</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Tipo</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">UF</th>
+                            <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @foreach($naoConsultados as $item)
+                        @php $tb = $tipoBadge($item->tipo); @endphp
+                        <tr class="hover:bg-gray-50/50 transition-colors">
+                            <td class="px-3 py-3 whitespace-nowrap">
+                                <div class="text-sm text-gray-900 font-medium">{{ $item->razao_social ?? 'N/A' }}</div>
+                                <div class="text-[11px] text-gray-500 font-mono">{{ $fmtCnpj($item->documento) }}</div>
+                            </td>
+                            <td class="px-3 py-3 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tb['hex'] }}">{{ $tb['label'] }}</span>
+                            </td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-700">{{ $item->uf ?? '—' }}</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-right text-xs">
+                                <a href="/app/consulta" data-link class="text-gray-600 hover:text-gray-900 hover:underline">Consultar</a>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            {{-- Mobile: cards --}}
+            <div class="divide-y divide-gray-100 md:hidden">
+                @foreach($naoConsultados as $item)
+                @php $tb = $tipoBadge($item->tipo); @endphp
+                <div class="px-4 py-3">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="text-sm text-gray-900 font-medium truncate">{{ $item->razao_social ?? 'N/A' }}</p>
+                            <p class="text-[11px] text-gray-500 font-mono">{{ $fmtCnpj($item->documento) }}</p>
+                        </div>
+                        <span class="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tb['hex'] }}">{{ $tb['label'] }}</span>
+                    </div>
+                    <div class="flex items-center justify-between mt-2">
+                        <span class="text-[11px] text-gray-500">{{ $item->uf ?? '—' }}</span>
+                        <a href="/app/consulta" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Consultar</a>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+
+            @if($naoConsultados->hasPages())
+            <div class="border-t border-gray-300 px-4 py-3">
+                {{ $naoConsultados->links() }}
+            </div>
+            @endif
+
+            @else
+            <div class="px-6 py-10 text-center">
+                <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide">Nenhum CNPJ pendente</h3>
+                <p class="mt-2 text-xs text-gray-500">Todos os CNPJs cadastrados já foram consultados.</p>
             </div>
             @endif
         </div>
