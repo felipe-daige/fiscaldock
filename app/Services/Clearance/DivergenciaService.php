@@ -186,8 +186,9 @@ class DivergenciaService
     }
 
     /**
-     * Retorna map chave_acesso => ['valor_total' => float, 'origem' => 'xml'|'efd', 'id' => int].
-     * XML tem precedência sobre EFD quando ambos existem (busca avulsa / upload é mais rico).
+     * Retorna map chave_acesso => ['valor_total','contraparte_cnpj','data_emissao','origem','id'].
+     * `contraparte_cnpj` = CNPJ da contraparte declarada (participante na EFD; lado sem cliente_id
+     * no XML). XML tem precedência sobre EFD quando ambos existem.
      */
     public function buscarDeclaradoPorChave(int $userId, array $chaves): array
     {
@@ -198,12 +199,18 @@ class DivergenciaService
         $map = [];
 
         EfdNota::query()
-            ->where('user_id', $userId)
-            ->whereIn('chave_acesso', $chaves)
-            ->get(['id', 'chave_acesso', 'valor_total'])
+            ->leftJoin('participantes', 'participantes.id', '=', 'efd_notas.participante_id')
+            ->where('efd_notas.user_id', $userId)
+            ->whereIn('efd_notas.chave_acesso', $chaves)
+            ->get([
+                'efd_notas.id', 'efd_notas.chave_acesso', 'efd_notas.valor_total',
+                'efd_notas.data_emissao', 'participantes.documento as contraparte_cnpj',
+            ])
             ->each(function ($nota) use (&$map) {
                 $map[$nota->chave_acesso] = [
                     'valor_total' => (float) $nota->valor_total,
+                    'contraparte_cnpj' => $nota->contraparte_cnpj ? preg_replace('/\D/', '', $nota->contraparte_cnpj) : null,
+                    'data_emissao' => $nota->data_emissao ? substr((string) $nota->data_emissao, 0, 10) : null,
                     'origem' => 'efd',
                     'id' => $nota->id,
                 ];
@@ -212,10 +219,14 @@ class DivergenciaService
         XmlNota::query()
             ->where('user_id', $userId)
             ->whereIn('chave_acesso', $chaves)
-            ->get(['id', 'chave_acesso', 'valor_total'])
+            ->get(['id', 'chave_acesso', 'valor_total', 'data_emissao', 'emit_documento', 'dest_documento', 'emit_cliente_id', 'dest_cliente_id'])
             ->each(function ($nota) use (&$map) {
+                // contraparte = lado SEM cliente_id (o outro lado é a empresa do usuário).
+                $contraparte = $nota->emit_cliente_id ? $nota->dest_documento : $nota->emit_documento;
                 $map[$nota->chave_acesso] = [
                     'valor_total' => (float) $nota->valor_total,
+                    'contraparte_cnpj' => $contraparte ? preg_replace('/\D/', '', $contraparte) : null,
+                    'data_emissao' => $nota->data_emissao ? substr((string) $nota->data_emissao, 0, 10) : null,
                     'origem' => 'xml',
                     'id' => $nota->id,
                 ];
