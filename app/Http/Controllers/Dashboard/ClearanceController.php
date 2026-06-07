@@ -1760,6 +1760,11 @@ class ClearanceController extends Controller
                 consulta.dest_cnpj,
                 NULL::varchar as tomador_nome,
                 NULL::varchar as tomador_cnpj,
+                consulta.natureza_operacao,
+                consulta.eventos,
+                consulta.url_html,
+                consulta.url_site_receipt,
+                consulta.payload->'nfe_clearance'->>'situacao_ambiente' as situacao_ambiente,
                 cliente.razao_social as cliente_nome,
                 consulta.consultado_em,
                 consulta.created_at
@@ -1786,6 +1791,11 @@ class ClearanceController extends Controller
                 consulta.dest_cnpj,
                 consulta.tomador_nome,
                 consulta.tomador_cnpj,
+                consulta.natureza_operacao,
+                consulta.eventos,
+                consulta.url_html,
+                consulta.url_site_receipt,
+                consulta.payload->'cte_clearance'->>'situacao_ambiente' as situacao_ambiente,
                 cliente.razao_social as cliente_nome,
                 consulta.consultado_em,
                 consulta.created_at
@@ -1831,6 +1841,24 @@ class ClearanceController extends Controller
                 $chave !== '' && isset($efdByChave[$chave]) => route('app.notas.detalhes', ['origem' => 'efd', 'id' => $efdByChave[$chave]]),
                 default => null,
             };
+            $resultado->eventos = is_string($resultado->eventos ?? null)
+                ? (json_decode($resultado->eventos, true) ?: [])
+                : (array) ($resultado->eventos ?? []);
+            $resultado->eventos_chips = collect($resultado->eventos)
+                ->map(fn ($e) => [
+                    'label' => $this->rotuloEventoDfe((string) ($e['evento'] ?? '')),
+                    'hex' => $this->hexEventoDfe((string) ($e['evento'] ?? '')),
+                    'protocolo' => $e['protocolo'] ?? null,
+                    'data' => $e['data_autorizacao'] ?? ($e['data_inclusao'] ?? null),
+                ])
+                ->filter(fn ($c) => $c['label'] !== '')
+                ->values()
+                ->all();
+            $resultado->comprovante_url = $resultado->url_html ?: ($resultado->url_site_receipt ?: null);
+            $resultado->ambiente_homologacao = str_contains(
+                mb_strtoupper((string) ($resultado->situacao_ambiente ?? '')), 'HOMOLOGA'
+            );
+
             $resultado->origem_acervo_label = null;
             $resultado->origem_acervo_hex = null;
             $resultado->ordem_lote = null;
@@ -1989,6 +2017,32 @@ class ClearanceController extends Controller
             'INDETERMINADO', 'NAO_ENCONTRADA' => '#d97706',
             'ERRO_PARAMETRO', 'ERRO_PROVEDOR' => '#6b7280',
             default => '#374151',
+        };
+    }
+
+    /** Rótulo curto do evento DF-e p/ chip. '' = ignorar (evento não relevante). */
+    private function rotuloEventoDfe(string $evento): string
+    {
+        $e = mb_strtoupper($evento);
+
+        return match (true) {
+            str_contains($e, 'CANCELAMENTO') => 'Cancelada',
+            str_contains($e, 'CORRECAO') || str_contains($e, 'CORREÇÃO') || str_contains($e, 'CCE') => 'CC-e',
+            str_contains($e, 'DENEGA') => 'Denegada',
+            str_contains($e, 'AUTORIZA') => 'Autorizada',
+            default => '',
+        };
+    }
+
+    /** Cor do chip por tipo de evento (hex inline — Design System DANFE). */
+    private function hexEventoDfe(string $evento): string
+    {
+        $e = mb_strtoupper($evento);
+
+        return match (true) {
+            str_contains($e, 'CANCELAMENTO') || str_contains($e, 'DENEGA') => '#b91c1c',
+            str_contains($e, 'CORRECAO') || str_contains($e, 'CORREÇÃO') || str_contains($e, 'CCE') => '#b45309',
+            default => '#15803d',
         };
     }
 
