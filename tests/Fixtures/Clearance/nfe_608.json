@@ -1,0 +1,7 @@
+{
+  "code": 608,
+  "code_message": "Parâmetro inválido.",
+  "header": { "service": "receita-federal/nfe", "billable": false, "price": "0" },
+  "errors": ["Chave de acesso inválida."],
+  "chave_acesso": "50240243648971004576550010001117211468024730"
+}

@@ -1,0 +1,7 @@
+{
+  "code": 611,
+  "code_message": "Dados insuficientes na origem.",
+  "header": { "service": "receita-federal/nfe", "billable": true, "price": "0.26" },
+  "errors": ["A Receita não retornou dados suficientes."],
+  "chave_acesso": "50240243648971004576550010001117211468024730"
+}

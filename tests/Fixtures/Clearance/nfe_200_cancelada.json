@@ -1,0 +1,25 @@
+{
+  "code": 200,
+  "code_message": "A requisição foi processada com sucesso.",
+  "header": { "service": "receita-federal/nfe", "billable": true, "price": "0.26" },
+  "data": [{
+    "nfe": {
+      "modelo": "55", "serie": "1", "numero": "111721",
+      "situacao": "Autorizada",
+      "data_emissao": "29/02/2024 14:03:39-04:00",
+      "emissao": { "natureza_operacao": "VENDA", "tipo_operacao": "1 - Saída" },
+      "eventos": [
+        { "evento": "Autorização de Uso", "protocolo": "150240008274469" },
+        { "evento": "Cancelamento de NF-e", "protocolo": "150240008279999" }
+      ]
+    },
+    "emitente": { "normalizado_cnpj": "43648971004576", "nome": "WURTH DO BRASIL", "ie": "283935790", "uf": "MS", "municipio": "CAMPO GRANDE" },
+    "destinatario": { "normalizado_cnpj": "00000165000193", "nome": "GT COMERCIO", "uf": "MS", "municipio": "DOURADOS" },
+    "totais": { "normalizado_valor_nfe": 51.11 },
+    "resumida": { "valor_total": "51,110" },
+    "nfe_completa": false,
+    "xml_baixado_com_certificado": false,
+    "versao_xml": "4.00"
+  }],
+  "chave_acesso": "50240243648971004576550010001117211468024730"
+}
