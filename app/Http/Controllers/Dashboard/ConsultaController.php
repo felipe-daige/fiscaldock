@@ -23,7 +23,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -751,31 +750,22 @@ class ConsultaController extends Controller
             ], Response::HTTP_PAYMENT_REQUIRED);
         }
 
-        // Roteamento da transição: se a camada de consultas do Laravel cobre TODAS as fontes
-        // do plano (e prontas), processa em casa (fila). Senão, segue no n8n.
+        // Consulta de CNPJ roda 100% na camada de consultas do Laravel (cutover concluído
+        // em 2026-06-07 — não há mais fallback n8n). Se a camada não cobre todas as fontes
+        // do plano (hoje só 'enterprise', inativo, com fontes não implementadas), recusa.
         $consultasIncluidas = $plano->resolvedConsultasIncluidas();
         $registry = app(\App\Services\Consultas\FonteRegistry::class);
-        $routeLaravel = $registry->cobre($consultasIncluidas);
 
-        // Escopo cliente (CNPJ próprio) só é suportado pela camada Laravel — o n8n não tem
-        // cliente_id em consulta_resultados. Bloqueia antes de debitar.
-        if (! $routeLaravel && $clientes->isNotEmpty()) {
+        if (! $registry->cobre($consultasIncluidas)) {
+            Log::error('Consultas: plano sem cobertura na camada Laravel', [
+                'plano' => $plano->codigo,
+                'consultas_incluidas' => $consultasIncluidas,
+            ]);
+
             return response()->json([
                 'success' => false,
-                'error' => 'Consulta de clientes (CNPJ próprio) ainda não disponível para este plano.',
+                'error' => 'Este plano ainda não está disponível para consulta.',
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        $webhookUrl = config('services.webhook.consultas_cnpj_participante_url')
-            ?: config('services.webhook.consultas_cnpj_url');
-
-        if (! $routeLaravel && empty($webhookUrl)) {
-            Log::error('Consultas: webhook não configurado (WEBHOOK_CONSULTAS_CNPJ_PARTICIPANTE_URL nem WEBHOOK_CONSULTAS_CNPJ_URL)');
-
-            return response()->json([
-                'success' => false,
-                'error' => 'Configuração de webhook ausente. Contate o suporte.',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         try {
@@ -818,113 +808,42 @@ class ConsultaController extends Controller
             ]);
 
             $etapas = $plano->resolvedEtapas();
-            $totalEtapas = $plano->resolvedTotalEtapas();
 
-            if ($routeLaravel) {
-                // values() reindexa 0..N-1 para o índice 1-based do alvo no lote (progresso global).
-                $jobs = $alvos->values()->map(fn ($alvo, $i) => new \App\Jobs\ProcessarConsultaJob(
-                    loteId: $lote->id,
-                    alvoTipo: $alvo['tipo'],
-                    alvoId: $alvo['id'],
-                    userId: $user->id,
-                    tabId: $validated['tab_id'],
-                    consultasIncluidas: $consultasIncluidas,
-                    alvo: [
-                        'cnpj' => $alvo['cnpj'],
-                        'uf' => $alvo['uf'],
-                        'crt' => $alvo['crt'],
-                    ],
-                    etapas: $etapas,
-                    alvoIndice: $i + 1,
-                    totalAlvos: $totalParticipantes,
-                ))->all();
+            // values() reindexa 0..N-1 para o índice 1-based do alvo no lote (progresso global).
+            $jobs = $alvos->values()->map(fn ($alvo, $i) => new \App\Jobs\ProcessarConsultaJob(
+                loteId: $lote->id,
+                alvoTipo: $alvo['tipo'],
+                alvoId: $alvo['id'],
+                userId: $user->id,
+                tabId: $validated['tab_id'],
+                consultasIncluidas: $consultasIncluidas,
+                alvo: [
+                    'cnpj' => $alvo['cnpj'],
+                    'uf' => $alvo['uf'],
+                    'crt' => $alvo['crt'],
+                ],
+                etapas: $etapas,
+                alvoIndice: $i + 1,
+                totalAlvos: $totalParticipantes,
+            ))->all();
 
-                \Illuminate\Support\Facades\Bus::batch($jobs)
-                    ->name("consulta-lote-{$lote->id}")
-                    ->then(function () use ($lote) {
-                        app(\App\Services\Consultas\FecharLoteService::class)
-                            ->fechar($lote->id, resumo: ['engine' => 'laravel']);
-                    })
-                    ->dispatch();
+            \Illuminate\Support\Facades\Bus::batch($jobs)
+                ->name("consulta-lote-{$lote->id}")
+                ->then(function () use ($lote) {
+                    app(\App\Services\Consultas\FecharLoteService::class)
+                        ->fechar($lote->id, resumo: ['engine' => 'laravel']);
+                })
+                ->dispatch();
 
-                return response()->json([
-                    'success' => true,
-                    'consulta_lote_id' => $lote->id,
-                    'redirect_url' => route('app.consulta.lote.show', ['id' => $lote->id]),
-                    'message' => 'Consulta iniciada com sucesso.',
-                    'creditos_cobrados' => $custoTotal,
-                    'novo_saldo' => $this->creditService->getBalance($user),
-                    'etapas' => $etapas,
-                ]);
-            }
-
-            // Preparar payload para n8n
-            $payload = [
-                'user_id' => $user->id,
+            return response()->json([
+                'success' => true,
                 'consulta_lote_id' => $lote->id,
-                'tab_id' => $validated['tab_id'],
-                'plano_codigo' => $plano->codigo,
-                'consultas_incluidas' => $plano->resolvedConsultasIncluidas(),
+                'redirect_url' => route('app.consulta.lote.show', ['id' => $lote->id]),
+                'message' => 'Consulta iniciada com sucesso.',
+                'creditos_cobrados' => $custoTotal,
+                'novo_saldo' => $this->creditService->getBalance($user),
                 'etapas' => $etapas,
-                'total_etapas' => $totalEtapas,
-                'participantes' => $participantes->map(function ($p) {
-                    return [
-                        'id' => $p->id,
-                        'cnpj' => preg_replace('/[^0-9]/', '', $p->documento),
-                        'razao_social' => $p->razao_social,
-                        'uf' => $p->uf,
-                        'crt' => $p->crt,
-                    ];
-                })->toArray(),
-                'progress_url' => url('/api/consultas/progresso'),
-            ];
-
-            // Enviar para n8n
-            $response = Http::timeout(15)
-                ->withHeaders([
-                    'X-API-Token' => config('services.api.token'),
-                    'Content-Type' => 'application/json',
-                ])
-                ->post($webhookUrl, $payload);
-
-            if ($response->successful()) {
-                Log::info('Consulta: enviado para n8n com sucesso', [
-                    'consulta_lote_id' => $lote->id,
-                    'response_status' => $response->status(),
-                ]);
-
-                return response()->json([
-                    'success' => true,
-                    'consulta_lote_id' => $lote->id,
-                    'redirect_url' => route('app.consulta.lote.show', ['id' => $lote->id]),
-                    'message' => 'Consulta iniciada com sucesso.',
-                    'creditos_cobrados' => $custoTotal,
-                    'novo_saldo' => $this->creditService->getBalance($user),
-                    'etapas' => $etapas,
-                ]);
-            } else {
-                // Falha no envio - estornar créditos e marcar erro
-                if (! $plano->is_gratuito) {
-                    $this->creditService->add($user, $custoTotal);
-                }
-
-                $lote->update([
-                    'status' => ConsultaLote::STATUS_ERRO,
-                    'error_code' => 'WEBHOOK_ERROR',
-                    'error_message' => 'Erro ao enviar para processamento: '.$response->status(),
-                ]);
-
-                Log::error('Consulta: erro na resposta do n8n', [
-                    'consulta_lote_id' => $lote->id,
-                    'response_status' => $response->status(),
-                    'response_body' => $response->body(),
-                ]);
-
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Erro ao iniciar processamento. Créditos foram estornados.',
-                ], Response::HTTP_BAD_GATEWAY);
-            }
+            ]);
 
         } catch (\Exception $e) {
             Log::error('Consulta: exceção ao executar', [

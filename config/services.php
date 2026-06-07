@@ -36,21 +36,12 @@ return [
     ],
 
     'webhook' => [
-        // Webhooks Importação EFD (extração completa por tipo)
+        // Único uso restante do n8n: extração completa de documentos EFD por tipo.
+        // Cutover 2026-06-07: consultas de CNPJ migraram 100% pro Laravel
+        // (app/Services/Consultas). Clearance de notas e importação XML foram
+        // desligados junto com a remoção dos webhooks n8n correspondentes.
         'importacao_efd_contribuicoes_url' => env('WEBHOOK_IMPORTACAO_EFD_CONTRIBUICOES_URL'),
         'importacao_efd_fiscal_url' => env('WEBHOOK_IMPORTACAO_EFD_FISCAL_URL'),
-        // Webhook Importação de XMLs (NF-e, NFS-e, CT-e)
-        'importacao_xml_url' => env('WEBHOOK_IMPORTACAO_XML_URL'),
-        // Webhook Consultas de CNPJ — escopo participantes (fluxo canônico)
-        'consultas_cnpj_participante_url' => env('WEBHOOK_CONSULTAS_CNPJ_PARTICIPANTE_URL'),
-        // Webhook Consultas de CNPJ — escopo clientes (CNPJ do próprio cliente)
-        'consultas_cnpj_cliente_url' => env('WEBHOOK_CONSULTAS_CNPJ_CLIENTE_URL'),
-        // Webhook Consultas de CNPJ — legado unificado (fallback se as variantes acima não estiverem setadas)
-        'consultas_cnpj_url' => env('WEBHOOK_CONSULTAS_CNPJ_URL'),
-        // Webhook Consultas de Notas Fiscais — clearance em lote (snapshot de verificação SEFAZ sobre acervo)
-        'consultas_notas_url' => env('WEBHOOK_CONSULTAS_NOTAS_URL'),
-        // Webhook Busca avulsa de Notas Fiscais — aquisição no acervo (xml_notas com origem='busca_avulsa')
-        'busca_nota_url' => env('WEBHOOK_BUSCA_NOTA_URL'),
     ],
 
     'api' => [
