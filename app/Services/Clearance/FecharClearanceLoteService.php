@@ -25,7 +25,7 @@ class FecharClearanceLoteService
             $estorno += (int) Cache::pull("clearance_estorno:{$loteId}:{$chave}", 0);
         }
 
-        DB::transaction(function () use ($loteId, $estorno, $resumo) {
+        $lote = DB::transaction(function () use ($loteId, $estorno, $resumo) {
             /** @var ConsultaLote $lote */
             $lote = ConsultaLote::lockForUpdate()->findOrFail($loteId);
 
@@ -43,7 +43,23 @@ class FecharClearanceLoteService
                     $lote,
                 );
             }
+
+            return $lote;
         });
+
+        // Terminal no cache de progresso → o SSE (streamProgresso) emite 'finalizado' e o
+        // clearance-resultado.js para de mostrar a barra e carrega o resultado (sem F4 manual).
+        if ($lote->tab_id) {
+            Cache::put("progresso:{$lote->user_id}:{$lote->tab_id}", [
+                'tab_id' => $lote->tab_id,
+                'status' => ConsultaLote::STATUS_FINALIZADO,
+                'progresso' => 100,
+                'etapa' => 2,
+                'total_etapas' => 2,
+                'etapa_label' => 'Resultados prontos',
+                'mensagem' => 'Clearance finalizado.',
+            ], 600);
+        }
 
         Cache::forget("clearance_lote_chaves:{$loteId}");
     }

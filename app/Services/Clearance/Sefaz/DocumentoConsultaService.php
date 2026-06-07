@@ -60,6 +60,8 @@ class DocumentoConsultaService
     {
         $this->throttle->aguardar('infosimples');
 
-        return $this->provider->consultar($slug, ['chave_acesso' => $chave]);
+        // InfoSimples receita-federal/nfe|cte espera o argumento `chave` (44 díg). Mandar
+        // `chave_acesso` retorna erro de parâmetro (608/619/620) → nada persiste.
+        return $this->provider->consultar($slug, ['chave' => $chave]);
     }
 }

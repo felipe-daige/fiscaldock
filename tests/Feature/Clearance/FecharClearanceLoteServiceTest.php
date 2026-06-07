@@ -35,6 +35,10 @@ it('soma o estorno por doc, credita e fecha o lote', function () {
     expect(app(CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes + 3);
     // pull limpa as keys (idempotência)
     expect(Cache::get("clearance_lote_chaves:{$lote->id}"))->toBeNull();
+    // terminal escrito no cache de progresso → SSE fecha sem F4 manual
+    $prog = Cache::get("progresso:{$user->id}:tab-f");
+    expect($prog['status'])->toBe(ConsultaLote::STATUS_FINALIZADO);
+    expect($prog['progresso'])->toBe(100);
 });
 
 it('sem docs falhos: nenhum crédito adicionado', function () {
