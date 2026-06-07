@@ -225,6 +225,16 @@
                                         </div>
                                         <p class="text-sm text-gray-900 mt-1">Nº {{ $linha->numero ?: '—' }} / Série {{ $linha->serie ?: '—' }}</p>
                                         <p class="text-[10px] text-gray-400 font-mono mt-0.5">{{ $linha->chave_acesso }}</p>
+                                        @if(!empty($linha->eventos_chips))
+                                            <div class="flex flex-wrap gap-1 mt-1">
+                                                @foreach($linha->eventos_chips as $chip)
+                                                    <span class="text-[10px] font-semibold text-white px-1.5 py-0.5 rounded" style="background-color: {{ $chip['hex'] }}" title="{{ $chip['protocolo'] ? 'Protocolo '.$chip['protocolo'] : '' }}{{ $chip['data'] ? ' · '.$chip['data'] : '' }}">{{ $chip['label'] }}</span>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                        @if(in_array('partes_divergentes', (array)($linha->tipos_divergencia ?? []), true))
+                                            <span class="text-[10px] font-semibold text-white px-1.5 py-0.5 rounded mt-1 inline-block" style="background-color: #7c3aed" title="Emitente/destinatário SEFAZ diferente do declarado">Partes ≠</span>
+                                        @endif
                                     </td>
                                     <td class="px-3 py-3 text-sm text-gray-700">{{ $linha->emit_nome ?: $linha->emit_cnpj ?: '—' }}</td>
                                     <td class="px-3 py-3 text-sm text-gray-900 text-right font-mono whitespace-nowrap">{{ $linha->declarado_valor_label }}</td>
@@ -239,6 +249,9 @@
                                     <td class="px-3 py-3 text-right whitespace-nowrap">
                                         @if($linha->detalhe_url ?? null)
                                             <a href="{{ $linha->detalhe_url }}" data-link class="text-xs text-gray-700 hover:text-gray-900 hover:underline">Ver documento</a>
+                                        @endif
+                                        @if($linha->comprovante_url ?? null)
+                                            <a href="{{ $linha->comprovante_url }}" target="_blank" rel="noopener" class="block text-[11px] text-blue-700 hover:underline mt-1">ver na Receita ↗</a>
                                         @endif
                                     </td>
                                 </tr>
@@ -285,7 +298,17 @@
                         <tbody class="divide-y divide-gray-100">
                             @foreach($divergencia['sem_divergencia']->concat($divergencia['ruido']) as $linha)
                                 <tr>
-                                    <td class="px-3 py-2 text-[11px] text-gray-500 font-mono">{{ $linha->tipo_documento }} {{ $linha->numero }}/{{ $linha->serie }}</td>
+                                    <td class="px-3 py-2 text-[11px] text-gray-500 font-mono">
+                                        {{ $linha->tipo_documento }} {{ $linha->numero }}/{{ $linha->serie }}
+                                        @if(!empty($linha->eventos_chips))
+                                            @foreach($linha->eventos_chips as $chip)
+                                                <span class="text-[9px] font-semibold text-white px-1 py-0.5 rounded ml-1" style="background-color: {{ $chip['hex'] }}">{{ $chip['label'] }}</span>
+                                            @endforeach
+                                        @endif
+                                        @if($linha->comprovante_url ?? null)
+                                            <a href="{{ $linha->comprovante_url }}" target="_blank" rel="noopener" class="text-[10px] text-blue-700 hover:underline ml-1">ver na Receita ↗</a>
+                                        @endif
+                                    </td>
                                     <td class="px-3 py-2 text-sm text-gray-700">{{ $linha->emit_nome ?: $linha->emit_cnpj ?: '—' }}</td>
                                     <td class="px-3 py-2 text-sm text-gray-700 text-right font-mono">{{ $linha->declarado_valor_label }}</td>
                                     <td class="px-3 py-2 text-sm text-gray-700 text-right font-mono">{{ $linha->valor_total_label ?? ($linha->valor_total !== null ? $formatMoney($linha->valor_total) : '—') }}</td>

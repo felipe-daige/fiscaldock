@@ -33,3 +33,22 @@ it('resultado expõe eventos, url_html e situacao_ambiente do snapshot', functio
     $r->assertOk();
     $r->assertJsonPath('total_resultados', 1)->assertJsonPath('resultado_pronto', true);
 })->group('clearance-enriquecido');
+
+it('tela mostra chip de evento e link oficial do snapshot', function () {
+    $user = User::factory()->create();
+    $lote = loteEnriquecido($user);
+    NfeConsulta::create([
+        'user_id' => $user->id, 'consulta_lote_id' => $lote->id,
+        'chave_acesso' => str_repeat('5', 44), 'tipo_documento' => 'NFE', 'modelo' => '55',
+        'status' => 'AUTORIZADA', 'valor_total' => 100, 'consultado_em' => now(),
+        'url_html' => 'https://receita.example/danfe',
+        'eventos' => [['evento' => 'Carta de Correção Eletrônica (1)', 'protocolo' => '999']],
+        'payload' => ['nfe_clearance' => ['situacao_ambiente' => 'produção']],
+    ]);
+
+    actingAs($user)->get("/app/clearance/notas/resultado/{$lote->id}")
+        ->assertOk()
+        ->assertSee('CC-e', false)
+        ->assertSee('ver na Receita', false)
+        ->assertSee('https://receita.example/danfe', false);
+})->group('clearance-enriquecido');
