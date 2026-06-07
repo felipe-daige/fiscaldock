@@ -1,0 +1,40 @@
+{
+  "code": 200,
+  "code_message": "A requisição foi processada com sucesso.",
+  "header": { "service": "receita-federal/cte", "billable": true, "price": "0.26" },
+  "data": [{
+    "cte": {
+      "situacao": "Autorizada",
+      "data_emissao": "15/03/2024 09:12:00-03:00",
+      "eventos": [{ "evento": "Autorização de Uso", "protocolo": "151240008270000" }],
+      "caracteristicas": { "cfop": "6352", "modal": "Rodoviário", "tipo_servico": "Normal", "tipo_operacao": "Saída" },
+      "versao_xml": "4.00"
+    },
+    "resumida": {
+      "cte": {
+        "modelo": "57", "serie": "1", "numero": "1690",
+        "normalizado_valor": 1500.50,
+        "cfop": "6352", "modal": "Rodoviário", "tipo": "Normal",
+        "natureza_operacao": "PRESTACAO DE SERVICO DE TRANSPORTE",
+        "uf_inicio": "MG", "uf_fim": "SP"
+      }
+    },
+    "emitente": { "normalizado_cnpj": "46970030000474", "nome": "TRANSPORTADORA X", "ie": "1234567", "uf": "MG", "municipio": "BELO HORIZONTE" },
+    "tomador": { "normalizado_cnpj": "11111111000191", "nome": "TOMADOR LTDA", "ie": "7654321", "uf": "SP", "municipio": "SAO PAULO" },
+    "remetente": { "normalizado_cnpj": "22222222000191", "nome": "REMETENTE LTDA", "uf": "MG" },
+    "destinatario": { "normalizado_cnpj": "33333333000191", "nome": "DESTINO LTDA", "uf": "SP" },
+    "expedidor": { "normalizado_cnpj": "44444444000191", "nome": "EXPEDIDOR" },
+    "recebedor": { "normalizado_cnpj": "55555555000191", "nome": "RECEBEDOR" },
+    "carga": {
+      "normalizado_valor": 80000.00,
+      "nfes": ["50240243648971004576550010001117211468024730"]
+    },
+    "totais": { "valor_prestacao_servico": "1.500,50", "componentes": [{ "nome": "Frete Peso", "valor": "1.500,50" }] },
+    "rodoviario": { "rntrc": "12345678" },
+    "aquaviario": null,
+    "cte_completo": false,
+    "xml_baixado_com_certificado": false,
+    "url_xml": null, "url_html": null, "site_receipt": null
+  }],
+  "chave_acesso": "51240146970030000474570010000016901000685610"
+}
