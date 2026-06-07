@@ -61,11 +61,16 @@ class InfoSimplesProvider implements ConsultaProvider
         return new RespostaProvider($status, $code, is_array($body) ? $body : [], $mensagem ?: null);
     }
 
-    /** Allowlist de teste: vazia = todos liberados; senão só os CNPJs listados. */
+    /** Allowlist de teste: vazia = todos liberados; só governa consultas com `cnpj` nos params. */
     private function cnpjPermitido(array $params): bool
     {
         $allowlist = (array) config('consultas.infosimples_teste_cnpjs', []);
         if (empty($allowlist)) {
+            return true;
+        }
+
+        // Consultas sem `cnpj` (ex: clearance por chave_acesso) não são governadas pela allowlist.
+        if (! array_key_exists('cnpj', $params)) {
             return true;
         }
 
