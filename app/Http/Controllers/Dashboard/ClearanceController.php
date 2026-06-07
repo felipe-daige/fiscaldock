@@ -185,7 +185,7 @@ class ClearanceController extends Controller
             $efd->whereNotExists(function ($q) use ($userId) {
                 $q->select(DB::raw(1))
                     ->from('xml_notas')
-                    ->whereColumn('xml_notas.nfe_id', 'efd_notas.chave_acesso')
+                    ->whereColumn('xml_notas.chave_acesso', 'efd_notas.chave_acesso')
                     ->where('xml_notas.user_id', $userId);
             });
             $efdIds = $efd->pluck('id')->map(fn ($v) => (int) $v)->values();
@@ -246,7 +246,7 @@ class ClearanceController extends Controller
 
         $consultas = $query
             ->orderByRaw('COALESCE(consultado_em, created_at) DESC')
-            ->orderByDesc('consulta_id')
+            ->orderByDesc('id')
             ->paginate(25)
             ->withQueryString();
 
@@ -699,9 +699,9 @@ class ClearanceController extends Controller
         $xml = XmlNota::query()
             ->with('cliente')
             ->where('user_id', $userId)
-            ->whereIn('nfe_id', $chaves)
+            ->whereIn('chave_acesso', $chaves)
             ->get()
-            ->keyBy('nfe_id');
+            ->keyBy('chave_acesso');
 
         $chavesRestantes = $chaves->reject(fn (string $chave) => $xml->has($chave))->values();
 
@@ -741,10 +741,10 @@ class ClearanceController extends Controller
             return (object) [
                 'id' => 'xml-'.$nota->id,
                 'consulta_lote_id' => null,
-                'chave_acesso' => $nota->nfe_id,
+                'chave_acesso' => $nota->chave_acesso,
                 'tipo_documento' => strtoupper((string) ($nota->tipo_documento ?: 'NFE')),
-                'modelo' => $this->inferirModeloDocumento($nota->tipo_documento, $nota->nfe_id),
-                'numero' => $nota->numero_nota,
+                'modelo' => $this->inferirModeloDocumento($nota->tipo_documento, $nota->chave_acesso),
+                'numero' => $nota->numero_documento,
                 'serie' => $nota->serie,
                 'status' => 'JA_NO_ACERVO',
                 'status_label' => 'JA_NO_ACERVO',
@@ -754,15 +754,15 @@ class ClearanceController extends Controller
                 'data_emissao' => $nota->data_emissao,
                 'data_emissao_label' => optional($nota->data_emissao)->format('d/m/Y H:i'),
                 'emit_nome' => $nota->emit_razao_social,
-                'emit_cnpj' => $nota->emit_cnpj,
+                'emit_cnpj' => $nota->emit_documento,
                 'dest_nome' => $nota->dest_razao_social,
-                'dest_cnpj' => $nota->dest_cnpj,
+                'dest_cnpj' => $nota->dest_documento,
                 'tomador_nome' => null,
                 'tomador_cnpj' => null,
-                'participante_label' => $nota->dest_razao_social ?: $nota->dest_cnpj ?: 'Não informado',
+                'participante_label' => $nota->dest_razao_social ?: $nota->dest_documento ?: 'Não informado',
                 'consultado_em' => null,
                 'consultado_em_label' => 'Já no acervo',
-                'detalhe_url' => route('app.notas-fiscais.detalhes', ['origem' => 'xml', 'id' => $nota->id]),
+                'detalhe_url' => route('app.notas.detalhes', ['origem' => 'xml', 'id' => $nota->id]),
                 'origem_acervo_label' => 'XML',
                 'origem_acervo_hex' => '#0f766e',
                 'ordem_lote' => $ordem,
@@ -804,7 +804,7 @@ class ClearanceController extends Controller
             'participante_label' => $destinatario ?: 'Não informado',
             'consultado_em' => null,
             'consultado_em_label' => 'Já no acervo',
-            'detalhe_url' => route('app.notas-fiscais.detalhes', ['origem' => 'efd', 'id' => $nota->id]),
+            'detalhe_url' => route('app.notas.detalhes', ['origem' => 'efd', 'id' => $nota->id]),
             'origem_acervo_label' => 'EFD',
             'origem_acervo_hex' => '#4338ca',
             'ordem_lote' => $ordem,
@@ -924,7 +924,7 @@ class ClearanceController extends Controller
                 'tipoDocumento' => $tipoDocumento,
                 'chaveConsultada' => strlen($chaveConsultada) === 44
                     ? $chaveConsultada
-                    : ($notaResultado['nfe_id'] ?? null),
+                    : ($notaResultado['chave_acesso'] ?? $notaResultado['nfe_id'] ?? null),
                 'aguardaPersistencia' => $lote->isFinalizado() && ! $notaResultado,
                 'progressSnapshot' => $this->getClearanceProgressSnapshot($lote),
             ]);
@@ -1125,7 +1125,7 @@ class ClearanceController extends Controller
         $efd->whereNotExists(function ($q) use ($userId) {
             $q->select(DB::raw(1))
                 ->from('xml_notas')
-                ->whereColumn('xml_notas.nfe_id', 'efd_notas.chave_acesso')
+                ->whereColumn('xml_notas.chave_acesso', 'efd_notas.chave_acesso')
                 ->where('xml_notas.user_id', $userId);
         });
 
@@ -1138,8 +1138,8 @@ class ClearanceController extends Controller
             ->selectRaw("
                 'xml'::text                                   as origem,
                 xml_notas.id                                   as id,
-                xml_notas.nfe_id                               as chave,
-                xml_notas.numero_nota                          as numero,
+                xml_notas.chave_acesso                         as chave,
+                xml_notas.numero_documento                     as numero,
                 xml_notas.serie::text                          as serie,
                 xml_notas.tipo_documento                       as modelo,
                 xml_notas.data_emissao                         as data_emissao,
@@ -1147,7 +1147,7 @@ class ClearanceController extends Controller
                 CASE xml_notas.tipo_nota WHEN 0 THEN 'entrada' ELSE 'saida' END as tipo_nota,
                 xml_notas.emit_razao_social                    as emit_razao_social,
                 xml_notas.dest_razao_social                    as dest_razao_social,
-                COALESCE(xml_notas.emit_cnpj, xml_notas.dest_cnpj) as participante_cnpj,
+                COALESCE(xml_notas.emit_documento, xml_notas.dest_documento) as participante_cnpj,
                 COALESCE(xml_notas.emit_cliente_id, xml_notas.dest_cliente_id) as cliente_id,
                 xml_notas.icms_valor                           as icms_valor,
                 xml_notas.pis_valor                            as pis_valor,
@@ -1197,7 +1197,12 @@ class ClearanceController extends Controller
                 NULL::text                                     as validacao_json
             ")
             ->where('efd_notas.user_id', $userId)
-            ->whereRaw("UPPER(COALESCE(efd_notas.modelo, '')) NOT IN ('00', 'NFSE', 'NFS-E')");
+            ->where('efd_notas.cancelada', false) // P4: cancelada não é selecionável/cobrável
+            ->whereRaw("UPPER(COALESCE(efd_notas.modelo, '')) NOT IN ('00', 'NFSE', 'NFS-E')")
+            // P1: a MESMA NF-e está em 'fiscal' e 'contribuicoes'. Sem dedup a lista mostra a
+            // nota 2× (e o custo cobraria 2×); manter só a fiscal garante que a validação caia
+            // numa origem canônica única (base do dedup das KPIs de status).
+            ->whereRaw("(efd_notas.origem_arquivo = 'fiscal' OR NOT EXISTS (SELECT 1 FROM efd_notas f WHERE f.user_id = efd_notas.user_id AND f.origem_arquivo = 'fiscal' AND f.chave_acesso IS NOT NULL AND f.chave_acesso = efd_notas.chave_acesso))");
 
         $this->applyCommonFiltersEfd($q, $f);
 
@@ -1224,7 +1229,7 @@ class ClearanceController extends Controller
         if (! empty($f['participante_cnpj'])) {
             $cnpj = preg_replace('/\D/', '', $f['participante_cnpj']);
             $q->where(function ($sub) use ($cnpj) {
-                $sub->where('xml_notas.emit_cnpj', $cnpj)->orWhere('xml_notas.dest_cnpj', $cnpj);
+                $sub->where('xml_notas.emit_documento', $cnpj)->orWhere('xml_notas.dest_documento', $cnpj);
             });
         }
 
@@ -1560,8 +1565,8 @@ class ClearanceController extends Controller
             ->get()
             ->map(fn ($nota) => [
                 'id' => $nota->id,
-                'numero' => $nota->numero_nota,
-                'emitente' => $nota->emitente->razao_social ?? $nota->emit_cnpj,
+                'numero' => $nota->numero_documento,
+                'emitente' => $nota->emitente->razao_social ?? $nota->emit_documento,
                 'valor' => $nota->valor_formatado,
                 'score' => $nota->validacao_score,
                 'classificacao' => $nota->validacao_classificacao,
@@ -1656,7 +1661,7 @@ class ClearanceController extends Controller
         return $this->consultaDfeHistoricoQuery($userId)
             ->where('fluxo_origem', 'avulsa')
             ->orderByRaw('COALESCE(consultado_em, created_at) DESC')
-            ->orderByDesc('consulta_id')
+            ->orderByDesc('id')
             ->limit($limite)
             ->get()
             ->map(function ($consulta) {
@@ -1822,8 +1827,8 @@ class ClearanceController extends Controller
                 ?: 'Não informado';
             $chave = trim((string) $resultado->chave_acesso);
             $resultado->detalhe_url = match (true) {
-                $chave !== '' && isset($xmlByChave[$chave]) => route('app.notas-fiscais.detalhes', ['origem' => 'xml', 'id' => $xmlByChave[$chave]]),
-                $chave !== '' && isset($efdByChave[$chave]) => route('app.notas-fiscais.detalhes', ['origem' => 'efd', 'id' => $efdByChave[$chave]]),
+                $chave !== '' && isset($xmlByChave[$chave]) => route('app.notas.detalhes', ['origem' => 'xml', 'id' => $xmlByChave[$chave]]),
+                $chave !== '' && isset($efdByChave[$chave]) => route('app.notas.detalhes', ['origem' => 'efd', 'id' => $efdByChave[$chave]]),
                 default => null,
             };
             $resultado->origem_acervo_label = null;
@@ -1852,7 +1857,7 @@ class ClearanceController extends Controller
     {
         return XmlNota::query()
             ->where('user_id', $userId)
-            ->where('nfe_id', $chaveAcesso)
+            ->where('chave_acesso', $chaveAcesso)
             ->first();
     }
 
@@ -1889,7 +1894,7 @@ class ClearanceController extends Controller
     private function formatarResultadoXmlAcervo(XmlNota $nota): array
     {
         $situacao = strtoupper((string) data_get($nota->validacao, 'situacao', 'SALVA_NO_ACERVO'));
-        $chave = (string) $nota->nfe_id;
+        $chave = (string) $nota->chave_acesso;
         $modeloDerivado = strlen($chave) === 44 ? substr($chave, 20, 2) : null;
 
         return [
@@ -1897,26 +1902,26 @@ class ClearanceController extends Controller
             'consulta_lote_id' => null,
             'tipo_documento' => strtoupper((string) ($nota->tipo_documento ?: 'NFE')),
             'modelo' => $modeloDerivado,
-            'nfe_id' => $nota->nfe_id,
-            'numero_nota' => $nota->numero_nota,
-            'numero' => $nota->numero_nota,
+            'nfe_id' => $nota->chave_acesso,
+            'numero_nota' => $nota->numero_documento,
+            'numero' => $nota->numero_documento,
             'serie' => $nota->serie,
             'valor_total' => $nota->valor_total,
             'valor_total_label' => $nota->valor_total !== null
                 ? 'R$ '.number_format((float) $nota->valor_total, 2, ',', '.')
                 : '—',
             'data_emissao' => optional($nota->data_emissao)->format('d/m/Y H:i'),
-            'emit' => $nota->emit_razao_social ?: $nota->emit_cnpj,
-            'emit_cnpj' => $nota->emit_cnpj,
-            'dest' => $nota->dest_razao_social ?: $nota->dest_cnpj,
-            'dest_cnpj' => $nota->dest_cnpj,
+            'emit' => $nota->emit_razao_social ?: $nota->emit_documento,
+            'emit_cnpj' => $nota->emit_documento,
+            'dest' => $nota->dest_razao_social ?: $nota->dest_documento,
+            'dest_cnpj' => $nota->dest_documento,
             'tomador_nome' => null,
             'tomador_cnpj' => null,
             'cliente_nome' => $nota->cliente?->razao_social,
             'situacao' => $situacao,
             'situacao_hex' => $this->statusHexConsultaDfe($situacao),
             'consultado_em' => $this->formatarDataConsulta($nota->updated_at ?: $nota->created_at),
-            'detalhe_url' => route('app.notas-fiscais.detalhes', ['origem' => 'xml', 'id' => $nota->id]),
+            'detalhe_url' => route('app.notas.detalhes', ['origem' => 'xml', 'id' => $nota->id]),
         ];
     }
 
@@ -1930,11 +1935,11 @@ class ClearanceController extends Controller
 
         $xmlNotaId = XmlNota::query()
             ->where('user_id', $userId)
-            ->where('nfe_id', $chave)
+            ->where('chave_acesso', $chave)
             ->value('id');
 
         if ($xmlNotaId) {
-            return route('app.notas-fiscais.detalhes', ['origem' => 'xml', 'id' => $xmlNotaId]);
+            return route('app.notas.detalhes', ['origem' => 'xml', 'id' => $xmlNotaId]);
         }
 
         $efdNotaId = EfdNota::query()
@@ -1943,7 +1948,7 @@ class ClearanceController extends Controller
             ->value('id');
 
         if ($efdNotaId) {
-            return route('app.notas-fiscais.detalhes', ['origem' => 'efd', 'id' => $efdNotaId]);
+            return route('app.notas.detalhes', ['origem' => 'efd', 'id' => $efdNotaId]);
         }
 
         return null;
