@@ -88,16 +88,16 @@ function clearanceMakeXmlNota(User $u, array $overrides = []): XmlNota
         'user_id' => $u->id,
         'importacao_xml_id' => $imp->id,
         'cliente_id' => $cliente->id,
-        'nfe_id' => '35240413305697000150550000000404041953940993',
+        'chave_acesso' => '35240413305697000150550000000404041953940993',
         'tipo_documento' => 'NFE',
-        'numero_nota' => 12345,
+        'numero_documento' => 12345,
         'serie' => 1,
         'data_emissao' => '2026-01-10 10:00:00',
         'valor_total' => 999.99,
         'tipo_nota' => XmlNota::TIPO_SAIDA,
-        'emit_cnpj' => '00000000000191',
+        'emit_documento' => '00000000000191',
         'emit_razao_social' => 'Empresa Propria',
-        'dest_cnpj' => '13305697000150',
+        'dest_documento' => '13305697000150',
         'dest_razao_social' => 'Destinatario XYZ',
     ], $overrides));
 }
@@ -106,7 +106,7 @@ it('retorna grade vazia com mensagem de escopo quando o usuario nao tem notas', 
     $u = clearanceMakeUser();
 
     actingAs($u)
-        ->get('/app/validacao/notas')
+        ->get('/app/clearance/notas')
         ->assertOk()
         ->assertSee('Nenhuma nota');
 });
@@ -116,7 +116,7 @@ it('lista notas EFD quando o usuario nao possui XML', function () {
     clearanceMakeEfdNota($u, ['numero' => 40404]);
 
     actingAs($u)
-        ->get('/app/validacao/notas')
+        ->get('/app/clearance/notas')
         ->assertOk()
         ->assertSee('40404')
         ->assertSee('EFD');
@@ -126,24 +126,25 @@ it('deduplica linhas pela chave de acesso preferindo XML sobre EFD', function ()
     $u = clearanceMakeUser();
     $chave = '35240413305697000150550000000404041953940992';
 
-    clearanceMakeEfdNota($u, ['chave_acesso' => $chave, 'numero' => 40404]);
-    clearanceMakeXmlNota($u, ['nfe_id' => $chave, 'numero_nota' => 77777]);
+    // Número da EFD escolhido p/ NÃO colidir com substring da chave (que contém "40404").
+    clearanceMakeEfdNota($u, ['chave_acesso' => $chave, 'numero' => 88888]);
+    clearanceMakeXmlNota($u, ['chave_acesso' => $chave, 'numero_documento' => 77777]);
 
-    $response = actingAs($u)->get('/app/validacao/notas')->assertOk();
+    $response = actingAs($u)->get('/app/clearance/notas')->assertOk();
 
     $response->assertSee('77777');
-    $response->assertDontSee('40404');
+    $response->assertDontSee('88888');
 });
 
 it('filtra por periodo em linhas XML e EFD', function () {
     $u = clearanceMakeUser();
     clearanceMakeEfdNota($u, ['data_emissao' => '2026-01-15', 'numero' => 1111, 'chave_acesso' => str_repeat('1', 44)]);
     clearanceMakeEfdNota($u, ['data_emissao' => '2026-03-15', 'numero' => 2222, 'chave_acesso' => str_repeat('2', 44)]);
-    clearanceMakeXmlNota($u, ['data_emissao' => '2026-01-20 12:00:00', 'numero_nota' => 3333, 'nfe_id' => str_repeat('3', 44)]);
-    clearanceMakeXmlNota($u, ['data_emissao' => '2026-03-20 12:00:00', 'numero_nota' => 4444, 'nfe_id' => str_repeat('4', 44)]);
+    clearanceMakeXmlNota($u, ['data_emissao' => '2026-01-20 12:00:00', 'numero_documento' => 3333, 'chave_acesso' => str_repeat('3', 44)]);
+    clearanceMakeXmlNota($u, ['data_emissao' => '2026-03-20 12:00:00', 'numero_documento' => 4444, 'chave_acesso' => str_repeat('4', 44)]);
 
     $response = actingAs($u)
-        ->get('/app/validacao/notas?periodo_de=2026-01-01&periodo_ate=2026-01-31')
+        ->get('/app/clearance/notas?periodo_de=2026-01-01&periodo_ate=2026-01-31')
         ->assertOk();
 
     $response->assertSee('1111');
@@ -168,13 +169,13 @@ it('filtra por CNPJ de participante em linhas XML (emit/dest) e EFD (join)', fun
         'part_razao' => 'Fornecedor B',
     ]);
     clearanceMakeXmlNota($u, [
-        'nfe_id' => str_repeat('3', 44),
-        'numero_nota' => 3333,
-        'emit_cnpj' => '11111111000191',
+        'chave_acesso' => str_repeat('3', 44),
+        'numero_documento' => 3333,
+        'emit_documento' => '11111111000191',
     ]);
 
     $response = actingAs($u)
-        ->get('/app/validacao/notas?participante_cnpj=11111111000191')
+        ->get('/app/clearance/notas?participante_cnpj=11111111000191')
         ->assertOk();
 
     $response->assertSee('1111');
@@ -187,11 +188,11 @@ it('filtra por tipo_nota mapeando corretamente entre XML e EFD', function () {
 
     clearanceMakeEfdNota($u, ['chave_acesso' => str_repeat('1', 44), 'numero' => 1111, 'tipo_operacao' => 'entrada']);
     clearanceMakeEfdNota($u, ['chave_acesso' => str_repeat('2', 44), 'numero' => 2222, 'tipo_operacao' => 'saida']);
-    clearanceMakeXmlNota($u, ['nfe_id' => str_repeat('3', 44), 'numero_nota' => 3333, 'tipo_nota' => XmlNota::TIPO_ENTRADA]);
-    clearanceMakeXmlNota($u, ['nfe_id' => str_repeat('4', 44), 'numero_nota' => 4444, 'tipo_nota' => XmlNota::TIPO_SAIDA]);
+    clearanceMakeXmlNota($u, ['chave_acesso' => str_repeat('3', 44), 'numero_documento' => 3333, 'tipo_nota' => XmlNota::TIPO_ENTRADA]);
+    clearanceMakeXmlNota($u, ['chave_acesso' => str_repeat('4', 44), 'numero_documento' => 4444, 'tipo_nota' => XmlNota::TIPO_SAIDA]);
 
     $response = actingAs($u)
-        ->get('/app/validacao/notas?tipo_nota=entrada')
+        ->get('/app/clearance/notas?tipo_nota=entrada')
         ->assertOk();
 
     $response->assertSee('1111');
@@ -205,14 +206,14 @@ it('status=validadas retorna apenas XML com validacao preenchida', function () {
 
     clearanceMakeEfdNota($u, ['chave_acesso' => str_repeat('1', 44), 'numero' => 1111]);
     clearanceMakeXmlNota($u, [
-        'nfe_id' => str_repeat('3', 44),
-        'numero_nota' => 3333,
+        'chave_acesso' => str_repeat('3', 44),
+        'numero_documento' => 3333,
         'validacao' => ['classificacao' => 'conforme', 'alertas' => []],
     ]);
-    clearanceMakeXmlNota($u, ['nfe_id' => str_repeat('4', 44), 'numero_nota' => 4444, 'validacao' => null]);
+    clearanceMakeXmlNota($u, ['chave_acesso' => str_repeat('4', 44), 'numero_documento' => 4444, 'validacao' => null]);
 
     $response = actingAs($u)
-        ->get('/app/validacao/notas?status_validacao=validadas')
+        ->get('/app/clearance/notas?status_validacao=validadas')
         ->assertOk();
 
     $response->assertSee('3333');
@@ -225,14 +226,14 @@ it('status=nao_validadas inclui todas as EFD e XML sem validacao', function () {
 
     clearanceMakeEfdNota($u, ['chave_acesso' => str_repeat('1', 44), 'numero' => 1111]);
     clearanceMakeXmlNota($u, [
-        'nfe_id' => str_repeat('3', 44),
-        'numero_nota' => 3333,
+        'chave_acesso' => str_repeat('3', 44),
+        'numero_documento' => 3333,
         'validacao' => ['classificacao' => 'conforme', 'alertas' => []],
     ]);
-    clearanceMakeXmlNota($u, ['nfe_id' => str_repeat('4', 44), 'numero_nota' => 4444, 'validacao' => null]);
+    clearanceMakeXmlNota($u, ['chave_acesso' => str_repeat('4', 44), 'numero_documento' => 4444, 'validacao' => null]);
 
     $response = actingAs($u)
-        ->get('/app/validacao/notas?status_validacao=nao_validadas')
+        ->get('/app/clearance/notas?status_validacao=nao_validadas')
         ->assertOk();
 
     $response->assertSee('1111');
@@ -255,27 +256,27 @@ it('todosIds retorna ids totais com mapa de origens respeitando dedupe por chave
     DB::table('xml_notas')->insert([
         'user_id' => $u->id,
         'importacao_xml_id' => $impSeed->id,
-        'nfe_id' => str_repeat('9', 44),
+        'chave_acesso' => str_repeat('9', 44),
         'tipo_documento' => 'NFE',
-        'numero_nota' => 0,
+        'numero_documento' => 0,
         'serie' => 1,
         'data_emissao' => '2026-01-01 00:00:00',
         'valor_total' => 0,
         'tipo_nota' => XmlNota::TIPO_SAIDA,
-        'emit_cnpj' => '00000000000191',
-        'dest_cnpj' => '00000000000000',
+        'emit_documento' => '00000000000191',
+        'dest_documento' => '00000000000000',
         'created_at' => now(),
         'updated_at' => now(),
     ]);
-    DB::table('xml_notas')->where('nfe_id', str_repeat('9', 44))->delete();
+    DB::table('xml_notas')->where('chave_acesso', str_repeat('9', 44))->delete();
 
     $efdUnico = clearanceMakeEfdNota($u, ['chave_acesso' => str_repeat('1', 44), 'numero' => 1111]);
     $efdDup = clearanceMakeEfdNota($u, ['chave_acesso' => str_repeat('2', 44), 'numero' => 2222]);
-    $xml = clearanceMakeXmlNota($u, ['nfe_id' => str_repeat('3', 44), 'numero_nota' => 3333]);
-    $xmlDup = clearanceMakeXmlNota($u, ['nfe_id' => str_repeat('2', 44), 'numero_nota' => 4444]);
+    $xml = clearanceMakeXmlNota($u, ['chave_acesso' => str_repeat('3', 44), 'numero_documento' => 3333]);
+    $xmlDup = clearanceMakeXmlNota($u, ['chave_acesso' => str_repeat('2', 44), 'numero_documento' => 4444]);
 
     $response = actingAs($u)
-        ->get('/app/validacao/notas/todos-ids')
+        ->get('/app/clearance/notas/todos-ids')
         ->assertOk()
         ->assertJson(['success' => true]);
 

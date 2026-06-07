@@ -42,16 +42,16 @@ function dashMakeXmlNota(User $u, array $overrides = []): XmlNota
         'user_id' => $u->id,
         'importacao_xml_id' => $imp->id,
         'cliente_id' => $cliente->id,
-        'nfe_id' => str_repeat('1', 44),
+        'chave_acesso' => str_repeat('1', 44),
         'tipo_documento' => 'NFE',
-        'numero_nota' => 1234,
+        'numero_documento' => 1234,
         'serie' => 1,
         'data_emissao' => '2026-01-10 10:00:00',
         'valor_total' => 100.00,
         'tipo_nota' => XmlNota::TIPO_SAIDA,
-        'emit_cnpj' => '00000000000191',
+        'emit_documento' => '00000000000191',
         'emit_razao_social' => 'Empresa Propria',
-        'dest_cnpj' => '13305697000150',
+        'dest_documento' => '13305697000150',
         'dest_razao_social' => 'Destinatario Teste',
     ], $overrides));
 }
@@ -93,7 +93,7 @@ function dashMakeEfdNota(User $u, array $overrides = []): EfdNota
 it('mostra zerado para usuario sem notas', function () {
     $u = dashUser();
 
-    $response = actingAs($u)->get('/app/validacao')->assertOk();
+    $response = actingAs($u)->get('/app/clearance/dashboard')->assertOk();
 
     $response->assertSee('Total DF-e');
     $response->assertSee('Nenhuma verificação ainda');
@@ -104,7 +104,7 @@ it('agrega XML+EFD deduplicando por chave de acesso', function () {
     $chave = str_repeat('1', 44);
 
     dashMakeXmlNota($u, [
-        'nfe_id' => $chave,
+        'chave_acesso' => $chave,
         'validacao' => ['situacao' => 'AUTORIZADA', 'consultado_em' => '2026-04-17T10:00:00Z', 'fonte' => 'infosimples/receita-federal/nfe'],
     ]);
     dashMakeEfdNota($u, ['chave_acesso' => $chave]);
@@ -121,7 +121,7 @@ it('conta separadamente quando chaves diferem', function () {
     $u = dashUser();
 
     dashMakeXmlNota($u, [
-        'nfe_id' => str_repeat('1', 44),
+        'chave_acesso' => str_repeat('1', 44),
         'validacao' => ['situacao' => 'CANCELADA', 'consultado_em' => '2026-04-17T10:00:00Z'],
     ]);
     dashMakeEfdNota($u, [
@@ -140,9 +140,9 @@ it('conta separadamente quando chaves diferem', function () {
 it('classifica como nao_verificadas notas sem situacao', function () {
     $u = dashUser();
 
-    dashMakeXmlNota($u, ['nfe_id' => str_repeat('1', 44), 'validacao' => null]);
+    dashMakeXmlNota($u, ['chave_acesso' => str_repeat('1', 44), 'validacao' => null]);
     dashMakeXmlNota($u, [
-        'nfe_id' => str_repeat('2', 44),
+        'chave_acesso' => str_repeat('2', 44),
         'validacao' => ['classificacao' => 'conforme', 'score_total' => 95, 'alertas' => []],
     ]);
 
@@ -158,18 +158,18 @@ it('lista notas bloqueantes ordenadas por consultado_em desc', function () {
     $u = dashUser();
 
     dashMakeXmlNota($u, [
-        'nfe_id' => str_repeat('1', 44),
-        'numero_nota' => 1111,
+        'chave_acesso' => str_repeat('1', 44),
+        'numero_documento' => 1111,
         'validacao' => ['situacao' => 'CANCELADA', 'consultado_em' => '2026-04-15T10:00:00Z'],
     ]);
     dashMakeXmlNota($u, [
-        'nfe_id' => str_repeat('2', 44),
-        'numero_nota' => 2222,
+        'chave_acesso' => str_repeat('2', 44),
+        'numero_documento' => 2222,
         'validacao' => ['situacao' => 'DENEGADA', 'consultado_em' => '2026-04-17T10:00:00Z'],
     ]);
     dashMakeXmlNota($u, [
-        'nfe_id' => str_repeat('3', 44),
-        'numero_nota' => 3333,
+        'chave_acesso' => str_repeat('3', 44),
+        'numero_documento' => 3333,
         'validacao' => ['situacao' => 'AUTORIZADA', 'consultado_em' => '2026-04-16T10:00:00Z'],
     ]);
 
@@ -185,17 +185,17 @@ it('filtra listagem por situacao_receita', function () {
     $u = dashUser();
 
     dashMakeXmlNota($u, [
-        'nfe_id' => str_repeat('1', 44),
-        'numero_nota' => 1111,
+        'chave_acesso' => str_repeat('1', 44),
+        'numero_documento' => 1111,
         'validacao' => ['situacao' => 'CANCELADA', 'consultado_em' => '2026-04-15T10:00:00Z'],
     ]);
     dashMakeXmlNota($u, [
-        'nfe_id' => str_repeat('2', 44),
-        'numero_nota' => 2222,
+        'chave_acesso' => str_repeat('2', 44),
+        'numero_documento' => 2222,
         'validacao' => ['situacao' => 'AUTORIZADA', 'consultado_em' => '2026-04-16T10:00:00Z'],
     ]);
 
-    $response = actingAs($u)->get('/app/validacao/notas?situacao_receita=CANCELADA')->assertOk();
+    $response = actingAs($u)->get('/app/clearance/notas?situacao_receita=CANCELADA')->assertOk();
 
     $response->assertSee('1111');
     $response->assertDontSee('2222');
@@ -204,14 +204,14 @@ it('filtra listagem por situacao_receita', function () {
 it('filtra listagem por status_validacao=sem_situacao_receita', function () {
     $u = dashUser();
 
-    dashMakeXmlNota($u, ['nfe_id' => str_repeat('1', 44), 'numero_nota' => 1111, 'validacao' => null]);
+    dashMakeXmlNota($u, ['chave_acesso' => str_repeat('1', 44), 'numero_documento' => 1111, 'validacao' => null]);
     dashMakeXmlNota($u, [
-        'nfe_id' => str_repeat('2', 44),
-        'numero_nota' => 2222,
+        'chave_acesso' => str_repeat('2', 44),
+        'numero_documento' => 2222,
         'validacao' => ['situacao' => 'AUTORIZADA', 'consultado_em' => '2026-04-16T10:00:00Z'],
     ]);
 
-    $response = actingAs($u)->get('/app/validacao/notas?status_validacao=sem_situacao_receita')->assertOk();
+    $response = actingAs($u)->get('/app/clearance/notas?status_validacao=sem_situacao_receita')->assertOk();
 
     $response->assertSee('1111');
     $response->assertDontSee('2222');

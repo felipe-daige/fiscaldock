@@ -129,7 +129,7 @@ it('renderiza painel Declarado vs SEFAZ com veredito crítico', function () use 
         ->assertSee('Sem divergência')
         ->assertSee('SOTRACTOR')
         ->assertSee('WURTH')
-        ->assertSee('Dados confrontados com a Receita Federal via InfoSimples');
+        ->assertSee('Dados confrontados com a Receita Federal');
 });
 
 it('renderiza veredito "tudo certo" quando nao ha divergencia', function () use (&$testUserIds) {
