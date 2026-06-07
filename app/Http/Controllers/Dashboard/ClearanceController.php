@@ -8,6 +8,7 @@ use App\Models\ConsultaLote;
 use App\Models\EfdNota;
 use App\Models\XmlImportacao;
 use App\Models\XmlNota;
+use App\Services\Clearance\ClearanceLoteService;
 use App\Services\Clearance\DivergenciaService;
 use App\Services\CreditService;
 use App\Services\NotaFiscalService;
@@ -184,7 +185,7 @@ class ClearanceController extends Controller
             $efd->whereNotExists(function ($q) use ($userId) {
                 $q->select(DB::raw(1))
                     ->from('xml_notas')
-                    ->whereColumn('xml_notas.chave_acesso', 'efd_notas.chave_acesso')
+                    ->whereColumn('xml_notas.nfe_id', 'efd_notas.chave_acesso')
                     ->where('xml_notas.user_id', $userId);
             });
             $efdIds = $efd->pluck('id')->map(fn ($v) => (int) $v)->values();
@@ -245,7 +246,7 @@ class ClearanceController extends Controller
 
         $consultas = $query
             ->orderByRaw('COALESCE(consultado_em, created_at) DESC')
-            ->orderByDesc('id')
+            ->orderByDesc('consulta_id')
             ->paginate(25)
             ->withQueryString();
 
@@ -698,9 +699,9 @@ class ClearanceController extends Controller
         $xml = XmlNota::query()
             ->with('cliente')
             ->where('user_id', $userId)
-            ->whereIn('chave_acesso', $chaves)
+            ->whereIn('nfe_id', $chaves)
             ->get()
-            ->keyBy('chave_acesso');
+            ->keyBy('nfe_id');
 
         $chavesRestantes = $chaves->reject(fn (string $chave) => $xml->has($chave))->values();
 
@@ -740,10 +741,10 @@ class ClearanceController extends Controller
             return (object) [
                 'id' => 'xml-'.$nota->id,
                 'consulta_lote_id' => null,
-                'chave_acesso' => $nota->chave_acesso,
+                'chave_acesso' => $nota->nfe_id,
                 'tipo_documento' => strtoupper((string) ($nota->tipo_documento ?: 'NFE')),
-                'modelo' => $this->inferirModeloDocumento($nota->tipo_documento, $nota->chave_acesso),
-                'numero' => $nota->numero_documento,
+                'modelo' => $this->inferirModeloDocumento($nota->tipo_documento, $nota->nfe_id),
+                'numero' => $nota->numero_nota,
                 'serie' => $nota->serie,
                 'status' => 'JA_NO_ACERVO',
                 'status_label' => 'JA_NO_ACERVO',
@@ -753,15 +754,15 @@ class ClearanceController extends Controller
                 'data_emissao' => $nota->data_emissao,
                 'data_emissao_label' => optional($nota->data_emissao)->format('d/m/Y H:i'),
                 'emit_nome' => $nota->emit_razao_social,
-                'emit_cnpj' => $nota->emit_documento,
+                'emit_cnpj' => $nota->emit_cnpj,
                 'dest_nome' => $nota->dest_razao_social,
-                'dest_cnpj' => $nota->dest_documento,
+                'dest_cnpj' => $nota->dest_cnpj,
                 'tomador_nome' => null,
                 'tomador_cnpj' => null,
-                'participante_label' => $nota->dest_razao_social ?: $nota->dest_documento ?: 'Não informado',
+                'participante_label' => $nota->dest_razao_social ?: $nota->dest_cnpj ?: 'Não informado',
                 'consultado_em' => null,
                 'consultado_em_label' => 'Já no acervo',
-                'detalhe_url' => route('app.notas.detalhes', ['origem' => 'xml', 'id' => $nota->id]),
+                'detalhe_url' => route('app.notas-fiscais.detalhes', ['origem' => 'xml', 'id' => $nota->id]),
                 'origem_acervo_label' => 'XML',
                 'origem_acervo_hex' => '#0f766e',
                 'ordem_lote' => $ordem,
@@ -803,7 +804,7 @@ class ClearanceController extends Controller
             'participante_label' => $destinatario ?: 'Não informado',
             'consultado_em' => null,
             'consultado_em_label' => 'Já no acervo',
-            'detalhe_url' => route('app.notas.detalhes', ['origem' => 'efd', 'id' => $nota->id]),
+            'detalhe_url' => route('app.notas-fiscais.detalhes', ['origem' => 'efd', 'id' => $nota->id]),
             'origem_acervo_label' => 'EFD',
             'origem_acervo_hex' => '#4338ca',
             'ordem_lote' => $ordem,
@@ -923,7 +924,7 @@ class ClearanceController extends Controller
                 'tipoDocumento' => $tipoDocumento,
                 'chaveConsultada' => strlen($chaveConsultada) === 44
                     ? $chaveConsultada
-                    : ($notaResultado['chave_acesso'] ?? $notaResultado['nfe_id'] ?? null),
+                    : ($notaResultado['nfe_id'] ?? null),
                 'aguardaPersistencia' => $lote->isFinalizado() && ! $notaResultado,
                 'progressSnapshot' => $this->getClearanceProgressSnapshot($lote),
             ]);
@@ -1124,7 +1125,7 @@ class ClearanceController extends Controller
         $efd->whereNotExists(function ($q) use ($userId) {
             $q->select(DB::raw(1))
                 ->from('xml_notas')
-                ->whereColumn('xml_notas.chave_acesso', 'efd_notas.chave_acesso')
+                ->whereColumn('xml_notas.nfe_id', 'efd_notas.chave_acesso')
                 ->where('xml_notas.user_id', $userId);
         });
 
@@ -1137,8 +1138,8 @@ class ClearanceController extends Controller
             ->selectRaw("
                 'xml'::text                                   as origem,
                 xml_notas.id                                   as id,
-                xml_notas.chave_acesso                         as chave,
-                xml_notas.numero_documento                     as numero,
+                xml_notas.nfe_id                               as chave,
+                xml_notas.numero_nota                          as numero,
                 xml_notas.serie::text                          as serie,
                 xml_notas.tipo_documento                       as modelo,
                 xml_notas.data_emissao                         as data_emissao,
@@ -1146,7 +1147,7 @@ class ClearanceController extends Controller
                 CASE xml_notas.tipo_nota WHEN 0 THEN 'entrada' ELSE 'saida' END as tipo_nota,
                 xml_notas.emit_razao_social                    as emit_razao_social,
                 xml_notas.dest_razao_social                    as dest_razao_social,
-                COALESCE(xml_notas.emit_documento, xml_notas.dest_documento) as participante_cnpj,
+                COALESCE(xml_notas.emit_cnpj, xml_notas.dest_cnpj) as participante_cnpj,
                 COALESCE(xml_notas.emit_cliente_id, xml_notas.dest_cliente_id) as cliente_id,
                 xml_notas.icms_valor                           as icms_valor,
                 xml_notas.pis_valor                            as pis_valor,
@@ -1196,12 +1197,7 @@ class ClearanceController extends Controller
                 NULL::text                                     as validacao_json
             ")
             ->where('efd_notas.user_id', $userId)
-            ->where('efd_notas.cancelada', false) // P4: cancelada não é selecionável/cobrável
-            ->whereRaw("UPPER(COALESCE(efd_notas.modelo, '')) NOT IN ('00', 'NFSE', 'NFS-E')")
-            // P1: a MESMA NF-e está em 'fiscal' e 'contribuicoes'. Sem dedup a lista mostra a
-            // nota 2× (e o custo cobraria 2×); manter só a fiscal garante que a validação caia
-            // numa origem canônica única (base do dedup das KPIs de status).
-            ->whereRaw("(efd_notas.origem_arquivo = 'fiscal' OR NOT EXISTS (SELECT 1 FROM efd_notas f WHERE f.user_id = efd_notas.user_id AND f.origem_arquivo = 'fiscal' AND f.chave_acesso IS NOT NULL AND f.chave_acesso = efd_notas.chave_acesso))");
+            ->whereRaw("UPPER(COALESCE(efd_notas.modelo, '')) NOT IN ('00', 'NFSE', 'NFS-E')");
 
         $this->applyCommonFiltersEfd($q, $f);
 
@@ -1228,7 +1224,7 @@ class ClearanceController extends Controller
         if (! empty($f['participante_cnpj'])) {
             $cnpj = preg_replace('/\D/', '', $f['participante_cnpj']);
             $q->where(function ($sub) use ($cnpj) {
-                $sub->where('xml_notas.emit_documento', $cnpj)->orWhere('xml_notas.dest_documento', $cnpj);
+                $sub->where('xml_notas.emit_cnpj', $cnpj)->orWhere('xml_notas.dest_cnpj', $cnpj);
             });
         }
 
@@ -1382,183 +1378,14 @@ class ClearanceController extends Controller
         $tabId = $request->input('tab_id');
         $user = Auth::user();
 
-        $custo = $this->validacaoService->calcularCusto($notaIds, $origens, $userId, $tipo);
+        // Validação contábil local (enriquecimento; popula *.validacao p/ dashboard, sem cobrança).
+        $this->validacaoService->validarNotas($notaIds, $origens, $userId, $tipo);
 
-        if ($custo['custo_total'] > 0) {
-            if (! $this->creditService->hasEnough($user, $custo['custo_total'])) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Creditos insuficientes',
-                    'custo_necessario' => $custo['custo_total'],
-                    'saldo_atual' => $this->creditService->getBalance($user),
-                ], 402);
-            }
+        // Clearance SEFAZ executado no Laravel (camada de consultas) — dono do débito e do estorno
+        // por documento. Substitui o despacho ao webhook n8n, desligado no cutover de 2026-06-07.
+        $resultado = app(ClearanceLoteService::class)->iniciar($notaIds, $origens, $tipo, $userId, $tabId);
 
-            $this->creditService->deduct($user, $custo['custo_total']);
-        }
-
-        $resultado = $this->validacaoService->validarNotas($notaIds, $origens, $userId, $tipo);
-
-        $responseBase = array_merge($resultado, [
-            'creditos_utilizados' => $custo['custo_total'],
-        ]);
-
-        $webhookUrl = config('services.webhook.consultas_notas_url');
-
-        if (empty($webhookUrl)) {
-            Log::warning('Clearance bulk: webhook nao configurado (WEBHOOK_CONSULTAS_NOTAS_URL)');
-
-            if ($custo['custo_total'] > 0) {
-                $this->creditService->add(
-                    $user,
-                    $custo['custo_total'],
-                    'clearance_bulk_refund',
-                    'Estorno - webhook de clearance nao configurado'
-                );
-            }
-
-            return response()->json([
-                'success' => false,
-                'error' => 'Webhook de clearance nao configurado. Creditos estornados.',
-                'refund_aplicado' => $custo['custo_total'] > 0,
-                'novo_saldo' => $this->creditService->getBalance($user),
-            ], 503);
-        }
-
-        $notasPayload = $this->montarPayloadNotasClearance($notaIds, $origens, $userId);
-
-        $lote = null;
-
-        try {
-            $lote = ConsultaLote::create([
-                'user_id' => $userId,
-                'cliente_id' => null,
-                'plano_id' => null,
-                'status' => ConsultaLote::STATUS_PROCESSANDO,
-                'total_participantes' => count($notasPayload),
-                'creditos_cobrados' => $custo['custo_total'],
-                'tab_id' => $tabId,
-            ]);
-
-            $totalNfe = collect($notasPayload)
-                ->filter(fn (array $nota) => ($nota['tipo_documento'] ?? null) === 'NFE')
-                ->count();
-            $totalCte = collect($notasPayload)
-                ->filter(fn (array $nota) => ($nota['tipo_documento'] ?? null) === 'CTE')
-                ->count();
-
-            $payload = [
-                'user_id' => $userId,
-                'consulta_lote_id' => $lote->id,
-                'tab_id' => $tabId,
-                'tipo_validacao' => $tipo,
-                'total_notas' => count($notasPayload),
-                'total_nfe' => $totalNfe,
-                'total_cte' => $totalCte,
-                'notas' => $notasPayload,
-                'progress_url' => url('/api/consultas/progresso'),
-            ];
-
-            if (! empty($tabId)) {
-                Cache::put(
-                    "progresso:{$userId}:{$tabId}",
-                    $this->buildClearanceNotasInitialProgressCache(
-                        $userId,
-                        $tabId,
-                        $lote->id,
-                        $tipo,
-                        $totalNfe,
-                        $totalCte
-                    ),
-                    600
-                );
-            }
-
-            $response = Http::timeout(15)
-                ->withHeaders([
-                    'X-API-Token' => config('services.api.token'),
-                    'Content-Type' => 'application/json',
-                ])
-                ->post($webhookUrl, $payload);
-
-            if (! $response->successful()) {
-                if ($custo['custo_total'] > 0) {
-                    $this->creditService->add(
-                        $user,
-                        $custo['custo_total'],
-                        'clearance_bulk_refund',
-                        'Estorno - webhook clearance bulk indisponivel'
-                    );
-                }
-
-                $lote->update([
-                    'status' => ConsultaLote::STATUS_ERRO,
-                    'error_code' => 'WEBHOOK_ERROR',
-                    'error_message' => 'Webhook n8n respondeu '.$response->status(),
-                ]);
-
-                Log::error('Clearance bulk: webhook retornou erro', [
-                    'consulta_lote_id' => $lote->id,
-                    'response_status' => $response->status(),
-                    'response_body' => $response->body(),
-                ]);
-
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Erro ao iniciar clearance externo. Creditos foram estornados.',
-                    'refund_aplicado' => true,
-                    'novo_saldo' => $this->creditService->getBalance($user),
-                ], Response::HTTP_BAD_GATEWAY);
-            }
-
-            Log::info('Clearance bulk: despachado para n8n', [
-                'consulta_lote_id' => $lote->id,
-                'user_id' => $userId,
-                'total_notas' => count($notasPayload),
-            ]);
-
-            return response()->json(array_merge($responseBase, [
-                'webhook_disparado' => true,
-                'consulta_lote_id' => $lote->id,
-                'tab_id' => $tabId,
-                'progress_url' => $tabId ? url('/app/consulta/progresso/stream?tab_id='.$tabId) : null,
-                'resultado_url' => route('app.clearance.notas.resultado', [
-                    'consultaLoteId' => $lote->id,
-                    'tipo_validacao' => $tipo,
-                ]),
-                'novo_saldo' => $this->creditService->getBalance($user),
-            ]));
-        } catch (\Throwable $e) {
-            if ($lote) {
-                $lote->update([
-                    'status' => ConsultaLote::STATUS_ERRO,
-                    'error_code' => 'INTERNAL_ERROR',
-                    'error_message' => $e->getMessage(),
-                ]);
-            }
-
-            if ($custo['custo_total'] > 0) {
-                $this->creditService->add(
-                    $user,
-                    $custo['custo_total'],
-                    'clearance_bulk_refund',
-                    'Estorno - excecao ao despachar clearance bulk'
-                );
-            }
-
-            Log::error('Clearance bulk: excecao ao despachar', [
-                'user_id' => $userId,
-                'consulta_lote_id' => $lote?->id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'error' => 'Erro interno ao despachar clearance externo.',
-                'refund_aplicado' => true,
-                'novo_saldo' => $this->creditService->getBalance($user),
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        return response()->json($resultado, $resultado['http_status'] ?? Response::HTTP_OK);
     }
 
     /**
@@ -1583,10 +1410,10 @@ class ClearanceController extends Controller
         if (! empty($xmlIds)) {
             $xml = XmlNota::whereIn('id', $xmlIds)
                 ->where('user_id', $userId)
-                ->get(['id', 'chave_acesso', 'tipo_documento', 'emit_cliente_id', 'dest_cliente_id']);
+                ->get(['id', 'nfe_id', 'tipo_documento', 'emit_cliente_id', 'dest_cliente_id']);
 
             foreach ($xml as $nota) {
-                $chave = trim((string) ($nota->chave_acesso ?? ''));
+                $chave = trim((string) ($nota->nfe_id ?? ''));
                 $payload[] = [
                     'id' => $nota->id,
                     'origem' => 'xml',
@@ -1750,32 +1577,19 @@ class ClearanceController extends Controller
 
         $request->validate([
             'tipo' => 'in:basico,full,completa,deep,local',
+            'tab_id' => 'nullable|string|max:36',
         ]);
         $tipo = $this->normalizarTier($request->input('tipo'));
-
-        // Calcular e cobrar creditos
+        $tabId = $request->input('tab_id');
         $origens = array_fill_keys($notaIds, 'xml');
-        $custo = $this->validacaoService->calcularCusto($notaIds, $origens, $userId, $tipo);
 
-        if ($custo['custo_total'] > 0) {
-            if (! $this->creditService->hasEnough($user, $custo['custo_total'])) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Creditos insuficientes',
-                    'custo_necessario' => $custo['custo_total'],
-                    'saldo_atual' => $this->creditService->getBalance($user),
-                ], 402);
-            }
+        // Validação contábil local (enriquecimento; popula *.validacao p/ dashboard, sem cobrança).
+        $this->validacaoService->validarImportacao($id, $userId, $tipo);
 
-            $this->creditService->deduct($user, $custo['custo_total']);
-        }
+        // Clearance SEFAZ executado no Laravel — dono do débito e do estorno por documento.
+        $resultado = app(ClearanceLoteService::class)->iniciar($notaIds, $origens, $tipo, $userId, $tabId);
 
-        // Executar validacao
-        $resultado = $this->validacaoService->validarImportacao($id, $userId, $tipo);
-
-        return response()->json(array_merge($resultado, [
-            'creditos_utilizados' => $custo['custo_total'],
-        ]));
+        return response()->json($resultado, $resultado['http_status'] ?? Response::HTTP_OK);
     }
 
     /**
@@ -1905,8 +1719,8 @@ class ClearanceController extends Controller
             ->get()
             ->map(fn ($nota) => [
                 'id' => $nota->id,
-                'numero' => $nota->numero_documento,
-                'emitente' => $nota->emitente->razao_social ?? $nota->emit_documento,
+                'numero' => $nota->numero_nota,
+                'emitente' => $nota->emitente->razao_social ?? $nota->emit_cnpj,
                 'valor' => $nota->valor_formatado,
                 'score' => $nota->validacao_score,
                 'classificacao' => $nota->validacao_classificacao,
@@ -2001,7 +1815,7 @@ class ClearanceController extends Controller
         return $this->consultaDfeHistoricoQuery($userId)
             ->where('fluxo_origem', 'avulsa')
             ->orderByRaw('COALESCE(consultado_em, created_at) DESC')
-            ->orderByDesc('id')
+            ->orderByDesc('consulta_id')
             ->limit($limite)
             ->get()
             ->map(function ($consulta) {
@@ -2167,8 +1981,8 @@ class ClearanceController extends Controller
                 ?: 'Não informado';
             $chave = trim((string) $resultado->chave_acesso);
             $resultado->detalhe_url = match (true) {
-                $chave !== '' && isset($xmlByChave[$chave]) => route('app.notas.detalhes', ['origem' => 'xml', 'id' => $xmlByChave[$chave]]),
-                $chave !== '' && isset($efdByChave[$chave]) => route('app.notas.detalhes', ['origem' => 'efd', 'id' => $efdByChave[$chave]]),
+                $chave !== '' && isset($xmlByChave[$chave]) => route('app.notas-fiscais.detalhes', ['origem' => 'xml', 'id' => $xmlByChave[$chave]]),
+                $chave !== '' && isset($efdByChave[$chave]) => route('app.notas-fiscais.detalhes', ['origem' => 'efd', 'id' => $efdByChave[$chave]]),
                 default => null,
             };
             $resultado->origem_acervo_label = null;
@@ -2197,7 +2011,7 @@ class ClearanceController extends Controller
     {
         return XmlNota::query()
             ->where('user_id', $userId)
-            ->where('chave_acesso', $chaveAcesso)
+            ->where('nfe_id', $chaveAcesso)
             ->first();
     }
 
@@ -2234,7 +2048,7 @@ class ClearanceController extends Controller
     private function formatarResultadoXmlAcervo(XmlNota $nota): array
     {
         $situacao = strtoupper((string) data_get($nota->validacao, 'situacao', 'SALVA_NO_ACERVO'));
-        $chave = (string) $nota->chave_acesso;
+        $chave = (string) $nota->nfe_id;
         $modeloDerivado = strlen($chave) === 44 ? substr($chave, 20, 2) : null;
 
         return [
@@ -2242,26 +2056,26 @@ class ClearanceController extends Controller
             'consulta_lote_id' => null,
             'tipo_documento' => strtoupper((string) ($nota->tipo_documento ?: 'NFE')),
             'modelo' => $modeloDerivado,
-            'nfe_id' => $nota->chave_acesso,
-            'numero_nota' => $nota->numero_documento,
-            'numero' => $nota->numero_documento,
+            'nfe_id' => $nota->nfe_id,
+            'numero_nota' => $nota->numero_nota,
+            'numero' => $nota->numero_nota,
             'serie' => $nota->serie,
             'valor_total' => $nota->valor_total,
             'valor_total_label' => $nota->valor_total !== null
                 ? 'R$ '.number_format((float) $nota->valor_total, 2, ',', '.')
                 : '—',
             'data_emissao' => optional($nota->data_emissao)->format('d/m/Y H:i'),
-            'emit' => $nota->emit_razao_social ?: $nota->emit_documento,
-            'emit_cnpj' => $nota->emit_documento,
-            'dest' => $nota->dest_razao_social ?: $nota->dest_documento,
-            'dest_cnpj' => $nota->dest_documento,
+            'emit' => $nota->emit_razao_social ?: $nota->emit_cnpj,
+            'emit_cnpj' => $nota->emit_cnpj,
+            'dest' => $nota->dest_razao_social ?: $nota->dest_cnpj,
+            'dest_cnpj' => $nota->dest_cnpj,
             'tomador_nome' => null,
             'tomador_cnpj' => null,
             'cliente_nome' => $nota->cliente?->razao_social,
             'situacao' => $situacao,
             'situacao_hex' => $this->statusHexConsultaDfe($situacao),
             'consultado_em' => $this->formatarDataConsulta($nota->updated_at ?: $nota->created_at),
-            'detalhe_url' => route('app.notas.detalhes', ['origem' => 'xml', 'id' => $nota->id]),
+            'detalhe_url' => route('app.notas-fiscais.detalhes', ['origem' => 'xml', 'id' => $nota->id]),
         ];
     }
 
@@ -2275,11 +2089,11 @@ class ClearanceController extends Controller
 
         $xmlNotaId = XmlNota::query()
             ->where('user_id', $userId)
-            ->where('chave_acesso', $chave)
+            ->where('nfe_id', $chave)
             ->value('id');
 
         if ($xmlNotaId) {
-            return route('app.notas.detalhes', ['origem' => 'xml', 'id' => $xmlNotaId]);
+            return route('app.notas-fiscais.detalhes', ['origem' => 'xml', 'id' => $xmlNotaId]);
         }
 
         $efdNotaId = EfdNota::query()
@@ -2288,7 +2102,7 @@ class ClearanceController extends Controller
             ->value('id');
 
         if ($efdNotaId) {
-            return route('app.notas.detalhes', ['origem' => 'efd', 'id' => $efdNotaId]);
+            return route('app.notas-fiscais.detalhes', ['origem' => 'efd', 'id' => $efdNotaId]);
         }
 
         return null;

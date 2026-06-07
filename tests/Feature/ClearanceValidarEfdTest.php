@@ -9,11 +9,20 @@ use App\Models\User;
 use App\Models\XmlImportacao;
 use App\Models\XmlNota;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 use function Pest\Laravel\actingAs;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    // Clearance SEFAZ agora roda no Laravel; o foco destes testes é a validação contábil
+    // local (popula validacao). Fakeamos o batch p/ não disparar consulta externa.
+    Bus::fake();
+    Http::fake();
+});
 
 function validarEfdMakeUser(): User
 {
@@ -89,7 +98,7 @@ it('valida uma EfdNota e persiste resultado com alerta bloqueante de CFOP incons
     validarEfdMakeItem($nota, ['cfop' => 5102]); // CFOP saida em nota de entrada
 
     $response = actingAs($u)
-        ->postJson('/app/validacao/notas/validar', [
+        ->postJson('/app/clearance/notas/validar', [
             'nota_ids' => [$nota->id],
             'origens' => [$nota->id => 'efd'],
             'tipo' => 'basico',
@@ -131,22 +140,22 @@ it('aceita seleção misturada XML + EFD e persiste validacao nas duas tabelas',
         'user_id' => $u->id,
         'importacao_xml_id' => $xmlImp->id,
         'cliente_id' => $cliente->id,
-        'nfe_id' => str_repeat('2', 44),
+        'chave_acesso' => str_repeat('2', 44),
         'tipo_documento' => 'NFE',
-        'numero_nota' => 222,
+        'numero_documento' => 222,
         'serie' => 1,
         'data_emissao' => '2026-01-20 10:00:00',
         'valor_total' => 500.00,
         'tipo_nota' => XmlNota::TIPO_SAIDA,
-        'emit_cnpj' => '00000000000191',
+        'emit_documento' => '00000000000191',
         'emit_razao_social' => 'Empresa Propria',
-        'dest_cnpj' => '13305697000150',
+        'dest_documento' => '13305697000150',
         'dest_razao_social' => 'Cliente Saida',
         'payload' => ['emit' => ['CRT' => 3], 'det' => [], 'total' => ['ICMSTot' => []]],
     ]);
 
     $response = actingAs($u)
-        ->postJson('/app/validacao/notas/validar', [
+        ->postJson('/app/clearance/notas/validar', [
             'nota_ids' => [$efd->id, $xml->id],
             'origens' => [$efd->id => 'efd', $xml->id => 'xml'],
             'tipo' => 'basico',

@@ -5,6 +5,8 @@ use App\Models\User;
 use App\Models\XmlImportacao;
 use App\Models\XmlNota;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Http;
 
 use function Pest\Laravel\actingAs;
 
@@ -38,16 +40,16 @@ function validarImpMakeImportacaoComNotas(User $u, int $qtd): XmlImportacao
             'user_id' => $u->id,
             'importacao_xml_id' => $imp->id,
             'cliente_id' => $cliente->id,
-            'nfe_id' => str_repeat((string) $i, 44),
+            'chave_acesso' => str_repeat((string) $i, 44),
             'tipo_documento' => 'NFE',
-            'numero_nota' => 1000 + $i,
+            'numero_documento' => 1000 + $i,
             'serie' => 1,
             'data_emissao' => '2026-01-15 10:00:00',
             'valor_total' => 500.00,
             'tipo_nota' => XmlNota::TIPO_SAIDA,
-            'emit_cnpj' => '00000000000191',
+            'emit_documento' => '00000000000191',
             'emit_razao_social' => 'Empresa Propria',
-            'dest_cnpj' => '13305697000150',
+            'dest_documento' => '13305697000150',
             'dest_razao_social' => 'Destinatario Teste',
             'payload' => ['emit' => ['CRT' => 3], 'det' => [], 'total' => ['ICMSTot' => []]],
         ]);
@@ -56,28 +58,36 @@ function validarImpMakeImportacaoComNotas(User $u, int $qtd): XmlImportacao
     return $imp;
 }
 
-it('valida uma importacao XML e persiste validacao em todas as notas', function () {
+it('valida uma importacao XML: persiste validacao local e despacha clearance no Laravel', function () {
+    Bus::fake();
+    Http::fake();
     $u = User::factory()->create(['credits' => 1000]);
     $imp = validarImpMakeImportacaoComNotas($u, 2);
 
     $response = actingAs($u)
-        ->postJson("/app/validacao/importacao/{$imp->id}/validar", [
+        ->postJson("/app/clearance/importacao/{$imp->id}/validar", [
             'tipo' => 'basico',
+            'tab_id' => 'tab-imp',
         ]);
 
     $response->assertOk();
     $response->assertJson(['success' => true]);
 
+    // Validação contábil local roda como enriquecimento (popula validacao).
     $notas = XmlNota::where('importacao_xml_id', $imp->id)->get();
     expect($notas)->toHaveCount(2);
     foreach ($notas as $nota) {
         expect($nota->validacao)->not->toBeNull();
-        expect($nota->validacao)->toBeArray();
         expect($nota->validacao)->toHaveKey('classificacao');
     }
+
+    // Clearance SEFAZ via Laravel (sem webhook n8n).
+    Bus::assertBatched(fn ($batch) => count($batch->jobs) === 2);
+    Http::assertNothingSent();
 });
 
 it('retorna 404 quando a importacao nao tem notas', function () {
+    Bus::fake();
     $u = User::factory()->create(['credits' => 1000]);
     $cliente = validarImpClientePropria($u);
 
@@ -89,10 +99,11 @@ it('retorna 404 quando a importacao nao tem notas', function () {
     ]);
 
     $response = actingAs($u)
-        ->postJson("/app/validacao/importacao/{$imp->id}/validar", [
+        ->postJson("/app/clearance/importacao/{$imp->id}/validar", [
             'tipo' => 'basico',
         ]);
 
     $response->assertStatus(404);
     $response->assertJson(['success' => false]);
+    Bus::assertNothingBatched();
 });
