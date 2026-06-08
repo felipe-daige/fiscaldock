@@ -33,6 +33,14 @@ class ClearanceLoteService
     public function iniciar(array $notaIds, array $origens, string $tier, int $userId, ?string $tabId): array
     {
         $tier = in_array($tier, ['basico', 'full'], true) ? $tier : 'basico';
+
+        // Clearance Full (tributos/itens) ainda não existe — exige certificado A1/A3. Enquanto a
+        // flag está off, 'full' não entrega nada além do básico, então coage p/ basico (não cobra o
+        // dobro). Regra: nunca confiar no frontend, mesmo com o card "em breve" desabilitado.
+        if ($tier === 'full' && ! config('clearance.full.habilitado')) {
+            $tier = 'basico';
+        }
+
         $itens = $this->resolverItens($notaIds, $origens, $userId);
 
         if ($itens->isEmpty()) {
