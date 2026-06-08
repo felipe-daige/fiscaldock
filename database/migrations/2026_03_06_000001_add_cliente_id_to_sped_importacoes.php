@@ -12,10 +12,14 @@ return new class extends Migration
         Schema::table('efd_importacoes', function (Blueprint $table) {
             $table->foreignId('cliente_id')->nullable()->constrained('clientes')->nullOnDelete()->after('user_id');
             $table->jsonb('resumo_final')->nullable()->after('cliente_id');
+            $table->string('cnpj', 14)->nullable()->after('tipo_efd');
+            $table->date('periodo_inicio')->nullable()->after('cnpj');
+            $table->date('periodo_fim')->nullable()->after('periodo_inicio');
+            $table->string('arquivo_hash', 64)->nullable()->after('periodo_fim');
         });
 
         // Adiciona coluna origem_arquivo em efd_notas (idempotente)
-        if (!Schema::hasColumn('efd_notas', 'origem_arquivo')) {
+        if (! Schema::hasColumn('efd_notas', 'origem_arquivo')) {
             Schema::table('efd_notas', function (Blueprint $table) {
                 $table->string('origem_arquivo')->nullable()->after('tipo_operacao');
             });
@@ -44,7 +48,7 @@ return new class extends Migration
         }
 
         // Cria tabela alertas (idempotente)
-        if (!Schema::hasTable('alertas')) {
+        if (! Schema::hasTable('alertas')) {
             Schema::create('alertas', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
@@ -74,10 +78,29 @@ return new class extends Migration
                 $table->unique(['user_id', 'hash']);
             });
         }
+
+        // Backstop: duas importações CONCLUÍDAS do mesmo período/cliente/tipo nunca coexistem.
+        // NULLS NOT DISTINCT (PG15+) faz cliente_id NULL colidir entre si (uploads sem cliente).
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("
+                CREATE UNIQUE INDEX IF NOT EXISTS efd_importacoes_periodo_unique
+                ON efd_importacoes (user_id, cliente_id, tipo_efd, periodo_inicio, periodo_fim)
+                NULLS NOT DISTINCT
+                WHERE status = 'concluido' AND periodo_inicio IS NOT NULL
+            ");
+        }
     }
 
     public function down(): void
     {
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('DROP INDEX IF EXISTS efd_importacoes_periodo_unique');
+        }
+        if (Schema::hasColumn('efd_importacoes', 'arquivo_hash')) {
+            Schema::table('efd_importacoes', function (Blueprint $table) {
+                $table->dropColumn(['cnpj', 'periodo_inicio', 'periodo_fim', 'arquivo_hash']);
+            });
+        }
         Schema::dropIfExists('alertas');
         if (Schema::hasColumn('efd_notas', 'origem_arquivo')) {
             Schema::table('efd_notas', function (Blueprint $table) {
