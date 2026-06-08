@@ -545,11 +545,12 @@
             txtImportarBtn.disabled = true;
             txtImportarBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg> Enviando...';
 
-            try {
+            const enviar = async function (substituir) {
                 const formData = new FormData();
                 formData.append('arquivo', txtFileInput.files[0]);
                 formData.append('tipo_efd', tipoEfd === 'efd-fiscal' ? 'EFD ICMS/IPI' : 'EFD PIS/COFINS');
                 formData.append('tab_id', tabId);
+                if (substituir) formData.append('substituir', '1');
 
                 const response = await fetch('/app/importacao/efd/importar-txt', {
                     method: 'POST',
@@ -560,11 +561,41 @@
 
                 const data = await response.json();
 
+                // Duplicidade: backend pede confirmação antes de substituir.
+                if (response.status === 409 && data.caso) {
+                    const imp = data.importacao || {};
+                    let msg;
+                    if (data.caso === 'identico') {
+                        msg = 'Este arquivo já foi importado em ' + (imp.criada_em || '—') +
+                            '. Nada mudou. Deseja reimportar mesmo assim (substitui a anterior)?';
+                    } else {
+                        const periodo = (imp.periodo_inicio || '') + ' a ' + (imp.periodo_fim || '');
+                        msg = 'Já existe uma importação ' + (imp.tipo_efd || '') + ' do período ' + periodo +
+                            (data.retificadora ? ' e este arquivo é uma retificadora.' : '.') +
+                            ' Substituir a importação anterior pela nova versão?';
+                    }
+                    if (window.confirm(msg)) {
+                        return enviar(true);
+                    }
+                    return null; // usuário cancelou
+                }
+
                 if (!response.ok || !data.success || !data.importacao_id) {
                     throw new Error(data.error || data.message || 'Erro ao enviar arquivo');
                 }
 
                 window.location.href = '/app/importacao/efd/' + data.importacao_id + '?tab_id=' + encodeURIComponent(tabId);
+                return data;
+            };
+
+            try {
+                const resultado = await enviar(false);
+                if (resultado === null) {
+                    // cancelado pelo usuário — restaura o botão
+                    txtImportarBtn.disabled = false;
+                    txtImportarBtn.innerHTML = originalHtml;
+                    updateImportButtonState();
+                }
             } catch (err) {
                 mostrarErroTxt(err.message || 'Erro ao enviar arquivo.');
                 txtImportarBtn.disabled = false;

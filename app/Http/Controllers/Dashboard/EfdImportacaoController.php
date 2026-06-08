@@ -28,6 +28,7 @@ class EfdImportacaoController extends Controller
     public function __construct(
         protected CreditService $creditService,
         protected SpedDetectorService $spedDetector,
+        protected \App\Services\Efd\EfdImportacaoDuplicidadeService $duplicidade,
     ) {}
 
     /**
@@ -284,29 +285,32 @@ class EfdImportacaoController extends Controller
             'tipo_efd' => 'required|in:EFD ICMS/IPI,EFD PIS/COFINS',
             'cliente_id' => 'nullable|integer',
             'tab_id' => 'nullable|string|max:36',
+            'substituir' => 'nullable|boolean',
         ]);
 
         $user = Auth::user();
         $arquivo = $request->file('arquivo');
         $tipoEfd = $request->tipo_efd;
 
-        $deteccao = $this->spedDetector->detectar(file_get_contents($arquivo->path()));
+        $conteudoArquivo = file_get_contents($arquivo->path());
+        $arquivoHash = hash('sha256', $conteudoArquivo);
+        $cabecalho = $this->spedDetector->extrairCabecalho($conteudoArquivo);
 
-        if (! $deteccao['valido']) {
+        if (! $cabecalho['valido']) {
             return response()->json([
                 'success' => false,
-                'error' => 'Arquivo invalido: nao parece ser um SPED. '.implode(' ', $deteccao['erros']),
+                'error' => 'Arquivo invalido: nao parece ser um SPED. '.implode(' ', $cabecalho['erros']),
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        if ($deteccao['tipo'] !== null && $deteccao['tipo'] !== $tipoEfd) {
+        if ($cabecalho['tipo'] !== null && $cabecalho['tipo'] !== $tipoEfd) {
             Log::info('tipo_efd corrigido pelo detector', [
                 'user_id' => $user->id,
                 'escolhido' => $tipoEfd,
-                'detectado' => $deteccao['tipo'],
+                'detectado' => $cabecalho['tipo'],
                 'arquivo' => $arquivo->getClientOriginalName(),
             ]);
-            $tipoEfd = $deteccao['tipo'];
+            $tipoEfd = $cabecalho['tipo'];
         }
 
         // Selecionar webhook baseado no tipo de EFD (extração completa sempre)
@@ -328,6 +332,55 @@ class EfdImportacaoController extends Controller
             }
         }
 
+        // CNPJ do arquivo × documento do cliente (só bloqueia com contradição real).
+        if (isset($cliente) && $cliente && $cabecalho['cnpj']) {
+            $cnpjCliente = preg_replace('/\D/', '', (string) $cliente->documento);
+            if ($cnpjCliente !== '' && $cnpjCliente !== $cabecalho['cnpj']) {
+                return response()->json([
+                    'success' => false,
+                    'error' => "Este arquivo é da empresa {$cabecalho['cnpj']}, mas o cliente selecionado tem documento {$cnpjCliente}.",
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        }
+
+        // Guard de duplicidade: impede reimportar o mesmo documento por engano.
+        $conflito = $this->duplicidade->verificar(
+            $user->id,
+            $clienteId,
+            $tipoEfd,
+            $cabecalho['periodo_inicio'],
+            $cabecalho['periodo_fim'],
+            $arquivoHash,
+        );
+
+        $substituir = $request->boolean('substituir');
+
+        if ($conflito['caso'] !== null && ! $substituir) {
+            $imp = $conflito['importacao'];
+
+            return response()->json([
+                'success' => false,
+                'caso' => $conflito['caso'],
+                'retificadora' => (bool) $cabecalho['retificadora'],
+                'importacao' => [
+                    'id' => $imp->id,
+                    'tipo_efd' => $imp->tipo_efd,
+                    'periodo_inicio' => optional($imp->periodo_inicio)->format('Y-m-d'),
+                    'periodo_fim' => optional($imp->periodo_fim)->format('Y-m-d'),
+                    'criada_em' => optional($imp->created_at)->format('d/m/Y H:i'),
+                ],
+                'error' => $conflito['caso'] === 'identico'
+                    ? 'Este arquivo já foi importado.'
+                    : 'Já existe uma importação deste período.',
+            ], Response::HTTP_CONFLICT);
+        }
+
+        // Substituir: apaga a importação anterior (resolvida server-side, nunca por ID do front).
+        // O FK cascadeOnDelete limpa notas/itens/apuração/retenções da importação removida.
+        if ($substituir && $conflito['caso'] !== null) {
+            $conflito['importacao']->delete();
+        }
+
         if (empty($webhookUrl)) {
             $configKey = $tipoEfd === 'EFD ICMS/IPI'
                 ? 'WEBHOOK_IMPORTACAO_EFD_FISCAL_URL'
@@ -347,7 +400,11 @@ class EfdImportacaoController extends Controller
             'user_id' => $user->id,
             'cliente_id' => $clienteId,
             'tipo_efd' => $tipoEfd,
-            'arquivo' => $arquivo->getClientOriginalName(),
+            'cnpj' => $cabecalho['cnpj'],
+            'periodo_inicio' => $cabecalho['periodo_inicio'],
+            'periodo_fim' => $cabecalho['periodo_fim'],
+            'arquivo_hash' => $arquivoHash,
+            'filename' => $arquivo->getClientOriginalName(),
             'status' => 'processando',
             'iniciado_em' => now(),
         ]);
@@ -355,7 +412,7 @@ class EfdImportacaoController extends Controller
         try {
             // Enviar arquivo para n8n via multipart
             $response = Http::timeout(30)
-                ->attach('file', file_get_contents($arquivo->path()), $arquivo->getClientOriginalName())
+                ->attach('file', $conteudoArquivo, $arquivo->getClientOriginalName())
                 ->post($webhookUrl, [
                     'user_id' => $user->id,
                     'importacao_id' => $importacao->id,
