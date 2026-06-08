@@ -9,20 +9,24 @@ use Illuminate\Validation\ValidationException;
 
 uses(Illuminate\Foundation\Testing\RefreshDatabase::class);
 
-function gerarPfx(string $senha, string $cnpj = '00000000000191', int $dias = 365): string
-{
-    $pkey = openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);
-    $csr = openssl_csr_new(['commonName' => "EMPRESA TESTE:{$cnpj}"], $pkey, ['digest_alg' => 'sha256']);
-    $x509 = openssl_csr_sign($csr, null, $pkey, $dias, ['digest_alg' => 'sha256']);
-    $pfx = '';
-    openssl_pkcs12_export($x509, $pfx, $pkey, $senha);
+if (! function_exists('gerarPfx')) {
+    function gerarPfx(string $senha, string $cnpj = '00000000000191', int $dias = 365): string
+    {
+        $pkey = openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);
+        $csr = openssl_csr_new(['commonName' => "EMPRESA TESTE:{$cnpj}"], $pkey, ['digest_alg' => 'sha256']);
+        $x509 = openssl_csr_sign($csr, null, $pkey, $dias, ['digest_alg' => 'sha256']);
+        $pfx = '';
+        openssl_pkcs12_export($x509, $pfx, $pkey, $senha);
 
-    return $pfx;
+        return $pfx;
+    }
 }
 
-function certUploadFile(string $pfx): \Illuminate\Http\UploadedFile
-{
-    return \Illuminate\Http\UploadedFile::fake()->createWithContent('cert.pfx', $pfx);
+if (! function_exists('certUploadFile')) {
+    function certUploadFile(string $pfx): \Illuminate\Http\UploadedFile
+    {
+        return \Illuminate\Http\UploadedFile::fake()->createWithContent('cert.pfx', $pfx);
+    }
 }
 
 function certCliente(): Cliente

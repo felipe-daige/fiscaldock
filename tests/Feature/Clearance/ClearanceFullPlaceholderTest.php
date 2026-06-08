@@ -92,13 +92,6 @@ it('tela de notas marca o tier Full como em breve quando Full está off', functi
         ->assertSee('pointer-events-none', false);
 });
 
-it('Empresa mostra card Certificado Digital em breve quando Full está off', function () {
-    config()->set('clearance.full.habilitado', false);
-    $user = fullPhUser();
-    fullPhCliente($user);
-
-    actingAs($user)->get('/app/minha-empresa')
-        ->assertOk()
-        ->assertSee('Certificado Digital', false)
-        ->assertSee('Em breve', false);
-});
+// O placeholder "em breve" do certificado na Empresa foi substituído pelo cadastro real
+// (ver CertificadoCadastroTest). O tier Full e o bloco de tributos/itens no resultado
+// seguem "em breve" enquanto a consulta-com-certificado não existir.
