@@ -158,6 +158,11 @@ class DivergenciaService
                     'creditos' => $creditosCobrados,
                     'custo_reais' => round($creditosCobrados * 0.20, 2),
                     'exposicao_reais' => $valorDivergente,
+                    'multiplicador' => ($creditosCobrados > 0 && $valorDivergente > 0)
+                        ? (int) round($valorDivergente / ($creditosCobrados * 0.20))
+                        : 0,
+                    'total_documentos' => $snapshots->count(),
+                    'conformes' => $snapshots->count() - ($totalCriticas + $totalRevisar),
                 ],
             ],
             'breakdown' => $breakdown,
@@ -383,6 +388,9 @@ class DivergenciaService
                 'creditos' => $creditosCobrados,
                 'custo_reais' => round($creditosCobrados * 0.20, 2),
                 'exposicao_reais' => 0.0,
+                'multiplicador' => 0,
+                'total_documentos' => 0,
+                'conformes' => 0,
             ],
         ];
     }

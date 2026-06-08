@@ -125,9 +125,15 @@
                     <p class="text-[11px] text-gray-500 mt-1">{{ $divergencia['kpis']['valor']['notas_divergentes'] }} nota(s) afetada(s)</p>
                 </div>
                 <div class="px-4 py-3">
+                    @php $roi = $divergencia['kpis']['roi']; @endphp
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">ROI da auditoria</p>
-                    <p class="text-lg font-bold text-gray-900">{{ $formatMoney($divergencia['kpis']['roi']['custo_reais']) }} → {{ $formatMoney($divergencia['kpis']['roi']['exposicao_reais']) }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">{{ $divergencia['kpis']['roi']['creditos'] }} créditos · exposição detectada</p>
+                    @if(($roi['exposicao_reais'] ?? 0) > 0)
+                        <p class="text-lg font-bold text-gray-900">{{ number_format($roi['multiplicador'], 0, ',', '.') }}×</p>
+                        <p class="text-[11px] text-gray-500 mt-1">{{ $formatMoney($roi['custo_reais']) }} revelaram {{ $formatMoney($roi['exposicao_reais']) }} em risco</p>
+                    @else
+                        <p class="text-lg font-bold text-gray-900">Tudo conforme</p>
+                        <p class="text-[11px] text-gray-500 mt-1">{{ $roi['conformes'] }}/{{ $roi['total_documentos'] }} conformes · custo {{ $formatMoney($roi['custo_reais']) }}</p>
+                    @endif
                 </div>
             </div>
         </div>

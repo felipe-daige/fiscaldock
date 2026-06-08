@@ -67,6 +67,24 @@ it('contraparte presente e ambiente produção = ok', function () {
     expect($r['veredito']['severidade'])->toBe('ok');
 });
 
+it('ROI: lote sem exposição reporta conformes/total e multiplicador 0', function () {
+    $svc = svcComDeclarado(['valor_total' => 100.0, 'contraparte_cnpj' => '11111111000111', 'data_emissao' => '2026-01-15', 'origem' => 'efd', 'id' => 1]);
+
+    $r = $svc->analisar(new Collection([snapEnr()]), 1, 5);
+    expect($r['kpis']['roi']['multiplicador'])->toBe(0);
+    expect($r['kpis']['roi']['conformes'])->toBe(1);
+    expect($r['kpis']['roi']['total_documentos'])->toBe(1);
+});
+
+it('ROI: com exposição calcula multiplicador = exposição / custo', function () {
+    // nota fria: declarada R$ 1.000, NAO_ENCONTRADA → exposição 1000; custo 5 créditos = R$ 1,00 → 1000×.
+    $svc = svcComDeclarado(['valor_total' => 1000.0, 'contraparte_cnpj' => '11111111000111', 'data_emissao' => '2026-01-15', 'origem' => 'efd', 'id' => 1]);
+
+    $r = $svc->analisar(new Collection([snapEnr(['status' => 'NAO_ENCONTRADA', 'status_label' => 'NAO_ENCONTRADA', 'valor_total' => null])]), 1, 5);
+    expect($r['kpis']['roi']['exposicao_reais'])->toBe(1000.0);
+    expect($r['kpis']['roi']['multiplicador'])->toBe(1000);
+});
+
 it('cada documento traz motivo legível (justificativa do veredito)', function () {
     // ok → motivo de conformidade
     $ok = svcComDeclarado(['valor_total' => 100.0, 'contraparte_cnpj' => '11111111000111', 'data_emissao' => '2026-01-15', 'origem' => 'efd', 'id' => 1]);
