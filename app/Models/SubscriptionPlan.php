@@ -35,10 +35,25 @@ class SubscriptionPlan extends Model
         return $this->hasMany(AccountSubscription::class);
     }
 
-    /** Plano padrão (Free) — fallback quando a conta não tem assinatura. */
+    /**
+     * Plano padrão (Free) — fallback quando a conta não tem assinatura.
+     *
+     * Resiliente: se a linha 'free' não existir no banco (ex.: seed ausente),
+     * devolve um Free em memória a partir da definição canônica do seeder, em vez
+     * de estourar ModelNotFoundException nos hot paths (getTierForUser/planFor).
+     */
     public static function free(): self
     {
-        return static::where('codigo', 'free')->firstOrFail();
+        $plan = static::where('codigo', 'free')->first();
+
+        if ($plan !== null) {
+            return $plan;
+        }
+
+        $definicao = collect(\Database\Seeders\SubscriptionPlanSeeder::definitions())
+            ->firstWhere('codigo', 'free');
+
+        return new self($definicao);
     }
 
     public function capability(string $key, mixed $default = null): mixed
