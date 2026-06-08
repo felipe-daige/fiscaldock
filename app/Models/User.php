@@ -82,6 +82,11 @@ class User extends Authenticatable
         return $this->hasMany(PrivateDocument::class);
     }
 
+    public function subscription()
+    {
+        return $this->hasOne(\App\Models\AccountSubscription::class);
+    }
+
     // Helper - mantém compatibilidade com código antigo
     public function empresas()
     {
