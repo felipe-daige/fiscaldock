@@ -65,6 +65,33 @@ it('cria pagamento pending com valor/créditos do catálogo backend (não do fro
     Http::assertSent(fn ($req) => $req['transaction_amount'] === 200.0);
 });
 
+it('erro do MP (sem id) vira rejected com a causa, sem gravar o HTTP code como status', function () {
+    Http::fake([
+        'api.mercadopago.com/v1/payments' => Http::response([
+            'error' => 'bad_request',
+            'status' => 400, // HTTP code ecoado no corpo — NÃO é status de pagamento
+            'message' => 'Invalid users involved',
+            'cause' => [['code' => 2034, 'description' => 'Invalid users involved']],
+        ], 400),
+    ]);
+
+    $user = User::factory()->create();
+    actingAs($user);
+
+    $resp = postJson(route('app.pagamento.mercadopago.criar'), [
+        'pacote' => 'business',
+        'payment_data' => ['payment_method_id' => 'pix'],
+    ])->assertOk();
+
+    $resp->assertJsonPath('status', 'rejected');
+
+    $payment = MercadoPagoPayment::first();
+    expect($payment->status)->toBe('rejected');
+    expect($payment->mp_payment_id)->toBeNull();
+    expect($payment->status_detail)->toBe('Invalid users involved');
+    expect($payment->credited_at)->toBeNull();
+});
+
 it('recusa pacote inválido', function () {
     $user = User::factory()->create();
     actingAs($user);

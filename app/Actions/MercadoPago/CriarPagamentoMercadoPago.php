@@ -85,10 +85,20 @@ class CriarPagamentoMercadoPago
 
         $resposta = $this->client->criarPagamento($body, $idempotencyKey);
 
+        // Sem `id` => o MP NÃO criou o pagamento (erro de validação/bad_request). Nesse caso
+        // o campo `status` do corpo é o HTTP code (ex.: 400), não um status de pagamento —
+        // não o usamos como status. Marcamos rejected e guardamos a causa.
+        $mpId = isset($resposta['id']) ? (string) $resposta['id'] : null;
+        $erroApi = $mpId === null;
+
         $payment->update([
-            'mp_payment_id' => isset($resposta['id']) ? (string) $resposta['id'] : null,
-            'status' => $resposta['status'] ?? MercadoPagoPayment::STATUS_PENDING,
-            'status_detail' => $resposta['status_detail'] ?? null,
+            'mp_payment_id' => $mpId,
+            'status' => $erroApi
+                ? MercadoPagoPayment::STATUS_REJECTED
+                : ($resposta['status'] ?? MercadoPagoPayment::STATUS_PENDING),
+            'status_detail' => $erroApi
+                ? (data_get($resposta, 'cause.0.description') ?? ($resposta['message'] ?? 'erro na criação do pagamento'))
+                : ($resposta['status_detail'] ?? null),
             'payment_method' => $resposta['payment_method_id'] ?? ($body['payment_method_id'] ?? null),
             'payload' => $resposta,
         ]);
