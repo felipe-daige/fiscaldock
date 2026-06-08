@@ -51,8 +51,42 @@ class ClearanceLoteService
             ];
         }
 
-        $user = User::findOrFail($userId);
         $custoUnit = ValidacaoContabilService::custoUnitarioPorTier($tier);
+
+        return $this->iniciarComItens(
+            $itens,
+            $custoUnit,
+            $userId,
+            $tabId,
+            "Clearance em lote ({$tier}) · {$itens->count()} documento(s)",
+            'app.clearance.notas.resultado'
+        );
+    }
+
+    /**
+     * Motor compartilhado (lote e busca avulsa): debita, cria o ConsultaLote, dispara o batch
+     * e o fechamento. $itens = [{chave, tipo('nfe'|'cte'), cliente_id}].
+     *
+     * @param  Collection<int, array{chave: string, tipo: string, cliente_id: int|null}>  $itens
+     * @return array<string, mixed>
+     */
+    public function iniciarComItens(
+        Collection $itens,
+        int $custoUnit,
+        int $userId,
+        ?string $tabId,
+        string $descricaoDebito,
+        string $resultadoRouteName = 'app.clearance.notas.resultado'
+    ): array {
+        if ($itens->isEmpty()) {
+            return [
+                'success' => false,
+                'http_status' => Response::HTTP_UNPROCESSABLE_ENTITY,
+                'error' => 'Nenhum documento válido para consultar.',
+            ];
+        }
+
+        $user = User::findOrFail($userId);
         $custoTotal = $itens->count() * $custoUnit;
 
         if (! $this->creditService->hasEnough($user, $custoTotal)) {
@@ -65,12 +99,7 @@ class ClearanceLoteService
             ];
         }
 
-        $this->creditService->deduct(
-            $user,
-            $custoTotal,
-            'clearance_lote',
-            "Clearance em lote ({$tier}) · {$itens->count()} documento(s)"
-        );
+        $this->creditService->deduct($user, $custoTotal, 'clearance_lote', $descricaoDebito);
 
         $lote = null;
 
@@ -108,9 +137,7 @@ class ClearanceLoteService
 
             return [
                 'success' => true,
-                // Flag legada consumida pelo front (clearance-notas.js): sinaliza "processamento
-                // assíncrono iniciado" → redireciona pra página de resultado/progresso. (Não há mais
-                // webhook; o nome é mantido só pra não quebrar o contrato do JS.)
+                // Flag legada consumida pelo front: sinaliza "processamento assíncrono iniciado".
                 'webhook_disparado' => true,
                 'consulta_lote_id' => $lote->id,
                 'tab_id' => $tabId,
@@ -118,7 +145,7 @@ class ClearanceLoteService
                 'creditos_cobrados' => $custoTotal,
                 'creditos_utilizados' => $custoTotal,
                 'novo_saldo' => $this->creditService->getBalance($user),
-                'resultado_url' => route('app.clearance.notas.resultado', ['consultaLoteId' => $lote->id]),
+                'resultado_url' => route($resultadoRouteName, ['consultaLoteId' => $lote->id]),
             ];
         } catch (\Throwable $e) {
             if ($lote) {
@@ -129,9 +156,9 @@ class ClearanceLoteService
                 ]);
             }
 
-            $this->creditService->add($user, $custoTotal, 'clearance_refund', 'Estorno · falha ao iniciar clearance em lote');
+            $this->creditService->add($user, $custoTotal, 'clearance_refund', 'Estorno · falha ao iniciar clearance');
 
-            Log::error('Clearance lote: exceção ao iniciar', ['user_id' => $userId, 'error' => $e->getMessage()]);
+            Log::error('Clearance: exceção ao iniciar', ['user_id' => $userId, 'error' => $e->getMessage()]);
 
             return [
                 'success' => false,
