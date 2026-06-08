@@ -249,6 +249,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/buscar', [ClearanceController::class, 'buscarNfe'])->name('buscar');
         Route::post('/buscar/consultar', [ClearanceController::class, 'consultarNfe'])->name('buscar.consultar');
         Route::get('/buscar/resultado/{consultaLoteId}', [ClearanceController::class, 'resultadoUltimaConsulta'])->name('buscar.resultado');
+        Route::get('/buscar/resultado-local/{token}', [ClearanceController::class, 'resultadoBuscaLocal'])->name('buscar.resultado-local');
         Route::post('/importacao/{id}/validar', [ClearanceController::class, 'validarImportacao'])->name('validar-importacao');
         Route::post('/calcular-custo', [ClearanceController::class, 'calcularCusto'])->name('calcular-custo');
         Route::get('/nota/{id}', [ClearanceController::class, 'notaDetalhes'])->name('nota');

@@ -20,8 +20,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -277,6 +275,13 @@ class ClearanceController extends Controller
             ], Response::HTTP_UNAUTHORIZED);
         }
 
+        if (! config('clearance.busca_avulsa.habilitada')) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Busca avulsa em desenvolvimento. Em breve.',
+            ], Response::HTTP_SERVICE_UNAVAILABLE);
+        }
+
         $user = Auth::user();
 
         $validated = $request->validate([
@@ -407,6 +412,10 @@ class ClearanceController extends Controller
         $clienteCnpj = preg_replace('/\D/', '', (string) $cliente->documento);
 
         $acervoPorChave = $this->localizarNotasNoAcervo($user->id, $notasPreparadas->pluck('chave_acesso'));
+        $reconsultar = $request->boolean('reconsultar');
+        $snapshotPorChave = $reconsultar
+            ? []
+            : $this->chavesComSnapshot($user->id, $notasPreparadas->pluck('chave_acesso'));
         $notasExistentes = collect();
         $notasParaConsultar = collect();
 
@@ -423,6 +432,11 @@ class ClearanceController extends Controller
                     )
                 );
 
+                continue;
+            }
+
+            // Idempotência: já consultada antes (snapshot) e não é reconsulta → não recobra.
+            if (! $reconsultar && isset($snapshotPorChave[$chave])) {
                 continue;
             }
 
@@ -473,181 +487,38 @@ class ClearanceController extends Controller
             ]);
         }
 
-        if (! $this->creditService->hasEnough($user, $custo)) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Créditos insuficientes.',
-                'custo_necessario' => $custo,
-                'saldo_atual' => $this->creditService->getBalance($user),
-            ], Response::HTTP_PAYMENT_REQUIRED);
-        }
+        // Busca avulsa roda no MESMO motor assíncrono do lote (Bus::batch + ProcessarClearanceJob),
+        // associando o snapshot ao cliente. Substitui o despacho ao webhook n8n (removido no cutover).
+        $itensParaConsultar = $notasParaConsultar->map(fn (array $n) => [
+            'chave' => preg_replace('/\D/', '', (string) $n['chave_acesso']),
+            'tipo' => ($n['tipo_documento'] ?? '') === 'CTE' ? 'cte' : 'nfe',
+            'cliente_id' => $clienteId,
+        ])->values();
 
-        $webhookUrl = config('services.webhook.busca_nota_url');
-
-        if (empty($webhookUrl)) {
-            Log::error("Clearance {$labelTipoDoc}: webhook não configurado (WEBHOOK_BUSCA_NOTA_URL)");
-
-            return response()->json([
-                'success' => false,
-                'error' => 'Configuração de webhook ausente. Contate o suporte.',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-
-        $debitado = $this->creditService->deduct(
-            $user,
-            $custo,
-            $transactionType,
-            $quantidadeNotas === 1
-                ? "Clearance {$labelTipoDoc} avulsa · chave …".substr($notasParaConsultar->first()['chave_acesso'], -4)
-                : "Clearance {$labelTipoDoc} avulsa em lote · {$quantidadeNotas} chaves"
+        $resultado = app(ClearanceLoteService::class)->iniciarComItens(
+            $itensParaConsultar,
+            self::CLEARANCE_NFE_AVULSA_CUSTO,
+            $user->id,
+            $validated['tab_id'],
+            "Clearance {$labelTipoDoc} avulsa · {$quantidadeNotas} documento(s)",
+            'app.clearance.buscar.resultado'
         );
 
-        if (! $debitado) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Falha ao debitar créditos. Tente novamente.',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-
-        $lote = null;
-
-        try {
-            $lote = ConsultaLote::create([
-                'user_id' => $user->id,
-                'cliente_id' => $clienteId,
-                'plano_id' => null,
-                'status' => ConsultaLote::STATUS_PROCESSANDO,
-                'total_participantes' => $quantidadeNotas,
-                'creditos_cobrados' => $custo,
-                'tab_id' => $validated['tab_id'],
-            ]);
-
-            $ordemPorChave = $notasPreparadas
-                ->mapWithKeys(fn (array $nota) => [$nota['chave_acesso'] => (int) $nota['ordem_lote']])
-                ->all();
-
-            $this->storeBuscaAcervoPrecheck($user->id, $lote->id, [
+        if (($resultado['success'] ?? false) && ! empty($resultado['consulta_lote_id'])) {
+            // Guarda os itens já no acervo p/ a tela de resultado mesclar declarado × consultado.
+            $this->storeBuscaAcervoPrecheck($user->id, $resultado['consulta_lote_id'], [
                 'resultados' => $notasExistentes->values()->all(),
-                'ordem_por_chave' => $ordemPorChave,
+                'ordem_por_chave' => $notasPreparadas
+                    ->mapWithKeys(fn (array $nota) => [$nota['chave_acesso'] => (int) $nota['ordem_lote']])
+                    ->all(),
             ]);
 
-            $notasPayload = $notasParaConsultar->values()->map(function (array $nota) {
-                return [
-                    'id' => null,
-                    'origem' => 'avulsa',
-                    'chave_acesso' => $nota['chave_acesso'],
-                    'tipo_documento' => $nota['tipo_documento'],
-                    'cliente_id' => $nota['cliente_id'],
-                ];
-            })->all();
-
-            $totalNfe = collect($notasPayload)
-                ->filter(fn (array $nota) => in_array(($nota['tipo_documento'] ?? null), ['NFE', 'NFCE'], true))
-                ->count();
-            $totalCte = collect($notasPayload)
-                ->filter(fn (array $nota) => ($nota['tipo_documento'] ?? null) === 'CTE')
-                ->count();
-
-            $payload = [
-                'user_id' => $user->id,
-                'cliente_id' => $clienteId,
-                'cliente_cnpj' => $clienteCnpj,
-                'consulta_lote_id' => $lote->id,
-                'tab_id' => $validated['tab_id'],
-                'tipo_validacao' => 'basico',
-                'total_notas' => $quantidadeNotas,
-                'total_nfe' => $totalNfe,
-                'total_cte' => $totalCte,
-                'notas' => $notasPayload,
-                'progress_url' => url('/api/consultas/progresso'),
-            ];
-
-            $response = Http::timeout(15)
-                ->withHeaders([
-                    'X-API-Token' => config('services.api.token'),
-                    'Content-Type' => 'application/json',
-                ])
-                ->post($webhookUrl, $payload);
-
-            if (! $response->successful()) {
-                $this->creditService->add(
-                    $user,
-                    $custo,
-                    $refundType,
-                    'Estorno · webhook clearance indisponível'
-                );
-
-                $lote->update([
-                    'status' => ConsultaLote::STATUS_ERRO,
-                    'error_code' => 'WEBHOOK_ERROR',
-                    'error_message' => 'Webhook n8n respondeu '.$response->status(),
-                ]);
-
-                Log::error("Clearance {$labelTipoDoc}: webhook retornou erro", [
-                    'consulta_lote_id' => $lote->id,
-                    'response_status' => $response->status(),
-                    'response_body' => $response->body(),
-                ]);
-
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Erro ao iniciar processamento. Créditos foram estornados.',
-                ], Response::HTTP_BAD_GATEWAY);
-            }
-
-            Log::info("Clearance {$labelTipoDoc}: despachado para n8n", [
-                'consulta_lote_id' => $lote->id,
-                'user_id' => $user->id,
-                'total_notas' => $quantidadeNotas,
-                'total_existentes' => $quantidadeExistentes,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'consulta_lote_id' => $lote->id,
-                'tab_id' => $validated['tab_id'],
-                'progress_url' => url('/app/consulta/progresso/stream?tab_id='.$validated['tab_id']),
-                'resultado_url' => $quantidadeNotas === 1 && $quantidadeExistentes === 0
-                    ? route('app.clearance.buscar.resultado', [
-                        'consultaLoteId' => $lote->id,
-                        'tipo_documento' => strtolower($notasPayload[0]['tipo_documento']),
-                        'chave_acesso' => $notasPayload[0]['chave_acesso'],
-                    ])
-                    : route('app.clearance.notas.resultado', ['consultaLoteId' => $lote->id]),
-                'mensagem' => 'Consulta iniciada.',
-                'novo_saldo' => $this->creditService->getBalance($user),
-                'total_itens' => $quantidadeItens,
-                'total_existentes' => $quantidadeExistentes,
-                'total_consultadas' => $quantidadeNotas,
-            ]);
-
-        } catch (\Throwable $e) {
-            if ($lote) {
-                $lote->update([
-                    'status' => ConsultaLote::STATUS_ERRO,
-                    'error_code' => 'INTERNAL_ERROR',
-                    'error_message' => $e->getMessage(),
-                ]);
-            }
-
-            $this->creditService->add(
-                $user,
-                $custo,
-                $refundType,
-                'Estorno · exceção ao despachar clearance'
-            );
-
-            Log::error("Clearance {$labelTipoDoc}: exceção ao despachar", [
-                'user_id' => $user->id,
-                'consulta_lote_id' => $lote?->id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'error' => 'Erro interno ao processar consulta.',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            $resultado['total_itens'] = $quantidadeItens;
+            $resultado['total_existentes'] = $quantidadeExistentes;
+            $resultado['total_consultadas'] = $quantidadeNotas;
         }
+
+        return response()->json($resultado, $resultado['http_status'] ?? Response::HTTP_OK);
     }
 
     private function normalizarBlocosBusca(array $validated): Collection
@@ -686,6 +557,26 @@ class ClearanceController extends Controller
         }
 
         return $chaves->all();
+    }
+
+    /**
+     * Chaves do usuário que já têm snapshot persistido (nfe_consultas/cte_consultas).
+     * Idempotência da busca avulsa: não recobrar o que já foi consultado (salvo reconsultar).
+     *
+     * @param  Collection<int,string>  $chaves
+     * @return array<string,bool>
+     */
+    private function chavesComSnapshot(int $userId, Collection $chaves): array
+    {
+        $chaves = $chaves->filter()->unique()->values();
+        if ($chaves->isEmpty()) {
+            return [];
+        }
+
+        $nfe = \App\Models\NfeConsulta::where('user_id', $userId)->whereIn('chave_acesso', $chaves)->pluck('chave_acesso');
+        $cte = \App\Models\CteConsulta::where('user_id', $userId)->whereIn('chave_acesso', $chaves)->pluck('chave_acesso');
+
+        return $nfe->concat($cte)->mapWithKeys(fn ($c) => [$c => true])->all();
     }
 
     private function localizarNotasNoAcervo(int $userId, Collection $chaves): array
