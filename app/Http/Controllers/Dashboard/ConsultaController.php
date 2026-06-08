@@ -1372,8 +1372,10 @@ class ConsultaController extends Controller
             'data_fim' => 'nullable|date',
         ]);
 
-        // Lotes de consultas (excluindo lotes associados à empresa própria)
+        // Lotes de consulta de CNPJ (plano_id != null). Lotes de clearance (plano_id null) têm
+        // histórico próprio (/app/clearance) e resultado em nfe_consultas — não entram aqui.
         $baseQuery = ConsultaLote::where('user_id', $user->id)
+            ->whereNotNull('plano_id')
             ->whereDoesntHave('cliente', fn ($q) => $q->where('is_empresa_propria', true))
             ->with('plano');
 
@@ -1479,6 +1481,13 @@ class ConsultaController extends Controller
 
         if (! $lote) {
             abort(404);
+        }
+
+        // Lotes de clearance (plano_id null) não pertencem à consulta de CNPJ — o resultado vive
+        // em nfe_consultas/cte_consultas, não em consulta_resultados. Sem isto, esta tela fica
+        // "verificando" pra sempre. Redireciona pra tela de resultado do clearance.
+        if ($lote->plano_id === null) {
+            return redirect()->route('app.clearance.notas.resultado', ['consultaLoteId' => $lote->id]);
         }
 
         $statusLote = ConsultaLote::normalizeStatus($lote->status);
