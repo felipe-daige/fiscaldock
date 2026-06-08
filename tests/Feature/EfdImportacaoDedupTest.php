@@ -3,8 +3,11 @@
 use App\Models\EfdImportacao;
 use App\Models\User;
 use App\Services\Efd\EfdImportacaoDuplicidadeService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+
+uses(RefreshDatabase::class);
 
 function spedPisCofinsValido(): string
 {
@@ -184,4 +187,21 @@ it('upload sem conflito segue normalmente e grava identidade', function () {
     $imp = EfdImportacao::where('user_id', $user->id)->first();
     expect($imp->periodo_inicio->format('Y-m-d'))->toBe('2024-06-01');
     expect($imp->cnpj)->toBe('97551165000193');
+});
+
+it('backstop do banco barra duas concluidas do mesmo periodo/cliente/tipo', function () {
+    $user = User::factory()->create();
+    $base = [
+        'user_id' => $user->id,
+        'cliente_id' => null,
+        'tipo_efd' => 'EFD PIS/COFINS',
+        'periodo_inicio' => '2024-06-01',
+        'periodo_fim' => '2024-06-30',
+        'status' => 'concluido',
+    ];
+
+    EfdImportacao::create($base + ['arquivo_hash' => str_repeat('a', 64)]);
+
+    expect(fn () => EfdImportacao::create($base + ['arquivo_hash' => str_repeat('b', 64)]))
+        ->toThrow(Illuminate\Database\QueryException::class);
 });
