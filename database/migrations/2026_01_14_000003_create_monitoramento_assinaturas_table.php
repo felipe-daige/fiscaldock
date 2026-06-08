@@ -24,6 +24,24 @@ return new class extends Migration
 
             $table->unique(['participante_id', 'plano_id']); // Um participante só pode ter uma assinatura por plano
         });
+
+        if (! Schema::hasTable('account_subscriptions')) {
+            Schema::create('account_subscriptions', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->unique()->constrained()->onDelete('cascade');
+                // sem cascade: arquivar plano via is_active, nunca hard-delete (RESTRICT protege assinaturas)
+                $table->foreignId('subscription_plan_id')->constrained('subscription_plans');
+                // string (não enum) de propósito: estados de cobrança podem crescer sem ALTER de constraint
+                $table->string('status')->default('ativa'); // ativa, trial, cancelada, inadimplente
+                $table->string('ciclo')->default('mensal');  // mensal, anual
+                $table->timestamp('iniciada_em')->nullable();
+                $table->timestamp('renova_em')->nullable();
+                $table->integer('creditos_inclusos_saldo')->default(0);
+                $table->integer('limite_consumo_automatico')->nullable(); // cap do cliente; null = default
+                $table->integer('assentos_extras')->default(0);
+                $table->timestamps();
+            });
+        }
     }
 
     /**
@@ -31,6 +49,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('account_subscriptions');
         Schema::dropIfExists('monitoramento_assinaturas');
     }
 };

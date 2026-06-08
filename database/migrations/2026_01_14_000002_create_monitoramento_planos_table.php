@@ -37,6 +37,28 @@ return new class extends Migration
                 ]);
             }, PlanoCatalog::definitions())
         );
+
+        if (! Schema::hasTable('subscription_plans')) {
+            Schema::create('subscription_plans', function (Blueprint $table) {
+                $table->id();
+                $table->string('codigo')->unique(); // free, essencial, profissional, escritorio, enterprise
+                $table->string('nome');
+                $table->integer('preco_mensal_centavos')->default(0); // 0 = sob consulta (enterprise)
+                $table->integer('preco_anual_centavos')->default(0);
+                $table->integer('creditos_inclusos')->default(0);
+                $table->string('faixa_slug')->default('base'); // base, x, y, z — faixa comprada pelo tier
+                $table->integer('limite_clientes')->nullable();           // null = ilimitado
+                $table->integer('limite_cnpjs_monitorados')->nullable();  // null = ilimitado
+                $table->integer('frequencia_padrao_dias')->default(30);
+                $table->string('profundidade_auto_monitor')->nullable();  // cadastral|licitacao|compliance|due_diligence
+                $table->integer('assentos_inclusos')->default(1);
+                $table->decimal('rollover_cap_multiplicador', 4, 2)->default(1); // banca 1x o mensal
+                $table->jsonb('capabilities')->nullable();
+                $table->boolean('is_active')->default(true);
+                $table->integer('ordem')->default(0);
+                $table->timestamps();
+            });
+        }
     }
 
     /**
@@ -44,6 +66,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('subscription_plans');
         Schema::dropIfExists('monitoramento_planos');
     }
 };
