@@ -76,6 +76,18 @@ class DivergenciaService
                 ? round((($sefazValor - $declaradoValor) / $declaradoValor) * 100, 2)
                 : 0.0;
 
+            $tiposLinha = array_values(array_unique(array_merge(
+                $this->tiposDivergencia($statusSefaz, $declaradoValor, $severidade),
+                $sinais['tipos']
+            )));
+            $motivos = array_values(array_filter(array_merge(
+                $this->motivosStatus($tiposLinha, $statusSefaz, $deltaValor),
+                $sinais['motivos']
+            )));
+            if ($motivos === [] && $severidade === 'ok') {
+                $motivos = ['Documento confere com a SEFAZ — sem divergência.'];
+            }
+
             $linha = (object) array_merge((array) $snapshot, [
                 'declarado_valor' => $declaradoValor,
                 'declarado_valor_label' => $declaradoValor !== null ? 'R$ '.number_format($declaradoValor, 2, ',', '.') : '—',
@@ -84,10 +96,8 @@ class DivergenciaService
                 'delta_percentual' => $deltaPct,
                 'delta_percentual_label' => number_format($deltaPct, 1, ',', '.').'%',
                 'severidade' => $severidade,
-                'tipos_divergencia' => array_values(array_unique(array_merge(
-                    $this->tiposDivergencia($statusSefaz, $declaradoValor, $severidade),
-                    $sinais['tipos']
-                ))),
+                'tipos_divergencia' => $tiposLinha,
+                'motivos' => $motivos,
                 'declarado_origem' => $declarado['origem'] ?? null,
             ]);
 
@@ -200,23 +210,30 @@ class DivergenciaService
     private function sinaisNovos(object $snapshot, ?array $declarado, string $statusSefaz): array
     {
         $tipos = [];
+        $motivos = [];
         $piso = 'ok';
         $relevante = ! in_array($statusSefaz, ['NAO_ENCONTRADA', 'ERRO_PARAMETRO', 'ERRO_PROVEDOR', 'TIMEOUT'], true);
 
         // Homologação escriturada → crítica.
         if ($relevante && str_contains(mb_strtoupper((string) ($snapshot->situacao_ambiente ?? '')), 'HOMOLOGA')) {
             $tipos[] = 'operacionais';
+            $motivos[] = 'Nota emitida em homologação (ambiente de teste) e escriturada nos livros.';
             $piso = 'critica';
         }
 
         if ($declarado) {
-            // Partes divergentes: contraparte declarada ausente nos dois lados do SEFAZ.
+            // Partes divergentes: contraparte declarada não confere com NENHUM lado do SEFAZ.
+            // Só marca quando a comparação é confiável dos DOIS lados (tolerante a máscara — o
+            // InfoSimples sem certificado mascara o CNPJ do destinatário com zeros à esquerda).
             $contra = $declarado['contraparte_cnpj'] ?? null;
-            $emit = preg_replace('/\D/', '', (string) ($snapshot->emit_cnpj ?? ''));
-            $dest = preg_replace('/\D/', '', (string) ($snapshot->dest_cnpj ?? ''));
-            if ($relevante && $contra && $contra !== $emit && $contra !== $dest) {
-                $tipos[] = 'partes_divergentes';
-                $piso = (($declarado['valor_total'] ?? 0) > 0) ? 'critica' : $this->maxSeveridade($piso, 'revisar');
+            if ($relevante && $contra) {
+                $bateEmit = $this->contraparteConfere($contra, (string) ($snapshot->emit_cnpj ?? ''));
+                $bateDest = $this->contraparteConfere($contra, (string) ($snapshot->dest_cnpj ?? ''));
+                if ($bateEmit === false && $bateDest === false) {
+                    $tipos[] = 'partes_divergentes';
+                    $motivos[] = 'CNPJ da contraparte na SEFAZ difere do declarado na escrituração.';
+                    $piso = (($declarado['valor_total'] ?? 0) > 0) ? 'critica' : $this->maxSeveridade($piso, 'revisar');
+                }
             }
 
             // Data de emissão divergente (por dia) → revisar.
@@ -224,11 +241,68 @@ class DivergenciaService
             $dSefaz = $snapshot->data_emissao ? substr((string) $snapshot->data_emissao, 0, 10) : null;
             if ($relevante && $dDecl && $dSefaz && $dDecl !== $dSefaz) {
                 $tipos[] = 'operacionais';
+                $motivos[] = "Data de emissão na SEFAZ ({$dSefaz}) difere da declarada ({$dDecl}).";
                 $piso = $this->maxSeveridade($piso, 'revisar');
             }
         }
 
-        return ['tipos' => array_values(array_unique($tipos)), 'piso' => $piso];
+        return ['tipos' => array_values(array_unique($tipos)), 'piso' => $piso, 'motivos' => $motivos];
+    }
+
+    /**
+     * Justificativas legíveis dos sinais baseados em status/valor (fria, cancelada, valor).
+     *
+     * @param  array<int,string>  $tipos
+     * @return array<int,string>
+     */
+    private function motivosStatus(array $tipos, string $statusSefaz, float $deltaValor): array
+    {
+        $motivos = [];
+
+        if (in_array('notas_frias', $tipos, true)) {
+            $motivos[] = 'Declarada na escrituração mas NÃO encontrada na SEFAZ (possível nota fria).';
+        }
+        if (in_array('canceladas_declaradas', $tipos, true)) {
+            $rotulo = match ($statusSefaz) {
+                'CANCELADA' => 'cancelada',
+                'DENEGADA' => 'denegada',
+                'INUTILIZADA' => 'inutilizada',
+                default => 'sem validade',
+            };
+            $motivos[] = "Documento {$rotulo} na SEFAZ, mas escriturado nos livros.";
+        }
+        if (in_array('valor_divergente', $tipos, true)) {
+            $motivos[] = 'Valor na SEFAZ difere do declarado (Δ R$ '.number_format($deltaValor, 2, ',', '.').').';
+        }
+
+        return $motivos;
+    }
+
+    /**
+     * Compara o CNPJ da contraparte declarada com um lado (emit/dest) do SEFAZ, tolerando a
+     * máscara da consulta sem certificado (zeros à esquerda no destinatário).
+     *
+     * @return bool|null true = confere; false = difere (comparação confiável); null = indeterminado
+     *                   (lado vazio ou mascarado de forma não comparável)
+     */
+    private function contraparteConfere(string $contra, string $ladoSefaz): ?bool
+    {
+        $lado = preg_replace('/\D/', '', $ladoSefaz);
+
+        if ($lado === '' || strlen($lado) !== 14) {
+            return null; // vazio ou mascarado com não-dígitos (ex.: ***) → não dá pra comparar
+        }
+        if ($contra === $lado) {
+            return true;
+        }
+        // Mascarado com zeros à esquerda (≥4): compara só a parte visível (sufixo).
+        if (preg_match('/^0{4,}/', $lado)) {
+            $visivel = ltrim($lado, '0');
+
+            return strlen($visivel) >= 6 ? str_ends_with($contra, $visivel) : null;
+        }
+
+        return false; // comparação limpa e diferente
     }
 
     private function maxSeveridade(string $a, string $b): string

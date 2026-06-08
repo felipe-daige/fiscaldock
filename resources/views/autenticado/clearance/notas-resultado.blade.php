@@ -245,6 +245,13 @@
                                     </td>
                                     <td class="px-3 py-3">
                                         <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $sevHex }}">{{ $sevLabel }}</span>
+                                        @if(!empty($linha->motivos))
+                                            <ul class="mt-1 space-y-0.5">
+                                                @foreach($linha->motivos as $m)
+                                                    <li class="text-[10px] text-gray-500 leading-snug">• {{ $m }}</li>
+                                                @endforeach
+                                            </ul>
+                                        @endif
                                     </td>
                                     <td class="px-3 py-3 text-right whitespace-nowrap">
                                         @if($linha->detalhe_url ?? null)

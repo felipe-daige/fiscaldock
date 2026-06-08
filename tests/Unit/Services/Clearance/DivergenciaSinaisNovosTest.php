@@ -26,9 +26,23 @@ function svcComDeclarado(array $declarado): DivergenciaService
 it('contraparte declarada ausente no SEFAZ vira partes_divergentes crítica (valor>0)', function () {
     $svc = svcComDeclarado(['valor_total' => 100.0, 'contraparte_cnpj' => '99999999000199', 'data_emissao' => '2026-01-15', 'origem' => 'efd', 'id' => 1]);
 
-    $r = $svc->analisar(new Collection([snapEnr()]), 1, 3);
+    // emit e dest do SEFAZ limpos e ambos diferentes da contraparte → divergência real.
+    $r = $svc->analisar(new Collection([snapEnr(['emit_cnpj' => '11111111000111', 'dest_cnpj' => '22222222000122'])]), 1, 3);
     expect($r['breakdown']['partes_divergentes']['count'])->toBe(1);
     expect($r['veredito']['severidade'])->toBe('critica');
+});
+
+it('CNPJ do destinatário mascarado (zeros à esquerda) com sufixo igual NÃO vira divergência', function () {
+    // Caso real lote 97: SEFAZ dest mascarado 00000932000105 == declarado 27371932000105.
+    $svc = svcComDeclarado(['valor_total' => 1900.06, 'contraparte_cnpj' => '27371932000105', 'data_emissao' => '2024-07-31', 'origem' => 'efd', 'id' => 1]);
+
+    $r = $svc->analisar(new Collection([snapEnr([
+        'emit_cnpj' => '97551165000193', 'dest_cnpj' => '00000932000105', 'data_emissao' => '2024-07-31',
+        'valor_total' => 1900.06,
+    ])]), 1, 3);
+
+    expect($r['breakdown']['partes_divergentes']['count'])->toBe(0);
+    expect($r['veredito']['severidade'])->toBe('ok');
 });
 
 it('homologação escriturada vira operacionais crítica', function () {
@@ -51,4 +65,16 @@ it('contraparte presente e ambiente produção = ok', function () {
 
     $r = $svc->analisar(new Collection([snapEnr()]), 1, 3);
     expect($r['veredito']['severidade'])->toBe('ok');
+});
+
+it('cada documento traz motivo legível (justificativa do veredito)', function () {
+    // ok → motivo de conformidade
+    $ok = svcComDeclarado(['valor_total' => 100.0, 'contraparte_cnpj' => '11111111000111', 'data_emissao' => '2026-01-15', 'origem' => 'efd', 'id' => 1]);
+    $rOk = $ok->analisar(new Collection([snapEnr()]), 1, 3);
+    expect($rOk['sem_divergencia']->first()->motivos[0])->toContain('sem divergência');
+
+    // homologação → motivo específico
+    $homo = svcComDeclarado(['valor_total' => 100.0, 'contraparte_cnpj' => '11111111000111', 'data_emissao' => '2026-01-15', 'origem' => 'efd', 'id' => 1]);
+    $rHomo = $homo->analisar(new Collection([snapEnr(['situacao_ambiente' => 'homologação'])]), 1, 3);
+    expect($rHomo['divergencias']->first()->motivos)->toContain('Nota emitida em homologação (ambiente de teste) e escriturada nos livros.');
 });
