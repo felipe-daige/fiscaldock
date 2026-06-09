@@ -1,17 +1,16 @@
 @php
     $isCustomCheckout = (bool) ($pacote['is_custom'] ?? false);
-    $isFeaturedCheckout = ($pacote['kind'] ?? null) === 'featured';
     $publicKey = config('services.mercadopago.public_key');
 @endphp
 
-{{-- Checkout — Mercado Pago Checkout Bricks (DANFE Modernizado) --}}
+{{-- Checkout — Mercado Pago Checkout Bricks (coluna única, minimalista) --}}
 <div class="min-h-screen bg-gray-100" id="checkout-container"
      data-mp-public-key="{{ $publicKey }}"
      data-mp-endpoint="{{ route('app.pagamento.mercadopago.criar') }}"
      data-mp-pacote="{{ $pacote['slug'] }}"
      data-mp-amount="{{ number_format($pacote['preco'], 2, '.', '') }}"
      data-mp-creditos="{{ (int) $pacote['creditos'] }}">
-    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <div class="max-w-lg mx-auto px-4 sm:px-6 py-6 sm:py-10">
 
         <style>
             @keyframes ck-fade-in { from { opacity: 0; transform: translateY(20px); } }
@@ -26,161 +25,93 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
-            Voltar para Faixa Comercial
+            Voltar
         </a>
 
-        {{-- Header --}}
-        <div class="mb-6">
-            <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Finalizar Compra</h1>
-            <p class="mt-1 text-xs text-gray-500">
-                @if($isCustomCheckout)
-                    Confirme sua recarga personalizada para adicionar créditos pré-pagos à conta.
-                @else
-                    Complete o pagamento para adicionar os créditos da oferta promocional à sua conta.
-                @endif
+        <div class="bg-white rounded-lg border border-gray-200 px-5 sm:px-7 py-6 sm:py-8">
+
+            {{-- Header enxuto --}}
+            <h1 class="text-lg font-bold text-gray-900">Finalizar compra</h1>
+            <p class="mt-1 text-sm text-gray-500">
+                {{ $pacote['nome'] }}
+                <span class="text-gray-300">·</span>
+                {{ number_format($pacote['creditos'], 0, ',', '.') }} créditos
+                <span class="text-gray-300">·</span>
+                <span class="font-semibold text-gray-900 font-mono">R$ {{ number_format($pacote['preco'], 2, ',', '.') }}</span>
             </p>
-        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <div class="border-t border-gray-100 my-6"></div>
 
-            {{-- Pagamento (3/5) --}}
-            <div class="lg:col-span-3 space-y-6" id="ck-form-area">
+            {{-- Formulário de pagamento --}}
+            @if(empty($publicKey))
+                {{-- Gateway não configurado — fallback honesto, sem simulação --}}
+                <div class="p-4 rounded border border-gray-300 border-l-4 border-l-amber-500 bg-amber-50">
+                    <p class="text-sm text-gray-800 font-semibold mb-1">Pagamento on-line indisponível</p>
+                    <p class="text-xs text-gray-600">O gateway de pagamento ainda não está configurado nesta conta. Tente novamente em instantes.</p>
+                </div>
+            @else
+                {{-- Estado de carregamento do Brick --}}
+                <div id="ck-brick-loading" class="py-10 text-center">
+                    <svg class="w-6 h-6 ck-spinner text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="31.4 31.4" stroke-linecap="round"/>
+                    </svg>
+                    <span class="text-[11px] text-gray-500 uppercase tracking-wide">Carregando pagamento seguro…</span>
+                </div>
 
-                <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Método de Pagamento</span>
+                {{-- Container do Payment Brick (cartão + Pix renderizados pelo MP) --}}
+                <div id="paymentBrick_container"></div>
+
+                {{-- Resultado Pix --}}
+                <div id="ck-pix-result" class="hidden text-center py-6">
+                    <p class="text-sm text-gray-700 mb-3 font-semibold">Escaneie o QR Code para pagar via Pix</p>
+                    <img id="ck-pix-qr" alt="QR Code Pix" class="w-48 h-48 mx-auto mb-4 border border-gray-200 rounded">
+                    <div class="flex items-center gap-2 max-w-sm mx-auto">
+                        <input type="text" readonly id="ck-pix-code"
+                               class="flex-1 px-3 py-2 border border-gray-300 rounded text-xs text-gray-500 bg-gray-50 font-mono truncate">
+                        <button type="button" onclick="window._ckCopyPix && window._ckCopyPix()"
+                                class="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 rounded text-xs font-medium text-gray-700 transition-colors whitespace-nowrap">
+                            Copiar
+                        </button>
                     </div>
-                    <div class="p-5">
+                    <p class="text-[11px] text-gray-500 mt-3">Os créditos entram automaticamente após a confirmação do pagamento.</p>
+                </div>
 
-                        @if(empty($publicKey))
-                            {{-- Gateway não configurado — fallback honesto, sem simulação --}}
-                            <div class="p-4 rounded border border-gray-300 border-l-4 border-l-amber-500 bg-amber-50">
-                                <p class="text-sm text-gray-800 font-semibold mb-1">Pagamento on-line indisponível</p>
-                                <p class="text-xs text-gray-600">O gateway de pagamento ainda não está configurado nesta conta. Tente novamente em instantes.</p>
-                            </div>
-                        @else
-                            {{-- Estado de carregamento do Brick --}}
-                            <div id="ck-brick-loading" class="py-10 text-center">
-                                <svg class="w-6 h-6 ck-spinner text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="31.4 31.4" stroke-linecap="round"/>
-                                </svg>
-                                <span class="text-[11px] text-gray-500 uppercase tracking-wide">Carregando pagamento seguro…</span>
-                            </div>
+                {{-- Erro --}}
+                <div id="ck-error" class="hidden mt-4 p-3 rounded border border-gray-300 border-l-4 border-l-red-500 bg-red-50">
+                    <p class="text-xs text-gray-800" id="ck-error-msg">Não foi possível processar o pagamento.</p>
+                </div>
+            @endif
 
-                            {{-- Container do Payment Brick (cartão + Pix renderizados pelo MP) --}}
-                            <div id="paymentBrick_container"></div>
-
-                            {{-- Resultado Pix --}}
-                            <div id="ck-pix-result" class="hidden text-center py-6">
-                                <p class="text-sm text-gray-700 mb-3 font-semibold">Escaneie o QR Code para pagar via Pix</p>
-                                <img id="ck-pix-qr" alt="QR Code Pix" class="w-48 h-48 mx-auto mb-4 border border-gray-200 rounded">
-                                <div class="flex items-center gap-2 max-w-sm mx-auto">
-                                    <input type="text" readonly id="ck-pix-code"
-                                           class="flex-1 px-3 py-2 border border-gray-300 rounded text-xs text-gray-500 bg-gray-50 font-mono truncate">
-                                    <button type="button" onclick="window._ckCopyPix && window._ckCopyPix()"
-                                            class="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 rounded text-xs font-medium text-gray-700 transition-colors whitespace-nowrap">
-                                        Copiar
-                                    </button>
-                                </div>
-                                <p class="text-[11px] text-gray-500 mt-3">Os créditos entram automaticamente após a confirmação do pagamento.</p>
-                            </div>
-
-                            {{-- Erro --}}
-                            <div id="ck-error" class="hidden mt-4 p-3 rounded border border-gray-300 border-l-4 border-l-red-500 bg-red-50">
-                                <p class="text-xs text-gray-800" id="ck-error-msg">Não foi possível processar o pagamento.</p>
-                            </div>
-                        @endif
-
-                    </div>
+            <div class="border-t border-gray-100 mt-6 pt-4">
+                <div class="flex items-center gap-2 text-[11px] text-gray-400">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                    <span>Pagamento processado pelo Mercado Pago · créditos liberados após a confirmação</span>
                 </div>
             </div>
 
-            {{-- Resumo do Pedido (2/5) --}}
-            <div class="lg:col-span-2">
-                <div class="bg-white rounded border border-gray-300 overflow-hidden lg:sticky lg:top-6">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo do Pedido</span>
-                    </div>
-                    <div class="p-5">
-
-                    <div class="space-y-3 pb-4 border-b border-gray-100">
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Origem</span>
-                            <span class="text-sm font-semibold text-gray-900">{{ $pacote['nome'] }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Modelo</span>
-                            <span class="text-sm font-medium text-gray-700">{{ $isCustomCheckout ? 'Valor livre' : 'Oferta promocional' }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Créditos</span>
-                            <span class="text-sm font-medium text-gray-700">{{ number_format($pacote['creditos'], 0, ',', '.') }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Valor pago</span>
-                            <span class="text-sm font-semibold text-gray-900 font-mono">R$ {{ number_format($pacote['preco'], 2, ',', '.') }}</span>
-                        </div>
-                        @if($isFeaturedCheckout)
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-600">Benefício</span>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
-                                      style="background-color: #047857">{{ $pacote['badge'] ?? 'Oferta' }}</span>
-                            </div>
-                        @endif
-                    </div>
-
-                    <div class="flex items-center justify-between pt-4">
-                        <span class="text-sm font-semibold text-gray-900 uppercase tracking-wide">Total</span>
-                        <span class="text-xl font-bold text-gray-900 font-mono">R$ {{ number_format($pacote['preco'], 2, ',', '.') }}</span>
-                    </div>
-
-                    <div class="mt-4 p-3 bg-white rounded border border-gray-300 border-l-4 border-l-blue-500">
-                        <div class="flex items-start gap-2">
-                            <svg class="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <p class="text-xs text-gray-700">
-                                Créditos adicionados após a confirmação do pagamento.
-                                @if($isCustomCheckout)
-                                    Você escolheu um valor livre acima do mínimo de R$ {{ number_format($pricing['minimum_deposit'] ?? 50, 0, ',', '.') }}.
-                                @endif
-                                Sua faixa comercial sobe conforme o histórico acumulado de créditos pagos.
-                            </p>
-                        </div>
-                    </div>
-
-                    {{-- Seguranca --}}
-                    <div class="mt-4 flex items-center gap-2 text-[11px] text-gray-500">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                        </svg>
-                        <span>Pagamento processado pelo Mercado Pago</span>
-                    </div>
-
-                    </div>
-                </div>
-            </div>
         </div>
 
         {{-- Sucesso Overlay (hidden) --}}
         <div id="ck-success-overlay" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-            <div class="bg-white rounded border border-gray-300 p-8 max-w-sm w-full text-center ck-scale-in">
+            <div class="bg-white rounded-lg border border-gray-200 p-8 max-w-sm w-full text-center ck-scale-in">
                 <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background-color: #ecfdf5">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #047857">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
                 </div>
-                <h3 class="text-lg font-bold text-gray-900 mb-1 uppercase tracking-wide">Pagamento Aprovado</h3>
-                <p class="text-sm text-gray-600 mb-2">
-                    <span class="font-semibold" style="color: #047857">{{ number_format($pacote['creditos'], 0, ',', '.') }} créditos</span> serão liberados na sua conta em instantes.
+                <h3 class="text-lg font-bold text-gray-900 mb-1">Pagamento aprovado</h3>
+                <p class="text-sm text-gray-600 mb-1">
+                    <span class="font-semibold" style="color: #047857">{{ number_format($pacote['creditos'], 0, ',', '.') }} créditos</span> serão liberados em instantes.
                 </p>
-                <p class="text-[11px] text-gray-500 mb-6">{{ $pacote['nome'] }} — R$ {{ number_format($pacote['preco'], 2, ',', '.') }}</p>
+                <p class="text-[11px] text-gray-400 mb-6">{{ $pacote['nome'] }} — R$ {{ number_format($pacote['preco'], 2, ',', '.') }}</p>
                 <a href="/app/plano" data-link
                    class="inline-flex items-center justify-center w-full py-2.5 text-white rounded text-sm font-semibold transition-colors"
                    style="background-color: #047857"
                    onmouseover="this.style.backgroundColor='#065f46'"
                    onmouseout="this.style.backgroundColor='#047857'">
-                    Voltar para Faixa Comercial
+                    Voltar
                 </a>
             </div>
         </div>
@@ -192,6 +123,13 @@
 window.initCheckout = function() {
     var root = document.getElementById('checkout-container');
     if (!root) return;
+
+    // Guard de mount por nó de DOM: o spa.js re-injeta o script inline E ainda chama
+    // window.initCheckout() (nome derivado da URL /app/checkout/...), então initCheckout
+    // roda 2× por navegação. Como o app.innerHTML troca o nó a cada navegação, a flag é
+    // fresca por visita; a 2ª chamada na mesma visita vira no-op → 1 único Brick.
+    if (root.__ckInit) return;
+    root.__ckInit = true;
 
     var PUBLIC_KEY = root.getAttribute('data-mp-public-key');
     var ENDPOINT = root.getAttribute('data-mp-endpoint');
@@ -248,11 +186,18 @@ window.initCheckout = function() {
     function boot() {
         if (!window.MercadoPago) { showError('Falha ao carregar o pagamento seguro.'); return; }
 
-        // Desmonta brick anterior (re-navegação SPA) antes de recriar.
+        // Idempotência (defense-in-depth): mesmo que boot seja chamado mais de uma vez
+        // (listeners de load acumulados), monta um único Brick por nó.
+        if (root.__ckBooted) return;
+        root.__ckBooted = true;
+
+        // Desmonta brick anterior (re-navegação SPA) e limpa o container antes de recriar.
         if (window._ckBrickController && window._ckBrickController.unmount) {
             try { window._ckBrickController.unmount(); } catch (e) {}
             window._ckBrickController = null;
         }
+        var container = document.getElementById('paymentBrick_container');
+        if (container) container.innerHTML = '';
 
         var mp = new window.MercadoPago(PUBLIC_KEY, { locale: 'pt-BR' });
         var bricks = mp.bricks();
@@ -300,6 +245,7 @@ window.initCheckout = function() {
             window._ckBrickController = controller;
         }).catch(function (e) {
             console.error('Falha ao montar o Brick:', e);
+            root.__ckBooted = false; // permite re-tentar numa próxima visita
             hide('ck-brick-loading');
             showError('Não foi possível carregar o pagamento.');
         });
@@ -323,15 +269,17 @@ window.initCheckout = function() {
         }
     }
 
-    // Cleanup SPA: desmonta o brick ao sair da página (evita vazamento entre navegações).
-    window._cleanupFunctions = window._cleanupFunctions || [];
-    window._cleanupFunctions.push(function () {
+    // Cleanup SPA — contrato de OBJETO (o spa.js itera Object.values e reseta {}).
+    // Usar array aqui quebrava ({}.push lança) e o unmount nunca registrava → bricks empilhados.
+    window._cleanupFunctions = window._cleanupFunctions || {};
+    window._cleanupFunctions.checkout = function () {
         if (window._ckBrickController && window._ckBrickController.unmount) {
             try { window._ckBrickController.unmount(); } catch (e) {}
         }
         window._ckBrickController = null;
         window._ckCopyPix = null;
-    });
+        if (root) { root.__ckInit = false; root.__ckBooted = false; }
+    };
 };
 
 if (document.readyState !== 'loading') {
