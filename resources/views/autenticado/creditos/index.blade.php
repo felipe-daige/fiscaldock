@@ -159,7 +159,29 @@
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Recarga automática</span>
             </div>
             <div class="p-4 sm:p-6">
-                @if($recargaAtual && in_array($recargaAtual->status, ['ativa', 'inadimplente']))
+                @if(config('services.mercadopago.auto_topup.habilitado') && $recargaAtual && in_array($recargaAtual->status, ['ativa', 'inadimplente']) && $recargaAtual->gatilho === 'saldo')
+                    {{-- Estado ativo: auto top-up por saldo baixo --}}
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div class="text-sm text-gray-700">
+                            Recompra de <span class="font-semibold">{{ number_format($recargaAtual->creditos, 0, ',', '.') }} créditos</span>
+                            (R$ {{ number_format($recargaAtual->valor, 2, ',', '.') }}) quando o saldo fica abaixo de
+                            <span class="font-semibold">{{ number_format($recargaAtual->limite_creditos, 0, ',', '.') }} créditos</span>.
+                            @if($recargaAtual->status === 'inadimplente')
+                                <span class="ml-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">Pausada</span>
+                            @else
+                                <span class="ml-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Ativa</span>
+                            @endif
+                        </div>
+                        <button type="button" id="recarga-cancelar" class="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancelar recarga</button>
+                    </div>
+                    @if($recargaAtual->status === 'inadimplente')
+                        <div class="mt-3 rounded px-3 py-2 text-[13px]" style="background-color:#fef2f2; color:#991b1b;">
+                            Sua recarga pausada — o cartão foi recusado ou o limite diário foi atingido. Reative atualizando o cartão abaixo.
+                        </div>
+                        <div class="mt-4">@include('autenticado.creditos.partials.recarga-saldo-form')</div>
+                    @endif
+                @elseif($recargaAtual && in_array($recargaAtual->status, ['ativa', 'inadimplente']))
+                    {{-- Estado ativo: recarga por tempo (mensal) --}}
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <div class="text-sm text-gray-700">
                             Recompra de <span class="font-semibold">{{ number_format($recargaAtual->creditos, 0, ',', '.') }} créditos</span>
@@ -173,6 +195,7 @@
                         <button type="button" id="recarga-cancelar" class="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancelar recarga</button>
                     </div>
                 @else
+                    {{-- Sem recarga: oferece os DOIS gatilhos (exclusivos — ativar um cancela o outro) --}}
                     <p class="text-sm text-gray-700 mb-3">Cobre um pacote de créditos automaticamente todo mês, sem precisar lembrar. Cancele quando quiser.</p>
                     <div class="flex flex-wrap items-end gap-3">
                         <div>
@@ -185,6 +208,9 @@
                         </div>
                         <button type="button" id="recarga-ativar" class="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-white rounded" style="background-color: #1f2937">Ativar recarga automática</button>
                     </div>
+                    @if(config('services.mercadopago.auto_topup.habilitado'))
+                        <div class="mt-6 border-t border-gray-100 pt-6">@include('autenticado.creditos.partials.recarga-saldo-form')</div>
+                    @endif
                 @endif
             </div>
         </div>
@@ -272,6 +298,7 @@
 <script>
     window.__MP_PUBLIC_KEY = @json($mpPublicKey);
     window.__RECARGA_URL = @json(route('app.recarga.criar'));
+    window.__RECARGA_SALDO_URL = @json(route('app.recarga.criar-saldo'), JSON_UNESCAPED_SLASHES);
     window.__RECARGA_CANCELAR_URL = @json(route('app.recarga.cancelar'));
     window.__CSRF = @json(csrf_token());
 </script>

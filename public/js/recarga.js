@@ -80,6 +80,50 @@ window.initRecarga = function () {
         });
     }
 
+    // --- Auto top-up por saldo baixo (reusa o mesmo modal/Brick) ---
+    function pacoteSaldoSelecionado() {
+        var sel = document.getElementById('recarga-saldo-pacote');
+        if (!sel) return null;
+        var opt = sel.options[sel.selectedIndex];
+        var limiteEl = document.getElementById('recarga-saldo-limite');
+        var limite = parseInt(limiteEl ? limiteEl.value : '', 10) || 50;
+        return { slug: sel.value, valor: parseFloat(opt.getAttribute('data-valor')) || 0, limite: limite };
+    }
+
+    function enviarSaldo(pac, token) {
+        return fetch(window.__RECARGA_SALDO_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.__CSRF, 'Accept': 'application/json' },
+            body: JSON.stringify({ pacote: pac.slug, token: token, limite_creditos: pac.limite }),
+        }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (res) {
+                if (!res.ok) { mostrarErro(res.j.error || 'Falha ao ativar o auto top-up.'); return; }
+                window.location.reload();
+            }).catch(function () { mostrarErro('Falha de rede.'); });
+    }
+
+    function abrirSaldo() {
+        if (!bricks) { mostrarErro('Pagamento indisponível no momento.'); return; }
+        var pac = pacoteSaldoSelecionado();
+        if (!pac) return;
+        root.classList.remove('hidden');
+        root.classList.add('flex');
+        document.getElementById('recarga-erro').classList.add('hidden');
+        document.getElementById('recarga-brick').innerHTML = '';
+        if (controller && controller.unmount) { try { controller.unmount(); } catch (e) {} }
+        bricks.create('cardPayment', 'recarga-brick', {
+            initialization: { amount: pac.valor },
+            callbacks: {
+                onReady: function () {},
+                onError: function () { mostrarErro('Erro ao carregar o cartão.'); },
+                onSubmit: function (formData) { return enviarSaldo(pac, formData.token); },
+            },
+        }).then(function (c) { controller = c; });
+    }
+
+    var ativarSaldoBtn = document.getElementById('recarga-saldo-ativar');
+    if (ativarSaldoBtn) ativarSaldoBtn.addEventListener('click', abrirSaldo);
+
     window._cleanupFunctions = window._cleanupFunctions || {};
     window._cleanupFunctions.recarga = function () {
         if (controller && controller.unmount) { try { controller.unmount(); } catch (e) {} }

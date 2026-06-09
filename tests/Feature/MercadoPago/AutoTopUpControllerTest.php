@@ -13,7 +13,18 @@ beforeEach(fn () => config([
     'services.mercadopago.access_token' => 'TEST-token',
     'services.mercadopago.base_url' => 'https://api.mercadopago.com',
     'services.mercadopago.preapproval_teto_centavos' => 400000,
+    'services.mercadopago.auto_topup.habilitado' => true,
 ]));
+
+it('endpoint 503 quando o auto top-up está desabilitado', function () {
+    config(['services.mercadopago.auto_topup.habilitado' => false]);
+    Http::fake();
+    $user = User::factory()->create();
+    actingAs($user);
+    postJson(route('app.recarga.criar-saldo'), ['pacote' => 'business', 'token' => 'tok', 'limite_creditos' => 50])
+        ->assertStatus(503);
+    Http::assertNothingSent();
+});
 
 it('endpoint cria recarga por saldo com limite', function () {
     Http::fake([

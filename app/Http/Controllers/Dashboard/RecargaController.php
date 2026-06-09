@@ -41,6 +41,11 @@ class RecargaController extends Controller
 
     public function criarPorSaldo(Request $request, SalvarCartaoVault $action): JsonResponse
     {
+        // Gate de go-live (backend é a verdade): só aceita o setup quando habilitado.
+        if (! config('services.mercadopago.auto_topup.habilitado')) {
+            return response()->json(['error' => 'Auto top-up por saldo indisponível no momento.'], 503);
+        }
+
         $dados = $request->validate([
             'pacote' => ['required', 'string'],
             'token' => ['required', 'string'],

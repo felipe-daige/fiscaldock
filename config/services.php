@@ -68,6 +68,9 @@ return [
         'preapproval_teto_centavos' => (int) env('MERCADO_PAGO_PREAPPROVAL_TETO_CENTAVOS', 400000),
         // Auto top-up por saldo baixo: cooldown entre cobranças (min) + teto diário de recompras.
         'auto_topup' => [
+            // Chave de go-live: só expõe o opt-in e aceita o setup quando ligado (default off).
+            // Ligar em prod APÓS aplicar o ALTER do schema e validar a tokenização MIT em sandbox.
+            'habilitado' => filter_var(env('MERCADO_PAGO_AUTOTOPUP_HABILITADO', false), FILTER_VALIDATE_BOOL),
             'cooldown_minutos' => (int) env('MERCADO_PAGO_AUTOTOPUP_COOLDOWN_MIN', 5),
             'max_por_dia' => (int) env('MERCADO_PAGO_AUTOTOPUP_MAX_DIA', 3),
         ],
