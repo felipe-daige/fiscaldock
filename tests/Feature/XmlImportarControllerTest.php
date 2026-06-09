@@ -22,13 +22,17 @@ function payloadImportar(int $clienteId): array
     ];
 }
 
-it('exige cliente_id', function () {
+it('importa sem cliente_id em modo auto (ownerDoc vazio)', function () {
+    Bus::fake();
+    Storage::fake('local');
     $user = User::factory()->create();
     $payload = payloadImportar(1);
     unset($payload['cliente_id']);
 
     $this->actingAs($user)->postJson('/app/importacao/xml/importar', $payload)
-        ->assertStatus(422)->assertJsonValidationErrorFor('cliente_id');
+        ->assertOk()->assertJson(['success' => true]);
+
+    Bus::assertDispatched(ProcessarXmlImportacaoJob::class, fn ($job) => $job->ownerDoc === '');
 });
 
 it('despacha o Job e persiste os XMLs no storage', function () {

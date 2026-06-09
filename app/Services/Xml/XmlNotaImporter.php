@@ -16,12 +16,16 @@ use Illuminate\Support\Facades\DB;
  */
 class XmlNotaImporter
 {
-    /** @return 'novo'|'duplicado'|'duplicado_atualizado'|'sem_dono' */
-    public function importar(array $parsed, string $ownerDoc, XmlImportacao $imp): string
+    /**
+     * @param  string|null  $ownerDoc  CNPJ do dono FORÇADO (override manual). Vazio/null = modo
+     *                                 AUTO: infere o dono pelo cliente cadastrado que casa.
+     * @return 'novo'|'duplicado'|'duplicado_atualizado'|'sem_dono'
+     */
+    public function importar(array $parsed, ?string $ownerDoc, XmlImportacao $imp): string
     {
         $userId = (int) $imp->user_id;
         $h = $parsed['header'];
-        $ownerDoc = preg_replace('/[^0-9]/', '', $ownerDoc);
+        $ownerDoc = preg_replace('/[^0-9]/', '', (string) $ownerDoc);
 
         $existente = XmlNota::where('user_id', $userId)
             ->where('chave_acesso', $h['chave_acesso'])
@@ -44,20 +48,25 @@ class XmlNotaImporter
 
         $emitDoc = $h['emit_documento'];
         $destDoc = $h['dest_documento'];
-        $donoAusente = false;
-        if ($ownerDoc !== '' && $ownerDoc === $emitDoc) {
+
+        // Resolve clientes uma vez (reusado p/ classificação e p/ emit/dest_cliente_id).
+        $emitCliente = $this->clienteInfo($userId, $emitDoc);
+        $destCliente = $this->clienteInfo($userId, $destDoc);
+
+        [$lado, $donoAusente] = $this->resolverDono($ownerDoc, $emitDoc, $destDoc, $emitCliente, $destCliente);
+
+        if ($lado === 'emit') {
             $h['tipo_nota'] = XmlNota::TIPO_SAIDA;
-        } elseif ($ownerDoc !== '' && $ownerDoc === $destDoc) {
+        } elseif ($lado === 'dest') {
             $h['tipo_nota'] = XmlNota::TIPO_ENTRADA;
-        } else {
-            $donoAusente = true; // mantém tipo_nota cru (tpNF) como fallback
         }
+        // $lado === null → mantém o tpNF cru do parser como fallback.
 
         // xml_notas.emit_documento/dest_documento são NOT NULL em prod.
         $h['emit_documento'] = $h['emit_documento'] ?? '';
         $h['dest_documento'] = $h['dest_documento'] ?? '';
 
-        return DB::transaction(function () use ($parsed, $h, $userId, $imp, $emitDoc, $destDoc, $donoAusente) {
+        return DB::transaction(function () use ($parsed, $h, $userId, $imp, $emitDoc, $destDoc, $emitCliente, $destCliente, $donoAusente) {
             $payload = $parsed['payload'];
             if ($donoAusente) {
                 $payload['_dono_ausente'] = true;
@@ -73,8 +82,8 @@ class XmlNotaImporter
                 'payload' => $payload,
                 'emit_participante_id' => $emitPart?->id,
                 'dest_participante_id' => $destPart?->id,
-                'emit_cliente_id' => $this->clienteId($userId, $emitDoc),
-                'dest_cliente_id' => $this->clienteId($userId, $destDoc),
+                'emit_cliente_id' => $emitCliente?->id,
+                'dest_cliente_id' => $destCliente?->id,
             ]));
 
             foreach ($parsed['itens'] as $item) {
@@ -86,6 +95,50 @@ class XmlNotaImporter
 
             return $donoAusente ? 'sem_dono' : 'novo';
         });
+    }
+
+    /**
+     * Decide qual lado é a perspectiva (dono). 'emit' => saída, 'dest' => entrada, null => indefinido.
+     *
+     * Forçado (ownerDoc preenchido): casa o documento com emit/dest; sem casar = dono ausente.
+     * Auto (ownerDoc vazio): empresa própria vence; senão o único lado que é cliente cadastrado;
+     * dois lados clientes = operação interna pela ótica do emitente; nenhum lado cliente = ausente.
+     *
+     * @return array{0: 'emit'|'dest'|null, 1: bool} [lado, donoAusente]
+     */
+    private function resolverDono(string $ownerDoc, ?string $emitDoc, ?string $destDoc, ?object $emitCliente, ?object $destCliente): array
+    {
+        if ($ownerDoc !== '') {
+            if ($ownerDoc === $emitDoc) {
+                return ['emit', false];
+            }
+            if ($ownerDoc === $destDoc) {
+                return ['dest', false];
+            }
+
+            return [null, true];
+        }
+
+        $emitPropria = (bool) ($emitCliente->is_empresa_propria ?? false);
+        $destPropria = (bool) ($destCliente->is_empresa_propria ?? false);
+
+        if ($emitPropria && ! $destPropria) {
+            return ['emit', false];
+        }
+        if ($destPropria && ! $emitPropria) {
+            return ['dest', false];
+        }
+        if ($emitCliente && ! $destCliente) {
+            return ['emit', false];
+        }
+        if ($destCliente && ! $emitCliente) {
+            return ['dest', false];
+        }
+        if ($emitCliente && $destCliente) {
+            return ['emit', false]; // operação interna: ótica do emitente
+        }
+
+        return [null, true]; // nenhum lado é cliente cadastrado
     }
 
     private function participante(int $userId, ?string $doc, ?string $razao, ?string $uf, ?string $mun, ?string $ie, XmlImportacao $imp): ?Participante
@@ -110,12 +163,15 @@ class XmlNotaImporter
         // NÃO atualizamos situacao_cadastral/regime_tributario/ultima_consulta_em (regra do projeto).
     }
 
-    private function clienteId(int $userId, ?string $doc): ?int
+    /** Cliente do usuário que casa com o documento (id + flag empresa própria), ou null. */
+    private function clienteInfo(int $userId, ?string $doc): ?object
     {
         if (empty($doc)) {
             return null;
         }
 
-        return Cliente::where('user_id', $userId)->where('documento', $doc)->value('id');
+        return Cliente::where('user_id', $userId)
+            ->where('documento', $doc)
+            ->first(['id', 'is_empresa_propria']);
     }
 }

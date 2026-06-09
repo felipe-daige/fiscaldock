@@ -179,7 +179,7 @@ class XmlImportacaoController extends Controller
         $validated = $request->validate([
             'tipo_documento' => 'required|in:NFE',
             'modo_envio' => 'required|in:zip,xml',
-            'cliente_id' => ['required', 'integer', \Illuminate\Validation\Rule::exists('clientes', 'id')->where('user_id', $user->id)],
+            'cliente_id' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('clientes', 'id')->where('user_id', $user->id)],
             'tab_id' => 'required|string|max:36',
             'arquivos' => 'required|array|min:1|max:100',
             'arquivos.*.nome' => 'required|string|max:255',
@@ -195,15 +195,18 @@ class XmlImportacaoController extends Controller
             return response()->json(['success' => false, 'error' => 'Tamanho total excede 200MB.'], Response::HTTP_BAD_REQUEST);
         }
 
-        $ownerDoc = $this->getClienteCnpj($validated['cliente_id']);
-        if (empty($ownerDoc)) {
-            return response()->json(['success' => false, 'error' => 'Cliente sem documento cadastrado.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        // Dono FORÇADO (override manual). Sem cliente = modo AUTO: o Job/importer
+        // infere a perspectiva por nota pelo cliente cadastrado que casar.
+        $clienteId = $validated['cliente_id'] ?? null;
+        $ownerDoc = $clienteId ? (string) $this->getClienteCnpj($clienteId) : '';
+        if ($clienteId && $ownerDoc === '') {
+            return response()->json(['success' => false, 'error' => 'Cliente selecionado sem documento cadastrado.'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         try {
             $importacao = XmlImportacao::create([
                 'user_id' => $user->id,
-                'cliente_id' => $validated['cliente_id'],
+                'cliente_id' => $clienteId,
                 'tipo_documento' => 'NFE',
                 'modo_envio' => $validated['modo_envio'],
                 'total_arquivos' => count($validated['arquivos']),

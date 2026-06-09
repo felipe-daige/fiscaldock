@@ -100,3 +100,58 @@ it('liga emit_cliente_id quando o documento casa com cliente existente', functio
 
     expect(XmlNota::where('user_id', $user->id)->first()->emit_cliente_id)->toBe($cliente->id);
 });
+
+// --- Modo AUTO (ownerDoc nulo): infere o dono pelo cliente que casa ---
+
+it('auto: empresa própria no emitente classifica como saída', function () {
+    $user = User::factory()->create();
+    Cliente::create(['user_id' => $user->id, 'documento' => '97551165000193', 'razao_social' => 'HIDRATOP', 'is_empresa_propria' => true]);
+    $imp = novaImportacaoXml($user);
+
+    $status = app(XmlNotaImporter::class)->importar(parsedFixture(), null, $imp);
+
+    expect($status)->toBe('novo');
+    expect(XmlNota::where('user_id', $user->id)->first()->tipo_nota)->toBe(XmlNota::TIPO_SAIDA);
+});
+
+it('auto: empresa própria no destinatário classifica como entrada', function () {
+    $user = User::factory()->create();
+    Cliente::create(['user_id' => $user->id, 'documento' => '44373108000600', 'razao_social' => 'COCAL', 'is_empresa_propria' => true]);
+    $imp = novaImportacaoXml($user);
+
+    app(XmlNotaImporter::class)->importar(parsedFixture(), null, $imp);
+
+    expect(XmlNota::where('user_id', $user->id)->first()->tipo_nota)->toBe(XmlNota::TIPO_ENTRADA);
+});
+
+it('auto: cliente comum (não própria) só no emitente classifica como saída', function () {
+    $user = User::factory()->create();
+    Cliente::create(['user_id' => $user->id, 'documento' => '97551165000193', 'razao_social' => 'HIDRATOP', 'is_empresa_propria' => false]);
+    $imp = novaImportacaoXml($user);
+
+    app(XmlNotaImporter::class)->importar(parsedFixture(), null, $imp);
+
+    expect(XmlNota::where('user_id', $user->id)->first()->tipo_nota)->toBe(XmlNota::TIPO_SAIDA);
+});
+
+it('auto: nenhum lado cadastrado marca sem_dono e flag _dono_ausente', function () {
+    $user = User::factory()->create();
+    $imp = novaImportacaoXml($user);
+
+    $status = app(XmlNotaImporter::class)->importar(parsedFixture(), null, $imp);
+
+    expect($status)->toBe('sem_dono');
+    expect(XmlNota::where('user_id', $user->id)->first()->payload['_dono_ausente'])->toBeTrue();
+});
+
+it('auto: empresa própria vence quando os dois lados são clientes', function () {
+    $user = User::factory()->create();
+    Cliente::create(['user_id' => $user->id, 'documento' => '97551165000193', 'razao_social' => 'HIDRATOP', 'is_empresa_propria' => false]);
+    Cliente::create(['user_id' => $user->id, 'documento' => '44373108000600', 'razao_social' => 'COCAL', 'is_empresa_propria' => true]);
+    $imp = novaImportacaoXml($user);
+
+    // dest (COCAL) é a empresa própria → entrada
+    app(XmlNotaImporter::class)->importar(parsedFixture(), null, $imp);
+
+    expect(XmlNota::where('user_id', $user->id)->first()->tipo_nota)->toBe(XmlNota::TIPO_ENTRADA);
+});

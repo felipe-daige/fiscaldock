@@ -29,17 +29,18 @@
                     <div class="bg-white rounded border border-gray-300 overflow-hidden">
                         <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
                             <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Upload dos Arquivos</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Em Breve</span>
                         </div>
                         <div class="p-4 sm:p-5">
                             <div class="mb-4">
-                                <label for="xml-cliente" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Cliente (dono destas notas) <span class="text-red-500">*</span></label>
-                                <select id="xml-cliente" required class="text-[13px] py-2.5 px-3 border border-gray-300 rounded w-full bg-white">
-                                    <option value="">Selecione…</option>
+                                <label for="xml-cliente" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Dono das notas (perspectiva)</label>
+                                <select id="xml-cliente" class="text-[13px] py-2.5 px-3 border border-gray-300 rounded w-full bg-white">
+                                    <option value="" selected>Detectar automaticamente</option>
                                     @foreach (($clientes ?? collect()) as $c)
-                                        <option value="{{ $c->id }}" @selected(isset($empresaPropriaId) && $c->id === $empresaPropriaId)>{{ $c->razao_social }}{{ $c->is_empresa_propria ? ' (própria)' : '' }}</option>
+                                        <option value="{{ $c->id }}">{{ $c->razao_social }}{{ $c->is_empresa_propria ? ' (própria)' : '' }}</option>
                                     @endforeach
                                 </select>
-                                <p class="text-[11px] text-gray-400 mt-1">Define se cada nota é entrada (compra) ou saída (venda) na perspectiva deste cliente.</p>
+                                <p class="text-[11px] text-gray-400 mt-1">No automático, cada nota é classificada pelo cliente cadastrado que casar (empresa própria tem prioridade). Selecione um cliente para forçar a perspectiva.</p>
                             </div>
                             <div class="mb-4">
                                 <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Tipo de Documento</label>
@@ -2210,11 +2211,8 @@
                     return;
                 }
 
+                // Dono opcional: vazio = detectar automaticamente (importer infere pelo cliente cadastrado).
                 const clienteId = document.getElementById('xml-cliente')?.value || '';
-                if (!clienteId) {
-                    if (window.showToast) window.showToast('Selecione o cliente dono destas notas.', 'warning');
-                    return;
-                }
 
                 if (selectedFiles.length === 0) {
                     if (window.showToast) window.showToast('Selecione ao menos um arquivo.', 'warning');
