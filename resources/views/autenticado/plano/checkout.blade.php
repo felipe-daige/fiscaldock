@@ -10,7 +10,7 @@
      data-mp-pacote="{{ $pacote['slug'] }}"
      data-mp-amount="{{ number_format($pacote['preco'], 2, '.', '') }}"
      data-mp-creditos="{{ (int) $pacote['creditos'] }}">
-    <div class="max-w-lg mx-auto px-4 sm:px-6 py-6 sm:py-10">
+    <div class="max-w-lg mx-auto px-3 sm:px-6 py-5 sm:py-10">
 
         <style>
             @keyframes ck-fade-in { from { opacity: 0; transform: translateY(20px); } }
@@ -21,24 +21,24 @@
         </style>
 
         {{-- Voltar --}}
-        <a href="/app/plano" data-link class="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 hover:underline mb-6 transition-colors">
+        <a href="/app/plano" data-link class="inline-flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-900 hover:underline mb-5 sm:mb-6 py-1 -my-1 transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
             Voltar
         </a>
 
-        <div class="bg-white rounded-lg border border-gray-200 px-5 sm:px-7 py-6 sm:py-8">
+        <div class="bg-white rounded-lg border border-gray-200 px-4 sm:px-7 py-5 sm:py-8">
 
             {{-- Header enxuto --}}
             <h1 class="text-lg font-bold text-gray-900">Finalizar compra</h1>
-            <p class="mt-1 text-sm text-gray-500">
-                {{ $pacote['nome'] }}
+            <div class="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm text-gray-500">
+                <span>{{ $pacote['nome'] }}</span>
                 <span class="text-gray-300">·</span>
-                {{ number_format($pacote['creditos'], 0, ',', '.') }} créditos
+                <span>{{ number_format($pacote['creditos'], 0, ',', '.') }} créditos</span>
                 <span class="text-gray-300">·</span>
                 <span class="font-semibold text-gray-900 font-mono">R$ {{ number_format($pacote['preco'], 2, ',', '.') }}</span>
-            </p>
+            </div>
 
             <div class="border-t border-gray-100 my-6"></div>
 
@@ -64,12 +64,12 @@
                 {{-- Resultado Pix --}}
                 <div id="ck-pix-result" class="hidden text-center py-6">
                     <p class="text-sm text-gray-700 mb-3 font-semibold">Escaneie o QR Code para pagar via Pix</p>
-                    <img id="ck-pix-qr" alt="QR Code Pix" class="w-48 h-48 mx-auto mb-4 border border-gray-200 rounded">
+                    <img id="ck-pix-qr" alt="QR Code Pix" class="w-48 h-48 max-w-full mx-auto mb-4 border border-gray-200 rounded">
                     <div class="flex items-center gap-2 max-w-sm mx-auto">
                         <input type="text" readonly id="ck-pix-code"
-                               class="flex-1 px-3 py-2 border border-gray-300 rounded text-xs text-gray-500 bg-gray-50 font-mono truncate">
+                               class="flex-1 min-w-0 px-3 py-2.5 border border-gray-300 rounded text-xs text-gray-500 bg-gray-50 font-mono truncate">
                         <button type="button" onclick="window._ckCopyPix && window._ckCopyPix()"
-                                class="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 rounded text-xs font-medium text-gray-700 transition-colors whitespace-nowrap">
+                                class="px-3 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 rounded text-xs font-medium text-gray-700 transition-colors whitespace-nowrap">
                             Copiar
                         </button>
                     </div>
@@ -95,7 +95,7 @@
 
         {{-- Sucesso Overlay (hidden) --}}
         <div id="ck-success-overlay" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-lg border border-gray-200 p-8 max-w-sm w-full text-center ck-scale-in">
+            <div class="bg-white rounded-lg border border-gray-200 p-6 sm:p-8 max-w-sm w-full text-center ck-scale-in">
                 <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background-color: #ecfdf5">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #047857">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
