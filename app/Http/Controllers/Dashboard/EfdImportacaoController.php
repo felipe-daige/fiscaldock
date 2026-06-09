@@ -29,6 +29,7 @@ class EfdImportacaoController extends Controller
         protected CreditService $creditService,
         protected SpedDetectorService $spedDetector,
         protected \App\Services\Efd\EfdImportacaoDuplicidadeService $duplicidade,
+        protected \App\Services\Efd\ExcluirImportacaoService $excluir,
     ) {}
 
     /**
@@ -733,5 +734,50 @@ class EfdImportacaoController extends Controller
         return $wantsJson
             || $expectsJson
             || $xRequestedWith === 'XMLHttpRequest';
+    }
+
+    public function previewExclusao(Request $request, $id): JsonResponse
+    {
+        $imp = $this->importacaoDoDono($id);
+
+        return response()->json($this->excluir->preview($imp));
+    }
+
+    public function destroy(Request $request, $id): JsonResponse
+    {
+        $imp = $this->importacaoDoDono($id);
+
+        if (in_array($imp->status, ['processando', 'pendente'], true)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Importação em processamento não pode ser excluída. Aguarde a conclusão.',
+            ], 409);
+        }
+
+        $excluirParticipantes = $request->boolean('excluir_participantes');
+        $resultado = $this->excluir->execute($imp, $excluirParticipantes);
+
+        Log::info('Importação EFD excluída', [
+            'user_id' => (int) Auth::id(),
+            'importacao_id' => (int) $id,
+            'excluir_participantes' => $excluirParticipantes,
+            'resultado' => $resultado,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Importação excluída com sucesso.',
+            'resultado' => $resultado,
+        ]);
+    }
+
+    /**
+     * Carrega a importação garantindo posse pelo usuário autenticado (404 caso contrário).
+     */
+    private function importacaoDoDono($id): EfdImportacao
+    {
+        return EfdImportacao::where('id', $id)
+            ->where('user_id', (int) Auth::id())
+            ->firstOrFail();
     }
 }

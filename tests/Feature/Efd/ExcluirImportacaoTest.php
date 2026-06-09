@@ -124,3 +124,52 @@ it('execute remove efd_catalogo_historico e nao estorna creditos nem apaga clien
         ->and(Cliente::find($cliente->id))->not->toBeNull()
         ->and(app(\App\Services\CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes);
 });
+
+it('destroy bloqueia importacao em processando (409)', function () {
+    $user = User::factory()->create();
+    $cliente = Cliente::create(['user_id' => $user->id, 'razao_social' => 'Acme', 'documento' => '12345678000199']);
+    $imp = excluirImpNovaImportacao($user, $cliente, ['status' => 'processando']);
+
+    $this->actingAs($user)
+        ->deleteJson("/app/importacao/efd/{$imp->id}")
+        ->assertStatus(409);
+
+    expect(EfdImportacao::find($imp->id))->not->toBeNull();
+});
+
+it('destroy nega importacao de outro usuario (404)', function () {
+    $dono = User::factory()->create();
+    $outro = User::factory()->create();
+    $cliente = Cliente::create(['user_id' => $dono->id, 'razao_social' => 'Acme', 'documento' => '12345678000199']);
+    $imp = excluirImpNovaImportacao($dono, $cliente);
+
+    $this->actingAs($outro)
+        ->deleteJson("/app/importacao/efd/{$imp->id}")
+        ->assertStatus(404);
+
+    expect(EfdImportacao::find($imp->id))->not->toBeNull();
+});
+
+it('destroy exclui importacao concluida do dono', function () {
+    $user = User::factory()->create();
+    $cliente = Cliente::create(['user_id' => $user->id, 'razao_social' => 'Acme', 'documento' => '12345678000199']);
+    $imp = excluirImpNovaImportacao($user, $cliente);
+
+    $this->actingAs($user)
+        ->deleteJson("/app/importacao/efd/{$imp->id}", ['excluir_participantes' => false])
+        ->assertStatus(200)
+        ->assertJson(['success' => true]);
+
+    expect(EfdImportacao::find($imp->id))->toBeNull();
+});
+
+it('preview-exclusao retorna contagens para o dono', function () {
+    $user = User::factory()->create();
+    $cliente = Cliente::create(['user_id' => $user->id, 'razao_social' => 'Acme', 'documento' => '12345678000199']);
+    $imp = excluirImpNovaImportacao($user, $cliente);
+
+    $this->actingAs($user)
+        ->getJson("/app/importacao/efd/{$imp->id}/preview-exclusao")
+        ->assertStatus(200)
+        ->assertJsonStructure(['notas', 'itens', 'participantes' => ['candidatos', 'orfaos', 'compartilhados']]);
+});

@@ -178,6 +178,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/efd/notas', [EfdImportacaoController::class, 'notasPorIds'])->name('efd.notas.por-ids');
         Route::get('/efd/notas-participante', [EfdImportacaoController::class, 'notasPorParticipante'])->name('efd.notas.por-participante');
         Route::get('/efd/{id}', [EfdImportacaoController::class, 'show'])->name('efd.detalhes');
+        Route::get('/efd/{id}/preview-exclusao', [EfdImportacaoController::class, 'previewExclusao'])->name('efd.preview-exclusao');
+        Route::delete('/efd/{id}', [EfdImportacaoController::class, 'destroy'])->name('efd.destroy');
 
         // Histórico unificado
         Route::get('/historico', [EfdImportacaoController::class, 'historico'])->name('historico');
