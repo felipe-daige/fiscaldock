@@ -69,6 +69,42 @@ it('preview conta derivados e classifica participantes orfaos x compartilhados',
         ->and($preview['participantes']['compartilhados'])->toBe(1);
 });
 
+it('participante orfao por notas mas com dado pago (consulta/score/monitoramento) e tratado como compartilhado e preservado', function () {
+    $user = User::factory()->create();
+    $cliente = Cliente::create(['user_id' => $user->id, 'razao_social' => 'Acme', 'documento' => '12345678000199']);
+
+    $imp = excluirImpNovaImportacao($user, $cliente);
+
+    // 4 participantes "órfãos por notas" (só nesta importação), cada um com 1 tipo de dado pago.
+    $pConsultaResultado = Participante::create(['user_id' => $user->id, 'cliente_id' => $cliente->id, 'importacao_efd_id' => $imp->id, 'razao_social' => 'ConsResult', 'documento' => '11111111000111']);
+    $pMonitConsulta = Participante::create(['user_id' => $user->id, 'cliente_id' => $cliente->id, 'importacao_efd_id' => $imp->id, 'razao_social' => 'MonitCons', 'documento' => '22222222000122']);
+    $pAssinatura = Participante::create(['user_id' => $user->id, 'cliente_id' => $cliente->id, 'importacao_efd_id' => $imp->id, 'razao_social' => 'Assina', 'documento' => '33333333000133']);
+    $pScore = Participante::create(['user_id' => $user->id, 'cliente_id' => $cliente->id, 'importacao_efd_id' => $imp->id, 'razao_social' => 'Score', 'documento' => '44444444000144']);
+    // 1 participante puramente órfão (nenhum dado pago) — esse deve ser excluído.
+    $pPuroOrfao = Participante::create(['user_id' => $user->id, 'cliente_id' => $cliente->id, 'importacao_efd_id' => $imp->id, 'razao_social' => 'Puro', 'documento' => '55555555000155']);
+
+    $loteId = \Illuminate\Support\Facades\DB::table('consulta_lotes')->insertGetId(['user_id' => $user->id, 'total_participantes' => 1, 'created_at' => now(), 'updated_at' => now()]);
+    $planoId = \Illuminate\Support\Facades\DB::table('monitoramento_planos')->insertGetId(['codigo' => 'teste', 'nome' => 'Teste', 'descricao' => 'Teste', 'consultas_incluidas' => '[]', 'custo_creditos' => 1, 'created_at' => now(), 'updated_at' => now()]);
+
+    \Illuminate\Support\Facades\DB::table('consulta_resultados')->insert(['consulta_lote_id' => $loteId, 'participante_id' => $pConsultaResultado->id, 'created_at' => now(), 'updated_at' => now()]);
+    \Illuminate\Support\Facades\DB::table('monitoramento_consultas')->insert(['user_id' => $user->id, 'participante_id' => $pMonitConsulta->id, 'plano_id' => $planoId, 'tipo' => 'avulso', 'created_at' => now(), 'updated_at' => now()]);
+    \Illuminate\Support\Facades\DB::table('monitoramento_assinaturas')->insert(['user_id' => $user->id, 'participante_id' => $pAssinatura->id, 'plano_id' => $planoId, 'created_at' => now(), 'updated_at' => now()]);
+    \App\Models\ParticipanteScore::create(['participante_id' => $pScore->id, 'cliente_id' => $cliente->id, 'user_id' => $user->id, 'score_total' => 50, 'classificacao' => 'medio']);
+
+    $preview = app(ExcluirImportacaoService::class)->preview($imp->fresh());
+    expect($preview['participantes']['candidatos'])->toBe(5)
+        ->and($preview['participantes']['orfaos'])->toBe(1)            // só o puro órfão
+        ->and($preview['participantes']['compartilhados'])->toBe(4);  // os 4 com dado pago
+
+    app(ExcluirImportacaoService::class)->execute($imp->fresh(), excluirParticipantes: true);
+
+    expect(Participante::find($pConsultaResultado->id))->not->toBeNull()
+        ->and(Participante::find($pMonitConsulta->id))->not->toBeNull()
+        ->and(Participante::find($pAssinatura->id))->not->toBeNull()
+        ->and(Participante::find($pScore->id))->not->toBeNull()
+        ->and(Participante::find($pPuroOrfao->id))->toBeNull();        // único excluído
+});
+
 it('execute apaga importacao e cascateia derivados, exclui orfao e preserva compartilhado', function () {
     $user = User::factory()->create();
     $cliente = Cliente::create(['user_id' => $user->id, 'razao_social' => 'Acme', 'documento' => '12345678000199']);

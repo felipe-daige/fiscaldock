@@ -52,12 +52,12 @@ class ExcluirImportacaoService
             // Sem cascade: histórico do catálogo (importacao_id é nullOnDelete).
             DB::table('efd_catalogo_historico')->where('importacao_id', $imp->id)->delete();
 
+            // Órfãos são apagados via FK cascade do banco (assinaturas, consultas, scores, pivot
+            // grupos, consulta_resultados; notas SET NULL). O Participante não tem evento de model
+            // no delete, então um único whereIn é suficiente e evita N+1.
             $excluidos = 0;
-            if ($excluirParticipantes) {
-                Participante::whereIn('id', $orfaos)->get()->each(function (Participante $p) use (&$excluidos) {
-                    $p->delete();
-                    $excluidos++;
-                });
+            if ($excluirParticipantes && $orfaos->isNotEmpty()) {
+                $excluidos = Participante::whereIn('id', $orfaos)->delete();
             }
 
             // participantes.importacao_efd_id NÃO tem FK → zerar nos sobreviventes p/ não ficar dangling.
@@ -90,7 +90,8 @@ class ExcluirImportacaoService
     }
 
     /**
-     * Dos candidatos, os que NÃO são referenciados por outra importação nem por xml_notas.
+     * Dos candidatos, os que NÃO são referenciados por outra importação nem por xml_notas
+     * e que não têm dado pago/derivado (consulta/score/monitoramento) — ver temDadosPagos().
      *
      * @param  \Illuminate\Support\Collection<int,int>  $candidatos
      * @return \Illuminate\Support\Collection<int,int>
@@ -106,7 +107,21 @@ class ExcluirImportacaoService
                 ->orWhere('dest_participante_id', $pid)
                 ->exists();
 
-            return ! $emOutraEfd && ! $emXml;
+            return ! $emOutraEfd && ! $emXml && ! $this->temDadosPagos($pid);
         })->values();
+    }
+
+    /**
+     * Participante com dado pago/derivado que NÃO deve ser destruído junto da importação:
+     * consultas avulsas (consulta_resultados), monitoramento (assinaturas/consultas) e score
+     * persistido. Esses participantes são tratados como compartilhados e preservados — excluí-los
+     * cascatearia (FK) e apagaria histórico de consulta que o usuário pagou.
+     */
+    protected function temDadosPagos(int $pid): bool
+    {
+        return DB::table('consulta_resultados')->where('participante_id', $pid)->exists()
+            || DB::table('monitoramento_consultas')->where('participante_id', $pid)->exists()
+            || DB::table('monitoramento_assinaturas')->where('participante_id', $pid)->exists()
+            || DB::table('participante_scores')->where('participante_id', $pid)->exists();
     }
 }
