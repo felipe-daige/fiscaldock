@@ -963,7 +963,7 @@ class DashboardController extends Controller
         }
 
         $user = Auth::user();
-        $planos = \App\Models\SubscriptionPlan::where('is_active', true)->orderBy('ordem')->get();
+        $planos = \App\Models\SubscriptionPlan::allActive();
         $planoAtual = (new \App\Services\Entitlements\EntitlementService)->planFor($user);
 
         $planosView = self::AUTH_VIEW_PREFIX.'planos.index';

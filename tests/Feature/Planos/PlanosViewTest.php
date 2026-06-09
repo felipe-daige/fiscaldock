@@ -43,6 +43,20 @@ it('marca o Free como plano atual de quem não tem assinatura e mostra Assinar e
     expect($html)->toContain('Falar com vendas');    // enterprise
 });
 
+it('renderiza os tiers mesmo se a tabela estiver vazia (fallback resiliente)', function () {
+    \App\Models\SubscriptionPlan::query()->delete(); // simula seed ausente em prod
+
+    $user = User::factory()->create();
+    actingAs($user);
+
+    $html = get('/app/planos')->assertOk()->getContent();
+
+    foreach (['Essencial', 'Profissional', 'Escritório'] as $nome) {
+        expect($html)->toContain($nome);
+    }
+    expect($html)->toContain('300 créditos inclusos/mês');
+});
+
 it('expõe os limites de carteira por tier (clientes/CNPJs)', function () {
     $user = User::factory()->create();
     actingAs($user);

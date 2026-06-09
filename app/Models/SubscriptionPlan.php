@@ -56,6 +56,28 @@ class SubscriptionPlan extends Model
         return new self($definicao);
     }
 
+    /**
+     * Planos ativos ordenados — resiliente igual ao free(): se a tabela estiver
+     * vazia (seed ausente em prod), devolve os tiers em memória a partir da
+     * definição canônica do seeder, pra UI nunca renderizar vazio.
+     *
+     * @return \Illuminate\Support\Collection<int, self>
+     */
+    public static function allActive(): \Illuminate\Support\Collection
+    {
+        $rows = static::where('is_active', true)->orderBy('ordem')->get();
+
+        if ($rows->isNotEmpty()) {
+            return $rows->toBase();
+        }
+
+        return collect(\Database\Seeders\SubscriptionPlanSeeder::definitions())
+            ->filter(fn ($def) => ($def['is_active'] ?? true) === true)
+            ->map(fn ($def) => new self($def))
+            ->sortBy('ordem')
+            ->values();
+    }
+
     public function capability(string $key, mixed $default = null): mixed
     {
         return $this->capabilities[$key] ?? $default;
