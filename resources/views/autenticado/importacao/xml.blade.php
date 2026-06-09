@@ -2321,14 +2321,15 @@
 
                     console.log('[Monitoramento XML] Importacao iniciada:', data);
 
-                    // Salvar dados da importacao
-                    currentImportacaoId = data.importacao_id || null;
-                    salvarMovimentacoesAtivo = payload.salvar_movimentacoes || false;
+                    // Padrão EFD: o acompanhamento (throttle) e o resultado final acontecem na
+                    // própria view de detalhe/histórico da importação. Redireciona pra lá levando
+                    // o tab_id (pro SSE); ao concluir, o servidor renderiza o resultado consolidado.
+                    if (data.importacao_id) {
+                        window.location.href = '/app/importacao/xml/' + data.importacao_id + '?tab_id=' + encodeURIComponent(tabId);
+                        return;
+                    }
 
-                    importacaoEmAndamento = true;
-                    resetarProgresso();
-                    mostrarProgresso();
-                    conectarSSE();
+                    throw new Error('Importação iniciada, mas sem identificador para acompanhamento.');
 
                 } catch (err) {
                     console.error('[Monitoramento XML] Erro:', err);

@@ -1,44 +1,46 @@
 {{-- Importação XML - Detalhes --}}
 @php
-    [$badgeClass, $badgeLabel] = match($importacao->status) {
-        'concluido'   => ['bg-green-100 text-green-700', 'Concluído'],
-        'processando' => ['bg-blue-100 text-blue-700', 'Processando'],
-        'erro'        => ['bg-red-100 text-red-700', 'Erro'],
-        default       => ['bg-gray-100 text-gray-700', 'Pendente'],
+    [$badgeStyle, $badgeLabel] = match($importacao->status) {
+        'concluido'   => ['background-color: #047857', 'Concluído'],
+        'processando' => ['background-color: #d97706', 'Processando'],
+        'erro'        => ['background-color: #dc2626', 'Erro'],
+        default       => ['background-color: #9ca3af', 'Pendente'],
     };
 
-    [$tipoDocLabel, $tipoBadgeClass] = match($importacao->tipo_documento ?? '') {
-        'nfe'  => ['NF-e',  'bg-green-100 text-green-700'],
-        'nfse' => ['NFS-e', 'bg-indigo-100 text-indigo-700'],
-        'cte'  => ['CT-e',  'bg-orange-100 text-orange-700'],
-        default => ['XML',  'bg-gray-100 text-gray-700'],
+    [$tipoDocLabel, $tipoStyle] = match(strtolower($importacao->tipo_documento ?? '')) {
+        'nfe'  => ['NF-e',  'background-color: #047857'],
+        'nfse' => ['NFS-e', 'background-color: #4338ca'],
+        'cte'  => ['CT-e',  'background-color: #c2410c'],
+        default => ['XML',  'background-color: #6b7280'],
     };
+
+    $emProcessamento = in_array($importacao->status, ['processando', 'pendente'], true);
+    $arquivoLabel = $importacao->filename ?: 'Importação #'.$importacao->id;
+    $tabIdQuery = request()->query('tab_id', '');
 @endphp
 
-<div class="min-h-screen bg-gray-50" id="xml-detalhes-container">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="bg-gray-100 min-h-screen" id="xml-detalhes-container">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
         {{-- Header --}}
-        <div class="mb-6">
-            <div class="flex items-start justify-between gap-4">
-                <div class="min-w-0">
-                    <div class="flex items-center gap-3 flex-wrap">
-                        <h1 class="text-2xl font-bold text-gray-900 truncate">{{ $importacao->filename ?? 'Importação #' . $importacao->id }}</h1>
-                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full {{ $tipoBadgeClass }}">{{ $tipoDocLabel }}</span>
-                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full {{ $badgeClass }}">{{ $badgeLabel }}</span>
-                    </div>
-                    <p class="mt-1 text-sm text-gray-500">Detalhes da importação XML</p>
-                </div>
-                <a
-                    href="/app/importacao/historico"
-                    data-link
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50 flex-shrink-0"
-                >
+        <div class="mb-4 sm:mb-6 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div class="min-w-0">
+                <a href="/app/importacao/historico" data-link class="inline-flex items-center gap-2 text-xs text-gray-600 hover:text-gray-900 hover:underline mb-3">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
-                    Voltar
+                    Voltar para importações
                 </a>
+                <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">
+                    Detalhe da Importação XML
+                </h1>
+                <p class="text-xs text-gray-500 mt-1">Consulte o resultado consolidado da extração dos documentos fiscais importados via XML.</p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="/app/importacao/xml" data-link class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium">Nova importação</a>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $tipoStyle }}">{{ $tipoDocLabel }}</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $badgeStyle }}">{{ $badgeLabel }}</span>
             </div>
         </div>
 
@@ -52,89 +54,159 @@
         @endif
 
         {{-- Info Card --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-6">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-base font-semibold text-gray-900">Informações da Importação</h2>
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4" id="info-section">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo Operacional</span>
             </div>
-            <div class="p-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
-                <div>
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Tipo Documento</p>
-                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full {{ $tipoBadgeClass }}">{{ $tipoDocLabel }}</span>
+            <div class="grid grid-cols-2 lg:grid-cols-6 divide-x divide-y lg:divide-y-0 divide-gray-200">
+                <div class="px-4 py-3 min-h-[96px] flex flex-col">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Importação</p>
+                    <div class="flex-1 flex items-center">
+                        <p class="text-lg font-bold text-gray-900">#{{ $importacao->id }}</p>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-1">{{ $importacao->created_at->format('d/m/Y H:i') }}</p>
                 </div>
-                <div>
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Enviado em</p>
-                    <p class="text-sm font-medium text-gray-900">{{ $importacao->created_at->format('d/m/Y') }}</p>
-                    <p class="text-xs text-gray-500">{{ $importacao->created_at->format('H:i') }}</p>
+                <div class="px-4 py-3 min-h-[96px] flex flex-col">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Tipo Documento</p>
+                    <div class="flex-1 flex items-center">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $tipoStyle }}">{{ $tipoDocLabel }}</span>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-1">Documentos importados</p>
                 </div>
-                <div>
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Concluído em</p>
-                    @if($importacao->concluido_em)
-                        <p class="text-sm font-medium text-gray-900">{{ $importacao->concluido_em->format('d/m/Y') }}</p>
-                        <p class="text-xs text-gray-500">{{ $importacao->concluido_em->format('H:i') }}</p>
-                    @else
-                        <p class="text-sm text-gray-400">—</p>
-                    @endif
+                <div class="px-4 py-3 min-h-[96px] flex flex-col">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Cliente</p>
+                    <div class="flex-1 flex items-center">
+                        <p class="text-sm font-bold text-gray-900">{{ $importacao->cliente?->razao_social ?? 'Não associado' }}</p>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-1">{{ $importacao->cliente?->documento_formatado ?? 'Sem vínculo a cliente' }}</p>
                 </div>
-                <div>
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Tempo</p>
-                    <p class="text-sm font-medium text-gray-900">{{ $importacao->tempo_processamento }}</p>
+                <div class="px-4 py-3 min-h-[96px] flex flex-col">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Tamanho</p>
+                    <div class="flex-1 flex items-center">
+                        <p class="text-sm font-bold text-gray-900">{{ $importacao->tamanho_formatado }}</p>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-1">arquivo enviado</p>
                 </div>
-                <div>
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Tamanho</p>
-                    <p class="text-sm font-medium text-gray-900">{{ $importacao->tamanho_formatado }}</p>
+                <div class="px-4 py-3 min-h-[96px] flex flex-col">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Status</p>
+                    <div class="flex-1 flex items-center">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $badgeStyle }}">{{ $badgeLabel }}</span>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-1">{{ $importacao->tempo_processamento ?: 'Em andamento' }}</p>
+                </div>
+                <div class="px-4 py-3 min-h-[96px] flex flex-col">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Processado em</p>
+                    <div class="flex-1 flex items-center">
+                        <p class="text-sm font-bold text-gray-900">{{ $importacao->concluido_em?->format('d/m/Y H:i') ?? 'Em andamento' }}</p>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-1">última atualização disponível</p>
                 </div>
             </div>
+
+            @if($importacao->filename)
+            <div class="px-4 py-3 border-t border-gray-200">
+                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Arquivo</p>
+                <p class="text-xs font-mono text-gray-700 break-all">{{ $arquivoLabel }}</p>
+            </div>
+            @endif
         </div>
 
-        {{-- Stats Bar --}}
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-            @php
-                $valorTotal = $importacao->valor_total ?? 0;
-                $stats = [
-                    ['label' => 'Total XMLs',         'value' => $importacao->total_xmls ?? 0,                    'color' => 'text-gray-900'],
-                    ['label' => 'Novos',              'value' => $importacao->xmls_novos ?? 0,                    'color' => 'text-green-600'],
-                    ['label' => 'Duplicados',         'value' => $importacao->xmls_duplicados_processados ?? 0,   'color' => 'text-yellow-600'],
-                    ['label' => 'Com erro',           'value' => $importacao->xmls_com_erro ?? 0,                 'color' => 'text-red-600'],
-                    ['label' => 'Participantes novos','value' => $importacao->participantes_novos ?? 0,           'color' => 'text-blue-600'],
-                ];
-            @endphp
-            @foreach($stats as $stat)
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm px-4 py-4">
-                <p class="text-xs font-medium text-gray-500">{{ $stat['label'] }}</p>
-                <p class="text-2xl font-bold {{ $stat['color'] }} mt-1">{{ number_format($stat['value']) }}</p>
+        {{-- Andamento da importação (throttle no padrão de toda automação).
+             Enquanto processando, o resultado consolidado fica oculto; ao concluir, o
+             xml-importacao-progresso.js recarrega a página e o servidor renderiza tudo. --}}
+        @if($emProcessamento)
+            <div id="xml-progresso-root"
+                 class="mb-4"
+                 data-tab-id="{{ $tabIdQuery }}"
+                 data-importacao-id="{{ $importacao->id }}"
+                 data-iniciado-em="{{ optional($importacao->created_at)->timestamp }}">
+                <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Andamento da Importação</span>
+                        <span id="xml-progresso-percent" class="text-[10px] text-gray-500 font-mono">0%</span>
+                    </div>
+                    <div class="p-4">
+                        <div class="w-full h-1.5 rounded-full overflow-hidden" style="background-color: #e5e7eb">
+                            <div id="xml-progresso-bar" class="h-full" style="background-color: #1f2937; width: 0%; transition: width 350ms ease-out"></div>
+                        </div>
+                        <p id="xml-progresso-etapa" class="text-xs text-gray-600 mt-3">Preparando importação...</p>
+                        @include('autenticado.partials.progresso-tempo', [
+                            'prefixo' => 'xml-progresso',
+                            'dica' => 'lendo e gravando as notas — pode levar alguns instantes em lotes grandes.',
+                        ])
+                    </div>
+                </div>
             </div>
-            @endforeach
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm px-4 py-4">
-                <p class="text-xs font-medium text-gray-500">Valor Total</p>
-                <p class="text-lg font-bold text-indigo-600 mt-1">
-                    @if($valorTotal)
-                        R$ {{ number_format($valorTotal, 2, ',', '.') }}
-                    @else
-                        <span class="text-gray-400">—</span>
-                    @endif
-                </p>
+
+            <div class="bg-white rounded border border-gray-300 p-6 text-center">
+                <p class="text-sm text-gray-500">Os dados da importação aparecerão aqui assim que o processamento terminar.</p>
+                <p class="text-xs text-gray-400 mt-1">Você pode fechar esta aba e voltar depois pelo histórico.</p>
+            </div>
+        @endif
+
+        @if(! $emProcessamento)
+        {{-- Indicadores --}}
+        @php
+            $valorTotal = $importacao->valor_total ?? 0;
+            $xmlsComErro = $importacao->xmls_com_erro ?? 0;
+        @endphp
+        <div class="bg-white rounded border border-gray-300 mb-4 overflow-hidden" id="indicadores-section">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resultado Consolidado</span>
+            </div>
+            <div class="grid grid-cols-2 lg:grid-cols-6 divide-x divide-y lg:divide-y-0 divide-gray-200">
+                <div class="px-4 py-3">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Total XMLs</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($importacao->total_xmls ?? 0) }}</p>
+                    <p class="text-[11px] text-gray-500">documentos no envio</p>
+                </div>
+                <div class="px-4 py-3">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Novos</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($importacao->xmls_novos ?? 0) }}</p>
+                    <p class="text-[11px] text-gray-500">importados</p>
+                </div>
+                <div class="px-4 py-3">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Duplicados</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($importacao->xmls_duplicados_processados ?? 0) }}</p>
+                    <p class="text-[11px] text-gray-500">já no acervo</p>
+                </div>
+                <div class="px-4 py-3">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Com erro</p>
+                    <p class="text-lg font-bold {{ $xmlsComErro > 0 ? 'text-red-600' : 'text-gray-900' }}">{{ number_format($xmlsComErro) }}</p>
+                    <p class="text-[11px] text-gray-500">não processados</p>
+                </div>
+                <div class="px-4 py-3">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participantes</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($importacao->participantes_novos ?: count($importacao->participante_ids ?? [])) }}</p>
+                    <p class="text-[11px] text-gray-500">extraídos das notas</p>
+                </div>
+                <div class="px-4 py-3">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Valor Total</p>
+                    <p class="text-lg font-bold text-gray-900">@if($valorTotal)R$ {{ number_format($valorTotal, 2, ',', '.') }}@else<span class="text-gray-400">—</span>@endif</p>
+                    <p class="text-[11px] text-gray-500">somatório dos documentos</p>
+                </div>
             </div>
         </div>
 
         {{-- Card Cliente --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-6">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-base font-semibold text-gray-900">Cliente Associado</h2>
+        <div class="bg-white rounded border border-gray-300 mb-4">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Cliente Associado</span>
             </div>
-            <div class="p-6">
+            <div class="p-4">
                 @if($importacao->cliente)
                     <div class="flex items-center gap-4 flex-wrap">
                         <div>
-                            <p class="text-xs text-gray-500 mb-0.5">Razão Social</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Razão Social</p>
                             <p class="text-sm font-semibold text-gray-900">{{ $importacao->cliente->razao_social }}</p>
                         </div>
                         <div>
-                            <p class="text-xs text-gray-500 mb-0.5">{{ $importacao->cliente->tipo_pessoa === 'PJ' ? 'CNPJ' : 'CPF' }}</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">{{ $importacao->cliente->tipo_pessoa === 'PJ' ? 'CNPJ' : 'CPF' }}</p>
                             <p class="text-sm font-mono text-gray-900">{{ $importacao->cliente->documento_formatado ?? $importacao->cliente->documento ?? '—' }}</p>
                         </div>
                         <div>
-                            <p class="text-xs text-gray-500 mb-0.5">Tipo</p>
-                            <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Tipo</p>
+                            <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded text-white" style="background-color: #374151">
                                 {{ $importacao->cliente->tipo_pessoa === 'PF' ? 'Pessoa Física' : 'Pessoa Jurídica' }}
                             </span>
                         </div>
@@ -145,7 +217,7 @@
                             <a
                                 href="/app/clientes?search={{ urlencode($docBusca) }}"
                                 data-link
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 transition"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-gray-300 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 transition"
                             >
                                 Ver no cadastro
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,18 +233,19 @@
         </div>
 
         {{-- Participantes --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-4 flex-wrap">
-                <h2 class="text-base font-semibold text-gray-900">
-                    Participantes
+        <div class="bg-white rounded border border-gray-300">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-4 flex-wrap">
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Participantes</span>
                     @if($participantes->total() > 0)
-                        <span class="ml-1.5 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">{{ $participantes->total() }}</span>
+                        <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ $participantes->total() }}</span>
                     @endif
-                </h2>
+                </div>
                 @if($participantes->total() > 0)
                 <div class="flex items-center gap-3">
-                    <div class="relative">
-                        <select class="pl-3 pr-8 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white" onchange="let u = new URL(window.location.href); u.searchParams.set('per_page_participantes', this.value); u.searchParams.delete('page'); const a = document.createElement('a'); a.href = u.toString(); a.setAttribute('data-link', ''); document.body.appendChild(a); a.click(); a.remove();">
+                    <div class="flex items-center gap-2">
+                        <label for="per-page-participantes-xml" class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Por pág.</label>
+                        <select id="per-page-participantes-xml" class="border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400 px-2 py-1.5 bg-white" onchange="let u = new URL(window.location.href); u.searchParams.set('per_page_participantes', this.value); u.searchParams.delete('page'); const a = document.createElement('a'); a.href = u.toString(); a.setAttribute('data-link', ''); document.body.appendChild(a); a.click(); a.remove();">
                             <option value="10" {{ request('per_page_participantes', 10) == 10 ? 'selected' : '' }}>10 por pág.</option>
                             <option value="25" {{ request('per_page_participantes') == 25 ? 'selected' : '' }}>25 por pág.</option>
                             <option value="50" {{ request('per_page_participantes') == 50 ? 'selected' : '' }}>50 por pág.</option>
@@ -187,7 +260,7 @@
                             type="text"
                             id="busca-participantes-xml"
                             placeholder="Buscar participante..."
-                            class="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
+                            class="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400 w-64"
                         >
                     </div>
                 </div>
@@ -197,31 +270,31 @@
             @if($participantes->total() > 0)
             {{-- Desktop: Table --}}
             <div class="hidden md:block overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200" id="tabela-participantes-xml">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">CNPJ/CPF</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Razão Social</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">UF</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Situação</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">CRT</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                <table class="min-w-full" id="tabela-participantes-xml">
+                    <thead>
+                        <tr class="border-b border-gray-300">
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">CNPJ/CPF</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Razão Social</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">UF</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Situação</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">CRT</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Tipo</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200" id="tbody-participantes-xml">
+                    <tbody class="divide-y divide-gray-100" id="tbody-participantes-xml">
                         @foreach($participantes as $part)
                         <tr
-                            class="hover:bg-gray-50 cursor-pointer transition-colors"
+                            class="hover:bg-gray-50/50 cursor-pointer transition-colors"
                             data-href="/app/participante/{{ $part->id }}"
                             data-razao="{{ strtolower($part->razao_social ?: '') }}"
                             data-doc="{{ $part->cnpj_formatado ?: $part->cpf ?: '' }}"
                         >
-                            <td class="px-6 py-4 text-sm font-mono text-gray-900 whitespace-nowrap">{{ $part->cnpj_formatado ?: $part->cpf ?: '—' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-900 max-w-[280px] truncate" title="{{ $part->razao_social ?: 'Razão social não informada' }}">{{ $part->razao_social ?: '—' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->uf ?: '—' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->situacao_cadastral ?: '—' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->crt ?: '—' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $part->tipo_pessoa ?: ($part->documento && strlen(preg_replace('/[^0-9]/', '', $part->documento)) === 11 ? 'PF' : 'PJ') }}</td>
+                            <td class="px-3 py-3 text-sm font-mono text-gray-900 whitespace-nowrap">{{ $part->cnpj_formatado ?: $part->cpf ?: '—' }}</td>
+                            <td class="px-3 py-3 text-sm text-gray-900 max-w-[280px] truncate" title="{{ $part->razao_social ?: 'Razão social não informada' }}">{{ $part->razao_social ?: '—' }}</td>
+                            <td class="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">{{ $part->uf ?: '—' }}</td>
+                            <td class="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">{{ $part->situacao_cadastral ?: '—' }}</td>
+                            <td class="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">{{ $part->crt ?: '—' }}</td>
+                            <td class="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">{{ $part->tipo_pessoa ?: ($part->documento && strlen(preg_replace('/[^0-9]/', '', $part->documento)) === 11 ? 'PF' : 'PJ') }}</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -229,7 +302,7 @@
             </div>
 
             {{-- Mobile: Cards --}}
-            <div class="md:hidden divide-y divide-gray-200" id="mobile-participantes-xml">
+            <div class="md:hidden divide-y divide-gray-100" id="mobile-participantes-xml">
                 @foreach($participantes as $part)
                 <div
                     class="px-4 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
@@ -249,23 +322,23 @@
 
             {{-- Paginação --}}
             @if($participantes->hasPages())
-            <div class="px-6 py-4 flex items-center justify-between gap-4 text-sm border-t border-gray-100">
-                <span class="text-gray-500 text-xs">
+            <div class="border-t border-gray-300 px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+                <span class="text-[10px] text-gray-500 uppercase tracking-wide">
                     Mostrando {{ $participantes->firstItem() }}–{{ $participantes->lastItem() }} de {{ $participantes->total() }} participantes
                 </span>
-                <div class="flex items-center gap-1">
+                <div class="flex items-center gap-2">
                     @if($participantes->onFirstPage())
-                        <span class="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-300 text-xs cursor-not-allowed">Anterior</span>
+                        <span class="px-3 py-1.5 text-[10px] text-gray-400 bg-gray-100 border border-gray-200 rounded">Anterior</span>
                     @else
-                        <a href="{{ $participantes->previousPageUrl() }}" data-link class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50 transition">Anterior</a>
+                        <a href="{{ $participantes->previousPageUrl() }}" data-link class="px-3 py-1.5 text-[10px] text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">Anterior</a>
                     @endif
 
-                    <span class="px-3 py-1.5 text-xs text-gray-500">{{ $participantes->currentPage() }} / {{ $participantes->lastPage() }}</span>
+                    <span class="text-[10px] text-gray-500 uppercase tracking-wide">{{ $participantes->currentPage() }} / {{ $participantes->lastPage() }}</span>
 
                     @if($participantes->hasMorePages())
-                        <a href="{{ $participantes->nextPageUrl() }}" data-link class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50 transition">Próxima</a>
+                        <a href="{{ $participantes->nextPageUrl() }}" data-link class="px-3 py-1.5 text-[10px] text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">Próxima</a>
                     @else
-                        <span class="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-300 text-xs cursor-not-allowed">Próxima</span>
+                        <span class="px-3 py-1.5 text-[10px] text-gray-400 bg-gray-100 border border-gray-200 rounded">Próxima</span>
                     @endif
                 </div>
             </div>
@@ -283,13 +356,13 @@
             {{-- Zero-state --}}
             <div class="px-6 py-12 text-center">
                 @if($importacao->status === 'processando' || $importacao->status === 'pendente')
-                    <svg class="w-10 h-10 text-blue-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                     </svg>
                     <p class="text-sm font-medium text-gray-700">Importação em andamento</p>
                     <p class="text-xs text-gray-500 mt-1">Os participantes aparecerão aqui quando o processamento for concluído.</p>
                 @elseif($importacao->status === 'erro')
-                    <svg class="w-10 h-10 text-red-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                     <p class="text-sm font-medium text-gray-700">Nenhum participante extraído</p>
@@ -304,9 +377,15 @@
             </div>
             @endif
         </div>
+        @endif
 
     </div>
 </div>
+
+@if($emProcessamento)
+<script src="/js/progresso-automacao.js?v={{ @filemtime(public_path('js/progresso-automacao.js')) ?: time() }}"></script>
+<script src="/js/xml-importacao-progresso.js?v={{ @filemtime(public_path('js/xml-importacao-progresso.js')) ?: time() }}"></script>
+@endif
 
 <script>
 (function () {
