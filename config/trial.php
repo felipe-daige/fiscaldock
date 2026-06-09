@@ -2,8 +2,10 @@
 
 return [
     // Bônus de boas-vindas concedido no signup.
-    'creditos' => (int) env('TRIAL_CREDITOS', 100),
-    'validade_dias' => (int) env('TRIAL_VALIDADE_DIAS', 30),
+    // Calibrado em 60cr/60dias (CFO §9 + CLAUDE.md) — 60 dias deixa o usuário ver
+    // ao menos 1 ciclo de re-monitoramento. Sobrescrevível por env.
+    'creditos' => (int) env('TRIAL_CREDITOS', 60),
+    'validade_dias' => (int) env('TRIAL_VALIDADE_DIAS', 60),
 
     // Teto GLOBAL de consultas (CNPJs) liberadas ANTES da 1ª compra — pool único
     // somado entre TODOS os planos pagos abaixo. Esgotou o pool, só liberando com depósito.

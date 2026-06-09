@@ -950,6 +950,35 @@ class DashboardController extends Controller
         ], $data));
     }
 
+    /**
+     * Planos de assinatura (tiers). Página informativa — lê do `subscription_plans`
+     * seedado (fonte: CFO design). "Assinar" fica em breve até a Fase 4 (preapproval).
+     */
+    public function planos(Request $request)
+    {
+        if (! Auth::check()) {
+            return $this->isAjaxRequest($request)
+                ? response()->json(['success' => false, 'message' => 'Voce nao esta logado', 'redirect' => '/login'])
+                : redirect('/login');
+        }
+
+        $user = Auth::user();
+        $planos = \App\Models\SubscriptionPlan::where('is_active', true)->orderBy('ordem')->get();
+        $planoAtual = (new \App\Services\Entitlements\EntitlementService)->planFor($user);
+
+        $planosView = self::AUTH_VIEW_PREFIX.'planos.index';
+        $data = [
+            'planos' => $planos,
+            'planoAtualCodigo' => $planoAtual->codigo,
+        ];
+
+        if ($this->isAjaxRequest($request)) {
+            return view($planosView, $data);
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, array_merge(['initialView' => $planosView], $data));
+    }
+
     public function checkout(Request $request, string $pacote)
     {
         $dados = $this->pricingCatalogService->resolveCheckoutSelection($pacote, $request->query('amount'));

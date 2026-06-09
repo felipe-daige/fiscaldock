@@ -209,11 +209,11 @@
             </div>
             <div class="bg-white rounded border border-gray-300 p-4 text-center space-y-2">
                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Validade</p>
-                <p class="text-sm font-semibold text-gray-900">Créditos pagos não expiram; o bônus do trial expira em 30 dias.</p>
+                <p class="text-sm font-semibold text-gray-900">Créditos pagos não expiram; o bônus do trial expira em {{ config('trial.validade_dias') }} dias.</p>
             </div>
             <div class="bg-white rounded border border-gray-300 p-4 text-center space-y-2">
                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Ofertas</p>
-                <p class="text-sm font-semibold text-gray-900">Business e Enterprise continuam como atalhos promocionais.</p>
+                <p class="text-sm font-semibold text-gray-900">Pacotes promocionais como atalho de recarga. Prefere mensalidade? <a href="/app/planos" data-link class="underline">Ver planos</a>.</p>
             </div>
         </div>
 

@@ -189,7 +189,7 @@
                     <div class="p-6 space-y-4 text-sm text-gray-700">
                         <div class="flex items-start gap-3">
                             <span class="text-[10px] font-bold uppercase tracking-wide text-white rounded px-2 py-0.5" style="background-color: #374151">1</span>
-                            <p>Você escolhe quanto quer depositar acima do mínimo, sem mensalidade e sem assinatura recorrente.</p>
+                            <p>No avulso você escolhe quanto depositar acima do mínimo, sem mensalidade. Prefere créditos inclusos todo mês? <a href="/app/planos" data-link class="text-gray-900 underline hover:text-gray-600">Veja os planos de assinatura</a>.</p>
                         </div>
                         <div class="flex items-start gap-3">
                             <span class="text-[10px] font-bold uppercase tracking-wide text-white rounded px-2 py-0.5" style="background-color: #374151">2</span>

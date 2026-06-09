@@ -36,8 +36,10 @@ class PricingCatalogService
                 'descricao' => 'Atalho promocional para rotina mensal com saldo forte de entrada.',
             ],
             [
+                // slug 'enterprise' mantido por compatibilidade de rota; nome de exibição
+                // é "Volume" para não colidir com o tier de assinatura Enterprise.
                 'slug' => 'enterprise',
-                'nome' => 'Enterprise',
+                'nome' => 'Volume',
                 'creditos' => 5000,
                 'preco' => 1000.00,
                 'badge' => 'Escala',
