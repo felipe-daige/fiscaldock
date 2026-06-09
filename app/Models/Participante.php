@@ -32,6 +32,7 @@ class Participante extends Model
         'telefone',
         'crt',
         'inscricao_estadual',
+        'codigo_municipal',
         'endereco',
         'numero',
         'complemento',
