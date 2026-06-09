@@ -18,14 +18,34 @@
             <p class="text-xs text-gray-500 mt-1">Mensalidade com créditos inclusos, limites de carteira e features premium. Os créditos inclusos cobrem o monitoramento automático do plano.</p>
         </div>
 
-        {{-- Aviso honesto: assinatura recorrente ainda não está ativa --}}
-        <div class="bg-white rounded border border-gray-300 p-4 border-l-4 border-l-amber-500">
-            <p class="text-sm text-gray-700">
-                <span class="font-semibold">Assinatura recorrente em breve.</span>
-                Por enquanto você opera no plano <span class="font-semibold">Free</span> com
-                <a href="/app/creditos" data-link class="text-gray-900 underline hover:text-gray-600">créditos avulsos (top-up)</a>.
-                Os planos abaixo são a escada que entra em cobrança recorrente na próxima fase.
-            </p>
+        {{-- Minha assinatura (quando ativa/inadimplente) --}}
+        @if($assinaturaAtual && in_array($assinaturaAtual->status, ['ativa', 'inadimplente']))
+            <div class="bg-white rounded border border-gray-300 p-4 flex flex-wrap items-center justify-between gap-3">
+                <div class="text-sm text-gray-700">
+                    <span class="font-semibold">Sua assinatura:</span>
+                    {{ $assinaturaAtual->plan->nome ?? '—' }} ({{ $assinaturaAtual->ciclo }})
+                    @if($assinaturaAtual->status === 'inadimplente')
+                        <span class="ml-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">Pagamento pendente</span>
+                    @else
+                        <span class="ml-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Ativa</span>
+                    @endif
+                    @if($assinaturaAtual->renova_em)
+                        <span class="block text-[11px] text-gray-500 mt-1">Próxima cobrança: {{ $assinaturaAtual->renova_em->format('d/m/Y') }}</span>
+                    @endif
+                </div>
+                <button type="button" id="assinatura-cancelar" class="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancelar assinatura</button>
+            </div>
+        @endif
+
+        {{-- Seletor de ciclo --}}
+        <div class="flex items-center gap-4">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ciclo de cobrança:</span>
+            <label class="inline-flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                <input type="radio" name="ciclo" value="mensal" checked> Mensal
+            </label>
+            <label class="inline-flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                <input type="radio" name="ciclo" value="anual"> Anual <span class="text-[11px] font-semibold text-emerald-700">(−17%)</span>
+            </label>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 items-stretch">
@@ -105,7 +125,13 @@
                         @elseif($isEnterprise)
                             <a href="mailto:contato@fiscaldock.com.br?subject=Plano%20Enterprise" class="w-full inline-flex items-center justify-center px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-white rounded" style="background-color: #1f2937">Falar com vendas</a>
                         @else
-                            <button type="button" disabled title="Assinatura recorrente em breve" class="w-full inline-flex items-center justify-center px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400 rounded border border-dashed border-gray-300 bg-white cursor-not-allowed">Assinar — em breve</button>
+                            <button type="button"
+                                data-assinar
+                                data-plano="{{ $plano->codigo }}"
+                                data-nome="{{ $plano->nome }}"
+                                data-ciclo-mensal-centavos="{{ $plano->preco_mensal_centavos }}"
+                                data-ciclo-anual-centavos="{{ $plano->preco_anual_centavos }}"
+                                class="w-full inline-flex items-center justify-center px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-white rounded" style="background-color: #1f2937">Assinar</button>
                         @endif
                     </div>
                 </div>
@@ -129,4 +155,27 @@
         </div>
 
     </div>
+
+    {{-- Modal do cartão (Card Payment Brick) --}}
+    <div id="assinatura-modal" class="hidden fixed inset-0 z-50 items-center justify-center" style="background-color: rgba(17,24,39,.6)">
+        <div class="bg-white rounded-xl w-full max-w-md mx-4 p-5">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-gray-800">Dados do cartão</h3>
+                <button type="button" id="assinatura-fechar" class="text-gray-400 text-xl leading-none">&times;</button>
+            </div>
+            <div id="assinatura-brick"></div>
+            <p id="assinatura-erro" class="hidden mt-3 text-xs" style="color: #dc2626"></p>
+        </div>
+    </div>
 </div>
+
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+<script>
+    window.__MP_PUBLIC_KEY = @json($mpPublicKey);
+    window.__ASSINAR_URL = @json(route('app.assinatura.criar'));
+    window.__CANCELAR_URL = @json(route('app.assinatura.cancelar'));
+    window.__CSRF = @json(csrf_token());
+    window.__MP_TETO_CENTAVOS = @json($mpTetoCentavos);
+    window.__WHATSAPP_URL = @json($whatsappUrl);
+</script>
+<script src="{{ asset('js/assinatura.js') }}"></script>

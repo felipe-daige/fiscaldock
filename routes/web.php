@@ -95,6 +95,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/app/pagamento/mercado-pago', [\App\Http\Controllers\Dashboard\PagamentoMercadoPagoController::class, 'criar'])
         ->name('app.pagamento.mercadopago.criar');
 
+    // Assinatura recorrente (preapproval Mercado Pago) — front envia o card_token do Brick.
+    Route::post('/app/assinatura', [\App\Http\Controllers\Dashboard\AssinaturaController::class, 'criar'])
+        ->name('app.assinatura.criar');
+    Route::post('/app/assinatura/cancelar', [\App\Http\Controllers\Dashboard\AssinaturaController::class, 'cancelar'])
+        ->name('app.assinatura.cancelar');
+
     // Rotas de créditos
     Route::prefix('app/credits')->name('app.credits.')->group(function () {
         Route::get('/balance', [CreditController::class, 'balance'])->name('balance');

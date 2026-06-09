@@ -25,6 +25,8 @@ class MercadoPagoPayment extends Model
 
     protected $fillable = [
         'user_id',
+        'tipo',
+        'account_subscription_id',
         'pacote',
         'mp_payment_id',
         'mp_preference_id',
@@ -48,6 +50,11 @@ class MercadoPagoPayment extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function accountSubscription(): BelongsTo
+    {
+        return $this->belongsTo(AccountSubscription::class);
     }
 
     public function isApproved(): bool

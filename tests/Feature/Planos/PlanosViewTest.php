@@ -32,15 +32,16 @@ it('renderiza os 5 tiers do seeder com preços e créditos inclusos da doc CFO',
     expect($html)->toContain('3.000 créditos inclusos/mês');
 });
 
-it('marca o Free como plano atual de quem não tem assinatura e mostra Assinar em breve nos pagos', function () {
+it('marca o Free como plano atual de quem não tem assinatura e oferece Assinar nos pagos', function () {
     $user = User::factory()->create();
     actingAs($user);
 
     $html = get('/app/planos')->assertOk()->getContent();
 
-    expect($html)->toContain('Plano atual');        // Free é o atual
-    expect($html)->toContain('Assinar — em breve');  // pagos ainda sem preapproval
-    expect($html)->toContain('Falar com vendas');    // enterprise
+    expect($html)->toContain('Plano atual');     // Free é o atual
+    expect($html)->toContain('data-assinar');    // botão real de assinar nos pagos (Fase 4)
+    expect($html)->toContain('Falar com vendas'); // enterprise
+    expect($html)->not->toContain('Assinar — em breve'); // placeholder antigo removido
 });
 
 it('renderiza os tiers mesmo se a tabela estiver vazia (fallback resiliente)', function () {

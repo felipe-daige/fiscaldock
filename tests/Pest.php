@@ -27,6 +27,9 @@ pest()->extend(Tests\TestCase::class)
 pest()->extend(Tests\TestCase::class)
     ->in('Unit/Entitlements');
 
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit/Subscription');
+
 /*
 |--------------------------------------------------------------------------
 | Expectations

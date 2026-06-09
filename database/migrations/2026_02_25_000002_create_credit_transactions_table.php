@@ -28,6 +28,8 @@ return new class extends Migration
             Schema::create('mercado_pago_payments', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+                $table->string('tipo', 20)->default('avulso'); // avulso | subscription
+                $table->foreignId('account_subscription_id')->nullable()->constrained('account_subscriptions')->nullOnDelete();
                 $table->string('pacote'); // slug do catálogo (business, enterprise, custom)
                 $table->string('mp_payment_id')->nullable()->unique(); // id do pagamento no MP
                 $table->string('mp_preference_id')->nullable(); // id de preference (fluxos futuros)

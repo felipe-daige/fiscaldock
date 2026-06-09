@@ -50,6 +50,58 @@ class MercadoPagoClient
         return $response->json() ?? [];
     }
 
+    /**
+     * Cria um preapproval_plan (template de assinatura por tier × ciclo).
+     *
+     * @param  array<string, mixed>  $body
+     * @return array<string, mixed>
+     */
+    public function criarPreapprovalPlan(array $body): array
+    {
+        return $this->request()->post($this->baseUrl.'/preapproval_plan', $body)->json() ?? [];
+    }
+
+    /**
+     * Cria um preapproval (assinatura do usuário a um plano, com card_token).
+     *
+     * @param  array<string, mixed>  $body
+     * @return array<string, mixed>
+     */
+    public function criarPreapproval(array $body): array
+    {
+        return $this->request()->post($this->baseUrl.'/preapproval', $body)->json() ?? [];
+    }
+
+    /**
+     * Consulta um preapproval por id (fonte de verdade do ciclo de vida da assinatura).
+     *
+     * @return array<string, mixed>
+     */
+    public function buscarPreapproval(string $id): array
+    {
+        return $this->request()->get($this->baseUrl.'/preapproval/'.$id)->json() ?? [];
+    }
+
+    /**
+     * Cancela um preapproval (PUT status=cancelled).
+     *
+     * @return array<string, mixed>
+     */
+    public function cancelarPreapproval(string $id): array
+    {
+        return $this->request()->put($this->baseUrl.'/preapproval/'.$id, ['status' => 'cancelled'])->json() ?? [];
+    }
+
+    /**
+     * Consulta uma cobrança recorrente (authorized_payment) por id.
+     *
+     * @return array<string, mixed>
+     */
+    public function buscarAuthorizedPayment(string $id): array
+    {
+        return $this->request()->get($this->baseUrl.'/authorized_payments/'.$id)->json() ?? [];
+    }
+
     private function request(): PendingRequest
     {
         return Http::withToken($this->accessToken)

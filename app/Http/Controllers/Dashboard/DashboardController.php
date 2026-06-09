@@ -965,11 +965,16 @@ class DashboardController extends Controller
         $user = Auth::user();
         $planos = \App\Models\SubscriptionPlan::allActive();
         $planoAtual = (new \App\Services\Entitlements\EntitlementService)->planFor($user);
+        $assinatura = $user->subscription()->with('plan')->first();
 
         $planosView = self::AUTH_VIEW_PREFIX.'planos.index';
         $data = [
             'planos' => $planos,
             'planoAtualCodigo' => $planoAtual->codigo,
+            'assinaturaAtual' => $assinatura,
+            'mpPublicKey' => (string) config('services.mercadopago.public_key'),
+            'mpTetoCentavos' => (int) config('services.mercadopago.preapproval_teto_centavos', 400000),
+            'whatsappUrl' => (string) config('support.whatsapp_url'),
         ];
 
         if ($this->isAjaxRequest($request)) {

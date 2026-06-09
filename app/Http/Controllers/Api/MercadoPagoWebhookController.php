@@ -20,6 +20,8 @@ class MercadoPagoWebhookController extends Controller
     public function __construct(
         private MercadoPagoSignature $signature = new MercadoPagoSignature,
         private ProcessarPagamentoMercadoPago $processar = new ProcessarPagamentoMercadoPago,
+        private \App\Actions\MercadoPago\AtivarAssinaturaMercadoPago $ativarAssinatura = new \App\Actions\MercadoPago\AtivarAssinaturaMercadoPago,
+        private \App\Actions\MercadoPago\RegistrarCobrancaAssinatura $registrarCobranca = new \App\Actions\MercadoPago\RegistrarCobrancaAssinatura,
     ) {}
 
     public function __invoke(Request $request): JsonResponse
@@ -28,25 +30,38 @@ class MercadoPagoWebhookController extends Controller
             return response()->json(['error' => 'assinatura inválida'], 401);
         }
 
-        // Só tratamos notificações de pagamento. Outras (merchant_order, etc.) -> 200 e ignora.
-        $type = $request->input('type', $request->query('type'));
-
-        if ($type !== 'payment') {
-            return response()->json(['status' => 'ignorado'], 200);
-        }
-
-        // PHP troca `data.id` por `data_id` no query string; checamos corpo + as duas formas.
-        $paymentId = (string) ($request->input('data.id')
-            ?? $request->query('data_id')
-            ?? $request->query('data.id')
+        $type = (string) ($request->input('type')
+            ?? $request->query('type')
+            ?? $request->query('topic')
             ?? '');
 
-        if ($paymentId === '') {
-            return response()->json(['error' => 'data.id ausente'], 422);
+        // PHP troca `data.id` por `data_id` no query string; checamos corpo + as formas + `id` (IPN legado).
+        $resourceId = (string) ($request->input('data.id')
+            ?? $request->query('data_id')
+            ?? $request->query('data.id')
+            ?? $request->query('id')
+            ?? '');
+
+        if ($resourceId === '') {
+            return response()->json(['error' => 'id do recurso ausente'], 422);
         }
 
-        $this->processar->execute($paymentId);
-
-        return response()->json(['status' => 'ok'], 200);
+        // payment = avulso (Fase 1); preapproval = ciclo de vida da assinatura;
+        // subscription_authorized_payment = cobrança recorrente (audit/dunning).
+        return match (true) {
+            $type === 'payment' => tap(
+                response()->json(['status' => 'ok'], 200),
+                fn () => $this->processar->execute($resourceId),
+            ),
+            $type === 'subscription_authorized_payment' => tap(
+                response()->json(['status' => 'ok'], 200),
+                fn () => $this->registrarCobranca->execute($resourceId),
+            ),
+            str_contains($type, 'preapproval') => tap(
+                response()->json(['status' => 'ok'], 200),
+                fn () => $this->ativarAssinatura->execute($resourceId),
+            ),
+            default => response()->json(['status' => 'ignorado'], 200),
+        };
     }
 }

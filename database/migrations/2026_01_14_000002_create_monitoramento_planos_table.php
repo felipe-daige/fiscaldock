@@ -56,6 +56,8 @@ return new class extends Migration
                 $table->jsonb('capabilities')->nullable();
                 $table->boolean('is_active')->default(true);
                 $table->integer('ordem')->default(0);
+                $table->string('mp_preapproval_plan_id_mensal')->nullable(); // id do preapproval_plan no MP (ciclo mensal)
+                $table->string('mp_preapproval_plan_id_anual')->nullable();  // id do preapproval_plan no MP (ciclo anual)
                 $table->timestamps();
             });
         }

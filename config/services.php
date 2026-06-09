@@ -63,6 +63,9 @@ return [
         // Secret da assinatura do webhook (gerado no painel MP ao cadastrar a notificação).
         'webhook_secret' => env('MERCADO_PAGO_WEBHOOK_SECRET'),
         'base_url' => env('MERCADO_PAGO_BASE_URL', 'https://api.mercadopago.com'),
+        // Teto de cobrança por transação do preapproval MP (BRL). Acima disso, o MP recusa
+        // ("Cannot pay an amount greater than R$ 4000.00") → roteamos pra checkout assistido (WhatsApp).
+        'preapproval_teto_centavos' => (int) env('MERCADO_PAGO_PREAPPROVAL_TETO_CENTAVOS', 400000),
     ],
 
 ];

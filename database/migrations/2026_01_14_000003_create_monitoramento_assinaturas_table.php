@@ -32,13 +32,16 @@ return new class extends Migration
                 // sem cascade: arquivar plano via is_active, nunca hard-delete (RESTRICT protege assinaturas)
                 $table->foreignId('subscription_plan_id')->constrained('subscription_plans');
                 // string (não enum) de propósito: estados de cobrança podem crescer sem ALTER de constraint
-                $table->string('status')->default('ativa'); // ativa, trial, cancelada, inadimplente
+                $table->string('status')->default('ativa'); // pendente, ativa, trial, cancelada, inadimplente
                 $table->string('ciclo')->default('mensal');  // mensal, anual
                 $table->timestamp('iniciada_em')->nullable();
                 $table->timestamp('renova_em')->nullable();
                 $table->integer('creditos_inclusos_saldo')->default(0);
                 $table->integer('limite_consumo_automatico')->nullable(); // cap do cliente; null = default
                 $table->integer('assentos_extras')->default(0);
+                $table->string('mp_preapproval_id')->nullable()->unique(); // id do preapproval (assinatura) no MP
+                $table->timestamp('proximo_grant_em')->nullable();         // quando o scheduler concede o próximo mês
+                $table->timestamp('ultimo_grant_em')->nullable();          // última concessão (guard de idempotência)
                 $table->timestamps();
             });
         }

@@ -14,6 +14,7 @@ class SubscriptionPlan extends Model
         'creditos_inclusos', 'faixa_slug', 'limite_clientes', 'limite_cnpjs_monitorados',
         'frequencia_padrao_dias', 'profundidade_auto_monitor', 'assentos_inclusos',
         'rollover_cap_multiplicador', 'capabilities', 'is_active', 'ordem',
+        'mp_preapproval_plan_id_mensal', 'mp_preapproval_plan_id_anual',
     ];
 
     protected $casts = [
@@ -81,5 +82,15 @@ class SubscriptionPlan extends Model
     public function capability(string $key, mixed $default = null): mixed
     {
         return $this->capabilities[$key] ?? $default;
+    }
+
+    public function precoCentavos(string $ciclo): int
+    {
+        return $ciclo === 'anual' ? (int) $this->preco_anual_centavos : (int) $this->preco_mensal_centavos;
+    }
+
+    public function mpPlanId(string $ciclo): ?string
+    {
+        return $ciclo === 'anual' ? $this->mp_preapproval_plan_id_anual : $this->mp_preapproval_plan_id_mensal;
     }
 }
