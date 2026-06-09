@@ -86,7 +86,7 @@ Route::middleware('auth')->group(function () {
     // Usuário (Placeholder)
     Route::get('/app/configuracoes', [DashboardController::class, 'configuracoes'])->name('app.configuracoes');
     Route::patch('/app/configuracoes/notificacoes', [DashboardController::class, 'atualizarNotificacaoConfiguracao'])->name('app.configuracoes.notificacoes.update');
-    Route::get('/app/plano', [DashboardController::class, 'meuPlano'])->name('app.plano');
+    Route::get('/app/faixa-comercial', [DashboardController::class, 'meuPlano'])->name('app.faixa-comercial');
     Route::get('/app/planos', [DashboardController::class, 'planos'])->name('app.planos');
     Route::get('/app/checkout/{pacote}', [DashboardController::class, 'checkout'])->name('app.checkout');
     Route::get('/app/creditos', [DashboardController::class, 'creditos'])->name('app.creditos');

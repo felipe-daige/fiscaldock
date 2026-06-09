@@ -3,7 +3,7 @@
 
         <div>
             <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Faixa Comercial</h1>
-            <p class="text-xs text-gray-500 mt-1">Resumo operacional do consumo de créditos e da sua economia atual por volume.</p>
+            <p class="text-xs text-gray-500 mt-1">Sua faixa de desconto nas consultas. Suba comprando créditos ou assinando um plano — quanto mais alta a faixa, menos créditos cada consulta consome.</p>
         </div>
 
         @if(($trialResumo['is_active'] ?? false) || ($trialResumo['is_expired'] ?? false))
@@ -75,17 +75,49 @@
                 </div>
 
                 <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Custo atual por produto</span>
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Custo por consulta em cada faixa</span>
+                        <span class="text-[10px] text-gray-400">quanto mais alta a faixa, menos créditos por consulta</span>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4">
-                        @foreach($pricing['products'] as $product)
-                            <div class="border border-gray-200 rounded p-4">
-                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{{ $product['nome'] }}</p>
-                                <p class="mt-2 text-lg font-bold text-gray-900">{{ number_format($product['credits'], 0, ',', '.') }} créditos</p>
-                                <p class="text-[11px] text-gray-500 mt-1">R$ {{ number_format($product['price'], 2, ',', '.') }} por consulta na faixa {{ $pricing['current_tier']['nome'] }}</p>
-                            </div>
-                        @endforeach
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Produto</th>
+                                    @foreach($pricing['tiers'] as $t)
+                                        @php $isAtual = $t['slug'] === ($pricing['current_tier']['slug'] ?? 'base'); @endphp
+                                        <th class="px-3 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide {{ $isAtual ? 'text-white' : 'text-gray-400' }}"
+                                            @if($isAtual) style="background-color: #1f2937" @endif>
+                                            {{ $t['nome'] }}
+                                            @if($isAtual)<span class="block text-[8px] font-normal normal-case">sua faixa</span>@endif
+                                        </th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @foreach($pricing['products'] as $product)
+                                    <tr class="hover:bg-gray-50/50">
+                                        <td class="px-3 py-2.5 text-gray-700 font-medium whitespace-nowrap">{{ $product['nome'] }}</td>
+                                        @foreach($pricing['tiers'] as $t)
+                                            @php
+                                                $cel = $product['by_tier'][$t['slug']];
+                                                $isAtual = $t['slug'] === ($pricing['current_tier']['slug'] ?? 'base');
+                                            @endphp
+                                            <td class="px-3 py-2.5 text-center {{ $isAtual ? 'bg-gray-50' : '' }}">
+                                                <span class="block {{ $isAtual ? 'font-bold text-gray-900' : 'text-gray-600' }}">{{ $cel['credits'] }} cr</span>
+                                                <span class="block text-[11px] text-gray-500">R$ {{ number_format($cel['price'], 2, ',', '.') }}</span>
+                                                @if($cel['desconto_percent'] > 0)
+                                                    <span class="block text-[10px] font-semibold" style="color: #047857">−{{ $cel['desconto_percent'] }}%</span>
+                                                @endif
+                                            </td>
+                                        @endforeach
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-4 py-2.5 border-t border-gray-100 bg-gray-50">
+                        <p class="text-[11px] text-gray-500">Preço do crédito é fixo (R$ {{ number_format($pricing['credit_unit_price'] ?? 0.20, 2, ',', '.') }}). O que muda por faixa é <span class="font-semibold">quantos créditos cada consulta consome</span> — por isso faixas altas saem mais baratas.</p>
                     </div>
                 </div>
 
@@ -184,19 +216,23 @@
 
                 <div class="bg-white rounded border border-gray-300 overflow-hidden">
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Como funciona</span>
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Como funciona a faixa comercial</span>
                     </div>
                     <div class="p-6 space-y-4 text-sm text-gray-700">
                         <div class="flex items-start gap-3">
                             <span class="text-[10px] font-bold uppercase tracking-wide text-white rounded px-2 py-0.5" style="background-color: #374151">1</span>
-                            <p>No avulso você escolhe quanto depositar acima do mínimo, sem mensalidade. Prefere créditos inclusos todo mês? <a href="/app/planos" data-link class="text-gray-900 underline hover:text-gray-600">Veja os planos de assinatura</a>.</p>
+                            <p>A faixa é um <span class="font-semibold">desconto comercial</span> (Base → X → Y → Z). Quanto mais alta, <span class="font-semibold">menos créditos cada consulta consome</span> — o preço do crédito (R$ {{ number_format($pricing['credit_unit_price'] ?? 0.20, 2, ',', '.') }}) nunca muda.</p>
                         </div>
                         <div class="flex items-start gap-3">
                             <span class="text-[10px] font-bold uppercase tracking-wide text-white rounded px-2 py-0.5" style="background-color: #374151">2</span>
-                            <p>O custo das consultas cai conforme a sua faixa comercial sobe pelo histórico acumulado de créditos pagos.</p>
+                            <p><span class="font-semibold">Caminho 1 — comprando:</span> seu histórico de créditos <span class="font-semibold">pagos</span> acumulados sobe a faixa (X a partir de 1.000, Y de 5.000, Z de 20.000). Créditos de trial/bônus não contam.</p>
                         </div>
                         <div class="flex items-start gap-3">
                             <span class="text-[10px] font-bold uppercase tracking-wide text-white rounded px-2 py-0.5" style="background-color: #374151">3</span>
+                            <p><span class="font-semibold">Caminho 2 — assinando:</span> um plano já entrega a faixa (Profissional → X, Escritório → Y, Enterprise → Z). <a href="/app/planos" data-link class="text-gray-900 underline hover:text-gray-600">Ver planos de assinatura</a>. Vale sempre a <span class="font-semibold">maior</span> das duas — a faixa nunca regride.</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-[10px] font-bold uppercase tracking-wide text-white rounded px-2 py-0.5" style="background-color: #374151">4</span>
                             <p>Créditos comprados não expiram; créditos promocionais do trial expiram ao fim do período informado.</p>
                         </div>
                     </div>

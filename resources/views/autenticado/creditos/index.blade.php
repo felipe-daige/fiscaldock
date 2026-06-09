@@ -127,7 +127,7 @@
             <div>
                 <div class="flex items-center justify-between mb-2">
                     <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Ofertas promocionais</h2>
-                    <a href="/app/plano" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Ver faixa comercial</a>
+                    <a href="/app/faixa-comercial" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Ver faixa comercial</a>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     @foreach(($pricing['featured_offers'] ?? $pacotes) as $pacote)
@@ -156,7 +156,7 @@
         <div class="bg-white rounded border border-gray-300 overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Histórico de créditos</span>
-                <a href="/app/plano" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Ver consumo detalhado</a>
+                <a href="/app/faixa-comercial" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Ver consumo detalhado</a>
             </div>
             @if($historicoCreditos->count() > 0)
                 <div class="overflow-x-auto">

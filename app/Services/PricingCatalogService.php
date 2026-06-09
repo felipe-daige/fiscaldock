@@ -306,8 +306,8 @@ class PricingCatalogService
                 'credits_by_tier' => [
                     'base' => 5,
                     'x' => 5,
-                    'y' => 5,
-                    'z' => 5,
+                    'y' => 4,
+                    'z' => 4,
                 ],
             ],
             [
@@ -316,9 +316,9 @@ class PricingCatalogService
                 'descricao' => 'Consulta para editais e contratação pública com CND Federal, CNDT e FGTS.',
                 'credits_by_tier' => [
                     'base' => 10,
-                    'x' => 10,
-                    'y' => 10,
-                    'z' => 10,
+                    'x' => 9,
+                    'y' => 9,
+                    'z' => 8,
                 ],
             ],
             [
@@ -327,9 +327,9 @@ class PricingCatalogService
                 'descricao' => 'Consulta de regularidade fiscal e trabalhista completa por CNPJ.',
                 'credits_by_tier' => [
                     'base' => 18,
-                    'x' => 18,
-                    'y' => 18,
-                    'z' => 18,
+                    'x' => 17,
+                    'y' => 15,
+                    'z' => 14,
                 ],
             ],
             [
@@ -338,9 +338,9 @@ class PricingCatalogService
                 'descricao' => 'Consulta ampliada de risco com compliance, sanções, CNJ, protestos e processos.',
                 'credits_by_tier' => [
                     'base' => 35,
-                    'x' => 35,
-                    'y' => 35,
-                    'z' => 35,
+                    'x' => 32,
+                    'y' => 30,
+                    'z' => 28,
                 ],
             ],
             [
@@ -528,10 +528,23 @@ class PricingCatalogService
     {
         $progress = $this->getTierProgressForUser($user);
         $tier = $progress['current_tier'];
+        $tiers = $this->getTiers();
         $featuredOffers = array_map(fn (array $package) => $this->decorateOffer($package), $this->getFeaturedOffers());
 
-        $products = array_map(function (array $product) use ($tier) {
+        $products = array_map(function (array $product) use ($tier, $tiers) {
             $credits = $product['credits_by_tier'][$tier['slug']];
+            $creditosBase = (int) $product['credits_by_tier']['base'];
+
+            // Matriz da economia por faixa (Base→Z) — alimenta a tabela comparativa da view.
+            $byTier = [];
+            foreach ($tiers as $t) {
+                $c = (int) $product['credits_by_tier'][$t['slug']];
+                $byTier[$t['slug']] = [
+                    'credits' => $c,
+                    'price' => $this->creditsToCurrency($c),
+                    'desconto_percent' => $creditosBase > 0 ? (int) round((($creditosBase - $c) / $creditosBase) * 100) : 0,
+                ];
+            }
 
             return [
                 'slug' => $product['slug'],
@@ -539,6 +552,9 @@ class PricingCatalogService
                 'descricao' => $product['descricao'],
                 'credits' => $credits,
                 'price' => $this->creditsToCurrency($credits),
+                'credits_base' => $creditosBase,
+                'desconto_percent' => $creditosBase > 0 ? (int) round((($creditosBase - $credits) / $creditosBase) * 100) : 0,
+                'by_tier' => $byTier,
             ];
         }, $this->getProductCatalog());
 
@@ -548,6 +564,7 @@ class PricingCatalogService
             'featured_offers' => $featuredOffers,
             'products' => $products,
             'packages' => $featuredOffers,
+            'tiers' => $tiers,
         ]);
     }
 

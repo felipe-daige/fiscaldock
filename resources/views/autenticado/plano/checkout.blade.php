@@ -21,7 +21,7 @@
         </style>
 
         {{-- Voltar --}}
-        <a href="/app/plano" data-link class="inline-flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-900 hover:underline mb-5 sm:mb-6 py-1 -my-1 transition-colors">
+        <a href="/app/faixa-comercial" data-link class="inline-flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-900 hover:underline mb-5 sm:mb-6 py-1 -my-1 transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -111,7 +111,7 @@
                     <span class="font-semibold" style="color: #047857">{{ number_format($pacote['creditos'], 0, ',', '.') }} créditos</span> serão liberados em instantes.
                 </p>
                 <p class="text-[11px] text-gray-400 mb-6">{{ $pacote['nome'] }} — R$ {{ number_format($pacote['preco'], 2, ',', '.') }}</p>
-                <a href="/app/plano" data-link
+                <a href="/app/faixa-comercial" data-link
                    class="inline-flex items-center justify-center w-full py-2.5 text-white rounded text-sm font-semibold transition-colors"
                    style="background-color: #047857"
                    onmouseover="this.style.backgroundColor='#065f46'"
