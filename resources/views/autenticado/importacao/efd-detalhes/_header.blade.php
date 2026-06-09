@@ -36,6 +36,15 @@
         @if($mostrarNovaImportacao)
             <a href="/app/importacao/efd" data-link class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium">Nova importação</a>
         @endif
+        @if(! $emProcessamento)
+            <button type="button"
+                data-excluir-importacao="{{ $importacao->id }}"
+                data-filename="{{ $importacao->filename }}"
+                data-redirect="/app/importacao/historico"
+                class="px-3 py-1.5 bg-white border border-red-300 text-red-600 hover:bg-red-50 rounded text-xs font-medium">
+                Excluir importação
+            </button>
+        @endif
         @if($isSped && $spedPeriodo)
             <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
                 {{ $spedPeriodo }}

@@ -165,6 +165,15 @@
                                     </td>
                                     <td class="pl-2 pr-3 py-3 text-right whitespace-nowrap">
                                         <a href="{{ $href }}" data-link class="text-xs text-blue-600 hover:text-blue-800 hover:underline">Abrir</a>
+                                        @if($tipo === 'efd')
+                                            @php $proc = ($imp['status'] ?? '') === 'processando'; @endphp
+                                            <button type="button"
+                                                @if($proc) disabled title="Aguarde a conclusão do processamento"
+                                                @else data-excluir-importacao="{{ $id }}" data-filename="{{ $filename }}" title="Excluir importação" @endif
+                                                class="ml-3 text-xs {{ $proc ? 'text-gray-300 cursor-not-allowed' : 'text-red-600 hover:text-red-800' }}">
+                                                Excluir
+                                            </button>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -224,7 +233,7 @@
                                 default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
                             };
                         @endphp
-                        <div class="hist-card px-4 py-3" data-tipo="{{ $tipo }}">
+                        <div class="hist-card px-4 py-3" data-tipo="{{ $tipo }}" data-importacao-card="{{ $id }}">
                             <div class="flex items-center gap-2 flex-wrap mb-2">
                                 <span class="inline-block whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemBadge['hex'] }}">{{ $origemBadge['label'] }}</span>
                                 @if($origemDetalhe)
@@ -233,6 +242,21 @@
                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusBadge['hex'] }}">{{ $statusBadge['label'] }}</span>
                             </div>
                             <a href="{{ $href }}" data-link class="block text-sm text-gray-900 hover:text-gray-600 hover:underline">{{ $filename }}</a>
+                            @if($tipo === 'efd')
+                                @php $procMob = ($imp['status'] ?? '') === 'processando'; @endphp
+                                @if($procMob)
+                                    <button type="button" disabled title="Aguarde a conclusão do processamento"
+                                        class="mt-1 text-xs text-gray-300 cursor-not-allowed">
+                                        Excluir
+                                    </button>
+                                @else
+                                    <button type="button"
+                                        data-excluir-importacao="{{ $id }}" data-filename="{{ $filename }}" title="Excluir importação"
+                                        class="mt-1 text-xs text-red-600 hover:text-red-800">
+                                        Excluir
+                                    </button>
+                                @endif
+                            @endif
                             <div class="mt-2 grid grid-cols-2 gap-3">
                                 <div>
                                     <p class="text-[10px] text-gray-400 uppercase">Cliente</p>
@@ -314,5 +338,130 @@
             if (zeroFiltro) zeroFiltro.classList.toggle('hidden', visiveis > 0);
         });
     });
+})();
+</script>
+
+<div id="modal-excluir-importacao" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+    <div class="w-full max-w-md rounded-lg bg-white shadow-xl">
+        <div class="border-b border-gray-200 px-5 py-4">
+            <h3 class="text-sm font-bold uppercase tracking-wide text-gray-900">Excluir importação</h3>
+            <p class="mt-1 text-xs text-gray-500" id="excluir-arquivo"></p>
+        </div>
+        <div class="px-5 py-4 text-sm text-gray-700">
+            <p class="mb-3">Esta ação é <strong>irreversível</strong>. Serão apagados:</p>
+            <ul id="excluir-impacto" class="mb-4 space-y-1 text-xs text-gray-600"></ul>
+            <label class="flex items-start gap-2 rounded border border-gray-200 p-3">
+                <input type="checkbox" id="excluir-participantes" class="mt-0.5">
+                <span class="text-xs text-gray-700">
+                    Também excluir os participantes desta importação
+                    <span id="excluir-part-detalhe" class="block text-gray-500"></span>
+                </span>
+            </label>
+        </div>
+        <div class="flex justify-end gap-2 border-t border-gray-200 px-5 py-3">
+            <button type="button" id="excluir-cancelar" class="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50">Cancelar</button>
+            <button type="button" id="excluir-confirmar" class="rounded px-3 py-1.5 text-xs font-medium text-white" style="background-color:#dc2626">Excluir definitivamente</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    if (window._excluirImportacaoInit) return;
+    window._excluirImportacaoInit = true;
+
+    var modal = document.getElementById('modal-excluir-importacao');
+    if (!modal) return;
+    var elArquivo = document.getElementById('excluir-arquivo');
+    var elImpacto = document.getElementById('excluir-impacto');
+    var elPartDet = document.getElementById('excluir-part-detalhe');
+    var chkPart = document.getElementById('excluir-participantes');
+    var btnConfirmar = document.getElementById('excluir-confirmar');
+    var btnCancelar = document.getElementById('excluir-cancelar');
+    var atual = { id: null, redirect: null, trigger: null };
+
+    function csrf() {
+        var m = document.querySelector('meta[name="csrf-token"]');
+        return m ? m.getAttribute('content') : '';
+    }
+    function abrir() { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    function fechar() { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+
+    function onClickExcluir(btn) {
+        atual.id = btn.getAttribute('data-excluir-importacao');
+        atual.redirect = btn.getAttribute('data-redirect');
+        atual.trigger = btn;
+        chkPart.checked = false;
+        elArquivo.textContent = btn.getAttribute('data-filename') || '';
+        elImpacto.innerHTML = '<li>Carregando prévia…</li>';
+        elPartDet.textContent = '';
+        abrir();
+
+        fetch('/app/importacao/efd/' + atual.id + '/preview-exclusao', {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+            elImpacto.innerHTML =
+                '<li>' + d.notas + ' notas e ' + d.itens + ' itens</li>' +
+                '<li>' + d.catalogo + ' itens de catálogo</li>' +
+                '<li>' + d.apuracoes + ' apurações · ' + d.retencoes + ' retenções · ' + d.divergencias + ' divergências</li>';
+            var p = d.participantes || {};
+            elPartDet.textContent = (p.orfaos || 0) + ' órfãos serão excluídos · ' + (p.compartilhados || 0) + ' compartilhados serão preservados';
+        })
+        .catch(function () { elImpacto.innerHTML = '<li style="color:#dc2626">Falha ao carregar prévia.</li>'; });
+    }
+
+    function confirmar() {
+        if (!atual.id) return;
+        btnConfirmar.disabled = true;
+        btnConfirmar.textContent = 'Excluindo…';
+        fetch('/app/importacao/efd/' + atual.id, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrf(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ excluir_participantes: chkPart.checked })
+        })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (res) {
+            btnConfirmar.disabled = false;
+            btnConfirmar.textContent = 'Excluir definitivamente';
+            if (!res.ok || !res.j.success) {
+                elImpacto.innerHTML = '<li style="color:#dc2626">' + (res.j.error || 'Falha ao excluir.') + '</li>';
+                return;
+            }
+            fechar();
+            if (atual.redirect) {
+                window.location.href = atual.redirect;
+            } else if (atual.trigger) {
+                var row = atual.trigger.closest('tr, [data-importacao-card]');
+                if (row) row.remove();
+            }
+        })
+        .catch(function () {
+            btnConfirmar.disabled = false;
+            btnConfirmar.textContent = 'Excluir definitivamente';
+            elImpacto.innerHTML = '<li style="color:#dc2626">Erro de rede ao excluir.</li>';
+        });
+    }
+
+    function handler(e) {
+        var btn = e.target.closest('[data-excluir-importacao]');
+        if (btn && !btn.disabled) { e.preventDefault(); onClickExcluir(btn); }
+    }
+    document.addEventListener('click', handler);
+    btnCancelar.addEventListener('click', fechar);
+    btnConfirmar.addEventListener('click', confirmar);
+    modal.addEventListener('click', function (e) { if (e.target === modal) fechar(); });
+
+    window._cleanupFunctions = window._cleanupFunctions || {};
+    window._cleanupFunctions.excluirImportacao = function () {
+        document.removeEventListener('click', handler);
+        window._excluirImportacaoInit = false;
+    };
 })();
 </script>
