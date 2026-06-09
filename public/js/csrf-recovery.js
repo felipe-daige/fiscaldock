@@ -33,6 +33,30 @@
         return /\/(login|logout)(\?|#|$)/.test(url);
     }
 
+    // Monta a URL de login preservando a página atual como ?redirect=, para que
+    // após autenticar o backend devolva o usuário de onde ele estava (caso 2:
+    // sessão expirada no meio de uma navegação AJAX). Só preserva páginas /app/*.
+    function loginUrlComRetorno() {
+        var pagina = window.location.pathname + window.location.search;
+        if (pagina.indexOf('/app/') === 0) {
+            return '/login?redirect=' + encodeURIComponent(pagina);
+        }
+        return '/login';
+    }
+
+    function pareceNaoAutenticado(response) {
+        // Contrato do backend: 401 de sessão expirada vem como JSON {success:false}.
+        return response
+            .clone()
+            .json()
+            .then(function (data) {
+                return !!(data && data.success === false);
+            })
+            .catch(function () {
+                return false;
+            });
+    }
+
     async function getFreshToken(response) {
         // 1) Token novo enviado no corpo do 419 pelo backend.
         try {
@@ -82,18 +106,30 @@
         var retrySource = (input instanceof Request) ? input.clone() : null;
 
         var response = await originalFetch(input, init);
+
+        var url = urlOf(input);
+
+        // Caso 2: sessão expirou durante uma navegação/ação AJAX. O backend
+        // responde 401 JSON. Mandamos pro login preservando a página atual.
+        // login/logout ficam de fora (401 ali = credencial inválida, tratado na tela).
+        if (response.status === 401 && !isAuthRoute(url)) {
+            if (await pareceNaoAutenticado(response)) {
+                window.location.href = loginUrlComRetorno();
+                return response;
+            }
+        }
+
         if (response.status !== 419) {
             return response;
         }
 
-        var url = urlOf(input);
         if (isAuthRoute(url)) {
             return response;
         }
 
         var token = await getFreshToken(response);
         if (!token) {
-            window.location.href = '/login';
+            window.location.href = loginUrlComRetorno();
             return response;
         }
 
@@ -112,7 +148,7 @@
 
         // Ainda 419: a sessão realmente acabou → manda pro login.
         if (retryResponse.status === 419) {
-            window.location.href = '/login';
+            window.location.href = loginUrlComRetorno();
         }
 
         return retryResponse;

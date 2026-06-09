@@ -40,6 +40,14 @@ class AuthController extends Controller
             return redirect('/app/dashboard');
         }
 
+        // Caso 2 (sessão expirada durante navegação AJAX): o front manda o usuário
+        // pra /login?redirect=<página> e nós guardamos esse destino como url.intended
+        // pra que `login()` devolva ele após autenticar. Validado contra open-redirect.
+        $intended = $this->intendedFromQuery($request->query('redirect'));
+        if ($intended !== null) {
+            $request->session()->put('url.intended', $intended);
+        }
+
         if ($request->ajax()) {
             return view('landing_page.auth.login');
         }
@@ -217,19 +225,25 @@ class AuthController extends Controller
         }
 
         // Anti session-fixation: novo ID de sessão após autenticar.
+        // regenerate() preserva os dados da sessão (incl. url.intended).
         $request->session()->regenerate();
 
         Log::info('Login bem-sucedido', ['user_id' => Auth::id()]);
+
+        // Volta para a página que o usuário tentou acessar antes de ser mandado
+        // ao login (url.intended, guardada pelo middleware auth no caso 1 ou por
+        // showLogin() no caso 2); cai em /app/dashboard se não houver destino.
+        $redirect = redirect()->intended('/app/dashboard');
 
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Login realizado com sucesso',
-                'redirect' => '/app/dashboard',
+                'redirect' => $redirect->getTargetUrl(),
             ]);
         }
 
-        return redirect('/app/dashboard');
+        return $redirect;
     }
 
     public function signup(Request $request)
@@ -401,6 +415,39 @@ class AuthController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Sanitiza o parâmetro ?redirect= recebido no login (caso 2).
+     *
+     * Só aceita caminho relativo, same-origin, dentro da área autenticada (/app).
+     * Bloqueia open-redirect: URLs absolutas (http://evil), protocol-relative
+     * (//evil), barra invertida (/\evil) e qualquer caminho fora de /app.
+     */
+    private function intendedFromQuery(?string $raw): ?string
+    {
+        if (! is_string($raw)) {
+            return null;
+        }
+
+        $raw = trim($raw);
+
+        if ($raw === '' || ! str_starts_with($raw, '/')) {
+            return null;
+        }
+
+        // Protocol-relative (//host) ou backslash trick (/\host) escapam a origem.
+        if (str_starts_with($raw, '//') || str_starts_with($raw, '/\\')) {
+            return null;
+        }
+
+        $path = parse_url($raw, PHP_URL_PATH);
+
+        if (! is_string($path) || ! (str_starts_with($path, '/app/') || $path === '/app')) {
+            return null;
+        }
+
+        return $raw;
     }
 
     private function normalizePhone(?string $value): string
