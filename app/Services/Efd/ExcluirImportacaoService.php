@@ -38,6 +38,42 @@ class ExcluirImportacaoService
     }
 
     /**
+     * Exclui a importação e todos os dados derivados, dentro de uma transação.
+     * O cascade de FK (importacao_id) cuida de notas/itens/catálogo/apurações/retenções/divergências.
+     *
+     * @return array{participantes_excluidos:int, participantes_preservados:int}
+     */
+    public function execute(EfdImportacao $imp, bool $excluirParticipantes): array
+    {
+        return DB::transaction(function () use ($imp, $excluirParticipantes) {
+            $candidatos = $this->participantesCandidatos($imp);
+            $orfaos = $this->participantesOrfaos($imp, $candidatos);
+
+            // Sem cascade: histórico do catálogo (importacao_id é nullOnDelete).
+            DB::table('efd_catalogo_historico')->where('importacao_id', $imp->id)->delete();
+
+            $excluidos = 0;
+            if ($excluirParticipantes) {
+                Participante::whereIn('id', $orfaos)->get()->each(function (Participante $p) use (&$excluidos) {
+                    $p->delete();
+                    $excluidos++;
+                });
+            }
+
+            // participantes.importacao_efd_id NÃO tem FK → zerar nos sobreviventes p/ não ficar dangling.
+            Participante::where('importacao_efd_id', $imp->id)->update(['importacao_efd_id' => null]);
+
+            // Dispara o cascade de todos os derivados via FK importacao_id.
+            $imp->delete();
+
+            return [
+                'participantes_excluidos' => $excluidos,
+                'participantes_preservados' => $candidatos->count() - $excluidos,
+            ];
+        });
+    }
+
+    /**
      * Participantes citados pelas notas desta importação ∪ criados por ela.
      *
      * @return \Illuminate\Support\Collection<int,int>

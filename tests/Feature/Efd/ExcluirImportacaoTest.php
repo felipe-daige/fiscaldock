@@ -68,3 +68,59 @@ it('preview conta derivados e classifica participantes orfaos x compartilhados',
         ->and($preview['participantes']['orfaos'])->toBe(1)
         ->and($preview['participantes']['compartilhados'])->toBe(1);
 });
+
+it('execute apaga importacao e cascateia derivados, exclui orfao e preserva compartilhado', function () {
+    $user = User::factory()->create();
+    $cliente = Cliente::create(['user_id' => $user->id, 'razao_social' => 'Acme', 'documento' => '12345678000199']);
+
+    $imp = excluirImpNovaImportacao($user, $cliente);
+    $outraImp = excluirImpNovaImportacao($user, $cliente, ['periodo_inicio' => '2026-02-01', 'periodo_fim' => '2026-02-28']);
+
+    $pOrfao = Participante::create(['user_id' => $user->id, 'cliente_id' => $cliente->id, 'importacao_efd_id' => $imp->id, 'razao_social' => 'Orfao', 'documento' => '11111111000111']);
+    $pCompart = Participante::create(['user_id' => $user->id, 'cliente_id' => $cliente->id, 'importacao_efd_id' => $imp->id, 'razao_social' => 'Compart', 'documento' => '22222222000122']);
+
+    $nota = excluirImpNovaNota($user, $cliente, $imp, $pOrfao);
+    \App\Models\EfdNotaItem::create(['efd_nota_id' => $nota->id, 'user_id' => $user->id, 'numero_item' => 1, 'codigo_item' => 'X', 'descricao' => 'item', 'valor_total' => 0]);
+    $notaOutra = excluirImpNovaNota($user, $cliente, $outraImp, $pCompart);
+
+    app(ExcluirImportacaoService::class)->execute($imp->fresh(), excluirParticipantes: true);
+
+    expect(EfdImportacao::find($imp->id))->toBeNull()
+        ->and(EfdNota::where('importacao_id', $imp->id)->count())->toBe(0)
+        ->and(\App\Models\EfdNotaItem::find($nota->id))->toBeNull()
+        ->and(Participante::find($pOrfao->id))->toBeNull()
+        ->and(Participante::find($pCompart->id))->not->toBeNull()
+        ->and(Participante::find($pCompart->id)->importacao_efd_id)->toBeNull()
+        ->and(EfdNota::find($notaOutra->id))->not->toBeNull();
+});
+
+it('execute com excluirParticipantes=false preserva todos os participantes mas zera importacao_efd_id', function () {
+    $user = User::factory()->create();
+    $cliente = Cliente::create(['user_id' => $user->id, 'razao_social' => 'Acme', 'documento' => '12345678000199']);
+    $imp = excluirImpNovaImportacao($user, $cliente);
+    $p = Participante::create(['user_id' => $user->id, 'cliente_id' => $cliente->id, 'importacao_efd_id' => $imp->id, 'razao_social' => 'P', 'documento' => '11111111000111']);
+    excluirImpNovaNota($user, $cliente, $imp, $p);
+
+    app(ExcluirImportacaoService::class)->execute($imp->fresh(), excluirParticipantes: false);
+
+    expect(Participante::find($p->id))->not->toBeNull()
+        ->and(Participante::find($p->id)->importacao_efd_id)->toBeNull();
+});
+
+it('execute remove efd_catalogo_historico e nao estorna creditos nem apaga cliente', function () {
+    $user = User::factory()->create();
+    $cliente = Cliente::create(['user_id' => $user->id, 'razao_social' => 'Acme', 'documento' => '12345678000199']);
+    $imp = excluirImpNovaImportacao($user, $cliente, ['creditos_cobrados' => 5]);
+    \Illuminate\Support\Facades\DB::table('efd_catalogo_historico')->insert([
+        'user_id' => $user->id, 'cliente_id' => $cliente->id, 'cod_item' => 'X',
+        'campo' => 'cod_ncm', 'valor_anterior' => '1', 'valor_novo' => '2',
+        'importacao_id' => $imp->id, 'changed_at' => now(),
+    ]);
+    $saldoAntes = app(\App\Services\CreditService::class)->getBalance($user->fresh());
+
+    app(ExcluirImportacaoService::class)->execute($imp->fresh(), excluirParticipantes: true);
+
+    expect(\Illuminate\Support\Facades\DB::table('efd_catalogo_historico')->where('importacao_id', $imp->id)->count())->toBe(0)
+        ->and(Cliente::find($cliente->id))->not->toBeNull()
+        ->and(app(\App\Services\CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes);
+});
