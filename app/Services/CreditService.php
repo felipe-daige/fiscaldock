@@ -39,19 +39,20 @@ class CreditService
             return true;
         }
 
-        if (!$this->hasEnough($user, $amount)) {
+        if (! $this->hasEnough($user, $amount)) {
             Log::warning('Tentativa de desconto de creditos insuficientes', [
                 'user_id' => $user->id,
                 'credits_atual' => $user->credits,
                 'amount_solicitado' => $amount,
             ]);
+
             return false;
         }
 
-        return DB::transaction(function () use ($user, $amount, $type, $description, $source) {
+        $ok = DB::transaction(function () use ($user, $amount, $type, $description, $source) {
             $freshUser = User::lockForUpdate()->find($user->id);
 
-            if (!$freshUser || $freshUser->credits < $amount) {
+            if (! $freshUser || $freshUser->credits < $amount) {
                 return false;
             }
 
@@ -76,6 +77,13 @@ class CreditService
 
             return true;
         });
+
+        // Efeito colateral pós-débito: auto top-up por saldo baixo (nunca bloqueia/lança).
+        if ($ok) {
+            app(\App\Services\MercadoPago\AutoTopUpTrigger::class)->aposDeducao($user);
+        }
+
+        return $ok;
     }
 
     /**
@@ -92,7 +100,7 @@ class CreditService
         DB::transaction(function () use ($user, $amount, $type, $description, $source) {
             $freshUser = User::lockForUpdate()->find($user->id);
 
-            if (!$freshUser) {
+            if (! $freshUser) {
                 return;
             }
 
@@ -172,6 +180,7 @@ class CreditService
             if ($amount <= 0) {
                 $freshUser->trial_credits_remaining = 0;
                 $freshUser->save();
+
                 return 0;
             }
 
