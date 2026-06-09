@@ -2,10 +2,13 @@
 
 namespace App\Actions\MercadoPago;
 
+use App\Mail\RecargaAutomaticaPausada;
 use App\Models\MercadoPagoPayment;
+use App\Models\RecargaAutomatica;
 use App\Services\CreditService;
 use App\Services\MercadoPago\MercadoPagoClient;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Processa uma notificação de pagamento do Mercado Pago.
@@ -58,6 +61,32 @@ class ProcessarPagamentoMercadoPago
                 );
 
                 $payment->credited_at = now();
+            }
+
+            // Auto top-up por saldo: reflete o resultado na config de recarga (exclusiva).
+            if ($payment->tipo === 'auto_topup') {
+                $recarga = RecargaAutomatica::where('user_id', $payment->user_id)
+                    ->where('gatilho', RecargaAutomatica::GATILHO_SALDO)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($recarga !== null) {
+                    if ($status === MercadoPagoPayment::STATUS_APPROVED) {
+                        $recarga->update([
+                            'status' => RecargaAutomatica::STATUS_ATIVA,
+                            'cobranca_em_andamento' => false,
+                            'ultima_cobranca_em' => now(),
+                        ]);
+                    } elseif (in_array($status, [MercadoPagoPayment::STATUS_REJECTED, MercadoPagoPayment::STATUS_CANCELLED], true)) {
+                        $recarga->update([
+                            'status' => RecargaAutomatica::STATUS_INADIMPLENTE,
+                            'cobranca_em_andamento' => false,
+                        ]);
+                        Mail::to($payment->user->email)->send(
+                            new RecargaAutomaticaPausada($payment->user, 'cartão recusado'),
+                        );
+                    }
+                }
             }
 
             $payment->save();
