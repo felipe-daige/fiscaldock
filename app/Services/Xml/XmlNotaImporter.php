@@ -31,9 +31,9 @@ class XmlNotaImporter
             if (empty($existente->status_autorizacao) && ! empty($h['status_autorizacao'])) {
                 $existente->update([
                     'protocolo_autorizacao' => $h['protocolo_autorizacao'],
-                    'data_autorizacao'      => $h['data_autorizacao'],
-                    'status_autorizacao'    => $h['status_autorizacao'],
-                    'motivo_autorizacao'    => $h['motivo_autorizacao'],
+                    'data_autorizacao' => $h['data_autorizacao'],
+                    'status_autorizacao' => $h['status_autorizacao'],
+                    'motivo_autorizacao' => $h['motivo_autorizacao'],
                 ]);
 
                 return 'duplicado_atualizado';
@@ -67,20 +67,20 @@ class XmlNotaImporter
             $destPart = $this->participante($userId, $destDoc, $h['dest_razao_social'], $h['dest_uf'], $h['dest_municipio_ibge'], $h['dest_ie'], $imp);
 
             $nota = XmlNota::create(array_merge($h, [
-                'user_id'              => $userId,
-                'importacao_xml_id'    => $imp->id,
-                'cliente_id'           => $imp->cliente_id,
-                'payload'              => $payload,
+                'user_id' => $userId,
+                'importacao_xml_id' => $imp->id,
+                'cliente_id' => $imp->cliente_id,
+                'payload' => $payload,
                 'emit_participante_id' => $emitPart?->id,
                 'dest_participante_id' => $destPart?->id,
-                'emit_cliente_id'      => $this->clienteId($userId, $emitDoc),
-                'dest_cliente_id'      => $this->clienteId($userId, $destDoc),
+                'emit_cliente_id' => $this->clienteId($userId, $emitDoc),
+                'dest_cliente_id' => $this->clienteId($userId, $destDoc),
             ]));
 
             foreach ($parsed['itens'] as $item) {
                 XmlNotaItem::create(array_merge($item, [
                     'xml_nota_id' => $nota->id,
-                    'user_id'     => $userId,
+                    'user_id' => $userId,
                 ]));
             }
 
@@ -98,13 +98,13 @@ class XmlNotaImporter
         return Participante::firstOrCreate(
             ['user_id' => $userId, 'documento' => $doc],
             [
-                'razao_social'       => $razao,
-                'uf'                 => $uf,
-                'codigo_municipal'   => $mun,
+                'razao_social' => $razao,
+                'uf' => $uf,
+                'codigo_municipal' => $mun,
                 'inscricao_estadual' => $ie,
-                'origem_tipo'        => 'xml',
-                'importacao_xml_id'  => $imp->id,
-                'tipo_documento'     => $tipoDoc,
+                'origem_tipo' => 'xml',
+                'importacao_xml_id' => $imp->id,
+                'tipo_documento' => $tipoDoc,
             ]
         );
         // NÃO atualizamos situacao_cadastral/regime_tributario/ultima_consulta_em (regra do projeto).

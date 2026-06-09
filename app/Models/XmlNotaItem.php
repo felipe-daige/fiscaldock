@@ -22,10 +22,10 @@ class XmlNotaItem extends Model
     protected function casts(): array
     {
         return [
-            'quantidade'     => 'decimal:4',
+            'quantidade' => 'decimal:4',
             'valor_unitario' => 'decimal:4',
-            'valor_total'    => 'decimal:2',
-            'metadados'      => 'array',
+            'valor_total' => 'decimal:2',
+            'metadados' => 'array',
         ];
     }
 

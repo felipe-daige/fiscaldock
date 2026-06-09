@@ -4,26 +4,25 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
+use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\XmlImportacao;
-use App\Models\MonitoramentoPlano;
 use App\Models\XmlNota;
 use App\Services\CreditService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
-use Illuminate\Http\JsonResponse;
 use ZipArchive;
 
 class XmlImportacaoController extends Controller
 {
     private const AUTH_VIEW_PREFIX = 'autenticado.importacao.';
+
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
 
     public function __construct(
@@ -35,9 +34,9 @@ class XmlImportacaoController extends Controller
      */
     public function index(Request $request)
     {
-        $xmlView = self::AUTH_VIEW_PREFIX . 'xml';
+        $xmlView = self::AUTH_VIEW_PREFIX.'xml';
 
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return $this->redirectToLogin($request);
         }
 
@@ -63,6 +62,7 @@ class XmlImportacaoController extends Controller
 
         if ($this->isAjaxRequest($request)) {
             $renderedView = view($xmlView, $data)->render();
+
             return response($renderedView)->header('Content-Type', 'text/html');
         }
 
@@ -74,9 +74,9 @@ class XmlImportacaoController extends Controller
      */
     public function show(Request $request, $id)
     {
-        $view = self::AUTH_VIEW_PREFIX . 'xml-detalhes';
+        $view = self::AUTH_VIEW_PREFIX.'xml-detalhes';
 
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return $this->redirectToLogin($request);
         }
 
@@ -93,7 +93,7 @@ class XmlImportacaoController extends Controller
         $perPageParticipantes = in_array((int) $request->input('per_page_participantes'), $allowedPerPages) ? (int) $request->input('per_page_participantes') : 10;
 
         // Dual-path: participante_ids (n8n v2) ou importacao_xml_id (legado)
-        if (!empty($importacao->participante_ids)) {
+        if (! empty($importacao->participante_ids)) {
             $participantes = Participante::whereIn('id', $importacao->participante_ids)
                 ->where('user_id', $userId)
                 ->orderBy('razao_social')
@@ -121,13 +121,13 @@ class XmlImportacaoController extends Controller
      */
     public function indexDev(Request $request)
     {
-        $xmlView = self::AUTH_VIEW_PREFIX . 'xml';
+        $xmlView = self::AUTH_VIEW_PREFIX.'xml';
 
-        if (!view()->exists($xmlView)) {
+        if (! view()->exists($xmlView)) {
             abort(404);
         }
 
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return $this->redirectToLogin($request);
         }
 
@@ -153,11 +153,12 @@ class XmlImportacaoController extends Controller
 
         if ($this->isAjaxRequest($request)) {
             $renderedView = view($xmlView, $data)->render();
+
             return response($renderedView)->header('Content-Type', 'text/html');
         }
 
         return view(self::AUTH_LAYOUT_VIEW, array_merge([
-            'initialView' => $xmlView
+            'initialView' => $xmlView,
         ], $data));
     }
 
@@ -177,12 +178,12 @@ class XmlImportacaoController extends Controller
 
         $validated = $request->validate([
             'tipo_documento' => 'required|in:NFE',
-            'modo_envio'     => 'required|in:zip,xml',
-            'cliente_id'     => ['required', 'integer', \Illuminate\Validation\Rule::exists('clientes', 'id')->where('user_id', $user->id)],
-            'tab_id'         => 'required|string|max:36',
-            'arquivos'       => 'required|array|min:1|max:100',
-            'arquivos.*.nome'            => 'required|string|max:255',
-            'arquivos.*.tipo'            => 'required|string|max:100',
+            'modo_envio' => 'required|in:zip,xml',
+            'cliente_id' => ['required', 'integer', \Illuminate\Validation\Rule::exists('clientes', 'id')->where('user_id', $user->id)],
+            'tab_id' => 'required|string|max:36',
+            'arquivos' => 'required|array|min:1|max:100',
+            'arquivos.*.nome' => 'required|string|max:255',
+            'arquivos.*.tipo' => 'required|string|max:100',
             'arquivos.*.conteudo_base64' => 'required|string',
         ]);
 
@@ -201,14 +202,14 @@ class XmlImportacaoController extends Controller
 
         try {
             $importacao = XmlImportacao::create([
-                'user_id'             => $user->id,
-                'cliente_id'          => $validated['cliente_id'],
-                'tipo_documento'      => 'NFE',
-                'modo_envio'          => $validated['modo_envio'],
-                'total_arquivos'      => count($validated['arquivos']),
+                'user_id' => $user->id,
+                'cliente_id' => $validated['cliente_id'],
+                'tipo_documento' => 'NFE',
+                'modo_envio' => $validated['modo_envio'],
+                'total_arquivos' => count($validated['arquivos']),
                 'tamanho_total_bytes' => $tamanhoTotal,
-                'status'              => 'pendente',
-                'iniciado_em'         => now(),
+                'status' => 'pendente',
+                'iniciado_em' => now(),
             ]);
 
             $dir = "xml-imports/{$importacao->id}";
@@ -221,9 +222,9 @@ class XmlImportacaoController extends Controller
             );
 
             return response()->json([
-                'success'       => true,
+                'success' => true,
                 'importacao_id' => $importacao->id,
-                'message'       => 'Importação iniciada com sucesso.',
+                'message' => 'Importação iniciada com sucesso.',
             ]);
         } catch (\Throwable $e) {
             Log::error('XmlImportacao: exceção ao iniciar', ['user_id' => $user->id, 'error' => $e->getMessage()]);
@@ -248,7 +249,7 @@ class XmlImportacaoController extends Controller
             $tmp = tempnam(sys_get_temp_dir(), 'xmlimp_').'.zip';
             file_put_contents($tmp, base64_decode($validated['arquivos'][0]['conteudo_base64']));
             try {
-                $zip = new ZipArchive();
+                $zip = new ZipArchive;
                 if ($zip->open($tmp) === true) {
                     for ($i = 0; $i < $zip->numFiles; $i++) {
                         $name = $zip->getNameIndex($i);
@@ -286,12 +287,12 @@ class XmlImportacaoController extends Controller
      * Usa fallback com comando unzip se ZipArchive falhar.
      * Retorna -1 se não conseguir contar (n8n fará a contagem).
      *
-     * @param string $zipPath Caminho para o arquivo ZIP
+     * @param  string  $zipPath  Caminho para o arquivo ZIP
      * @return int Quantidade de XMLs encontrados, ou -1 se indisponível
      */
     private function contarXmlsNoZip(string $zipPath): int
     {
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         $result = $zip->open($zipPath);
 
         if ($result !== true) {
@@ -307,6 +308,7 @@ class XmlImportacaoController extends Controller
                 Log::info('contarXmlsNoZip: ZIP aceito via magic bytes, contagem será feita pelo n8n', [
                     'zipPath' => $zipPath,
                 ]);
+
                 return -1; // -1 indica que n8n fará a contagem
             }
 
@@ -318,12 +320,13 @@ class XmlImportacaoController extends Controller
             $name = $zip->getNameIndex($i);
             if ($name &&
                 str_ends_with(strtolower($name), '.xml') &&
-                !str_starts_with($name, '__MACOSX/')) {
+                ! str_starts_with($name, '__MACOSX/')) {
                 $count++;
             }
         }
 
         $zip->close();
+
         return $count;
     }
 
@@ -336,11 +339,11 @@ class XmlImportacaoController extends Controller
         $nomeBase = pathinfo($nome, PATHINFO_FILENAME);
         $nomeBaseSanitizado = preg_replace('/[^a-zA-Z0-9_-]/', '_', $nomeBase);
 
-        if (!in_array(strtolower($extensao), ['xml', 'zip'])) {
+        if (! in_array(strtolower($extensao), ['xml', 'zip'])) {
             $extensao = 'xml';
         }
 
-        return $nomeBaseSanitizado . '.' . strtolower($extensao);
+        return $nomeBaseSanitizado.'.'.strtolower($extensao);
     }
 
     /**
@@ -348,7 +351,7 @@ class XmlImportacaoController extends Controller
      */
     public function streamProgresso(Request $request)
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return response()->json([
                 'success' => false,
                 'error' => 'Usuário não autenticado.',
@@ -358,7 +361,7 @@ class XmlImportacaoController extends Controller
         $userId = auth()->id();
         $tabId = $request->query('tab_id');
 
-        if (!$tabId) {
+        if (! $tabId) {
             return response()->json([
                 'success' => false,
                 'error' => 'tab_id obrigatório.',
@@ -400,7 +403,7 @@ class XmlImportacaoController extends Controller
                             $lastDataHash = $currentHash;
 
                             // Enviar dados de progresso
-                            echo "data: " . json_encode($data) . "\n\n";
+                            echo 'data: '.json_encode($data)."\n\n";
 
                             if (ob_get_level() > 0) {
                                 ob_flush();
@@ -449,11 +452,11 @@ class XmlImportacaoController extends Controller
 
             // Se chegou no limite, encerrar
             if ($tentativas >= $maxTentativas) {
-                echo "data: " . json_encode([
+                echo 'data: '.json_encode([
                     'status' => 'timeout',
                     'progresso' => 0,
                     'mensagem' => 'Tempo limite atingido. Tente novamente.',
-                ]) . "\n\n";
+                ])."\n\n";
                 if (ob_get_level() > 0) {
                     ob_flush();
                 }
@@ -476,7 +479,7 @@ class XmlImportacaoController extends Controller
      */
     public function validar(Request $request): JsonResponse
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return response()->json([
                 'success' => false,
                 'error' => 'Usuário não autenticado.',
@@ -538,7 +541,7 @@ class XmlImportacaoController extends Controller
         }
 
         $tempFile = tempnam(sys_get_temp_dir(), 'xml_validate_');
-        if (!$tempFile) {
+        if (! $tempFile) {
             return response()->json([
                 'success' => false,
                 'error' => 'Erro ao criar arquivo temporário.',
@@ -548,7 +551,7 @@ class XmlImportacaoController extends Controller
         try {
             file_put_contents($tempFile, $content);
 
-            $zip = new ZipArchive();
+            $zip = new ZipArchive;
             $result = $zip->open($tempFile);
 
             if ($result !== true) {
@@ -615,7 +618,7 @@ class XmlImportacaoController extends Controller
                 $entryName = $zip->getNameIndex($i);
                 if ($entryName &&
                     str_ends_with(strtolower($entryName), '.xml') &&
-                    !str_starts_with($entryName, '__MACOSX/')) {
+                    ! str_starts_with($entryName, '__MACOSX/')) {
                     $totalXmls++;
                 }
             }
@@ -665,14 +668,14 @@ class XmlImportacaoController extends Controller
     {
         // Verificar se unzip está disponível
         $whichResult = Process::run(['which', 'unzip']);
-        if (!$whichResult->successful()) {
+        if (! $whichResult->successful()) {
             return ['success' => false, 'error' => 'unzip não disponível no sistema'];
         }
 
         // Testar integridade do ZIP
         $testResult = Process::run(['unzip', '-t', $tempFile]);
 
-        if (!$testResult->successful()) {
+        if (! $testResult->successful()) {
             return [
                 'success' => false,
                 'error' => trim($testResult->errorOutput()) ?: 'ZIP inválido',
@@ -682,7 +685,7 @@ class XmlImportacaoController extends Controller
         // Listar conteúdo e contar XMLs (excluindo __MACOSX)
         $listResult = Process::run(['unzip', '-l', $tempFile]);
 
-        if (!$listResult->successful()) {
+        if (! $listResult->successful()) {
             // ZIP é válido mas não conseguimos listar - retornar sucesso com 0 XMLs
             return ['success' => true, 'total_xmls' => 0];
         }
@@ -695,7 +698,7 @@ class XmlImportacaoController extends Controller
 
         foreach ($lines as $line) {
             // Formato típico: "  12345  2024-01-01 10:00   path/to/file.xml"
-            if (preg_match('/\.xml$/i', $line) && !preg_match('/__MACOSX/i', $line)) {
+            if (preg_match('/\.xml$/i', $line) && ! preg_match('/__MACOSX/i', $line)) {
                 $totalXmls++;
             }
         }
@@ -710,7 +713,7 @@ class XmlImportacaoController extends Controller
      * Esta verificação é usada como último fallback quando ZipArchive
      * e unzip falham em abrir o arquivo (comum com ZIPs do Mac).
      *
-     * @param string $content Conteúdo binário do arquivo
+     * @param  string  $content  Conteúdo binário do arquivo
      * @return bool True se os magic bytes indicam um ZIP
      */
     private function isValidZipMagicBytes(string $content): bool
@@ -734,7 +737,7 @@ class XmlImportacaoController extends Controller
      * ou é um alias. O conteúdo começa com "book" seguido de bytes nulos
      * e contém "mark" nos primeiros 16 bytes.
      *
-     * @param string $content Conteúdo binário do arquivo
+     * @param  string  $content  Conteúdo binário do arquivo
      * @return bool True se é um Apple Finder Bookmark
      */
     private function isAppleBookmark(string $content): bool
@@ -758,12 +761,13 @@ class XmlImportacaoController extends Controller
         $previousErrors = libxml_use_internal_errors(true);
 
         try {
-            $dom = new \DOMDocument();
+            $dom = new \DOMDocument;
             $loaded = $dom->loadXML($content);
 
-            if (!$loaded) {
+            if (! $loaded) {
                 $errors = libxml_get_errors();
                 libxml_clear_errors();
+
                 return response()->json([
                     'success' => false,
                     'error' => 'XML mal formado.',
@@ -793,7 +797,7 @@ class XmlImportacaoController extends Controller
     private function detectarTipoDocumento(\DOMDocument $dom): ?string
     {
         $rootElement = $dom->documentElement;
-        if (!$rootElement) {
+        if (! $rootElement) {
             return null;
         }
 
@@ -858,23 +862,23 @@ class XmlImportacaoController extends Controller
     private function redirectToLogin(Request $request)
     {
         session(['url.intended' => $request->fullUrl()]);
+
         return redirect()->route('login');
     }
 
     /**
      * Busca o CNPJ do cliente pelo ID.
      *
-     * @param int|null $clienteId
      * @return string|null CNPJ limpo (apenas numeros) ou null
      */
     private function getClienteCnpj(?int $clienteId): ?string
     {
-        if (!$clienteId) {
+        if (! $clienteId) {
             return null;
         }
 
         $cliente = Cliente::find($clienteId);
-        if (!$cliente || empty($cliente->documento)) {
+        if (! $cliente || empty($cliente->documento)) {
             return null;
         }
 
@@ -887,7 +891,7 @@ class XmlImportacaoController extends Controller
      */
     public function getParticipantes(Request $request, int $importacaoId): JsonResponse
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return response()->json([
                 'success' => false,
                 'error' => 'Usuario nao autenticado.',
@@ -901,7 +905,7 @@ class XmlImportacaoController extends Controller
             ->where('user_id', $userId)
             ->first();
 
-        if (!$importacao) {
+        if (! $importacao) {
             return response()->json([
                 'success' => false,
                 'error' => 'Importacao nao encontrada.',
@@ -919,7 +923,7 @@ class XmlImportacaoController extends Controller
             $participanteIds = $this->extrairParticipanteIdsDasNotas($importacaoId, $userId);
         }
 
-        if (!empty($participanteIds)) {
+        if (! empty($participanteIds)) {
             $participantesQuery = \App\Models\Participante::whereIn('id', $participanteIds)
                 ->where('user_id', $userId)
                 ->orderBy('razao_social')
@@ -1044,7 +1048,7 @@ class XmlImportacaoController extends Controller
      */
     public function salvarCnpjsNovos(Request $request, int $importacaoId): JsonResponse
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return response()->json([
                 'success' => false,
                 'error' => 'Usuario nao autenticado.',
@@ -1058,7 +1062,7 @@ class XmlImportacaoController extends Controller
             ->where('user_id', $userId)
             ->first();
 
-        if (!$importacao) {
+        if (! $importacao) {
             return response()->json([
                 'success' => false,
                 'error' => 'Importacao nao encontrada.',
@@ -1196,7 +1200,7 @@ class XmlImportacaoController extends Controller
 
             return response()->json([
                 'success' => false,
-                'error' => 'Erro ao salvar CNPJs: ' . $e->getMessage(),
+                'error' => 'Erro ao salvar CNPJs: '.$e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -1208,8 +1212,8 @@ class XmlImportacaoController extends Controller
      * Busca emit_participante_id e dest_participante_id únicos das notas.
      * Salva os IDs no registro para próximas consultas.
      *
-     * @param int $importacaoId ID da importação
-     * @param int $userId ID do usuário (para validação)
+     * @param  int  $importacaoId  ID da importação
+     * @param  int  $userId  ID do usuário (para validação)
      * @return array IDs únicos dos participantes
      */
     private function extrairParticipanteIdsDasNotas(int $importacaoId, int $userId): array
@@ -1234,7 +1238,7 @@ class XmlImportacaoController extends Controller
         $participanteIds = array_values(array_unique(array_merge($emitIds, $destIds)));
 
         // Se encontrou IDs, salvar no registro para próximas consultas
-        if (!empty($participanteIds)) {
+        if (! empty($participanteIds)) {
             try {
                 XmlImportacao::where('id', $importacaoId)
                     ->where('user_id', $userId)
