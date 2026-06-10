@@ -2321,6 +2321,13 @@
 
                     console.log('[Monitoramento XML] Importacao iniciada:', data);
 
+                    // Doc único já no acervo: o backend não reimporta — leva direto pra view
+                    // individual da nota existente (todos os dados já estão lá).
+                    if (data.duplicado && data.nota_url) {
+                        window.location.href = data.nota_url;
+                        return;
+                    }
+
                     // Padrão EFD: o acompanhamento (throttle) e o resultado final acontecem na
                     // própria view de detalhe/histórico da importação. Redireciona pra lá levando
                     // o tab_id (pro SSE); ao concluir, o servidor renderiza o resultado consolidado.

@@ -105,7 +105,7 @@ class NotaFiscalController extends Controller
         if ($origem === 'xml') {
             $nota = XmlNota::where('id', $id)
                 ->where('user_id', $userId)
-                ->with(['emitCliente', 'destCliente', 'cliente'])
+                ->with(['emitCliente', 'destCliente', 'cliente', 'itens'])
                 ->first();
 
             if (! $nota) {

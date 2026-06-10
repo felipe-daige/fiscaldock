@@ -9,6 +9,7 @@ use App\Models\Participante;
 use App\Models\XmlImportacao;
 use App\Models\XmlNota;
 use App\Services\CreditService;
+use App\Services\Xml\NfeXmlParser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 use ZipArchive;
 
@@ -329,6 +331,22 @@ class XmlImportacaoController extends Controller
             $dir = "xml-imports/{$importacao->id}";
             $totalXmls = $this->extrairXmlsParaStorage($validated, $dir);
 
+            // Guard de re-importação (doc único): 1 XML cuja chave já existe no acervo →
+            // não reimporta, leva direto pra view individual da nota. Lotes (>1) seguem o
+            // fluxo normal (processa novos, ignora duplicados, mostra o aviso no resultado).
+            if ($totalXmls === 1 && ($existente = $this->notaDuplicadaNoLote($dir, (int) $user->id))) {
+                $importacao->delete();
+                Storage::disk('local')->deleteDirectory($dir);
+
+                return response()->json([
+                    'success' => true,
+                    'duplicado' => true,
+                    'nota_id' => $existente->id,
+                    'nota_url' => route('app.notas.detalhes', ['origem' => 'xml', 'id' => $existente->id]),
+                    'message' => 'Esta nota já está no seu acervo.',
+                ]);
+            }
+
             $importacao->update(['status' => 'processando', 'total_xmls' => $totalXmls]);
 
             \App\Jobs\ProcessarXmlImportacaoJob::dispatch(
@@ -392,6 +410,35 @@ class XmlImportacaoController extends Controller
         }
 
         return $count;
+    }
+
+    /**
+     * Guard de doc único: se o diretório do lote tem 1 XML cuja chave_acesso já está
+     * no acervo do usuário, retorna a nota existente (alvo do redirect). Resolução é
+     * server-side pela chave do arquivo — nunca por ID vindo do front. Parse falho não
+     * bloqueia (retorna null → o import segue o fluxo normal e o Job trata o erro).
+     */
+    private function notaDuplicadaNoLote(string $dir, int $userId): ?XmlNota
+    {
+        $disk = Storage::disk('local');
+        $arquivo = collect($disk->files($dir))
+            ->first(fn ($f) => str_ends_with(strtolower($f), '.xml'));
+        if (! $arquivo) {
+            return null;
+        }
+
+        try {
+            $parsed = app(NfeXmlParser::class)->parse($disk->get($arquivo));
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        $chave = $parsed['header']['chave_acesso'] ?? null;
+        if (! $chave) {
+            return null;
+        }
+
+        return XmlNota::where('user_id', $userId)->where('chave_acesso', $chave)->first();
     }
 
     /**
