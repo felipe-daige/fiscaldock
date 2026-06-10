@@ -66,14 +66,17 @@ class XmlNotaImporter
         $h['emit_documento'] = $h['emit_documento'] ?? '';
         $h['dest_documento'] = $h['dest_documento'] ?? '';
 
-        return DB::transaction(function () use ($parsed, $h, $userId, $imp, $emitDoc, $destDoc, $emitCliente, $destCliente, $donoAusente) {
+        return DB::transaction(function () use ($parsed, $h, $userId, $imp, $emitDoc, $destDoc, $emitCliente, $destCliente, $donoAusente, $lado) {
             $payload = $parsed['payload'];
             if ($donoAusente) {
                 $payload['_dono_ausente'] = true;
             }
 
-            $emitPart = $this->participante($userId, $emitDoc, $h['emit_razao_social'], $h['emit_uf'], $h['emit_municipio_ibge'], $h['emit_ie'], $imp);
-            $destPart = $this->participante($userId, $destDoc, $h['dest_razao_social'], $h['dest_uf'], $h['dest_municipio_ibge'], $h['dest_ie'], $imp);
+            // Só a CONTRAPARTE (lado não-dono) vira participante. O lado dono é o cliente
+            // (vinculado por *_cliente_id), nunca participante. Sem dono na nota ($lado null,
+            // raro com cliente obrigatório) → ambos os lados são contrapartes.
+            $emitPart = $lado === 'emit' ? null : $this->participante($userId, $emitDoc, $h['emit_razao_social'], $h['emit_uf'], $h['emit_municipio_ibge'], $h['emit_ie'], $imp);
+            $destPart = $lado === 'dest' ? null : $this->participante($userId, $destDoc, $h['dest_razao_social'], $h['dest_uf'], $h['dest_municipio_ibge'], $h['dest_ie'], $imp);
 
             $nota = XmlNota::create(array_merge($h, [
                 'user_id' => $userId,

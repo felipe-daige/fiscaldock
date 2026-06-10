@@ -36,8 +36,35 @@ it('importa nota nova, cria itens e classifica saída quando o dono é o emitent
     $nota = XmlNota::where('user_id', $user->id)->first();
     expect($nota->tipo_nota)->toBe(XmlNota::TIPO_SAIDA);
     expect($nota->itens()->count())->toBe(7);
-    expect($nota->emit_participante_id)->not->toBeNull();
+    // Dono = emitente → emitente é o cliente (não participante); só a contraparte (dest).
+    expect($nota->emit_participante_id)->toBeNull();
     expect($nota->dest_participante_id)->not->toBeNull();
+});
+
+it('só a contraparte vira participante — o dono nunca', function () {
+    $user = User::factory()->create();
+
+    // Saída (dono = emitente): emit não é participante, dest é.
+    $impSaida = novaImportacaoXml($user);
+    app(XmlNotaImporter::class)->importar(parsedFixture(), '97551165000193', $impSaida);
+    $saida = XmlNota::where('importacao_xml_id', $impSaida->id)->first();
+    expect($saida->emit_participante_id)->toBeNull();
+    expect($saida->dest_participante_id)->not->toBeNull();
+
+    // Só 1 participante criado (a contraparte/dest).
+    expect(Participante::where('user_id', $user->id)->count())->toBe(1);
+});
+
+it('entrada: o destinatário (dono) não vira participante, só o emitente', function () {
+    $user = User::factory()->create();
+    $imp = novaImportacaoXml($user);
+
+    // Dono = destinatário (44373108000600) → entrada.
+    app(XmlNotaImporter::class)->importar(parsedFixture(), '44373108000600', $imp);
+    $nota = XmlNota::where('user_id', $user->id)->first();
+
+    expect($nota->dest_participante_id)->toBeNull();
+    expect($nota->emit_participante_id)->not->toBeNull();
 });
 
 it('classifica entrada quando o dono é o destinatário', function () {
