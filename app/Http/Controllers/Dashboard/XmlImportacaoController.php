@@ -28,8 +28,66 @@ class XmlImportacaoController extends Controller
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
 
     public function __construct(
-        protected CreditService $creditService
+        protected CreditService $creditService,
+        protected \App\Services\Xml\ExcluirImportacaoXmlService $excluir,
     ) {}
+
+    /**
+     * Importação XML do dono autenticado (ou 404).
+     */
+    private function importacaoDoDono($id): XmlImportacao
+    {
+        return XmlImportacao::where('id', $id)
+            ->where('user_id', (int) Auth::id())
+            ->firstOrFail();
+    }
+
+    /**
+     * Prévia de impacto da exclusão (modal).
+     */
+    public function previewExclusao(Request $request, $id): JsonResponse
+    {
+        if (! Auth::check()) {
+            return response()->json(['success' => false, 'error' => 'Usuário não autenticado.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        return response()->json($this->excluir->preview($this->importacaoDoDono($id)));
+    }
+
+    /**
+     * Exclui a importação XML e seus derivados.
+     */
+    public function destroy(Request $request, $id): JsonResponse
+    {
+        if (! Auth::check()) {
+            return response()->json(['success' => false, 'error' => 'Usuário não autenticado.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $imp = $this->importacaoDoDono($id);
+
+        if (in_array($imp->status, ['processando', 'pendente'], true)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Importação em processamento não pode ser excluída. Aguarde a conclusão.',
+            ], Response::HTTP_CONFLICT);
+        }
+
+        $excluirParticipantes = $request->boolean('excluir_participantes');
+        $resultado = $this->excluir->execute($imp, $excluirParticipantes);
+
+        Log::info('Importação XML excluída', [
+            'user_id' => (int) Auth::id(),
+            'importacao_id' => (int) $id,
+            'excluir_participantes' => $excluirParticipantes,
+            'resultado' => $resultado,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Importação excluída com sucesso.',
+            'resultado' => $resultado,
+        ]);
+    }
 
     /**
      * Página de importação de XMLs (placeholder - em desenvolvimento).

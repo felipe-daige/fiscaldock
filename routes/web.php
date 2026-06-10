@@ -201,6 +201,8 @@ Route::middleware('auth')->group(function () {
         // XML (NF-e, NFS-e, CT-e)
         Route::get('/xml', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'index'])->name('xml');
         Route::get('/xml/{id}', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'show'])->name('xml.detalhes');
+        Route::get('/xml/{id}/preview-exclusao', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'previewExclusao'])->name('xml.preview-exclusao');
+        Route::delete('/xml/{id}', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'destroy'])->name('xml.destroy');
         Route::post('/xml/validar', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'validar'])->name('xml.validar');
         Route::post('/xml/importar', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'importar'])->name('xml.importar');
         Route::get('/xml/progresso/stream', [\App\Http\Controllers\Dashboard\XmlImportacaoController::class, 'streamProgresso'])->name('xml.progresso.stream');
