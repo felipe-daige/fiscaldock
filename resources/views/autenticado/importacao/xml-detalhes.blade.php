@@ -39,6 +39,15 @@
 
             <div class="flex flex-wrap items-center gap-2">
                 <a href="/app/importacao/xml" data-link class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium">Nova importação</a>
+                @if(! $emProcessamento)
+                    <button type="button"
+                        data-excluir-xml="{{ $importacao->id }}"
+                        data-filename="{{ $importacao->filename ?: ('Importação #'.$importacao->id) }}"
+                        data-redirect="/app/importacao/historico"
+                        class="px-3 py-1.5 rounded text-xs font-medium text-white" style="background-color: #dc2626">
+                        Excluir
+                    </button>
+                @endif
                 <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $tipoStyle }}">{{ $tipoDocLabel }}</span>
                 <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $badgeStyle }}">{{ $badgeLabel }}</span>
             </div>
@@ -583,3 +592,7 @@
     });
 })();
 </script>
+
+@if(! $emProcessamento)
+    @include('autenticado.importacao._modal-excluir-xml')
+@endif

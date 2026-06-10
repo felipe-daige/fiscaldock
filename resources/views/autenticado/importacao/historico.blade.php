@@ -175,11 +175,18 @@
                                     </td>
                                     <td class="pl-2 pr-3 py-3 text-right whitespace-nowrap">
                                         <a href="{{ $href }}" data-link class="text-xs text-blue-600 hover:text-blue-800 hover:underline">Abrir</a>
+                                        @php $proc = in_array($imp['status'] ?? '', ['processando', 'pendente'], true); @endphp
                                         @if($tipo === 'efd')
-                                            @php $proc = ($imp['status'] ?? '') === 'processando'; @endphp
                                             <button type="button"
                                                 @if($proc) disabled title="Aguarde a conclusão do processamento"
                                                 @else data-excluir-importacao="{{ $id }}" data-filename="{{ $filename }}" title="Excluir importação" @endif
+                                                class="ml-3 text-xs {{ $proc ? 'text-gray-300 cursor-not-allowed' : 'text-red-600 hover:text-red-800' }}">
+                                                Excluir
+                                            </button>
+                                        @elseif($tipo === 'xml')
+                                            <button type="button"
+                                                @if($proc) disabled title="Aguarde a conclusão do processamento"
+                                                @else data-excluir-xml="{{ $id }}" data-filename="{{ $filename }}" title="Excluir importação" @endif
                                                 class="ml-3 text-xs {{ $proc ? 'text-gray-300 cursor-not-allowed' : 'text-red-600 hover:text-red-800' }}">
                                                 Excluir
                                             </button>
@@ -262,8 +269,8 @@
                             @if($competencia)
                                 <span class="block text-[11px] text-gray-500 mt-0.5">{{ $competencia }}</span>
                             @endif
-                            @if($tipo === 'efd')
-                                @php $procMob = ($imp['status'] ?? '') === 'processando'; @endphp
+                            @php $procMob = in_array($imp['status'] ?? '', ['processando', 'pendente'], true); @endphp
+                            @if($tipo === 'efd' || $tipo === 'xml')
                                 @if($procMob)
                                     <button type="button" disabled title="Aguarde a conclusão do processamento"
                                         class="mt-1 text-xs text-gray-300 cursor-not-allowed">
@@ -271,7 +278,8 @@
                                     </button>
                                 @else
                                     <button type="button"
-                                        data-excluir-importacao="{{ $id }}" data-filename="{{ $filename }}" title="Excluir importação"
+                                        @if($tipo === 'efd') data-excluir-importacao="{{ $id }}" @else data-excluir-xml="{{ $id }}" @endif
+                                        data-filename="{{ $filename }}" title="Excluir importação"
                                         class="mt-1 text-xs text-red-600 hover:text-red-800">
                                         Excluir
                                     </button>
@@ -360,6 +368,8 @@
     });
 })();
 </script>
+
+@include('autenticado.importacao._modal-excluir-xml')
 
 <div id="modal-excluir-importacao" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
     <div class="w-full max-w-md rounded-lg bg-white shadow-xl">
