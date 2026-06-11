@@ -241,13 +241,12 @@ class XmlImportacaoController extends Controller
             // definido (ex.: forçado/âncora com notas de empresas não cadastradas) também
             // ganham atribuição por grupo + alerta. Não roda no caminho do picker single-side.
             if ($importacao->cliente_id && ! $gruposClientes) {
-                $grupos = $this->definirClienteService->gruposPorDocumento($importacao);
-                if (count($grupos['emit']) + count($grupos['dest']) > 0) {
-                    $gruposClientes = $grupos;
-                    $notasSemDono = XmlNota::where('importacao_xml_id', $id)
-                        ->where('user_id', $userId)
-                        ->whereNull('cliente_id')
-                        ->count();
+                $notasSemDono = XmlNota::where('importacao_xml_id', $id)
+                    ->where('user_id', $userId)
+                    ->whereNull('cliente_id')
+                    ->count();
+                if ($notasSemDono > 0) {
+                    $gruposClientes = $this->definirClienteService->gruposPorDocumento($importacao);
                 }
             }
         }
