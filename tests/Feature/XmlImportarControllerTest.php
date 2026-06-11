@@ -35,6 +35,20 @@ it('exige cliente_id (escolha do cliente é obrigatória no upload)', function (
     Bus::assertNotDispatched(ProcessarXmlImportacaoJob::class);
 });
 
+it('aceita criar_cliente_lado sem cliente_id e despacha com ownerLado', function () {
+    Bus::fake();
+    Storage::fake('local');
+    $user = User::factory()->create();
+    $payload = payloadImportar(1);
+    unset($payload['cliente_id']);
+    $payload['criar_cliente_lado'] = 'emit';
+
+    $this->actingAs($user)->postJson('/app/importacao/xml/importar', $payload)
+        ->assertOk()->assertJson(['success' => true]);
+
+    Bus::assertDispatched(ProcessarXmlImportacaoJob::class, fn ($job) => $job->ownerLado === 'emit' && $job->ownerDoc === '');
+});
+
 it('despacha o Job e persiste os XMLs no storage', function () {
     Bus::fake();
     Storage::fake('local');

@@ -67,6 +67,26 @@ it('entrada: o destinatário (dono) não vira participante, só o emitente', fun
     expect($nota->emit_participante_id)->not->toBeNull();
 });
 
+it('criar pelo lado: cria o Cliente do lado escolhido e marca a contraparte como participante', function () {
+    $user = User::factory()->create();
+    $imp = novaImportacaoXml($user);
+
+    // ownerLado='emit' (sem cliente pré-cadastrado) → emitente vira Cliente novo.
+    $status = app(XmlNotaImporter::class)->importar(parsedFixture(), '', $imp, 'emit');
+
+    expect($status)->toBe('novo');
+    $cliente = Cliente::where('user_id', $user->id)->where('documento', '97551165000193')->first();
+    expect($cliente)->not->toBeNull();
+    expect($cliente->razao_social)->not->toBeNull();
+
+    $nota = XmlNota::where('user_id', $user->id)->first();
+    expect($nota->tipo_nota)->toBe(XmlNota::TIPO_SAIDA);
+    expect($nota->emit_cliente_id)->toBe($cliente->id);
+    expect($nota->emit_participante_id)->toBeNull();      // dono (cliente) não é participante
+    expect($nota->dest_participante_id)->not->toBeNull(); // contraparte é participante
+    expect(Participante::where('user_id', $user->id)->count())->toBe(1);
+});
+
 it('classifica entrada quando o dono é o destinatário', function () {
     $user = User::factory()->create();
     $imp  = novaImportacaoXml($user);

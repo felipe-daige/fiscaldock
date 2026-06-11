@@ -350,7 +350,8 @@ class XmlImportacaoController extends Controller
         $validated = $request->validate([
             'tipo_documento' => 'required|in:NFE',
             'modo_envio' => 'required|in:zip,xml',
-            'cliente_id' => ['required', 'integer', \Illuminate\Validation\Rule::exists('clientes', 'id')->where('user_id', $user->id)],
+            'cliente_id' => ['required_without:criar_cliente_lado', 'nullable', 'integer', \Illuminate\Validation\Rule::exists('clientes', 'id')->where('user_id', $user->id)],
+            'criar_cliente_lado' => ['required_without:cliente_id', 'nullable', 'in:emit,dest'],
             'tab_id' => 'required|string|max:36',
             'arquivos' => 'required|array|min:1|max:100',
             'arquivos.*.nome' => 'required|string|max:255',
@@ -366,13 +367,19 @@ class XmlImportacaoController extends Controller
             return response()->json(['success' => false, 'error' => 'Tamanho total excede 200MB.'], Response::HTTP_BAD_REQUEST);
         }
 
-        // Cliente é obrigatório (dono/perspectiva escolhido no upload) → vira o ownerDoc
-        // forçado e o importacao.cliente_id, que o histórico exibe. A classificação
-        // entrada/saída do importer (resolverDono) continua intacta — só sempre forçada.
-        $clienteId = $validated['cliente_id'];
-        $ownerDoc = (string) $this->getClienteCnpj($clienteId);
-        if ($ownerDoc === '') {
-            return response()->json(['success' => false, 'error' => 'Cliente selecionado sem documento cadastrado.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        // Dono/perspectiva: ou um cliente JÁ cadastrado (ownerDoc forçado), ou o modo
+        // "criar pelo lado" (ownerLado emit/dest) — o importer cria o cliente desse lado a
+        // partir da nota e o Job preenche importacao.cliente_id. Em ambos o histórico exibe.
+        $ownerLado = $validated['criar_cliente_lado'] ?? '';
+        $clienteId = $validated['cliente_id'] ?? null;
+        $ownerDoc = '';
+        if ($ownerLado === '') {
+            $ownerDoc = (string) $this->getClienteCnpj($clienteId);
+            if ($ownerDoc === '') {
+                return response()->json(['success' => false, 'error' => 'Cliente selecionado sem documento cadastrado.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        } else {
+            $clienteId = null; // definido pelo Job a partir do dono criado
         }
 
         // Nome do arquivo enviado (padrão EFD): ZIP/XML único = o próprio nome; vários
@@ -417,7 +424,7 @@ class XmlImportacaoController extends Controller
             $importacao->update(['status' => 'processando', 'total_xmls' => $totalXmls]);
 
             \App\Jobs\ProcessarXmlImportacaoJob::dispatch(
-                $importacao->id, (int) $user->id, $validated['tab_id'], $ownerDoc, $dir
+                $importacao->id, (int) $user->id, $validated['tab_id'], $ownerDoc, $dir, $ownerLado
             );
 
             return response()->json([

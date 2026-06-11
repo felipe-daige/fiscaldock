@@ -59,6 +59,25 @@ it('conta duplicados ao reprocessar o mesmo diretório', function () {
     expect(XmlNota::where('user_id', $user->id)->count())->toBe(10);
 });
 
+it('modo criar-pelo-lado: cria o cliente e backfilla o cliente_id da importação', function () {
+    Storage::fake('local');
+    $user = App\Models\User::factory()->create();
+    $imp = XmlImportacao::create([
+        'user_id' => $user->id, 'tipo_documento' => 'NFE', 'modo_envio' => 'zip',
+        'status' => 'processando', 'iniciado_em' => now(),
+    ]);
+    $dir = semearXmls($imp->id); // 10 fixtures, todas com emit 97551165000193
+
+    (new ProcessarXmlImportacaoJob($imp->id, $user->id, 'tab-1', '', $dir, 'emit'))
+        ->handle(app(\App\Services\Xml\NfeXmlParser::class), app(\App\Services\Xml\XmlNotaImporter::class));
+
+    $cliente = App\Models\Cliente::where('user_id', $user->id)->where('documento', '97551165000193')->first();
+    expect($cliente)->not->toBeNull();
+
+    $imp->refresh();
+    expect($imp->cliente_id)->toBe($cliente->id); // backfill do dono mais comum
+});
+
 it('deduplica a mesma chave repetida dentro do mesmo lote', function () {
     Storage::fake('local');
     $user = User::factory()->create();

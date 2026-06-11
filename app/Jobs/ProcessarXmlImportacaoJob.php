@@ -30,6 +30,7 @@ class ProcessarXmlImportacaoJob implements ShouldQueue
         public string $tabId,
         public string $ownerDoc,
         public string $storageDir,
+        public string $ownerLado = '',
     ) {}
 
     public function handle(NfeXmlParser $parser, XmlNotaImporter $importer): void
@@ -53,7 +54,7 @@ class ProcessarXmlImportacaoJob implements ShouldQueue
             $i++;
             try {
                 $parsed = $parser->parse(Storage::disk('local')->get($path));
-                $status = $importer->importar($parsed, $this->ownerDoc, $imp);
+                $status = $importer->importar($parsed, $this->ownerDoc, $imp, $this->ownerLado ?: null);
                 if (in_array($status, ['novo', 'sem_dono'], true)) {
                     $novos++;
                 } elseif (in_array($status, ['duplicado', 'duplicado_atualizado'], true)) {
@@ -79,8 +80,21 @@ class ProcessarXmlImportacaoJob implements ShouldQueue
 
         $valorTotal = (float) XmlNota::where('importacao_xml_id', $imp->id)->sum('valor_total');
 
+        // Modo "criar cliente pelo lado": define o cliente da importação como o dono mais
+        // comum (o lado escolhido), pro histórico exibir. No modo forçado já vem do create.
+        $clienteImportacao = $imp->cliente_id;
+        if ($this->ownerLado !== '' && ! $clienteImportacao) {
+            $col = $this->ownerLado === 'emit' ? 'emit_cliente_id' : 'dest_cliente_id';
+            $clienteImportacao = XmlNota::where('importacao_xml_id', $imp->id)
+                ->whereNotNull($col)
+                ->groupBy($col)
+                ->orderByRaw('COUNT(*) DESC')
+                ->value($col);
+        }
+
         $imp->update([
             'status' => 'concluido',
+            'cliente_id' => $clienteImportacao,
             'total_xmls' => $total,
             'xmls_processados' => $total,
             'xmls_novos' => $novos,

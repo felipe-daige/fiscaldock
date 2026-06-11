@@ -19,9 +19,11 @@ class XmlNotaImporter
     /**
      * @param  string|null  $ownerDoc  CNPJ do dono FORÇADO (override manual). Vazio/null = modo
      *                                 AUTO: infere o dono pelo cliente cadastrado que casa.
+     * @param  string|null  $ownerLado  'emit'|'dest' = modo CRIAR CLIENTE PELO LADO: esse lado é o
+     *                                  dono e vira Cliente (criado se novo); o outro é participante.
      * @return 'novo'|'duplicado'|'duplicado_atualizado'|'sem_dono'
      */
-    public function importar(array $parsed, ?string $ownerDoc, XmlImportacao $imp): string
+    public function importar(array $parsed, ?string $ownerDoc, XmlImportacao $imp, ?string $ownerLado = null): string
     {
         $userId = (int) $imp->user_id;
         $h = $parsed['header'];
@@ -53,7 +55,28 @@ class XmlNotaImporter
         $emitCliente = $this->clienteInfo($userId, $emitDoc);
         $destCliente = $this->clienteInfo($userId, $destDoc);
 
-        [$lado, $donoAusente] = $this->resolverDono($ownerDoc, $emitDoc, $destDoc, $emitCliente, $destCliente);
+        if ($ownerLado === 'emit' || $ownerLado === 'dest') {
+            // Modo "criar cliente pelo lado": o lado escolhido é o dono → vira Cliente
+            // (criado se novo, a partir dos dados da nota); o outro lado é participante.
+            $lado = $ownerLado;
+            $donoAusente = false;
+            $donoDoc = $lado === 'emit' ? $emitDoc : $destDoc;
+            if (! empty($donoDoc)) {
+                $cli = $this->criarClienteDono(
+                    $userId, $donoDoc,
+                    $lado === 'emit' ? $h['emit_razao_social'] : $h['dest_razao_social'],
+                    $lado === 'emit' ? $h['emit_uf'] : $h['dest_uf'],
+                    $lado === 'emit' ? $h['emit_ie'] : $h['dest_ie'],
+                );
+                if ($lado === 'emit') {
+                    $emitCliente = $cli;
+                } else {
+                    $destCliente = $cli;
+                }
+            }
+        } else {
+            [$lado, $donoAusente] = $this->resolverDono($ownerDoc, $emitDoc, $destDoc, $emitCliente, $destCliente);
+        }
 
         if ($lado === 'emit') {
             $h['tipo_nota'] = XmlNota::TIPO_SAIDA;
@@ -164,6 +187,26 @@ class XmlNotaImporter
             ]
         );
         // NÃO atualizamos situacao_cadastral/regime_tributario/ultima_consulta_em (regra do projeto).
+    }
+
+    /**
+     * Find-or-create do Cliente do lado dono (modo "criar cliente pelo lado"), com os dados
+     * da nota. Espelha o find-or-create do participante, mas grava em `clientes`.
+     */
+    private function criarClienteDono(int $userId, string $doc, ?string $razao, ?string $uf, ?string $ie): Cliente
+    {
+        return Cliente::firstOrCreate(
+            ['user_id' => $userId, 'documento' => $doc],
+            [
+                'tipo_pessoa' => strlen($doc) === 11 ? 'PF' : 'PJ',
+                'razao_social' => $razao,
+                'nome' => $razao,
+                'uf' => $uf,
+                'inscricao_estadual' => $ie,
+                'ativo' => true,
+                'is_empresa_propria' => false,
+            ]
+        );
     }
 
     /** Cliente do usuário que casa com o documento (id + flag empresa própria), ou null. */

@@ -41,6 +41,24 @@
                                     @endforeach
                                 </select>
                                 <p class="text-[11px] text-gray-400 mt-1">Escolha de quem são estas notas — define a perspectiva (entrada/saída) e passa a aparecer no histórico. <a href="/app/clientes" data-link class="text-gray-600 hover:text-gray-900 underline">Cadastrar novo cliente</a>.</p>
+
+                                <div class="mt-3">
+                                    <label class="flex items-start gap-2 cursor-pointer">
+                                        <input type="checkbox" id="xml-criar-cliente" class="mt-0.5">
+                                        <span class="text-[11px] text-gray-600">O cliente ainda não está cadastrado — <strong>criar automaticamente</strong> a partir das notas.</span>
+                                    </label>
+                                    <div id="xml-criar-cliente-lado" class="hidden mt-2 pl-6">
+                                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Confirme: o cliente é o…</p>
+                                        <div class="flex flex-wrap gap-4">
+                                            <label class="flex items-center gap-1.5 text-[13px] text-gray-700 cursor-pointer">
+                                                <input type="radio" name="xml-cliente-lado" value="emit"> Emitente <span class="text-gray-400">(estas são saídas)</span>
+                                            </label>
+                                            <label class="flex items-center gap-1.5 text-[13px] text-gray-700 cursor-pointer">
+                                                <input type="radio" name="xml-cliente-lado" value="dest"> Destinatário <span class="text-gray-400">(estas são entradas)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="mb-4">
                                 <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Tipo de Documento</label>
@@ -892,7 +910,10 @@
                 return;
             }
 
-            const hasCliente = (document.getElementById('xml-cliente')?.value || '') !== '';
+            const criarCliente = document.getElementById('xml-criar-cliente')?.checked;
+            const ladoEscolhido = !!document.querySelector('input[name="xml-cliente-lado"]:checked');
+            const clienteSelecionado = (document.getElementById('xml-cliente')?.value || '') !== '';
+            const hasCliente = criarCliente ? ladoEscolhido : clienteSelecionado;
             const hasTipoDoc = getSelectedTipoDoc() !== '';
             const hasModoEnvio = getSelectedModoEnvio() !== '';
             const hasFiles = selectedFiles.length > 0;
@@ -1256,6 +1277,27 @@
         if (xmlClienteSelect) {
             xmlClienteSelect.addEventListener('change', updateImportButtonState);
         }
+
+        // Criar cliente automaticamente (pelo lado): alterna o seletor x a escolha do lado
+        const criarClienteChk = document.getElementById('xml-criar-cliente');
+        const criarClienteLado = document.getElementById('xml-criar-cliente-lado');
+        if (criarClienteChk) {
+            criarClienteChk.addEventListener('change', function() {
+                const on = criarClienteChk.checked;
+                if (criarClienteLado) criarClienteLado.classList.toggle('hidden', !on);
+                if (xmlClienteSelect) {
+                    xmlClienteSelect.disabled = on;
+                    if (on) xmlClienteSelect.value = '';
+                }
+                if (!on) {
+                    document.querySelectorAll('input[name="xml-cliente-lado"]').forEach(r => { r.checked = false; });
+                }
+                updateImportButtonState();
+            });
+        }
+        document.querySelectorAll('input[name="xml-cliente-lado"]').forEach(r => {
+            r.addEventListener('change', updateImportButtonState);
+        });
 
         // Dropzone click
         if (dropzone && fileInput) {
@@ -2282,11 +2324,18 @@
                     const payload = {
                         tipo_documento: tipoDoc,
                         modo_envio: modoEnvio,
-                        cliente_id: clienteId,
                         tab_id: tabId,
                         salvar_movimentacoes: false,
                         arquivos: arquivos
                     };
+                    // Cliente: existente (cliente_id) OU criar pelo lado escolhido (criar_cliente_lado).
+                    const criarClienteAuto = document.getElementById('xml-criar-cliente')?.checked;
+                    const ladoAuto = document.querySelector('input[name="xml-cliente-lado"]:checked');
+                    if (criarClienteAuto && ladoAuto) {
+                        payload.criar_cliente_lado = ladoAuto.value;
+                    } else {
+                        payload.cliente_id = clienteId;
+                    }
 
                     let response = await fetch('/app/importacao/xml/importar', {
                         method: 'POST',
