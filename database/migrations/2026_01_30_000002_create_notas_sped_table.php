@@ -94,6 +94,12 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('cliente_id')->constrained('clientes')->cascadeOnDelete();
 
+            // ── 0110 — Regime de Apuração (preenchido por UPDATE após o INSERT do M*) ──
+            $table->string('cod_inc_tributaria', 2)->nullable();      // COD_INC_TRIB: 1=NC, 2=Cum, 3=Misto NC>50%, 4=Misto Cum>=50%
+            $table->string('ind_apropriacao_credito', 2)->nullable(); // IND_APRO_CRED: só em regime não-cumulativo
+            $table->string('cod_tipo_contribuicao', 2)->nullable();   // COD_TIPO_CONT
+            $table->string('ind_regime_cumulativo', 2)->nullable();   // IND_REG_CUM
+
             // ── M200 — Consolidação PIS do Período ──
             $table->decimal('pis_nao_cumulativo', 15, 2)->default(0);
             $table->decimal('pis_credito_descontado', 15, 2)->default(0);

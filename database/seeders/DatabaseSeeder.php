@@ -26,16 +26,12 @@ class DatabaseSeeder extends Seeder
                 'password' => bcrypt('12312312'),
                 'empresa' => 'F. DEVECCHI DAIGE E CIA LTDA',
                 'cargo' => 'Socio-Administrador',
-                'cnpj' => '00000000000191',
+                'cnpj' => '63112970000107',
                 'credits' => 100,
             ]
         );
 
         // Popular planos de monitoramento
         $this->call(MonitoramentoPlanoSeeder::class);
-
-        // Popular dados mock de monitoramento (participantes, assinaturas, consultas)
-        $this->call(MonitoramentoMockDataSeeder::class);
-
     }
 }

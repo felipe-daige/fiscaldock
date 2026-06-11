@@ -35,7 +35,7 @@
                     'validacao' => [
                         'cor' => 'blue',
                         'icone' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
-                        'consultas_display' => ['Situação Cadastral', 'Dados Cadastrais', 'Simples Nacional', 'MEI'],
+                        'consultas_display' => ['Situação Cadastral', 'Dados Cadastrais', 'Regime Tributário'],
                         'casos_uso' => ['Conferir regime tributário', 'Validar inscrição estadual', 'Qualificar novos fornecedores'],
                     ],
                     'licitacao' => [

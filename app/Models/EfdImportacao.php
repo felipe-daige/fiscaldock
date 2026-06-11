@@ -58,6 +58,23 @@ class EfdImportacao extends Model
         ];
     }
 
+    // Acessores
+
+    /**
+     * Competência da EFD no formato "Jan/2026", derivada do período extraído do SPED.
+     * Ex.: periodo_inicio 01.01.2026 → "Jan/2026". Null se o período não foi salvo.
+     */
+    public function getCompetenciaAttribute(): ?string
+    {
+        if (! $this->periodo_inicio) {
+            return null;
+        }
+
+        $meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+        return $meses[$this->periodo_inicio->month - 1].'/'.$this->periodo_inicio->year;
+    }
+
     // Relacionamentos
 
     public function user(): BelongsTo

@@ -199,7 +199,9 @@
                                 @foreach($clientes as $cliente)
                                     <tr class="hover:bg-gray-50/50 transition-colors cliente-row" data-cliente-id="{{ $cliente->id }}">
                                         <td class="px-3 py-3">
-                                            <input type="checkbox" class="cliente-checkbox w-4 h-4 rounded border-gray-300 text-gray-700 focus:ring-gray-400" data-id="{{ $cliente->id }}">
+                                            @unless($cliente->is_empresa_propria)
+                                                <input type="checkbox" class="cliente-checkbox w-4 h-4 rounded border-gray-300 text-gray-700 focus:ring-gray-400" data-id="{{ $cliente->id }}">
+                                            @endunless
                                         </td>
                                         <td class="px-3 py-3">
                                             <button
@@ -299,6 +301,7 @@
                                                 data-id="{{ $cliente->id }}"
                                                 data-nome="{{ $cliente->razao_social ?? $cliente->nome ?? '' }}"
                                                 data-documento="{{ $cliente->documento_formatado }}"
+                                                data-empresa-propria="{{ $cliente->is_empresa_propria ? '1' : '0' }}"
                                             >
                                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                                     <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
@@ -347,7 +350,9 @@
                             <div class="px-4 py-3 border-b border-gray-200 bg-gray-50/60">
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="flex items-start gap-3 min-w-0">
-                                        <input type="checkbox" class="cliente-checkbox mt-0.5 w-4 h-4 rounded border-gray-300 text-gray-700 focus:ring-gray-400" data-id="{{ $cliente->id }}">
+                                        @unless($cliente->is_empresa_propria)
+                                            <input type="checkbox" class="cliente-checkbox mt-0.5 w-4 h-4 rounded border-gray-300 text-gray-700 focus:ring-gray-400" data-id="{{ $cliente->id }}">
+                                        @endunless
                                         <div class="min-w-0">
                                             <div class="flex items-center gap-2 flex-wrap">
                                                 <a href="/app/cliente/{{ $cliente->id }}" data-link class="text-sm text-gray-900 hover:text-gray-600 hover:underline truncate">
@@ -389,6 +394,7 @@
                                         data-id="{{ $cliente->id }}"
                                         data-nome="{{ $cliente->razao_social ?? $cliente->nome ?? '' }}"
                                         data-documento="{{ $cliente->documento_formatado }}"
+                                        data-empresa-propria="{{ $cliente->is_empresa_propria ? '1' : '0' }}"
                                     >
                                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                             <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
@@ -781,6 +787,11 @@
             if (dropdownAcoesNome) dropdownAcoesNome.textContent = acaoClienteNome || 'Sem nome';
             if (dropdownAcoesDocumento) dropdownAcoesDocumento.textContent = acaoClienteDocumento || '';
             if (dropdownAcoesEditar) dropdownAcoesEditar.href = '/app/cliente/' + acaoClienteId + '/editar';
+
+            // Empresa própria não pode ser excluída — esconde a opção de exclusão.
+            if (dropdownAcoesExcluir) {
+                dropdownAcoesExcluir.classList.toggle('hidden', btnElement.dataset.empresaPropria === '1');
+            }
 
             posicionarDropdown(btnElement);
             dropdownAcoes.classList.remove('hidden');

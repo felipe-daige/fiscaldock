@@ -14,6 +14,12 @@ class EfdApuracaoContribuicao extends Model
         'user_id',
         'cliente_id',
 
+        // 0110 — Regime de Apuração
+        'cod_inc_tributaria',
+        'ind_apropriacao_credito',
+        'cod_tipo_contribuicao',
+        'ind_regime_cumulativo',
+
         // M200 — Consolidação PIS
         'pis_nao_cumulativo',
         'pis_credito_descontado',
