@@ -457,6 +457,7 @@ class XmlImportacaoController extends Controller
         $ownerLado = $validated['criar_cliente_lado'] ?? '';
         $clienteId = $validated['cliente_id'] ?? null;
         $ownerDoc = '';
+        $anchorClienteId = 0;
         if ($decidirDepois) {
             $clienteId = null;
             $ownerLado = ''; // importa sem dono; reclassifica no /definir-cliente
@@ -465,6 +466,10 @@ class XmlImportacaoController extends Controller
             if ($ownerDoc === '') {
                 return response()->json(['success' => false, 'error' => 'Cliente selecionado sem documento cadastrado.'], Response::HTTP_UNPROCESSABLE_ENTITY);
             }
+            // Âncora: o cliente escolhido garante o dono nas notas dele, mas o lote pode ser
+            // misto → cria sem header e deixa o Job derivar ("Vários (N)" se >1 dono real).
+            $anchorClienteId = (int) $clienteId;
+            $clienteId = null;
         } else {
             $clienteId = null; // definido pelo Job a partir do dono criado
         }
@@ -511,7 +516,7 @@ class XmlImportacaoController extends Controller
             $importacao->update(['status' => 'processando', 'total_xmls' => $totalXmls]);
 
             \App\Jobs\ProcessarXmlImportacaoJob::dispatch(
-                $importacao->id, (int) $user->id, $validated['tab_id'], $ownerDoc, $dir, $ownerLado
+                $importacao->id, (int) $user->id, $validated['tab_id'], $ownerDoc, $dir, $ownerLado, $anchorClienteId
             );
 
             return response()->json([

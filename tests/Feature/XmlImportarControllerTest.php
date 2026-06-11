@@ -141,3 +141,18 @@ it('definir-cliente (whole-lote) é bloqueado num lote multi-cliente', function 
     // nenhuma nota foi reclassificada (continuam sem dono)
     expect(XmlNota::where('importacao_xml_id', $imp->id)->whereNotNull('cliente_id')->count())->toBe(0);
 });
+
+it('forçado: cria importação sem header e despacha o Job com a âncora', function () {
+    Bus::fake();
+    Storage::fake('local');
+    $user = User::factory()->create();
+    $cliente = Cliente::create(['user_id' => $user->id, 'documento' => '97551165000193', 'razao_social' => 'HIDRATOP', 'is_empresa_propria' => true]);
+
+    $this->actingAs($user)->postJson('/app/importacao/xml/importar', payloadImportar($cliente->id))
+        ->assertOk()->assertJson(['success' => true]);
+
+    $imp = XmlImportacao::where('user_id', $user->id)->firstOrFail();
+    expect($imp->cliente_id)->toBeNull(); // header derivado pelo Job, não pré-setado
+
+    Bus::assertDispatched(ProcessarXmlImportacaoJob::class, fn ($job) => $job->ownerDoc === '97551165000193' && $job->anchorClienteId === $cliente->id);
+});
