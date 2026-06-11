@@ -27,23 +27,40 @@
             <p class="text-sm text-gray-500">Nenhuma nota fiscal encontrada.</p>
         </div>
     @else
-        <div class="hidden md:block overflow-x-auto">
-            <table class="min-w-full">
+        <div class="hidden md:block overflow-hidden">
+            <table class="w-full table-fixed">
+                <colgroup>
+                    <col style="width: 8%">
+                    <col style="width: 15%">
+                    <col style="width: 9%">
+                    <col style="width: 11%">
+                    <col style="width: 10%">
+                    @if($contexto !== 'participante' && $contexto !== 'cliente')
+                        <col style="width: 14%">
+                        <col style="width: 14%">
+                    @else
+                        <col style="width: 29%">
+                    @endif
+                    <col style="width: 13%">
+                    <col style="width: 5%">
+                </colgroup>
                 <thead>
                     <tr class="border-b border-gray-300">
-                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Origem</th>
-                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Nº / Série</th>
-                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Modelo</th>
-                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Emissão</th>
-                        <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Tipo</th>
+                        <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Origem</th>
+                        <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Nº/Série</th>
+                        <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Modelo</th>
+                        <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Emissão</th>
+                        <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Tipo</th>
                         @if($contexto !== 'participante')
-                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participante</th>
+                            <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participante</th>
                         @endif
                         @if($contexto !== 'cliente')
-                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Cliente</th>
+                            <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Cliente</th>
                         @endif
-                        <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Valor</th>
-                        <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50 w-12">Ações</th>
+                        <th class="px-2 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Valor</th>
+                        <th class="px-2 py-2 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50" title="Ações">
+                            <span class="sr-only">Ações</span>
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -61,35 +78,37 @@
                             $modeloLabel = $n['modelo_label'] ?? '—';
                         @endphp
                         <tr class="hover:bg-gray-50/50 transition-colors cursor-pointer nf-card-row" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}">
-                            <td class="px-3 py-3">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemHex }}">{{ $origemLabel }}</span>
+                            <td class="px-2 py-2">
+                                <span class="inline-flex max-w-full px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: {{ $origemHex }}">{{ $origemLabel }}</span>
                             </td>
-                            <td class="px-3 py-3 text-sm text-gray-700 font-mono whitespace-nowrap">{{ $numero }}{{ $serie }}</td>
-                            <td class="px-3 py-3">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $modeloLabel }}</span>
+                            <td class="px-2 py-2 text-xs text-gray-700 font-mono min-w-0">
+                                <span class="block truncate" title="{{ $numero }}{{ $serie }}">{{ $numero }}{{ $serie }}</span>
                             </td>
-                            <td class="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">{{ $dataFormatada }}</td>
-                            <td class="px-3 py-3">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoHex }}">{{ $tipoLabel }}</span>
+                            <td class="px-2 py-2">
+                                <span class="inline-flex max-w-full px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #374151">{{ $modeloLabel }}</span>
+                            </td>
+                            <td class="px-2 py-2 text-xs text-gray-700 whitespace-nowrap">{{ $dataFormatada }}</td>
+                            <td class="px-2 py-2">
+                                <span class="inline-flex max-w-full px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: {{ $tipoHex }}">{{ $tipoLabel }}</span>
                             </td>
                             @if($contexto !== 'participante')
-                                <td class="px-3 py-3 text-sm text-gray-700 max-w-xs">
+                                <td class="px-2 py-2 text-xs text-gray-700 min-w-0">
                                     @if($n['participante_id'])
-                                        <a href="/app/participante/{{ $n['participante_id'] }}" data-link class="text-gray-900 hover:text-gray-600 hover:underline block truncate">
+                                        <a href="/app/participante/{{ $n['participante_id'] }}" data-link class="text-gray-900 hover:text-gray-600 hover:underline block truncate" title="{{ $n['participante_nome'] ?? '—' }}">
                                             {{ $n['participante_nome'] ?? '—' }}
                                         </a>
                                     @else
-                                        <div class="truncate">{{ $n['participante_nome'] ?? '—' }}</div>
+                                        <div class="truncate" title="{{ $n['participante_nome'] ?? '—' }}">{{ $n['participante_nome'] ?? '—' }}</div>
                                     @endif
                                     @if($n['participante_doc'])
-                                        <div class="text-[11px] font-mono text-gray-400 mt-0.5">{{ $n['participante_doc'] }}</div>
+                                        <div class="text-[10px] font-mono text-gray-400 mt-0.5 truncate" title="{{ $n['participante_doc'] }}">{{ $n['participante_doc'] }}</div>
                                     @endif
                                 </td>
                             @endif
                             @if($contexto !== 'cliente')
-                                <td class="px-3 py-3 text-sm text-gray-700 max-w-[10rem]">
+                                <td class="px-2 py-2 text-xs text-gray-700 min-w-0">
                                     @if($n['cliente_id'])
-                                        <a href="/app/cliente/{{ $n['cliente_id'] }}" data-link class="text-gray-900 hover:text-gray-600 hover:underline truncate block">
+                                        <a href="/app/cliente/{{ $n['cliente_id'] }}" data-link class="text-gray-900 hover:text-gray-600 hover:underline truncate block" title="{{ $n['cliente_nome'] ?? '—' }}">
                                             {{ $n['cliente_nome'] ?? '—' }}
                                         </a>
                                     @else
@@ -97,12 +116,12 @@
                                     @endif
                                 </td>
                             @endif
-                            <td class="px-3 py-3 text-sm font-semibold text-gray-900 text-right whitespace-nowrap">
+                            <td class="px-2 py-2 text-xs font-semibold text-gray-900 text-right whitespace-nowrap">
                                 R$ {{ number_format($n['valor_total'], 2, ',', '.') }}
                             </td>
-                            <td class="px-3 py-3 text-center">
-                                <button type="button" class="nf-card-expand-btn text-gray-400 hover:text-gray-700 transition-colors p-1" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}" title="Ver detalhes">
-                                    <svg class="w-5 h-5 nf-card-expand-icon transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <td class="px-2 py-2 text-center">
+                                <button type="button" class="nf-card-expand-btn inline-flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors p-1" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}" title="Ver detalhes">
+                                    <svg class="w-4 h-4 nf-card-expand-icon transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                     </svg>
                                 </button>
@@ -135,9 +154,9 @@
                 <div class="px-4 py-3 nf-card-mobile cursor-pointer" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}">
                     <div class="flex items-start justify-between gap-2 mb-2">
                         <div class="flex items-center gap-2 flex-wrap">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemHex }}">{{ $origemLabel }}</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $modeloLabel }}</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoHex }}">{{ $tipoLabel }}</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: {{ $origemHex }}">{{ $origemLabel }}</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #374151">{{ $modeloLabel }}</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: {{ $tipoHex }}">{{ $tipoLabel }}</span>
                         </div>
                         <button type="button" class="nf-card-expand-btn text-gray-400 hover:text-gray-700 p-2 -mr-2 min-w-[40px] min-h-[40px] flex items-center justify-center" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}">
                             <svg class="w-5 h-5 nf-card-expand-icon transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,9 +164,9 @@
                             </svg>
                         </button>
                     </div>
-                    <div class="flex items-baseline justify-between gap-2">
-                        <span class="text-sm font-mono font-medium text-gray-900">{{ $numero }}{{ $serie }}</span>
-                        <span class="text-sm font-semibold text-gray-900">R$ {{ number_format($n['valor_total'], 2, ',', '.') }}</span>
+                    <div class="flex items-baseline justify-between gap-2 min-w-0">
+                        <span class="text-sm font-mono font-medium text-gray-900 truncate">{{ $numero }}{{ $serie }}</span>
+                        <span class="text-sm font-semibold text-gray-900 whitespace-nowrap">R$ {{ number_format($n['valor_total'], 2, ',', '.') }}</span>
                     </div>
                     <div class="flex items-center justify-between mt-1 gap-2">
                         <span class="text-xs text-gray-500">{{ $dataFormatada }}</span>

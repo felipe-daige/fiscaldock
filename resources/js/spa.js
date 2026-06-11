@@ -48,6 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
         notas: null, // Código inline na view
         alertas: null, // Código inline na view
         clearance: null, // Código inline/script externo por view de clearance
+        cliente: null, // Código inline na view
+        clientes: null, // Código inline na view
     };
 
     // Converte slug (com hífen/underscore) para camelCase
@@ -83,7 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const paginaCamel = slugToCamel(baseSlug);
         const nomePagina = paginaCamel || 'inicio';
-        const nomeFuncao = `init${nomePagina.charAt(0).toUpperCase() + nomePagina.slice(1)}`;
+        const nomeFuncao = nomePagina === 'cliente'
+            ? null
+            : `init${nomePagina.charAt(0).toUpperCase() + nomePagina.slice(1)}`;
         const scriptPath = Object.prototype.hasOwnProperty.call(_spaScriptOverrides, nomePagina)
             ? _spaScriptOverrides[nomePagina]
             : `/js/${nomePagina}.js`;

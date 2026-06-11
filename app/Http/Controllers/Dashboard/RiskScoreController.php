@@ -65,9 +65,15 @@ class RiskScoreController extends Controller
         // Estatisticas (KPIs) — escopadas pelo cliente selecionado.
         $estatisticas = $this->riskScoreService->getEstatisticas($userId, $escopoClienteScore);
 
+        // Score ligado a um participante "PROPRIO" (a própria empresa, materializada como
+        // participante pela tela Minha Empresa) é duplicata do cliente empresa própria, que já
+        // aparece nas listas pelo lado `cliente`. Mesma regra do DashboardDataService.
+        $excluirParticipanteProprio = fn ($q) => $q->whereDoesntHave('participante', fn ($p) => $p->where('origem_tipo', 'PROPRIO'));
+
         // CONSULTADOS: têm score (participante OU cliente). Ordem por risco (maior 1º), null ao fim.
         $consultadosQuery = ParticipanteScore::where('user_id', $userId)
             ->with(['participante', 'cliente'])
+            ->tap($excluirParticipanteProprio)
             ->orderByRaw('score_total desc nulls last')
             ->orderByDesc('ultima_consulta_em');
 
@@ -94,6 +100,9 @@ class RiskScoreController extends Controller
             $query = $model::where('user_id', $userId)
                 ->whereRaw($cnpjRaw)
                 ->whereDoesntHave('score')
+                // O participante "PROPRIO" é a própria empresa duplicada; ela já aparece pelo
+                // lado `cliente`. Não filtra o lado cliente (empresa própria deve permanecer).
+                ->when($tipo === 'participante', fn ($q) => $q->where(fn ($w) => $w->where('origem_tipo', '!=', 'PROPRIO')->orWhereNull('origem_tipo')))
                 ->when($busca !== '', fn ($q) => $q->where(fn ($w) => $w->where('razao_social', 'ilike', "%{$busca}%")->orWhere('documento', 'like', "%{$busca}%")));
 
             if (! $verTodos && $clienteSelecionadoId) {
@@ -144,6 +153,7 @@ class RiskScoreController extends Controller
         $emRiscoCriticoQuery = ParticipanteScore::where('user_id', $userId)
             ->where('classificacao', 'critico')
             ->with(['participante', 'cliente'])
+            ->tap($excluirParticipanteProprio)
             ->limit(5);
         $escopoClienteScore($emRiscoCriticoQuery);
         $emRiscoCritico = $emRiscoCriticoQuery->get();

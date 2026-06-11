@@ -160,6 +160,52 @@ it('mostra clientes consultados no score e exclui CPF da lista', function () {
         ->assertDontSee('FULANO CPF');
 });
 
+it('exclui o participante PROPRIO (empresa propria duplicada) da listagem, mantendo o cliente', function () {
+    $user = User::factory()->create();
+
+    // Empresa própria como CLIENTE (representação correta) — deve aparecer.
+    \App\Models\Cliente::create([
+        'user_id' => $user->id, 'documento' => '63112970000107',
+        'razao_social' => 'MINHA EMPRESA CLIENTE', 'is_empresa_propria' => true,
+    ]);
+
+    // Mesma empresa duplicada como PARTICIPANTE origem PROPRIO (criada pela tela Minha Empresa),
+    // sem score → cairia em "Não consultados". Não deve aparecer.
+    Participante::create([
+        'user_id' => $user->id, 'documento' => '63112970000107',
+        'razao_social' => 'MINHA EMPRESA PARTICIPANTE', 'origem_tipo' => 'PROPRIO',
+    ]);
+
+    actingAs($user)
+        ->get('/app/score-fiscal?cliente_id=todos')
+        ->assertOk()
+        ->assertSee('MINHA EMPRESA CLIENTE')
+        ->assertDontSee('MINHA EMPRESA PARTICIPANTE');
+});
+
+it('exclui o participante PROPRIO mesmo quando ja tem score (Consultados)', function () {
+    $user = User::factory()->create();
+
+    \App\Models\Cliente::create([
+        'user_id' => $user->id, 'documento' => '63112970000107',
+        'razao_social' => 'PROPRIA CLIENTE', 'is_empresa_propria' => true,
+    ]);
+
+    $partProprio = Participante::create([
+        'user_id' => $user->id, 'documento' => '63112970000107',
+        'razao_social' => 'PROPRIA PARTICIPANTE', 'origem_tipo' => 'PROPRIO',
+    ]);
+    \App\Models\ParticipanteScore::create([
+        'participante_id' => $partProprio->id, 'user_id' => $user->id,
+        'score_total' => 50, 'classificacao' => 'medio', 'ultima_consulta_em' => now(),
+    ]);
+
+    actingAs($user)
+        ->get('/app/score-fiscal?cliente_id=todos')
+        ->assertOk()
+        ->assertDontSee('PROPRIA PARTICIPANTE');
+});
+
 it('o detalhe do participante mostra subscores avaliados e ESG/Protestos em breve', function () {
     $user = User::factory()->create();
     $part = Participante::create([
