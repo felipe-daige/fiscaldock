@@ -116,6 +116,111 @@ class DefinirClienteXmlService
     }
 
     /**
+     * Documentos candidatos das notas AINDA SEM DONO (cliente_id null), por lado.
+     * Cada item: ['documento', 'razao', 'qtd']. Lados são independentes.
+     *
+     * @return array{emit: array<int,array>, dest: array<int,array>}
+     */
+    public function gruposPorDocumento(XmlImportacao $imp): array
+    {
+        return [
+            'emit' => $this->gruposLado($imp, 'emit'),
+            'dest' => $this->gruposLado($imp, 'dest'),
+        ];
+    }
+
+    /**
+     * Atribui o cliente de UM documento (num lado) às notas SEM DONO daquele documento.
+     * Espelha execute(), mas escopado a um subconjunto — não toca notas já resolvidas
+     * nem notas de outros documentos. Fill-only no participante preservado.
+     *
+     * @return array{participantes_removidos:int, notas:int, cliente_id:?int}
+     */
+    public function executePorDocumento(XmlImportacao $imp, string $documento, string $lado): array
+    {
+        $documento = preg_replace('/\D/', '', (string) $documento);
+        $tipoNota = $lado === 'emit' ? XmlNota::TIPO_SAIDA : XmlNota::TIPO_ENTRADA;
+        $docCol = $lado === 'emit' ? 'emit_documento' : 'dest_documento';
+        $razaoCol = $lado === 'emit' ? 'emit_razao_social' : 'dest_razao_social';
+        $ufCol = $lado === 'emit' ? 'emit_uf' : 'dest_uf';
+        $ieCol = $lado === 'emit' ? 'emit_ie' : 'dest_ie';
+        $clienteCol = $lado === 'emit' ? 'emit_cliente_id' : 'dest_cliente_id';
+        $partCol = $lado === 'emit' ? 'emit_participante_id' : 'dest_participante_id';
+        $cpDocCol = $lado === 'emit' ? 'dest_documento' : 'emit_documento';
+        $cpRazaoCol = $lado === 'emit' ? 'dest_razao_social' : 'emit_razao_social';
+        $cpUfCol = $lado === 'emit' ? 'dest_uf' : 'emit_uf';
+        $cpMunCol = $lado === 'emit' ? 'dest_municipio_ibge' : 'emit_municipio_ibge';
+        $cpIeCol = $lado === 'emit' ? 'dest_ie' : 'emit_ie';
+        $cpPartCol = $lado === 'emit' ? 'dest_participante_id' : 'emit_participante_id';
+
+        return DB::transaction(function () use ($imp, $documento, $tipoNota, $docCol, $razaoCol, $ufCol, $ieCol, $clienteCol, $partCol, $cpDocCol, $cpRazaoCol, $cpUfCol, $cpMunCol, $cpIeCol, $cpPartCol) {
+            $userId = (int) $imp->user_id;
+            $donoPartIds = [];
+
+            // Column values are already digit-only (importer strips masks), so a direct
+            // equality match on the pre-normalised $documento is sufficient and avoids
+            // relying on PCRE extensions (\D) not available in PostgreSQL POSIX ERE.
+            $notas = XmlNota::where('importacao_xml_id', $imp->id)
+                ->where('user_id', $userId)
+                ->whereNull('cliente_id')
+                ->where($docCol, $documento)
+                ->get();
+
+            $cliente = null;
+            foreach ($notas as $nota) {
+                $cliente ??= Cliente::firstOrCreate(
+                    ['user_id' => $userId, 'documento' => $documento],
+                    [
+                        'tipo_pessoa' => strlen($documento) === 11 ? 'PF' : 'PJ',
+                        'razao_social' => $nota->{$razaoCol},
+                        'nome' => $nota->{$razaoCol},
+                        'uf' => $nota->{$ufCol},
+                        'inscricao_estadual' => $nota->{$ieCol},
+                        'ativo' => true,
+                        'is_empresa_propria' => false,
+                    ]
+                );
+
+                if ($nota->{$partCol}) {
+                    $donoPartIds[] = (int) $nota->{$partCol};
+                }
+
+                $contraparte = $this->participanteContraparte(
+                    $userId, $cliente->id, $nota->{$cpDocCol}, $nota->{$cpRazaoCol},
+                    $nota->{$cpUfCol}, $nota->{$cpMunCol}, $nota->{$cpIeCol}, $imp
+                );
+
+                $nota->update([
+                    'tipo_nota' => $tipoNota,
+                    $clienteCol => $cliente->id,
+                    $partCol => null,
+                    $cpPartCol => $contraparte?->id,
+                    'cliente_id' => $cliente->id,
+                ]);
+            }
+
+            // Header: seta só quando o lote está TODO resolvido para 1 único dono.
+            // Enquanto restar nota sem dono OU houver >1 dono, fica null ("Vários"/pendente).
+            $temSemDono = XmlNota::where('importacao_xml_id', $imp->id)->whereNull('cliente_id')->exists();
+            $donosDistintos = XmlNota::where('importacao_xml_id', $imp->id)
+                ->whereNotNull('cliente_id')->distinct()->pluck('cliente_id');
+            $imp->cliente_id = (! $temSemDono && $donosDistintos->count() === 1)
+                ? (int) $donosDistintos->first()
+                : null;
+
+            $imp->participante_ids = XmlNota::where('importacao_xml_id', $imp->id)
+                ->get(['emit_participante_id', 'dest_participante_id'])
+                ->flatMap(fn ($n) => [$n->emit_participante_id, $n->dest_participante_id])
+                ->filter()->unique()->values()->all();
+            $imp->save();
+
+            $removidos = $this->limparOrfaos($userId, array_values(array_unique($donoPartIds)));
+
+            return ['participantes_removidos' => $removidos, 'notas' => $notas->count(), 'cliente_id' => $cliente?->id];
+        });
+    }
+
+    /**
      * "Decidir depois" automático: se exatamente um lado dominante já for Cliente,
      * reclassifica o lote por esse lado. Nenhum ou dois matches mantêm a escolha manual.
      *
@@ -182,6 +287,24 @@ class DefinirClienteXmlService
         $c = $this->candidatos($imp);
 
         return ($c['emit']['distintos'] ?? 0) > 1 && ($c['dest']['distintos'] ?? 0) > 1;
+    }
+
+    /** @return array<int,array{documento:string,razao:?string,qtd:int}> */
+    private function gruposLado(XmlImportacao $imp, string $lado): array
+    {
+        $docCol = $lado === 'emit' ? 'emit_documento' : 'dest_documento';
+        $razaoCol = $lado === 'emit' ? 'emit_razao_social' : 'dest_razao_social';
+
+        return XmlNota::where('importacao_xml_id', $imp->id)
+            ->where('user_id', (int) $imp->user_id)
+            ->whereNull('cliente_id')
+            ->whereNotNull($docCol)->where($docCol, '!=', '')
+            ->selectRaw("$docCol as documento, MAX($razaoCol) as razao, COUNT(*) as qtd")
+            ->groupBy($docCol)
+            ->orderByDesc('qtd')
+            ->get()
+            ->map(fn ($r) => ['documento' => $r->documento, 'razao' => $r->razao, 'qtd' => (int) $r->qtd])
+            ->all();
     }
 
     /**

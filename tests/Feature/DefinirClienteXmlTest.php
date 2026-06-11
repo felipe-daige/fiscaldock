@@ -331,3 +331,74 @@ it('autoDefinir não reclassifica um lote multi-candidato', function () {
 
     expect(app(DefinirClienteXmlService::class)->autoDefinirSeClienteExistente($imp))->toBeNull();
 });
+
+// === Atribuição por documento (gruposPorDocumento + executePorDocumento) ===
+
+it('gruposPorDocumento lista só documentos das notas sem dono, por lado', function () {
+    $user = User::factory()->create();
+    // 2 notas sem dono (clientes não cadastrados), emitentes distintos.
+    $imp = seedLoteMisto($user->id, [
+        ['emit' => '11111111000191', 'dest' => '22222222000191', 'chave' => str_pad('1', 44, '0')],
+        ['emit' => '33333333000191', 'dest' => '44444444000191', 'chave' => str_pad('2', 44, '0')],
+    ]);
+
+    $grupos = app(DefinirClienteXmlService::class)->gruposPorDocumento($imp);
+
+    expect(collect($grupos['emit'])->pluck('documento')->sort()->values()->all())
+        ->toBe(['11111111000191', '33333333000191']);
+    expect($grupos['emit'][0])->toHaveKeys(['documento', 'razao', 'qtd']);
+});
+
+it('executePorDocumento classifica só as notas do documento naquele lado', function () {
+    $user = User::factory()->create();
+    $imp = seedLoteMisto($user->id, [
+        ['emit' => '11111111000191', 'dest' => '22222222000191', 'chave' => str_pad('1', 44, '0')],
+        ['emit' => '33333333000191', 'dest' => '44444444000191', 'chave' => str_pad('2', 44, '0')],
+    ]);
+
+    $res = app(DefinirClienteXmlService::class)->executePorDocumento($imp, '11111111000191', 'emit');
+
+    $clienteA = Cliente::where('user_id', $user->id)->where('documento', '11111111000191')->first();
+    expect($clienteA)->not->toBeNull();
+
+    $notaA = XmlNota::where('importacao_xml_id', $imp->id)->where('emit_documento', '11111111000191')->first();
+    $notaB = XmlNota::where('importacao_xml_id', $imp->id)->where('emit_documento', '33333333000191')->first();
+
+    expect($notaA->tipo_nota)->toBe(XmlNota::TIPO_SAIDA);
+    expect($notaA->emit_cliente_id)->toBe($clienteA->id);
+    expect($notaA->cliente_id)->toBe($clienteA->id);
+    // A nota do OUTRO documento permanece intocada (ainda sem dono).
+    expect($notaB->cliente_id)->toBeNull();
+    expect($res['notas'])->toBe(1);
+});
+
+it('executePorDocumento deixa o header como Vários enquanto resta mais de um dono', function () {
+    $user = User::factory()->create();
+    $imp = seedLoteMisto($user->id, [
+        ['emit' => '11111111000191', 'dest' => '22222222000191', 'chave' => str_pad('1', 44, '0')],
+        ['emit' => '33333333000191', 'dest' => '44444444000191', 'chave' => str_pad('2', 44, '0')],
+    ]);
+
+    app(DefinirClienteXmlService::class)->executePorDocumento($imp, '11111111000191', 'emit');
+    expect($imp->refresh()->cliente_id)->toBeNull(); // ainda há a nota B sem dono
+
+    app(DefinirClienteXmlService::class)->executePorDocumento($imp, '33333333000191', 'emit');
+    // agora 2 donos resolvidos → continua "Vários" (null)
+    expect($imp->refresh()->cliente_id)->toBeNull();
+    expect($imp->clientesResolvidos())->toBe(2);
+});
+
+it('executePorDocumento é idempotente (rodar 2x não duplica nem troca)', function () {
+    $user = User::factory()->create();
+    $imp = seedLoteMisto($user->id, [
+        ['emit' => '11111111000191', 'dest' => '22222222000191', 'chave' => str_pad('1', 44, '0')],
+    ]);
+
+    $svc = app(DefinirClienteXmlService::class);
+    $svc->executePorDocumento($imp, '11111111000191', 'emit');
+    $partCount = Participante::where('user_id', $user->id)->count();
+
+    $res2 = $svc->executePorDocumento($imp, '11111111000191', 'emit');
+    expect(Participante::where('user_id', $user->id)->count())->toBe($partCount);
+    expect($res2['notas'])->toBe(0); // nada mais sem dono nesse doc
+});
