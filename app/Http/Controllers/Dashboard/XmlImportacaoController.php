@@ -222,16 +222,33 @@ class XmlImportacaoController extends Controller
         $clienteAutoVinculado = null;
         $gruposClientes = null;
         $clientesResolvidos = 0;
-        if (! $importacao->cliente_id && $importacao->status === 'concluido') {
-            $clienteAutoVinculado = $this->definirClienteService->autoDefinirSeClienteExistente($importacao);
-            if ($clienteAutoVinculado) {
-                $importacao->refresh()->load('cliente');
-            } elseif ($this->definirClienteService->ehMultiCandidato($importacao)) {
-                // Lote misto: header "Vários (N)" + atribuição por grupo das notas sem dono.
-                $clientesResolvidos = $importacao->clientesResolvidos();
-                $gruposClientes = $this->definirClienteService->gruposPorDocumento($importacao);
-            } else {
-                $definirClienteCandidatos = $this->definirClienteService->candidatos($importacao);
+        $notasSemDono = 0;
+        if ($importacao->status === 'concluido') {
+            if (! $importacao->cliente_id) {
+                $clienteAutoVinculado = $this->definirClienteService->autoDefinirSeClienteExistente($importacao);
+                if ($clienteAutoVinculado) {
+                    $importacao->refresh()->load('cliente');
+                } elseif ($this->definirClienteService->ehMultiCandidato($importacao)) {
+                    // Lote misto: header "Vários (N)" + atribuição por grupo das notas sem dono.
+                    $clientesResolvidos = $importacao->clientesResolvidos();
+                    $gruposClientes = $this->definirClienteService->gruposPorDocumento($importacao);
+                } else {
+                    $definirClienteCandidatos = $this->definirClienteService->candidatos($importacao);
+                }
+            }
+
+            // Card de grupos desacoplado do header: notas sem dono num lote COM cliente
+            // definido (ex.: forçado/âncora com notas de empresas não cadastradas) também
+            // ganham atribuição por grupo + alerta. Não roda no caminho do picker single-side.
+            if ($importacao->cliente_id && ! $gruposClientes) {
+                $grupos = $this->definirClienteService->gruposPorDocumento($importacao);
+                if (count($grupos['emit']) + count($grupos['dest']) > 0) {
+                    $gruposClientes = $grupos;
+                    $notasSemDono = XmlNota::where('importacao_xml_id', $id)
+                        ->where('user_id', $userId)
+                        ->whereNull('cliente_id')
+                        ->count();
+                }
             }
         }
 
@@ -261,7 +278,7 @@ class XmlImportacaoController extends Controller
         // Agregados para o resultado consolidado (toda a base do lote, não só as 200 exibidas).
         [$resumoTributario, $porUf, $catalogoItens, $alertas] = $this->montarConsolidado($id, $userId);
 
-        $data = compact('importacao', 'participantes', 'notas', 'resumoTributario', 'porUf', 'catalogoItens', 'alertas', 'definirClienteCandidatos', 'clienteAutoVinculado', 'gruposClientes', 'clientesResolvidos');
+        $data = compact('importacao', 'participantes', 'notas', 'resumoTributario', 'porUf', 'catalogoItens', 'alertas', 'definirClienteCandidatos', 'clienteAutoVinculado', 'gruposClientes', 'clientesResolvidos', 'notasSemDono');
 
         if ($this->isAjaxRequest($request)) {
             return response(view($view, $data)->render())->header('Content-Type', 'text/html');

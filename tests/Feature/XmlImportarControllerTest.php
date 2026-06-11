@@ -156,3 +156,34 @@ it('forçado: cria importação sem header e despacha o Job com a âncora', func
 
     Bus::assertDispatched(ProcessarXmlImportacaoJob::class, fn ($job) => $job->ownerDoc === '97551165000193' && $job->anchorClienteId === $cliente->id);
 });
+
+it('show(): lote com cliente escolhido + estranhas mostra alerta e card de grupos', function () {
+    $user = User::factory()->create();
+    $clienteA = Cliente::create(['user_id' => $user->id, 'documento' => '11111111000191', 'tipo_pessoa' => 'PJ', 'razao_social' => 'CLIENTE A', 'ativo' => true, 'is_empresa_propria' => false]);
+    $imp = XmlImportacao::create(['user_id' => $user->id, 'tipo_documento' => 'NFE', 'modo_envio' => 'xml', 'status' => 'concluido', 'iniciado_em' => now(), 'cliente_id' => null]);
+
+    // nota de A (resolve via âncora) + nota estranha (empresa não cadastrada → sem dono)
+    app(XmlNotaImporter::class)->importar(app(NfeXmlParser::class)->parse(NfeFixtureMint::make('11111111000191', '22222222000191', str_pad('1', 44, '0'))), '11111111000191', $imp);
+    app(XmlNotaImporter::class)->importar(app(NfeXmlParser::class)->parse(NfeFixtureMint::make('55555555000191', '66666666000191', str_pad('2', 44, '0'))), '11111111000191', $imp);
+    $imp->update(['cliente_id' => $clienteA->id]); // header derivado (1 dono = A)
+
+    $resp = $this->actingAs($user)->get("/app/importacao/xml/{$imp->id}");
+
+    $resp->assertOk();
+    $resp->assertSee('precisam de classificação');       // alerta no topo
+    $resp->assertSee('Atribua o cliente de cada parte');  // card de grupos
+});
+
+it('show(): lote com cliente escolhido e SEM estranhas não mostra alerta nem card', function () {
+    $user = User::factory()->create();
+    $clienteA = Cliente::create(['user_id' => $user->id, 'documento' => '11111111000191', 'tipo_pessoa' => 'PJ', 'razao_social' => 'CLIENTE A', 'ativo' => true, 'is_empresa_propria' => false]);
+    $imp = XmlImportacao::create(['user_id' => $user->id, 'tipo_documento' => 'NFE', 'modo_envio' => 'xml', 'status' => 'concluido', 'iniciado_em' => now(), 'cliente_id' => null]);
+    app(XmlNotaImporter::class)->importar(app(NfeXmlParser::class)->parse(NfeFixtureMint::make('11111111000191', '22222222000191', str_pad('1', 44, '0'))), '11111111000191', $imp);
+    $imp->update(['cliente_id' => $clienteA->id]);
+
+    $resp = $this->actingAs($user)->get("/app/importacao/xml/{$imp->id}");
+
+    $resp->assertOk();
+    $resp->assertDontSee('precisam de classificação');
+    $resp->assertDontSee('Atribua o cliente de cada parte');
+});

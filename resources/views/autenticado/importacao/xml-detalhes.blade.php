@@ -253,6 +253,18 @@
             </div>
         @endif
 
+        {{-- Lote com cliente definido (âncora) mas com notas de empresas não cadastradas --}}
+        @if(($notasSemDono ?? 0) > 0 && $importacao->cliente_id)
+            <div class="bg-white rounded border border-gray-300 border-l-4 mb-4 overflow-hidden" style="border-left-color: #b45309">
+                <div class="p-4">
+                    <p class="text-sm text-gray-700">
+                        <span class="font-semibold">{{ $notasSemDono }} nota(s)</span> deste lote não pertencem a
+                        <span class="font-semibold">{{ $importacao->cliente?->razao_social ?? 'este cliente' }}</span>
+                        e precisam de classificação — use o quadro abaixo.
+                    </p>
+                </div>
+            </div>
+        @endif
         @if(($gruposClientes ?? null) && (count($gruposClientes['emit']) + count($gruposClientes['dest'])) > 0)
         <div class="bg-white rounded border border-gray-300 border-l-4 mb-4 overflow-hidden" id="definir-grupo-card" data-importacao-id="{{ $importacao->id }}" style="border-left-color: #b45309">
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
