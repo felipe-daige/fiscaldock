@@ -1,19 +1,15 @@
 {{-- Monitoramento - Importar XMLs --}}
-<div class="min-h-screen bg-gray-100" id="importacao-xml-container" data-em-breve="0">
+<div class="min-h-screen bg-gray-100" id="importacao-xml-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
         {{-- Page Header --}}
         <div class="mb-4 sm:mb-6 flex items-center justify-between gap-3">
             <div>
                 <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Importação de XMLs</h1>
-                <p class="text-xs text-gray-500 mt-0.5">Extraia CNPJs de NF-e, NFS-e ou CT-e e adicione à sua lista de monitoramento.</p>
+                <p class="text-xs text-gray-500 mt-0.5">Importe NF-e, vincule o cliente dono das notas e revise os participantes da contraparte.</p>
             </div>
-            <a
-                href="/app/dashboard"
-                class="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-gray-300 bg-white text-gray-600 text-xs font-medium hover:bg-gray-50 transition"
-                data-link
-            >
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <a href="/app/dashboard" data-link class="inline-flex items-center gap-2 text-xs text-gray-600 hover:text-gray-900 hover:underline">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                 </svg>
                 Voltar
@@ -24,12 +20,11 @@
 
         {{-- Upload Section --}}
         <div id="upload-section" class="mb-6 space-y-4 sm:space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 items-start">
                 <div class="lg:col-span-2">
                     <div class="bg-white rounded border border-gray-300 overflow-hidden">
                         <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
                             <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Upload dos Arquivos</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Em Breve</span>
                         </div>
                         <div class="p-4 sm:p-5">
                             <div class="mb-4">
@@ -75,12 +70,12 @@
                                     <label class="flex flex-col items-start gap-1 p-3 border border-gray-200 rounded cursor-not-allowed opacity-50 tipo-doc-label" data-tipo="NFSE">
                                         <input type="radio" name="tipo-documento" value="NFSE" class="sr-only" disabled>
                                         <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">NFS-e</span>
-                                        <span class="text-[11px] text-gray-500 leading-tight">Nota Fiscal de Serviços <em>(em breve)</em></span>
+                                        <span class="text-[11px] text-gray-500 leading-tight">Nota Fiscal de Serviços <em>(não disponível)</em></span>
                                     </label>
                                     <label class="flex flex-col items-start gap-1 p-3 border border-gray-200 rounded cursor-not-allowed opacity-50 tipo-doc-label" data-tipo="CTE">
                                         <input type="radio" name="tipo-documento" value="CTE" class="sr-only" disabled>
                                         <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">CT-e</span>
-                                        <span class="text-[11px] text-gray-500 leading-tight">Conhecimento de Transporte <em>(em breve)</em></span>
+                                        <span class="text-[11px] text-gray-500 leading-tight">Conhecimento de Transporte <em>(não disponível)</em></span>
                                     </label>
                                 </div>
                             </div>
@@ -115,9 +110,8 @@
                                         </svg>
                                     </div>
                                     <div class="space-y-1 text-center">
-                                        <p class="text-sm font-medium text-gray-600" id="xml-dropzone-main-text">Importação XML temporariamente indisponível</p>
-                                        <p class="text-[11px] text-gray-400" id="xml-dropzone-sub-text">Esta área será liberada quando o desenvolvimento operacional estiver concluído</p>
-                                        <p class="text-[11px] text-gray-400 mt-2">Nenhum arquivo pode ser enviado no momento</p>
+                                        <p class="text-sm font-medium text-gray-600" id="xml-dropzone-main-text">Selecione o tipo e modo de envio</p>
+                                        <p class="text-[11px] text-gray-400" id="xml-dropzone-sub-text">Escolha as opções acima para habilitar o envio</p>
                                     </div>
                                     <input
                                         type="file"
@@ -166,45 +160,60 @@
                     </div>
                 </div>
 
-                <div class="lg:col-span-1">
-                    <div class="bg-white rounded border border-gray-300 overflow-hidden h-full">
+                <div class="lg:col-span-1 lg:w-full lg:max-w-sm lg:justify-self-start">
+                    <div class="bg-white rounded border border-gray-300 overflow-hidden">
                         <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Como Funciona</span>
+                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Fluxo de Processamento</span>
                         </div>
-                        <div class="p-4 sm:p-5 space-y-3">
-                            <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0 w-6 h-6 rounded border border-gray-300 bg-gray-50 text-gray-700 flex items-center justify-center text-xs font-bold">1</div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-900">Selecione o Tipo</p>
-                                    <p class="text-[11px] text-gray-500">Escolha entre NF-e, NFS-e ou CT-e conforme o lote que será importado.</p>
+                        <div class="p-3 sm:p-4 grid grid-cols-1 gap-2.5">
+                            <div class="rounded border border-gray-200 bg-gray-50 p-3">
+                                <div class="flex items-start gap-2.5">
+                                    <span class="inline-flex h-6 w-6 items-center justify-center rounded text-[11px] font-bold text-white flex-shrink-0" style="background-color: #1f2937">1</span>
+                                    <div>
+                                        <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Seleção</p>
+                                        <p class="text-xs font-semibold text-gray-900">Escolha o cliente dono</p>
+                                        <p class="text-xs text-gray-700 mt-0.5">Defina quem é o titular das notas, ou marque para criar/decidir depois.</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0 w-6 h-6 rounded border border-gray-300 bg-gray-50 text-gray-700 flex items-center justify-center text-xs font-bold">2</div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-900">Escolha o Modo</p>
-                                    <p class="text-[11px] text-gray-500">Envie um ZIP consolidado ou um conjunto de XMLs avulsos.</p>
+                            <div class="rounded border border-gray-200 bg-gray-50 p-3">
+                                <div class="flex items-start gap-2.5">
+                                    <span class="inline-flex h-6 w-6 items-center justify-center rounded text-[11px] font-bold text-white flex-shrink-0" style="background-color: #1f2937">2</span>
+                                    <div>
+                                        <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Configuração</p>
+                                        <p class="text-xs font-semibold text-gray-900">Ajuste o vínculo de cadastro</p>
+                                        <p class="text-xs text-gray-700 mt-0.5">Reutilize o cliente existente ou crie o cadastro a partir do emitente/destinatário.</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0 w-6 h-6 rounded border border-gray-300 bg-gray-50 text-gray-700 flex items-center justify-center text-xs font-bold">3</div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-900">Envie os Arquivos</p>
-                                    <p class="text-[11px] text-gray-500">Arraste ou selecione os arquivos para iniciar a validação do lote.</p>
+                            <div class="rounded border border-gray-200 bg-gray-50 p-3">
+                                <div class="flex items-start gap-2.5">
+                                    <span class="inline-flex h-6 w-6 items-center justify-center rounded text-[11px] font-bold text-white flex-shrink-0" style="background-color: #1f2937">3</span>
+                                    <div>
+                                        <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Envio</p>
+                                        <p class="text-xs font-semibold text-gray-900">Anexe XMLs ou ZIP</p>
+                                        <p class="text-xs text-gray-700 mt-0.5">Selecione o modo de envio e carregue os arquivos do lote.</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0 w-6 h-6 rounded border border-gray-300 bg-gray-50 text-gray-700 flex items-center justify-center text-xs font-bold">4</div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-900">Extração Fiscal</p>
-                                    <p class="text-[11px] text-gray-500">O sistema identifica participantes, notas e movimentações compatíveis com o documento enviado.</p>
+                            <div class="rounded border border-gray-200 bg-gray-50 p-3">
+                                <div class="flex items-start gap-2.5">
+                                    <span class="inline-flex h-6 w-6 items-center justify-center rounded text-[11px] font-bold text-white flex-shrink-0" style="background-color: #1f2937">4</span>
+                                    <div>
+                                        <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Extração</p>
+                                        <p class="text-xs font-semibold text-gray-900">O sistema processa o XML</p>
+                                        <p class="text-xs text-gray-700 mt-0.5">Participantes, contraparte e notas são vinculados automaticamente.</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0 w-6 h-6 rounded border border-gray-300 text-white flex items-center justify-center text-xs font-bold" style="background-color: #047857">5</div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-900">Revisão Operacional</p>
-                                    <p class="text-[11px] text-gray-500">Ao concluir, revise os resultados e avance com monitoramento e consultas dos participantes importados.</p>
+                            <div class="rounded border border-gray-200 bg-gray-50 p-3">
+                                <div class="flex items-start gap-2.5">
+                                    <span class="inline-flex h-6 w-6 items-center justify-center rounded text-[11px] font-bold text-white flex-shrink-0" style="background-color: #047857">5</span>
+                                    <div>
+                                        <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Revisão</p>
+                                        <p class="text-xs font-semibold text-gray-900">Confira o resultado final</p>
+                                        <p class="text-xs text-gray-700 mt-0.5">Abra a importação concluída para revisar os participantes e os documentos.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -630,31 +639,6 @@
     </div>
 </div>
 
-<div id="xml-em-breve-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="xml-em-breve-modal-title" role="dialog" aria-modal="true">
-    <div class="flex min-h-full items-center justify-center p-4">
-        <div id="xml-em-breve-modal-overlay" class="fixed inset-0 bg-black/50 transition-opacity"></div>
-        <div class="relative w-full max-w-lg overflow-hidden rounded border border-gray-300 bg-white shadow-xl">
-            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Aviso de Desenvolvimento</span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Em Breve</span>
-            </div>
-            <div class="p-5">
-                <h3 id="xml-em-breve-modal-title" class="text-base font-bold text-gray-900 uppercase tracking-wide">Esta view ainda não está funcionando</h3>
-                <p class="mt-3 text-sm text-gray-700">A importação de XMLs continua indisponível para uso. Os controles exibidos nesta tela estão apenas como referência visual e não executam validação, upload ou processamento.</p>
-                <p class="mt-2 text-sm text-gray-700">Enquanto o desenvolvimento não é retomado, utilize outras áreas do painel normalmente. O histórico permanece acessível para consulta.</p>
-                <div class="mt-5 flex justify-end gap-3">
-                    <a href="/app/dashboard" data-link class="inline-flex items-center gap-2 rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50">
-                        Voltar ao painel
-                    </a>
-                    <button type="button" id="xml-em-breve-modal-close" class="inline-flex items-center gap-2 rounded bg-gray-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-700">
-                        Entendi
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script src="/js/progresso-automacao.js?v={{ @filemtime(public_path('js/progresso-automacao.js')) ?: time() }}"></script>
 <script>
 (function() {
@@ -729,11 +713,6 @@
         const modoEnvioRadios = document.querySelectorAll('input[name="modo-envio"]');
         const uploadSection = document.getElementById('upload-section');
         const progressoContainer = document.getElementById('importacao-progresso');
-        const xmlEmBreveModal = document.getElementById('xml-em-breve-modal');
-        const xmlEmBreveModalClose = document.getElementById('xml-em-breve-modal-close');
-        const xmlEmBreveModalOverlay = document.getElementById('xml-em-breve-modal-overlay');
-        const viewEmBreve = container.dataset.emBreve === '1';
-
         // Limites
         const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
         const MAX_TOTAL_SIZE = 200 * 1024 * 1024; // 200MB
@@ -753,57 +732,6 @@
         let dadosNotasFiscais = [];
         let dadosCnpjsNovos = [];
         let salvarMovimentacoesAtivo = false;
-
-        function closeEmBreveModal() {
-            if (xmlEmBreveModal) {
-                xmlEmBreveModal.classList.add('hidden');
-            }
-        }
-
-        function openEmBreveModal() {
-            if (xmlEmBreveModal) {
-                xmlEmBreveModal.classList.remove('hidden');
-            }
-        }
-
-        function bloquearViewEmBreve() {
-            tipoDocRadios.forEach(radio => {
-                radio.checked = false;
-                radio.disabled = true;
-            });
-
-            modoEnvioRadios.forEach(radio => {
-                radio.checked = false;
-                radio.disabled = true;
-            });
-
-            if (dropzone) {
-                dropzone.classList.remove('bg-white', 'hover:border-gray-500', 'hover:bg-gray-50', 'cursor-pointer');
-                dropzone.classList.add('bg-gray-50', 'opacity-60', 'cursor-not-allowed', 'pointer-events-none');
-                dropzone.setAttribute('aria-disabled', 'true');
-            }
-
-            if (fileInput) {
-                fileInput.disabled = true;
-                fileInput.value = '';
-            }
-
-            if (importarBtn) {
-                importarBtn.disabled = true;
-                const btnText = importarBtn.querySelector('.btn-text');
-                if (btnText) btnText.textContent = 'Em Breve';
-            }
-
-            if (filesList) {
-                filesList.classList.add('hidden');
-            }
-
-            if (errorMessage) {
-                errorMessage.classList.add('hidden');
-            }
-
-            selectedFiles = [];
-        }
 
         // Funcao para obter tipo de documento selecionado
         function getSelectedTipoDoc() {
@@ -829,11 +757,6 @@
 
         // Atualizar estado do dropzone
         function updateDropzoneState() {
-            if (viewEmBreve) {
-                bloquearViewEmBreve();
-                return;
-            }
-
             const hasTipoDoc = getSelectedTipoDoc() !== '';
             const modoEnvio = getSelectedModoEnvio();
             const hasModoEnvio = modoEnvio !== '';
@@ -905,15 +828,6 @@
 
         // Atualizar botao importar
         function updateImportButtonState() {
-            if (viewEmBreve) {
-                if (importarBtn) {
-                    importarBtn.disabled = true;
-                    const btnText = importarBtn.querySelector('.btn-text');
-                    if (btnText) btnText.textContent = 'Em Breve';
-                }
-                return;
-            }
-
             const decidirDepois = document.getElementById('xml-decidir-depois')?.checked;
             const criarCliente = document.getElementById('xml-criar-cliente')?.checked;
             const ladoEscolhido = !!document.querySelector('input[name="xml-cliente-lado"]:checked');
@@ -988,15 +902,6 @@
 
         // Validar arquivo via API (conta XMLs em ZIPs, detecta tipo)
         async function validarArquivoApi(fileObj, index, retryCount = 0) {
-            if (viewEmBreve) {
-                fileObj.status = 'error';
-                fileObj.error = 'Importacao XML indisponivel nesta fase.';
-                fileObj.totalXmls = 0;
-                renderFilesList();
-                updateImportButtonState();
-                return;
-            }
-
             fileObj.status = 'validating';
             renderFilesList();
             updateImportButtonState();
@@ -1186,11 +1091,6 @@
 
         // Adicionar arquivos
         function addFiles(files) {
-            if (viewEmBreve) {
-                mostrarErro('Importacao XML indisponivel. Nenhum arquivo pode ser enviado nesta tela.');
-                return;
-            }
-
             ocultarErro();
 
             let totalSize = selectedFiles.reduce((sum, f) => sum + f.file.size, 0);
@@ -1321,15 +1221,10 @@
         // Dropzone click
         if (dropzone && fileInput) {
             dropzone.addEventListener('click', function() {
-                if (viewEmBreve) {
-                    openEmBreveModal();
-                    return;
-                }
                 if (!fileInput.disabled) fileInput.click();
             });
 
             dropzone.addEventListener('dragover', function(e) {
-                if (viewEmBreve) return;
                 if (fileInput.disabled) return;
                 e.preventDefault();
                 dropzone.classList.remove('border-gray-300', 'bg-gray-50');
@@ -1337,14 +1232,12 @@
             });
 
             dropzone.addEventListener('dragleave', function() {
-                if (viewEmBreve) return;
                 if (fileInput.disabled) return;
                 dropzone.classList.remove('border-gray-500', 'bg-gray-50');
                 dropzone.classList.add('border-gray-300', 'bg-gray-50');
             });
 
             dropzone.addEventListener('drop', function(e) {
-                if (viewEmBreve) return;
                 if (fileInput.disabled) return;
                 e.preventDefault();
                 dropzone.classList.remove('border-gray-500', 'bg-gray-50');
@@ -1359,7 +1252,6 @@
         // File input change
         if (fileInput) {
             fileInput.addEventListener('change', function(e) {
-                if (viewEmBreve) return;
                 if (e.target.files) {
                     addFiles(Array.from(e.target.files));
                 }
@@ -2284,11 +2176,6 @@
         // Botao importar
         if (importarBtn) {
             importarBtn.addEventListener('click', async function() {
-                if (viewEmBreve) {
-                    openEmBreveModal();
-                    return;
-                }
-
                 const tipoDoc = getSelectedTipoDoc();
                 if (!tipoDoc) {
                     if (window.showToast) window.showToast('Selecione o tipo de documento.', 'warning');
@@ -2462,10 +2349,6 @@
         const btnNovaImportacao = document.getElementById('btn-nova-importacao');
         if (btnNovaImportacao) {
             btnNovaImportacao.addEventListener('click', function() {
-                if (viewEmBreve) {
-                    openEmBreveModal();
-                    return;
-                }
                 importacaoEmAndamento = false;
                 currentImportacaoId = null;
                 salvarMovimentacoesAtivo = false;
@@ -2482,25 +2365,6 @@
                 voltarAoUpload();
                 resetarProgresso();
             });
-        }
-
-        if (xmlEmBreveModalClose) {
-            xmlEmBreveModalClose.addEventListener('click', closeEmBreveModal);
-        }
-
-        if (xmlEmBreveModalOverlay) {
-            xmlEmBreveModalOverlay.addEventListener('click', closeEmBreveModal);
-        }
-
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                closeEmBreveModal();
-            }
-        });
-
-        if (viewEmBreve) {
-            bloquearViewEmBreve();
-            openEmBreveModal();
         }
 
         // Cleanup

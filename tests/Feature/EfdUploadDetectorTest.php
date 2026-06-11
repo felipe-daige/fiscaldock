@@ -13,7 +13,6 @@ beforeEach(function () {
     config([
         'services.webhook.importacao_efd_fiscal_url' => 'https://n8n.example.com/icms',
         'services.webhook.importacao_efd_contribuicoes_url' => 'https://n8n.example.com/contrib',
-        'importacao.efd_manutencao.ativa' => false,
     ]);
 
     $this->user = User::factory()->create();
@@ -39,6 +38,32 @@ function spedIcmsIpi(): string
         "|E110|0|0|0|0|0|0|0|0|0|0|0|\r\n".
         "|9999|5|\r\n";
 }
+
+it('mostra a tela de upload efd sem bloqueio de manutencao', function () {
+    config()->set('importacao.efd_manutencao.ativa', true);
+
+    $response = $this->get('/app/importacao/efd');
+
+    $response->assertOk();
+    $response->assertSee('Importação EFD');
+    $response->assertSee('Upload do Arquivo');
+    $response->assertDontSee('Módulo em manutenção');
+    $response->assertDontSee('Upload temporariamente desativado');
+});
+
+it('mantem upload efd aberto mesmo se a config legada de manutencao estiver ativa', function () {
+    config()->set('importacao.efd_manutencao.ativa', true);
+
+    $file = UploadedFile::fake()->createWithContent('icms.txt', spedIcmsIpi());
+
+    $response = $this->postJson('/app/importacao/efd/importar-txt', [
+        'tipo_efd' => 'EFD ICMS/IPI',
+        'arquivo' => $file,
+    ]);
+
+    $response->assertOk();
+    expect(EfdImportacao::first()->tipo_efd)->toBe('EFD ICMS/IPI');
+});
 
 it('rejeita arquivo nao-SPED com 422', function () {
     $file = UploadedFile::fake()->createWithContent('lixo.txt', 'isso nao eh sped, eh um texto aleatorio qualquer.');

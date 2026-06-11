@@ -3,11 +3,6 @@
         'fiscal' => ['label' => 'EFD ICMS/IPI', 'hex' => '#4338ca'],
         'contrib' => ['label' => 'EFD PIS/COFINS', 'hex' => '#0f766e'],
     ];
-    $efdManutencaoAtiva = $efdManutencaoAtiva ?? (bool) config('importacao.efd_manutencao.ativa');
-    $podeImportarEfd = $podeImportarEfd ?? (
-        ! $efdManutencaoAtiva
-        || in_array((int) (auth()->id() ?? 0), array_map('intval', (array) config('importacao.efd_manutencao.usuarios_permitidos', [])), true)
-    );
 @endphp
 
 {{-- Monitoramento - Importar EFD --}}
@@ -31,46 +26,7 @@
             </a>
         </div>
 
-        @if ($efdManutencaoAtiva)
-            <div class="mb-4 sm:mb-6 rounded border" style="background-color: #fef3c7; border-color: #fcd34d;">
-                <div class="px-4 py-3 sm:px-5 sm:py-4 flex items-start gap-3">
-                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" style="color: #92400e;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                    </svg>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold uppercase tracking-wide" style="color: #92400e;">Módulo em manutenção</p>
-                        <p class="text-xs sm:text-[13px] mt-1" style="color: #78350f;">
-                            O pipeline de extração EFD (participantes, notas, catálogo e apurações) foi auditado e corrigido contra o SPED bruto; estamos em validação final antes de reabrir os uploads para todos.
-                            @if ($podeImportarEfd)
-                                Você está na lista de usuários autorizados a importar durante a manutenção para validar o novo pipeline.
-                            @else
-                                Novos uploads estão temporariamente desativados. As importações anteriores permanecem acessíveis para consulta no histórico.
-                            @endif
-                        </p>
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        @if (! $podeImportarEfd)
-            <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Upload do Arquivo</span>
-                </div>
-                <div class="p-6 sm:p-8 text-center">
-                    <svg class="w-10 h-10 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path>
-                    </svg>
-                    <p class="text-sm font-semibold text-gray-700">Upload temporariamente desativado</p>
-                    <p class="text-xs text-gray-500 mt-1 max-w-md mx-auto">
-                        O envio de novos arquivos SPED voltará assim que a reestruturação do pipeline for concluída. Acompanhe o histórico de importações já processadas em
-                        <a href="/app/importacao/historico" class="text-gray-700 underline" data-link>Importação · Histórico</a>.
-                    </p>
-                </div>
-            </div>
-        @endif
-
-        <div id="efd-upload-workspace" @class(['space-y-4 sm:space-y-6', 'hidden' => ! $podeImportarEfd])>
+        <div id="efd-upload-workspace" class="space-y-4 sm:space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 items-start">
                 <div class="space-y-4 lg:col-span-2">
                     <div class="bg-white rounded border border-gray-300 overflow-hidden">

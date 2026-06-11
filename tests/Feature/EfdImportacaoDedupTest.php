@@ -18,7 +18,6 @@ function spedPisCofinsValido(): string
 
 function prepararUploadEfd(): void
 {
-    config()->set('importacao.efd_manutencao.ativa', false);
     config()->set('services.webhook.importacao_efd_contribuicoes_url', 'http://n8n.test/hook');
 }
 
