@@ -261,10 +261,9 @@ class ClearanceController extends Controller
     }
 
     /**
-     * Dispara consulta avulsa de DF-e via n8n + InfoSimples.
-     *
-     * Valida input, debita créditos, cria ConsultaLote (plano_id=null)
-     * e envia payload para o webhook n8n. Em falha, estorna créditos.
+     * Busca avulsa de DF-e por chave (atrás da feature flag clearance.busca_avulsa.habilitada;
+     * desabilitada → 503). Valida input, deduplica contra acervo/snapshot, debita créditos e
+     * processa no Laravel (InfoSimples). Sem n8n — despacho desligado no cutover de 2026-06-07.
      */
     public function consultarNfe(Request $request)
     {
