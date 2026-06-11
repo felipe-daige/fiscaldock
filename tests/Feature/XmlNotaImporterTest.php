@@ -7,6 +7,7 @@ use App\Models\XmlImportacao;
 use App\Models\XmlNota;
 use App\Services\Xml\NfeXmlParser;
 use App\Services\Xml\XmlNotaImporter;
+use Tests\Fixtures\NfeFixtureMint;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
@@ -414,4 +415,29 @@ it('dedup: reimportar a mesma chave não cria participante duplicado', function 
     app(XmlNotaImporter::class)->importar(parsedFixture(), '97551165000193', $imp2);
 
     expect(Participante::where('user_id', $user->id)->count())->toBe(1);
+});
+
+it('forçado: nota sem a âncora resolve por outro cliente cadastrado (não vira sem_dono)', function () {
+    $user = User::factory()->create();
+    // B é cliente cadastrado e emitente da nota; a âncora A (11111111000191) NÃO aparece na nota.
+    $clienteB = Cliente::create(['user_id' => $user->id, 'documento' => '33333333000191', 'tipo_pessoa' => 'PJ', 'razao_social' => 'B', 'ativo' => true, 'is_empresa_propria' => false]);
+    $imp = XmlImportacao::create(['user_id' => $user->id, 'tipo_documento' => 'NFE', 'modo_envio' => 'xml', 'status' => 'processando', 'iniciado_em' => now()]);
+
+    $xml = NfeFixtureMint::make('33333333000191', '99999999000191', str_pad('1', 44, '0'));
+    $status = app(XmlNotaImporter::class)->importar(app(NfeXmlParser::class)->parse($xml), '11111111000191', $imp);
+
+    expect($status)->toBe('novo'); // NÃO sem_dono
+    $nota = XmlNota::where('importacao_xml_id', $imp->id)->first();
+    expect($nota->emit_cliente_id)->toBe($clienteB->id);
+    expect($nota->tipo_nota)->toBe(XmlNota::TIPO_SAIDA);
+});
+
+it('forçado: nota sem a âncora e sem nenhum cliente cadastrado continua sem_dono', function () {
+    $user = User::factory()->create();
+    $imp = XmlImportacao::create(['user_id' => $user->id, 'tipo_documento' => 'NFE', 'modo_envio' => 'xml', 'status' => 'processando', 'iniciado_em' => now()]);
+
+    $xml = NfeFixtureMint::make('33333333000191', '99999999000191', str_pad('2', 44, '0'));
+    $status = app(XmlNotaImporter::class)->importar(app(NfeXmlParser::class)->parse($xml), '11111111000191', $imp);
+
+    expect($status)->toBe('sem_dono');
 });

@@ -147,8 +147,8 @@ class XmlNotaImporter
             if ($ownerDoc === $destDoc) {
                 return ['dest', false];
             }
-
-            return [null, true];
+            // Âncora ausente nesta nota → cai pro AUTO abaixo (resolve por outro cliente
+            // cadastrado / empresa própria; nenhum cadastrado → sem_dono no final).
         }
 
         $emitPropria = (bool) ($emitCliente->is_empresa_propria ?? false);
