@@ -123,6 +123,12 @@ class DefinirClienteXmlService
      */
     public function autoDefinirSeClienteExistente(XmlImportacao $imp): ?array
     {
+        // Guard: nunca reclassificar whole-lote um lote multi-cliente (corromperia
+        // as notas dos outros donos). Esses lotes vão pra atribuição por grupo.
+        if ($this->ehMultiCandidato($imp)) {
+            return null;
+        }
+
         $candidatos = $this->candidatos($imp);
 
         $matches = [];
@@ -152,6 +158,30 @@ class DefinirClienteXmlService
             'cliente' => $matches[$lado],
             'resultado' => $this->execute($imp, $lado),
         ];
+    }
+
+    /**
+     * O lote tem mais de um candidato a dono (logo, reclassify whole-lote corromperia)?
+     *
+     * - Donos já resolvidos por-nota (xml_notas.cliente_id) distintos > 1 → multi.
+     * - Senão (0 ou 1 resolvido): multi só quando AMBOS os lados têm vários documentos.
+     *   Se um lado tem 1 doc só, esse lado é o dono comum (ex.: 1 vendedor → N compradores)
+     *   → single-client, mantém o picker/autoDefinir atuais.
+     */
+    public function ehMultiCandidato(XmlImportacao $imp): bool
+    {
+        $donosDistintos = XmlNota::where('importacao_xml_id', $imp->id)
+            ->where('user_id', (int) $imp->user_id)
+            ->whereNotNull('cliente_id')
+            ->distinct()
+            ->count('cliente_id');
+        if ($donosDistintos > 1) {
+            return true;
+        }
+
+        $c = $this->candidatos($imp);
+
+        return ($c['emit']['distintos'] ?? 0) > 1 && ($c['dest']['distintos'] ?? 0) > 1;
     }
 
     /**

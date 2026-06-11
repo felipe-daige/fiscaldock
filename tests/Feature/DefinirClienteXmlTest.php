@@ -285,3 +285,49 @@ it('clientesResolvidos conta donos distintos das notas do lote', function () {
 
     expect($imp->clientesResolvidos())->toBe(2); // a nota sem dono (null) não conta
 });
+
+// === Guard multi-candidato ===
+
+// Helper local: importa N notas via decidir_depois (ownerDoc='') num lote.
+function seedLoteMisto(int $userId, array $notas): XmlImportacao
+{
+    $imp = XmlImportacao::create(['user_id' => $userId, 'tipo_documento' => 'NFE', 'modo_envio' => 'xml', 'status' => 'concluido', 'iniciado_em' => now()]);
+    foreach ($notas as $n) {
+        $xml = NfeFixtureMint::make($n['emit'], $n['dest'], $n['chave']);
+        app(XmlNotaImporter::class)->importar(app(NfeXmlParser::class)->parse($xml), '', $imp);
+    }
+
+    return $imp;
+}
+
+it('ehMultiCandidato é true quando ambos os lados têm múltiplos documentos', function () {
+    $user = User::factory()->create();
+    $imp = seedLoteMisto($user->id, [
+        ['emit' => '11111111000191', 'dest' => '22222222000191', 'chave' => str_pad('1', 44, '0')],
+        ['emit' => '33333333000191', 'dest' => '44444444000191', 'chave' => str_pad('2', 44, '0')],
+    ]);
+
+    expect(app(DefinirClienteXmlService::class)->ehMultiCandidato($imp))->toBeTrue();
+});
+
+it('ehMultiCandidato é false para 1 vendedor → N compradores (single-client)', function () {
+    $user = User::factory()->create();
+    $imp = seedLoteMisto($user->id, [
+        ['emit' => '11111111000191', 'dest' => '22222222000191', 'chave' => str_pad('1', 44, '0')],
+        ['emit' => '11111111000191', 'dest' => '44444444000191', 'chave' => str_pad('2', 44, '0')],
+    ]);
+
+    expect(app(DefinirClienteXmlService::class)->ehMultiCandidato($imp))->toBeFalse();
+});
+
+it('autoDefinir não reclassifica um lote multi-candidato', function () {
+    $user = User::factory()->create();
+    // Cliente A é emitente de UMA das notas; mesmo assim o lote é multi (emit e dest variam).
+    Cliente::create(['user_id' => $user->id, 'documento' => '11111111000191', 'tipo_pessoa' => 'PJ', 'razao_social' => 'A', 'ativo' => true, 'is_empresa_propria' => false]);
+    $imp = seedLoteMisto($user->id, [
+        ['emit' => '11111111000191', 'dest' => '22222222000191', 'chave' => str_pad('1', 44, '0')],
+        ['emit' => '33333333000191', 'dest' => '44444444000191', 'chave' => str_pad('2', 44, '0')],
+    ]);
+
+    expect(app(DefinirClienteXmlService::class)->autoDefinirSeClienteExistente($imp))->toBeNull();
+});
