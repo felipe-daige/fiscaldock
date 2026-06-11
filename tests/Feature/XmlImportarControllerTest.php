@@ -92,3 +92,34 @@ it('endpoint definir-cliente-documento classifica o grupo e responde sucesso', f
     $nota = XmlNota::where('importacao_xml_id', $imp->id)->where('emit_documento', '11111111000191')->first();
     expect($nota->cliente_id)->not->toBeNull();
 });
+
+it('show() mostra o card de grupos para lote multi-candidato sem dono', function () {
+    $user = User::factory()->create();
+    $imp = XmlImportacao::create(['user_id' => $user->id, 'tipo_documento' => 'NFE', 'modo_envio' => 'xml', 'status' => 'concluido', 'iniciado_em' => now()]);
+    foreach ([['11111111000191', '22222222000191', '1'], ['33333333000191', '44444444000191', '2']] as [$e, $d, $n]) {
+        $xml = NfeFixtureMint::make($e, $d, str_pad($n, 44, '0'));
+        app(XmlNotaImporter::class)->importar(app(NfeXmlParser::class)->parse($xml), '', $imp);
+    }
+
+    $resp = $this->actingAs($user)->get("/app/importacao/xml/{$imp->id}");
+
+    $resp->assertOk();
+    $resp->assertSee('Atribua o cliente de cada parte'); // título do card de grupos
+    $resp->assertDontSee('Defina o cliente deste lote');  // picker single-side NÃO aparece
+});
+
+it('show() mostra banner Vários quando o lote já resolveu múltiplos clientes', function () {
+    $user = User::factory()->create();
+    Cliente::create(['user_id' => $user->id, 'documento' => '11111111000191', 'tipo_pessoa' => 'PJ', 'razao_social' => 'A', 'ativo' => true, 'is_empresa_propria' => false]);
+    Cliente::create(['user_id' => $user->id, 'documento' => '33333333000191', 'tipo_pessoa' => 'PJ', 'razao_social' => 'B', 'ativo' => true, 'is_empresa_propria' => false]);
+    $imp = XmlImportacao::create(['user_id' => $user->id, 'tipo_documento' => 'NFE', 'modo_envio' => 'xml', 'status' => 'concluido', 'iniciado_em' => now()]);
+    foreach ([['11111111000191', '22222222000191', '1'], ['33333333000191', '44444444000191', '2']] as [$e, $d, $n]) {
+        $xml = NfeFixtureMint::make($e, $d, str_pad($n, 44, '0'));
+        app(XmlNotaImporter::class)->importar(app(NfeXmlParser::class)->parse($xml), '', $imp);
+    }
+
+    $resp = $this->actingAs($user)->get("/app/importacao/xml/{$imp->id}");
+
+    $resp->assertOk();
+    $resp->assertSee('Vários (2 clientes)');
+});

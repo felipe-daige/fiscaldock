@@ -85,7 +85,7 @@
                 <div class="px-4 py-3 min-h-[96px] flex flex-col">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Cliente</p>
                     <div class="flex-1 flex items-center">
-                        <p class="text-sm font-bold text-gray-900">{{ $importacao->cliente?->razao_social ?? 'Não associado' }}</p>
+                        <p class="text-sm font-bold text-gray-900">{{ $importacao->cliente?->razao_social ?? (($clientesResolvidos ?? 0) > 1 ? "Vários ({$clientesResolvidos} clientes)" : 'Não associado') }}</p>
                     </div>
                     <p class="text-[11px] text-gray-500 mt-1">{{ $importacao->cliente?->documento_formatado ?? 'Sem vínculo a cliente' }}</p>
                 </div>
@@ -233,6 +233,82 @@
                     })
                     .catch(function () {
                         if (erro) { erro.textContent = 'Erro de rede.'; erro.classList.remove('hidden'); }
+                        card.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
+                    });
+                });
+            });
+        })();
+        </script>
+        @endif
+
+        {{-- Lote multi-cliente: banner honesto + atribuição por grupo das notas sem dono --}}
+        @if(($clientesResolvidos ?? 0) > 1)
+            <div class="bg-white rounded border border-gray-300 border-l-4 mb-4 overflow-hidden" style="border-left-color: #1d4ed8">
+                <div class="p-4">
+                    <p class="text-sm text-gray-700">
+                        Este lote contém notas de <span class="font-semibold">{{ $clientesResolvidos }} clientes</span> distintos.
+                        Cada nota foi classificada para o seu cliente. O cabeçalho exibe <span class="font-semibold">Vários ({{ $clientesResolvidos }} clientes)</span>.
+                    </p>
+                </div>
+            </div>
+        @endif
+
+        @if(($gruposClientes ?? null) && (count($gruposClientes['emit']) + count($gruposClientes['dest'])) > 0)
+        <div class="bg-white rounded border border-gray-300 border-l-4 mb-4 overflow-hidden" id="definir-grupo-card" data-importacao-id="{{ $importacao->id }}" style="border-left-color: #b45309">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Atribua o cliente de cada parte</span>
+            </div>
+            <div class="p-4">
+                <p class="text-sm text-gray-700 mb-3">Algumas notas têm partes que ainda não são clientes cadastrados. Para cada documento abaixo, confirme se é um cliente (o outro lado da nota vira participante):</p>
+                @foreach(['emit' => 'Como emitente · saídas', 'dest' => 'Como destinatário · entradas'] as $lado => $titulo)
+                    @if(count($gruposClientes[$lado]))
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mt-2 mb-1">{{ $titulo }}</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
+                            @foreach($gruposClientes[$lado] as $grupo)
+                                <button type="button"
+                                    data-grupo-documento="{{ $grupo['documento'] }}" data-grupo-lado="{{ $lado }}"
+                                    class="text-left p-3 rounded border border-gray-300 hover:border-gray-700 hover:bg-gray-50 transition disabled:opacity-50">
+                                    <p class="text-sm font-semibold text-gray-900 truncate" title="{{ $grupo['razao'] }}">{{ $grupo['razao'] ?: '—' }}</p>
+                                    <p class="text-xs font-mono text-gray-600">{{ $fmtDoc($grupo['documento']) }}</p>
+                                    <p class="text-[11px] text-gray-400 mt-1">{{ $grupo['qtd'] }} nota{{ $grupo['qtd'] === 1 ? '' : 's' }}</p>
+                                </button>
+                            @endforeach
+                        </div>
+                    @endif
+                @endforeach
+                <p id="definir-grupo-erro" class="hidden text-xs mt-2" style="color:#dc2626"></p>
+            </div>
+        </div>
+        <script>
+        (function () {
+            var card = document.getElementById('definir-grupo-card');
+            if (!card || card.dataset.bound === '1') return;
+            card.dataset.bound = '1';
+            var impId = card.dataset.importacaoId;
+            var erro = document.getElementById('definir-grupo-erro');
+            function csrf() { var m = document.querySelector('meta[name="csrf-token"]'); return m ? m.getAttribute('content') : ''; }
+            card.querySelectorAll('[data-grupo-documento]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var documento = btn.getAttribute('data-grupo-documento');
+                    var lado = btn.getAttribute('data-grupo-lado');
+                    card.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+                    if (erro) erro.classList.add('hidden');
+                    fetch('/app/importacao/xml/' + impId + '/definir-cliente-documento', {
+                        method: 'POST',
+                        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrf(), 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ documento: documento, lado: lado })
+                    })
+                    .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+                    .then(function (res) {
+                        if (!res.ok || !res.j.success) {
+                            if (erro) { erro.textContent = res.j.error || 'Falha ao atribuir o cliente.'; erro.classList.remove('hidden'); }
+                            card.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
+                            return;
+                        }
+                        window.location.reload();
+                    })
+                    .catch(function () {
+                        if (erro) { erro.textContent = 'Erro de rede. Tente novamente.'; erro.classList.remove('hidden'); }
                         card.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
                     });
                 });
