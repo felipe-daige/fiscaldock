@@ -72,26 +72,3 @@ it('progresso EFD nao rebaixa nem rejuvenesce importacao concluida', function ()
 
     expect($imp->fresh()->updated_at->diffInMinutes(now()))->toBeGreaterThan(10);
 });
-
-it('progresso XML atualiza updated_at de importacao processando', function () {
-    $user = User::factory()->create();
-    $imp = XmlImportacao::create([
-        'user_id'        => $user->id,
-        'tipo_documento' => 'nfe',
-        'status'         => 'processando',
-    ]);
-    DB::table('xml_importacoes')->where('id', $imp->id)
-        ->update(['updated_at' => now()->subMinutes(20)]);
-
-    $this->withHeaders(['X-API-Token' => 'token-heartbeat-teste'])
-        ->postJson('/api/importacao/xml/progress', [
-            'user_id'       => $user->id,
-            'tab_id'        => 'tab-teste',
-            'status'        => 'processando',
-            'progresso'     => 50,
-            'importacao_id' => $imp->id,
-        ])
-        ->assertOk();
-
-    expect($imp->fresh()->updated_at->diffInMinutes(now()))->toBeLessThan(1);
-});

@@ -34,33 +34,6 @@ Route::post('/importacao/efd/finalizar', [DataReceiverController::class, 'finali
     ->name('api.importacao.efd.finalizar');
 
 // ============================================
-// Importação XML
-// ============================================
-
-// Recebe progresso de importação de XMLs (NF-e, NFS-e, CT-e)
-// n8n envia progresso para Laravel armazenar em cache (SSE lê do cache)
-Route::post('/importacao/xml/progress', [DataReceiverController::class, 'receiveXmlImportacaoProgress'])
-    ->name('api.importacao.xml.progress');
-
-// ============================================
-// Monitoramento
-// ============================================
-
-// Recebe resultado de consulta do Monitoramento
-// n8n envia resultado da consulta (ou pode escrever diretamente no PostgreSQL)
-Route::post('/monitoramento/consulta/resultado', [DataReceiverController::class, 'receiveMonitoramentoConsulta'])
-    ->name('api.monitoramento.consulta.resultado');
-
-// ============================================
-// Consultas
-// ============================================
-
-// Endpoint unificado de progresso, conclusão e erro de consulta em lote
-// n8n envia status=progresso (cache SSE), status=concluido (DB + cache) ou status=erro (refund + cache)
-Route::post('/consultas/progresso', [DataReceiverController::class, 'receiveConsultasProgresso'])
-    ->name('api.consultas.progresso');
-
-// ============================================
 // Mercado Pago — webhook de pagamentos
 // ============================================
 
@@ -73,4 +46,3 @@ Route::post('/mercado-pago/webhook', MercadoPagoWebhookController::class)
 // Mesmo controller, mesma validação HMAC — atende test mode e produção.
 Route::post('/teste/mercado-pago/webhook', MercadoPagoWebhookController::class)
     ->name('api.mercadopago.webhook.teste');
-
