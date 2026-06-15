@@ -62,3 +62,15 @@ it('renderiza a tela com KPIs, itens e o alerta de item sem catálogo', function
     expect($html)->toContain('SEMCAT');
     expect($html)->toContain('sem catálogo');
 });
+
+it('mostra colunas de procedência, NCM e os KPIs principais', function () {
+    [$user, $clienteId] = seedBiUser();
+    biCatalogo($user->id, $clienteId, 'P1', '12345678');
+    biEfdItem($user->id, $clienteId, str_pad('A', 44, '0', STR_PAD_LEFT), 'P1', 100.0);
+
+    $html = actingAs($user)->get('/app/bi/catalogo-itens')->assertOk()->getContent();
+
+    expect($html)->toContain('Origem');           // cabeçalho da coluna procedência
+    expect($html)->toContain('12345678');          // NCM (via catálogo)
+    expect($html)->toContain('Valor movimentado'); // KPI
+});
