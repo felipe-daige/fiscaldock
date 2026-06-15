@@ -254,6 +254,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/apuracao-notas', [BiController::class, 'apuracaoNotas'])->name('apuracao-notas');
         Route::get('/cfop', [BiController::class, 'cfop'])->name('cfop');
         Route::get('/exportar', [BiController::class, 'exportar'])->name('exportar');
+        Route::get('/catalogo-itens', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'index'])->name('catalogo-itens');
     });
 
     // Score Fiscal (Score de Regularidade) — alimentado pelos scores persistidos a cada lote de consulta
