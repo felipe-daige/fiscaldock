@@ -622,4 +622,4 @@
 
 {{-- ApexCharts (local) --}}
 <script src="/js/apexcharts.min.js"></script>
-<script src="{{ asset('js/bi.js') }}?v={{ file_exists(public_path('js/bi.js')) ? filemtime(public_path('js/bi.js')) : time() }}"></script>
+<script src="/js/bi.js"></script>
