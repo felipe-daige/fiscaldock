@@ -20,7 +20,7 @@ function seedCatalogoUser(): array
     return [$user, (int) $clienteId];
 }
 
-function efdNotaComItem(int $userId, int $clienteId, string $chave, string $codItem, float $valor, float $aliq = 18, string $origem = 'fiscal', $cfop = 5102, string $dataEmissao = '2024-01-15'): void
+function efdNotaComItem(int $userId, int $clienteId, ?string $chave, string $codItem, float $valor, float $aliq = 18, string $origem = 'fiscal', $cfop = 5102, string $dataEmissao = '2024-01-15'): void
 {
     $imp = EfdImportacao::create(['user_id' => $userId, 'cliente_id' => $clienteId, 'tipo_efd' => 'EFD ICMS/IPI', 'filename' => 'i.txt', 'status' => 'concluido', 'iniciado_em' => now()]);
     $nota = EfdNota::create([
@@ -149,4 +149,17 @@ it('filtra por cliente_id', function () {
 
     $itens = app(NotaItemUnificadoService::class)->itensAgregados($user->id, ['cliente_id' => $clienteId])->pluck('codigo_item')->all();
     expect($itens)->toBe(['DOMECLI']);
+});
+
+it('XML não some quando o EFD tem nota com chave_acesso nula (NFS-e / bloco A)', function () {
+    [$user, $clienteId] = seedCatalogoUser();
+    // EFD nota SEM chave (NFS-e) — não pode "envenenar" o dedup e sumir com o XML inteiro.
+    efdNotaComItem($user->id, $clienteId, null, 'EFDNULL', 10.0);
+    // XML com chave real, sem contraparte no EFD → deve aparecer.
+    xmlNotaComItem($user->id, $clienteId, str_pad('B', 44, '0', STR_PAD_LEFT), 'XMLOK', 50.0);
+
+    $itens = app(NotaItemUnificadoService::class)->itensAgregados($user->id)->keyBy('codigo_item');
+
+    expect($itens)->toHaveKey('XMLOK');  // não some por causa da chave nula no EFD
+    expect($itens)->toHaveKey('EFDNULL');
 });

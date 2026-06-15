@@ -53,7 +53,10 @@ class NotaItemUnificadoService
             FROM xml_notas_itens xi
             JOIN xml_notas xn ON xn.id = xi.xml_nota_id
             WHERE xi.user_id = :uid
-              AND xn.chave_acesso NOT IN (SELECT chave_acesso FROM efd_notas WHERE user_id = :uid){$xmlWhere}";
+              AND NOT EXISTS (
+                  SELECT 1 FROM efd_notas en
+                  WHERE en.user_id = :uid AND en.chave_acesso = xn.chave_acesso
+              ){$xmlWhere}";
 
         if ($fonte === 'efd') {
             $movimento = $efdSelect;
