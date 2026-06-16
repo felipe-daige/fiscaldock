@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Concerns\RespondeAjax;
 use App\Http\Controllers\Controller;
+use App\Models\Cliente;
 use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoConsulta;
 use App\Models\MonitoramentoPlano;
@@ -326,10 +327,17 @@ class MonitoramentoController extends Controller
             $participanteIds = [$participanteId];
         }
 
-        if (empty($participanteIds) || empty($planoId)) {
+        // Aceita cliente_id (único) ou clientes (array) — alvo alternativo ao participante
+        $clienteId = $request->input('cliente_id');
+        $clienteIds = $request->input('clientes', []);
+        if ($clienteId && empty($clienteIds)) {
+            $clienteIds = [$clienteId];
+        }
+
+        if ((empty($participanteIds) && empty($clienteIds)) || empty($planoId)) {
             return response()->json([
                 'success' => false,
-                'error' => 'Dados incompletos. Selecione participantes e um plano.',
+                'error' => 'Dados incompletos. Selecione participantes ou clientes e um plano.',
             ], Response::HTTP_BAD_REQUEST);
         }
 
@@ -349,6 +357,19 @@ class MonitoramentoController extends Controller
                 'success' => false,
                 'error' => 'Plano não encontrado ou inativo.',
             ], Response::HTTP_NOT_FOUND);
+        }
+
+        // Ownership dos clientes — backend nunca confia no front (403 se algum não for do usuário)
+        $clientes = collect();
+        if (! empty($clienteIds)) {
+            $clienteIds = array_values(array_unique($clienteIds));
+            $clientes = Cliente::whereIn('id', $clienteIds)->where('user_id', $user->id)->get();
+            if ($clientes->count() !== count($clienteIds)) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Cliente não encontrado ou sem permissão.',
+                ], Response::HTTP_FORBIDDEN);
+            }
         }
 
         try {
@@ -391,6 +412,32 @@ class MonitoramentoController extends Controller
                     'frequencia_dias' => $frequenciaDias,
                     'status' => 'ativo',
                     'proxima_execucao_em' => $proximaExecucao,
+                ]);
+
+                $assinaturasCriadas++;
+            }
+
+            foreach ($clientes as $cliente) {
+                $assinaturaExistente = MonitoramentoAssinatura::where('cliente_id', $cliente->id)
+                    ->where('user_id', $user->id)
+                    ->whereIn('status', ['ativo', 'pausado'])
+                    ->first();
+
+                if ($assinaturaExistente) {
+                    $jaExistentes++;
+
+                    continue;
+                }
+
+                $frequenciaDias = $this->frequenciaParaDias($frequencia);
+
+                MonitoramentoAssinatura::create([
+                    'user_id' => $user->id,
+                    'cliente_id' => $cliente->id,
+                    'plano_id' => $plano->id,
+                    'frequencia_dias' => $frequenciaDias,
+                    'status' => 'ativo',
+                    'proxima_execucao_em' => Carbon::now()->addDays($frequenciaDias)->setTime(8, 0, 0),
                 ]);
 
                 $assinaturasCriadas++;
