@@ -16,8 +16,11 @@ class MonitoramentoConsulta extends Model
     protected $fillable = [
         'user_id',
         'participante_id',
+        'cliente_id',
         'plano_id',
         'assinatura_id',
+        'parent_consulta_id',
+        'consulta_lote_id',
         'tipo',
         'status',
         'resultado',
