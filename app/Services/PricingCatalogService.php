@@ -16,8 +16,18 @@ class PricingCatalogService
     public const FIRST_PURCHASE_LOCKED_PRODUCTS = ['compliance', 'due_diligence'];
 
     public function __construct(
-        private \App\Services\Entitlements\EntitlementService $entitlements = new \App\Services\Entitlements\EntitlementService
+        private \App\Services\Entitlements\EntitlementService $entitlements = new \App\Services\Entitlements\EntitlementService,
+        private \App\Services\Admin\ComercialParametroService $comercial = new \App\Services\Admin\ComercialParametroService
     ) {}
+
+    /**
+     * Preço por crédito efetivo (override admin §6.1 ou o default CREDIT_UNIT_PRICE).
+     * As constantes permanecem como fallback e back-compat de consumidores estáticos.
+     */
+    public function creditUnitPrice(): float
+    {
+        return (float) $this->comercial->valor('credit_unit_price', self::CREDIT_UNIT_PRICE);
+    }
 
     /**
      * Ofertas promocionais destacadas.
@@ -57,7 +67,7 @@ class PricingCatalogService
 
     public function getMinimumDeposit(): float
     {
-        return self::MINIMUM_DEPOSIT;
+        return (float) $this->comercial->valor('minimum_deposit', self::MINIMUM_DEPOSIT);
     }
 
     public function getFirstPurchaseLockedProducts(): array
@@ -192,29 +202,34 @@ class PricingCatalogService
      */
     public function getTiers(): array
     {
+        // Limiares editáveis por admin (§6.1); default = valores atuais. max = (próximo min − 1).
+        $xMin = (int) $this->comercial->valor('faixa_x_min', 1000);
+        $yMin = (int) $this->comercial->valor('faixa_y_min', 5000);
+        $zMin = (int) $this->comercial->valor('faixa_z_min', 20000);
+
         return [
             [
                 'slug' => 'base',
                 'nome' => 'Base',
                 'min_paid_credits' => 0,
-                'max_paid_credits' => 999,
+                'max_paid_credits' => $xMin - 1,
             ],
             [
                 'slug' => 'x',
                 'nome' => 'Faixa X',
-                'min_paid_credits' => 1000,
-                'max_paid_credits' => 4999,
+                'min_paid_credits' => $xMin,
+                'max_paid_credits' => $yMin - 1,
             ],
             [
                 'slug' => 'y',
                 'nome' => 'Faixa Y',
-                'min_paid_credits' => 5000,
-                'max_paid_credits' => 19999,
+                'min_paid_credits' => $yMin,
+                'max_paid_credits' => $zMin - 1,
             ],
             [
                 'slug' => 'z',
                 'nome' => 'Faixa Z',
-                'min_paid_credits' => 20000,
+                'min_paid_credits' => $zMin,
                 'max_paid_credits' => null,
             ],
         ];

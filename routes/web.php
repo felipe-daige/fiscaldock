@@ -299,6 +299,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/app/suporte', [SupportController::class, 'index'])->name('app.suporte.index');
     Route::post('/app/suporte', [SupportController::class, 'store'])->name('app.suporte.store');
 
+    // Painel admin — parâmetros comerciais (§6.1, somente operador FiscalDock)
+    Route::prefix('app/admin/comercial')->name('app.admin.comercial.')
+        ->middleware(\App\Http\Middleware\EnsureAdmin::class)->group(function () {
+            Route::get('/', [\App\Http\Controllers\Dashboard\AdminComercialController::class, 'index'])->name('index');
+            Route::post('/{chave}', [\App\Http\Controllers\Dashboard\AdminComercialController::class, 'update'])->name('update');
+            Route::post('/{chave}/reset', [\App\Http\Controllers\Dashboard\AdminComercialController::class, 'reset'])->name('reset');
+        });
+
     // Centro de Privacidade (LGPD fase 2 — direitos do titular)
     Route::prefix('app/privacidade')->name('app.privacidade.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Dashboard\PrivacidadeController::class, 'index'])->name('index');

@@ -38,6 +38,19 @@ return new class extends Migration
             }, PlanoCatalog::definitions())
         );
 
+        // Parâmetros comerciais globais editáveis por admin (LGPD/CFO §6.1). Tabela vazia por
+        // padrão — o PricingCatalogService usa os defaults hardcoded como fallback; um override
+        // aqui passa a vencer. Garante zero mudança de preço até um admin editar.
+        if (! Schema::hasTable('comercial_parametros')) {
+            Schema::create('comercial_parametros', function (Blueprint $table) {
+                $table->id();
+                $table->string('chave')->unique();
+                $table->string('valor'); // serializado como string; o tipo é conhecido pelo default
+                $table->unsignedBigInteger('updated_by')->nullable();
+                $table->timestamps();
+            });
+        }
+
         if (! Schema::hasTable('subscription_plans')) {
             Schema::create('subscription_plans', function (Blueprint $table) {
                 $table->id();
@@ -68,6 +81,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('comercial_parametros');
         Schema::dropIfExists('subscription_plans');
         Schema::dropIfExists('monitoramento_planos');
     }
