@@ -32,6 +32,30 @@
             <p class="text-xs text-gray-500 mt-1">Notas fiscais validadas com ocorrências classificadas por severidade e categoria.</p>
         </div>
 
+        {{-- Risco de fornecedores: Consultas × Clearance (resumo; detalhe em /app/bi/cruzamentos) --}}
+        @if(!empty($cruzamentos) && (($cruzamentos['irregulares_qtd'] ?? 0) + ($cruzamentos['sancionados_qtd'] ?? 0) + ($cruzamentos['canceladas_qtd'] ?? 0)) > 0)
+            <a href="/app/bi/cruzamentos" data-link class="block bg-white rounded border border-gray-300 border-l-4 mb-6 p-4 hover:border-gray-400 transition-colors" style="border-left-color: #dc2626">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">Risco de fornecedores — Consultas × Clearance</span>
+                    <span class="text-[11px] text-blue-600">Ver detalhe →</span>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <p class="text-lg font-bold text-gray-900">{{ number_format($cruzamentos['irregulares_qtd'], 0, ',', '.') }}</p>
+                        <p class="text-[11px] text-gray-500">Fornecedores irregulares com compras (R$ {{ number_format($cruzamentos['irregulares_valor'], 2, ',', '.') }})</p>
+                    </div>
+                    <div>
+                        <p class="text-lg font-bold text-gray-900">{{ number_format($cruzamentos['sancionados_qtd'], 0, ',', '.') }}</p>
+                        <p class="text-[11px] text-gray-500">Fornecedores sancionados com compras (R$ {{ number_format($cruzamentos['sancionados_valor'], 2, ',', '.') }})</p>
+                    </div>
+                    <div>
+                        <p class="text-lg font-bold text-gray-900">{{ number_format($cruzamentos['canceladas_qtd'], 0, ',', '.') }}</p>
+                        <p class="text-[11px] text-gray-500">Notas canceladas na SEFAZ</p>
+                    </div>
+                </div>
+            </a>
+        @endif
+
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             @foreach($cards as $nivel => $card)
                 <a
