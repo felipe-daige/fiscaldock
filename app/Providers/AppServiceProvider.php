@@ -26,6 +26,11 @@ class AppServiceProvider extends ServiceProvider
             new \App\Services\Consultas\Fontes\CndMunicipalFonte,
             new \App\Services\Consultas\Fontes\ProtestosFonte,
         ]));
+
+        $this->app->bind(
+            \App\Support\Monitoramento\MonitoramentoNotifier::class,
+            \App\Support\Monitoramento\AlertaCentralNotifier::class,
+        );
     }
 
     /**

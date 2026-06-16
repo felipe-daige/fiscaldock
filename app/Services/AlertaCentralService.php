@@ -512,4 +512,53 @@ class AlertaCentralService
 
         return count($mesesFaltantes) > 0 ? $mesesFaltantes : null;
     }
+
+    /**
+     * Registra (ou atualiza) um alerta in-app do monitoramento contínuo.
+     * Dedup por (user_id, hash). `monitoramento_consulta_id` vai no `detalhes`
+     * (a tabela `alertas` não tem coluna própria pra isso).
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    public function registrarAlertaMonitoramento(array $payload): Alerta
+    {
+        $userId = $payload['user_id'];
+        $consultaId = $payload['monitoramento_consulta_id'] ?? null;
+
+        $hash = hash('sha256', implode(':', [
+            $userId,
+            $payload['tipo'],
+            $payload['participante_id'] ?? '',
+            $payload['cliente_id'] ?? '',
+            $consultaId ?? '',
+        ]));
+
+        $data = [
+            'tipo' => $payload['tipo'],
+            'categoria' => 'monitoramento',
+            'severidade' => $payload['severidade'],
+            'titulo' => $payload['titulo'],
+            'descricao' => $payload['descricao'],
+            'participante_id' => $payload['participante_id'] ?? null,
+            'cliente_id' => $payload['cliente_id'] ?? null,
+            'detalhes' => $consultaId ? ['monitoramento_consulta_id' => $consultaId] : null,
+        ];
+
+        $existing = Alerta::where('user_id', $userId)->where('hash', $hash)->first();
+
+        if ($existing) {
+            if (! in_array($existing->status, ['resolvido', 'ignorado'], true)) {
+                $data['status'] = 'ativo';
+            }
+            $existing->update($data);
+
+            return $existing;
+        }
+
+        return Alerta::create(array_merge($data, [
+            'user_id' => $userId,
+            'hash' => $hash,
+            'status' => 'ativo',
+        ]));
+    }
 }
