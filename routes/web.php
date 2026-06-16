@@ -276,6 +276,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/notas/validar', [ClearanceController::class, 'validarNotas'])
             ->middleware(RequiresEntitlement::class.':clearance_lote')->name('validar');
         Route::get('/notas/resultado/{consultaLoteId}', [ClearanceController::class, 'resultadoNotas'])->name('notas.resultado');
+        Route::get('/notas/resultado/{consultaLoteId}/pdf', [ClearanceController::class, 'resultadoPdf'])
+            ->middleware(RequiresEntitlement::class.':export')->name('notas.resultado-pdf');
         Route::get('/buscar', [ClearanceController::class, 'buscarNfe'])->name('buscar');
         Route::post('/buscar/consultar', [ClearanceController::class, 'consultarNfe'])->name('buscar.consultar');
         Route::get('/buscar/resultado/{consultaLoteId}', [ClearanceController::class, 'resultadoUltimaConsulta'])->name('buscar.resultado');

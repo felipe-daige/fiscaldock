@@ -11,9 +11,11 @@ use App\Models\XmlImportacao;
 use App\Models\XmlNota;
 use App\Services\Clearance\ClearanceLoteService;
 use App\Services\Clearance\DivergenciaService;
+use App\Services\Clearance\RelatorioExecutivoService;
 use App\Services\CreditService;
 use App\Services\NotaFiscalService;
 use App\Services\ValidacaoContabilService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
@@ -21,6 +23,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -930,6 +933,54 @@ class ClearanceController extends Controller
             'aguardaPersistencia' => $lote->isFinalizado() && $resultados->isEmpty(),
             'progressSnapshot' => $this->getClearanceProgressSnapshot($lote),
         ]);
+    }
+
+    /**
+     * PDF executivo do resultado do lote (entregável pro cliente final do escritório).
+     * Reusa o mesmo caminho de resultadoNotas e delega a montagem ao RelatorioExecutivoService.
+     * Gate: entitlement `export` (rota). Ownership: lote precisa ser do usuário (404).
+     */
+    public function resultadoPdf(Request $request, int $consultaLoteId)
+    {
+        if (! Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        $userId = Auth::id();
+
+        $lote = ConsultaLote::where('id', $consultaLoteId)
+            ->where('user_id', $userId)
+            ->first();
+
+        if (! $lote) {
+            abort(404);
+        }
+
+        $resultados = $this->listarConsultasDfePorLote($userId, $lote->id);
+
+        if ($resultados->isEmpty()) {
+            abort(404, 'Lote sem resultados de clearance para exportar.');
+        }
+
+        $divergencia = (new DivergenciaService)->analisar(
+            $resultados,
+            $userId,
+            (int) ($lote->creditos_cobrados ?? 0)
+        );
+
+        $relatorio = (new RelatorioExecutivoService)->montar($lote, $resultados, $divergencia);
+
+        Log::info('clearance.relatorio_executivo.download', [
+            'user_id' => $userId,
+            'lote_id' => $lote->id,
+            'ip' => $request->ip(),
+            'hash' => $relatorio['hash'],
+        ]);
+
+        $pdf = Pdf::loadView('autenticado.clearance.pdf.relatorio', ['r' => $relatorio])
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download("clearance-lote-{$lote->id}.pdf");
     }
 
     /**
