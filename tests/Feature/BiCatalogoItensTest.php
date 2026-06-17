@@ -74,3 +74,53 @@ it('mostra colunas de procedência, NCM e os KPIs principais', function () {
     expect($html)->toContain('12345678');          // NCM (via catálogo)
     expect($html)->toContain('Valor movimentado'); // KPI
 });
+
+function biXmlItem(int $userId, int $clienteId, string $chave, string $codItem, float $valor, string $ncm): void
+{
+    $nid = DB::table('xml_notas')->insertGetId([
+        'user_id' => $userId, 'cliente_id' => $clienteId, 'chave_acesso' => $chave, 'tipo_documento' => 'NFE',
+        'numero_documento' => '1', 'serie' => '1', 'data_emissao' => '2024-02-10', 'tipo_nota' => 1, 'modelo' => '55',
+        'emit_documento' => '00000000000100', 'dest_documento' => '99999999000191', 'valor_total' => $valor,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('xml_notas_itens')->insert([
+        'xml_nota_id' => $nid, 'user_id' => $userId, 'numero_item' => 1, 'codigo_item' => $codItem,
+        'descricao' => 'item xml', 'quantidade' => 1, 'valor_total' => $valor, 'cfop' => 5102, 'aliquota_icms' => 18,
+        'ncm' => $ncm, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+}
+
+it('mostra o KPI e o painel de NCM a revisar quando o item XML diverge do catálogo', function () {
+    [$user, $clienteId] = seedBiUser();
+    biCatalogo($user->id, $clienteId, 'DIVITEM', '11112222');
+    biXmlItem($user->id, $clienteId, str_pad('D', 44, '0', STR_PAD_LEFT), 'DIVITEM', 100.0, '99998888');
+
+    $html = actingAs($user)->get('/app/bi/catalogo-itens')->assertOk()->getContent();
+
+    expect($html)->toContain('NCM a revisar');   // KPI + título do painel
+    expect($html)->toContain('DIVITEM');          // linha do painel
+    expect($html)->toContain('99998888');         // NCM documento
+    expect($html)->toContain('11112222');         // NCM cadastro
+});
+
+it('mostra a faixa de reconciliação quando há nota XML documentada', function () {
+    [$user, $clienteId] = seedBiUser();
+    $chave = str_pad('R', 44, '0', STR_PAD_LEFT);
+    biEfdItem($user->id, $clienteId, $chave, 'P', 100.0);
+    biXmlItem($user->id, $clienteId, $chave, 'P', 100.0, '12345678');
+
+    $html = actingAs($user)->get('/app/bi/catalogo-itens')->assertOk()->getContent();
+
+    expect($html)->toContain('Reconciliação documento');
+    expect($html)->toContain('documentadas');
+});
+
+it('não mostra o painel de divergência quando não há divergência', function () {
+    [$user, $clienteId] = seedBiUser();
+    biCatalogo($user->id, $clienteId, 'OKITEM', '12345678');
+    biEfdItem($user->id, $clienteId, str_pad('A', 44, '0', STR_PAD_LEFT), 'OKITEM', 50.0);
+
+    $html = actingAs($user)->get('/app/bi/catalogo-itens')->assertOk()->getContent();
+
+    expect($html)->not->toContain('NCM a revisar (documento');  // título do painel ausente
+});

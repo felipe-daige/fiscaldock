@@ -10,12 +10,13 @@
         </div>
 
         {{-- KPIs --}}
-        <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
+        <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 mb-5">
             @foreach([
                 ['Itens movimentados', $kpis['total_itens'], '#1d4ed8'],
                 ['Com catálogo', $kpis['com_catalogo'], '#047857'],
                 ['Sem catálogo', $kpis['sem_catalogo'], '#b45309'],
                 ['Sem NCM', $kpis['sem_ncm'], '#b45309'],
+                ['NCM a revisar', $kpis['ncm_revisar'] ?? 0, '#b45309'],
             ] as [$label, $valor, $cor])
                 <div class="bg-white rounded border border-gray-300 border-l-4 p-3" style="border-left-color: {{ $cor }}">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{{ $label }}</p>
@@ -27,6 +28,52 @@
                 <p class="text-lg font-bold text-gray-900">{{ $fmtMoeda($kpis['valor_movimentado']) }}</p>
             </div>
         </div>
+
+        @if(($reconciliacao['documentadas'] ?? 0) > 0)
+            <div class="bg-white rounded border border-gray-300 p-3 mb-4">
+                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Reconciliação documento × declarado (por chave)</p>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                    <div><span class="font-bold text-gray-900">{{ number_format($reconciliacao['documentadas'], 0, ',', '.') }}</span> <span class="text-gray-500 text-[11px]">documentadas (XML)</span></div>
+                    <div><span class="font-bold" style="color:#047857">{{ number_format($reconciliacao['reconciliadas'], 0, ',', '.') }}</span> <span class="text-gray-500 text-[11px]">reconciliadas</span></div>
+                    <div><span class="font-bold" style="color:#b45309">{{ number_format($reconciliacao['divergencia_total'], 0, ',', '.') }}</span> <span class="text-gray-500 text-[11px]">divergência de total</span></div>
+                    <div><span class="font-bold" style="color:#dc2626">{{ number_format($reconciliacao['nao_declaradas'], 0, ',', '.') }}</span> <span class="text-gray-500 text-[11px]">não declaradas</span></div>
+                </div>
+                @if(($reconciliacao['efd_sem_xml'] ?? 0) > 0)
+                    <p class="text-[11px] text-gray-400 mt-2">Cobertura: {{ number_format($reconciliacao['efd_sem_xml'], 0, ',', '.') }} nota(s) declarada(s) no EFD sem XML no acervo (informativo, não é alerta).</p>
+                @endif
+            </div>
+        @endif
+
+        @if($divergencias->isNotEmpty())
+            <div class="bg-white rounded border border-gray-300 border-l-4 mb-4" style="border-left-color:#b45309">
+                <div class="px-4 py-2.5 border-b border-gray-200">
+                    <p class="text-sm font-semibold text-gray-800">NCM a revisar (documento × cadastro) — {{ $divergencias->count() }}</p>
+                    <p class="text-[11px] text-gray-500">O NCM do XML diverge do catálogo 0200. Pode ser erro de classificação ou atualização posterior do cadastro.</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 text-[10px] uppercase tracking-wide text-gray-400">
+                            <tr>
+                                <th class="text-left px-3 py-2">Código</th>
+                                <th class="text-left px-3 py-2">Descrição</th>
+                                <th class="text-left px-3 py-2">NCM documento</th>
+                                <th class="text-left px-3 py-2">NCM cadastro</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach($divergencias as $d)
+                                <tr>
+                                    <td class="px-3 py-2 font-mono text-gray-900">{{ $d['codigo_item'] }}</td>
+                                    <td class="px-3 py-2 text-gray-700 truncate max-w-xs" title="{{ $d['descricao'] }}">{{ $d['descricao'] }}</td>
+                                    <td class="px-3 py-2 font-mono"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold text-white" style="background-color:#b45309">{{ $d['ncm_xml'] ?: '—' }}</span></td>
+                                    <td class="px-3 py-2 font-mono text-gray-600">{{ $d['cat_ncm'] ?: '—' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
 
         @if($kpis['sem_catalogo'] > 0)
             <div class="bg-white rounded border border-gray-300 border-l-4 mb-4 p-4" style="border-left-color: #b45309">
