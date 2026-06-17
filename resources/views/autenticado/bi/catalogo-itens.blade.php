@@ -65,7 +65,7 @@
                                 <tr>
                                     <td class="px-3 py-2 font-mono text-gray-900">{{ $d['codigo_item'] }}</td>
                                     <td class="px-3 py-2 text-gray-700 truncate max-w-xs" title="{{ $d['descricao'] }}">{{ $d['descricao'] }}</td>
-                                    <td class="px-3 py-2 font-mono"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold text-white" style="background-color:#b45309">{{ $d['ncm_xml'] ?: '—' }}</span></td>
+                                    <td class="px-3 py-2 font-mono font-semibold" style="color:#b45309">{{ $d['ncm_xml'] ?: '—' }}</td>
                                     <td class="px-3 py-2 font-mono text-gray-600">{{ $d['cat_ncm'] ?: '—' }}</td>
                                 </tr>
                             @endforeach
