@@ -180,19 +180,19 @@
             <div id="clientes-list-view" class="bg-white rounded border border-gray-300 overflow-hidden">
                 @if(isset($clientes) && $clientes->count() > 0)
                     <div class="overflow-x-auto">
-                        <table class="w-full">
+                        <table class="w-full table-fixed">
                             <thead>
                                 <tr class="border-b border-gray-300">
                                     <th class="w-10 px-3 py-2.5 text-left bg-gray-50">
                                         <input type="checkbox" id="select-all-clientes" class="w-4 h-4 rounded border-gray-300 text-gray-700 focus:ring-gray-400">
                                     </th>
-                                    <th class="w-12 px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50"></th>
+                                    <th class="w-10 px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50"></th>
                                     <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Cliente</th>
-                                    <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Documento</th>
-                                    <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Contato</th>
-                                    <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participantes</th>
-                                    <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Status</th>
-                                    <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ações</th>
+                                    <th class="w-[150px] px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Documento</th>
+                                    <th class="hidden xl:table-cell w-[190px] px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Contato</th>
+                                    <th class="w-[90px] px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Particip.</th>
+                                    <th class="w-[180px] px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Status</th>
+                                    <th class="w-[72px] px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ações</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
@@ -217,11 +217,12 @@
                                             </button>
                                         </td>
                                         <td class="px-3 py-3">
-                                            <div class="flex items-center gap-2 flex-wrap">
+                                            <div class="flex items-center gap-2 flex-wrap min-w-0">
                                                 <a
                                                     href="/app/cliente/{{ $cliente->id }}"
                                                     data-link
-                                                    class="text-sm text-gray-900 hover:text-gray-600 hover:underline"
+                                                    class="text-sm text-gray-900 hover:text-gray-600 hover:underline truncate max-w-full"
+                                                    title="{{ $cliente->razao_social ?? $cliente->nome ?? '-' }}"
                                                 >
                                                     {{ $cliente->razao_social ?? $cliente->nome ?? '-' }}
                                                 </a>
@@ -262,10 +263,10 @@
                                                 {{ $cliente->consulta_status_meta }}
                                             </div>
                                         </td>
-                                        <td class="px-3 py-3 text-sm text-gray-700 font-mono">{{ $cliente->documento_formatado }}</td>
-                                        <td class="px-3 py-3">
-                                            <div class="text-sm text-gray-700">{{ $cliente->email ?: '-' }}</div>
-                                            <div class="text-[11px] text-gray-500 mt-1">
+                                        <td class="px-3 py-3 text-sm text-gray-700 font-mono truncate" title="{{ $cliente->documento_formatado }}">{{ $cliente->documento_formatado }}</td>
+                                        <td class="hidden xl:table-cell px-3 py-3">
+                                            <div class="text-sm text-gray-700 truncate" title="{{ $cliente->email ?: '' }}">{{ $cliente->email ?: '-' }}</div>
+                                            <div class="text-[11px] text-gray-500 mt-1 truncate">
                                                 {{ $cliente->telefone ?: 'Sem telefone' }}
                                                 @if($cliente->uf)
                                                     <span class="mx-1">·</span>{{ $cliente->uf }}
