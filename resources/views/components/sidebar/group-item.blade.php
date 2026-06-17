@@ -10,7 +10,7 @@
     <span class="sidebar__group-menu-item-label">{{ $slot }}</span>
 
     @if($pill)
-        <span class="sidebar__group-menu-item-pill" style="background-color: #fef3c7; color: #92400e;">{{ $pill }}</span>
+        <span class="sidebar__group-menu-item-pill" style="background-color: #dcfce7; color: #166534;">{{ $pill }}</span>
     @elseif($suffix)
         <span class="sidebar__group-menu-item-suffix" aria-hidden="true">
             @if($suffix === 'development')
