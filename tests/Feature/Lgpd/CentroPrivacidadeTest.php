@@ -21,6 +21,21 @@ it('redireciona visitante não autenticado', function () {
     $this->get('/app/privacidade')->assertRedirect();
 });
 
+it('o link para a política pública abre em nova aba e não é interceptado pelo SPA', function () {
+    // Regressão: link com data-link para /privacidade (rota pública, fora de /app/) jogava o
+    // usuário na landing e bugava o histórico do SPA no botão voltar. Deve abrir em aba nova.
+    $user = User::factory()->create();
+
+    $html = actingAs($user)->get('/app/privacidade')->assertOk()->getContent();
+
+    // casa SÓ a URL pública exata (route('privacidade')), não o link de sidebar /app/privacidade
+    $url = preg_quote(route('privacidade'), '/');
+
+    // a âncora que aponta para a política pública precisa ter target="_blank" e NÃO ter data-link
+    expect($html)->toMatch('/<a[^>]*href="'.$url.'"[^>]*target="_blank"/');
+    expect($html)->not->toMatch('/<a[^>]*href="'.$url.'"[^>]*data-link/');
+});
+
 it('revoga o consentimento de marketing', function () {
     $user = User::factory()->create(['marketing_opt_in' => true, 'marketing_opt_in_at' => now()]);
 

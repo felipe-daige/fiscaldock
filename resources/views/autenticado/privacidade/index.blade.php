@@ -33,7 +33,7 @@
                         <p class="font-medium text-gray-900">Termos e Política de Privacidade</p>
                         <p class="text-[12px] text-gray-500">{{ $fmtData($user->terms_accepted_at) ? 'Aceitos em '.$fmtData($user->terms_accepted_at) : 'Sem registro de aceite' }}</p>
                     </div>
-                    <a href="/privacidade" data-link class="text-[12px] text-blue-600 hover:underline">Ver política →</a>
+                    <a href="{{ route('privacidade') }}" target="_blank" rel="noopener" class="text-[12px] text-blue-600 hover:underline">Ver política →</a>
                 </div>
                 <div class="flex items-center justify-between border-t border-gray-100 pt-3">
                     <div>
