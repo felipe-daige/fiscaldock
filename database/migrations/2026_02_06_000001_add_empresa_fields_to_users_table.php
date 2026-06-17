@@ -25,6 +25,9 @@ return new class extends Migration
             if (! Schema::hasColumn('users', 'desafio_principal')) {
                 $table->string('desafio_principal', 100)->nullable()->after('faturamento_anual');
             }
+            if (! Schema::hasColumn('users', 'desafio_secundario')) {
+                $table->string('desafio_secundario', 100)->nullable()->after('desafio_principal');
+            }
         });
 
         // Backfill apenas no Postgres (UPDATE...FROM não é suportado em SQLite)
@@ -44,7 +47,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['empresa', 'cargo', 'cnpj', 'faturamento_anual', 'desafio_principal']);
+            $table->dropColumn(['empresa', 'cargo', 'cnpj', 'faturamento_anual', 'desafio_principal', 'desafio_secundario']);
         });
     }
 };

@@ -95,6 +95,142 @@ test('signup rejeita senha fraca sem letras+numeros', function () {
     $response->assertJsonValidationErrors('senha');
 });
 
+test('signup explica em pt-BR o que falta na senha', function () {
+    $response = $this->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/criar-conta', [
+        'nome' => 'Joao',
+        'sobrenome' => 'Silva',
+        'email' => 'joao-senha@example.com',
+        'telefone' => '67999990000',
+        'senha' => 'abcdefghij', // só letras, sem número
+        'senha_confirmation' => 'abcdefghij',
+        'empresa' => 'Empresa X',
+        'cargo' => 'Contador',
+        'documento' => '11144477735',
+        'faturamento' => 'ate-360k',
+        'desafio_principal' => 'documentos_espalhados',
+        'terms_aceitos' => true,
+    ]);
+
+    $response->assertStatus(422);
+    expect($response->json('errors.senha.0'))->toContain('número');
+});
+
+test('signup salva desafio secundario opcional', function () {
+    $response = $this->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/criar-conta', [
+        'nome' => 'Ana',
+        'sobrenome' => 'Lima',
+        'email' => 'ana@example.com',
+        'telefone' => '67911110000',
+        'senha' => 'Xk9382mZqp01',
+        'senha_confirmation' => 'Xk9382mZqp01',
+        'empresa' => 'Empresa Ana',
+        'cargo' => 'Contadora',
+        'documento' => '11144477735',
+        'faturamento' => 'ate-360k',
+        'desafio_principal' => 'documentos_espalhados',
+        'desafio_secundario' => 'falta_visao',
+        'terms_aceitos' => true,
+    ]);
+
+    $response->assertStatus(200);
+    expect(User::where('email', 'ana@example.com')->value('desafio_secundario'))->toBe('falta_visao');
+});
+
+test('signup rejeita desafio secundario igual ao principal', function () {
+    $response = $this->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/criar-conta', [
+        'nome' => 'Ana',
+        'sobrenome' => 'Lima',
+        'email' => 'ana2@example.com',
+        'telefone' => '67911110001',
+        'senha' => 'Xk9382mZqp01',
+        'senha_confirmation' => 'Xk9382mZqp01',
+        'empresa' => 'Empresa Ana',
+        'cargo' => 'Contadora',
+        'documento' => '11144477735',
+        'faturamento' => 'ate-360k',
+        'desafio_principal' => 'documentos_espalhados',
+        'desafio_secundario' => 'documentos_espalhados',
+        'terms_aceitos' => true,
+    ]);
+
+    $response->assertStatus(422);
+    $response->assertJsonValidationErrors('desafio_secundario');
+});
+
+test('signup permite documento que ja e cliente de outro usuario (unique por usuario)', function () {
+    // Cenário do bug em prod: o CNPJ da empresa do novo usuário já existe na base
+    // como cliente de OUTRA conta. Com UNIQUE global em clientes.documento isso dava
+    // 500 (clientes_documento_unique). O correto é UNIQUE(user_id, documento).
+    $outro = User::factory()->create([
+        'email' => 'dono@example.com',
+        'telefone' => '67900000000',
+        'cnpj' => '00000000000191',
+        'empresa' => 'Contabilidade do Outro',
+    ]);
+
+    \App\Models\Cliente::create([
+        'user_id' => $outro->id,
+        'tipo_pessoa' => 'PJ',
+        'documento' => '97551165000193',
+        'nome' => 'Hidratop Comercio',
+        'razao_social' => 'Hidratop Comercio',
+        'is_empresa_propria' => false,
+    ]);
+
+    $response = $this->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/criar-conta', [
+        'nome' => 'Marcio',
+        'sobrenome' => 'Oliveira',
+        'email' => 'marcio@example.com',
+        'telefone' => '67999571609',
+        'senha' => 'Xk9382mZqp01',
+        'senha_confirmation' => 'Xk9382mZqp01',
+        'empresa' => 'Hidratop Comercio',
+        'cargo' => 'Contador',
+        'documento' => '97.551.165/0001-93',
+        'faturamento' => 'ate-360k',
+        'desafio_principal' => 'documentos_espalhados',
+        'terms_aceitos' => true,
+    ]);
+
+    $response->assertStatus(200);
+    $response->assertJson(['success' => true]);
+
+    // Os dois clientes coexistem — um por usuário.
+    expect(\App\Models\Cliente::where('documento', '97551165000193')->count())->toBe(2);
+});
+
+test('signup com e-mail novo nao trava por telefone, CNPJ ou nome ja existentes', function () {
+    // Bug reportado: ao testar com um e-mail novo mantendo o mesmo telefone/CNPJ/nome
+    // de um usuário existente, o cadastro travava. Só o e-mail repetido deve bloquear.
+    User::factory()->create([
+        'email' => 'existente@example.com',
+        'name' => 'Felipe',
+        'sobrenome' => 'Daige',
+        'empresa' => 'Empresa Repetida',
+        'telefone' => '67999844366',
+        'cnpj' => '63112970000107',
+    ]);
+
+    $response = $this->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/criar-conta', [
+        'nome' => 'Felipe',
+        'sobrenome' => 'Daige',
+        'email' => 'novo@example.com', // e-mail NOVO
+        'telefone' => '(67) 99984-4366', // mesmo telefone
+        'senha' => 'Xk9382mZqp01',
+        'senha_confirmation' => 'Xk9382mZqp01',
+        'empresa' => 'Empresa Repetida', // mesma empresa
+        'cargo' => 'Contador',
+        'documento' => '63.112.970/0001-07', // mesmo CNPJ
+        'faturamento' => 'ate-360k',
+        'desafio_principal' => 'documentos_espalhados',
+        'terms_aceitos' => true,
+    ]);
+
+    $response->assertStatus(200);
+    $response->assertJson(['success' => true]);
+    expect(User::where('email', 'novo@example.com')->exists())->toBeTrue();
+});
+
 test('conflito de signup usa mensagem generica (anti-enumeracao)', function () {
     User::factory()->create([
         'email' => 'existe@example.com',

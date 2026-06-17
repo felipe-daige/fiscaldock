@@ -26,16 +26,9 @@
                     </div>
 
                     <div class="p-4 sm:p-5">
-                        @if ($errors->any())
-                            <div class="mb-4 bg-white rounded border border-gray-300 p-4 border-l-4 border-l-red-500">
-                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Falha no cadastro</p>
-                                <ul class="mt-2 space-y-1 text-sm text-gray-700">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
+                        {{-- Alerta de topo só para erro genérico do servidor (sem campo). Erros de
+                             campo aparecem inline, abaixo de cada campo (ver .field-error). --}}
+                        <div id="signup-alert" class="mb-4 hidden bg-white rounded border border-gray-300 p-3 border-l-4 border-l-red-500 text-sm text-gray-700"></div>
 
                         <form id="signup-form" class="space-y-5" method="POST" action="{{ route('signup.post') }}">
                             @csrf
@@ -46,26 +39,45 @@
                                     <div>
                                         <label for="nome" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Nome</label>
                                         <input type="text" id="nome" name="nome" value="{{ old('nome') }}" required class="w-full border border-gray-300 rounded text-sm px-3 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="João">
+                                        <p class="field-error empty:hidden mt-1 text-[11px] text-red-600" data-error="nome">@error('nome'){{ $message }}@enderror</p>
                                     </div>
                                     <div>
                                         <label for="sobrenome" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Sobrenome</label>
                                         <input type="text" id="sobrenome" name="sobrenome" value="{{ old('sobrenome') }}" required class="w-full border border-gray-300 rounded text-sm px-3 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="Silva">
+                                        <p class="field-error empty:hidden mt-1 text-[11px] text-red-600" data-error="sobrenome">@error('sobrenome'){{ $message }}@enderror</p>
                                     </div>
                                     <div>
                                         <label for="signup-email" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">E-mail corporativo</label>
                                         <input type="email" id="signup-email" name="email" value="{{ old('email') }}" required class="w-full border border-gray-300 rounded text-sm px-3 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="seu@empresa.com.br">
+                                        <p class="field-error empty:hidden mt-1 text-[11px] text-red-600" data-error="email">@error('email'){{ $message }}@enderror</p>
                                     </div>
                                     <div>
                                         <label for="telefone" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Telefone</label>
                                         <input type="tel" id="telefone" name="telefone" value="{{ old('telefone') }}" required class="w-full border border-gray-300 rounded text-sm px-3 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="(67) 99984-4366">
+                                        <p class="field-error empty:hidden mt-1 text-[11px] text-red-600" data-error="telefone">@error('telefone'){{ $message }}@enderror</p>
                                     </div>
                                     <div>
                                         <label for="senha" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Senha</label>
-                                        <input type="password" id="senha" name="senha" required minlength="8" class="w-full border border-gray-300 rounded text-sm px-3 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="Mínimo 8 caracteres">
+                                        <div class="relative">
+                                            <input type="password" id="senha" name="senha" required minlength="8" class="w-full border border-gray-300 rounded text-sm pl-3 pr-10 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="Mínimo 8 caracteres">
+                                            <button type="button" class="senha-toggle absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600" data-target="senha" aria-label="Mostrar senha" tabindex="-1">
+                                                <svg class="icon-eye w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                <svg class="icon-eye-off w-4 h-4 hidden" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.22A10.5 10.5 0 002.25 12s3.75 7.5 9.75 7.5c1.6 0 3.06-.38 4.35-1.01M9.88 5.09A10.6 10.6 0 0112 4.5c6 0 9.75 7.5 9.75 7.5a17 17 0 01-2.83 3.74M9.9 9.9a3 3 0 104.2 4.2M3 3l18 18"/></svg>
+                                            </button>
+                                        </div>
+                                        <p class="mt-1 text-[11px] text-gray-500">Pelo menos 8 caracteres, com uma letra e um número.</p>
+                                        <p class="field-error empty:hidden mt-1 text-[11px] text-red-600" data-error="senha">@error('senha'){{ $message }}@enderror</p>
                                     </div>
                                     <div>
                                         <label for="senha_confirmation" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Confirmar senha</label>
-                                        <input type="password" id="senha_confirmation" name="senha_confirmation" required minlength="8" class="w-full border border-gray-300 rounded text-sm px-3 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="Repita a senha">
+                                        <div class="relative">
+                                            <input type="password" id="senha_confirmation" name="senha_confirmation" required minlength="8" class="w-full border border-gray-300 rounded text-sm pl-3 pr-10 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="Repita a senha">
+                                            <button type="button" class="senha-toggle absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600" data-target="senha_confirmation" aria-label="Mostrar senha" tabindex="-1">
+                                                <svg class="icon-eye w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                <svg class="icon-eye-off w-4 h-4 hidden" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.22A10.5 10.5 0 002.25 12s3.75 7.5 9.75 7.5c1.6 0 3.06-.38 4.35-1.01M9.88 5.09A10.6 10.6 0 0112 4.5c6 0 9.75 7.5 9.75 7.5a17 17 0 01-2.83 3.74M9.9 9.9a3 3 0 104.2 4.2M3 3l18 18"/></svg>
+                                            </button>
+                                        </div>
+                                        <p class="field-error empty:hidden mt-1 text-[11px] text-red-600" data-error="senha_confirmation">@error('senha_confirmation'){{ $message }}@enderror</p>
                                     </div>
                                 </div>
                             </div>
@@ -76,24 +88,27 @@
                                     <div>
                                         <label for="empresa" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Empresa</label>
                                         <input type="text" id="empresa" name="empresa" value="{{ old('empresa') }}" required class="w-full border border-gray-300 rounded text-sm px-3 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="Nome da empresa">
+                                        <p class="field-error empty:hidden mt-1 text-[11px] text-red-600" data-error="empresa">@error('empresa'){{ $message }}@enderror</p>
                                     </div>
                                     <div>
                                         <label for="cargo" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Cargo</label>
                                         <input type="text" id="cargo" name="cargo" value="{{ old('cargo') }}" required class="w-full border border-gray-300 rounded text-sm px-3 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="Ex: Contador, Financeiro, Sócio">
+                                        <p class="field-error empty:hidden mt-1 text-[11px] text-red-600" data-error="cargo">@error('cargo'){{ $message }}@enderror</p>
                                     </div>
                                     <div>
                                         <label for="documento" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">CPF ou CNPJ</label>
                                         <input type="text" id="documento" name="documento" value="{{ old('documento') }}" required class="w-full border border-gray-300 rounded text-sm px-3 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="000.000.000-00 ou 00.000.000/0000-00">
+                                        <p class="field-error empty:hidden mt-1 text-[11px] text-red-600" data-error="documento">@error('documento'){{ $message }}@enderror</p>
                                     </div>
                                     <div>
                                         <label for="faturamento" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Faturamento anual</label>
                                         <select id="faturamento" name="faturamento" required class="w-full border border-gray-300 rounded text-sm px-3 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                                             <option value="">Selecione</option>
-                                            <option value="ate-360k" @selected(old('faturamento') === 'ate-360k')>Até R$ 360 mil</option>
-                                            <option value="360k-4.8m" @selected(old('faturamento') === '360k-4.8m')>R$ 360 mil a R$ 4,8 milhões</option>
-                                            <option value="4.8m-300m" @selected(old('faturamento') === '4.8m-300m')>R$ 4,8 milhões a R$ 300 milhões</option>
-                                            <option value="acima-300m" @selected(old('faturamento') === 'acima-300m')>Acima de R$ 300 milhões</option>
+                                            @foreach(config('cadastro.faturamento') as $valor => $label)
+                                                <option value="{{ $valor }}" @selected(old('faturamento') === $valor)>{{ $label }}</option>
+                                            @endforeach
                                         </select>
+                                        <p class="field-error empty:hidden mt-1 text-[11px] text-red-600" data-error="faturamento">@error('faturamento'){{ $message }}@enderror</p>
                                     </div>
                                 </div>
                             </div>
@@ -101,20 +116,25 @@
                             <div class="border-t border-gray-200 pt-5">
                                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-3">Principal desafio</p>
                                 <div class="space-y-2 text-sm text-gray-700">
-                                    @php
-                                        $desafios = [
-                                            'documentos_espalhados' => 'Documentos espalhados sem histórico',
-                                            'pendencias_fim_mes' => 'Corrida no fim do mês com pendências',
-                                            'comunicacao_manual' => 'Comunicação manual sem rastreabilidade',
-                                            'falta_visao' => 'Falta de visão do que está certo ou falta',
-                                        ];
-                                    @endphp
+                                    @php $desafios = config('cadastro.desafios'); @endphp
                                     @foreach($desafios as $valor => $label)
                                         <label class="flex items-center gap-2">
                                             <input type="radio" name="desafio_principal" value="{{ $valor }}" @checked(old('desafio_principal') === $valor) required class="text-gray-700 focus:ring-gray-500">
                                             <span>{{ $label }}</span>
                                         </label>
                                     @endforeach
+                                </div>
+                                <p class="field-error empty:hidden mt-2 text-[11px] text-red-600" data-error="desafio_principal">@error('desafio_principal'){{ $message }}@enderror</p>
+
+                                <div class="mt-4">
+                                    <label for="desafio_secundario" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Desafio secundário (opcional)</label>
+                                    <select id="desafio_secundario" name="desafio_secundario" class="w-full border border-gray-300 rounded text-sm px-3 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                                        <option value="">Nenhum</option>
+                                        @foreach($desafios as $valor => $label)
+                                            <option value="{{ $valor }}" @selected(old('desafio_secundario') === $valor)>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    <p class="field-error empty:hidden mt-1 text-[11px] text-red-600" data-error="desafio_secundario">@error('desafio_secundario'){{ $message }}@enderror</p>
                                 </div>
                             </div>
 
@@ -128,6 +148,7 @@
                                         <a href="{{ route('privacidade') }}" class="hover:underline" style="color: #1e4fa0">Política de Privacidade</a>.
                                     </span>
                                 </label>
+                                <p class="field-error empty:hidden text-[11px] text-red-600" data-error="terms_aceitos">@error('terms_aceitos'){{ $message }}@enderror</p>
 
                                 <label for="marketing_opt_in" class="flex items-start gap-2 text-sm text-gray-600">
                                     <input type="checkbox" id="marketing_opt_in" name="marketing_opt_in" value="1" @checked(old('marketing_opt_in')) class="mt-0.5 h-4 w-4 border border-gray-300 rounded text-gray-800 focus:ring-1 focus:ring-gray-400">

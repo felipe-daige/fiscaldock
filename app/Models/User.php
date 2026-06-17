@@ -23,6 +23,7 @@ class User extends Authenticatable
         'cnpj',
         'faturamento_anual',
         'desafio_principal',
+        'desafio_secundario',
         'terms_accepted_at',
         'marketing_opt_in',
         'marketing_opt_in_at',

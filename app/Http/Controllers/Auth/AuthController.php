@@ -262,10 +262,21 @@ class AuthController extends Controller
                 'documento' => 'required|string|max:18',
                 'faturamento' => 'required|string|max:255',
                 'desafio_principal' => 'required|string|max:100',
+                'desafio_secundario' => 'nullable|string|max:100|different:desafio_principal',
                 'terms_aceitos' => 'accepted',
                 'marketing_opt_in' => 'nullable|boolean',
             ], [
                 'terms_aceitos.accepted' => 'Você precisa aceitar os Termos de Uso e a Política de Privacidade.',
+                'desafio_secundario.different' => 'O desafio secundário precisa ser diferente do principal.',
+                // Mensagens claras em pt-BR para a senha (locale do app é "en";
+                // a regra Password emite falhas nas chaves password.letters/numbers/uncompromised).
+                'senha.required' => 'Informe uma senha.',
+                'senha.confirmed' => 'A confirmação de senha não confere.',
+                'senha.min' => 'A senha deve ter pelo menos 8 caracteres.',
+                'senha.string' => 'A senha informada é inválida.',
+                'senha.password.letters' => 'A senha deve conter pelo menos uma letra.',
+                'senha.password.numbers' => 'A senha deve conter pelo menos um número.',
+                'senha.password.uncompromised' => 'Esta senha apareceu em vazamentos públicos de dados. Por segurança, escolha outra.',
             ]);
 
             $validated['telefone'] = $this->normalizePhone($validated['telefone']);
@@ -334,6 +345,7 @@ class AuthController extends Controller
                 'cnpj' => $validated['documento'],
                 'faturamento_anual' => $validated['faturamento'],
                 'desafio_principal' => $validated['desafio_principal'],
+                'desafio_secundario' => $validated['desafio_secundario'] ?? null,
                 'terms_accepted_at' => now(),
                 'terms_version' => config('legal.terms_version'),
                 'privacy_version' => config('legal.privacy_version'),
@@ -410,23 +422,13 @@ class AuthController extends Controller
     private function detectSignupConflict(array $validated): ?string
     {
         $email = mb_strtolower(trim($validated['email']));
-        $telefone = $validated['telefone'];
-        $documento = $validated['documento'];
 
-        $sameProfile = User::query()
-            ->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($validated['nome']))])
-            ->whereRaw('LOWER(sobrenome) = ?', [mb_strtolower(trim($validated['sobrenome']))])
-            ->whereRaw('LOWER(empresa) = ?', [mb_strtolower(trim($validated['empresa']))])
-            ->exists();
-
-        // Mensagem única e genérica para não permitir enumerar quais dados
-        // (e-mail, telefone, CPF/CNPJ) já existem na base via tentativas de cadastro.
-        $jaExiste = $sameProfile
-            || User::where('email', $email)->exists()
-            || User::where('telefone', $telefone)->exists()
-            || User::where('cnpj', $documento)->exists();
-
-        if ($jaExiste) {
+        // A identidade da conta é o e-mail (único no banco — users_email_unique).
+        // Telefone, CPF/CNPJ e nome+empresa podem legitimamente se repetir entre
+        // contas (colega da mesma empresa, contador com vários clientes — coerente
+        // com o unique por-usuário de clientes.documento). Só o e-mail repetido
+        // bloqueia. Mensagem genérica para não confirmar diretamente a existência.
+        if (User::where('email', $email)->exists()) {
             return 'Não foi possível concluir o cadastro com estes dados. Se você já tem conta, faça login ou fale com nosso time.';
         }
 

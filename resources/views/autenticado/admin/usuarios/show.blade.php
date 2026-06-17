@@ -31,6 +31,17 @@
             @endforeach
         </div>
 
+        {{-- Perfil de cadastro (coletado no signup) --}}
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
+            <div class="px-4 py-2.5 border-b border-gray-200"><p class="text-sm font-semibold text-gray-800">Perfil de cadastro</p></div>
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 p-4 text-sm">
+                <div class="flex justify-between gap-3"><dt class="text-gray-500">Cargo</dt><dd class="text-gray-900 text-right">{{ $usuario->cargo ?: '—' }}</dd></div>
+                <div class="flex justify-between gap-3"><dt class="text-gray-500">Faturamento anual</dt><dd class="text-gray-900 text-right">{{ config('cadastro.faturamento.'.$usuario->faturamento_anual, $usuario->faturamento_anual ?: '—') }}</dd></div>
+                <div class="flex justify-between gap-3"><dt class="text-gray-500">Desafio principal</dt><dd class="text-gray-900 text-right">{{ config('cadastro.desafios.'.$usuario->desafio_principal, $usuario->desafio_principal ?: '—') }}</dd></div>
+                <div class="flex justify-between gap-3"><dt class="text-gray-500">Desafio secundário</dt><dd class="text-gray-900 text-right">{{ config('cadastro.desafios.'.$usuario->desafio_secundario, $usuario->desafio_secundario ?: '—') }}</dd></div>
+            </dl>
+        </div>
+
         @if($usuario->deletion_requested_at)
             <div class="bg-white rounded border border-gray-300 border-l-4 mb-4 p-3 text-sm text-gray-700" style="border-left-color:#dc2626">
                 Exclusão de conta solicitada em {{ \Carbon\Carbon::parse($usuario->deletion_requested_at)->format('d/m/Y') }} (LGPD).

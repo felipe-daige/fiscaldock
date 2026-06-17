@@ -24,15 +24,11 @@
                         <p class="text-xs text-gray-500 mt-3">Informe seu e-mail corporativo e senha para acessar o ambiente autenticado.</p>
                     </div>
 
+                    {{-- Erro de credencial (genérico, anti-enumeração) aparece neste alerta inline.
+                         Erros de formato de campo aparecem abaixo de cada campo (.field-error). --}}
+                    <div id="login-alert" class="mb-4 hidden bg-white rounded border border-gray-300 p-3 border-l-4 border-l-red-500 text-sm text-gray-700"></div>
                     @if ($errors->any())
-                        <div class="mb-4 bg-white rounded border border-gray-300 p-4 border-l-4 border-l-red-500">
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Falha de autenticação</p>
-                            <ul class="mt-2 space-y-1 text-sm text-gray-700">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
+                        <div class="mb-4 bg-white rounded border border-gray-300 p-3 border-l-4 border-l-red-500 text-sm text-gray-700">{{ $errors->first() }}</div>
                     @endif
 
                     <form id="login-form" class="space-y-4" method="POST" action="/login">
@@ -59,15 +55,21 @@
                                 <label for="password" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Senha</label>
                                 <span class="text-[10px] text-gray-500 uppercase tracking-wide">Mínimo de 8 caracteres</span>
                             </div>
-                            <input
-                                type="password"
-                                id="password"
-                                name="password"
-                                required
-                                autocomplete="current-password"
-                                class="w-full border border-gray-300 rounded text-sm px-3 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
-                                placeholder="Digite sua senha"
-                            >
+                            <div class="relative">
+                                <input
+                                    type="password"
+                                    id="password"
+                                    name="password"
+                                    required
+                                    autocomplete="current-password"
+                                    class="w-full border border-gray-300 rounded text-sm pl-3 pr-10 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                    placeholder="Digite sua senha"
+                                >
+                                <button type="button" class="senha-toggle absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600" data-target="password" aria-label="Mostrar senha" tabindex="-1">
+                                    <svg class="icon-eye w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    <svg class="icon-eye-off w-4 h-4 hidden" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.22A10.5 10.5 0 002.25 12s3.75 7.5 9.75 7.5c1.6 0 3.06-.38 4.35-1.01M9.88 5.09A10.6 10.6 0 0112 4.5c6 0 9.75 7.5 9.75 7.5a17 17 0 01-2.83 3.74M9.9 9.9a3 3 0 104.2 4.2M3 3l18 18"/></svg>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="flex items-center justify-between gap-3">

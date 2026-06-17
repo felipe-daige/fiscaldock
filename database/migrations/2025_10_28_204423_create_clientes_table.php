@@ -19,7 +19,10 @@ return new class extends Migration
             $table->enum('tipo_pessoa', ['PF', 'PJ'])->default('PJ');
             
             // Dados principais
-            $table->string('documento')->unique(); // CPF ou CNPJ
+            // Documento é único POR usuário, não global: o mesmo CNPJ pode ser
+            // cliente (ou empresa própria) de contas diferentes. Unique composto
+            // declarado abaixo, após todas as colunas.
+            $table->string('documento'); // CPF ou CNPJ
             $table->string('nome')->nullable(); // Nome fantasia ou nome da pessoa
             $table->string('razao_social')->nullable(); // Razão social (obrigatório para PJ; null p/ PF)
             
@@ -33,8 +36,12 @@ return new class extends Migration
             
             // Status
             $table->boolean('ativo')->default(true);
-            
+
             $table->timestamps();
+
+            // Unicidade por usuário: cada conta não pode repetir o mesmo CPF/CNPJ,
+            // mas o mesmo documento pode existir em contas diferentes.
+            $table->unique(['user_id', 'documento']);
         });
     }
 
