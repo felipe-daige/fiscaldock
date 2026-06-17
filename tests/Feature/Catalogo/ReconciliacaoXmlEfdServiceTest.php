@@ -156,3 +156,26 @@ it('resumoAlertas sem nada retorna tudo zero e temSinal false', function () {
     expect($r['nao_declaradas_qtd'])->toBe(0);
     expect($r['temSinal'])->toBeFalse();
 });
+
+it('resumoAlertas conta item XML cujo código não está no catálogo (sem_catalogo_qtd)', function () {
+    [$user, $cli] = reconSeedUser();
+
+    // item XML com código FORA do catálogo (nenhum efd_catalogo_itens cadastrado)
+    $nid = DB::table('xml_notas')->insertGetId([
+        'user_id' => $user->id, 'cliente_id' => $cli, 'chave_acesso' => str_pad('E', 44, '0', STR_PAD_LEFT),
+        'tipo_documento' => 'NFE', 'numero_documento' => '1', 'serie' => '1', 'data_emissao' => '2024-01-10',
+        'tipo_nota' => 1, 'modelo' => '55', 'emit_documento' => '00000000000100', 'dest_documento' => '99999999000191',
+        'valor_total' => 10.0, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('xml_notas_itens')->insert([
+        'xml_nota_id' => $nid, 'user_id' => $user->id, 'numero_item' => 1, 'codigo_item' => 'FORA',
+        'descricao' => 'item', 'quantidade' => 1, 'valor_total' => 10.0, 'cfop' => 5102, 'aliquota_icms' => 18,
+        'ncm' => '12345678', 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    $r = app(ReconciliacaoXmlEfdService::class)->resumoAlertas($user->id);
+
+    expect($r['sem_catalogo_qtd'])->toBe(1);
+    expect($r['ncm_revisar_qtd'])->toBe(0); // sem catálogo não acusa divergência de NCM
+    expect($r['temSinal'])->toBeTrue();
+});

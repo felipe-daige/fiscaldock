@@ -42,7 +42,8 @@ it('mostra o card Catálogo × Documentos quando há sinal', function () {
 
     actingAs($user)->get('/app/clearance/alertas')
         ->assertOk()
-        ->assertSee('Catálogo × Documentos');
+        ->assertSee('Catálogo × Documentos')
+        ->assertSee('Itens com NCM a revisar (documento × cadastro)'); // corpo do card renderizado
 });
 
 it('esconde o card quando não há sinal', function () {

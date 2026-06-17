@@ -264,3 +264,16 @@ it('não acusa divergência de NCM quando o item XML não tem NCM mas o catálog
     expect($mapa['SEMNCMXML']['ncm_divergente'])->toBeFalse();
     expect($mapa['SEMNCMXML']['tem_catalogo'])->toBeTrue();
 });
+
+it('agrega múltiplas notas do mesmo código e sinaliza divergência se qualquer XML divergir (BOOL_OR)', function () {
+    [$user, $clienteId] = seedCatalogoUser();
+    catalogoItem($user->id, $clienteId, 'MULTI', '11112222', 18);
+    // duas notas XML do mesmo código: uma bate o NCM, a outra diverge
+    xmlNotaComItem($user->id, $clienteId, str_pad('A', 44, '0', STR_PAD_LEFT), 'MULTI', 100.0, '11112222');
+    xmlNotaComItem($user->id, $clienteId, str_pad('B', 44, '0', STR_PAD_LEFT), 'MULTI', 100.0, '99998888');
+
+    $mapa = app(NotaItemUnificadoService::class)->divergenciasNcmPorItem($user->id);
+
+    expect($mapa)->toHaveCount(1);                       // 1 linha por código
+    expect($mapa['MULTI']['ncm_divergente'])->toBeTrue(); // BOOL_OR pega a ocorrência divergente
+});

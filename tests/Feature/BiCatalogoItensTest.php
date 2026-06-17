@@ -124,3 +124,16 @@ it('não mostra o painel de divergência quando não há divergência', function
 
     expect($html)->not->toContain('NCM a revisar (documento');  // título do painel ausente
 });
+
+it('renderiza o painel de divergência também no path AJAX (partial)', function () {
+    [$user, $clienteId] = seedBiUser();
+    biCatalogo($user->id, $clienteId, 'DIVAJAX', '11112222');
+    biXmlItem($user->id, $clienteId, str_pad('D', 44, '0', STR_PAD_LEFT), 'DIVAJAX', 100.0, '99998888');
+
+    $html = actingAs($user)
+        ->get('/app/bi/catalogo-itens', ['X-Requested-With' => 'XMLHttpRequest'])
+        ->assertOk()->getContent();
+
+    expect($html)->toContain('NCM a revisar (documento'); // painel presente no partial
+    expect($html)->toContain('DIVAJAX');
+});
