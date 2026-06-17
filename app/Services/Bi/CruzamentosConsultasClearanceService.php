@@ -103,6 +103,33 @@ class CruzamentosConsultasClearanceService
         })->values();
     }
 
+    /**
+     * Diagnóstico do cruzamento — explica por que a tela pode estar vazia (não é bug, é cobertura
+     * de dado): quantos CNPJs foram consultados, quantos fornecedores há nas notas de entrada e
+     * quantos desses fornecedores já foram consultados (o overlap que alimenta os cruzamentos).
+     *
+     * @return array{consultados_qtd:int, fornecedores_entrada_qtd:int, fornecedores_consultados_qtd:int}
+     */
+    public function diagnostico(int $userId): array
+    {
+        $idsConsultados = $this->resultadosMaisRecentesPorParticipante($userId)
+            ->pluck('participante_id')->filter()->unique();
+
+        $fornecedoresEntrada = DB::table('efd_notas')
+            ->where('user_id', $userId)
+            ->where('origem_arquivo', 'fiscal')
+            ->where('tipo_operacao', 'entrada')
+            ->whereNotNull('participante_id')
+            ->distinct()
+            ->pluck('participante_id');
+
+        return [
+            'consultados_qtd' => $idsConsultados->count(),
+            'fornecedores_entrada_qtd' => $fornecedoresEntrada->count(),
+            'fornecedores_consultados_qtd' => $idsConsultados->intersect($fornecedoresEntrada)->count(),
+        ];
+    }
+
     public function resumo(int $userId, array $filtros = []): array
     {
         $irregulares = $this->fornecedoresIrregularesComCompras($userId, $filtros);

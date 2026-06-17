@@ -52,12 +52,14 @@ class BiCruzamentosController extends Controller
             'canceladas_qtd' => $canceladas->count(),
         ];
 
+        $diagnostico = $this->service->diagnostico($userId);
+
         $clientes = Cliente::where('user_id', $userId)
             ->orderByDesc('is_empresa_propria')
             ->orderBy('razao_social')
             ->get(['id', 'razao_social']);
 
-        $data = compact('irregulares', 'sancionados', 'canceladas', 'resumo', 'clientes', 'filtros');
+        $data = compact('irregulares', 'sancionados', 'canceladas', 'resumo', 'diagnostico', 'clientes', 'filtros');
 
         if ($this->isAjaxRequest($request)) {
             return response(view($view, $data)->render())->header('Content-Type', 'text/html');

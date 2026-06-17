@@ -111,6 +111,28 @@ it('resume os KPIs dos cruzamentos', function () {
     expect($resumo['sancionados_valor'])->toBe(2000.00);
 });
 
+it('diagnostico conta consultados, fornecedores de entrada e o overlap', function () {
+    $c = montarCenarioCruzamento(); // 3 consultados (A,B,C), todos fornecedores de entrada
+    $cliente = Cliente::where('user_id', $c['user']->id)->first();
+    $imp = EfdImportacao::where('user_id', $c['user']->id)->first();
+
+    // Fornecedor de entrada que NÃO foi consultado (entra só no total de fornecedores).
+    $D = Participante::create(['user_id' => $c['user']->id, 'cliente_id' => $cliente->id, 'documento' => '44444444000144', 'razao_social' => 'Fornecedor D']);
+    EfdNota::create([
+        'user_id' => $c['user']->id, 'cliente_id' => $cliente->id, 'participante_id' => $D->id,
+        'importacao_id' => $imp->id, 'chave_acesso' => '3524'.str_pad('40009', 40, '0', STR_PAD_LEFT),
+        'modelo' => '55', 'numero' => 40009, 'serie' => '0', 'data_emissao' => '2026-01-15',
+        'tipo_operacao' => 'entrada', 'valor_total' => 100.00, 'valor_desconto' => 0,
+        'origem_arquivo' => 'fiscal', 'metadados' => [],
+    ]);
+
+    $diag = (new CruzamentosConsultasClearanceService)->diagnostico($c['user']->id);
+
+    expect($diag['consultados_qtd'])->toBe(3);
+    expect($diag['fornecedores_entrada_qtd'])->toBe(4);     // A, B, C, D
+    expect($diag['fornecedores_consultados_qtd'])->toBe(3); // A, B, C
+});
+
 it('isola por usuário (não vaza fornecedor de outro)', function () {
     $c = montarCenarioCruzamento();
     $outro = User::factory()->create(['credits' => 100]);

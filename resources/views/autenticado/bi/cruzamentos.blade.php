@@ -9,6 +9,23 @@
             <p class="text-xs text-gray-500 mt-0.5">Risco do fornecedor (regularidade e sanções das consultas de CNPJ) cruzado com o quanto você comprou dele nas notas.</p>
         </div>
 
+        {{-- Diagnóstico de cobertura: explica quando o cruzamento aparece (e por que pode estar vazio) --}}
+        <div class="bg-white rounded border border-gray-300 border-l-4 p-3 mb-5" style="border-left-color: #0b1f3a">
+            <div class="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
+                <span class="text-gray-700"><strong class="text-gray-900">{{ number_format($diagnostico['consultados_qtd'], 0, ',', '.') }}</strong> CNPJs consultados</span>
+                <span class="text-gray-700"><strong class="text-gray-900">{{ number_format($diagnostico['fornecedores_entrada_qtd'], 0, ',', '.') }}</strong> fornecedores nas notas de entrada</span>
+                <span class="text-gray-700"><strong class="text-gray-900">{{ number_format($diagnostico['fornecedores_consultados_qtd'], 0, ',', '.') }}</strong> consultados que são fornecedores</span>
+            </div>
+            @if($diagnostico['fornecedores_consultados_qtd'] === 0)
+                <p class="text-[12px] text-gray-500 mt-2">
+                    Os cruzamentos aparecem quando um CNPJ que você <strong>consultou</strong> também é <strong>fornecedor</strong> nas suas notas de entrada. Hoje não há sobreposição — não é erro, é cobertura de dado.
+                    @if($diagnostico['fornecedores_entrada_qtd'] > 0)
+                        Para alimentar esta tela, consulte os CNPJs dos seus fornecedores em <a href="{{ route('app.consulta.nova') }}" data-link class="text-blue-600 hover:underline">Consulta CNPJ</a>.
+                    @endif
+                </p>
+            @endif
+        </div>
+
         {{-- KPIs --}}
         <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
             <div class="bg-white rounded border border-gray-300 border-l-4 p-3" style="border-left-color: #dc2626">
@@ -34,16 +51,20 @@
         </div>
 
         {{-- Filtros (padrão /app/clientes) --}}
-        <form method="GET" class="bg-white rounded border border-gray-300 p-3 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div>
+        <form method="GET" class="bg-white rounded border border-gray-300 p-3 mb-4 flex flex-wrap items-end gap-3">
+            <div class="min-w-[220px] flex-1 sm:flex-none">
                 <label class="block text-[11px] text-gray-500 mb-1">Cliente</label>
-                <select name="cliente_id" onchange="this.form.submit()" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
+                <select name="cliente_id" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
                     <option value="">Todos</option>
                     @foreach($clientes as $c)
                         <option value="{{ $c->id }}" @selected(($filtros['cliente_id'] ?? null) == $c->id)>{{ $c->razao_social }}</option>
                     @endforeach
                 </select>
             </div>
+            <button type="submit" class="px-4 py-2.5 rounded text-[12px] font-bold uppercase tracking-wide text-white hover:opacity-90" style="background-color: #0b1f3a">Aplicar filtro</button>
+            @if(! empty($filtros['cliente_id']))
+                <a href="{{ route('app.bi.cruzamentos') }}" data-link class="text-[12px] text-gray-500 hover:underline self-center">Limpar</a>
+            @endif
         </form>
 
         {{-- 1. Fornecedor irregular × compras --}}

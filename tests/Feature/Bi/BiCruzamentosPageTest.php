@@ -60,6 +60,50 @@ it('redireciona visitante não autenticado da página de cruzamentos', function 
     $this->get('/app/bi/cruzamentos')->assertRedirect();
 });
 
+it('exibe o botão de aplicar filtro', function () {
+    $user = User::factory()->create(['credits' => 100]);
+
+    actingAs($user)->get('/app/bi/cruzamentos')
+        ->assertOk()
+        ->assertSee('Aplicar filtro');
+});
+
+it('explica que a tela vazia é cobertura de dado, não bug (CNPJ consultado não é fornecedor)', function () {
+    $user = User::factory()->create(['credits' => 100]);
+    $cliente = Cliente::create([
+        'user_id' => $user->id, 'is_empresa_propria' => true,
+        'tipo_pessoa' => 'PJ', 'documento' => '00000000000191', 'razao_social' => 'Escritorio ME',
+    ]);
+    $imp = EfdImportacao::create([
+        'user_id' => $user->id, 'cliente_id' => $cliente->id, 'tipo_efd' => 'EFD ICMS/IPI', 'status' => 'concluido',
+    ]);
+    // CNPJ consultado (regular) que só aparece em SAÍDA — é cliente, não fornecedor (espelha prod).
+    $p = Participante::create([
+        'user_id' => $user->id, 'cliente_id' => $cliente->id,
+        'documento' => '11111111000111', 'razao_social' => 'Cliente Nao Fornecedor SA',
+    ]);
+    $lote = ConsultaLote::create([
+        'user_id' => $user->id, 'plano_id' => null, 'status' => ConsultaLote::STATUS_FINALIZADO,
+        'total_participantes' => 1, 'creditos_cobrados' => 10, 'tab_id' => 'tab-vazio', 'processado_em' => now(),
+    ]);
+    ConsultaResultado::create([
+        'consulta_lote_id' => $lote->id, 'participante_id' => $p->id, 'status' => 'sucesso',
+        'resultado_dados' => ['cnd_federal' => ['status' => 'Negativa']], 'consultado_em' => now(),
+    ]);
+    EfdNota::create([
+        'user_id' => $user->id, 'cliente_id' => $cliente->id, 'participante_id' => $p->id,
+        'importacao_id' => $imp->id, 'chave_acesso' => '35240000000000000000000000000000000000099001',
+        'modelo' => '55', 'numero' => 99001, 'serie' => '0', 'data_emissao' => '2026-01-15',
+        'tipo_operacao' => 'saida', 'valor_total' => 5000.00, 'valor_desconto' => 0,
+        'origem_arquivo' => 'fiscal', 'metadados' => [],
+    ]);
+
+    actingAs($user)->get('/app/bi/cruzamentos')
+        ->assertOk()
+        ->assertSee('CNPJs consultados')
+        ->assertSee('não é erro, é cobertura de dado');
+});
+
 it('mostra o card de risco de fornecedores na tela de alertas quando há risco', function () {
     $user = User::factory()->create(['credits' => 100]);
     seedFornecedorIrregularComCompra($user);
