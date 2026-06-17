@@ -89,6 +89,8 @@ class NotaItemUnificadoService
             GROUP BY m.codigo_item, cat.cod_item, cat.descr_item, cat.cod_ncm, cat.aliq_icms
             ORDER BY valor_total DESC";
 
+        $importacoes = $this->importacoesPorItem($userId, $filtros);
+
         return collect(DB::select($sql, $bind))->map(fn ($r) => [
             'codigo_item' => $r->codigo_item,
             // item C170 de saída costuma vir sem descrição → cai pra descrição do catálogo (0200)
@@ -107,7 +109,69 @@ class NotaItemUnificadoService
                 'cod_ncm' => $r->cat_ncm,
                 'aliq_icms' => $r->cat_aliq !== null ? (float) $r->cat_aliq : null,
             ] : null,
+            'importacoes' => $importacoes[$r->codigo_item] ?? [],
         ]);
+    }
+
+    /**
+     * Importação(ões) de origem por codigo_item (para link ao documento de origem na tabela de itens).
+     * Mesma dedup EFD×XML por chave de itensAgregados; respeita os filtros cliente/período/fonte.
+     *
+     * @param  array{periodo_de?:string,periodo_ate?:string,cliente_id?:int,fonte?:string}  $filtros
+     * @return array<string, array<int, array{fonte:string,id:int,label:string}>>
+     */
+    public function importacoesPorItem(int $userId, array $filtros = []): array
+    {
+        $bind = ['uid' => $userId];
+        $efdWhere = '';
+        $xmlWhere = '';
+        if (! empty($filtros['cliente_id'])) {
+            $bind['cli'] = (int) $filtros['cliente_id'];
+            $efdWhere .= ' AND n.cliente_id = :cli';
+            $xmlWhere .= ' AND xn.cliente_id = :cli';
+        }
+        if (! empty($filtros['periodo_de'])) {
+            $bind['de'] = $filtros['periodo_de'];
+            $efdWhere .= ' AND n.data_emissao >= :de';
+            $xmlWhere .= ' AND xn.data_emissao >= :de';
+        }
+        if (! empty($filtros['periodo_ate'])) {
+            $bind['ate'] = $filtros['periodo_ate'];
+            $efdWhere .= ' AND n.data_emissao <= :ate';
+            $xmlWhere .= ' AND xn.data_emissao <= :ate';
+        }
+
+        $efdSel = "
+            SELECT DISTINCT ni.codigo_item AS cod, 'efd' AS fonte, n.importacao_id AS imp_id,
+                   trim(coalesce(ei.tipo_efd, 'EFD') || ' ' || coalesce(to_char(ei.periodo_inicio, 'MM/YYYY'), '')) AS label
+            FROM efd_notas_itens ni
+            JOIN efd_notas n ON n.id = ni.efd_nota_id AND n.cancelada = false
+            LEFT JOIN efd_importacoes ei ON ei.id = n.importacao_id
+            WHERE ni.user_id = :uid AND n.importacao_id IS NOT NULL{$efdWhere}";
+
+        $xmlSel = "
+            SELECT DISTINCT xi.codigo_item AS cod, 'xml' AS fonte, xn.importacao_xml_id AS imp_id,
+                   coalesce(NULLIF(xim.filename, ''), 'XML #'||xim.id::text) AS label
+            FROM xml_notas_itens xi
+            JOIN xml_notas xn ON xn.id = xi.xml_nota_id
+            LEFT JOIN xml_importacoes xim ON xim.id = xn.importacao_xml_id
+            WHERE xi.user_id = :uid AND xn.importacao_xml_id IS NOT NULL
+              AND NOT EXISTS (SELECT 1 FROM efd_notas en WHERE en.user_id = :uid AND en.chave_acesso = xn.chave_acesso)
+              {$xmlWhere}";
+
+        $fonte = $filtros['fonte'] ?? 'ambas';
+        $src = match ($fonte) {
+            'efd' => $efdSel,
+            'xml' => $xmlSel,
+            default => $efdSel.' UNION '.$xmlSel,
+        };
+
+        $mapa = [];
+        foreach (DB::select("SELECT cod, fonte, imp_id, label FROM ({$src}) s ORDER BY cod, fonte, imp_id", $bind) as $r) {
+            $mapa[$r->cod][] = ['fonte' => $r->fonte, 'id' => (int) $r->imp_id, 'label' => $r->label];
+        }
+
+        return $mapa;
     }
 
     /**

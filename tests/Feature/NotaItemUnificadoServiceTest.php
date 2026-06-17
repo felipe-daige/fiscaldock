@@ -325,6 +325,18 @@ it('divergenciasNcmPorItem traz a referência da importação XML do item', func
     expect($mapa['DIVIMP']['importacoes'])->toContain('lote-julho.zip');
 });
 
+it('itensAgregados traz as importações de origem do item (id, fonte e label p/ link)', function () {
+    [$user, $clienteId] = seedCatalogoUser();
+    efdNotaComItem($user->id, $clienteId, str_pad('A', 44, '0', STR_PAD_LEFT), 'SKUI', 100.0);
+
+    $itens = app(NotaItemUnificadoService::class)->itensAgregados($user->id)->keyBy('codigo_item');
+
+    expect($itens['SKUI']['importacoes'])->toBeArray()->not->toBeEmpty();
+    expect($itens['SKUI']['importacoes'][0]['fonte'])->toBe('efd');
+    expect($itens['SKUI']['importacoes'][0]['id'])->toBeGreaterThan(0);
+    expect($itens['SKUI']['importacoes'][0]['label'])->toContain('EFD');
+});
+
 it('itensSemCatalogo lista item movimentado sem 0200 com a referência da importação', function () {
     [$user, $clienteId] = seedCatalogoUser();
     catalogoItem($user->id, $clienteId, 'TEM', '11112222', 18);

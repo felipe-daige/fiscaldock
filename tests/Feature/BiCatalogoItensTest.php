@@ -173,3 +173,13 @@ it('descartar exige autenticação', function () {
     $this->postJson('/app/bi/catalogo-itens/alerta/descartar', ['tipo' => 'ncm_divergente', 'codigo_item' => '1'])
         ->assertStatus(401);
 });
+
+it('mostra a coluna Arquivo de origem com link para a importação na tabela de itens', function () {
+    [$user, $clienteId] = seedBiUser();
+    biEfdItem($user->id, $clienteId, str_pad('A', 44, '0', STR_PAD_LEFT), 'SKUL', 100.0);
+
+    $html = actingAs($user)->get('/app/bi/catalogo-itens')->assertOk()->getContent();
+
+    expect($html)->toContain('Arquivo de origem');
+    expect($html)->toContain('/app/importacao/efd/'); // link para o documento de origem
+});

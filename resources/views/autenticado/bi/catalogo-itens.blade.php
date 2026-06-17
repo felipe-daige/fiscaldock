@@ -170,6 +170,7 @@
                         <th class="text-left px-3 py-2.5">Código</th>
                         <th class="text-left px-3 py-2.5">Descrição</th>
                         <th class="text-left px-3 py-2.5">Origem</th>
+                        <th class="text-left px-3 py-2.5">Arquivo de origem</th>
                         <th class="text-left px-3 py-2.5">NCM</th>
                         <th class="text-left px-3 py-2.5">CFOP</th>
                         <th class="text-left px-3 py-2.5">CST</th>
@@ -191,6 +192,13 @@
                         <td class="px-3 py-2">
                             <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase text-white" style="background-color: {{ $origemCor }}">{{ $item['fontes'] }}</span>
                         </td>
+                        <td class="px-3 py-2 text-[11px]">
+                            @forelse($item['importacoes'] as $imp)
+                                <a href="{{ $imp['fonte'] === 'xml' ? route('app.importacao.xml.detalhes', $imp['id']) : route('app.importacao.efd.detalhes', $imp['id']) }}" data-link class="text-blue-600 underline cursor-pointer">{{ $imp['label'] }}</a>@if(! $loop->last) <span class="text-gray-300">·</span> @endif
+                            @empty
+                                <span class="text-gray-400">—</span>
+                            @endforelse
+                        </td>
                         <td class="px-3 py-2 font-mono text-gray-600">{{ $item['ncm'] ?: '—' }}</td>
                         <td class="px-3 py-2 text-gray-600">{{ $item['cfops'] ?: '—' }}</td>
                         <td class="px-3 py-2 text-gray-600">{{ $item['csts'] ?: '—' }}</td>
@@ -207,7 +215,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="11" class="px-3 py-6 text-center text-gray-400 text-sm">Nenhum item movimentado no período/filtro.</td></tr>
+                    <tr><td colspan="12" class="px-3 py-6 text-center text-gray-400 text-sm">Nenhum item movimentado no período/filtro.</td></tr>
                 @endforelse
                 </tbody>
             </table>
