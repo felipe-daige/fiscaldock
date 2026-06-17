@@ -277,3 +277,24 @@ it('agrega múltiplas notas do mesmo código e sinaliza divergência se qualquer
     expect($mapa)->toHaveCount(1);                       // 1 linha por código
     expect($mapa['MULTI']['ncm_divergente'])->toBeTrue(); // BOOL_OR pega a ocorrência divergente
 });
+
+it('na agregação, usa a descrição do catálogo quando o item da nota está sem descrição', function () {
+    [$user, $clienteId] = seedCatalogoUser();
+    catalogoItem($user->id, $clienteId, 'SEMDESC', '12345678', 18); // descr_item = 'PRODUTO CATALOGO'
+    $imp = EfdImportacao::create(['user_id' => $user->id, 'cliente_id' => $clienteId, 'tipo_efd' => 'EFD ICMS/IPI', 'filename' => 'i.txt', 'status' => 'concluido', 'iniciado_em' => now()]);
+    $nota = EfdNota::create([
+        'user_id' => $user->id, 'cliente_id' => $clienteId, 'importacao_id' => $imp->id, 'numero' => 1, 'serie' => '1',
+        'data_emissao' => '2024-01-15', 'valor_desconto' => 0, 'cancelada' => false,
+        'chave_acesso' => str_pad('A', 44, '0', STR_PAD_LEFT), 'modelo' => '55', 'tipo_operacao' => 'saida',
+        'origem_arquivo' => 'fiscal', 'valor_total' => 100.0,
+    ]);
+    DB::table('efd_notas_itens')->insert([
+        'efd_nota_id' => $nota->id, 'user_id' => $user->id, 'numero_item' => 1, 'codigo_item' => 'SEMDESC',
+        'descricao' => null, 'quantidade' => 1, 'valor_total' => 100.0, 'cfop' => 5102, 'aliquota_icms' => 18,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    $itens = app(NotaItemUnificadoService::class)->itensAgregados($user->id)->keyBy('codigo_item');
+
+    expect($itens['SEMDESC']['descricao'])->toBe('PRODUTO CATALOGO'); // fallback do catálogo
+});

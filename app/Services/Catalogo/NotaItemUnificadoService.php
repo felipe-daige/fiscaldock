@@ -91,7 +91,8 @@ class NotaItemUnificadoService
 
         return collect(DB::select($sql, $bind))->map(fn ($r) => [
             'codigo_item' => $r->codigo_item,
-            'descricao' => $r->descricao,
+            // item C170 de saída costuma vir sem descrição → cai pra descrição do catálogo (0200)
+            'descricao' => $r->descricao ?: $r->cat_descr,
             'ocorrencias' => (int) $r->ocorrencias,
             'quantidade' => (float) $r->quantidade,
             'valor_total' => (float) $r->valor_total,
