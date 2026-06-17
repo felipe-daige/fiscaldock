@@ -71,7 +71,7 @@
                     </div>
                     <div>
                         <p class="text-lg font-bold text-gray-900">{{ number_format($catalogoDocumentos['sem_catalogo_qtd'], 0, ',', '.') }}</p>
-                        <p class="text-[11px] text-gray-500">Itens XML sem catálogo</p>
+                        <p class="text-[11px] text-gray-500">Itens sem catálogo (0200)</p>
                     </div>
                     <div>
                         <p class="text-lg font-bold text-gray-900">{{ number_format($catalogoDocumentos['nao_declaradas_qtd'], 0, ',', '.') }}</p>

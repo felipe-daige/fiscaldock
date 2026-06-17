@@ -44,11 +44,19 @@
             </div>
         @endif
 
+        {{-- Toggle dispensados --}}
+        @if($mostrarDispensados)
+            <div class="mb-4 text-[12px]"><a href="/app/bi/catalogo-itens" data-link class="text-blue-600">← Voltar (ocultar dispensados)</a> <span class="text-gray-400">— alertas dispensados aparecem com opacidade; use “Restaurar” para reativar.</span></div>
+        @elseif($totalDispensados > 0)
+            <div class="mb-4 text-[12px]"><a href="/app/bi/catalogo-itens?dispensados=1" data-link class="text-blue-600">Mostrar {{ $totalDispensados }} alerta(s) dispensado(s)</a></div>
+        @endif
+
+        {{-- NCM a revisar (documento × cadastro) --}}
         @if($divergencias->isNotEmpty())
             <div class="bg-white rounded border border-gray-300 border-l-4 mb-4" style="border-left-color:#b45309">
                 <div class="px-4 py-2.5 border-b border-gray-200">
-                    <p class="text-sm font-semibold text-gray-800">NCM a revisar (documento × cadastro) — {{ $divergencias->count() }}</p>
-                    <p class="text-[11px] text-gray-500">O NCM do XML diverge do catálogo 0200. Pode ser erro de classificação ou atualização posterior do cadastro.</p>
+                    <p class="text-sm font-semibold text-gray-800">NCM a revisar (documento × cadastro) — {{ $divergencias->where('dispensado', false)->count() }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">O NCM informado no documento (XML) difere do cadastrado no seu catálogo (registro 0200). Pode gerar tributação/ST incorreta e malha fiscal. <strong>Como corrigir:</strong> confirme o NCM correto do produto e ajuste o cadastro 0200 na próxima EFD — ou corrija a emissão, se o documento estiver errado. Dispense se já conferiu/corrigiu.</p>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
@@ -58,15 +66,25 @@
                                 <th class="text-left px-3 py-2">Descrição</th>
                                 <th class="text-left px-3 py-2">NCM documento</th>
                                 <th class="text-left px-3 py-2">NCM cadastro</th>
+                                <th class="text-left px-3 py-2">Importação</th>
+                                <th class="text-right px-3 py-2">Ação</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @foreach($divergencias as $d)
-                                <tr>
+                                <tr @if($d['dispensado']) style="opacity:.5" @endif>
                                     <td class="px-3 py-2 font-mono text-gray-900">{{ $d['codigo_item'] }}</td>
-                                    <td class="px-3 py-2 text-gray-700 truncate max-w-xs" title="{{ $d['descricao'] }}">{{ $d['descricao'] }}</td>
+                                    <td class="px-3 py-2 text-gray-700 truncate max-w-xs" title="{{ $d['descricao'] }}">{{ $d['descricao'] ?: '—' }}</td>
                                     <td class="px-3 py-2 font-mono font-semibold" style="color:#b45309">{{ $d['ncm_xml'] ?: '—' }}</td>
                                     <td class="px-3 py-2 font-mono text-gray-600">{{ $d['cat_ncm'] ?: '—' }}</td>
+                                    <td class="px-3 py-2 text-[11px] text-gray-500">{{ $d['importacoes'] ?: '—' }}</td>
+                                    <td class="px-3 py-2 text-right whitespace-nowrap">
+                                        @if($d['dispensado'])
+                                            <button type="button" onclick="catalogoAlerta.restaurar('ncm_divergente', @js($d['codigo_item']))" class="text-[11px] text-blue-600">Restaurar</button>
+                                        @else
+                                            <button type="button" onclick="catalogoAlerta.pedir('ncm_divergente', @js($d['codigo_item']))" class="text-[11px] text-gray-500 hover:text-red-600">Dispensar</button>
+                                        @endif
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -75,9 +93,43 @@
             </div>
         @endif
 
-        @if($kpis['sem_catalogo'] > 0)
-            <div class="bg-white rounded border border-gray-300 border-l-4 mb-4 p-4" style="border-left-color: #b45309">
-                <p class="text-sm text-gray-700"><span class="font-semibold">{{ $kpis['sem_catalogo'] }} item(ns)</span> movimentado(s) em nota mas sem catálogo cadastrado — confira a coluna "Catálogo".</p>
+        {{-- Itens sem catálogo (0200) --}}
+        @if($semCatalogo->isNotEmpty())
+            <div class="bg-white rounded border border-gray-300 border-l-4 mb-4" style="border-left-color:#b45309">
+                <div class="px-4 py-2.5 border-b border-gray-200">
+                    <p class="text-sm font-semibold text-gray-800">Itens sem catálogo (0200) — {{ $semCatalogo->where('dispensado', false)->count() }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Código movimentado em nota mas fora do seu registro 0200. <strong>Serviços</strong> (ex.: montagem) não exigem 0200 — pode dispensar. <strong>Produtos</strong> devem ser cadastrados no 0200 para consistência fiscal e para casar NCM/alíquota.</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 text-[10px] uppercase tracking-wide text-gray-400">
+                            <tr>
+                                <th class="text-left px-3 py-2">Código</th>
+                                <th class="text-left px-3 py-2">Descrição</th>
+                                <th class="text-left px-3 py-2">Origem</th>
+                                <th class="text-left px-3 py-2">Importação</th>
+                                <th class="text-right px-3 py-2">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach($semCatalogo as $i)
+                                <tr @if($i['dispensado']) style="opacity:.5" @endif>
+                                    <td class="px-3 py-2 font-mono text-gray-900">{{ $i['codigo_item'] }}</td>
+                                    <td class="px-3 py-2 text-gray-700 truncate max-w-xs" title="{{ $i['descricao'] }}">{{ $i['descricao'] ?: '—' }}</td>
+                                    <td class="px-3 py-2"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase text-white" style="background-color: {{ ['efd' => '#1d4ed8', 'xml' => '#7c3aed', 'ambas' => '#047857'][$i['fontes']] ?? '#334155' }}">{{ $i['fontes'] }}</span></td>
+                                    <td class="px-3 py-2 text-[11px] text-gray-500">{{ $i['importacoes'] ?: '—' }}</td>
+                                    <td class="px-3 py-2 text-right whitespace-nowrap">
+                                        @if($i['dispensado'])
+                                            <button type="button" onclick="catalogoAlerta.restaurar('sem_catalogo', @js($i['codigo_item']))" class="text-[11px] text-blue-600">Restaurar</button>
+                                        @else
+                                            <button type="button" onclick="catalogoAlerta.pedir('sem_catalogo', @js($i['codigo_item']))" class="text-[11px] text-gray-500 hover:text-red-600">Dispensar</button>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
         @endif
 
@@ -161,4 +213,52 @@
             </table>
         </div>
     </div>
+
+    {{-- Modal de confirmação de dispensa --}}
+    <div id="catalogoAlertaModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/40" onclick="catalogoAlerta.cancelar()"></div>
+        <div class="relative bg-white rounded-lg shadow-xl max-w-sm w-full mx-4 p-5">
+            <p class="text-sm font-semibold text-gray-900 mb-1">Dispensar alerta?</p>
+            <p class="text-[12px] text-gray-500 mb-4">O alerta sai da lista e das contagens. Você pode revê-lo depois em “Mostrar dispensados”.</p>
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="catalogoAlerta.cancelar()" class="px-3 py-1.5 text-[12px] rounded border border-gray-300 text-gray-600">Cancelar</button>
+                <button type="button" onclick="catalogoAlerta.confirmar()" class="px-3 py-1.5 text-[12px] rounded text-white font-semibold" style="background-color:#b45309">Dispensar</button>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+window.catalogoAlerta = window.catalogoAlerta || (function () {
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    let pendente = null;
+    const modal = () => document.getElementById('catalogoAlertaModal');
+    async function post(url, body) {
+        try {
+            const r = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify(body),
+            });
+            return r.ok;
+        } catch (e) {
+            return false;
+        }
+    }
+    return {
+        pedir(tipo, codigo) { pendente = { tipo, codigo }; modal()?.classList.remove('hidden'); },
+        cancelar() { pendente = null; modal()?.classList.add('hidden'); },
+        async confirmar() {
+            if (!pendente) return;
+            const ok = await post('/app/bi/catalogo-itens/alerta/descartar', { tipo: pendente.tipo, codigo_item: pendente.codigo });
+            modal()?.classList.add('hidden');
+            pendente = null;
+            ok ? window.location.reload() : alert('Não foi possível dispensar o alerta.');
+        },
+        async restaurar(tipo, codigo) {
+            const ok = await post('/app/bi/catalogo-itens/alerta/restaurar', { tipo, codigo_item: codigo });
+            ok ? window.location.reload() : alert('Não foi possível restaurar o alerta.');
+        },
+    };
+})();
+</script>

@@ -137,3 +137,39 @@ it('renderiza o painel de divergência também no path AJAX (partial)', function
     expect($html)->toContain('NCM a revisar (documento'); // painel presente no partial
     expect($html)->toContain('DIVAJAX');
 });
+
+it('dispensar alerta de NCM remove do painel e reaparece em mostrar dispensados', function () {
+    [$user, $clienteId] = seedBiUser();
+    biCatalogo($user->id, $clienteId, 'DIVK', '11112222');
+    biXmlItem($user->id, $clienteId, str_pad('D', 44, '0', STR_PAD_LEFT), 'DIVK', 100.0, '99998888');
+
+    expect(actingAs($user)->get('/app/bi/catalogo-itens')->getContent())->toContain('NCM a revisar (documento');
+
+    actingAs($user)->postJson('/app/bi/catalogo-itens/alerta/descartar', ['tipo' => 'ncm_divergente', 'codigo_item' => 'DIVK'])
+        ->assertOk()->assertJson(['ok' => true]);
+
+    // painel some (era o único alerta de NCM)
+    $depois = actingAs($user)->get('/app/bi/catalogo-itens')->assertOk()->getContent();
+    expect($depois)->not->toContain('NCM a revisar (documento');
+
+    // reaparece com toggle + botão Restaurar
+    $disp = actingAs($user)->get('/app/bi/catalogo-itens?dispensados=1')->assertOk()->getContent();
+    expect($disp)->toContain('DIVK');
+    expect($disp)->toContain('Restaurar');
+
+    // restaurar traz de volta
+    actingAs($user)->postJson('/app/bi/catalogo-itens/alerta/restaurar', ['tipo' => 'ncm_divergente', 'codigo_item' => 'DIVK'])
+        ->assertOk();
+    expect(actingAs($user)->get('/app/bi/catalogo-itens')->getContent())->toContain('NCM a revisar (documento');
+});
+
+it('descartar valida o tipo de alerta', function () {
+    [$user] = seedBiUser();
+    actingAs($user)->postJson('/app/bi/catalogo-itens/alerta/descartar', ['tipo' => 'xxx', 'codigo_item' => '1'])
+        ->assertStatus(422);
+});
+
+it('descartar exige autenticação', function () {
+    $this->postJson('/app/bi/catalogo-itens/alerta/descartar', ['tipo' => 'ncm_divergente', 'codigo_item' => '1'])
+        ->assertStatus(401);
+});

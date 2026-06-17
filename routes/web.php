@@ -264,6 +264,8 @@ Route::middleware(['auth', \App\Http\Middleware\RequireCurrentTerms::class])->gr
         Route::get('/exportar', [BiController::class, 'exportar'])
             ->middleware(RequiresEntitlement::class.':export')->name('exportar');
         Route::get('/catalogo-itens', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'index'])->name('catalogo-itens');
+        Route::post('/catalogo-itens/alerta/descartar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'descartarAlerta'])->name('catalogo-itens.descartar');
+        Route::post('/catalogo-itens/alerta/restaurar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'restaurarAlerta'])->name('catalogo-itens.restaurar');
         Route::get('/cruzamentos', [\App\Http\Controllers\Dashboard\BiCruzamentosController::class, 'index'])->name('cruzamentos');
     });
 
