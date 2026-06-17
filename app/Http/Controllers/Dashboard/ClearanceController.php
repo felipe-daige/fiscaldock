@@ -1476,6 +1476,7 @@ class ClearanceController extends Controller
             'filtroCategoria' => $categoria,
             'categorias' => $this->validacaoService->getCategorias(),
             'cruzamentos' => (new CruzamentosConsultasClearanceService)->resumo($userId),
+            'catalogoDocumentos' => app(\App\Services\Catalogo\ReconciliacaoXmlEfdService::class)->resumoAlertas($userId),
         ];
 
         return $this->render($request, 'alertas', $data);

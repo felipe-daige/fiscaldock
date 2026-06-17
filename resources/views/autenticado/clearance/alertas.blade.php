@@ -56,6 +56,30 @@
             </a>
         @endif
 
+        {{-- Catálogo × Documentos (XML): divergência NCM / sem-catálogo / não declaradas --}}
+        @if(!empty($catalogoDocumentos) && ($catalogoDocumentos['temSinal'] ?? false))
+            <a href="/app/bi/catalogo-itens" data-link class="block bg-white rounded border border-gray-300 border-l-4 mb-6 p-4 hover:border-gray-400 transition-colors" style="border-left-color: #b45309">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">Catálogo × Documentos (XML)</span>
+                    <span class="text-[11px] text-blue-600">Ver detalhe →</span>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <p class="text-lg font-bold text-gray-900">{{ number_format($catalogoDocumentos['ncm_revisar_qtd'], 0, ',', '.') }}</p>
+                        <p class="text-[11px] text-gray-500">Itens com NCM a revisar (documento × cadastro)</p>
+                    </div>
+                    <div>
+                        <p class="text-lg font-bold text-gray-900">{{ number_format($catalogoDocumentos['sem_catalogo_qtd'], 0, ',', '.') }}</p>
+                        <p class="text-[11px] text-gray-500">Itens XML sem catálogo</p>
+                    </div>
+                    <div>
+                        <p class="text-lg font-bold text-gray-900">{{ number_format($catalogoDocumentos['nao_declaradas_qtd'], 0, ',', '.') }}</p>
+                        <p class="text-[11px] text-gray-500">Notas documentadas não declaradas</p>
+                    </div>
+                </div>
+            </a>
+        @endif
+
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             @foreach($cards as $nivel => $card)
                 <a
