@@ -110,3 +110,49 @@ it('conta notas EFD sem XML como cobertura (efd_sem_xml), não como não-declara
     expect($r['nao_declaradas'])->toBe(0);
     expect($r['documentadas'])->toBe(0);
 });
+
+it('resumoAlertas compõe contagens de divergência, sem-catálogo e não-declaradas com temSinal', function () {
+    [$user, $cli] = reconSeedUser();
+
+    // 1 item XML com NCM divergente do catálogo
+    $impId = DB::table('efd_importacoes')->insertGetId([
+        'user_id' => $user->id, 'cliente_id' => $cli, 'tipo_efd' => 'EFD ICMS/IPI',
+        'filename' => 'c.txt', 'status' => 'concluido', 'iniciado_em' => now(), 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('efd_catalogo_itens')->insert([
+        'user_id' => $user->id, 'cliente_id' => $cli, 'importacao_id' => $impId, 'cod_item' => 'DIV',
+        'descr_item' => 'X', 'tipo_item' => '00', 'cod_ncm' => '11112222', 'aliq_icms' => 18, 'unid_inv' => 'UN',
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $nid = DB::table('xml_notas')->insertGetId([
+        'user_id' => $user->id, 'cliente_id' => $cli, 'chave_acesso' => str_pad('D', 44, '0', STR_PAD_LEFT),
+        'tipo_documento' => 'NFE', 'numero_documento' => '1', 'serie' => '1', 'data_emissao' => '2024-01-10',
+        'tipo_nota' => 1, 'modelo' => '55', 'emit_documento' => '00000000000100', 'dest_documento' => '99999999000191',
+        'valor_total' => 10.0, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('xml_notas_itens')->insert([
+        'xml_nota_id' => $nid, 'user_id' => $user->id, 'numero_item' => 1, 'codigo_item' => 'DIV',
+        'descricao' => 'item', 'quantidade' => 1, 'valor_total' => 10.0, 'cfop' => 5102, 'aliquota_icms' => 18,
+        'ncm' => '99998888', 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    // 1 nota XML não declarada (sem EFD)
+    reconXml($user->id, $cli, str_pad('B', 44, '0', STR_PAD_LEFT), 50.0);
+
+    $r = app(ReconciliacaoXmlEfdService::class)->resumoAlertas($user->id);
+
+    expect($r['ncm_revisar_qtd'])->toBe(1);
+    expect($r['sem_catalogo_qtd'])->toBe(0);     // o item 'DIV' tem catálogo
+    expect($r['nao_declaradas_qtd'])->toBe(2);   // chave 'D' (XML, EFD ausente) + chave 'B'
+    expect($r['temSinal'])->toBeTrue();
+});
+
+it('resumoAlertas sem nada retorna tudo zero e temSinal false', function () {
+    [$user] = reconSeedUser();
+
+    $r = app(ReconciliacaoXmlEfdService::class)->resumoAlertas($user->id);
+
+    expect($r['ncm_revisar_qtd'])->toBe(0);
+    expect($r['sem_catalogo_qtd'])->toBe(0);
+    expect($r['nao_declaradas_qtd'])->toBe(0);
+    expect($r['temSinal'])->toBeFalse();
+});

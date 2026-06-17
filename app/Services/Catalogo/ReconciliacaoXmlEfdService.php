@@ -95,4 +95,26 @@ class ReconciliacaoXmlEfdService
             'efd_sem_xml' => $efdSemXml,
         ];
     }
+
+    /**
+     * Compõe os baldes nota-level com contagens de item (divergência NCM, sem-catálogo) pro card do clearance.
+     *
+     * @return array{ncm_revisar_qtd:int,sem_catalogo_qtd:int,nao_declaradas_qtd:int,temSinal:bool}
+     */
+    public function resumoAlertas(int $userId): array
+    {
+        $recon = $this->resumo($userId);
+        $div = collect($this->unificado->divergenciasNcmPorItem($userId));
+
+        $ncmRevisar = $div->filter(fn ($d) => $d['ncm_divergente'])->count();
+        $semCatalogo = $div->filter(fn ($d) => ! $d['tem_catalogo'])->count();
+        $naoDeclaradas = $recon['nao_declaradas'];
+
+        return [
+            'ncm_revisar_qtd' => $ncmRevisar,
+            'sem_catalogo_qtd' => $semCatalogo,
+            'nao_declaradas_qtd' => $naoDeclaradas,
+            'temSinal' => ($ncmRevisar + $semCatalogo + $naoDeclaradas) > 0,
+        ];
+    }
 }
