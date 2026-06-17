@@ -199,6 +199,48 @@ test('signup permite documento que ja e cliente de outro usuario (unique por usu
     expect(\App\Models\Cliente::where('documento', '97551165000193')->count())->toBe(2);
 });
 
+test('signup retorna creditos e validade do config (nao hardcoded)', function () {
+    $response = $this->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/criar-conta', [
+        'nome' => 'Bia',
+        'sobrenome' => 'Costa',
+        'email' => 'bia@example.com',
+        'telefone' => '67911119999',
+        'senha' => 'Xk9382mZqp01',
+        'senha_confirmation' => 'Xk9382mZqp01',
+        'empresa' => 'Empresa Bia',
+        'cargo' => 'Contadora',
+        'documento' => '11144477735',
+        'faturamento' => 'ate-360k',
+        'desafio_principal' => 'documentos_espalhados',
+        'terms_aceitos' => true,
+    ]);
+
+    $response->assertStatus(200);
+    $response->assertJson([
+        'success' => true,
+        'creditos' => (int) config('trial.creditos'),
+        'validade_dias' => (int) config('trial.validade_dias'),
+    ]);
+});
+
+test('confirmar-termos do onboarding exige auth e grava consent_log', function () {
+    // Sem autenticação → bloqueado.
+    $this->postJson('/app/onboarding/confirmar-termos')->assertStatus(401);
+
+    $user = User::factory()->create([
+        'terms_version' => config('legal.terms_version'),
+        'privacy_version' => config('legal.privacy_version'),
+    ]);
+
+    $this->actingAs($user)
+        ->postJson('/app/onboarding/confirmar-termos')
+        ->assertStatus(200)
+        ->assertJson(['success' => true]);
+
+    expect(\App\Models\ConsentLog::where('user_id', $user->id)->where('tipo', 'termos')->where('acao', 'aceite')->exists())->toBeTrue();
+    expect(\App\Models\ConsentLog::where('user_id', $user->id)->where('tipo', 'privacidade')->where('acao', 'aceite')->exists())->toBeTrue();
+});
+
 test('signup com e-mail novo nao trava por telefone, CNPJ ou nome ja existentes', function () {
     // Bug reportado: ao testar com um e-mail novo mantendo o mesmo telefone/CNPJ/nome
     // de um usuário existente, o cadastro travava. Só o e-mail repetido deve bloquear.

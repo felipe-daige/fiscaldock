@@ -152,6 +152,59 @@ function initCriarConta() {
         submitBtn.innerHTML = originalButtonHTML;
     }
 
+    // Modal de boas-vindas (bloqueante, 2 etapas): créditos -> confirmação de termos.
+    // O aceite legal já ocorreu no form; a etapa 2 reconfirma e registra consent_log.
+    // Só redireciona pro painel ao concluir. Best-effort: se o POST falhar, segue mesmo assim.
+    function abrirModalBoasVindas(redirect) {
+        const modal = document.getElementById('signup-modal');
+        if (!modal) {
+            window.location.href = redirect;
+            return;
+        }
+
+        const step1 = modal.querySelector('[data-step="1"]');
+        const step2 = modal.querySelector('[data-step="2"]');
+        const btnCiente = document.getElementById('signup-modal-ciente');
+        const btnContinuar = document.getElementById('signup-modal-continuar');
+        const chkTerms = document.getElementById('signup-modal-terms');
+        const erro = document.getElementById('signup-modal-error');
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        if (btnCiente) {
+            btnCiente.addEventListener('click', () => {
+                if (step1) step1.classList.add('hidden');
+                if (step2) step2.classList.remove('hidden');
+            }, { once: true });
+        }
+
+        if (btnContinuar) {
+            btnContinuar.addEventListener('click', () => {
+                if (chkTerms && !chkTerms.checked) {
+                    if (erro) erro.textContent = 'Marque a confirmação para continuar.';
+                    return;
+                }
+                if (erro) erro.textContent = '';
+                btnContinuar.disabled = true;
+                btnContinuar.innerHTML = '<span>Aguarde...</span>';
+
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+                fetch('/app/onboarding/confirmar-termos', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': token || '',
+                        'Accept': 'application/json',
+                    },
+                })
+                    .then(() => { window.location.href = redirect; })
+                    .catch(() => { window.location.href = redirect; });
+            });
+        }
+    }
+
     applyMasks();
 
     freshForm.addEventListener('submit', function (e) {
@@ -183,12 +236,7 @@ function initCriarConta() {
             .then((response) => response.json())
             .then((data) => {
                 if (data.success) {
-                    if (typeof showToast === 'function') {
-                        showToast(data.message, 'success');
-                    }
-                    setTimeout(() => {
-                        window.location.href = data.redirect;
-                    }, 1000);
+                    abrirModalBoasVindas(data.redirect || '/app/dashboard');
                     return;
                 }
 

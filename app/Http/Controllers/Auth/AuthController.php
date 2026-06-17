@@ -129,7 +129,7 @@ class AuthController extends Controller
             'initialView' => 'auth.criar-conta',
             'seo' => [
                 'title' => 'Criar Conta Grátis — FiscalDock',
-                'description' => 'Crie sua conta FiscalDock e receba 100 créditos grátis para usar em até 30 dias.',
+                'description' => 'Crie sua conta FiscalDock e receba '.(int) config('trial.creditos').' créditos grátis para usar em até '.(int) config('trial.validade_dias').' dias.',
                 'canonical' => 'https://fiscaldock.com/criar-conta',
                 'robots' => 'index,follow',
                 'og_type' => 'website',
@@ -388,12 +388,16 @@ class AuthController extends Controller
 
             DB::commit();
 
-            $message = 'Conta criada com sucesso. Você recebeu 100 créditos grátis por 30 dias.';
+            $creditos = (int) config('trial.creditos');
+            $validadeDias = (int) config('trial.validade_dias');
+            $message = "Conta criada com sucesso. Você recebeu {$creditos} créditos grátis por {$validadeDias} dias.";
 
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
                     'message' => $message,
+                    'creditos' => $creditos,
+                    'validade_dias' => $validadeDias,
                     'redirect' => '/app/dashboard',
                 ]);
             }

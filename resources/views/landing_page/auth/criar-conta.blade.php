@@ -17,10 +17,10 @@
                             <div>
                                 <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Trial FiscalDock</p>
                                 <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide mt-1">Criar conta grátis</h1>
-                                <p class="text-xs text-gray-500 mt-1">Receba 100 créditos para usar em até 30 dias.</p>
+                                <p class="text-xs text-gray-500 mt-1">Receba {{ config('trial.creditos') }} créditos para usar em até {{ config('trial.validade_dias') }} dias.</p>
                             </div>
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">
-                                100 créditos
+                                {{ config('trial.creditos') }} créditos
                             </span>
                         </div>
                     </div>
@@ -59,8 +59,8 @@
                                     <div>
                                         <label for="senha" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Senha</label>
                                         <div class="relative">
-                                            <input type="password" id="senha" name="senha" required minlength="8" class="w-full border border-gray-300 rounded text-sm pl-3 pr-10 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="Mínimo 8 caracteres">
-                                            <button type="button" class="senha-toggle absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600" data-target="senha" aria-label="Mostrar senha" tabindex="-1">
+                                            <input type="password" id="senha" name="senha" required minlength="8" style="padding-right:2.5rem" class="w-full border border-gray-300 rounded text-sm pl-3 pr-10 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="Mínimo 8 caracteres">
+                                            <button type="button" class="senha-toggle absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600" style="top:0;bottom:0" data-target="senha" aria-label="Mostrar senha" tabindex="-1">
                                                 <svg class="icon-eye w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z"/><circle cx="12" cy="12" r="3"/></svg>
                                                 <svg class="icon-eye-off w-4 h-4 hidden" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.22A10.5 10.5 0 002.25 12s3.75 7.5 9.75 7.5c1.6 0 3.06-.38 4.35-1.01M9.88 5.09A10.6 10.6 0 0112 4.5c6 0 9.75 7.5 9.75 7.5a17 17 0 01-2.83 3.74M9.9 9.9a3 3 0 104.2 4.2M3 3l18 18"/></svg>
                                             </button>
@@ -71,8 +71,8 @@
                                     <div>
                                         <label for="senha_confirmation" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Confirmar senha</label>
                                         <div class="relative">
-                                            <input type="password" id="senha_confirmation" name="senha_confirmation" required minlength="8" class="w-full border border-gray-300 rounded text-sm pl-3 pr-10 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="Repita a senha">
-                                            <button type="button" class="senha-toggle absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600" data-target="senha_confirmation" aria-label="Mostrar senha" tabindex="-1">
+                                            <input type="password" id="senha_confirmation" name="senha_confirmation" required minlength="8" style="padding-right:2.5rem" class="w-full border border-gray-300 rounded text-sm pl-3 pr-10 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="Repita a senha">
+                                            <button type="button" class="senha-toggle absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600" style="top:0;bottom:0" data-target="senha_confirmation" aria-label="Mostrar senha" tabindex="-1">
                                                 <svg class="icon-eye w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z"/><circle cx="12" cy="12" r="3"/></svg>
                                                 <svg class="icon-eye-off w-4 h-4 hidden" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.22A10.5 10.5 0 002.25 12s3.75 7.5 9.75 7.5c1.6 0 3.06-.38 4.35-1.01M9.88 5.09A10.6 10.6 0 0112 4.5c6 0 9.75 7.5 9.75 7.5a17 17 0 01-2.83 3.74M9.9 9.9a3 3 0 104.2 4.2M3 3l18 18"/></svg>
                                             </button>
@@ -177,12 +177,12 @@
                     <div class="p-4 space-y-4 text-sm text-gray-700">
                         <div class="border border-gray-200 rounded p-4">
                             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Bônus inicial</p>
-                            <p class="text-lg font-bold text-gray-900">100 créditos grátis</p>
+                            <p class="text-lg font-bold text-gray-900">{{ config('trial.creditos') }} créditos grátis</p>
                             <p class="text-xs text-gray-500 mt-1">Liberados automaticamente na criação da conta.</p>
                         </div>
                         <div class="border border-gray-200 rounded p-4">
                             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Validade</p>
-                            <p class="text-lg font-bold text-gray-900">30 dias</p>
+                            <p class="text-lg font-bold text-gray-900">{{ config('trial.validade_dias') }} dias</p>
                             <p class="text-xs text-gray-500 mt-1">O saldo promocional restante expira ao fim do período.</p>
                         </div>
                         <div class="border border-gray-200 rounded p-4">
@@ -204,6 +204,63 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    {{-- Modal de boas-vindas pós-cadastro (bloqueante, 2 etapas). Aberto pelo
+         criar-conta.js no sucesso do signup; não fecha por fora/ESC. --}}
+    <div id="signup-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+        <div class="bg-white rounded-lg border border-gray-300 shadow-xl w-full max-w-md overflow-hidden">
+
+            {{-- Etapa 1 — boas-vindas + créditos --}}
+            <div data-step="1">
+                <div class="bg-gray-50 px-5 py-3 border-b border-gray-200">
+                    <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Bem-vindo à FiscalDock</p>
+                    <h2 class="text-lg font-bold text-gray-900 mt-1">Conta criada com sucesso</h2>
+                </div>
+                <div class="p-5 space-y-4 text-sm text-gray-700">
+                    <div class="border border-gray-200 rounded p-4 text-center">
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Bônus de boas-vindas</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">{{ config('trial.creditos') }} créditos grátis</p>
+                        <p class="text-xs text-gray-500 mt-1">válidos por {{ config('trial.validade_dias') }} dias</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Como funcionam os créditos</p>
+                        <ul class="space-y-1.5 text-[13px] text-gray-600 list-disc pl-4">
+                            <li>São a moeda da plataforma: você os usa para rodar <strong>consultas de CNPJ</strong> (situação cadastral, certidões, sanções) e <strong>clearance de notas fiscais</strong>.</li>
+                            <li>Cada ação consome créditos conforme a <strong>profundidade</strong> escolhida — uma verificação simples custa menos que uma due diligence completa.</li>
+                            <li>Os créditos de boas-vindas <strong>expiram em {{ config('trial.validade_dias') }} dias</strong>. Depois, você compra pacotes para continuar no seu ritmo.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="px-5 py-4 border-t border-gray-200 flex justify-end">
+                    <button type="button" id="signup-modal-ciente" class="bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium px-4 py-2.5">Estou ciente</button>
+                </div>
+            </div>
+
+            {{-- Etapa 2 — confirmação dos termos --}}
+            <div data-step="2" class="hidden">
+                <div class="bg-gray-50 px-5 py-3 border-b border-gray-200">
+                    <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Última etapa</p>
+                    <h2 class="text-lg font-bold text-gray-900 mt-1">Confirme os termos</h2>
+                </div>
+                <div class="p-5 space-y-4 text-sm text-gray-700">
+                    <p>Para acessar o painel, confirme que você leu e concorda com nossos documentos legais.</p>
+                    <label class="flex items-start gap-2">
+                        <input type="checkbox" id="signup-modal-terms" class="mt-0.5 h-4 w-4 border border-gray-300 rounded text-gray-800 focus:ring-1 focus:ring-gray-400">
+                        <span>Li e concordo com os
+                            <a href="{{ route('termos') }}" target="_blank" rel="noopener" class="hover:underline" style="color: #1e4fa0">Termos de Uso</a>
+                            e a
+                            <a href="{{ route('privacidade') }}" target="_blank" rel="noopener" class="hover:underline" style="color: #1e4fa0">Política de Privacidade</a>.
+                        </span>
+                    </label>
+                    <p id="signup-modal-error" class="empty:hidden text-[12px] text-red-600"></p>
+                </div>
+                <div class="px-5 py-4 border-t border-gray-200 flex justify-end">
+                    <button type="button" id="signup-modal-continuar" class="bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium px-4 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed">Concordo e continuar</button>
+                </div>
+            </div>
+
         </div>
     </div>
 </section>

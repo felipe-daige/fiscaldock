@@ -79,6 +79,9 @@ Route::middleware(['auth', \App\Http\Middleware\RequireCurrentTerms::class])->gr
     Route::get('/app/reaceite', [\App\Http\Controllers\Dashboard\TermosReaceiteController::class, 'show'])->name('app.reaceite.show');
     Route::post('/app/reaceite', [\App\Http\Controllers\Dashboard\TermosReaceiteController::class, 'aceitar'])->name('app.reaceite.aceitar');
 
+    // Onboarding pós-cadastro: reconfirmação dos termos no modal de boas-vindas.
+    Route::post('/app/onboarding/confirmar-termos', [\App\Http\Controllers\Dashboard\OnboardingController::class, 'confirmarTermos'])->name('app.onboarding.confirmar-termos');
+
     Route::get('/app/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
     Route::get('/app/perfil', [DashboardController::class, 'perfil'])->name('app.perfil');
 

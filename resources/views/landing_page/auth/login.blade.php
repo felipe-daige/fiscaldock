@@ -63,9 +63,10 @@
                                     required
                                     autocomplete="current-password"
                                     class="w-full border border-gray-300 rounded text-sm pl-3 pr-10 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                    style="padding-right:2.5rem"
                                     placeholder="Digite sua senha"
                                 >
-                                <button type="button" class="senha-toggle absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600" data-target="password" aria-label="Mostrar senha" tabindex="-1">
+                                <button type="button" class="senha-toggle absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600" style="top:0;bottom:0" data-target="password" aria-label="Mostrar senha" tabindex="-1">
                                     <svg class="icon-eye w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z"/><circle cx="12" cy="12" r="3"/></svg>
                                     <svg class="icon-eye-off w-4 h-4 hidden" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.22A10.5 10.5 0 002.25 12s3.75 7.5 9.75 7.5c1.6 0 3.06-.38 4.35-1.01M9.88 5.09A10.6 10.6 0 0112 4.5c6 0 9.75 7.5 9.75 7.5a17 17 0 01-2.83 3.74M9.9 9.9a3 3 0 104.2 4.2M3 3l18 18"/></svg>
                                 </button>
