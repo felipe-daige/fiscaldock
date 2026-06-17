@@ -62,58 +62,46 @@
             </div>
         </div>
 
-        {{-- Conteúdo --}}
+        {{-- Ferramentas de monitoramento (atalhos para telas reais) --}}
         <div class="bg-white rounded border border-gray-300 overflow-hidden">
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Em Desenvolvimento</span>
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Ferramentas de monitoramento</span>
             </div>
-            <div class="p-10 text-center">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
-                </svg>
-                <h2 class="mt-4 text-sm font-semibold text-gray-900 uppercase tracking-wide">Em Desenvolvimento</h2>
-                <p class="mt-2 text-xs text-gray-500 max-w-md mx-auto">
-                    Esta funcionalidade está sendo desenvolvida para permitir o monitoramento centralizado dos seus clientes.
-                </p>
-
-                {{-- Features Preview --}}
-                <div class="bg-gray-50 border border-gray-200 rounded p-5 max-w-lg mx-auto mt-6 text-left">
-                    <h3 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-3">O que você poderá fazer aqui</h3>
-                    <ul class="text-xs text-gray-700 space-y-2">
-                        <li class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Visualizar status fiscal de todos os clientes
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Acompanhar CNDs e certidões por cliente
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Receber alertas de vencimento e irregularidades
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Gerar relatórios consolidados por cliente
-                        </li>
-                    </ul>
-                </div>
-
-                <a href="/app/participantes" data-link class="mt-6 inline-flex items-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
-                    Ver Participantes
+            <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <a href="/app/participantes" data-link class="block border border-gray-200 rounded p-4 hover:border-gray-400 hover:shadow-sm transition">
+                    <div class="flex items-center gap-2 mb-1">
+                        <svg class="w-5 h-5 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-3-6.65"></path></svg>
+                        <span class="text-sm font-semibold text-gray-900">Participantes</span>
+                    </div>
+                    <p class="text-[11px] text-gray-500">Veja todos os CNPJs e ative o monitoramento de cada um.</p>
+                </a>
+                <a href="/app/alertas" data-link class="block border border-gray-200 rounded p-4 hover:border-gray-400 hover:shadow-sm transition">
+                    <div class="flex items-center gap-2 mb-1">
+                        <svg class="w-5 h-5 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        <span class="text-sm font-semibold text-gray-900">Alertas</span>
+                    </div>
+                    <p class="text-[11px] text-gray-500">Vencimentos de certidões e irregularidades detectadas.</p>
+                </a>
+                <a href="/app/monitoramento/historico" data-link class="block border border-gray-200 rounded p-4 hover:border-gray-400 hover:shadow-sm transition">
+                    <div class="flex items-center gap-2 mb-1">
+                        <svg class="w-5 h-5 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="text-sm font-semibold text-gray-900">Histórico</span>
+                    </div>
+                    <p class="text-[11px] text-gray-500">Consultas e re-monitoramentos já executados.</p>
+                </a>
+                <a href="/app/monitoramento/grupos" data-link class="block border border-gray-200 rounded p-4 hover:border-gray-400 hover:shadow-sm transition">
+                    <div class="flex items-center gap-2 mb-1">
+                        <svg class="w-5 h-5 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                        <span class="text-sm font-semibold text-gray-900">Grupos</span>
+                    </div>
+                    <p class="text-[11px] text-gray-500">Organize participantes em grupos para monitorar em lote.</p>
                 </a>
             </div>
+        </div>
+
+        {{-- Nota honesta: visão consolidada por cliente ainda em construção --}}
+        <div class="mt-4 bg-gray-50 border border-gray-200 rounded p-3 text-[11px] text-gray-500">
+            A visão consolidada de status fiscal por cliente (CNDs, certidões e relatórios reunidos por cliente) ainda está em construção. Por enquanto, use as ferramentas acima.
         </div>
 
         {{-- Contato --}}
