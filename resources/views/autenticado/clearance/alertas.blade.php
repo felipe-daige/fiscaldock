@@ -4,6 +4,7 @@
     $filtroNivel = $filtroNivel ?? '';
     $filtroCategoria = $filtroCategoria ?? '';
     $categorias = $categorias ?? [];
+    $catalogoDocumentos = $catalogoDocumentos ?? [];
 
     $cards = [
         'bloqueante' => ['label' => 'Bloqueantes', 'hex' => '#dc2626', 'valor' => $contadores['bloqueante'] ?? 0],

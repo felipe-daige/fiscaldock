@@ -52,6 +52,7 @@ class BiCatalogoItensController extends Controller
             'sem_ncm' => $itens->filter(fn ($i) => empty($i['ncm']))->count(),
         ];
 
+        // Divergência é sempre XML×catálogo (não-deduplicado); o filtro `fonte` não se aplica a ela.
         $divergencias = collect($this->service->divergenciasNcmPorItem($userId, $filtros))
             ->filter(fn ($d) => $d['ncm_divergente'])
             ->map(fn ($d, $cod) => array_merge(['codigo_item' => $cod], $d))

@@ -10,6 +10,7 @@ use App\Models\EfdNota;
 use App\Models\XmlImportacao;
 use App\Models\XmlNota;
 use App\Services\Bi\CruzamentosConsultasClearanceService;
+use App\Services\Catalogo\ReconciliacaoXmlEfdService;
 use App\Services\Clearance\ClearanceLoteService;
 use App\Services\Clearance\DivergenciaService;
 use App\Services\Clearance\RelatorioExecutivoService;
@@ -43,7 +44,8 @@ class ClearanceController extends Controller
     public function __construct(
         protected ValidacaoContabilService $validacaoService,
         protected CreditService $creditService,
-        protected NotaFiscalService $notaFiscalService
+        protected NotaFiscalService $notaFiscalService,
+        protected ReconciliacaoXmlEfdService $reconciliacaoService
     ) {}
 
     /**
@@ -1476,7 +1478,7 @@ class ClearanceController extends Controller
             'filtroCategoria' => $categoria,
             'categorias' => $this->validacaoService->getCategorias(),
             'cruzamentos' => (new CruzamentosConsultasClearanceService)->resumo($userId),
-            'catalogoDocumentos' => app(\App\Services\Catalogo\ReconciliacaoXmlEfdService::class)->resumoAlertas($userId),
+            'catalogoDocumentos' => $this->reconciliacaoService->resumoAlertas($userId),
         ];
 
         return $this->render($request, 'alertas', $data);
