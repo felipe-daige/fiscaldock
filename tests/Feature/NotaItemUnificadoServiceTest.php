@@ -298,3 +298,42 @@ it('na agregação, usa a descrição do catálogo quando o item da nota está s
 
     expect($itens['SEMDESC']['descricao'])->toBe('PRODUTO CATALOGO'); // fallback do catálogo
 });
+
+it('divergenciasNcmPorItem traz a referência da importação XML do item', function () {
+    [$user, $clienteId] = seedCatalogoUser();
+    catalogoItem($user->id, $clienteId, 'DIVIMP', '11112222', 18);
+    $impId = DB::table('xml_importacoes')->insertGetId([
+        'user_id' => $user->id, 'cliente_id' => $clienteId, 'tipo_documento' => 'NFE',
+        'filename' => 'lote-julho.zip', 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $nid = DB::table('xml_notas')->insertGetId([
+        'user_id' => $user->id, 'cliente_id' => $clienteId, 'importacao_xml_id' => $impId,
+        'chave_acesso' => str_pad('Z', 44, '0', STR_PAD_LEFT), 'tipo_documento' => 'NFE',
+        'numero_documento' => '1', 'serie' => '1', 'data_emissao' => '2024-02-10', 'tipo_nota' => 1, 'modelo' => '55',
+        'emit_documento' => '00000000000100', 'dest_documento' => '99999999000191', 'valor_total' => 10.0,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('xml_notas_itens')->insert([
+        'xml_nota_id' => $nid, 'user_id' => $user->id, 'numero_item' => 1, 'codigo_item' => 'DIVIMP',
+        'descricao' => 'i', 'quantidade' => 1, 'valor_total' => 10.0, 'cfop' => 5102, 'aliquota_icms' => 18,
+        'ncm' => '99998888', 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    $mapa = app(NotaItemUnificadoService::class)->divergenciasNcmPorItem($user->id);
+
+    expect($mapa['DIVIMP']['ncm_divergente'])->toBeTrue();
+    expect($mapa['DIVIMP']['importacoes'])->toContain('lote-julho.zip');
+});
+
+it('itensSemCatalogo lista item movimentado sem 0200 com a referência da importação', function () {
+    [$user, $clienteId] = seedCatalogoUser();
+    catalogoItem($user->id, $clienteId, 'TEM', '11112222', 18);
+    efdNotaComItem($user->id, $clienteId, str_pad('A', 44, '0', STR_PAD_LEFT), 'SEMCAT', 100.0); // sem catálogo
+    efdNotaComItem($user->id, $clienteId, str_pad('B', 44, '0', STR_PAD_LEFT), 'TEM', 50.0);     // com catálogo
+
+    $lista = app(NotaItemUnificadoService::class)->itensSemCatalogo($user->id)->keyBy('codigo_item');
+
+    expect($lista)->toHaveKey('SEMCAT');
+    expect($lista)->not->toHaveKey('TEM');
+    expect($lista['SEMCAT']['importacoes'])->toContain('EFD'); // rótulo da importação EFD
+});

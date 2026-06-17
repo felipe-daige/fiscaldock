@@ -118,7 +118,7 @@ class NotaItemUnificadoService
      * Base = versão atual do catálogo. Comparação tolerante a máscara (regexp_replace [^0-9]).
      *
      * @param  array{periodo_de?:string,periodo_ate?:string,cliente_id?:int}  $filtros
-     * @return array<string, array{descricao:?string,ncm_xml:?string,ncm_divergente:bool,aliquota_divergente:bool,tem_catalogo:bool,cat_ncm:?string}>
+     * @return array<string, array{descricao:?string,ncm_xml:?string,ncm_divergente:bool,aliquota_divergente:bool,tem_catalogo:bool,cat_ncm:?string,importacoes:?string}>
      */
     public function divergenciasNcmPorItem(int $userId, array $filtros = []): array
     {
@@ -151,9 +151,12 @@ class NotaItemUnificadoService
                        AND ABS(xi.aliquota_icms - cat.aliq_icms) > 0.01
                    )::int AS aliquota_divergente,
                    BOOL_OR(cat.cod_item IS NOT NULL)::int AS tem_catalogo,
-                   MAX(cat.cod_ncm) AS cat_ncm
+                   MAX(cat.cod_ncm) AS cat_ncm,
+                   string_agg(DISTINCT coalesce(NULLIF(xim.filename, ''), 'XML #'||xim.id::text), ' · ')
+                       FILTER (WHERE xim.id IS NOT NULL) AS importacoes
             FROM xml_notas_itens xi
             JOIN xml_notas xn ON xn.id = xi.xml_nota_id AND xn.user_id = :uid{$xmlWhere}
+            LEFT JOIN xml_importacoes xim ON xim.id = xn.importacao_xml_id
             LEFT JOIN (
                 SELECT DISTINCT ON (cod_item) cod_item, cod_ncm, aliq_icms
                 FROM efd_catalogo_itens
@@ -173,10 +176,84 @@ class NotaItemUnificadoService
                 'aliquota_divergente' => (bool) (int) $r->aliquota_divergente,
                 'tem_catalogo' => (bool) (int) $r->tem_catalogo,
                 'cat_ncm' => $r->cat_ncm,
+                'importacoes' => $r->importacoes,
             ];
         }
 
         return $mapa;
+    }
+
+    /**
+     * Itens movimentados em nota SEM cadastro no catálogo 0200 (EFD + XML, dedup EFD×XML por chave),
+     * com a referência da(s) importação(ões) de origem. Alimenta o painel acionável "Sem catálogo".
+     *
+     * @param  array{periodo_de?:string,periodo_ate?:string,cliente_id?:int}  $filtros
+     * @return Collection<int, array{codigo_item:string,descricao:?string,fontes:string,importacoes:?string,ocorrencias:int}>
+     */
+    public function itensSemCatalogo(int $userId, array $filtros = []): Collection
+    {
+        $bind = ['uid' => $userId];
+        $efdWhere = '';
+        $xmlWhere = '';
+        if (! empty($filtros['cliente_id'])) {
+            $bind['cli'] = (int) $filtros['cliente_id'];
+            $efdWhere .= ' AND n.cliente_id = :cli';
+            $xmlWhere .= ' AND xn.cliente_id = :cli';
+        }
+        if (! empty($filtros['periodo_de'])) {
+            $bind['de'] = $filtros['periodo_de'];
+            $efdWhere .= ' AND n.data_emissao >= :de';
+            $xmlWhere .= ' AND xn.data_emissao >= :de';
+        }
+        if (! empty($filtros['periodo_ate'])) {
+            $bind['ate'] = $filtros['periodo_ate'];
+            $efdWhere .= ' AND n.data_emissao <= :ate';
+            $xmlWhere .= ' AND xn.data_emissao <= :ate';
+        }
+
+        $sql = "
+            WITH mov AS (
+                SELECT ni.codigo_item, ni.descricao,
+                       trim(coalesce(ei.tipo_efd, 'EFD') || ' ' || coalesce(to_char(ei.periodo_inicio, 'MM/YYYY'), '')) AS imp_label,
+                       'efd' AS fonte
+                FROM efd_notas_itens ni
+                JOIN efd_notas n ON n.id = ni.efd_nota_id AND n.cancelada = false
+                LEFT JOIN efd_importacoes ei ON ei.id = n.importacao_id
+                WHERE ni.user_id = :uid{$efdWhere}
+                UNION ALL
+                SELECT xi.codigo_item, xi.descricao,
+                       coalesce(NULLIF(xim.filename, ''), 'XML #'||xim.id::text) AS imp_label,
+                       'xml' AS fonte
+                FROM xml_notas_itens xi
+                JOIN xml_notas xn ON xn.id = xi.xml_nota_id
+                LEFT JOIN xml_importacoes xim ON xim.id = xn.importacao_xml_id
+                WHERE xi.user_id = :uid
+                  AND NOT EXISTS (SELECT 1 FROM efd_notas en WHERE en.user_id = :uid AND en.chave_acesso = xn.chave_acesso)
+                  {$xmlWhere}
+            )
+            SELECT m.codigo_item,
+                   MAX(m.descricao) AS descricao,
+                   string_agg(DISTINCT m.fonte, ',') AS fontes_raw,
+                   string_agg(DISTINCT m.imp_label, ' · ') FILTER (WHERE m.imp_label IS NOT NULL AND m.imp_label <> '') AS importacoes,
+                   COUNT(*) AS ocorrencias
+            FROM mov m
+            LEFT JOIN (
+                SELECT DISTINCT ON (cod_item) cod_item
+                FROM efd_catalogo_itens
+                WHERE user_id = :uid
+                ORDER BY cod_item, id DESC
+            ) cat ON cat.cod_item = m.codigo_item
+            WHERE cat.cod_item IS NULL
+            GROUP BY m.codigo_item
+            ORDER BY m.codigo_item";
+
+        return collect(DB::select($sql, $bind))->map(fn ($r) => [
+            'codigo_item' => $r->codigo_item,
+            'descricao' => $r->descricao,
+            'fontes' => $this->normalizarFontes($r->fontes_raw),
+            'importacoes' => $r->importacoes,
+            'ocorrencias' => (int) $r->ocorrencias,
+        ]);
     }
 
     /** 'efd,xml' / 'xml,efd' → 'ambas'; senão a fonte única. */
