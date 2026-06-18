@@ -600,6 +600,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         scripts.forEach((script, index) => {
             try {
+                // Data-islands (ex.: <script type="application/json" id="cockpit-initial">) NÃO são
+                // JS executável. Recriá-los apaga type/id e quebra quem lê o dado (gráficos do cockpit
+                // ficam vazios). Deixar intactos no DOM — só JS de verdade é reprocessado.
+                const tipoScript = (script.getAttribute('type') || '').toLowerCase();
+                if (tipoScript && tipoScript !== 'text/javascript' && tipoScript !== 'application/javascript' && tipoScript !== 'module') {
+                    return;
+                }
+
                 // Script externo com src - carregar dinamicamente
                 if (script.src) {
                     const scriptSrc = script.getAttribute('src');
@@ -795,6 +803,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const scripts = app.querySelectorAll('script');
         scripts.forEach((script, index) => {
             try {
+                // Data-islands (ex.: <script type="application/json" id="cockpit-initial">) NÃO são
+                // JS executável. Recriá-los apaga type/id e quebra quem lê o dado. Deixar intactos.
+                const tipoScript = (script.getAttribute('type') || '').toLowerCase();
+                if (tipoScript && tipoScript !== 'text/javascript' && tipoScript !== 'application/javascript' && tipoScript !== 'module') {
+                    return;
+                }
+
                 // Script externo com src - carregar dinamicamente
                 if (script.src) {
                     const scriptSrc = script.getAttribute('src');

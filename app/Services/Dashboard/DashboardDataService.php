@@ -7,6 +7,7 @@ use App\Models\ConsultaResultado;
 use App\Models\EfdImportacao;
 use App\Models\Participante;
 use App\Models\User;
+use App\Models\XmlImportacao;
 use App\Services\AlertaCentralService;
 use App\Services\BiService;
 use App\Services\CreditService;
@@ -162,8 +163,8 @@ class DashboardDataService
         $risco = $this->contarRisco($userId, $clienteId);
 
         return [
-            'volume'   => ['notas' => $volNotas, 'valor' => $volValor],
-            'saude'    => ['total' => $alertasAlta + $risco, 'alertas_alta' => $alertasAlta, 'risco' => $risco],
+            'volume' => ['notas' => $volNotas, 'valor' => $volValor],
+            'saude' => ['total' => $alertasAlta + $risco, 'alertas_alta' => $alertasAlta, 'risco' => $risco],
             'creditos' => ['saldo' => $this->creditService->getBalance($user), 'usados_mes' => $this->creditosUsadosMes($userId)],
         ];
     }
@@ -231,8 +232,7 @@ class DashboardDataService
     public function cockpit(int $userId, User $user, ?int $clienteId, int $periodo): array
     {
         $periodo = in_array($periodo, [3, 6, 12], true) ? $periodo : 6;
-        $dataInicio = now()->subMonths($periodo - 1)->startOfMonth()->toDateString();
-        $dataFim = now()->endOfMonth()->toDateString();
+        [$dataInicio, $dataFim, $referencia] = $this->janelaCockpit($userId, $clienteId, $periodo);
 
         $bloco = fn (callable $fn, $fallback) => rescue($fn, $fallback, report: false);
 
@@ -253,8 +253,62 @@ class DashboardDataService
             'tendencia' => $tendencia,
             'top_fornecedores' => $topFornecedores,
             'risco_distribuicao' => $riscoDistribuicao,
-            'meta' => ['cliente' => $clienteId, 'periodo' => $periodo],
+            'meta' => [
+                'cliente' => $clienteId,
+                'periodo' => $periodo,
+                'referencia' => $referencia?->toDateString(),
+            ],
         ];
+    }
+
+    /**
+     * Resolve a janela do cockpit. Quando a janela padrão atual não tem dados,
+     * ancora o período no último mês com movimento do acervo do usuário.
+     */
+    private function janelaCockpit(int $userId, ?int $clienteId, int $periodo): array
+    {
+        $inicio = now()->subMonths($periodo - 1)->startOfMonth();
+        $fim = now()->endOfMonth();
+        $referencia = $fim->copy();
+
+        $temDados = DB::table('efd_notas')
+            ->where('user_id', $userId)
+            ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
+            ->whereBetween('data_emissao', [$inicio->toDateString(), $fim->toDateString()])
+            ->exists()
+            || DB::table('xml_notas')
+                ->where('user_id', $userId)
+                ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
+                ->whereBetween('data_emissao', [$inicio->toDateString(), $fim->toDateString()])
+                ->exists();
+
+        if ($temDados) {
+            return [$inicio->toDateString(), $fim->toDateString(), $referencia];
+        }
+
+        $ultimaEfd = DB::table('efd_notas')
+            ->where('user_id', $userId)
+            ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
+            ->max('data_emissao');
+        $ultimaXml = DB::table('xml_notas')
+            ->where('user_id', $userId)
+            ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
+            ->max('data_emissao');
+
+        $ultimaData = collect([$ultimaEfd, $ultimaXml])
+            ->filter()
+            ->map(fn ($data) => Carbon::parse($data))
+            ->sortBy(fn (Carbon $data) => $data->getTimestamp())
+            ->last();
+
+        if (! $ultimaData) {
+            return [$inicio->toDateString(), $fim->toDateString(), $referencia];
+        }
+
+        $referencia = $ultimaData->copy()->endOfMonth();
+        $inicio = $referencia->copy()->subMonths($periodo - 1)->startOfMonth();
+
+        return [$inicio->toDateString(), $referencia->toDateString(), $ultimaData];
     }
 
     /**
@@ -272,6 +326,21 @@ class DashboardDataService
                 'tipo_efd' => $i->tipo_efd,
                 'status' => $i->status,
                 'data' => $i->created_at,
+                // Atalho pro histórico/detalhe daquele documento importado.
+                'url' => '/app/importacao/efd/'.$i->id,
+            ]);
+
+        $importacoesXml = XmlImportacao::where('user_id', $userId)
+            ->latest()
+            ->limit(3)
+            ->get()
+            ->map(fn ($x) => [
+                'tipo' => 'importacao_xml',
+                'descricao' => $x->filename ?? 'Importação XML',
+                'status' => $x->status,
+                'data' => $x->created_at,
+                // Atalho pro histórico/detalhe daquela importação XML.
+                'url' => '/app/importacao/xml/'.$x->id,
             ]);
 
         $consultas = ConsultaLote::where('user_id', $userId)
@@ -284,9 +353,11 @@ class DashboardDataService
                 'descricao' => $c->plano?->nome ?? 'Consulta',
                 'status' => $c->status,
                 'data' => $c->created_at,
+                // Atalho pro detalhe/histórico daquele lote de consulta.
+                'url' => '/app/consulta/lote/'.$c->id,
             ]);
 
-        return $importacoes->concat($consultas)
+        return $importacoes->concat($importacoesXml)->concat($consultas)
             ->sortByDesc('data')
             ->take(5)
             ->values();

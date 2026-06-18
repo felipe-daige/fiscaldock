@@ -1,4 +1,4 @@
-{{-- Dashboard — Cockpit --}}
+{{-- Dashboard - Cockpit --}}
 @php
     $fmtN = fn ($v) => number_format((float) $v, 0, ',', '.');
     $fmtR = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
@@ -11,63 +11,95 @@
     ];
     $atalhosFixos = $dashboardPrefs['atalhos_fixos'] ?? [];
     $cardLabels = ['tendencia' => 'Tendência', 'risco' => 'Risco da carteira', 'triagem' => 'Precisa de atenção', 'fornecedores' => 'Top fornecedores', 'atividade' => 'Atividade recente', 'atalhos' => 'Atalhos'];
+    $atalhosOrdem = array_values(array_unique(array_merge($dashboardPrefs['atalhos_ordem'] ?? [], array_keys($atalhoLabels))));
+    $atalhosConfig = [];
+    foreach ($atalhosOrdem as $slug) {
+        if (isset($atalhoLabels[$slug], $atalhosCatalogo[$slug])) {
+            $atalhosConfig[$slug] = ['label' => $atalhoLabels[$slug], 'url' => $atalhosCatalogo[$slug]];
+        }
+    }
+    $periodoAtual = (int) ($cockpit['meta']['periodo'] ?? 6);
 @endphp
 
 <div id="dashboard-cockpit" class="min-h-screen bg-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-
-        {{-- Header + controles --}}
-        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div class="mb-4 sm:mb-6 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>
                 <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Dashboard</h1>
-                <p class="text-xs text-gray-500 mt-0.5">Visão geral do seu escritório</p>
+                <p class="text-xs text-gray-500 mt-1">Painel operacional da carteira fiscal</p>
             </div>
-            <div class="flex items-end gap-2">
-                <div class="flex flex-col">
-                    <label class="text-[11px] text-gray-500">Cliente</label>
-                    <select data-control="cliente" class="text-[13px] py-2.5 px-3 border border-gray-300 rounded bg-white">
-                        <option value="">Todos</option>
-                        @foreach($clientesOpcoes as $opt)
-                            <option value="{{ $opt['id'] }}">{{ $opt['label'] }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="flex flex-col">
-                    <label class="text-[11px] text-gray-500">Período</label>
-                    <select data-control="periodo" class="text-[13px] py-2.5 px-3 border border-gray-300 rounded bg-white">
-                        <option value="3">3 meses</option>
-                        <option value="6" selected>6 meses</option>
-                        <option value="12">12 meses</option>
-                    </select>
-                </div>
-                <button type="button" data-personalizar-toggle class="text-[13px] py-2.5 px-3 border border-gray-300 rounded bg-white text-gray-600 hover:bg-gray-50">
+            <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+                <span data-dashboard-status class="hidden px-3 py-2 bg-white border border-gray-300 rounded text-xs text-gray-600">Atualizando...</span>
+                <button type="button" data-personalizar-toggle aria-expanded="false" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded text-sm font-medium">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.89 3.31.877 2.42 2.42a1.724 1.724 0 001.065 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.89 1.543-.877 3.31-2.42 2.42a1.724 1.724 0 00-2.573 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.89-3.31-.877-2.42-2.42a1.724 1.724 0 00-1.065-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.89-1.543.877-3.31 2.42-2.42.996.575 2.236.07 2.573-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
                     Personalizar
                 </button>
             </div>
         </div>
 
-        {{-- Painel personalizar (oculto por padrão) --}}
-        <div data-personalizar-panel class="hidden bg-white rounded border border-gray-300 p-4 mb-4">
-            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Mostrar cards</p>
-            <div class="flex flex-wrap gap-4 mb-4">
-                @foreach($cardLabels as $k => $label)
-                    <label class="inline-flex items-center gap-2 text-[13px] text-gray-700">
-                        <input type="checkbox" data-pref-card="{{ $k }}" @checked($cardVisivel($k))> {{ $label }}
-                    </label>
-                @endforeach
+        <div class="bg-white rounded border border-gray-300 p-4 sm:p-5 mb-4 sm:mb-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 lg:items-end">
+                <div class="lg:col-span-5">
+                    <label for="dashboard-cliente" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Cliente</label>
+                    <select id="dashboard-cliente" data-control="cliente" class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        <option value="">Todos os clientes</option>
+                        @foreach($clientesOpcoes as $opt)
+                            <option value="{{ $opt['id'] }}">{{ $opt['label'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="lg:col-span-3">
+                    <label for="dashboard-periodo" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Período</label>
+                    <select id="dashboard-periodo" data-control="periodo" class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        <option value="3" @selected($periodoAtual === 3)>3 meses</option>
+                        <option value="6" @selected($periodoAtual === 6)>6 meses</option>
+                        <option value="12" @selected($periodoAtual === 12)>12 meses</option>
+                    </select>
+                </div>
+                <div class="lg:col-span-4">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Escopo</p>
+                    <div class="min-h-[38px] px-3 py-2 rounded border border-gray-200 bg-gray-50 text-xs text-gray-600 flex items-center">
+                        <span data-dashboard-scope>Todos os clientes - {{ $periodoAtual }} meses</span>
+                    </div>
+                </div>
             </div>
-            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Atalhos fixados</p>
-            <div class="flex flex-wrap gap-4">
-                @foreach($atalhoLabels as $slug => $label)
-                    <label class="inline-flex items-center gap-2 text-[13px] text-gray-700">
-                        <input type="checkbox" data-pref-atalho="{{ $slug }}" @checked(in_array($slug, $atalhosFixos, true))> {{ $label }}
-                    </label>
-                @endforeach
+        </div>
+
+        <div data-personalizar-panel class="hidden bg-white rounded border border-gray-300 overflow-hidden mb-4 sm:mb-6">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Personalização</span>
+            </div>
+            <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div>
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-3">Mostrar cards</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        @foreach($cardLabels as $k => $label)
+                            <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                                <input type="checkbox" data-pref-card="{{ $k }}" class="rounded border-gray-300 text-gray-800 focus:ring-gray-400" @checked($cardVisivel($k))>
+                                <span>{{ $label }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+                <div>
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-3">Atalhos fixados</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        @foreach($atalhosConfig as $slug => $atalho)
+                            <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                                <input type="checkbox" data-pref-atalho="{{ $slug }}" class="rounded border-gray-300 text-gray-800 focus:ring-gray-400" @checked(in_array($slug, $atalhosFixos, true))>
+                                <span>{{ $atalho['label'] }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
             </div>
         </div>
 
         @if(($trialResumo['is_active'] ?? false) || ($trialResumo['is_expired'] ?? false))
-            <div class="bg-white rounded border border-gray-300 p-3 mb-4 border-l-4 {{ ($trialResumo['is_active'] ?? false) ? 'border-l-blue-500' : 'border-l-amber-500' }}">
+            <div class="bg-white rounded border border-gray-300 p-4 mb-4 sm:mb-6 border-l-4 {{ ($trialResumo['is_active'] ?? false) ? 'border-l-blue-500' : 'border-l-amber-500' }}">
                 @if($trialResumo['is_active'] ?? false)
                     <p class="text-sm text-gray-700">Trial ativo com <strong>{{ $fmtN($trialResumo['remaining'] ?? 0) }} créditos</strong>, expira em <strong>{{ optional($trialResumo['expires_at'])->format('d/m/Y') }}</strong>.</p>
                 @else
@@ -76,85 +108,111 @@
             </div>
         @endif
 
-        {{-- KPIs (3, clicáveis) --}}
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-            <a href="/app/notas/dashboard" data-link data-kpi="volume" class="bg-white rounded border border-gray-300 border-l-4 p-4 hover:border-gray-400 transition-all" style="border-left-color:#1d4ed8">
-                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Volume processado</p>
-                <p class="text-xl font-bold text-gray-900" data-kpi-valor>{{ $fmtN($cockpit['kpis']['volume']['notas']) }}</p>
-                <p class="text-[11px] text-gray-500 mt-0.5" data-kpi-sub>{{ $fmtR($cockpit['kpis']['volume']['valor']) }}</p>
-            </a>
-            <a href="/app/alertas" data-link data-kpi="saude" class="bg-white rounded border border-gray-300 border-l-4 p-4 hover:border-gray-400 transition-all" style="border-left-color:#dc2626">
-                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saúde da carteira</p>
-                <p class="text-xl font-bold text-gray-900" data-kpi-valor>{{ $fmtN($cockpit['kpis']['saude']['total']) }}</p>
-                <p class="text-[11px] text-gray-500 mt-0.5" data-kpi-sub>{{ $cockpit['kpis']['saude']['total'] > 0 ? 'pontos de atenção' : 'tudo em dia' }}</p>
-            </a>
-            <a href="/app/creditos" data-link data-kpi="creditos" class="bg-white rounded border border-gray-300 border-l-4 p-4 hover:border-gray-400 transition-all" style="border-left-color:#047857">
-                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Créditos</p>
-                <p class="text-xl font-bold text-gray-900" data-kpi-valor>{{ $fmtN($cockpit['kpis']['creditos']['saldo']) }}</p>
-                <p class="text-[11px] text-gray-500 mt-0.5" data-kpi-sub>{{ $fmtN($cockpit['kpis']['creditos']['usados_mes']) }} usados este mês</p>
-            </a>
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4 sm:mb-6">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo operacional</span>
+                <span data-dashboard-meta class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ $periodoAtual }} meses</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-200">
+                <a href="/app/notas/dashboard" data-link data-kpi="volume" class="block p-4 sm:p-6 hover:bg-gray-50/50 transition-colors">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Volume processado</p>
+                    <p class="text-lg font-bold text-gray-900" data-kpi-valor>{{ $fmtN($cockpit['kpis']['volume']['notas']) }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1" data-kpi-sub>{{ $fmtR($cockpit['kpis']['volume']['valor']) }}</p>
+                </a>
+                <a href="/app/alertas" data-link data-kpi="saude" class="block p-4 sm:p-6 hover:bg-gray-50/50 transition-colors">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Saúde da carteira</p>
+                    <p class="text-lg font-bold text-gray-900" data-kpi-valor>{{ $fmtN($cockpit['kpis']['saude']['total']) }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1" data-kpi-sub>{{ $cockpit['kpis']['saude']['total'] > 0 ? 'pontos de atenção' : 'tudo em dia' }}</p>
+                </a>
+                <a href="/app/creditos" data-link data-kpi="creditos" class="block p-4 sm:p-6 hover:bg-gray-50/50 transition-colors">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Créditos</p>
+                    <p class="text-lg font-bold text-gray-900" data-kpi-valor>{{ $fmtN($cockpit['kpis']['creditos']['saldo']) }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1" data-kpi-sub>{{ $fmtN($cockpit['kpis']['creditos']['usados_mes']) }} usados este mês</p>
+                </a>
+            </div>
         </div>
 
-        {{-- Tendência (2/3) + Risco da carteira (1/3) --}}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-            <div data-card="tendencia" class="lg:col-span-2 bg-white rounded border border-gray-300 p-4 {{ $cardVisivel('tendencia') ? '' : 'hidden' }}">
-                <div class="flex items-baseline justify-between mb-2">
-                    <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Tendência — entrada × saída</p>
-                    <select data-control="metrica" class="text-[11px] text-gray-500 border-0 bg-transparent focus:ring-0">
+        <div data-card="atalhos" class="bg-white rounded border border-gray-300 overflow-hidden mb-4 sm:mb-6 {{ $cardVisivel('atalhos') ? '' : 'hidden' }}">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Atalhos</span>
+            </div>
+            <div class="p-4">
+                <div id="atalhos-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    @foreach($atalhosFixos as $slug)
+                        @if(isset($atalhosConfig[$slug]))
+                            <a href="{{ $atalhosConfig[$slug]['url'] }}" data-link class="inline-flex items-center justify-center min-h-[40px] text-center px-3 py-2 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors">
+                                {{ $atalhosConfig[$slug]['label'] }}
+                            </a>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
+            <div data-card="tendencia" class="lg:col-span-2 bg-white rounded border border-gray-300 overflow-hidden {{ $cardVisivel('tendencia') ? '' : 'hidden' }}">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Tendência - entradas x saídas</span>
+                    <select aria-label="Métrica da tendência" data-control="metrica" class="text-[11px] text-gray-600 border border-gray-300 rounded bg-white px-2 py-1 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         <option value="valor" selected>Faturamento</option>
                         <option value="qtd">Volume</option>
                     </select>
                 </div>
-                <div id="chartTendencia"></div>
+                <div class="p-4">
+                    <div id="chartTendencia" class="min-h-[268px]"></div>
+                </div>
             </div>
-            <div data-card="risco" class="bg-white rounded border border-gray-300 p-4 {{ $cardVisivel('risco') ? '' : 'hidden' }}">
-                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Risco da carteira</p>
-                <div id="chartRisco"></div>
-                <p id="risco-vazio" class="hidden text-center text-sm text-gray-400 py-10">Nenhum participante avaliado ainda.</p>
-            </div>
-        </div>
 
-        {{-- Triagem (1/3) + Top fornecedores (1/3) + Atividade (1/3) --}}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-            <div data-card="triagem" class="bg-white rounded border border-gray-300 p-4 {{ $cardVisivel('triagem') ? '' : 'hidden' }}">
-                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-3">Precisa de atenção</p>
-                <div id="triagem-lista" class="divide-y divide-gray-100">
+            <div data-card="triagem" class="bg-white rounded border border-gray-300 overflow-hidden flex flex-col {{ $cardVisivel('triagem') ? '' : 'hidden' }}">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Precisa de atenção</span>
+                </div>
+                <div id="triagem-lista" class="flex-1 flex flex-col">
                     @include('autenticado.dashboard.partials.triagem', ['triagem' => $cockpit['triagem']])
                 </div>
             </div>
-            <div data-card="fornecedores" class="bg-white rounded border border-gray-300 p-4 {{ $cardVisivel('fornecedores') ? '' : 'hidden' }}">
-                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Top fornecedores</p>
-                <div id="chartFornecedores"></div>
-                <p id="fornecedores-vazio" class="hidden text-center text-sm text-gray-400 py-10">Sem compras no período.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
+            <div data-card="risco" class="bg-white rounded border border-gray-300 overflow-hidden {{ $cardVisivel('risco') ? '' : 'hidden' }}">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Risco da carteira</span>
+                </div>
+                <div class="p-4">
+                    <div id="chartRisco" class="min-h-[244px]"></div>
+                    <p id="risco-vazio" class="hidden text-center text-sm text-gray-500 py-12">Nenhum participante avaliado ainda.</p>
+                </div>
             </div>
+
+            <div data-card="fornecedores" class="bg-white rounded border border-gray-300 overflow-hidden {{ $cardVisivel('fornecedores') ? '' : 'hidden' }}">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Top fornecedores</span>
+                </div>
+                <div class="p-4">
+                    <div id="chartFornecedores" class="min-h-[244px]"></div>
+                    <p id="fornecedores-vazio" class="hidden text-center text-sm text-gray-500 py-12">Sem compras no período.</p>
+                </div>
+            </div>
+
             <div data-card="atividade" class="bg-white rounded border border-gray-300 overflow-hidden {{ $cardVisivel('atividade') ? '' : 'hidden' }}">
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                    <h2 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Atividade recente</h2>
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Atividade recente</span>
                 </div>
                 <div class="divide-y divide-gray-100">
                     @forelse($atividadeRecente as $atividade)
-                        <div class="px-4 py-2.5 flex items-center justify-between gap-2">
-                            <span class="text-sm text-gray-700 truncate">{{ $atividade['descricao'] }}</span>
-                            <span class="text-[11px] text-gray-400 flex-shrink-0">{{ $atividade['data']->format('d/m H:i') }}</span>
-                        </div>
+                        <a href="{{ $atividade['url'] ?? '#' }}" data-link class="group flex items-center justify-between gap-3 px-4 py-3 hover:bg-gray-50/50 transition-colors">
+                            <span class="min-w-0 text-sm text-gray-700 truncate group-hover:text-gray-900">{{ $atividade['descricao'] }}</span>
+                            <span class="flex-shrink-0 flex items-center gap-1.5 text-[11px] text-gray-400">
+                                {{ $atividade['data']->format('d/m H:i') }}
+                                <svg class="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </span>
+                        </a>
                     @empty
-                        <div class="px-4 py-6 text-center text-sm text-gray-500">Nenhuma atividade recente</div>
+                        <div class="px-4 py-12 text-center text-sm text-gray-500">Nenhuma atividade recente</div>
                     @endforelse
                 </div>
-            </div>
-        </div>
-
-        {{-- Atalhos --}}
-        <div data-card="atalhos" class="bg-white rounded border border-gray-300 p-4 mb-4 {{ $cardVisivel('atalhos') ? '' : 'hidden' }}">
-            <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-3">Atalhos</p>
-            <div id="atalhos-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                @foreach($atalhosFixos as $slug)
-                    @if(isset($atalhosCatalogo[$slug]))
-                        <a href="{{ $atalhosCatalogo[$slug] }}" data-link class="text-[13px] text-center py-2.5 px-3 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all">
-                            {{ $atalhoLabels[$slug] ?? $slug }}
-                        </a>
-                    @endif
-                @endforeach
             </div>
         </div>
 
@@ -165,6 +223,11 @@
 
     {{-- Estado inicial pro JS (evita refetch na 1ª pintura) --}}
     <script type="application/json" id="cockpit-initial">{!! json_encode($cockpit) !!}</script>
+    <script type="application/json" id="dashboard-atalhos">{!! json_encode($atalhosConfig) !!}</script>
 </div>
 
 <script src="/js/apexcharts.min.js"></script>
+{{-- dashboard.js versionado por mtime: o SPA carrega esse script por convenção (window.initDashboard),
+     mas sem ?v= o browser servia uma cópia velha em cache (max-age=3600) e o gráfico ficava em branco
+     após edições. Incluir aqui com cache-bust garante que a versão atual sempre seja buscada. --}}
+<script src="/js/dashboard.js?v={{ filemtime(public_path('js/dashboard.js')) }}"></script>
