@@ -95,6 +95,17 @@ class DashboardController extends Controller
             'isUsuarioNovo' => $isUsuarioNovo,
             'ultimaImportacao' => $ultimaImportacao,
             'trialResumo' => $this->buildTrialResumo($user),
+            'cockpit' => $this->dashboardDataService->cockpit($userId, $user, null, 6),
+            'dashboardPrefs' => $user->dashboardPrefs(),
+            'atalhosCatalogo' => self::ATALHOS_CATALOGO,
+            'clientesOpcoes' => Cliente::where('user_id', $userId)
+                ->where(function ($q) {
+                    $q->where('is_empresa_propria', false)->orWhereNull('is_empresa_propria');
+                })
+                ->orderByRaw("COALESCE(razao_social, nome, '') asc")
+                ->get(['id', 'razao_social', 'nome'])
+                ->map(fn ($c) => ['id' => $c->id, 'label' => $c->razao_social ?: ($c->nome ?: ('Cliente #'.$c->id))])
+                ->all(),
         ];
 
         if ($this->isAjaxRequest($request)) {
