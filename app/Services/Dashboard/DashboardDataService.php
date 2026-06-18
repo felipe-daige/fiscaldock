@@ -117,6 +117,39 @@ class DashboardDataService
         ];
     }
 
+    /** Créditos consumidos no mês corrente (consultas + importações), igual ao KPI legado. */
+    private function creditosUsadosMes(int $userId): int
+    {
+        $ini = now()->startOfMonth();
+        $fim = now()->endOfMonth();
+
+        $consultas = (int) ConsultaLote::where('user_id', $userId)
+            ->whereIn('status', ConsultaLote::successfulStatuses())
+            ->whereBetween('created_at', [$ini, $fim])
+            ->sum('creditos_cobrados');
+        $importacoes = (int) EfdImportacao::where('user_id', $userId)
+            ->whereBetween('created_at', [$ini, $fim])
+            ->sum('creditos_cobrados');
+
+        return $consultas + $importacoes;
+    }
+
+    /** 3 KPIs enxutos do cockpit, filtráveis por cliente/período. */
+    public function getCockpitKpis(int $userId, User $user, ?int $clienteId, ?string $dataInicio, ?string $dataFim): array
+    {
+        $volNotas = $this->efd->notasDedup($userId, null, $dataInicio, $dataFim, $clienteId)->count();
+        $volValor = (float) $this->efd->notasDedup($userId, null, $dataInicio, $dataFim, $clienteId)->sum('n.valor_total');
+
+        $alertasAlta = (int) ($this->alertaCentralService->obterResumo($userId)['por_severidade']['alta'] ?? 0);
+        $risco = $this->contarRisco($userId, $clienteId);
+
+        return [
+            'volume'   => ['notas' => $volNotas, 'valor' => $volValor],
+            'saude'    => ['total' => $alertasAlta + $risco, 'alertas_alta' => $alertasAlta, 'risco' => $risco],
+            'creditos' => ['saldo' => $this->creditService->getBalance($user), 'usados_mes' => $this->creditosUsadosMes($userId)],
+        ];
+    }
+
     /**
      * Retorna atividade recente mesclando importações e consultas.
      */
