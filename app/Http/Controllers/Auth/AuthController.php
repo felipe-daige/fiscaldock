@@ -229,6 +229,8 @@ class AuthController extends Controller
         // Conta suspensa: não autentica (defesa junto com EnsureNaoBloqueado).
         if (Auth::user()?->bloqueado_em !== null) {
             Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
             if ($request->ajax()) {
                 return response()->json(['success' => false, 'message' => 'Conta suspensa. Fale com o suporte.'], 403);
             }

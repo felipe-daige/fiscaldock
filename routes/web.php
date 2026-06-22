@@ -75,7 +75,7 @@ Route::get('/api/csrf-token', function () {
 // RequireCurrentTerms por FQCN (bootstrap/app.php não é montado): força re-aceite (LGPD 2.2)
 // quando a versão dos documentos sobe. Só intercepta GET full-page; o interstitial app.reaceite.*
 // é isento via routeIs (sem loop).
-Route::middleware(['auth', \App\Http\Middleware\RequireCurrentTerms::class, \App\Http\Middleware\EnsureNaoBloqueado::class])->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\Http\Middleware\RequireCurrentTerms::class])->group(function () {
     Route::get('/app/reaceite', [\App\Http\Controllers\Dashboard\TermosReaceiteController::class, 'show'])->name('app.reaceite.show');
     Route::post('/app/reaceite', [\App\Http\Controllers\Dashboard\TermosReaceiteController::class, 'aceitar'])->name('app.reaceite.aceitar');
 
@@ -208,6 +208,7 @@ Route::middleware(['auth', \App\Http\Middleware\RequireCurrentTerms::class, \App
         Route::get('/efd/notas', [EfdImportacaoController::class, 'notasPorIds'])->name('efd.notas.por-ids');
         Route::get('/efd/notas-participante', [EfdImportacaoController::class, 'notasPorParticipante'])->name('efd.notas.por-participante');
         Route::get('/efd/{id}', [EfdImportacaoController::class, 'show'])->name('efd.detalhes');
+        Route::get('/efd/{id}/exportar', [EfdImportacaoController::class, 'exportar'])->name('efd.exportar');
         Route::get('/efd/{id}/preview-exclusao', [EfdImportacaoController::class, 'previewExclusao'])->name('efd.preview-exclusao');
         Route::delete('/efd/{id}', [EfdImportacaoController::class, 'destroy'])->name('efd.destroy');
 
@@ -273,6 +274,10 @@ Route::middleware(['auth', \App\Http\Middleware\RequireCurrentTerms::class, \App
         Route::get('/exportar', [BiController::class, 'exportar'])
             ->middleware(RequiresEntitlement::class.':export')->name('exportar');
         Route::get('/catalogo-itens', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'index'])->name('catalogo-itens');
+        Route::get('/catalogo-itens/exportar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'exportarCsv'])
+            ->middleware(RequiresEntitlement::class.':export')->name('catalogo-itens.exportar');
+        Route::get('/catalogo-itens/exportar-pdf', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'exportarPdf'])
+            ->middleware(RequiresEntitlement::class.':export')->name('catalogo-itens.exportar-pdf');
         Route::post('/catalogo-itens/alerta/descartar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'descartarAlerta'])->name('catalogo-itens.descartar');
         Route::post('/catalogo-itens/alerta/restaurar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'restaurarAlerta'])->name('catalogo-itens.restaurar');
         Route::get('/cruzamentos', [\App\Http\Controllers\Dashboard\BiCruzamentosController::class, 'index'])->name('cruzamentos');

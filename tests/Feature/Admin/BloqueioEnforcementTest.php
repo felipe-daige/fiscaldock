@@ -11,7 +11,7 @@ uses(RefreshDatabase::class);
 it('usuário bloqueado é deslogado ao acessar /app', function () {
     $u = User::factory()->create(['bloqueado_em' => now()]);
 
-    actingAs($u)->get('/app/dashboard')->assertRedirect('/login');
+    actingAs($u)->get('/app/dashboard')->assertRedirect(route('login'));
     expect(auth()->check())->toBeFalse();
 });
 
