@@ -142,7 +142,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="bg-white rounded border border-gray-300 p-4 space-y-1">
                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Crédito</p>
-                <p class="text-sm text-gray-700">1 crédito = R$ 0,20 (fixo). Os planos incluem créditos por mês; estourou, compra avulsa na sua faixa.</p>
+                <p class="text-sm text-gray-700">1 crédito = R$ {{ number_format($creditUnitPrice ?? 0.20, 2, ',', '.') }} (fixo). Os planos incluem créditos por mês; estourou, compra avulsa na sua faixa.</p>
             </div>
             <div class="bg-white rounded border border-gray-300 p-4 space-y-1">
                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Faixa de desconto</p>

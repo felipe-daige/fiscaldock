@@ -171,7 +171,7 @@ class PricingCatalogService
         return [
             'slug' => 'custom',
             'nome' => 'Recarga personalizada',
-            'creditos' => (int) round($normalizedAmount / self::CREDIT_UNIT_PRICE),
+            'creditos' => (int) round($normalizedAmount / $this->creditUnitPrice()),
             'preco' => $normalizedAmount,
             'badge' => 'Valor livre',
             'usage_hint' => 'Você escolhe quanto pagar',
@@ -401,7 +401,7 @@ class PricingCatalogService
         }, $this->getProductCatalog());
 
         return [
-            'credit_unit_price' => self::CREDIT_UNIT_PRICE,
+            'credit_unit_price' => $this->creditUnitPrice(),
             'minimum_deposit' => $this->getMinimumDeposit(),
             'featured_offers' => $featuredOffers,
             'packages' => $featuredOffers,
@@ -574,7 +574,7 @@ class PricingCatalogService
         }, $this->getProductCatalog());
 
         return array_merge($progress, [
-            'credit_unit_price' => self::CREDIT_UNIT_PRICE,
+            'credit_unit_price' => $this->creditUnitPrice(),
             'minimum_deposit' => $this->getMinimumDeposit(),
             'featured_offers' => $featuredOffers,
             'products' => $products,
@@ -613,6 +613,6 @@ class PricingCatalogService
 
     public function creditsToCurrency(int $credits): float
     {
-        return round($credits * self::CREDIT_UNIT_PRICE, 2);
+        return round($credits * $this->creditUnitPrice(), 2);
     }
 }

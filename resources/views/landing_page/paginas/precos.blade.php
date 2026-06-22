@@ -53,7 +53,7 @@
                     </span>
                 </div>
                 <h1 class="mt-6 text-4xl md:text-5xl font-bold text-gray-900">
-                    Comece com <span class="text-blue-600">R$ 50 em créditos</span> e pague menos por consulta conforme o volume cresce
+                    Comece com <span class="text-blue-600">R$ {{ number_format($minimumDeposit, 0, ',', '.') }} em créditos</span> e pague menos por consulta conforme o volume cresce
                 </h1>
                 <p class="mt-5 text-lg text-gray-600 max-w-3xl mx-auto">
                     A FiscalDock funciona no modelo pré-pago: você testa sem cartão, compra créditos quando precisar e destrava faixas melhores automaticamente pelo histórico pago acumulado.

@@ -203,7 +203,7 @@
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div class="border border-gray-300 rounded p-3">
-                                <p class="text-sm font-semibold text-gray-900">1 crédito = R$ 0,20</p>
+                                <p class="text-sm font-semibold text-gray-900">1 crédito = R$ {{ number_format($creditUnitPrice ?? 0.20, 2, ',', '.') }}</p>
                                 <p class="text-[11px] text-gray-500 mt-1">Escada comercial atual: Validação 5, Licitação 10, Compliance 18, Due Diligence 35 créditos por CNPJ.</p>
                             </div>
                             <div class="border border-gray-300 rounded p-3">

@@ -120,6 +120,7 @@ class ConsultaController extends Controller
             'participantesUfs' => $participantesUfs,
             'clientesUfs' => $clientesUfs,
             'credits' => $this->creditService->getBalance($user),
+            'creditUnitPrice' => $this->pricingCatalogService->creditUnitPrice(),
             'complianceSources' => $this->pricingCatalogService->getComplianceSources(),
             'hasMadeFirstPurchase' => $this->pricingCatalogService->userHasFirstPurchase($user),
             'firstPurchaseLockedProducts' => $this->pricingCatalogService->getFirstPurchaseLockedProducts(),

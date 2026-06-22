@@ -1064,6 +1064,7 @@ class DashboardController extends Controller
             'planos' => $planos,
             'planoAtualCodigo' => $planoAtual->codigo,
             'assinaturaAtual' => $assinatura,
+            'creditUnitPrice' => $this->pricingCatalogService->creditUnitPrice(),
             'mpPublicKey' => (string) config('services.mercadopago.public_key'),
             'mpTetoCentavos' => (int) config('services.mercadopago.preapproval_teto_centavos', 400000),
             'whatsappUrl' => (string) config('support.whatsapp_url'),
