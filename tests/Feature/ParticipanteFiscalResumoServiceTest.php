@@ -103,6 +103,7 @@ it('com comCfops=true retorna top 3 CFOPs desc do participante', function () {
     // adiciona consolidados (C190) às notas de entrada do fornecedor
     $notas = DB::table('efd_notas')->where('participante_id', $d['forn'])
         ->where('origem_arquivo', 'fiscal')->where('cancelada', false)->pluck('id');
+    expect($notas)->toHaveCount(2, 'pfrSetup mudou: o número de notas do fornecedor afeta a distribuição de CFOP — revisar cfopSeq/itens por nota');
     // 1102×3, 1556×2, 2401×2, 2102×1 → top 3 = [1102,1556,2401]; 2102 fica fora
     // (cfopSeq estendida para 8 porque os 2 notas × 4 itens = 8 inserts cobrem o ciclo)
     $cfopSeq = [1102, 1102, 1102, 1556, 1556, 2401, 2401, 2102];
