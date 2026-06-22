@@ -1778,59 +1778,59 @@ class ConsultaController extends Controller
             ->paraParticipantes($lote->user_id, $participanteIds, comCfops: true);
 
         return $resultados->map(function (ConsultaResultado $resultado) use ($parecerService, $detalhePresenter, $fiscalResumos) {
-                $parecerResumo = $resultado->isSucesso()
-                    ? $parecerService->gerarResumo($resultado->getParecerFiscalPayload())
-                    : [];
+            $parecerResumo = $resultado->isSucesso()
+                ? $parecerService->gerarResumo($resultado->getParecerFiscalPayload())
+                : [];
 
-                $statusMeta = match ($resultado->status) {
-                    ConsultaResultado::STATUS_SUCESSO => ['label' => 'Sucesso', 'hex' => '#047857'],
-                    ConsultaResultado::STATUS_TIMEOUT => ['label' => 'Timeout', 'hex' => '#d97706'],
-                    ConsultaResultado::STATUS_ERRO => ['label' => 'Erro', 'hex' => '#dc2626'],
-                    default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
-                };
-                $situacaoCadastral = trim((string) $resultado->getDado('situacao_cadastral'));
-                $regimeTributario = $resultado->getRegimeTributarioLabel();
-                $cndFederal = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('cnd_federal'), true);
-                $fgts = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('crf_fgts'));
-                $cndt = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('cndt'));
+            $statusMeta = match ($resultado->status) {
+                ConsultaResultado::STATUS_SUCESSO => ['label' => 'Sucesso', 'hex' => '#047857'],
+                ConsultaResultado::STATUS_TIMEOUT => ['label' => 'Timeout', 'hex' => '#d97706'],
+                ConsultaResultado::STATUS_ERRO => ['label' => 'Erro', 'hex' => '#dc2626'],
+                default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
+            };
+            $situacaoCadastral = trim((string) $resultado->getDado('situacao_cadastral'));
+            $regimeTributario = $resultado->getRegimeTributarioLabel();
+            $cndFederal = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('cnd_federal'), true);
+            $fgts = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('crf_fgts'));
+            $cndt = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('cndt'));
 
-                // O alvo pode ser participante OU cliente (escopo "clientes"). O Laravel não
-                // atualiza esses cadastros, então caímos no que a própria consulta trouxe
-                // (resultado_dados da minhareceita) quando o cadastro está sem nome/CNPJ.
-                $participante = $resultado->participante;
-                $cliente = $resultado->cliente;
-                $enderecoConsulta = is_array($resultado->getDado('endereco')) ? $resultado->getDado('endereco') : [];
-                $documento = $participante?->documento ?: $cliente?->documento;
-                $razaoSocial = $participante?->razao_social
-                    ?: ($cliente?->razao_social
-                    ?: ($resultado->getDado('razao_social') ?: $resultado->getDado('nome_fantasia')));
-                $uf = $participante?->uf ?: ($cliente?->uf ?: ($enderecoConsulta['uf'] ?? null));
+            // O alvo pode ser participante OU cliente (escopo "clientes"). O Laravel não
+            // atualiza esses cadastros, então caímos no que a própria consulta trouxe
+            // (resultado_dados da minhareceita) quando o cadastro está sem nome/CNPJ.
+            $participante = $resultado->participante;
+            $cliente = $resultado->cliente;
+            $enderecoConsulta = is_array($resultado->getDado('endereco')) ? $resultado->getDado('endereco') : [];
+            $documento = $participante?->documento ?: $cliente?->documento;
+            $razaoSocial = $participante?->razao_social
+                ?: ($cliente?->razao_social
+                ?: ($resultado->getDado('razao_social') ?: $resultado->getDado('nome_fantasia')));
+            $uf = $participante?->uf ?: ($cliente?->uf ?: ($enderecoConsulta['uf'] ?? null));
 
-                return [
-                    'participante_id' => $participante?->id,
-                    'cliente_id' => $cliente?->id,
-                    'cnpj' => $documento,
-                    'documento_formatado' => $this->formatarDocumentoConsulta($documento),
-                    'razao_social' => $razaoSocial,
-                    'uf' => $uf,
-                    'status' => $resultado->status,
-                    'status_label' => $statusMeta['label'],
-                    'status_hex' => $statusMeta['hex'],
-                    'error_message' => $resultado->publicErrorMessage(),
-                    'mensagem_exibivel' => $resultado->getMensagemExibivel(),
-                    'consultado_em_label' => $resultado->consultado_em?->format('d/m/Y H:i') ?: '—',
-                    'situacao_cadastral' => $situacaoCadastral !== '' ? $situacaoCadastral : '—',
-                    'regime_tributario' => $regimeTributario ?: '—',
-                    'cnd_federal_badge' => $cndFederal,
-                    'fgts_badge' => $fgts,
-                    'cndt_badge' => $cndt,
-                    'parecer' => $parecerResumo,
-                    'parecer_count' => count($parecerResumo),
-                    'detalhe_blocos' => $detalhePresenter->blocos($resultado),
-                    'resumo_texto' => $resultado->isSucesso() ? $detalhePresenter->resumoTextual($resultado) : null,
-                    'fiscal_resumo' => $resultado->participante_id ? ($fiscalResumos[$resultado->participante_id] ?? null) : null,
-                ];
-            });
+            return [
+                'participante_id' => $participante?->id,
+                'cliente_id' => $cliente?->id,
+                'cnpj' => $documento,
+                'documento_formatado' => $this->formatarDocumentoConsulta($documento),
+                'razao_social' => $razaoSocial,
+                'uf' => $uf,
+                'status' => $resultado->status,
+                'status_label' => $statusMeta['label'],
+                'status_hex' => $statusMeta['hex'],
+                'error_message' => $resultado->publicErrorMessage(),
+                'mensagem_exibivel' => $resultado->getMensagemExibivel(),
+                'consultado_em_label' => $resultado->consultado_em?->format('d/m/Y H:i') ?: '—',
+                'situacao_cadastral' => $situacaoCadastral !== '' ? $situacaoCadastral : '—',
+                'regime_tributario' => $regimeTributario ?: '—',
+                'cnd_federal_badge' => $cndFederal,
+                'fgts_badge' => $fgts,
+                'cndt_badge' => $cndt,
+                'parecer' => $parecerResumo,
+                'parecer_count' => count($parecerResumo),
+                'detalhe_blocos' => $detalhePresenter->blocos($resultado),
+                'resumo_texto' => $resultado->isSucesso() ? $detalhePresenter->resumoTextual($resultado) : null,
+                'fiscal_resumo' => $resultado->participante_id ? ($fiscalResumos[$resultado->participante_id] ?? null) : null,
+            ];
+        });
     }
 
     /** Formata CNPJ (14) / CPF (11) p/ exibição; devolve o original se não bater. */
