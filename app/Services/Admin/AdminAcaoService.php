@@ -24,6 +24,39 @@ class AdminAcaoService
         ]);
     }
 
+    public function bloquear(User $admin, User $alvo, string $motivo): AdminActionLog
+    {
+        $this->proibirAutoAlvo($admin, $alvo, 'bloquear a própria conta');
+
+        return DB::transaction(function () use ($admin, $alvo, $motivo) {
+            $alvo->forceFill(['bloqueado_em' => now()])->save();
+
+            return $this->registrar($admin, $alvo, 'bloquear', $motivo);
+        });
+    }
+
+    public function desbloquear(User $admin, User $alvo, string $motivo): AdminActionLog
+    {
+        return DB::transaction(function () use ($admin, $alvo, $motivo) {
+            $alvo->forceFill(['bloqueado_em' => null])->save();
+
+            return $this->registrar($admin, $alvo, 'desbloquear', $motivo);
+        });
+    }
+
+    public function definirAdmin(User $admin, User $alvo, bool $tornarAdmin, string $motivo): AdminActionLog
+    {
+        if (! $tornarAdmin) {
+            $this->proibirAutoAlvo($admin, $alvo, 'rebaixar a própria conta');
+        }
+
+        return DB::transaction(function () use ($admin, $alvo, $tornarAdmin, $motivo) {
+            $alvo->forceFill(['is_admin' => $tornarAdmin])->save();
+
+            return $this->registrar($admin, $alvo, $tornarAdmin ? 'promover_admin' : 'rebaixar_admin', $motivo);
+        });
+    }
+
     public function creditar(User $admin, User $alvo, float $valor, string $motivo): AdminActionLog
     {
         if ((int) $valor === 0) {
@@ -53,5 +86,12 @@ class AdminAcaoService
                 'saldo_depois' => $saldoDepois,
             ]);
         });
+    }
+
+    private function proibirAutoAlvo(User $admin, User $alvo, string $oQue): void
+    {
+        if ($admin->id === $alvo->id) {
+            throw new \InvalidArgumentException("Operador não pode {$oQue}.");
+        }
     }
 }

@@ -45,3 +45,33 @@ it('debito acima do saldo lança e não muta', function () {
         ->toThrow(RuntimeException::class);
     expect($alvo->fresh()->credits)->toBe(10);
 });
+
+it('bloquear seta bloqueado_em e desbloquear limpa, ambos com audit', function () {
+    $alvo = User::factory()->create();
+
+    $this->svc->bloquear($this->admin, $alvo, 'fraude suspeita');
+    expect($alvo->fresh()->bloqueado_em)->not->toBeNull();
+
+    $this->svc->desbloquear($this->admin, $alvo, 'resolvido');
+    expect($alvo->fresh()->bloqueado_em)->toBeNull();
+
+    expect(AdminActionLog::where('target_user_id', $alvo->id)->pluck('acao')->all())
+        ->toBe(['bloquear', 'desbloquear']);
+});
+
+it('definirAdmin promove e rebaixa', function () {
+    $alvo = User::factory()->create(['is_admin' => false]);
+
+    $this->svc->definirAdmin($this->admin, $alvo, true, 'novo operador');
+    expect($alvo->fresh()->is_admin)->toBeTrue();
+
+    $this->svc->definirAdmin($this->admin, $alvo, false, 'saiu');
+    expect($alvo->fresh()->is_admin)->toBeFalse();
+});
+
+it('admin não pode bloquear nem se auto-rebaixar', function () {
+    expect(fn () => $this->svc->bloquear($this->admin, $this->admin, 'x'))
+        ->toThrow(InvalidArgumentException::class);
+    expect(fn () => $this->svc->definirAdmin($this->admin, $this->admin, false, 'x'))
+        ->toThrow(InvalidArgumentException::class);
+});
