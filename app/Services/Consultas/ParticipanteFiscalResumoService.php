@@ -41,6 +41,7 @@ class ParticipanteFiscalResumoService
 
         $empresaIds = $linhas->pluck('cliente_id')->unique()->all();
         $empresas = DB::table('clientes')
+            ->where('user_id', $userId)
             ->whereIn('id', $empresaIds)
             ->get(['id', 'razao_social', 'is_empresa_propria'])
             ->keyBy('id');
@@ -115,10 +116,31 @@ class ParticipanteFiscalResumoService
         };
     }
 
-    /** Placeholder substituído na Task 2. */
+    /**
+     * Top 3 CFOPs por participante a partir do C190 consolidado (mais leve que itens).
+     *
+     * @param  array<int, int>  $ids
+     * @return array<int, array<int, array{cfop:int, qtd:int}>> keyed por participante_id
+     */
     private function topCfops(int $userId, array $ids): array
     {
-        return [];
+        $linhas = DB::table('efd_notas_consolidados as c')
+            ->join('efd_notas as n', 'n.id', '=', 'c.efd_nota_id')
+            ->where('n.user_id', $userId)
+            ->where('n.origem_arquivo', 'fiscal')
+            ->where('n.cancelada', false)
+            ->whereIn('n.participante_id', $ids)
+            ->whereNotNull('c.cfop')
+            ->groupBy('n.participante_id', 'c.cfop')
+            ->selectRaw('n.participante_id, c.cfop, COUNT(*) as qtd')
+            ->get();
+
+        return $linhas
+            ->groupBy('participante_id')
+            ->map(fn ($g) => $g->sortByDesc('qtd')->take(3)
+                ->map(fn ($r) => ['cfop' => (int) $r->cfop, 'qtd' => (int) $r->qtd])
+                ->values()->all())
+            ->all();
     }
 
     private function menorData(?string $atual, ?string $nova): ?string

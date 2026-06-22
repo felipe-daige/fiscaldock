@@ -97,3 +97,41 @@ it('não vaza entre usuários e omite participante sem notas', function () {
     $r = app(ParticipanteFiscalResumoService::class)->paraParticipantes($outro->id, [$d['forn'], $d['cli']]);
     expect($r)->toBe([]);
 });
+
+it('com comCfops=true retorna top 3 CFOPs desc do participante', function () {
+    $d = pfrSetup();
+    // adiciona consolidados (C190) às notas de entrada do fornecedor
+    $notas = DB::table('efd_notas')->where('participante_id', $d['forn'])
+        ->where('origem_arquivo', 'fiscal')->where('cancelada', false)->pluck('id');
+    // 1102×3, 1556×2, 2401×2, 2102×1 → top 3 = [1102,1556,2401]; 2102 fica fora
+    // (cfopSeq estendida para 8 porque os 2 notas × 4 itens = 8 inserts cobrem o ciclo)
+    $cfopSeq = [1102, 1102, 1102, 1556, 1556, 2401, 2401, 2102];
+    $i = 0;
+    foreach ($notas as $nid) {
+        foreach ([0, 1, 2, 3] as $_) { // 4 itens por nota p/ ter volume de CFOP
+            $cfop = $cfopSeq[$i % count($cfopSeq)];
+            $i++;
+            // aliquota_icms varia por $i para satisfazer o unique (efd_nota_id, cst_icms, cfop, aliquota_icms)
+            DB::table('efd_notas_consolidados')->insert([
+                'efd_nota_id' => $nid, 'user_id' => $d['user']->id, 'cfop' => $cfop,
+                'cst_icms' => '00', 'aliquota_icms' => $i, 'valor_operacao' => 100,
+                'valor_bc_icms' => 0, 'valor_icms' => 0, 'valor_bc_icms_st' => 0, 'valor_icms_st' => 0,
+                'valor_reducao_bc' => 0, 'valor_ipi' => 0, 'created_at' => now(), 'updated_at' => now(),
+            ]);
+        }
+    }
+
+    $r = app(ParticipanteFiscalResumoService::class)->paraParticipantes($d['user']->id, [$d['forn']], comCfops: true);
+    $cfops = $r[$d['forn']]['top_cfops'];
+
+    expect($cfops)->toHaveCount(3);
+    expect($cfops[0]['cfop'])->toBe(1102);
+    expect($cfops[0]['qtd'])->toBeGreaterThanOrEqual($cfops[1]['qtd']);
+    expect(collect($cfops)->pluck('cfop')->all())->not->toContain(2102); // fora do top 3
+});
+
+it('sem comCfops top_cfops fica vazio', function () {
+    $d = pfrSetup();
+    $r = app(ParticipanteFiscalResumoService::class)->paraParticipantes($d['user']->id, [$d['forn']]);
+    expect($r[$d['forn']]['top_cfops'])->toBe([]);
+});
