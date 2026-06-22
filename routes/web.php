@@ -75,7 +75,7 @@ Route::get('/api/csrf-token', function () {
 // RequireCurrentTerms por FQCN (bootstrap/app.php não é montado): força re-aceite (LGPD 2.2)
 // quando a versão dos documentos sobe. Só intercepta GET full-page; o interstitial app.reaceite.*
 // é isento via routeIs (sem loop).
-Route::middleware(['auth', \App\Http\Middleware\RequireCurrentTerms::class])->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\RequireCurrentTerms::class, \App\Http\Middleware\EnsureNaoBloqueado::class])->group(function () {
     Route::get('/app/reaceite', [\App\Http\Controllers\Dashboard\TermosReaceiteController::class, 'show'])->name('app.reaceite.show');
     Route::post('/app/reaceite', [\App\Http\Controllers\Dashboard\TermosReaceiteController::class, 'aceitar'])->name('app.reaceite.aceitar');
 

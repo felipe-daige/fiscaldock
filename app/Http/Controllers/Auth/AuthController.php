@@ -226,6 +226,16 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Email ou senha inválidos'])->withInput();
         }
 
+        // Conta suspensa: não autentica (defesa junto com EnsureNaoBloqueado).
+        if (Auth::user()?->bloqueado_em !== null) {
+            Auth::logout();
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Conta suspensa. Fale com o suporte.'], 403);
+            }
+
+            return back()->withErrors(['email' => 'Conta suspensa. Fale com o suporte.'])->withInput();
+        }
+
         // Anti session-fixation: novo ID de sessão após autenticar.
         // regenerate() preserva os dados da sessão (incl. url.intended).
         $request->session()->regenerate();
