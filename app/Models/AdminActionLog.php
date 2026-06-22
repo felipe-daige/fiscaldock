@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\JsonPreservingFloats;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -14,7 +15,7 @@ class AdminActionLog extends Model
     ];
 
     protected $casts = [
-        'detalhe' => 'array',
+        'detalhe' => JsonPreservingFloats::class,
         'created_at' => 'datetime',
     ];
 
