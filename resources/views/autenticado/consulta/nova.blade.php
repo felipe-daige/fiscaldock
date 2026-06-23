@@ -199,7 +199,7 @@
                                                 @if ($pd['gratuito'])
                                                     Gratuito
                                                 @else
-                                                    {{ $pd['creditos'] }} créditos/CNPJ
+                                                    {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $pd['creditos'])) }}/CNPJ
                                                 @endif
                                             </td>
                                             <td class="py-2 px-3 text-gray-500">{{ $pd['casos_uso'][0] ?? '—' }}</td>
@@ -225,7 +225,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div class="border border-gray-300 rounded p-3">
                                 <p class="text-sm font-semibold text-gray-900">1 crédito = R$ {{ number_format($creditUnitPrice ?? 0.20, 2, ',', '.') }}</p>
-                                <p class="text-[11px] text-gray-500 mt-1">Escada comercial atual: Validação 5, Licitação 10, Compliance 18, Due Diligence 35 créditos por CNPJ.</p>
+                                <p class="text-[11px] text-gray-500 mt-1">Escada comercial atual: Validação {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(5)) }}, Licitação {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(10)) }}, Compliance {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(18)) }}, Due Diligence {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(35)) }} por CNPJ.</p>
                             </div>
                             <div class="border border-gray-300 rounded p-3">
                                 <p class="text-sm font-semibold text-gray-900">Cobrança só na confirmação</p>
@@ -291,10 +291,10 @@
                     </div>
                     <div class="px-4 py-4" style="background-color: #ecfdf5">
                         <div class="flex items-center justify-between gap-2">
-                            <p class="text-[10px] font-semibold uppercase tracking-wide" style="color: #047857">Créditos</p>
+                            <p class="text-[10px] font-semibold uppercase tracking-wide" style="color: #047857">Saldo</p>
                             <span class="text-[9px] font-bold uppercase tracking-wide text-white px-1.5 py-0.5 rounded" style="background-color: #047857">Saldo</span>
                         </div>
-                        <p class="text-xl font-bold mt-0.5" style="color: #047857">{{ number_format($credits ?? 0, 0, ',', '.') }}</p>
+                        <p class="text-xl font-bold mt-0.5" style="color: #047857">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($credits ?? 0))) }}</p>
                         <p class="text-[11px] mt-1" style="color: #065f46">Disponível para consulta</p>
                     </div>
                 </div>
@@ -686,7 +686,7 @@
                                     @elseif($isLocked)
                                         <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Bloq.</span>
                                     @else
-                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeHex }}">{{ $pd['creditos'] }} cred.</span>
+                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeHex }}">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $pd['creditos'])) }}</span>
                                     @endif
                                     @if(!empty($pd['trial_aplicavel']))
                                         <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap"
@@ -712,7 +712,7 @@
                         <div class="px-4 py-4">
                             <div class="flex items-center justify-between mb-3">
                                 <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Total</span>
-                                <span id="resumo-custo-total" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">0 créditos</span>
+                                <span id="resumo-custo-total" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">R$ 0,00</span>
                             </div>
 
                             <div class="space-y-2 text-sm">
@@ -730,17 +730,17 @@
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-500">Custo unitário</span>
-                                    <span id="resumo-custo-unitario" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">0 créditos</span>
+                                    <span id="resumo-custo-unitario" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">R$ 0,00</span>
                                 </div>
                                 <div class="flex justify-between items-center pt-2 border-t border-gray-100">
                                     <span class="text-gray-500">Seu saldo</span>
-                                    <span id="resumo-saldo" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">{{ number_format($credits, 0, ',', '.') }} créditos</span>
+                                    <span id="resumo-saldo" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $credits)) }}</span>
                                 </div>
                             </div>
 
-                            {{-- Alerta créditos --}}
+                            {{-- Alerta saldo --}}
                             <div id="alerta-creditos-insuficientes" class="hidden mt-3 bg-white rounded border border-gray-300 p-3 border-l-4 border-l-red-500 text-sm text-gray-700">
-                                Créditos insuficientes
+                                Saldo insuficiente
                             </div>
 
                             <button type="button" id="btn-gerar-relatorio" class="w-full mt-4 py-2.5 rounded text-sm font-medium transition" style="background-color: #d1d5db; color: #6b7280; cursor: not-allowed;" disabled>
@@ -922,9 +922,9 @@
                                                     @elseif($pd['gratuito'])
                                                         <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
                                                     @elseif($pd['promo'])
-                                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">{{ $pd['creditos'] }} cred.</span>
+                                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $pd['creditos'])) }}</span>
                                                     @else
-                                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeHex }}">{{ $pd['creditos'] }} cred.</span>
+                                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeHex }}">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $pd['creditos'])) }}</span>
                                                     @endif
                                                 </div>
                                                 <p class="text-sm text-gray-700">{{ $pd['descricao'] }}</p>

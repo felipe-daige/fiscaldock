@@ -28,7 +28,7 @@
                 ['Usuários', $fmtN($m['crescimento']['total_usuarios']), $fmtN($m['crescimento']['novos']).' novos · '.$fmtN($m['crescimento']['ativos']).' ativos (30d)', '#1d4ed8'],
                 ['Receita total', $fmtR($m['receita']['aprovada_total']), $fmtR($m['receita']['aprovada_periodo']).' no período', '#047857'],
                 ['MRR estimado', $fmtR($m['receita']['mrr']), $fmtN($m['receita']['assinaturas_ativas']).' assinatura(s) · '.$fmtN($m['receita']['recargas_ativas']).' recarga(s)', '#047857'],
-                ['Saldo de créditos', $fmtN($m['creditos']['saldo_base']), $fmtN($m['creditos']['vendidos']).' vendidos · '.$fmtN($m['creditos']['consumidos']).' consumidos', '#334155'],
+                ['Saldo de créditos', $fmtR(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int)$m['creditos']['saldo_base'])), $fmtR(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int)$m['creditos']['vendidos'])).' vendidos · '.$fmtR(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int)$m['creditos']['consumidos'])).' consumidos', '#334155'],
             ] as [$label, $valor, $sub, $cor])
                 <div class="bg-white rounded border border-gray-300 border-l-4 p-3" style="border-left-color: {{ $cor }}">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{{ $label }}</p>

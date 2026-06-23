@@ -15,10 +15,10 @@
         {{-- Perfil --}}
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
             @foreach([
-                ['Créditos', $fmtN($usuario->credits), '#1d4ed8'],
+                ['Saldo', $fmtR(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $usuario->credits)), '#1d4ed8'],
                 ['Consultas', $fmtN($kpis['qtd_consultas']), '#1d4ed8'],
                 ['Importações', $fmtN($kpis['qtd_importacoes']), '#1d4ed8'],
-                ['Créditos consumidos', $fmtN($kpis['creditos_consumidos']), '#b45309'],
+                ['Custo total', $fmtR(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $kpis['creditos_consumidos'])), '#b45309'],
                 ['Total pago', $fmtR($kpis['total_pago']), '#047857'],
                 ['Plano', $assinatura->plano_nome ?? (($usuario->trial_used && $usuario->trial_expires_at && \Carbon\Carbon::parse($usuario->trial_expires_at)->isFuture()) ? 'Trial' : 'Gratuito'), '#334155'],
                 ['Criado em', \Carbon\Carbon::parse($usuario->created_at)->format('d/m/Y'), '#334155'],
