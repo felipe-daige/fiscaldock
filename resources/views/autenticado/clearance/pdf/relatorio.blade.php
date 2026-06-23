@@ -16,13 +16,13 @@
 
 @push('estilos')
     <style>
-        h1, h2, h3 { margin: 0; color: #0b1f3a; }
+        h1, h2, h3 { margin: 0; color: #1f2937; }
         .muted { color: #6b7280; }
-        .sec-title { font-size: 12px; color: #0b1f3a; border-bottom: 2px solid #0b1f3a; padding-bottom: 3px; margin: 18px 0 8px 0; }
+        .sec-title { font-size: 12px; color: #1f2937; border-bottom: 2px solid #1f2937; padding-bottom: 3px; margin: 18px 0 8px 0; }
         .kv td { padding: 2px 0; vertical-align: top; }
         .box { border: 1px solid #e5e7eb; border-radius: 4px; padding: 10px 12px; }
         .grid td { vertical-align: top; padding: 0 6px; }
-        .data-table th { background-color: #0b1f3a; color: #ffffff; font-size: 8.5px; text-align: left; padding: 5px 6px; }
+        .data-table th { background-color: #1f2937; color: #ffffff; font-size: 8.5px; text-align: left; padding: 5px 6px; }
         .data-table td { font-size: 8.5px; padding: 4px 6px; border-bottom: 1px solid #eef2f7; vertical-align: top; }
         .data-table tr:nth-child(even) td { background-color: #f8fafc; }
     </style>
@@ -36,14 +36,14 @@
             <td style="width:50%;">
                 <div class="box">
                     <div class="muted" style="font-size:8px; text-transform:uppercase;">Escritório responsável</div>
-                    <div style="font-weight:bold; color:#0b1f3a;">{{ $r['capa']['escritorio']['razao_social'] }}</div>
+                    <div style="font-weight:bold; color:#1f2937;">{{ $r['capa']['escritorio']['razao_social'] }}</div>
                     <div class="muted">CNPJ {{ $r['capa']['escritorio']['cnpj'] }}</div>
                 </div>
             </td>
             <td style="width:50%;">
                 <div class="box">
                     <div class="muted" style="font-size:8px; text-transform:uppercase;">Acervo auditado</div>
-                    <div style="font-weight:bold; color:#0b1f3a;">{{ $r['capa']['cliente_auditado']['razao_social'] }}</div>
+                    <div style="font-weight:bold; color:#1f2937;">{{ $r['capa']['cliente_auditado']['razao_social'] }}</div>
                     <div class="muted">Período: {{ $r['capa']['periodo']['label'] }} · Lote #{{ $r['capa']['lote_id'] }}</div>
                 </div>
             </td>
@@ -59,7 +59,7 @@
         <tr>
             @php
                 $cards = [
-                    ['Documentos auditados', $r['resumo']['total_documentos'], '#0b1f3a'],
+                    ['Documentos auditados', $r['resumo']['total_documentos'], '#1f2937'],
                     ['Divergências', $r['resumo']['total_divergencias'], '#b45309'],
                     ['Críticas', $r['resumo']['total_criticas'], '#b91c1c'],
                     ['Exposição total', $r['exposicao']['total_label'], '#b91c1c'],
@@ -82,7 +82,7 @@
         <tr><th>Componente</th><th style="text-align:right;">Valor</th></tr>
         <tr><td>Crédito / imposto exposto (divergências críticas)</td><td style="text-align:right;">{{ $r['exposicao']['base_label'] }}</td></tr>
         <tr><td>Multa de ofício (75% — art. 44, I, Lei 9.430/96)</td><td style="text-align:right;">{{ $r['exposicao']['multa_label'] }}</td></tr>
-        <tr><td style="font-weight:bold; color:#0b1f3a;">Exposição total estimada</td><td style="text-align:right; font-weight:bold; color:#b91c1c;">{{ $r['exposicao']['total_label'] }}</td></tr>
+        <tr><td style="font-weight:bold; color:#1f2937;">Exposição total estimada</td><td style="text-align:right; font-weight:bold; color:#b91c1c;">{{ $r['exposicao']['total_label'] }}</td></tr>
     </table>
     <div class="muted" style="font-size:7.5px; margin-top:4px;">
         Estimativa. Não inclui juros de mora (Selic acumulada). Prazo decadencial: 5 anos da emissão (art. 173, I, CTN).
@@ -161,7 +161,7 @@
         <strong>Tolerância de ruído:</strong> R$ {{ number_format($r['metodologia']['tolerancia_absoluta'], 2, ',', '.') }} ou {{ $r['metodologia']['tolerancia_percentual'] }}%.
         <strong>Severidade:</strong> crítica (ação imediata) / a revisar (análise recomendada).
         A exposição fiscal é <strong>estimativa</strong> e não substitui parecer formal; a multa de ofício segue o art. 44, I da Lei 9.430/96 e o prazo decadencial o art. 173, I do CTN.
-        Integridade verificável pelo hash SHA-256 no rodapé.
+        Integridade verificável pelo hash SHA-256 no cabeçalho.
     </div>
 
 @endsection
