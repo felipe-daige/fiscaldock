@@ -82,3 +82,13 @@ it('GET /app/bi/exportar-xlsx baixa um xlsx', function () {
     expect($resp->headers->get('content-type'))
         ->toContain('spreadsheetml.sheet');
 });
+
+it('GET /app/bi/exportar-pdf baixa um pdf', function () {
+    [$uid] = semearBiExport();
+
+    $resp = $this->actingAs(User::find($uid))->get('/app/bi/exportar-pdf');
+
+    $resp->assertOk();
+    expect($resp->headers->get('content-type'))->toContain('application/pdf');
+    expect(substr($resp->getContent(), 0, 4))->toBe('%PDF');
+});

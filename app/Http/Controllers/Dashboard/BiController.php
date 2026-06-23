@@ -333,6 +333,20 @@ class BiController extends Controller
         return app(\App\Services\Bi\Export\BiXlsxBuilder::class)->download($rel, $filename);
     }
 
+    public function exportarPdf(Request $request)
+    {
+        if (! Auth::check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $rel = $this->biExport->relatorioCompleto(
+            Auth::id(), $request->get('data_inicio'), $request->get('data_fim'), $request->get('cliente_id')
+        );
+        $filename = 'bi-fiscal-'.now()->format('Ymd').'.pdf';
+
+        return \App\Support\PdfReport::render('reports.bi-executivo', ['relatorio' => $rel])->download($filename);
+    }
+
     /**
      * Resumo geral (para AJAX).
      */
