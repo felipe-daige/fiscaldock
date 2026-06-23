@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\ConsultaLote;
 use App\Models\CreditTransaction;
 use App\Models\MonitoramentoPlano;
 use App\Models\User;
@@ -14,7 +13,7 @@ class PricingCatalogService
     // Piso de depósito no sistema. Alinhado ao mínimo do provedor (InfoSimples ~R$100).
     public const MINIMUM_DEPOSIT = 100.00;
 
-    public const FIRST_PURCHASE_LOCKED_PRODUCTS = ['compliance', 'due_diligence'];
+    public const FIRST_PURCHASE_LOCKED_PRODUCTS = ['compliance'];
 
     public function __construct(
         private \App\Services\Entitlements\EntitlementService $entitlements = new \App\Services\Entitlements\EntitlementService,
@@ -56,7 +55,7 @@ class PricingCatalogService
                 'badge' => 'Escala',
                 'usage_hint' => 'Para operação intensiva',
                 'featured' => false,
-                'descricao' => 'Atalho promocional para operações intensivas que precisam acelerar saldo e faixa.',
+                'descricao' => 'Atalho promocional para operações intensivas que precisam acelerar saldo.',
             ],
         ];
     }
@@ -135,10 +134,10 @@ class PricingCatalogService
             ->whereIn('codigo', (array) config('trial.planos_com_teto', []))
             ->pluck('id');
 
-        $usados = (int) ConsultaLote::query()
+        $usados = (int) \App\Models\ConsultaLote::query()
             ->where('user_id', $user->id)
             ->whereIn('plano_id', $planosComTetoIds)
-            ->where('status', '!=', ConsultaLote::STATUS_ERRO)
+            ->where('status', '!=', \App\Models\ConsultaLote::STATUS_ERRO)
             ->sum('total_participantes');
 
         return [
@@ -196,44 +195,6 @@ class PricingCatalogService
         }
 
         return $this->getPackageBySlug($slug);
-    }
-
-    /**
-     * Faixas comerciais por histórico líquido de créditos pagos.
-     */
-    public function getTiers(): array
-    {
-        // Limiares editáveis por admin (§6.1); default = valores atuais. max = (próximo min − 1).
-        $xMin = (int) $this->comercial->valor('faixa_x_min', 1000);
-        $yMin = (int) $this->comercial->valor('faixa_y_min', 5000);
-        $zMin = (int) $this->comercial->valor('faixa_z_min', 20000);
-
-        return [
-            [
-                'slug' => 'base',
-                'nome' => 'Base',
-                'min_paid_credits' => 0,
-                'max_paid_credits' => $xMin - 1,
-            ],
-            [
-                'slug' => 'x',
-                'nome' => 'Faixa X',
-                'min_paid_credits' => $xMin,
-                'max_paid_credits' => $yMin - 1,
-            ],
-            [
-                'slug' => 'y',
-                'nome' => 'Faixa Y',
-                'min_paid_credits' => $yMin,
-                'max_paid_credits' => $zMin - 1,
-            ],
-            [
-                'slug' => 'z',
-                'nome' => 'Faixa Z',
-                'min_paid_credits' => $zMin,
-                'max_paid_credits' => null,
-            ],
-        ];
     }
 
     /**
@@ -310,7 +271,7 @@ class PricingCatalogService
     }
 
     /**
-     * Catálogo comercial público.
+     * Catálogo comercial público — preço único por plano (sem faixas de volume).
      */
     public function getProductCatalog(): array
     {
@@ -319,97 +280,37 @@ class PricingCatalogService
                 'slug' => 'validacao',
                 'nome' => 'Validação',
                 'descricao' => 'Consulta fiscal básica de CNPJ com Simples Nacional e SINTEGRA para qualificação inicial.',
-                'credits_by_tier' => [
-                    'base' => 5,
-                    'x' => 5,
-                    'y' => 4,
-                    'z' => 4,
-                ],
             ],
             [
                 'slug' => 'licitacao',
                 'nome' => 'Licitação',
                 'descricao' => 'Consulta para editais e contratação pública com CND Federal, CNDT e FGTS.',
-                'credits_by_tier' => [
-                    'base' => 10,
-                    'x' => 9,
-                    'y' => 9,
-                    'z' => 8,
-                ],
             ],
             [
                 'slug' => 'compliance',
                 'nome' => 'Compliance',
                 'descricao' => 'Consulta de regularidade fiscal e trabalhista completa por CNPJ.',
-                'credits_by_tier' => [
-                    'base' => 18,
-                    'x' => 17,
-                    'y' => 15,
-                    'z' => 14,
-                ],
             ],
             [
                 'slug' => 'due_diligence',
                 'nome' => 'Due Diligence',
                 'descricao' => 'Consulta ampliada de risco com compliance, sanções, CNJ, protestos e processos.',
-                'credits_by_tier' => [
-                    'base' => 35,
-                    'x' => 32,
-                    'y' => 30,
-                    'z' => 28,
-                ],
             ],
             [
                 'slug' => 'clearance',
                 'nome' => 'Clearance',
                 'descricao' => 'Validação premium de notas fiscais com custo mais alto por consulta, preservando o posicionamento premium do produto.',
-                'credits_by_tier' => [
-                    'base' => 14,
-                    'x' => 12,
-                    'y' => 10,
-                    'z' => 8,
-                ],
             ],
         ];
     }
 
-    public function getLandingPricingData(): array
+    /**
+     * Custo em créditos para executar um produto de consulta para o dado plano.
+     * Override admin opcional via comercial_parametros; default = custo_creditos do plano.
+     */
+    public function getProductCreditsByPlan(MonitoramentoPlano $plan, User $user): int
     {
-        $tiers = $this->getTiers();
-        $featuredOffers = array_map(fn (array $package) => $this->decorateOffer($package), $this->getFeaturedOffers());
-
-        $products = array_map(function (array $product) use ($tiers) {
-            $rows = [];
-            foreach ($tiers as $tier) {
-                $credits = $product['credits_by_tier'][$tier['slug']];
-                $rows[] = [
-                    'tier_slug' => $tier['slug'],
-                    'tier_name' => $tier['nome'],
-                    'credits' => $credits,
-                    'price' => $this->creditsToCurrency($credits),
-                    'price_for_100' => $this->creditsToCurrency($credits * 100),
-                ];
-            }
-
-            $entryRow = $rows[0];
-            $bestRow = $rows[array_key_last($rows)];
-
-            return array_merge($product, [
-                'rows' => $rows,
-                'entry_price_label' => 'A partir de R$ '.number_format($entryRow['price'], 2, ',', '.').'/consulta',
-                'best_price_label' => 'Melhor faixa: R$ '.number_format($bestRow['price'], 2, ',', '.').'/consulta',
-            ]);
-        }, $this->getProductCatalog());
-
-        return [
-            'credit_unit_price' => $this->creditUnitPrice(),
-            'minimum_deposit' => $this->getMinimumDeposit(),
-            'featured_offers' => $featuredOffers,
-            'packages' => $featuredOffers,
-            'tiers' => $tiers,
-            'products' => $products,
-            'compliance_sources' => $this->getComplianceSources(),
-        ];
+        return (int) ($this->comercial->valor('preco_'.$plan->codigo, $plan->custo_creditos));
     }
 
     public function getPaidCreditsForUser(User $user): int
@@ -427,140 +328,17 @@ class PricingCatalogService
         return max(0, $purchased - $refunded);
     }
 
-    public function getTierForUser(User $user): array
+    /**
+     * Retorna os dados de pricing para a landing page.
+     * Cada produto tem {slug, nome, descricao, credits, price} — sem matriz de faixas.
+     */
+    public function getLandingPricingData(): array
     {
-        $faixaPorCreditos = $this->getTierForPaidCredits($this->getPaidCreditsForUser($user));
-        $faixaDoPlano = $this->tierBySlug($this->entitlements->faixaFor($user));
-
-        // Não regride: vale a faixa de maior patamar entre histórico pago e plano.
-        return $faixaPorCreditos['min_paid_credits'] >= $faixaDoPlano['min_paid_credits']
-            ? $faixaPorCreditos
-            : $faixaDoPlano;
-    }
-
-    private function tierBySlug(string $slug): array
-    {
-        foreach ($this->getTiers() as $tier) {
-            if ($tier['slug'] === $slug) {
-                return $tier;
-            }
-        }
-
-        return $this->getTiers()[0];
-    }
-
-    public function getTierForPaidCredits(int $paidCredits): array
-    {
-        foreach (array_reverse($this->getTiers()) as $tier) {
-            if ($paidCredits >= $tier['min_paid_credits']) {
-                return $tier;
-            }
-        }
-
-        return $this->getTiers()[0];
-    }
-
-    public function getNextTierForUser(User $user): ?array
-    {
-        return $this->getNextTierForPaidCredits($this->getPaidCreditsForUser($user));
-    }
-
-    public function getNextTierForPaidCredits(int $paidCredits): ?array
-    {
-        foreach ($this->getTiers() as $tier) {
-            if ($tier['min_paid_credits'] > $paidCredits) {
-                return $tier;
-            }
-        }
-
-        return null;
-    }
-
-    public function getTierProgressForUser(User $user): array
-    {
-        $paidCredits = $this->getPaidCreditsForUser($user);
-        $currentTier = $this->getTierForPaidCredits($paidCredits);
-        $nextTier = $this->getNextTierForPaidCredits($paidCredits);
-
-        if ($nextTier === null) {
-            return [
-                'paid_credits' => $paidCredits,
-                'current_tier' => $currentTier,
-                'next_tier' => null,
-                'credits_remaining' => 0,
-                'progress_percent' => 100,
-            ];
-        }
-
-        $rangeStart = $currentTier['min_paid_credits'];
-        $rangeEnd = $nextTier['min_paid_credits'];
-        $creditsRemaining = max(0, $rangeEnd - $paidCredits);
-        $progressPercent = (int) min(
-            100,
-            max(0, (($paidCredits - $rangeStart) / max(1, ($rangeEnd - $rangeStart))) * 100)
-        );
-
-        return [
-            'paid_credits' => $paidCredits,
-            'current_tier' => $currentTier,
-            'next_tier' => $nextTier,
-            'credits_remaining' => $creditsRemaining,
-            'progress_percent' => $progressPercent,
-        ];
-    }
-
-    public function getProductCreditsForUser(string $productSlug, User $user, ?MonitoramentoPlano $legacyPlan = null): int
-    {
-        $currentTier = $this->getTierForUser($user);
-
-        foreach ($this->getProductCatalog() as $product) {
-            if ($product['slug'] === $productSlug) {
-                return (int) $product['credits_by_tier'][$currentTier['slug']];
-            }
-        }
-
-        return (int) ($legacyPlan?->custo_creditos ?? 0);
-    }
-
-    public function getProductCreditsByPlan(MonitoramentoPlano $plan, User $user): int
-    {
-        $mappedProduct = match ($plan->codigo) {
-            'validacao' => 'validacao',
-            'licitacao' => 'licitacao',
-            'compliance' => 'compliance',
-            'due_diligence' => 'due_diligence',
-            'clearance' => 'clearance',
-            default => null,
-        };
-
-        if ($mappedProduct === null) {
-            return (int) $plan->custo_creditos;
-        }
-
-        return $this->getProductCreditsForUser($mappedProduct, $user, $plan);
-    }
-
-    public function getCommercialSummaryForUser(User $user): array
-    {
-        $progress = $this->getTierProgressForUser($user);
-        $tier = $progress['current_tier'];
-        $tiers = $this->getTiers();
         $featuredOffers = array_map(fn (array $package) => $this->decorateOffer($package), $this->getFeaturedOffers());
 
-        $products = array_map(function (array $product) use ($tier, $tiers) {
-            $credits = $product['credits_by_tier'][$tier['slug']];
-            $creditosBase = (int) $product['credits_by_tier']['base'];
-
-            // Matriz da economia por faixa (Base→Z) — alimenta a tabela comparativa da view.
-            $byTier = [];
-            foreach ($tiers as $t) {
-                $c = (int) $product['credits_by_tier'][$t['slug']];
-                $byTier[$t['slug']] = [
-                    'credits' => $c,
-                    'price' => $this->creditsToCurrency($c),
-                    'desconto_percent' => $creditosBase > 0 ? (int) round((($creditosBase - $c) / $creditosBase) * 100) : 0,
-                ];
-            }
+        $products = array_map(function (array $product) {
+            $plano = MonitoramentoPlano::where('codigo', $product['slug'])->first();
+            $credits = $plano ? (int) $plano->custo_creditos : 0;
 
             return [
                 'slug' => $product['slug'],
@@ -568,20 +346,47 @@ class PricingCatalogService
                 'descricao' => $product['descricao'],
                 'credits' => $credits,
                 'price' => $this->creditsToCurrency($credits),
-                'credits_base' => $creditosBase,
-                'desconto_percent' => $creditosBase > 0 ? (int) round((($creditosBase - $credits) / $creditosBase) * 100) : 0,
-                'by_tier' => $byTier,
             ];
         }, $this->getProductCatalog());
 
-        return array_merge($progress, [
+        return [
             'credit_unit_price' => $this->creditUnitPrice(),
             'minimum_deposit' => $this->getMinimumDeposit(),
             'featured_offers' => $featuredOffers,
-            'products' => $products,
             'packages' => $featuredOffers,
-            'tiers' => $tiers,
-        ]);
+            'products' => $products,
+            'compliance_sources' => $this->getComplianceSources(),
+        ];
+    }
+
+    /**
+     * Retorna o resumo comercial do usuário para as views autenticadas.
+     * Cada produto tem {slug, nome, descricao, credits, price} — sem matriz de faixas.
+     */
+    public function getCommercialSummaryForUser(User $user): array
+    {
+        $featuredOffers = array_map(fn (array $package) => $this->decorateOffer($package), $this->getFeaturedOffers());
+
+        $products = array_map(function (array $product) use ($user) {
+            $plano = MonitoramentoPlano::where('codigo', $product['slug'])->first();
+            $credits = $plano ? $this->getProductCreditsByPlan($plano, $user) : 0;
+
+            return [
+                'slug' => $product['slug'],
+                'nome' => $product['nome'],
+                'descricao' => $product['descricao'],
+                'credits' => $credits,
+                'price' => $this->creditsToCurrency($credits),
+            ];
+        }, $this->getProductCatalog());
+
+        return [
+            'credit_unit_price' => $this->creditUnitPrice(),
+            'minimum_deposit' => $this->getMinimumDeposit(),
+            'featured_offers' => $featuredOffers,
+            'packages' => $featuredOffers,
+            'products' => $products,
+        ];
     }
 
     private function decorateOffer(array $package): array
