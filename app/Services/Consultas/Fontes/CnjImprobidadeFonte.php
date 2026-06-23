@@ -32,7 +32,7 @@ class CnjImprobidadeFonte extends FonteInfoSimplesBase
                 'possui_condenacao' => ! $negativa || $registros > 0,
                 'total_condenacoes' => $registros,
                 'condenacoes' => $d0['registros_lista'] ?? [],
-                'comprovante' => $d0['site_receipt'] ?? null,
+                'comprovante' => $d0['site_receipt'] ?? ($raw['site_receipts'][0] ?? null),
                 'consulta_datahora' => $d0['consulta_datahora'] ?? null,
             ]);
         }

@@ -101,6 +101,32 @@
             font-size: 8px;
             color: #6b7280;
         }
+        /* ── Detalhamento por CNPJ ───────────────────────────────── */
+        .cnpj-block { margin-bottom: 12px; page-break-inside: avoid; }
+        .cnpj-head { background: #111827; color: #fff; padding: 5px 8px; }
+        .cnpj-head .doc { font-family: DejaVu Sans Mono, monospace; font-size: 10px; font-weight: bold; }
+        .cnpj-head .nome { font-size: 9px; }
+        .cnpj-resumo {
+            padding: 5px 8px; font-size: 8px; color: #374151;
+            background: #f9fafb; border: 1px solid #e5e7eb; border-top: none;
+        }
+        .cards { width: 100%; border-collapse: separate; border-spacing: 6px 6px; }
+        .cards > tbody > tr > td { width: 50%; vertical-align: top; padding: 0; border: none; }
+        .card { border: 1px solid #d1d5db; }
+        .card-head { background: #f9fafb; border-bottom: 1px solid #e5e7eb; padding: 4px 6px; }
+        .card-head td { border: none; padding: 0; }
+        .card-title { font-size: 8px; font-weight: bold; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; }
+        .card-body { padding: 5px 6px; }
+        .kv { width: 100%; border-collapse: collapse; }
+        .kv td { padding: 1px 3px; font-size: 8px; vertical-align: top; border: none; }
+        .kv .k { color: #9ca3af; text-transform: uppercase; font-size: 7px; width: 40%; }
+        .kv .v { color: #374151; }
+        .list-title { font-size: 7px; color: #9ca3af; text-transform: uppercase; letter-spacing: .06em; margin-top: 5px; }
+        .list-item { font-size: 8px; color: #374151; line-height: 1.3; }
+        .msg { font-size: 7px; color: #6b7280; font-style: italic; border-left: 2px solid #e5e7eb; padding-left: 5px; margin-top: 5px; }
+        .comprovante { margin-top: 6px; font-size: 8px; }
+        .comprovante a { color: #1d4ed8; text-decoration: underline; font-weight: bold; }
+        .comprovante .url { font-family: DejaVu Sans Mono, monospace; font-size: 6px; color: #9ca3af; word-break: break-all; margin-top: 1px; }
     </style>
 </head>
 <body>
@@ -283,6 +309,102 @@
             </tbody>
         </table>
     </div>
+
+    @if(!empty($detalhes) && $detalhes->count())
+        <div class="section">
+            <div class="section-header">Detalhamento por CNPJ — dados completos e comprovantes</div>
+        </div>
+
+        @foreach($detalhes as $d)
+            <div class="cnpj-block">
+                <div class="cnpj-head">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="border: none; padding: 0;">
+                                <span class="doc">{{ $d['documento'] ?: '—' }}</span>
+                                <span class="nome">— {{ \Illuminate\Support\Str::limit($d['razao_social'] ?: 'Sem razão social', 70) }}</span>
+                            </td>
+                            <td style="border: none; padding: 0; text-align: right;">
+                                @if($d['status_consulta'] !== 'sucesso')
+                                    <span class="badge" style="background-color: {{ $statusHex($d['status_consulta']) }}">{{ strtoupper($d['status_consulta']) }}</span>
+                                @elseif($d['consultado_em'])
+                                    <span class="small" style="color: #d1d5db;">{{ $d['consultado_em'] }}</span>
+                                @endif
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                @if($d['status_consulta'] !== 'sucesso')
+                    <div class="cnpj-resumo">Consulta não concluída: {{ $d['error_message'] ?: 'sem detalhe disponível' }}</div>
+                @else
+                    @if(!empty($d['resumo']))
+                        <div class="cnpj-resumo">{{ $d['resumo'] }}</div>
+                    @endif
+
+                    @if(!empty($d['blocos']))
+                        <table class="cards">
+                            @foreach(array_chunk($d['blocos'], 2) as $par)
+                                <tr>
+                                    @foreach($par as $bloco)
+                                        <td>
+                                            <div class="card">
+                                                <div class="card-head">
+                                                    <table style="width: 100%;">
+                                                        <tr>
+                                                            <td class="card-title">{{ $bloco['titulo'] }}</td>
+                                                            <td style="text-align: right;">
+                                                                @if(!empty($bloco['badge']))
+                                                                    <span class="badge" style="background-color: {{ $bloco['badge']['hex'] }}">{{ $bloco['badge']['label'] }}</span>
+                                                                @endif
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                                <div class="card-body">
+                                                    @if(!empty($bloco['itens']))
+                                                        <table class="kv">
+                                                            @foreach($bloco['itens'] as $item)
+                                                                <tr>
+                                                                    <td class="k">{{ $item['label'] }}</td>
+                                                                    <td class="v">{{ $item['valor'] }}</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </table>
+                                                    @endif
+
+                                                    @foreach($bloco['listas'] as $lista)
+                                                        <div class="list-title">{{ $lista['titulo'] }}</div>
+                                                        @foreach($lista['linhas'] as $linha)
+                                                            <div class="list-item">• {{ $linha }}</div>
+                                                        @endforeach
+                                                    @endforeach
+
+                                                    @if(!empty($bloco['mensagem']))
+                                                        <div class="msg">{{ $bloco['mensagem'] }}</div>
+                                                    @endif
+
+                                                    @if(!empty($bloco['comprovante_url']))
+                                                        <div class="comprovante">
+                                                            <a href="{{ $bloco['comprovante_url'] }}">Baixar certidão / comprovante (PDF)</a>
+                                                            <div class="url">{{ $bloco['comprovante_url'] }}</div>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </td>
+                                    @endforeach
+                                    @if(count($par) === 1)
+                                        <td></td>
+                                    @endif
+                                </tr>
+                            @endforeach
+                        </table>
+                    @endif
+                @endif
+            </div>
+        @endforeach
+    @endif
 
     <div class="footer">
         Relatório gerado automaticamente pelo FiscalDock com base em consultas oficiais. Lote #{{ $lote->id }} | Usuário {{ $lote->user_id }} | {{ $gerado_em }}

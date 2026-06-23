@@ -34,7 +34,7 @@ class CguCncFonte extends FonteInfoSimplesBase
                 'bases' => $bases,
                 'bases_com_registro' => array_map(fn ($b) => $b['nome'] ?? null, $comRegistro),
                 'mensagem' => $d0['mensagem'] ?? null,
-                'comprovante' => $d0['site_receipt'] ?? null,
+                'comprovante' => $d0['site_receipt'] ?? ($raw['site_receipts'][0] ?? null),
                 'data_validade' => $d0['data_validade'] ?? null,
                 'consulta_datahora' => $d0['datahora_emissao'] ?? null,
             ]);

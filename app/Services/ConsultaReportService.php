@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ConsultaLote;
 use App\Models\ConsultaResultado;
+use App\Services\Consultas\ResultadoDetalhePresenter;
 use App\Support\CsvExport;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
@@ -11,7 +12,8 @@ use Illuminate\Support\Collection;
 class ConsultaReportService
 {
     public function __construct(
-        protected RiskScoreService $riskScoreService
+        protected RiskScoreService $riskScoreService,
+        protected ResultadoDetalhePresenter $detalhePresenter
     ) {}
 
     /**
@@ -34,23 +36,29 @@ class ConsultaReportService
     }
 
     /**
+     * Monta o payload completo do relatório (resumo + tabela + detalhamento por CNPJ).
+     * Exposto para que view e testes consumam exatamente o mesmo conjunto de dados.
+     */
+    public function dadosRelatorio(ConsultaLote $lote): array
+    {
+        $resultados = $this->getResultadosFormatados($lote);
+
+        return [
+            'lote' => $lote,
+            'plano' => $lote->plano,
+            'resultados' => $resultados,
+            'resumo' => $this->calcularResumo($resultados),
+            'detalhes' => $this->getDetalhes($lote),
+            'gerado_em' => now()->format('d/m/Y H:i'),
+        ];
+    }
+
+    /**
      * Gera PDF a partir dos resultados do lote.
      */
     public function gerarPdf(ConsultaLote $lote): \Barryvdh\DomPDF\PDF
     {
-        $resultados = $this->getResultadosFormatados($lote);
-        $resumo = $this->calcularResumo($resultados);
-        $plano = $lote->plano;
-
-        $data = [
-            'lote' => $lote,
-            'plano' => $plano,
-            'resultados' => $resultados,
-            'resumo' => $resumo,
-            'gerado_em' => now()->format('d/m/Y H:i'),
-        ];
-
-        $pdf = Pdf::loadView('reports.consulta-lote', $data);
+        $pdf = Pdf::loadView('reports.consulta-lote', $this->dadosRelatorio($lote));
 
         $pdf->setPaper('a4', 'landscape');
         $pdf->setOptions([
@@ -60,6 +68,37 @@ class ConsultaReportService
         ]);
 
         return $pdf;
+    }
+
+    /**
+     * Detalhamento completo por CNPJ — TODOS os dados, descrições e links de comprovante
+     * (PDF das certidões emitidas) de cada fonte consultada. Reusa o mesmo presenter da
+     * tela web (ResultadoDetalhePresenter) para garantir paridade visual/dados.
+     */
+    public function getDetalhes(ConsultaLote $lote): Collection
+    {
+        return $lote->resultados()
+            ->with(['participante', 'cliente'])
+            ->get()
+            ->map(function (ConsultaResultado $resultado) {
+                $alvo = $resultado->participante ?? $resultado->cliente;
+                $dados = $resultado->resultado_dados ?? [];
+
+                return [
+                    'documento' => $this->formatarCnpj($alvo?->documento),
+                    'razao_social' => $dados['razao_social'] ?? $alvo?->razao_social,
+                    'nome_fantasia' => $dados['nome_fantasia'] ?? $alvo?->nome_fantasia,
+                    'status_consulta' => $resultado->status,
+                    'error_message' => $resultado->publicErrorMessage(),
+                    'consultado_em' => $resultado->consultado_em?->format('d/m/Y H:i'),
+                    'resumo' => $resultado->status === ConsultaResultado::STATUS_SUCESSO
+                        ? $this->detalhePresenter->resumoTextual($resultado)
+                        : null,
+                    'blocos' => $resultado->status === ConsultaResultado::STATUS_SUCESSO
+                        ? $this->detalhePresenter->blocos($resultado)
+                        : [],
+                ];
+            });
     }
 
     /**
@@ -98,20 +137,20 @@ class ConsultaReportService
                 'cnaes' => $dados['cnaes'] ?? null,
                 'qsa' => $dados['qsa'] ?? null,
 
-                // SINTEGRA
-                'sintegra_ie' => $dados['sintegra']['ie'] ?? null,
+                // SINTEGRA (chave normalizada = inscricao_estadual, não "ie")
+                'sintegra_ie' => $dados['sintegra']['inscricao_estadual'] ?? null,
                 'sintegra_situacao' => $dados['sintegra']['situacao'] ?? null,
 
-                // CNDs
+                // CNDs (chave normalizada de validade = data_validade, não "validade")
                 'cnd_federal_status' => $dados['cnd_federal']['status'] ?? null,
-                'cnd_federal_validade' => $dados['cnd_federal']['validade'] ?? null,
+                'cnd_federal_validade' => $dados['cnd_federal']['data_validade'] ?? null,
                 'cnd_estadual_status' => $dados['cnd_estadual']['status'] ?? null,
-                'cnd_estadual_validade' => $dados['cnd_estadual']['validade'] ?? null,
+                'cnd_estadual_validade' => $dados['cnd_estadual']['data_validade'] ?? null,
 
                 // FGTS/Trabalhista
                 'crf_fgts_status' => $dados['crf_fgts']['status'] ?? null,
                 'cndt_status' => $dados['cndt']['status'] ?? null,
-                'cndt_validade' => $dados['cndt']['validade'] ?? null,
+                'cndt_validade' => $dados['cndt']['data_validade'] ?? null,
 
                 // Compliance
                 'tcu_situacao' => $dados['tcu_consolidada']['situacao'] ?? ($dados['tcu'] ?? null),

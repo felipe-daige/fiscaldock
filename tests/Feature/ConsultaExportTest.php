@@ -118,6 +118,47 @@ it('exporta resultado de escopo CLIENTE (participante nulo) sem corromper o arqu
     expect($body)->not->toContain('Attempt to read property');
 });
 
+it('CSV preenche SINTEGRA IE e validades das CNDs (chaves normalizadas)', function () {
+    $user = User::factory()->create();
+
+    // Plano que inclui sintegra + CNDs no CSV.
+    $plano = MonitoramentoPlano::porCodigo('due_diligence')
+        ?? MonitoramentoPlano::porCodigo('compliance')
+        ?? exportPlano();
+
+    $lote = exportLote($user, ['plano_id' => $plano->id]);
+
+    $p = Participante::create([
+        'user_id' => $user->id,
+        'documento' => '12345678000199',
+        'razao_social' => 'Fornecedor IE',
+        'uf' => 'SP',
+        'crt' => '3',
+    ]);
+    $lote->participantes()->attach([$p->id]);
+
+    ConsultaResultado::create([
+        'consulta_lote_id' => $lote->id,
+        'participante_id' => $p->id,
+        'status' => ConsultaResultado::STATUS_SUCESSO,
+        'resultado_dados' => [
+            'situacao_cadastral' => 'ATIVA',
+            'sintegra' => ['inscricao_estadual' => '111.222.333.444', 'situacao' => 'Habilitado'],
+            'cnd_federal' => ['status' => 'Negativa', 'data_validade' => '2026-12-31'],
+            'cnd_estadual' => ['status' => 'Negativa', 'data_validade' => '2026-11-30'],
+            'cndt' => ['status' => 'Negativa', 'data_validade' => '2026-10-15'],
+        ],
+        'consultado_em' => now(),
+    ]);
+
+    $body = actingAs($user)->get("/app/consulta/lote/{$lote->id}/baixar?formato=csv")->streamedContent();
+
+    expect($body)->toContain('111.222.333.444')   // SINTEGRA IE
+        ->toContain('2026-12-31')                  // CND Federal Validade
+        ->toContain('2026-11-30')                  // CND Estadual Validade
+        ->toContain('2026-10-15');                 // CNDT Validade
+});
+
 it('historico mostra botao Excel e PDF para lote com resultados', function () {
     $user = User::factory()->create();
     $lote = exportLote($user);
