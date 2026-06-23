@@ -2,8 +2,8 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6">
 
         <div>
-            <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Faixa Comercial</h1>
-            <p class="text-xs text-gray-500 mt-1">Sua faixa de desconto nas consultas. Suba adicionando saldo ou assinando um plano — quanto mais alta a faixa, menor o custo por consulta.</p>
+            <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Saldo e extrato</h1>
+            <p class="text-xs text-gray-500 mt-1">Seu saldo, consumo e histórico de transações. Adicione saldo quando precisar.</p>
         </div>
 
         @if(($trialResumo['is_active'] ?? false) || ($trialResumo['is_expired'] ?? false))
@@ -31,13 +31,13 @@
                     <p class="text-[11px] text-gray-500 mt-1">disponível</p>
                 </div>
                 <div class="p-4 sm:p-6">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Faixa atual</p>
-                    <p class="text-lg sm:text-xl font-bold text-gray-900">{{ $pricing['current_tier']['nome'] ?? 'Base' }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">economia ativa nas próximas consultas</p>
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Saldo atual</p>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) (auth()->user()->credits ?? 0)))</p>
+                    <p class="text-[11px] text-gray-500 mt-1">disponível para consultas</p>
                 </div>
                 <div class="p-4 sm:p-6">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Histórico pago</p>
-                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($pricing['paid_credits'] ?? 0)))</p>
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Total comprado</p>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(app(\App\Services\PricingCatalogService::class)->getPaidCreditsForUser(auth()->user())))</p>
                     <p class="text-[11px] text-gray-500 mt-1">comprado acumulado</p>
                 </div>
                 <div class="p-4 sm:p-6">
@@ -50,76 +50,6 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 space-y-6">
-                <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Progresso para a próxima faixa</span>
-                    </div>
-                    <div class="p-6 space-y-4">
-                        @if($pricing['next_tier'])
-                            <div class="flex items-center justify-between gap-4">
-                                <div>
-                                    <p class="text-sm font-semibold text-gray-900">{{ $pricing['current_tier']['nome'] }} → {{ $pricing['next_tier']['nome'] }}</p>
-                                    <p class="text-xs text-gray-500 mt-1">
-                                        Faltam @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $pricing['credits_remaining'])) em compras acumuladas para destravar a próxima economia.
-                                    </p>
-                                </div>
-                                <a href="/app/creditos" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Adicionar saldo</a>
-                            </div>
-                            <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                                <div class="h-3 rounded-full" style="width: {{ $pricing['progress_percent'] }}%; background-color: #1f2937"></div>
-                            </div>
-                        @else
-                            <p class="text-sm text-gray-700">Você já está na maior faixa comercial disponível. As melhores condições já estão ativas.</p>
-                        @endif
-                    </div>
-                </div>
-
-                <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Custo por consulta em cada faixa</span>
-                        <span class="text-[10px] text-gray-400">quanto mais alta a faixa, menor o custo por consulta</span>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full text-sm">
-                            <thead>
-                                <tr class="border-b border-gray-200">
-                                    <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Produto</th>
-                                    @foreach($pricing['tiers'] as $t)
-                                        @php $isAtual = $t['slug'] === ($pricing['current_tier']['slug'] ?? 'base'); @endphp
-                                        <th class="px-3 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide {{ $isAtual ? 'text-white' : 'text-gray-400' }}"
-                                            @if($isAtual) style="background-color: #1f2937" @endif>
-                                            {{ $t['nome'] }}
-                                            @if($isAtual)<span class="block text-[8px] font-normal normal-case">sua faixa</span>@endif
-                                        </th>
-                                    @endforeach
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100">
-                                @foreach($pricing['products'] as $product)
-                                    <tr class="hover:bg-gray-50/50">
-                                        <td class="px-3 py-2.5 text-gray-700 font-medium whitespace-nowrap">{{ $product['nome'] }}</td>
-                                        @foreach($pricing['tiers'] as $t)
-                                            @php
-                                                $cel = $product['by_tier'][$t['slug']];
-                                                $isAtual = $t['slug'] === ($pricing['current_tier']['slug'] ?? 'base');
-                                            @endphp
-                                            <td class="px-3 py-2.5 text-center {{ $isAtual ? 'bg-gray-50' : '' }}">
-                                                <span class="block {{ $isAtual ? 'font-bold text-gray-900' : 'text-gray-600' }}">R$ {{ number_format($cel['price'], 2, ',', '.') }}</span>
-                                                @if($cel['desconto_percent'] > 0)
-                                                    <span class="block text-[10px] font-semibold" style="color: #047857">−{{ $cel['desconto_percent'] }}%</span>
-                                                @endif
-                                            </td>
-                                        @endforeach
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="px-4 py-2.5 border-t border-gray-100 bg-gray-50">
-                        <p class="text-[11px] text-gray-500">Preço unitário fixo em R$ {{ number_format($pricing['credit_unit_price'] ?? 0.20, 2, ',', '.') }}. O que muda por faixa é <span class="font-semibold">o custo em R$ de cada consulta</span> — por isso faixas altas saem mais baratas.</p>
-                    </div>
-                </div>
-
                 <div class="bg-white rounded border border-gray-300 overflow-hidden">
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Histórico de consumo</span>
@@ -189,7 +119,7 @@
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Valor livre</span>
                     </div>
                     <div class="p-4 space-y-4">
-                        <p class="text-sm text-gray-700">Faça uma recarga personalizada a partir de R$ {{ number_format($pricing['minimum_deposit'] ?? 50, 0, ',', '.') }} e continue acumulando histórico pago para subir de faixa.</p>
+                        <p class="text-sm text-gray-700">Faça uma recarga personalizada a partir de R$ {{ number_format($pricing['minimum_deposit'] ?? 50, 0, ',', '.') }} e adicione saldo quando precisar.</p>
                         <form method="GET" action="/app/checkout/custom" class="space-y-3">
                             <div>
                                 <label for="plan-custom-amount" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Quanto deseja pagar</label>
@@ -210,30 +140,6 @@
                                 Continuar para pagamento
                             </button>
                         </form>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Como funciona a faixa comercial</span>
-                    </div>
-                    <div class="p-6 space-y-4 text-sm text-gray-700">
-                        <div class="flex items-start gap-3">
-                            <span class="text-[10px] font-bold uppercase tracking-wide text-white rounded px-2 py-0.5" style="background-color: #374151">1</span>
-                            <p>A faixa é um <span class="font-semibold">desconto comercial</span> (Base → X → Y → Z). Quanto mais alta, <span class="font-semibold">menor o custo por consulta</span> — o preço unitário (R$ {{ number_format($pricing['credit_unit_price'] ?? 0.20, 2, ',', '.') }}) nunca muda.</p>
-                        </div>
-                        <div class="flex items-start gap-3">
-                            <span class="text-[10px] font-bold uppercase tracking-wide text-white rounded px-2 py-0.5" style="background-color: #374151">2</span>
-                            <p><span class="font-semibold">Caminho 1 — comprando:</span> seu histórico de compras <span class="font-semibold">pagas</span> acumuladas sobe a faixa (X a partir de R$ 200, Y de R$ 1.000, Z de R$ 4.000). Bônus de trial não contam.</p>
-                        </div>
-                        <div class="flex items-start gap-3">
-                            <span class="text-[10px] font-bold uppercase tracking-wide text-white rounded px-2 py-0.5" style="background-color: #374151">3</span>
-                            <p><span class="font-semibold">Caminho 2 — assinando:</span> um plano já entrega a faixa (Profissional → X, Escritório → Y, Enterprise → Z). <a href="/app/planos" data-link class="text-gray-900 underline hover:text-gray-600">Ver planos de assinatura</a>. Vale sempre a <span class="font-semibold">maior</span> das duas — a faixa nunca regride.</p>
-                        </div>
-                        <div class="flex items-start gap-3">
-                            <span class="text-[10px] font-bold uppercase tracking-wide text-white rounded px-2 py-0.5" style="background-color: #374151">4</span>
-                            <p>Saldo pago não expira; saldo promocional do trial expira ao fim do período informado.</p>
-                        </div>
                     </div>
                 </div>
 

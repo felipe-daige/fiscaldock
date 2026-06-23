@@ -13,7 +13,7 @@
 
         <div>
             <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Adicionar saldo</h1>
-            <p class="text-xs text-gray-500 mt-1">Escolha quanto quer depositar, acompanhe sua faixa atual e use as ofertas promocionais como atalho.</p>
+            <p class="text-xs text-gray-500 mt-1">Escolha quanto quer depositar e use as ofertas promocionais como atalho.</p>
         </div>
 
         @if(($trialResumo['is_active'] ?? false) || ($trialResumo['is_expired'] ?? false))
@@ -61,21 +61,6 @@
             </div>
         </div>
 
-        {{-- Faixa comercial — resumo numa linha (detalhe vive em /app/faixa-comercial) --}}
-        <a href="/app/faixa-comercial" data-link class="flex flex-wrap items-center gap-x-2 gap-y-1 bg-white rounded border border-gray-300 px-4 py-3 text-[13px] text-gray-600 hover:bg-gray-50 transition-colors">
-            <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Faixa</span>
-            <span class="font-semibold text-gray-900">{{ $pricing['current_tier']['nome'] ?? 'Base' }}</span>
-            <span class="text-gray-300">·</span>
-            <span>pago @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($pricing['paid_credits'] ?? 0)))</span>
-            <span class="text-gray-300">·</span>
-            @if($pricing['next_tier'])
-                <span>próxima <span class="font-medium text-gray-700">{{ $pricing['next_tier']['nome'] }}</span> (faltam @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($pricing['credits_remaining'] ?? 0))))</span>
-            @else
-                <span>melhor condição comercial</span>
-            @endif
-            <span class="ml-auto text-gray-400">→</span>
-        </a>
-
         <div class="grid grid-cols-1 xl:grid-cols-[minmax(320px,0.9fr)_minmax(0,1.1fr)] gap-6 items-start">
             <div class="bg-white rounded border border-gray-300 overflow-hidden">
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
@@ -117,7 +102,7 @@
             <div>
                 <div class="flex items-center justify-between mb-2">
                     <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Ofertas promocionais</h2>
-                    <a href="/app/faixa-comercial" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Ver faixa comercial</a>
+                    <a href="/app/faixa-comercial" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Ver extrato</a>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     @foreach(($pricing['featured_offers'] ?? $pacotes) as $pacote)
@@ -206,7 +191,7 @@
         <div class="bg-white rounded border border-gray-300 overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Histórico de transações</span>
-                <a href="/app/faixa-comercial" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Ver consumo detalhado</a>
+                <a href="/app/faixa-comercial" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Ver extrato completo</a>
             </div>
             @if($historicoCreditos->count() > 0)
                 <div class="overflow-x-auto">

@@ -24,10 +24,10 @@ beforeEach(function () {
 it('a landing /precos reflete o depósito mínimo e o preço por crédito do override', function () {
     get('/precos')
         ->assertOk()
-        ->assertSee('R$ 80 em créditos')      // hero, antes hardcoded "R$ 50"
+        ->assertSee('R$ 80 em créditos')      // hero
         ->assertSee('R$ 0,25 por crédito')    // tabela de consumo
         ->assertDontSee('R$ 50 em créditos');
-})->skip('views da pricing page serão atualizadas na task de UI pós-remoção das faixas');
+});
 
 it('a tela /app/consulta/nova reflete o preço por crédito do override', function () {
     actingAs(User::factory()->create())
@@ -43,4 +43,4 @@ it('a tela /app/planos reflete o preço por crédito do override', function () {
         ->assertOk()
         ->assertSee('1 crédito = R$ 0,25')
         ->assertDontSee('1 crédito = R$ 0,20');
-})->skip('view /app/planos usa tiers que serão removidos na task de UI pós-remoção das faixas');
+});

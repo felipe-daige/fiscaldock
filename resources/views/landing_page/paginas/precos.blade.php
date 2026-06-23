@@ -1,6 +1,7 @@
 @php
     $pricingData = $pricingData ?? [];
     $minimumDeposit = $pricingData['minimum_deposit'] ?? 100;
+    $creditUnitPrice = $pricingData['credit_unit_price'] ?? 0.20;
     $featuredOffers = $pricingData['featured_offers'] ?? ($pricingData['packages'] ?? []);
     $products = $pricingData['products'] ?? [];
     $complianceProduct = collect($products)->firstWhere('slug', 'compliance') ?? ($products[0] ?? null);
@@ -51,7 +52,7 @@
                     </span>
                 </div>
                 <h1 class="mt-6 text-4xl md:text-5xl font-bold text-gray-900">
-                    Comece com <span class="text-blue-600">R$ {{ number_format($minimumDeposit, 0, ',', '.') }} de saldo</span> e pague só pelas consultas que usar
+                    Comece com <span class="text-blue-600">R$ {{ number_format($minimumDeposit, 0, ',', '.') }} em créditos</span> e pague só pelas consultas que usar
                 </h1>
                 <p class="mt-5 text-lg text-gray-600 max-w-3xl mx-auto">
                     A FiscalDock funciona no modelo pré-pago em reais: você testa sem cartão, adiciona saldo quando precisar e cada consulta tem preço fixo e transparente. Sem mensalidade.
@@ -206,6 +207,7 @@
         <div class="text-center mb-8">
             <h2 class="text-3xl font-bold text-gray-900">Preço por consulta</h2>
             <p class="mt-3 text-base text-gray-600">Tudo em reais. Veja quanto custa cada consulta e o total a cada 100 consultas.</p>
+            <p class="mt-2 text-sm text-gray-500">1 crédito = R$ {{ number_format($creditUnitPrice, 2, ',', '.') }} por crédito</p>
         </div>
         <div class="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
             <div class="overflow-x-auto">

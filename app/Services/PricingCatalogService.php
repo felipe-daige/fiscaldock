@@ -336,6 +336,7 @@ class PricingCatalogService
 
         return [
             'minimum_deposit' => $this->getMinimumDeposit(),
+            'credit_unit_price' => $this->creditUnitPrice(),
             'featured_offers' => $featuredOffers,
             'packages' => $featuredOffers,
             'products' => $products,
@@ -345,11 +346,7 @@ class PricingCatalogService
 
     /**
      * Retorna o resumo comercial do usuário para as views autenticadas.
-     * Cada produto tem {slug, nome, descricao, credits, price} — sem matriz de faixas.
-     *
-     * Shim backward-compat: chaves de faixa retornam valores seguros para que
-     * views que ainda as referenciem (plano/index, creditos/index) não fatalizem.
-     * Relabel das views é task posterior — aqui só paramos o 500.
+     * Preço único por produto em R$, sem faixas de volume.
      */
     public function getCommercialSummaryForUser(User $user): array
     {
@@ -358,32 +355,22 @@ class PricingCatalogService
         $products = array_map(function (array $product) use ($user) {
             $plano = MonitoramentoPlano::where('codigo', $product['slug'])->first();
             $credits = $plano ? $this->getProductCreditsByPlan($plano, $user) : 0;
+            $price = $this->creditsToCurrency($credits);
 
             return [
                 'slug' => $product['slug'],
                 'nome' => $product['nome'],
                 'descricao' => $product['descricao'],
-                'credits' => $credits,
-                'price' => $this->creditsToCurrency($credits),
-                // shim: views legadas iteram $product['by_tier'] dentro do loop $tiers
-                // como $tiers=[] o loop externo nunca executa, mas por segurança:
-                'by_tier' => [],
+                'price' => $price,
+                'price_label' => 'R$ '.number_format($price, 2, ',', '.').'/consulta',
             ];
         }, $this->getProductCatalog());
 
         return [
-            'credit_unit_price' => $this->creditUnitPrice(),
             'minimum_deposit' => $this->getMinimumDeposit(),
             'featured_offers' => $featuredOffers,
             'packages' => $featuredOffers,
             'products' => $products,
-            // shim backward-compat: chaves de faixa que views autenticadas ainda lêem
-            'tiers' => [],
-            'current_tier' => null,
-            'next_tier' => null,
-            'paid_credits' => 0,
-            'credits_remaining' => 0,
-            'progress_percent' => 100,
         ];
     }
 
