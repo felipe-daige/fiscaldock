@@ -48,6 +48,61 @@
             </div>
         @endif
 
+        @php($ehEu = auth()->id() === $usuario->id)
+        {{-- Ações administrativas --}}
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
+            <div class="px-4 py-2.5 border-b border-gray-200"><p class="text-sm font-semibold text-gray-800">Ações administrativas</p></div>
+            <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {{-- Crédito --}}
+                <form method="POST" action="/app/admin/usuarios/{{ $usuario->id }}/creditar" class="space-y-2">
+                    @csrf
+                    <label class="block text-[11px] text-gray-500">Ajuste de crédito (negativo debita)</label>
+                    <input type="number" step="1" name="valor" placeholder="ex.: 50 ou -20" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded" required>
+                    <input type="text" name="motivo" placeholder="Motivo (obrigatório)" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded" required>
+                    <button class="text-white text-[12px] font-semibold px-3 py-2 rounded" style="background-color:#1d4ed8">Aplicar ajuste</button>
+                </form>
+                {{-- Bloqueio + admin + impersonar --}}
+                <div class="space-y-3">
+                    <form method="POST" action="/app/admin/usuarios/{{ $usuario->id }}/bloquear" class="flex gap-2 items-center">
+                        @csrf
+                        <input type="text" name="motivo" placeholder="Motivo" class="flex-1 text-[13px] py-2.5 px-3 border border-gray-300 rounded" required>
+                        <button @disabled($ehEu) class="text-white text-[12px] font-semibold px-3 py-2 rounded disabled:opacity-40" style="background-color:{{ $usuario->bloqueado_em ? '#047857' : '#b91c1c' }}">{{ $usuario->bloqueado_em ? 'Desbloquear' : 'Bloquear' }}</button>
+                    </form>
+                    <form method="POST" action="/app/admin/usuarios/{{ $usuario->id }}/admin" class="flex gap-2 items-center">
+                        @csrf
+                        <input type="text" name="motivo" placeholder="Motivo" class="flex-1 text-[13px] py-2.5 px-3 border border-gray-300 rounded" required>
+                        <button @disabled($ehEu) class="text-white text-[12px] font-semibold px-3 py-2 rounded disabled:opacity-40" style="background-color:#334155">{{ $usuario->is_admin ? 'Remover admin' : 'Tornar admin' }}</button>
+                    </form>
+                    @unless($usuario->is_admin || $ehEu)
+                    <form method="POST" action="/app/admin/usuarios/{{ $usuario->id }}/impersonar" class="flex gap-2 items-center">
+                        @csrf
+                        <input type="text" name="motivo" placeholder="Motivo" class="flex-1 text-[13px] py-2.5 px-3 border border-gray-300 rounded" required>
+                        <button class="text-white text-[12px] font-semibold px-3 py-2 rounded" style="background-color:#7c3aed">Impersonar (leitura)</button>
+                    </form>
+                    @endunless
+                </div>
+            </div>
+            @error('valor')<p class="px-4 pb-3 text-[12px] text-red-600">{{ $message }}</p>@enderror
+            @error('motivo')<p class="px-4 pb-3 text-[12px] text-red-600">{{ $message }}</p>@enderror
+            @if(session('status'))<p class="px-4 pb-3 text-[12px] text-emerald-700">{{ session('status') }}</p>@endif
+        </div>
+
+        {{-- Trilha administrativa --}}
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
+            <div class="px-4 py-2.5 border-b border-gray-200"><p class="text-sm font-semibold text-gray-800">Trilha administrativa</p></div>
+            <table class="w-full text-sm"><tbody class="divide-y divide-gray-100">
+            @forelse($trilhaAdmin as $log)
+                <tr>
+                    <td class="px-3 py-2 w-40 text-[12px] text-gray-500">{{ optional($log->created_at)->format('d/m/Y H:i') }}</td>
+                    <td class="px-3 py-2 w-32 text-[11px] font-semibold text-gray-600">{{ $log->acao }}</td>
+                    <td class="px-3 py-2 text-[12px] text-gray-700">{{ $log->motivo }} <span class="text-gray-400">· {{ $log->admin->name ?? '—' }}</span></td>
+                </tr>
+            @empty
+                <tr><td colspan="3" class="px-3 py-6 text-center text-gray-400">Sem ações administrativas.</td></tr>
+            @endforelse
+            </tbody></table>
+        </div>
+
         {{-- Timeline --}}
         <div class="bg-white rounded border border-gray-300 overflow-hidden">
             <div class="px-4 py-2.5 border-b border-gray-200"><p class="text-sm font-semibold text-gray-800">Atividade recente</p></div>

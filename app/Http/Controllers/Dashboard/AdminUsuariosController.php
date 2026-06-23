@@ -47,6 +47,8 @@ class AdminUsuariosController extends Controller
             'assinatura' => $this->usuarios->assinaturaAtiva($id),
             'sessao' => $this->usuarios->ultimaSessao($id),
             'timeline' => $this->usuarios->timeline($id),
+            'trilhaAdmin' => \App\Models\AdminActionLog::with('admin')
+                ->where('target_user_id', $id)->orderByDesc('created_at')->limit(50)->get(),
         ];
 
         if ($this->isAjaxRequest($request)) {
