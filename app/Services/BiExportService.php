@@ -69,4 +69,64 @@ class BiExportService
 
         return ['colunas' => $colunas, 'linhas' => $linhas];
     }
+
+    /**
+     * Relatório completo do BI (KPIs + cobertura + as 4 seções) — fonte única
+     * consumida pelo PDF executivo e pelo XLSX. Reusa dataset() e os getters do BI.
+     */
+    public function relatorioCompleto(int $userId, ?string $ini, ?string $fim, ?int $cli): array
+    {
+        $resumo = $this->bi->getResumoGeral($userId, $cli, $ini, $fim);
+        $efd = $this->bi->getKpisEfd($userId, $ini, $fim);
+
+        $titulos = [
+            'faturamento' => 'Faturamento mensal',
+            'tributos' => 'Tributos por mês',
+            'apuracao-notas' => 'Declarado × Computado',
+            'cfop' => 'Ranking CFOP',
+        ];
+        $secoes = [];
+        foreach ($titulos as $aba => $titulo) {
+            $ds = $this->dataset($aba, $userId, $ini, $fim, $cli);
+            $secoes[$aba] = ['titulo' => $titulo, 'colunas' => $ds['colunas'], 'linhas' => $ds['linhas']];
+        }
+
+        return [
+            'periodo' => ['inicio' => $ini, 'fim' => $fim, 'cliente_id' => $cli],
+            'kpis' => [
+                'faturamento' => $this->brl((float) ($resumo['total_vendas'] ?? 0)),
+                'aquisicoes' => $this->brl((float) ($resumo['total_compras'] ?? 0)),
+                'tributos' => $this->brl((float) ($resumo['total_tributos'] ?? 0)),
+                'saldo_liquido' => $this->brl((float) ($efd['saldo_liquido'] ?? 0)),
+                'total_notas' => (int) ($resumo['total_notas'] ?? 0),
+                'aliquota_media' => (float) ($resumo['aliquota_media'] ?? 0),
+            ],
+            'cobertura' => $this->bi->getCoberturaResumo($userId, $ini, $fim, $cli),
+            'secoes' => $secoes,
+        ];
+    }
+
+    /**
+     * Converte linhas de uma seção mensal em itens do partial _bar-chart.
+     * pct é relativo ao máximo da série (max=0 → pct=0). idxValorBrl aponta a
+     * coluna cujo valor está formatado em BRL string ("1.234,56").
+     */
+    public function barChartItens(array $linhas, int $idxLabel, int $idxValorBrl, string $hex): array
+    {
+        $parse = fn (string $brl): float => (float) str_replace(',', '.', str_replace('.', '', $brl));
+        $valores = array_map(fn ($l) => $parse((string) ($l[$idxValorBrl] ?? '0')), $linhas);
+        $max = $valores ? max($valores) : 0.0;
+
+        $itens = [];
+        foreach ($linhas as $i => $l) {
+            $itens[] = [
+                'label' => (string) ($l[$idxLabel] ?? ''),
+                'hex' => $hex,
+                'pct' => $max > 0 ? (int) round($valores[$i] / $max * 100) : 0,
+                'valor' => (string) ($l[$idxValorBrl] ?? ''),
+            ];
+        }
+
+        return $itens;
+    }
 }
