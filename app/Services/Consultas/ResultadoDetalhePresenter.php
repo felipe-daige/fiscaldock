@@ -397,7 +397,7 @@ class ResultadoDetalhePresenter
 
         $mensagem = $d['mensagem'] ?? ($badge['motivo'] ?? null);
 
-        return $this->bloco($chave, $this->tituloCertidao($chave, $uf), $badge, $itens, [], $mensagem);
+        return $this->bloco($chave, $this->tituloCertidao($chave, $uf), $badge, $itens, [], $mensagem, $d['comprovante'] ?? null);
     }
 
     private function tituloCertidao(string $chave, ?string $uf = null): string
@@ -432,7 +432,7 @@ class ResultadoDetalhePresenter
             $this->item('Data da situação', $d['data_situacao'] ?? null),
         ];
 
-        return $this->bloco('sintegra', 'SINTEGRA', $badge, $itens, [], $d['mensagem'] ?? null);
+        return $this->bloco('sintegra', 'SINTEGRA', $badge, $itens, [], $d['mensagem'] ?? null, $d['comprovante'] ?? null);
     }
 
     // ──────────────────────────────────────────────────────────────────────────

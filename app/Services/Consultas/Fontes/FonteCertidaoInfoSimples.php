@@ -34,7 +34,13 @@ abstract class FonteCertidaoInfoSimples extends FonteInfoSimplesBase
     public function normalizar(array $raw, string $status = 'sucesso'): array
     {
         if ($status === 'sucesso') {
-            return $this->bloco($this->mapearSucesso($raw['data'][0] ?? []));
+            $d0 = $raw['data'][0] ?? [];
+            $dados = $this->mapearSucesso($d0);
+            // Link do comprovante (PDF) da certidão emitida: InfoSimples devolve em site_receipt
+            // (data[0]) ou site_receipts[] (top-level). mapearSucesso não o conhece — injeta aqui.
+            $dados['comprovante'] ??= $d0['site_receipt'] ?? ($raw['site_receipts'][0] ?? null);
+
+            return $this->bloco($dados);
         }
 
         // 611: a fonte não emitiu por dados insuficientes — INDETERMINADO, nunca irregular.

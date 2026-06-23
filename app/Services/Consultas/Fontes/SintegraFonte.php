@@ -43,6 +43,7 @@ class SintegraFonte extends FonteInfoSimplesBase
                 'regime_apuracao' => $d['regime_apuracao'] ?? null,
                 'atividade_economica' => $d['atividade_economica'] ?? null,
                 'consulta_datahora' => $d['consulta_datahora'] ?? null,
+                'comprovante' => $d['site_receipt'] ?? ($raw['site_receipts'][0] ?? null),
             ]);
         }
 
