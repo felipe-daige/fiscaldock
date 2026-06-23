@@ -99,53 +99,32 @@ class PricingCatalogService
     }
 
     /**
-     * O plano está sujeito ao teto de consultas do período de teste?
-     * (Gratuito fica de fora; os demais planos pagos compartilham um pool único.)
-     */
-    public function planoTemTetoTrial(string $codigo): bool
-    {
-        return in_array($codigo, (array) config('trial.planos_com_teto', []), true);
-    }
-
-    /**
-     * Status do teto de teste — pool GLOBAL de consultas (CNPJs) somado entre
-     * TODOS os planos pagos, liberado apenas até a 1ª compra confirmada.
+     * Status do cap de consultas do plano Gratuito.
+     * Sem a 1ª compra confirmada, o usuário tem no máximo `trial.limite_consultas_gratuito`
+     * participantes consultados neste plano. Após a 1ª compra o cap desaparece.
      *
-     * @return array{aplicavel: bool, limite: int, usados: int, restantes: int, bloqueado: bool}
+     * @return array{limite: int, usados: int, restantes: int, bloqueado: bool}
      */
-    public function trialCapStatus(User $user, MonitoramentoPlano $plano, int $novosCnpjs = 0): array
+    public function gratuitoCapStatus(User $user, int $novos = 0): array
     {
-        $limite = (int) config('trial.limite_consultas_sem_compra', 5);
+        $limite = (int) config('trial.limite_consultas_gratuito', 3);
 
-        $aplicavel = $this->planoTemTetoTrial($plano->codigo) && ! $this->userHasFirstPurchase($user);
-
-        if (! $aplicavel) {
-            return [
-                'aplicavel' => false,
-                'limite' => $limite,
-                'usados' => 0,
-                'restantes' => $limite,
-                'bloqueado' => false,
-            ];
+        if ($this->userHasFirstPurchase($user)) {
+            return ['limite' => $limite, 'usados' => 0, 'restantes' => $limite, 'bloqueado' => false];
         }
 
-        // Pool único: soma os CNPJs consumidos em QUALQUER plano sujeito ao teto.
-        $planosComTetoIds = MonitoramentoPlano::query()
-            ->whereIn('codigo', (array) config('trial.planos_com_teto', []))
-            ->pluck('id');
-
+        $gratuitoId = \App\Models\MonitoramentoPlano::where('codigo', 'gratuito')->value('id');
         $usados = (int) \App\Models\ConsultaLote::query()
             ->where('user_id', $user->id)
-            ->whereIn('plano_id', $planosComTetoIds)
+            ->where('plano_id', $gratuitoId)
             ->where('status', '!=', \App\Models\ConsultaLote::STATUS_ERRO)
             ->sum('total_participantes');
 
         return [
-            'aplicavel' => true,
             'limite' => $limite,
             'usados' => $usados,
             'restantes' => max(0, $limite - $usados),
-            'bloqueado' => ($usados + $novosCnpjs) > $limite,
+            'bloqueado' => ($usados + $novos) > $limite,
         ];
     }
 

@@ -20,6 +20,27 @@
                 Histórico
             </a>
         </div>
+        @php
+            $gratuitoCap = $gratuitoCap ?? null;
+            $mostrarCapGratuito = $gratuitoCap !== null && ! ($gratuitoCap['bloqueado'] === false && ($gratuitoCap['usados'] ?? 0) === 0 && ($hasMadeFirstPurchase ?? false));
+        @endphp
+        @if($gratuitoCap !== null && !($hasMadeFirstPurchase ?? false))
+            <div class="mb-3 px-3 py-2 rounded border flex items-center gap-2 text-xs"
+                 style="background-color: #f0fdf4; border-color: #86efac;">
+                <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #16a34a;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span style="color: #15803d;">
+                    <strong>Plano Gratuito:</strong>
+                    {{ $gratuitoCap['usados'] }} de {{ $gratuitoCap['limite'] }} consultas gratuitas usadas.
+                    @if($gratuitoCap['bloqueado'])
+                        <a href="/app/creditos" class="font-semibold underline" data-link>Adicione saldo para continuar.</a>
+                    @else
+                        {{ $gratuitoCap['restantes'] }} restante{{ $gratuitoCap['restantes'] !== 1 ? 's' : '' }}.
+                    @endif
+                </span>
+            </div>
+        @endif
         <div class="space-y-6">
         <div id="consulta-inline-error-region"></div>
 

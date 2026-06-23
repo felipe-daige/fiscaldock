@@ -65,14 +65,6 @@ class ConsultaController extends Controller
         // Buscar catálogo legado de produtos consultáveis
         $planos = MonitoramentoPlano::ativos();
 
-        // Status do teto de teste (pool único de 5 CNPJs somado entre os planos pagos antes da 1ª compra)
-        $trialCaps = [];
-        foreach ($planos as $planoItem) {
-            if ($this->pricingCatalogService->planoTemTetoTrial($planoItem->codigo)) {
-                $trialCaps[$planoItem->codigo] = $this->pricingCatalogService->trialCapStatus($user, $planoItem);
-            }
-        }
-
         // Buscar clientes do usuário
         $clientes = Cliente::where('user_id', $user->id)
             ->orderBy('razao_social')
@@ -125,7 +117,8 @@ class ConsultaController extends Controller
             'complianceSources' => $this->pricingCatalogService->getComplianceSources(),
             'hasMadeFirstPurchase' => $this->pricingCatalogService->userHasFirstPurchase($user),
             'firstPurchaseLockedProducts' => $this->pricingCatalogService->getFirstPurchaseLockedProducts(),
-            'trialCaps' => $trialCaps,
+            'trialCaps' => [],
+            'gratuitoCap' => $this->pricingCatalogService->gratuitoCapStatus($user),
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -662,20 +655,17 @@ class ConsultaController extends Controller
 
         $totalParticipantes = count($validated['participante_ids']);
 
-        $trialCap = $this->pricingCatalogService->trialCapStatus($user, $plano, $totalParticipantes);
-
-        if ($trialCap['bloqueado']) {
-            return response()->json([
-                'success' => false,
-                'error' => sprintf(
-                    'Você usou %d de %d consultas liberadas no período de teste. Faça um depósito para liberar consultas ilimitadas.',
-                    $trialCap['usados'],
-                    $trialCap['limite']
-                ),
-                'trial_cap_atingido' => true,
-                'trial_cap' => $trialCap,
-                'produto_codigo' => $plano->codigo,
-            ], Response::HTTP_FORBIDDEN);
+        if ($plano->codigo === 'gratuito') {
+            $cap = $this->pricingCatalogService->gratuitoCapStatus($user, $totalParticipantes);
+            if ($cap['bloqueado']) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Limite de 3 consultas gratuitas atingido. Adicione saldo para continuar.',
+                    'trial_cap_atingido' => true,
+                    'trial_cap' => $cap,
+                    'produto_codigo' => $plano->codigo,
+                ], Response::HTTP_FORBIDDEN);
+            }
         }
 
         $custoUnitario = $this->pricingCatalogService->getProductCreditsByPlan($plano, $user);
@@ -685,7 +675,6 @@ class ConsultaController extends Controller
 
         return response()->json([
             'success' => true,
-            'trial_cap' => $trialCap,
             'calculo' => [
                 'total_participantes' => $totalParticipantes,
                 'produto_codigo' => $plano->codigo,
@@ -785,20 +774,17 @@ class ConsultaController extends Controller
         // Calcular custo
         $totalParticipantes = $alvos->count();
 
-        $trialCap = $this->pricingCatalogService->trialCapStatus($user, $plano, $totalParticipantes);
-
-        if ($trialCap['bloqueado']) {
-            return response()->json([
-                'success' => false,
-                'error' => sprintf(
-                    'Você usou %d de %d consultas liberadas no período de teste. Faça um depósito para liberar consultas ilimitadas.',
-                    $trialCap['usados'],
-                    $trialCap['limite']
-                ),
-                'trial_cap_atingido' => true,
-                'trial_cap' => $trialCap,
-                'produto_codigo' => $plano->codigo,
-            ], Response::HTTP_FORBIDDEN);
+        if ($plano->codigo === 'gratuito') {
+            $cap = $this->pricingCatalogService->gratuitoCapStatus($user, $totalParticipantes);
+            if ($cap['bloqueado']) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Limite de 3 consultas gratuitas atingido. Adicione saldo para continuar.',
+                    'trial_cap_atingido' => true,
+                    'trial_cap' => $cap,
+                    'produto_codigo' => $plano->codigo,
+                ], Response::HTTP_FORBIDDEN);
+            }
         }
 
         $custoUnitario = $this->pricingCatalogService->getProductCreditsByPlan($plano, $user);
