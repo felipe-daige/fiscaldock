@@ -11,25 +11,6 @@ use App\Services\Participantes\ParticipanteMovimentacaoService;
 
 uses(RefreshDatabase::class);
 
-// helpers criarNotaEfd / criarItemEfd
-
-function criarNotaEfd(User $u, Participante $p, string $tipo, ?string $data, float $valor, bool $cancelada = false): EfdNota
-{
-    $cliente = Cliente::firstOrCreate(['user_id' => $u->id, 'documento' => '00000000000191'], ['razao_social' => 'Empresa Teste']);
-    $imp = EfdImportacao::firstOrCreate(['user_id' => $u->id, 'tipo_efd' => 'EFD ICMS/IPI'], []);
-    return EfdNota::create([
-        'user_id' => $u->id, 'cliente_id' => $cliente->id, 'importacao_id' => $imp->id,
-        'participante_id' => $p->id, 'modelo' => '55', 'numero' => (string) random_int(1, 9999999),
-        'tipo_operacao' => $tipo, 'valor_total' => $valor, 'data_emissao' => $data, 'cancelada' => $cancelada,
-    ]);
-}
-function criarItemEfd(EfdNota $n, array $attrs): EfdNotaItem
-{
-    return EfdNotaItem::create(array_merge([
-        'efd_nota_id' => $n->id, 'user_id' => $n->user_id, 'numero_item' => 1, 'codigo_item' => 'COD' . random_int(1, 9999),
-    ], $attrs));
-}
-
 beforeEach(function () {
     $this->svc = app(ParticipanteMovimentacaoService::class);
     $this->user = User::factory()->create();

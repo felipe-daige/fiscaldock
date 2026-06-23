@@ -1,14 +1,14 @@
 @php
     $k = $movimentacao['kpis'];
     $fmt = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
-    $scoreHex = \App\Support\Reports\ReportTheme::riscoHex($score['classificacao']);
+    $scoreHex = \App\Support\Reports\ReportTheme::riscoHex($score['classificacao'] ?? 'medio');
 @endphp
 <div class="secao">
     <div class="secao-header">Identificação</div>
     <div class="secao-body">
         <table class="kv">
             <tr><td class="k">Razão Social</td><td>{{ $participante->razao_social ?: '—' }}</td>
-                <td class="k">Situação</td><td>{{ data_get($consulta, 'blocos.0') ? ($participante->situacao_cadastral ?? '—') : ($participante->situacao_cadastral ?? '—') }}</td></tr>
+                <td class="k">Situação</td><td>{{ $participante->situacao_cadastral ?? '—' }}</td></tr>
             <tr><td class="k">CNPJ</td><td class="mono">{{ $participante->documento }}</td>
                 <td class="k">UF</td><td>{{ $participante->uf ?: '—' }}</td></tr>
         </table>
@@ -33,7 +33,7 @@
             <td>
                 <div class="kpi"><table><tr>
                     <td><div class="lbl">Score Fiscal</div><div class="val" style="color: {{ $scoreHex }}">{{ $score['score_total'] }}</div></td>
-                    <td><div class="lbl">Classificação</div><div class="val">{{ ucfirst($score['classificacao']) }}</div></td>
+                    <td><div class="lbl">Classificação</div><div class="val">{{ ucfirst($score['classificacao'] ?? 'medio') }}</div></td>
                 </tr></table></div>
                 <div class="score-bar" style="margin-top:4px;"><div style="background-color:{{ $scoreHex }};width:{{ max(0,min(100,(int)$score['score_total'])) }}%;height:14px;"></div></div>
             </td>

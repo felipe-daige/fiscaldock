@@ -169,3 +169,21 @@ function montarLoteParticipante(): array
 
     return [$loteId, $participanteId, $user->id];
 }
+
+function criarNotaEfd(\App\Models\User $u, \App\Models\Participante $p, string $tipo, ?string $data, float $valor, bool $cancelada = false): \App\Models\EfdNota
+{
+    $cliente = \App\Models\Cliente::firstOrCreate(['user_id' => $u->id, 'documento' => '00000000000191'], ['razao_social' => 'Empresa Teste']);
+    $imp = \App\Models\EfdImportacao::firstOrCreate(['user_id' => $u->id, 'tipo_efd' => 'EFD ICMS/IPI'], []);
+    return \App\Models\EfdNota::create([
+        'user_id' => $u->id, 'cliente_id' => $cliente->id, 'importacao_id' => $imp->id,
+        'participante_id' => $p->id, 'modelo' => '55', 'numero' => (string) random_int(1, 9999999),
+        'tipo_operacao' => $tipo, 'valor_total' => $valor, 'data_emissao' => $data, 'cancelada' => $cancelada,
+    ]);
+}
+
+function criarItemEfd(\App\Models\EfdNota $n, array $attrs): \App\Models\EfdNotaItem
+{
+    return \App\Models\EfdNotaItem::create(array_merge([
+        'efd_nota_id' => $n->id, 'user_id' => $n->user_id, 'numero_item' => 1, 'codigo_item' => 'COD' . random_int(1, 9999),
+    ], $attrs));
+}

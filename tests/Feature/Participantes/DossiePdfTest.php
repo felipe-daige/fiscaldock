@@ -12,18 +12,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-function criarNotaEfd(User $u, Participante $p, string $tipo, ?string $data, float $valor, bool $cancelada = false): EfdNota
-{
-    $cliente = Cliente::firstOrCreate(['user_id' => $u->id, 'documento' => '00000000000191'], ['razao_social' => 'Empresa Teste']);
-    $imp = EfdImportacao::firstOrCreate(['user_id' => $u->id, 'tipo_efd' => 'EFD ICMS/IPI'], []);
-
-    return EfdNota::create([
-        'user_id' => $u->id, 'cliente_id' => $cliente->id, 'importacao_id' => $imp->id,
-        'participante_id' => $p->id, 'modelo' => '55', 'numero' => (string) random_int(1, 9999999),
-        'tipo_operacao' => $tipo, 'valor_total' => $valor, 'data_emissao' => $data, 'cancelada' => $cancelada,
-    ]);
-}
-
 beforeEach(function () {
     $this->user = User::factory()->trialAtivo()->create();
     $this->p = Participante::create(['user_id' => $this->user->id, 'documento' => '07863768000138', 'razao_social' => 'ACME DOSSIE LTDA', 'uf' => 'SP', 'crt' => '3']);
@@ -59,5 +47,7 @@ it('a view do dossie renderiza secoes de consulta e movimentacao', function () {
     $html = view('reports.dossie.participante', $dados)->render();
     expect($html)->toContain('ACME DOSSIE LTDA')
         ->and($html)->toContain('Movimentações')
-        ->and($html)->toContain('Regularidade');
+        ->and($html)->toContain('Regularidade')
+        ->and($html)->toContain('Infográficos')
+        ->and($html)->toContain('Detalhamento');
 });
