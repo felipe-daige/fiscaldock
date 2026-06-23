@@ -13,7 +13,6 @@
     $accountStatusLabel = 'Ativo';
     $accountStatusHex = '#047857';
     $memberSince = $user->created_at ? $user->created_at->format('d/m/Y') : '—';
-    $creditAmount = number_format($user->credits ?? 0, 0, ',', '.');
 @endphp
 
 <div class="min-h-screen bg-gray-100">
@@ -21,7 +20,7 @@
 
         <div>
             <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Perfil</h1>
-            <p class="text-xs text-gray-500 mt-1">Informações pessoais, créditos e status da conta.</p>
+            <p class="text-xs text-gray-500 mt-1">Informações pessoais, saldo e status da conta.</p>
         </div>
 
         <div class="bg-white rounded border border-gray-300 overflow-hidden">
@@ -61,15 +60,14 @@
 
         <div class="bg-white rounded border border-gray-300 overflow-hidden">
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Créditos</span>
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Saldo</span>
             </div>
             <div class="p-6 text-center space-y-2">
                 <p class="text-sm text-gray-500">Saldo disponível</p>
-                <p class="text-4xl font-bold text-gray-900">{{ $creditAmount }}</p>
-                <p class="text-[11px] text-gray-500">créditos</p>
+                <p class="text-4xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($user->credits ?? 0))</p>
                 <div class="mt-4">
                     <a href="/app/creditos" data-link class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded" style="background-color: #1f2937">
-                        Comprar créditos
+                        Adicionar saldo
                     </a>
                 </div>
             </div>

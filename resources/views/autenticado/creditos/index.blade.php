@@ -12,7 +12,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6">
 
         <div>
-            <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Comprar créditos</h1>
+            <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Adicionar saldo</h1>
             <p class="text-xs text-gray-500 mt-1">Escolha quanto quer depositar, acompanhe sua faixa atual e use as ofertas promocionais como atalho.</p>
         </div>
 
@@ -21,7 +21,7 @@
                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Status do trial</p>
                 @if($trialResumo['is_active'] ?? false)
                     <p class="mt-2 text-sm text-gray-700">
-                        Trial ativo: {{ number_format($trialResumo['remaining'] ?? 0, 0, ',', '.') }} créditos promocionais restantes até {{ optional($trialResumo['expires_at'])->format('d/m/Y H:i') }}.
+                        Trial ativo: @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($trialResumo['remaining'] ?? 0)) em saldo promocional até {{ optional($trialResumo['expires_at'])->format('d/m/Y H:i') }}.
                     </p>
                 @else
                     <p class="mt-2 text-sm text-gray-700">
@@ -35,23 +35,23 @@
             <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-200">
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Saldo atual</p>
-                    <p class="text-lg sm:text-xl font-bold text-gray-900">{{ number_format($saldoAtual, 0, ',', '.') }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">créditos</p>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($saldoAtual))</p>
+                    <p class="text-[11px] text-gray-500 mt-1">disponível</p>
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Total recebido</p>
-                    <p class="text-lg sm:text-xl font-bold text-gray-900">{{ number_format($totalRecebido, 0, ',', '.') }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">créditos</p>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($totalRecebido))</p>
+                    <p class="text-[11px] text-gray-500 mt-1">adicionado</p>
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Total consumido</p>
-                    <p class="text-lg sm:text-xl font-bold text-gray-900">{{ number_format($totalConsumido, 0, ',', '.') }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">créditos</p>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($totalConsumido))</p>
+                    <p class="text-[11px] text-gray-500 mt-1">consumido</p>
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Última entrada</p>
                     @if($ultimaEntrada)
-                        <p class="text-lg sm:text-xl font-bold text-gray-900">+{{ number_format($ultimaEntrada->amount, 0, ',', '.') }}</p>
+                        <p class="text-lg sm:text-xl font-bold text-gray-900">+@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $ultimaEntrada->amount))</p>
                         <p class="text-[11px] text-gray-500 mt-1">{{ $ultimaEntrada->created_at->format('d/m/Y') }}</p>
                     @else
                         <p class="text-lg sm:text-xl font-bold text-gray-900">--</p>
@@ -66,10 +66,10 @@
             <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Faixa</span>
             <span class="font-semibold text-gray-900">{{ $pricing['current_tier']['nome'] ?? 'Base' }}</span>
             <span class="text-gray-300">·</span>
-            <span>pago {{ number_format($pricing['paid_credits'] ?? 0, 0, ',', '.') }} cr</span>
+            <span>pago @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($pricing['paid_credits'] ?? 0)))</span>
             <span class="text-gray-300">·</span>
             @if($pricing['next_tier'])
-                <span>próxima <span class="font-medium text-gray-700">{{ $pricing['next_tier']['nome'] }}</span> (faltam {{ number_format($pricing['credits_remaining'], 0, ',', '.') }} cr)</span>
+                <span>próxima <span class="font-medium text-gray-700">{{ $pricing['next_tier']['nome'] }}</span> (faltam @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($pricing['credits_remaining'] ?? 0))))</span>
             @else
                 <span>melhor condição comercial</span>
             @endif
@@ -84,7 +84,7 @@
                 <div class="p-4 sm:p-6 space-y-4">
                     <div>
                         <p class="text-sm font-semibold text-gray-900">Deposite o valor que fizer sentido agora</p>
-                        <p class="text-sm text-gray-600 mt-1">Mínimo de R$ {{ number_format($pricing['minimum_deposit'] ?? 100, 0, ',', '.') }}. Os créditos entram como saldo pré-pago e o histórico comprado continua contando para a sua faixa.</p>
+                        <p class="text-sm text-gray-600 mt-1">Mínimo de R$ {{ number_format($pricing['minimum_deposit'] ?? 100, 0, ',', '.') }}. O valor entra como saldo pré-pago e o histórico comprado continua contando para a sua faixa.</p>
                     </div>
                     <form method="GET" action="/app/checkout/custom" class="space-y-3">
                         <div>
@@ -104,7 +104,7 @@
                             @if($errors->has('amount'))
                                 <p class="mt-2 text-xs text-red-600">{{ $errors->first('amount') }}</p>
                             @else
-                                <p class="mt-2 text-[11px] text-gray-500">Exemplo: R$ 200 libera {{ number_format((int) round(200 / ($pricing['credit_unit_price'] ?? 0.20)), 0, ',', '.') }} créditos.</p>
+                                <p class="mt-2 text-[11px] text-gray-500">Exemplo: R$ 200 adicionam R$ 200,00 ao seu saldo.</p>
                             @endif
                         </div>
                         <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-3 text-sm font-semibold text-white rounded" style="background-color: #1f2937">
@@ -130,9 +130,8 @@
                                     </div>
                                     <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ !empty($pacote['featured']) ? '#0f766e' : '#374151' }}">{{ $pacote['badge'] ?? 'Oferta' }}</span>
                                 </div>
-                                <p class="text-[11px] text-gray-400">{{ number_format($pacote['creditos'], 0, ',', '.') }} créditos</p>
-                                <p class="text-2xl font-bold text-gray-900">R$ {{ number_format($pacote['preco'], 0, ',', '.') }}</p>
-                                <p class="text-[11px] text-gray-500">{{ $pacote['descricao'] ?? 'Créditos pré-pagos para uso conforme a necessidade.' }}</p>
+                                <p class="text-2xl font-bold text-gray-900">@brl($pacote['preco'])</p>
+                                <p class="text-[11px] text-gray-500">{{ $pacote['descricao'] ?? 'Saldo pré-pago para uso conforme a necessidade.' }}</p>
                             </div>
                             <div class="px-4 py-4 border-t border-gray-100 mt-auto">
                                 <a href="/app/checkout/{{ $pacote['slug'] }}" data-link class="w-full inline-flex items-center justify-center px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-white rounded" style="background-color: #1f2937">Usar oferta</a>
@@ -153,9 +152,9 @@
                     {{-- Estado ativo: auto top-up por saldo baixo --}}
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <div class="text-sm text-gray-700">
-                            Recompra de <span class="font-semibold">{{ number_format($recargaAtual->creditos, 0, ',', '.') }} créditos</span>
-                            (R$ {{ number_format($recargaAtual->valor, 2, ',', '.') }}) quando o saldo fica abaixo de
-                            <span class="font-semibold">{{ number_format($recargaAtual->limite_creditos, 0, ',', '.') }} créditos</span>.
+                            Recompra de <span class="font-semibold">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $recargaAtual->creditos))</span>
+                            quando o saldo cai abaixo de
+                            <span class="font-semibold">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $recargaAtual->limite_creditos))</span>.
                             @if($recargaAtual->status === 'inadimplente')
                                 <span class="ml-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">Pausada</span>
                             @else
@@ -174,8 +173,7 @@
                     {{-- Estado ativo: recarga por tempo (mensal) --}}
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <div class="text-sm text-gray-700">
-                            Recompra de <span class="font-semibold">{{ number_format($recargaAtual->creditos, 0, ',', '.') }} créditos</span>
-                            (R$ {{ number_format($recargaAtual->valor, 2, ',', '.') }}) todo mês.
+                            Recompra de <span class="font-semibold">@brl($recargaAtual->valor)</span> todo mês.
                             @if($recargaAtual->status === 'inadimplente')
                                 <span class="ml-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">Pagamento pendente</span>
                             @else
@@ -186,13 +184,13 @@
                     </div>
                 @else
                     {{-- Sem recarga: oferece os DOIS gatilhos (exclusivos — ativar um cancela o outro) --}}
-                    <p class="text-sm text-gray-700 mb-3">Cobre um pacote de créditos automaticamente todo mês, sem precisar lembrar. Cancele quando quiser.</p>
+                    <p class="text-sm text-gray-700 mb-3">Adiciona saldo automaticamente todo mês, sem precisar lembrar. Cancele quando quiser.</p>
                     <div class="flex flex-wrap items-end gap-3">
                         <div>
                             <label for="recarga-pacote" class="block text-[11px] text-gray-500 mb-1">Pacote mensal</label>
                             <select id="recarga-pacote" class="text-[13px] py-2.5 px-3 border border-gray-300 rounded bg-white">
                                 @foreach(($pricing['featured_offers'] ?? []) as $pac)
-                                    <option value="{{ $pac['slug'] }}" data-valor="{{ $pac['preco'] }}">{{ $pac['nome'] }} — {{ number_format($pac['creditos'], 0, ',', '.') }} cr / R$ {{ number_format($pac['preco'], 0, ',', '.') }}/mês</option>
+                                    <option value="{{ $pac['slug'] }}" data-valor="{{ $pac['preco'] }}">{{ $pac['nome'] }} — R$ {{ number_format($pac['preco'], 0, ',', '.') }}/mês</option>
                                 @endforeach
                             </select>
                         </div>
@@ -207,7 +205,7 @@
 
         <div class="bg-white rounded border border-gray-300 overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Histórico de créditos</span>
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Histórico de transações</span>
                 <a href="/app/faixa-comercial" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Ver consumo detalhado</a>
             </div>
             @if($historicoCreditos->count() > 0)
@@ -218,7 +216,7 @@
                                 <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Data</th>
                                 <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Tipo</th>
                                 <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Descrição</th>
-                                <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Créditos</th>
+                                <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Valor (R$)</th>
                                 <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Saldo após</th>
                             </tr>
                         </thead>
@@ -235,8 +233,8 @@
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badge['hex'] }}">{{ $badge['label'] }}</span>
                                     </td>
                                     <td class="px-3 py-2.5 text-sm text-gray-600">{{ $tx->description ?? '-' }}</td>
-                                    <td class="px-3 py-2.5 text-sm text-right font-semibold {{ $amountClass }}">{{ $amountPrefix }}{{ number_format($tx->amount, 0, ',', '.') }}</td>
-                                    <td class="px-3 py-2.5 text-sm text-right text-gray-500">{{ $tx->balance_after !== null ? number_format($tx->balance_after, 0, ',', '.') : '-' }}</td>
+                                    <td class="px-3 py-2.5 text-sm text-right font-semibold {{ $amountClass }}">{{ $amountPrefix }}@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) abs($tx->amount)))</td>
+                                    <td class="px-3 py-2.5 text-sm text-right text-gray-500">{{ $tx->balance_after !== null ? 'R$ '.number_format(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $tx->balance_after), 2, ',', '.') : '-' }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -244,14 +242,14 @@
                 </div>
             @else
                 <div class="p-6 text-center text-sm text-gray-500 space-y-2">
-                    <p>Nenhuma movimentação de créditos ainda.</p>
+                    <p>Nenhuma movimentação ainda.</p>
                     <p class="text-xs text-gray-400">Crie saldo com o trial, faça uma recarga livre ou use uma das ofertas promocionais.</p>
                 </div>
             @endif
         </div>
 
         <p class="text-[11px] text-gray-500 text-center pt-1">
-            Créditos pagos não expiram; o bônus do trial expira em {{ config('trial.validade_dias') }} dias. Prefere mensalidade? <a href="/app/planos" data-link class="underline hover:text-gray-700">Ver planos</a>.
+            Saldo pago não expira; o bônus do trial expira em {{ config('trial.validade_dias') }} dias. Prefere mensalidade? <a href="/app/planos" data-link class="underline hover:text-gray-700">Ver planos</a>.
         </p>
 
     </div>

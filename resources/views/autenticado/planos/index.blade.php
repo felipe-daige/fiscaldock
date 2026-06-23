@@ -15,7 +15,7 @@
 
         <div>
             <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Planos de assinatura</h1>
-            <p class="text-xs text-gray-500 mt-1">Mensalidade com créditos inclusos, limites de carteira e features premium. Os créditos inclusos cobrem o monitoramento automático do plano.</p>
+            <p class="text-xs text-gray-500 mt-1">Mensalidade com saldo incluso, limites de uso e features premium. O saldo incluso cobre o monitoramento automático do plano.</p>
         </div>
 
         {{-- Minha assinatura (quando ativa/inadimplente) --}}
@@ -64,7 +64,7 @@
                     $retencao = ($caps['retencao_meses'] ?? null) === null ? 'ilimitada' : ($caps['retencao_meses'].' meses');
 
                     $features = [];
-                    $features[] = [$plano->creditos_inclusos > 0, number_format($plano->creditos_inclusos, 0, ',', '.').' créditos inclusos/mês', $isEnterprise ? 'Créditos sob medida' : 'Sem créditos inclusos'];
+                    $features[] = [$plano->creditos_inclusos > 0, \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $plano->creditos_inclusos)).' em saldo/mês', $isEnterprise ? 'Saldo sob medida' : 'Sem saldo incluso'];
                     $features[] = [true, ($plano->limite_clientes === null ? 'Clientes ilimitados' : $plano->limite_clientes.' clientes monitorados'), null];
                     $features[] = [true, ($plano->limite_cnpjs_monitorados === null ? 'CNPJs ilimitados' : $plano->limite_cnpjs_monitorados.' CNPJs monitorados'), null];
                     $features[] = [true, 'Auto-monitor: '.($profundidadeMap[$plano->profundidade_auto_monitor] ?? $plano->profundidade_auto_monitor).' / '.($frequenciaMap[$plano->frequencia_padrao_dias] ?? $plano->frequencia_padrao_dias.'d'), null];
@@ -141,8 +141,8 @@
         {{-- Rodapé: como o crédito e a faixa se relacionam --}}
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="bg-white rounded border border-gray-300 p-4 space-y-1">
-                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Crédito</p>
-                <p class="text-sm text-gray-700">1 crédito = R$ {{ number_format($creditUnitPrice ?? 0.20, 2, ',', '.') }} (fixo). Os planos incluem créditos por mês; estourou, compra avulsa na sua faixa.</p>
+                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saldo</p>
+                <p class="text-sm text-gray-700">Saldo pré-pago a R$ {{ number_format($creditUnitPrice ?? 0.20, 2, ',', '.') }}/unidade (fixo). Os planos incluem saldo por mês; estourou, compra avulsa na sua faixa.</p>
             </div>
             <div class="bg-white rounded border border-gray-300 p-4 space-y-1">
                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Faixa de desconto</p>
@@ -150,7 +150,7 @@
             </div>
             <div class="bg-white rounded border border-gray-300 p-4 space-y-1">
                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Avulso</p>
-                <p class="text-sm text-gray-700">Sem assinatura? <a href="/app/creditos" data-link class="text-gray-900 underline hover:text-gray-600">Compre créditos avulsos</a> e use quando precisar.</p>
+                <p class="text-sm text-gray-700">Sem assinatura? <a href="/app/creditos" data-link class="text-gray-900 underline hover:text-gray-600">Adicione saldo avulso</a> e use quando precisar.</p>
             </div>
         </div>
 

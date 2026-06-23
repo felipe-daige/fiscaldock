@@ -6,14 +6,14 @@
     </p>
     <div class="flex flex-wrap items-end gap-3">
         <div>
-            <label for="recarga-saldo-limite" class="block text-[11px] text-gray-500 mb-1">Recarregar quando o saldo for menor que (créditos)</label>
+            <label for="recarga-saldo-limite" class="block text-[11px] text-gray-500 mb-1">Recarregar quando o saldo (em R$) for menor que</label>
             <input id="recarga-saldo-limite" type="number" min="1" value="50" class="text-[13px] py-2.5 px-3 border border-gray-300 rounded bg-white w-44" />
         </div>
         <div>
             <label for="recarga-saldo-pacote" class="block text-[11px] text-gray-500 mb-1">Pacote a recomprar</label>
             <select id="recarga-saldo-pacote" class="text-[13px] py-2.5 px-3 border border-gray-300 rounded bg-white">
                 @foreach(($pricing['featured_offers'] ?? []) as $pac)
-                    <option value="{{ $pac['slug'] }}" data-valor="{{ $pac['preco'] }}">{{ $pac['nome'] }} — {{ number_format($pac['creditos'], 0, ',', '.') }} cr / R$ {{ number_format($pac['preco'], 0, ',', '.') }}</option>
+                    <option value="{{ $pac['slug'] }}" data-valor="{{ $pac['preco'] }}">{{ $pac['nome'] }} — R$ {{ number_format($pac['preco'], 0, ',', '.') }}</option>
                 @endforeach
             </select>
         </div>

@@ -209,7 +209,7 @@
                 <div class="p-3">
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] font-bold uppercase" style="letter-spacing:.06em;">Trial ativo</span>
-                        <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded" style="background-color:rgba(255,255,255,.14); color:#eff6ff;">{{ number_format($__creditos, 0, ',', '.') }} créditos</span>
+                        <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded" style="background-color:rgba(255,255,255,.14); color:#eff6ff;">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($__creditos))</span>
                     </div>
                     <div class="flex items-baseline gap-1.5 mt-2.5">
                         <span class="text-[22px] font-bold leading-none">{{ $__dias }}</span>
@@ -262,7 +262,7 @@
                         <svg class="sidebar__user-menu-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"></path>
                         </svg>
-                        <span class="sidebar__item-label">Créditos</span>
+                        <span class="sidebar__item-label">Saldo</span>
                     </a>
                     <a href="/app/configuracoes" data-link data-sidebar-user-link class="sidebar__user-menu-item">
                         <svg class="sidebar__user-menu-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">

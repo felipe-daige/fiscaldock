@@ -3,21 +3,21 @@
 
         <div>
             <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Faixa Comercial</h1>
-            <p class="text-xs text-gray-500 mt-1">Sua faixa de desconto nas consultas. Suba comprando créditos ou assinando um plano — quanto mais alta a faixa, menos créditos cada consulta consome.</p>
+            <p class="text-xs text-gray-500 mt-1">Sua faixa de desconto nas consultas. Suba adicionando saldo ou assinando um plano — quanto mais alta a faixa, menor o custo por consulta.</p>
         </div>
 
         @if(($trialResumo['is_active'] ?? false) || ($trialResumo['is_expired'] ?? false))
             <div class="bg-white rounded border border-gray-300 p-4 border-l-4 {{ ($trialResumo['is_active'] ?? false) ? 'border-l-blue-500' : 'border-l-amber-500' }}">
-                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Créditos promocionais</p>
+                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saldo promocional</p>
                 @if($trialResumo['is_active'] ?? false)
                     <p class="mt-2 text-sm text-gray-700">
-                        Você recebeu {{ number_format($trialResumo['granted'] ?? 0, 0, ',', '.') }} créditos grátis.
-                        Restam {{ number_format($trialResumo['remaining'] ?? 0, 0, ',', '.') }} até {{ optional($trialResumo['expires_at'])->format('d/m/Y H:i') }}.
+                        Você recebeu @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($trialResumo['granted'] ?? 0))) em saldo grátis.
+                        Restam @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($trialResumo['remaining'] ?? 0))) até {{ optional($trialResumo['expires_at'])->format('d/m/Y H:i') }}.
                     </p>
                 @else
                     <p class="mt-2 text-sm text-gray-700">
                         O trial expirou em {{ optional($trialResumo['expires_at'])->format('d/m/Y H:i') }}.
-                        Créditos comprados continuam válidos normalmente.
+                        Saldo pago continua válido normalmente.
                     </p>
                 @endif
             </div>
@@ -27,8 +27,8 @@
             <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-200">
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Saldo atual</p>
-                    <p class="text-lg sm:text-xl font-bold text-gray-900">{{ number_format($saldoAtual, 0, ',', '.') }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">créditos disponíveis</p>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($saldoAtual))</p>
+                    <p class="text-[11px] text-gray-500 mt-1">disponível</p>
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Faixa atual</p>
@@ -37,13 +37,13 @@
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Histórico pago</p>
-                    <p class="text-lg sm:text-xl font-bold text-gray-900">{{ number_format($pricing['paid_credits'] ?? 0, 0, ',', '.') }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">créditos comprados acumulados</p>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($pricing['paid_credits'] ?? 0)))</p>
+                    <p class="text-[11px] text-gray-500 mt-1">comprado acumulado</p>
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Usados no mês</p>
-                    <p class="text-lg sm:text-xl font-bold text-gray-900">{{ number_format($creditosUsadosMes, 0, ',', '.') }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">créditos consumidos</p>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($creditosUsadosMes))</p>
+                    <p class="text-[11px] text-gray-500 mt-1">consumido este mês</p>
                 </div>
             </div>
         </div>
@@ -60,10 +60,10 @@
                                 <div>
                                     <p class="text-sm font-semibold text-gray-900">{{ $pricing['current_tier']['nome'] }} → {{ $pricing['next_tier']['nome'] }}</p>
                                     <p class="text-xs text-gray-500 mt-1">
-                                        Faltam {{ number_format($pricing['credits_remaining'], 0, ',', '.') }} créditos pagos acumulados para destravar a próxima economia.
+                                        Faltam @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $pricing['credits_remaining'])) em compras acumuladas para destravar a próxima economia.
                                     </p>
                                 </div>
-                                <a href="/app/creditos" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Comprar créditos</a>
+                                <a href="/app/creditos" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Adicionar saldo</a>
                             </div>
                             <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
                                 <div class="h-3 rounded-full" style="width: {{ $pricing['progress_percent'] }}%; background-color: #1f2937"></div>
@@ -77,7 +77,7 @@
                 <div class="bg-white rounded border border-gray-300 overflow-hidden">
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Custo por consulta em cada faixa</span>
-                        <span class="text-[10px] text-gray-400">quanto mais alta a faixa, menos créditos por consulta</span>
+                        <span class="text-[10px] text-gray-400">quanto mais alta a faixa, menor o custo por consulta</span>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-sm">
@@ -104,8 +104,7 @@
                                                 $isAtual = $t['slug'] === ($pricing['current_tier']['slug'] ?? 'base');
                                             @endphp
                                             <td class="px-3 py-2.5 text-center {{ $isAtual ? 'bg-gray-50' : '' }}">
-                                                <span class="block {{ $isAtual ? 'font-bold text-gray-900' : 'text-gray-600' }}">{{ $cel['credits'] }} cr</span>
-                                                <span class="block text-[11px] text-gray-500">R$ {{ number_format($cel['price'], 2, ',', '.') }}</span>
+                                                <span class="block {{ $isAtual ? 'font-bold text-gray-900' : 'text-gray-600' }}">R$ {{ number_format($cel['price'], 2, ',', '.') }}</span>
                                                 @if($cel['desconto_percent'] > 0)
                                                     <span class="block text-[10px] font-semibold" style="color: #047857">−{{ $cel['desconto_percent'] }}%</span>
                                                 @endif
@@ -117,7 +116,7 @@
                         </table>
                     </div>
                     <div class="px-4 py-2.5 border-t border-gray-100 bg-gray-50">
-                        <p class="text-[11px] text-gray-500">Preço do crédito é fixo (R$ {{ number_format($pricing['credit_unit_price'] ?? 0.20, 2, ',', '.') }}). O que muda por faixa é <span class="font-semibold">quantos créditos cada consulta consome</span> — por isso faixas altas saem mais baratas.</p>
+                        <p class="text-[11px] text-gray-500">Preço unitário fixo em R$ {{ number_format($pricing['credit_unit_price'] ?? 0.20, 2, ',', '.') }}. O que muda por faixa é <span class="font-semibold">o custo em R$ de cada consulta</span> — por isso faixas altas saem mais baratas.</p>
                     </div>
                 </div>
 
@@ -135,7 +134,7 @@
                                         <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Execução</th>
                                         <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Produto</th>
                                         <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participantes</th>
-                                        <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Créditos</th>
+                                        <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Custo (R$)</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100">
@@ -165,9 +164,9 @@
                                             <td class="px-3 py-2.5 text-sm text-gray-700 text-center">{{ $tx->total_participantes ?? '-' }}</td>
                                             <td class="px-3 py-2.5 text-sm font-semibold text-right {{ $tx->creditos_cobrados > 0 ? 'text-red-600' : 'text-gray-400' }}">
                                                 @if($tx->creditos_cobrados > 0)
-                                                    -{{ $tx->creditos_cobrados }}
+                                                    −@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $tx->creditos_cobrados))
                                                 @else
-                                                    0
+                                                    —
                                                 @endif
                                             </td>
                                         </tr>
@@ -221,11 +220,11 @@
                     <div class="p-6 space-y-4 text-sm text-gray-700">
                         <div class="flex items-start gap-3">
                             <span class="text-[10px] font-bold uppercase tracking-wide text-white rounded px-2 py-0.5" style="background-color: #374151">1</span>
-                            <p>A faixa é um <span class="font-semibold">desconto comercial</span> (Base → X → Y → Z). Quanto mais alta, <span class="font-semibold">menos créditos cada consulta consome</span> — o preço do crédito (R$ {{ number_format($pricing['credit_unit_price'] ?? 0.20, 2, ',', '.') }}) nunca muda.</p>
+                            <p>A faixa é um <span class="font-semibold">desconto comercial</span> (Base → X → Y → Z). Quanto mais alta, <span class="font-semibold">menor o custo por consulta</span> — o preço unitário (R$ {{ number_format($pricing['credit_unit_price'] ?? 0.20, 2, ',', '.') }}/cr) nunca muda.</p>
                         </div>
                         <div class="flex items-start gap-3">
                             <span class="text-[10px] font-bold uppercase tracking-wide text-white rounded px-2 py-0.5" style="background-color: #374151">2</span>
-                            <p><span class="font-semibold">Caminho 1 — comprando:</span> seu histórico de créditos <span class="font-semibold">pagos</span> acumulados sobe a faixa (X a partir de 1.000, Y de 5.000, Z de 20.000). Créditos de trial/bônus não contam.</p>
+                            <p><span class="font-semibold">Caminho 1 — comprando:</span> seu histórico de compras <span class="font-semibold">pagas</span> acumuladas sobe a faixa (X a partir de R$ 200, Y de R$ 1.000, Z de R$ 4.000). Bônus de trial não contam.</p>
                         </div>
                         <div class="flex items-start gap-3">
                             <span class="text-[10px] font-bold uppercase tracking-wide text-white rounded px-2 py-0.5" style="background-color: #374151">3</span>
@@ -233,7 +232,7 @@
                         </div>
                         <div class="flex items-start gap-3">
                             <span class="text-[10px] font-bold uppercase tracking-wide text-white rounded px-2 py-0.5" style="background-color: #374151">4</span>
-                            <p>Créditos comprados não expiram; créditos promocionais do trial expiram ao fim do período informado.</p>
+                            <p>Saldo pago não expira; saldo promocional do trial expira ao fim do período informado.</p>
                         </div>
                     </div>
                 </div>
@@ -251,8 +250,7 @@
                                         <p class="text-[11px] text-gray-400 mt-0.5">{{ $pacote['usage_hint'] ?? '' }}</p>
                                     </div>
                                     <div class="text-right">
-                                        <p class="text-sm font-bold text-gray-900">R$ {{ number_format($pacote['preco'], 0, ',', '.') }}</p>
-                                        <p class="text-[11px] text-gray-500">{{ number_format($pacote['creditos'], 0, ',', '.') }} créditos</p>
+                                        <p class="text-sm font-bold text-gray-900">@brl($pacote['preco'])</p>
                                     </div>
                                 </div>
                             </a>
