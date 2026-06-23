@@ -316,6 +316,23 @@ class BiController extends Controller
         return CsvExport::download($filename, $ds['colunas'], $ds['linhas']);
     }
 
+    public function exportarXlsx(Request $request)
+    {
+        if (! Auth::check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        if (! \App\Support\Reports\XlsxReport::disponivel()) {
+            abort(503, 'Exportação XLSX indisponível');
+        }
+
+        $rel = $this->biExport->relatorioCompleto(
+            Auth::id(), $request->get('data_inicio'), $request->get('data_fim'), $request->get('cliente_id')
+        );
+        $filename = 'bi-fiscal-'.now()->format('Ymd').'.xlsx';
+
+        return app(\App\Services\Bi\Export\BiXlsxBuilder::class)->download($rel, $filename);
+    }
+
     /**
      * Resumo geral (para AJAX).
      */

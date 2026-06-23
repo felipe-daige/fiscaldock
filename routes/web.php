@@ -276,6 +276,8 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         Route::get('/cfop', [BiController::class, 'cfop'])->name('cfop');
         Route::get('/exportar', [BiController::class, 'exportar'])
             ->middleware(RequiresEntitlement::class.':export')->name('exportar');
+        Route::get('/exportar-xlsx', [BiController::class, 'exportarXlsx'])
+            ->middleware(RequiresEntitlement::class.':export')->name('exportar-xlsx');
         Route::get('/catalogo-itens', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'index'])->name('catalogo-itens');
         Route::get('/catalogo-itens/exportar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'exportarCsv'])
             ->middleware(RequiresEntitlement::class.':export')->name('catalogo-itens.exportar');

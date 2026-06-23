@@ -11,7 +11,7 @@ uses(RefreshDatabase::class);
 
 function semearBiExport(): array
 {
-    $user = User::factory()->create();
+    $user = User::factory()->trialAtivo()->create();
     $cli = DB::table('clientes')->insertGetId([
         'user_id' => $user->id, 'documento' => '00000000000191', 'razao_social' => 'Empresa Teste',
         'is_empresa_propria' => true, 'created_at' => now(), 'updated_at' => now(),
@@ -66,4 +66,19 @@ it('relatorioCompleto respeita o filtro de periodo', function () {
     $rel = app(BiExportService::class)->relatorioCompleto($uid, '2024-01-01', '2024-01-31', null);
     // faturamento mensal só de jan: 1 linha
     expect(count($rel['secoes']['faturamento']['linhas']))->toBe(1);
+});
+
+use App\Support\Reports\XlsxReport;
+
+it('GET /app/bi/exportar-xlsx baixa um xlsx', function () {
+    if (! XlsxReport::disponivel()) {
+        $this->markTestSkipped('openspout indisponível neste ambiente');
+    }
+    [$uid] = semearBiExport();
+
+    $resp = $this->actingAs(User::find($uid))->get('/app/bi/exportar-xlsx');
+
+    $resp->assertOk();
+    expect($resp->headers->get('content-type'))
+        ->toContain('spreadsheetml.sheet');
 });
