@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\Cliente;
 use App\Models\EfdImportacao;
 use App\Models\EfdNota;
@@ -7,6 +8,8 @@ use App\Models\EfdNotaItem;
 use App\Models\Participante;
 use App\Models\User;
 use App\Services\Participantes\ParticipanteMovimentacaoService;
+
+uses(RefreshDatabase::class);
 
 // helpers criarNotaEfd / criarItemEfd
 

@@ -1,11 +1,14 @@
 <?php
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\ConsultaLote;
 use App\Models\ConsultaResultado;
 use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\User;
 use App\Services\Participantes\DossieParticipanteBuilder;
+
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->builder = app(DossieParticipanteBuilder::class);
@@ -52,5 +55,7 @@ it('inclui dados da ultima consulta sucesso quando existe', function () {
     $d = $this->builder->montar($this->p);
 
     expect($d['consulta']['tem'])->toBeTrue()
-        ->and($d['consulta']['blocos'])->not->toBeEmpty();
+        ->and($d['consulta']['blocos'])->not->toBeEmpty()
+        ->and($d['score'])->toHaveKeys(['score_total', 'classificacao', 'scores'])
+        ->and($d['consulta']['consultado_em'])->not->toBeNull();
 });
