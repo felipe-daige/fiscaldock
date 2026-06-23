@@ -90,6 +90,11 @@ final class ConsultaXlsxBuilder
     public function download(array $dados, array $colunas, array $linhas, string $filename): BinaryFileResponse
     {
         $tmp = tempnam(sys_get_temp_dir(), 'xlsxrep');
+
+        if ($tmp === false) {
+            throw new \RuntimeException('Falha ao criar arquivo temporário para o XLSX.');
+        }
+
         $this->gerarArquivo($dados, $colunas, $linhas, $tmp);
 
         return response()->download($tmp, $filename, [
