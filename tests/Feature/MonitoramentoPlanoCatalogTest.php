@@ -12,9 +12,27 @@ use function Pest\Laravel\actingAs;
 
 uses(RefreshDatabase::class);
 
+use App\Support\Monitoramento\PlanoCatalog;
+
 beforeEach(function () {
     config()->set('services.api.token', 'token-cnpj-teste');
     config()->set('services.webhook.consultas_cnpj_url', 'https://n8n.test/webhook/consultas-cnpj');
+});
+
+it('4 planos lineares com precos em credito', function () {
+    $b = collect(PlanoCatalog::definitions())->keyBy('codigo');
+    expect($b['gratuito']['custo_creditos'])->toBe(0);
+    expect($b['validacao']['custo_creditos'])->toBe(15);
+    expect($b['licitacao']['custo_creditos'])->toBe(50);
+    expect($b['compliance']['custo_creditos'])->toBe(100);
+    expect($b['due_diligence']['is_active'])->toBeFalse();
+});
+
+it('licitacao = 3 federais; compliance = 6 fontes sem sancoes', function () {
+    $b = collect(PlanoCatalog::definitions())->keyBy('codigo');
+    expect($b['licitacao']['consultas_incluidas'])->toContain('cnd_federal', 'crf_fgts', 'cndt');
+    expect($b['compliance']['consultas_incluidas'])->toContain('cnd_federal', 'crf_fgts', 'cndt', 'cnd_estadual', 'cnd_municipal', 'sintegra');
+    expect($b['compliance']['consultas_incluidas'])->not->toContain('cgu_cnc', 'cnj_improbidade');
 });
 
 it('migrations sobem os planos com o catalogo atual', function () {
@@ -36,16 +54,15 @@ it('migrations sobem os planos com o catalogo atual', function () {
     ]);
 
     expect($compliance)->not->toBeNull();
-    expect($compliance->custo_creditos)->toBe(18);
+    expect($compliance->custo_creditos)->toBe(100);
     expect($compliance->is_active)->toBeTrue();
 
     expect($dueDiligence)->not->toBeNull();
-    expect($dueDiligence->custo_creditos)->toBe(35);
-    expect($dueDiligence->is_active)->toBeTrue();
+    expect($dueDiligence->is_active)->toBeFalse();
 
     expect(MonitoramentoPlano::ativos()->pluck('codigo')->all())
-        ->toContain('gratuito', 'validacao', 'licitacao', 'compliance', 'due_diligence')
-        ->not->toContain('enterprise');
+        ->toContain('gratuito', 'validacao', 'licitacao', 'compliance')
+        ->not->toContain('due_diligence', 'enterprise');
 });
 
 it('resolve definicao canonica quando o banco esta legado', function () {
@@ -86,7 +103,7 @@ it('resolve definicao canonica quando o banco esta legado', function () {
     expect($gratuito->ordem)->toBe(1);
 
     expect($compliance)->not->toBeNull();
-    expect($compliance->custo_creditos)->toBe(18);
+    expect($compliance->custo_creditos)->toBe(100);
     expect($compliance->is_active)->toBeTrue();
     expect(MonitoramentoPlano::ativos()->pluck('codigo')->all())->toContain('compliance');
 });
