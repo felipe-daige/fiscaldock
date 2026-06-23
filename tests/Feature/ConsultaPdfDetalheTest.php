@@ -91,6 +91,8 @@ it('PDF da consulta estende o layout-mestre e colore o risco', function () {
     expect($html)->toContain('background-color:');
     // WIP comprovante preservado
     expect($html)->toContain('Detalhamento por CNPJ');
+    // nao duplica o brand block do layout antigo
+    expect($html)->not->toContain('Identificação do Relatório');
 });
 
 it('view PDF renderiza detalhamento completo com links de comprovante clicaveis', function () {

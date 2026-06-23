@@ -10,18 +10,6 @@
 @push('estilos')
 <style>
     .muted { color: #6b7280; }
-    .meta-label {
-        font-size: 8px;
-        color: #9ca3af;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-        margin-bottom: 3px;
-    }
-    .meta-value {
-        font-size: 11px;
-        font-weight: bold;
-        color: #111827;
-    }
     .table th {
         background: #f9fafb;
         border-bottom: 1px solid #d1d5db;
