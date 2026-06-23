@@ -322,30 +322,24 @@ class PricingCatalogService
         $products = array_map(function (array $product) {
             $plano = MonitoramentoPlano::where('codigo', $product['slug'])->first();
             $credits = $plano ? (int) $plano->custo_creditos : 0;
+            $price = $this->creditsToCurrency($credits);
 
             return [
                 'slug' => $product['slug'],
                 'nome' => $product['nome'],
                 'descricao' => $product['descricao'],
-                'credits' => $credits,
-                'price' => $this->creditsToCurrency($credits),
-                // shim: views legadas iteram $product['rows'] — empty loop é safe
-                'rows' => [],
-                'by_tier' => [],
-                'entry_price_label' => 'A partir de R$ '.number_format($this->creditsToCurrency($credits), 2, ',', '.').'/consulta',
-                'best_price_label' => 'A partir de R$ '.number_format($this->creditsToCurrency($credits), 2, ',', '.').'/consulta',
+                'price' => $price,
+                'price_label' => 'R$ '.number_format($price, 2, ',', '.').'/consulta',
+                'price_for_100' => $price * 100,
             ];
         }, $this->getProductCatalog());
 
         return [
-            'credit_unit_price' => $this->creditUnitPrice(),
             'minimum_deposit' => $this->getMinimumDeposit(),
             'featured_offers' => $featuredOffers,
             'packages' => $featuredOffers,
             'products' => $products,
             'compliance_sources' => $this->getComplianceSources(),
-            // shim: views legadas iteram $tiers — empty loop é safe
-            'tiers' => [],
         ];
     }
 
