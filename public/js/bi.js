@@ -93,6 +93,10 @@
 
         // Carregar dados da tab padrão; renderChart() já lida com retry interno se ApexCharts ainda não estiver pronto
         switchTab(defaultTab);
+
+        // Boot: preenche KPIs consolidados + avisos de cobertura (renderCobertura).
+        // Sem isto, o card/faixa de cobertura só apareceriam após mexer num filtro.
+        updateResumoKpis();
     }
 
     // Configura as tabs
