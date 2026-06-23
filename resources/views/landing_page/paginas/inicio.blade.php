@@ -1415,7 +1415,7 @@
                 Criar conta grátis
                 <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
             </a>
-            <p class="mt-3 text-xs text-gray-400">Sem mensalidade — pague apenas pelos créditos que usar</p>
+            <p class="mt-3 text-xs text-gray-400">Sem mensalidade — pague só pelas consultas que usar</p>
         </div>
     </div>
 </section>
@@ -1527,7 +1527,7 @@
                 <ul class="space-y-2.5 mb-4">
                     <li class="flex items-start text-sm text-gray-500 leading-relaxed">
                         <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" style="color: #047857;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        Créditos acessíveis com faixas de economia para consultas tributárias
+                        Preço fixo por consulta, sem mensalidade para consultas tributárias
                     </li>
                     <li class="flex items-start text-sm text-gray-500 leading-relaxed">
                         <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" style="color: #047857;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -1539,7 +1539,7 @@
                     </li>
                 </ul>
                 <div class="flex flex-wrap gap-2" style="margin-top: auto; padding-top: 1.25rem; border-top: 1px solid #e5e7eb;">
-                    <span class="text-[10px] font-medium uppercase tracking-wide text-gray-400 whitespace-nowrap" style="background-color: #f3f4f6; padding: 4px 10px; border-radius: 4px; display: inline-block;">Creditos</span>
+                    <span class="text-[10px] font-medium uppercase tracking-wide text-gray-400 whitespace-nowrap" style="background-color: #f3f4f6; padding: 4px 10px; border-radius: 4px; display: inline-block;">Saldo</span>
                     <span class="text-[10px] font-medium uppercase tracking-wide text-gray-400 whitespace-nowrap" style="background-color: #f3f4f6; padding: 4px 10px; border-radius: 4px; display: inline-block;">Simples</span>
                     <span class="text-[10px] font-medium uppercase tracking-wide text-gray-400 whitespace-nowrap" style="background-color: #f3f4f6; padding: 4px 10px; border-radius: 4px; display: inline-block;">Intuitivo</span>
                 </div>
@@ -1781,14 +1781,14 @@
 
             <div class="duvidas-item border border-gray-200 rounded-xl mb-3 transition-colors overflow-hidden hover:bg-gray-50/50">
                 <button class="duvidas-question w-full text-left px-5 py-4 text-sm font-bold text-gray-900 flex justify-between items-center">
-                    <span>Como funciona o sistema de créditos?</span>
+                    <span>Como funciona o saldo pré-pago?</span>
                     <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </button>
                 <div class="duvidas-answer hidden">
                     <div class="px-5 py-4 text-sm text-gray-600 border-t border-gray-100">
-                        Você compra créditos e usa conforme a necessidade. Cada tipo de consulta (CNPJ, CND, verificação de nota) consome uma quantidade específica de créditos. Sem mensalidade fixa e sem surpresas — pague só pelo que usar.
+                        Você adiciona saldo em reais e usa conforme a necessidade. Cada tipo de consulta (CNPJ, CND, verificação de nota) tem preço fixo por produto. Sem mensalidade fixa e sem surpresas — pague só pelo que usar.
                     </div>
                 </div>
             </div>
@@ -1823,14 +1823,14 @@
 
             <div class="duvidas-item border border-gray-200 rounded-xl mb-3 transition-colors overflow-hidden hover:bg-gray-50/50">
                 <button class="duvidas-question w-full text-left px-5 py-4 text-sm font-bold text-gray-900 flex justify-between items-center">
-                    <span>Posso testar antes de comprar créditos?</span>
+                    <span>Posso testar antes de adicionar saldo?</span>
                     <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </button>
                 <div class="duvidas-answer hidden">
                     <div class="px-5 py-4 text-sm text-gray-600 border-t border-gray-100">
-                        Sim. Oferecemos acesso gratuito para você conhecer a plataforma. Importe um SPED, veja os participantes extraídos, explore os dashboards — tudo sem custo. Quando decidir, compre créditos para ativar as consultas.
+                        Sim. Oferecemos acesso gratuito para você conhecer a plataforma. Importe um SPED, veja os participantes extraídos, explore os dashboards — tudo sem custo. Quando decidir, adicione saldo para ativar as consultas.
                     </div>
                 </div>
             </div>
