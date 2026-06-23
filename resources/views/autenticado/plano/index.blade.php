@@ -24,15 +24,10 @@
         @endif
 
         <div class="bg-white rounded border border-gray-300 overflow-hidden">
-            <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-200">
+            <div class="grid grid-cols-2 lg:grid-cols-3 divide-x divide-y lg:divide-y-0 divide-gray-200">
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Saldo atual</p>
                     <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($saldoAtual))</p>
-                    <p class="text-[11px] text-gray-500 mt-1">disponível</p>
-                </div>
-                <div class="p-4 sm:p-6">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Saldo atual</p>
-                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) (auth()->user()->credits ?? 0)))</p>
                     <p class="text-[11px] text-gray-500 mt-1">disponível para consultas</p>
                 </div>
                 <div class="p-4 sm:p-6">
