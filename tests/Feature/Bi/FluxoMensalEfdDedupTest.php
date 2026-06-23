@@ -72,7 +72,7 @@ it('getFluxoMensalEfd usa base dedup: não dobra NF-e nas 2 origens nem soma can
     $saidas = array_sum(array_column($fluxo, 'saidas'));
     $entradas = array_sum(array_column($fluxo, 'entradas'));
 
-    expect($saidas)->toBe(1000.0); // não 12799 (bruto) nem 2000
+    expect($saidas)->toBe(1000.0); // não 11999 (bruto: 1000+1000+9999) nem 2000
     expect($entradas)->toBe(700.0); // não 1400 (bruto)
 });
 

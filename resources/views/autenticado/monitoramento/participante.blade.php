@@ -873,7 +873,7 @@
                 </div>
 
                 {{-- Preview de Movimentações --}}
-                <div class="bg-white border border-gray-200 rounded-lg p-4 mt-4" data-spa-keep>
+                <div class="bg-white border border-gray-200 rounded-lg p-4 mt-4">
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="text-[13px] font-bold text-gray-700 uppercase tracking-wide">Movimentações</h3>
                         <a href="/app/participante/{{ $participante->id }}/dossie" target="_blank" rel="noopener"
@@ -1475,7 +1475,37 @@ const formCriarAssinatura = document.getElementById('form-criar-assinatura');
             }
         }
 
+        // Renderizar gráfico de movimentações inline (re-executa em cada swap SPA)
+        renderMovimentacaoChart();
+
         console.log('[Monitoramento Participante] Inicialização concluída');
+    }
+
+    function renderMovimentacaoChart() {
+        const el = document.getElementById('chart-mov-competencia');
+        const data = @json($movimentacao ?? null);
+        if (!el || !data || typeof ApexCharts === 'undefined') { return; }
+
+        window._chartMovParticipante && window._chartMovParticipante.destroy();
+
+        const comp = data.por_competencia || [];
+        const chart = new ApexCharts(el, {
+            chart: { type: 'bar', height: 220, toolbar: { show: false } },
+            series: [
+                { name: 'Entrada', data: comp.map((c) => Number(c.entrada)) },
+                { name: 'Saída', data: comp.map((c) => Number(c.saida)) },
+            ],
+            xaxis: { categories: comp.map((c) => c.competencia) },
+            colors: ['#047857', '#dc2626'],
+            plotOptions: { bar: { columnWidth: '55%' } },
+            dataLabels: { enabled: false },
+            legend: { position: 'top' },
+        });
+        chart.render();
+        window._chartMovParticipante = chart;
+
+        window._cleanupFunctions = window._cleanupFunctions || {};
+        window._cleanupFunctions.participanteMovimentacao = () => { chart.destroy(); window._chartMovParticipante = null; };
     }
 
     // Expor globalmente para SPA
@@ -1489,5 +1519,3 @@ const formCriarAssinatura = document.getElementById('form-criar-assinatura');
     }
 })();
 </script>
-<script>window.movimentacaoData = @json($movimentacao);</script>
-<script src="/js/participante-movimentacao.js?v={{ filemtime(public_path('js/participante-movimentacao.js')) }}"></script>

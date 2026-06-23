@@ -33,9 +33,10 @@
             </div>
         </div>
 
-        {{-- Faixa de cobertura de fonte (avisa meses sem EFD ICMS/IPI / PIS-COFINS) --}}
-        @php $cobInicial = $cobertura ?? ['parcial' => false]; @endphp
-        <div id="bi-cobertura-banner" class="{{ ($cobInicial['parcial'] ?? false) ? '' : 'hidden' }} rounded border mb-4 px-4 py-2 flex items-start gap-2"
+        {{-- Faixa de cobertura de fonte (avisa meses sem EFD ICMS/IPI / PIS-COFINS).
+             Sempre começa hidden; renderCobertura() (boot via updateResumoKpis) revela
+             só com texto — evita banner âmbar vazio se o AJAX do boot falhar. --}}
+        <div id="bi-cobertura-banner" class="hidden rounded border mb-4 px-4 py-2 flex items-start gap-2"
              style="background-color: #fffbeb; border-color: #fde68a;">
             <span style="color: #b45309;" class="text-sm font-bold leading-5">&#9888;</span>
             <p id="bi-cobertura-texto" class="text-[12px] leading-5" style="color: #92400e;"></p>
