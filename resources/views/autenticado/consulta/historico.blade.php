@@ -197,7 +197,8 @@
                                         <x-acoes-menu>
                                             <x-acoes-item href="/app/consulta/lote/{{ $lote->id }}" data-link>Abrir</x-acoes-item>
                                             @if($lote->isFinalizado() && $lote->hasResultados())
-                                                <x-acoes-item href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=csv">Excel (CSV)</x-acoes-item>
+                                                <x-acoes-item href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=csv">CSV</x-acoes-item>
+                                                <x-acoes-item href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=xlsx">Excel (XLSX)</x-acoes-item>
                                                 <x-acoes-item href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=pdf">PDF</x-acoes-item>
                                             @endif
                                         </x-acoes-menu>
@@ -247,7 +248,8 @@
                                     <x-acoes-menu align="left">
                                         <x-acoes-item href="/app/consulta/lote/{{ $lote->id }}" data-link>Abrir</x-acoes-item>
                                         @if($lote->isFinalizado() && $lote->hasResultados())
-                                            <x-acoes-item href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=csv">Excel (CSV)</x-acoes-item>
+                                            <x-acoes-item href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=csv">CSV</x-acoes-item>
+                                            <x-acoes-item href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=xlsx">Excel (XLSX)</x-acoes-item>
                                             <x-acoes-item href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=pdf">PDF</x-acoes-item>
                                         @endif
                                     </x-acoes-menu>

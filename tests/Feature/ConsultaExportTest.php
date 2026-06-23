@@ -167,7 +167,8 @@ it('historico mostra botao Excel e PDF para lote com resultados', function () {
     actingAs($user)
         ->get('/app/consulta/historico')
         ->assertOk()
-        ->assertSee('Excel (CSV)', false)
+        ->assertSee('CSV', false)
+        ->assertSee('Excel (XLSX)', false)
         ->assertSee("/app/consulta/lote/{$lote->id}/baixar?formato=csv", false)
         ->assertSee("/app/consulta/lote/{$lote->id}/baixar?formato=pdf", false);
 });
@@ -196,4 +197,14 @@ it('exporta xlsx quando a lib está disponível', function () {
 
     $resp->assertOk();
     $resp->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+});
+
+it('mostra o link de XLSX na tela do lote', function () {
+    $lote = exportLote(User::factory()->create());
+    exportResultadoParticipante($lote, $lote->user);
+
+    $this->actingAs($lote->user)
+        ->get("/app/consulta/lote/{$lote->id}")
+        ->assertOk()
+        ->assertSee('formato=xlsx', false);
 });

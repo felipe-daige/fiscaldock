@@ -40,6 +40,7 @@
                     <a href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=csv" class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium">CSV</a>
                     @if($lote->hasResultados())
                         <a href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=pdf" class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium">PDF</a>
+                        <a href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=xlsx" class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium">Excel (XLSX)</a>
                     @endif
                 @endif
                 <a href="/app/consulta/nova" data-link class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium">Nova consulta</a>
