@@ -33,8 +33,8 @@ final class XlsxReport
 
     public static function paraArquivo(string $path): self
     {
-        $self = new self();
-        $self->writer = new Writer(new Options());
+        $self = new self;
+        $self->writer = new Writer(new Options);
         $self->writer->openToFile($path);
 
         return $self;
@@ -59,7 +59,7 @@ final class XlsxReport
 
     public function tituloMarca(string $titulo): self
     {
-        $style = (new Style())->setFontBold()->setFontSize(14);
+        $style = (new Style)->setFontBold()->setFontSize(14);
         $this->writer->addRow(Row::fromValues([$titulo], $style));
         $this->linhaAtual++;
 
@@ -68,13 +68,13 @@ final class XlsxReport
 
     public function header(array $colunas): self
     {
-        $style = (new Style())->setFontBold()->setBackgroundColor('F3F4F6');
+        $style = (new Style)->setFontBold()->setBackgroundColor('F3F4F6');
         $this->writer->addRow(Row::fromValues(array_values($colunas), $style));
         $this->linhaAtual++;
 
         // Congela tudo acima da próxima linha (header e o que vier antes ficam fixos).
         $this->writer->getCurrentSheet()->setSheetView(
-            (new SheetView())->setFreezeRow($this->linhaAtual + 1)
+            (new SheetView)->setFreezeRow($this->linhaAtual + 1)
         );
 
         return $this;
@@ -97,7 +97,7 @@ final class XlsxReport
         foreach (array_values($valores) as $i => $v) {
             $hex = $coresPorIndice[$i] ?? null;
             if ($hex !== null && $hex !== '') {
-                $style = (new Style())
+                $style = (new Style)
                     ->setBackgroundColor(strtoupper(ltrim((string) $hex, '#')))
                     ->setFontColor(Color::WHITE)
                     ->setFontBold();
@@ -114,7 +114,7 @@ final class XlsxReport
 
     public function totais(array $valores): self
     {
-        $style = (new Style())->setFontBold()->setBackgroundColor('E5E7EB');
+        $style = (new Style)->setFontBold()->setBackgroundColor('E5E7EB');
         $this->writer->addRow(Row::fromValues(array_values($valores), $style));
         $this->linhaAtual++;
 
