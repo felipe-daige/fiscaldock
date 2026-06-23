@@ -518,7 +518,7 @@
                         <option value="">Selecione o plano</option>
                         @foreach(($planosMonitoramento ?? collect()) as $planoMon)
                             @if(! $planoMon->is_gratuito)
-                                <option value="{{ $planoMon->id }}">{{ $planoMon->nome }} — {{ $planoMon->custo_creditos }} créditos/ciclo</option>
+                                <option value="{{ $planoMon->id }}">{{ $planoMon->nome }} — {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($planoMon->custo_creditos)) }}/ciclo</option>
                             @endif
                         @endforeach
                     </select>
