@@ -30,6 +30,9 @@ pest()->extend(Tests\TestCase::class)
 pest()->extend(Tests\TestCase::class)
     ->in('Unit/Subscription');
 
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit/Support');
+
 /*
 |--------------------------------------------------------------------------
 | Expectations
