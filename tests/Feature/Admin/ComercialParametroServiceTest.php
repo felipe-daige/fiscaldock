@@ -10,14 +10,14 @@ it('sem faixas, com preco por plano e peg mantido', function () {
     expect(ComercialParametroService::DEFAULTS)->not->toHaveKeys(['faixa_x_min', 'faixa_y_min', 'faixa_z_min']);
     expect(ComercialParametroService::DEFAULTS)->toHaveKeys(['credit_unit_price', 'minimum_deposit']);
     $s = new ComercialParametroService;
-    expect($s->valor('preco_compliance'))->toBe(100);
+    expect($s->valor('preco_compliance'))->toBe(50);
 });
 
 it('retorna o default quando não há override', function () {
     $service = new ComercialParametroService;
 
     expect($service->valor('credit_unit_price'))->toBe(0.20);
-    expect($service->valor('preco_validacao'))->toBe(15);
+    expect($service->valor('preco_validacao'))->toBe(10);
 });
 
 it('os defaults do registro batem com as constantes do PricingCatalogService (anti-drift)', function () {

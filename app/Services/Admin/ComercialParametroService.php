@@ -37,17 +37,17 @@ class ComercialParametroService
         'preco_validacao' => [
             'rotulo' => 'Preço Validação (créditos)',
             'tipo' => 'int',
-            'default' => 15,
+            'default' => 10,
         ],
         'preco_licitacao' => [
             'rotulo' => 'Preço Licitação (créditos)',
             'tipo' => 'int',
-            'default' => 50,
+            'default' => 25,
         ],
         'preco_compliance' => [
             'rotulo' => 'Preço Compliance (créditos)',
             'tipo' => 'int',
-            'default' => 100,
+            'default' => 50,
         ],
     ];
 
