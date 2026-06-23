@@ -966,8 +966,9 @@
             if (elements.resumoCustoUnitario) elements.resumoCustoUnitario.textContent = 'Gratis';
             if (elements.resumoCustoTotal) elements.resumoCustoTotal.textContent = 'Gratis';
         } else {
-            if (elements.resumoCustoUnitario) elements.resumoCustoUnitario.textContent = `${custoUnitario} ${custoUnitario === 1 ? 'crédito' : 'créditos'}`;
-            if (elements.resumoCustoTotal) elements.resumoCustoTotal.textContent = `${custoTotal} ${custoTotal === 1 ? 'crédito' : 'créditos'}`;
+            // custo* é em crédito interno (peg R$0,20); exibe em R$
+            if (elements.resumoCustoUnitario) elements.resumoCustoUnitario.textContent = 'R$ ' + (custoUnitario * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (elements.resumoCustoTotal) elements.resumoCustoTotal.textContent = 'R$ ' + (custoTotal * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         // Alerta de creditos insuficientes
@@ -1068,7 +1069,7 @@
             }
 
             state.credits = data.novo_saldo;
-            if (elements.resumoSaldo) elements.resumoSaldo.textContent = `${data.novo_saldo} créditos`;
+            if (elements.resumoSaldo) elements.resumoSaldo.textContent = 'R$ ' + ((data.novo_saldo || 0) * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             const redirectUrl = data.redirect_url || ('/app/consulta/lote/' + data.consulta_lote_id);
             if (redirectUrl) {

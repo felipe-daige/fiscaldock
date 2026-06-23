@@ -279,7 +279,7 @@ function atualizarCusto() {
 
     document.querySelectorAll('.plan-total').forEach((el) => {
         const tier = el.dataset.tier;
-        el.textContent = String(n * (custos[tier] || 0));
+        el.textContent = 'R$ ' + (n * (custos[tier] || 0) * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     });
 
     const total = n * (custos[tierSelecionado] || 0);
@@ -288,7 +288,7 @@ function atualizarCusto() {
 
     const saldoAposLabel = $('saldo-apos-label');
     if (saldoAposLabel) {
-        saldoAposLabel.textContent = `${saldoApos} créditos`;
+        saldoAposLabel.textContent = 'R$ ' + (saldoApos * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         if (insuficiente) {
             saldoAposLabel.style.backgroundColor = '#fee2e2';
             saldoAposLabel.style.color = '#b91c1c';
@@ -308,7 +308,7 @@ function atualizarCusto() {
             btnValidar.disabled = true;
         } else {
             const label = TIER_LABEL[tierSelecionado] || tierSelecionado;
-            btnValidar.textContent = `Validar ${n} nota(s) com Clearance ${label} · ${total} créditos`;
+            btnValidar.textContent = `Validar ${n} nota(s) com Clearance ${label} · R$ ${(total * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             btnValidar.disabled = false;
         }
     }
@@ -436,15 +436,15 @@ async function executarClearance() {
             } else {
                 const modalSucesso = $('modal-sucesso-validacao');
                 const modalSucessoCreditos = $('modal-sucesso-creditos');
-                if (modalSucessoCreditos) modalSucessoCreditos.textContent = String(data.creditos_utilizados ?? 0);
+                if (modalSucessoCreditos) modalSucessoCreditos.textContent = 'R$ ' + ((data.creditos_utilizados ?? 0) * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 abrirModal(modalSucesso);
             }
         } else if (resp.status === 402) {
             fecharModal(modalConfirm);
-            showError(`Créditos insuficientes. Necessário: ${data.custo_necessario}. Saldo: ${data.saldo_atual}.`, 'clearance-validar');
+            showError(`Saldo insuficiente. Necessário: R$ ${((data.custo_necessario || 0) * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Saldo: R$ ${((data.saldo_atual || 0) * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`, 'clearance-validar');
         } else if (resp.status === 502) {
             fecharModal(modalConfirm);
-            showError(data.error || 'Webhook de clearance indisponível. Créditos estornados.', 'clearance-webhook');
+            showError(data.error || 'Webhook de clearance indisponível. Saldo estornado.', 'clearance-webhook');
         } else {
             fecharModal(modalConfirm);
             showError(data.message || data.error || 'Falha ao validar notas.', 'clearance-validar');
@@ -501,11 +501,11 @@ function handleValidarClick() {
     const modalConfirmSaldoApos = $('modal-confirm-saldo-apos');
 
     if (modalConfirmQtd) modalConfirmQtd.textContent = String(ids.length);
-    if (modalConfirmCusto) modalConfirmCusto.textContent = String(total);
+    if (modalConfirmCusto) modalConfirmCusto.textContent = 'R$ ' + (total * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     if (modalConfirmTierLabel) modalConfirmTierLabel.textContent = `Clearance ${label}`;
     if (modalConfirmTierChip) modalConfirmTierChip.textContent = label;
     if (modalConfirmSaldoApos) {
-        modalConfirmSaldoApos.textContent = `${saldoApos} créditos`;
+        modalConfirmSaldoApos.textContent = 'R$ ' + (saldoApos * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         modalConfirmSaldoApos.style.color = saldoApos < 0 ? '#b91c1c' : '#111827';
     }
 

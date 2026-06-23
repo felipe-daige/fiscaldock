@@ -169,7 +169,7 @@ function initClearanceBuscar() {
 
     function atualizarSaldo(novoSaldo) {
         if (typeof novoSaldo !== 'number') return;
-        if (saldoLabel) saldoLabel.textContent = novoSaldo.toLocaleString('pt-BR');
+        if (saldoLabel) saldoLabel.textContent = 'R$ ' + (novoSaldo * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         if (saldoBadge) {
             const suficiente = novoSaldo >= CUSTO;
             saldoBadge.style.backgroundColor = suficiente ? '#047857' : '#dc2626';
@@ -376,8 +376,8 @@ function initClearanceBuscar() {
 
             if (response.status === 402) {
                 mostrarErro(
-                    'Créditos insuficientes',
-                    `Esta consulta custa ${data.custo_necessario || CUSTO} créditos. Saldo atual: ${data.saldo_atual ?? 0}.`,
+                    'Saldo insuficiente',
+                    `Esta consulta custa R$ ${((data.custo_necessario || CUSTO) * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Saldo atual: R$ ${((data.saldo_atual ?? 0) * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`,
                     false
                 );
                 inFlight = false;
@@ -396,7 +396,7 @@ function initClearanceBuscar() {
                 const criticalError = buildSystemError(data, 'clearance-buscar-webhook');
                 mostrarErro(
                     'Integração indisponível',
-                    data.error || 'O webhook n8n não respondeu. Seus créditos foram estornados.',
+                    data.error || 'O webhook n8n não respondeu. Seu saldo foi estornado.',
                     true,
                     criticalError
                 );
