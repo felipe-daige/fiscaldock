@@ -1,4 +1,4 @@
-<div style="position:fixed; top:18px; left:0; width:100%;">
+<div style="position:fixed; top:-74px; left:0; width:100%;">
     <table style="width:100%; border-collapse:collapse;">
         <tr>
             <td style="width:150px; vertical-align:middle; border:none;">

@@ -45,8 +45,8 @@
         padding: 5px 8px; font-size: 8px; color: #374151;
         background: #f9fafb; border: 1px solid #e5e7eb; border-top: none;
     }
-    .cards { width: 100%; border-collapse: separate; border-spacing: 6px 6px; }
-    .cards > tbody > tr > td { width: 50%; vertical-align: top; padding: 0; border: none; }
+    .cards { width: 100%; border-collapse: separate; border-spacing: 6px 6px; table-layout: fixed; }
+    .cards > tbody > tr > td { width: 50%; vertical-align: top; padding: 0; border: none; word-wrap: break-word; }
     .card { border: 1px solid #e5e7eb; border-top: 2px solid #1f2937; }
     .card-head { background: #f9fafb; border-bottom: 1px solid #e5e7eb; padding: 4px 6px; }
     .card-head td { border: none; padding: 0; }

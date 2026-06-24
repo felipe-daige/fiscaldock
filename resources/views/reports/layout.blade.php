@@ -4,8 +4,11 @@
     <meta charset="utf-8">
     <title>@yield('titulo', 'Relatório FiscalDock')</title>
     <style>
-        @page { margin: 92px 32px 52px 32px; }
-        * { margin:0; padding:0; box-sizing:border-box; }
+        @page { margin: 88px 32px 52px 32px; }
+        /* dompdf 3.x: resetar margin/padding em `*` OU em html/body ZERA a margem do @page
+           (conteúdo full-bleed colide com o header fixo). Resetar só tags internas — nunca html/body. */
+        * { box-sizing:border-box; }
+        table, tr, td, th, div, p, h1, h2, h3, h4, ul, ol, li { margin:0; padding:0; }
         body { font-family:"DejaVu Sans", sans-serif; font-size:9px; color:#111827; line-height:1.4; }
         .pdf-conteudo { position:relative; z-index:2; }
 
