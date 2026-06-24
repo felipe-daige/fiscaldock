@@ -10,6 +10,7 @@
 @php($resumo = $resumo ?? null)
 @php($certidoes = $certidoes ?? [])
 @php($cabecalho = $cabecalho ?? [])
+@php($monoLabels = ['Certidão nº', 'Emissão', 'Validade', 'Início de atividade', 'Capital social', 'UF', 'Telefone'])
 @php($cadastro = collect($blocos)->firstWhere('chave', 'cadastro'))
 @php($fontes = collect($blocos)->reject(fn ($b) => ($b['chave'] ?? null) === 'cadastro')->values())
 
@@ -64,7 +65,7 @@
                         @foreach($cadastro['itens'] as $item)
                             <div class="min-w-0">
                                 <dt class="text-[9px] text-gray-400 uppercase tracking-wider">{{ $item['label'] }}</dt>
-                                <dd class="text-[12px] text-gray-800 font-medium break-words mt-0.5">
+                                <dd @class(['text-[12px] text-gray-800 font-medium break-words mt-0.5', 'font-mono tabular-nums' => in_array($item['label'], $monoLabels, true)])>
                                     @if(!empty($item['tooltip']))
                                         <span class="underline decoration-dotted cursor-help" title="{{ $item['tooltip'] }}">{{ $item['valor'] }}</span>
                                     @else
@@ -115,7 +116,7 @@
                                 @foreach($bloco['itens'] as $item)
                                     <div class="min-w-0">
                                         <dt class="text-[9px] text-gray-400 uppercase tracking-wider">{{ $item['label'] }}</dt>
-                                        <dd class="text-[12px] text-gray-800 font-medium break-words mt-0.5">
+                                        <dd @class(['text-[12px] text-gray-800 font-medium break-words mt-0.5', 'font-mono tabular-nums' => in_array($item['label'], $monoLabels, true)])>
                                             @if(!empty($item['tooltip']))
                                                 <span class="underline decoration-dotted cursor-help" title="{{ $item['tooltip'] }}">{{ $item['valor'] }}</span>
                                             @else
