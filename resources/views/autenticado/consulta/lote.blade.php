@@ -223,9 +223,18 @@
 
             @if(!empty($analise))
                 @php $cn = $analise['cnpjs'] ?? []; @endphp
+                @php $retryElegiveis = $retryPendentes['elegiveis'] ?? []; @endphp
                 <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3 flex-wrap">
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Análise da Consulta</span>
+                        @if(!empty($retryElegiveis))
+                            <button type="button"
+                                onclick="document.getElementById('modal-retry-{{ $lote->id }}').classList.remove('hidden')"
+                                class="text-[11px] font-semibold px-3 py-1.5 rounded text-white"
+                                style="background-color: #d97706">
+                                ↻ Reconsultar {{ count($retryElegiveis) }} fonte(s) com falha — 50% off
+                            </button>
+                        @endif
                     </div>
                     <div class="p-4 space-y-4">
                         <div>
@@ -284,6 +293,76 @@
                         @endif
                     </div>
                 </div>
+
+                @if(!empty($retryPendentes['elegiveis']) || !empty($retryPendentes['inelegiveis']))
+                    <div id="modal-retry-{{ $lote->id }}" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color: rgba(17,24,39,.5)">
+                        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[85vh] overflow-y-auto">
+                            <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                                <span class="text-sm font-semibold text-gray-800">Reconsultar fontes com falha</span>
+                                <button type="button" onclick="document.getElementById('modal-retry-{{ $lote->id }}').classList.add('hidden')" class="text-gray-400 text-xl leading-none">&times;</button>
+                            </div>
+                            <form id="form-retry-{{ $lote->id }}" class="p-4 space-y-3">
+                                <p class="text-[11px] text-gray-500">Reconsulta apenas as fontes que falharam por instabilidade do provedor, com 50% de desconto (válido 1× por fonte).</p>
+                                @foreach($retryPendentes['elegiveis'] as $e)
+                                    <label class="flex items-start gap-2 text-xs">
+                                        <input type="checkbox" checked class="mt-0.5"
+                                            data-alvo-tipo="{{ $e['alvo_tipo'] }}" data-alvo-id="{{ $e['alvo_id'] }}" data-fonte="{{ $e['fonte'] }}">
+                                        <span class="text-gray-700"><strong>{{ $e['titulo'] }}</strong> — {{ $e['cnpj'] }} ({{ $e['razao'] }}) · erro {{ $e['codigo'] }}
+                                            · <span class="text-amber-700 font-medium">{{ (int) $e['preco_creditos'] }} crédito(s)</span></span>
+                                    </label>
+                                @endforeach
+                                @foreach($retryPendentes['inelegiveis'] as $i)
+                                    <div class="flex items-start gap-2 text-xs text-gray-400">
+                                        <span class="inline-flex px-1.5 py-0.5 rounded text-white text-[10px] shrink-0" style="background-color: #9ca3af">Tente mais tarde</span>
+                                        <span>{{ $i['titulo'] }} — {{ $i['cnpj'] }}</span>
+                                    </div>
+                                @endforeach
+                                <div class="border-t border-gray-200 pt-3 text-xs text-gray-600">
+                                    Custo: <strong>{{ (int) $retryPendentes['total_preco_creditos'] }} crédito(s)</strong> · Saldo: {{ $credits }}
+                                </div>
+                                <div class="flex justify-end gap-2">
+                                    <button type="button" onclick="document.getElementById('modal-retry-{{ $lote->id }}').classList.add('hidden')" class="text-xs px-3 py-1.5 text-gray-600">Cancelar</button>
+                                    <button type="submit" class="text-xs px-3 py-1.5 rounded text-white" style="background-color: #047857">Confirmar reconsulta</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <script>
+                    (function () {
+                        var form = document.getElementById('form-retry-{{ $lote->id }}');
+                        if (!form || form.dataset.bound) return;
+                        form.dataset.bound = '1';
+                        form.addEventListener('submit', function (ev) {
+                            ev.preventDefault();
+                            var selecao = Array.from(form.querySelectorAll('input[type=checkbox]:checked')).map(function (c) {
+                                return { alvo_tipo: c.dataset.alvoTipo, alvo_id: parseInt(c.dataset.alvoId, 10), fonte: c.dataset.fonte };
+                            });
+                            if (!selecao.length) return;
+                            var btn = form.querySelector('button[type=submit]');
+                            if (btn) { btn.disabled = true; btn.textContent = 'Reconsultando…'; }
+                            fetch('{{ route('app.consulta.lote.retry', ['id' => $lote->id]) }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                body: JSON.stringify({ selecao: selecao })
+                            }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+                              .then(function (res) {
+                                  if (res.ok && res.j.redirect_url) { window.location = res.j.redirect_url; }
+                                  else {
+                                      alert((res.j && (res.j.message || res.j.error)) || 'Não foi possível reconsultar.');
+                                      if (btn) { btn.disabled = false; btn.textContent = 'Confirmar reconsulta'; }
+                                  }
+                              }).catch(function () {
+                                  alert('Falha de rede. Tente novamente.');
+                                  if (btn) { btn.disabled = false; btn.textContent = 'Confirmar reconsulta'; }
+                              });
+                        });
+                    })();
+                    </script>
+                @endif
             @endif
 
             @if($temResultadosNoLote)
