@@ -37,11 +37,16 @@
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 @if($statusLote === 'finalizado')
-                    <a href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=csv" class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium">CSV</a>
+                    {{-- Exports — <x-download-button> (iframe nativo + spinner, igual BI) --}}
                     @if($lote->hasResultados())
-                        <a href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=pdf" class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium">PDF</a>
-                        <a href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=xlsx" class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium">Excel (XLSX)</a>
+                        <x-download-button path="/app/consulta/lote/{{ $lote->id }}/baixar" query="formato=pdf"
+                                           filename="consulta_lote_{{ $lote->id }}.pdf"
+                                           overlay="download-overlay-lote"
+                                           class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium">PDF</x-download-button>
                     @endif
+                    <button type="button"
+                            onclick="document.getElementById('modal-export-lote').classList.remove('hidden')"
+                            class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium">Planilha</button>
                 @endif
                 <a href="/app/consulta/nova" data-link class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium">Nova consulta</a>
                 <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusMeta['hex'] }}">
@@ -49,6 +54,36 @@
                 </span>
             </div>
         </div>
+
+        @if($statusLote === 'finalizado')
+            {{-- Overlay de download (spinner) — compartilhado pelos botões de export --}}
+            <x-download-overlay id="download-overlay-lote" texto="Gerando relatório…" />
+
+            {{-- Modal de export de planilha (XLSX completo ou CSV) --}}
+            <x-modal id="modal-export-lote" titulo="Exportar planilha">
+                <p class="text-[13px] text-gray-600 mb-4">Escolha o formato.</p>
+                <div class="space-y-2">
+                    @if($lote->hasResultados())
+                        <x-download-button path="/app/consulta/lote/{{ $lote->id }}/baixar" query="formato=xlsx"
+                                           filename="consulta_lote_{{ $lote->id }}.xlsx"
+                                           overlay="download-overlay-lote"
+                                           extraOnDone="document.getElementById('modal-export-lote').classList.add('hidden');"
+                                           class="block w-full text-left px-4 py-3 rounded border border-gray-300 hover:bg-gray-50">
+                            <span class="block text-sm font-semibold text-gray-900">Excel (XLSX)</span>
+                            <span class="block text-[12px] text-gray-500">Relatório completo do lote em planilha.</span>
+                        </x-download-button>
+                    @endif
+                    <x-download-button path="/app/consulta/lote/{{ $lote->id }}/baixar" query="formato=csv"
+                                       filename="consulta_lote_{{ $lote->id }}.csv"
+                                       overlay="download-overlay-lote"
+                                       extraOnDone="document.getElementById('modal-export-lote').classList.add('hidden');"
+                                       class="block w-full text-left px-4 py-3 rounded border border-gray-300 hover:bg-gray-50">
+                        <span class="block text-sm font-semibold text-gray-900">CSV</span>
+                        <span class="block text-[12px] text-gray-500">Separador ; com BOM UTF-8 (compatível com Excel).</span>
+                    </x-download-button>
+                </div>
+            </x-modal>
+        @endif
 
         <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
@@ -263,16 +298,35 @@
                         </div>
                     </div>
 
-                    <div class="hidden md:block overflow-x-auto">
+                    {{-- Tooltip rápido (CSS puro, sem delay) dos badges de certidão. Wrapper sem
+                         overflow-x-auto pra não cortar o balão (tabela de 7 colunas cabe no desktop). --}}
+                    <style>
+                        .cert-chip { position: relative; cursor: default; }
+                        .cert-tip {
+                            display: none; position: absolute; left: 50%; bottom: calc(100% + 7px);
+                            transform: translateX(-50%); z-index: 60; width: max-content; max-width: 250px;
+                            background: #111827; color: #fff; padding: 7px 9px; border-radius: 7px;
+                            font-size: 11px; line-height: 1.4; font-weight: 400; text-transform: none;
+                            letter-spacing: normal; text-align: left; white-space: normal;
+                            box-shadow: 0 6px 18px rgba(17,24,39,.22); pointer-events: none;
+                        }
+                        .cert-tip strong { display: block; font-weight: 700; margin-bottom: 2px; }
+                        .cert-tip::after {
+                            content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+                            border: 5px solid transparent; border-top-color: #111827;
+                        }
+                        .cert-chip:hover .cert-tip { display: block; }
+                    </style>
+
+                    @php $autoAbrirDetalhe = $resultados->total() === 1; @endphp
+                    <div class="hidden md:block overflow-visible">
                         <table class="min-w-full">
                             <thead>
                                 <tr class="border-b border-gray-300">
                                     <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participante</th>
                                     <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Situação</th>
                                     <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50 whitespace-nowrap">Regime Tributário</th>
-                                    <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50 whitespace-nowrap">CND Federal</th>
-                                    <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">FGTS</th>
-                                    <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">CNDT</th>
+                                    <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Certidões</th>
                                     <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Sinalizações</th>
                                     <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Status</th>
                                     <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Consultado em</th>
@@ -282,17 +336,15 @@
                                 @foreach($resultados as $resultado)
                                     @php
                                         $regimeTributario = $resultado['regime_tributario'] ?? null;
-                                        $cndFederal = $resultado['cnd_federal_badge'] ?? ['label' => '—', 'hex' => '#9ca3af'];
-                                        $fgts = $resultado['fgts_badge'] ?? ['label' => '—', 'hex' => '#9ca3af'];
-                                        $cndt = $resultado['cndt_badge'] ?? ['label' => '—', 'hex' => '#9ca3af'];
+                                        $certidoes = $resultado['certidoes'] ?? [];
                                     @endphp
                                     <tr class="hover:bg-gray-50/50 transition-colors">
                                         <td class="px-3 py-3">
                                             <div class="flex items-start gap-2">
                                                 <button type="button" data-detalhe-toggle="consulta-detalhe-d-{{ $loop->index }}"
                                                         class="mt-0.5 flex-shrink-0 w-5 h-5 inline-flex items-center justify-center rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-                                                        title="Ver detalhes da consulta" aria-expanded="false">
-                                                    <svg class="detalhe-chevron w-3.5 h-3.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        title="Ver detalhes da consulta" aria-expanded="{{ $autoAbrirDetalhe ? 'true' : 'false' }}">
+                                                    <svg class="detalhe-chevron w-3.5 h-3.5 transition-transform" @if($autoAbrirDetalhe) style="transform: rotate(90deg)"@endif fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                                     </svg>
                                                 </button>
@@ -314,14 +366,24 @@
                                         </td>
                                         <td class="px-3 py-3 text-sm text-gray-700 text-center">{{ $resultado['situacao_cadastral'] ?: '—' }}</td>
                                         <td class="px-3 py-3 text-sm text-gray-700 text-center whitespace-nowrap">{{ $regimeTributario ?: '—' }}</td>
-                                        <td class="px-3 py-3 text-center">
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cndFederal['hex'] }}"@if(!empty($cndFederal['indeterminado']) && !empty($cndFederal['motivo'])) title="{{ $cndFederal['motivo'] }}"@endif>{{ $cndFederal['label'] }}</span>
-                                            @if(!empty($cndFederal['indeterminado']) && !empty($cndFederal['motivo']))
-                                                <p class="text-[11px] text-gray-500 mt-1 leading-snug">{{ $cndFederal['motivo'] }}</p>
+                                        <td class="px-3 py-3">
+                                            @if(!empty($certidoes))
+                                                <div class="flex flex-wrap gap-1">
+                                                    @foreach($certidoes as $cert)
+                                                        <span class="cert-chip inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
+                                                              style="background-color: {{ $cert['hex'] }}">
+                                                            {{ $cert['sigla'] }} {{ $cert['glyph'] }}
+                                                            <span class="cert-tip">
+                                                                <strong>{{ $cert['titulo'] }} · {{ $cert['label'] }}</strong>
+                                                                @if(!empty($cert['descricao'])){{ $cert['descricao'] }}@endif
+                                                            </span>
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            @else
+                                                <span class="text-xs text-gray-400">—</span>
                                             @endif
                                         </td>
-                                        <td class="px-3 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $fgts['hex'] }}">{{ $fgts['label'] }}</span></td>
-                                        <td class="px-3 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cndt['hex'] }}">{{ $cndt['label'] }}</span></td>
                                         <td class="px-3 py-3">
                                             @if(!empty($resultado['parecer']))
                                                 <div class="flex flex-wrap gap-1">
@@ -345,9 +407,9 @@
                                         </td>
                                         <td class="px-3 py-3 text-sm text-gray-700">{{ $resultado['consultado_em_label'] ?: '—' }}</td>
                                     </tr>
-                                    <tr id="consulta-detalhe-d-{{ $loop->index }}" class="hidden">
-                                        <td colspan="9" class="px-4 py-4 bg-gray-50/60 border-t border-gray-100">
-                                            @include('autenticado.consulta.partials.detalhe-blocos', ['blocos' => $resultado['detalhe_blocos'] ?? [], 'resumo' => $resultado['resumo_texto'] ?? null])
+                                    <tr id="consulta-detalhe-d-{{ $loop->index }}" class="{{ $autoAbrirDetalhe ? '' : 'hidden' }}">
+                                        <td colspan="7" class="px-4 py-4 bg-gray-50/60 border-t border-gray-100">
+                                            @include('autenticado.consulta.partials.detalhe-blocos', ['blocos' => $resultado['detalhe_blocos'] ?? [], 'resumo' => $resultado['resumo_texto'] ?? null, 'certidoes' => $resultado['certidoes'] ?? [], 'cabecalho' => ['razao' => $resultado['razao_social'] ?? null, 'documento' => $resultado['documento_formatado'] ?? null, 'uf' => $resultado['uf'] ?? null, 'situacao' => $resultado['situacao_cadastral'] ?? null]])
                                             @include('autenticado.consulta.partials.relacionamento-fiscal', ['fiscal' => $resultado['fiscal_resumo'] ?? null])
                                         </td>
                                     </tr>
@@ -360,9 +422,7 @@
                         @foreach($resultados as $resultado)
                             @php
                                 $regimeTributario = $resultado['regime_tributario'] ?? null;
-                                $cndFederal = $resultado['cnd_federal_badge'] ?? ['label' => '—', 'hex' => '#9ca3af'];
-                                $fgts = $resultado['fgts_badge'] ?? ['label' => '—', 'hex' => '#9ca3af'];
-                                $cndt = $resultado['cndt_badge'] ?? ['label' => '—', 'hex' => '#9ca3af'];
+                                $certidoes = $resultado['certidoes'] ?? [];
                             @endphp
                             <div class="px-4 py-3">
                                 <div class="flex items-start justify-between gap-3">
@@ -385,24 +445,26 @@
                                         <p class="text-[10px] text-gray-400 uppercase whitespace-nowrap">Regime Tributário</p>
                                         <p>{{ $regimeTributario ?: '—' }}</p>
                                     </div>
-                                    <div class="text-center">
-                                        <p class="text-[10px] text-gray-400 uppercase whitespace-nowrap">CND Federal</p>
-                                        <div class="mt-1 flex justify-center">
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cndFederal['hex'] }}">{{ $cndFederal['label'] }}</span>
-                                        </div>
-                                        @if(!empty($cndFederal['indeterminado']) && !empty($cndFederal['motivo']))
-                                            <p class="text-[11px] text-gray-500 mt-1 leading-snug text-center">{{ $cndFederal['motivo'] }}</p>
-                                        @endif
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] text-gray-400 uppercase">FGTS</p>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $fgts['hex'] }}">{{ $fgts['label'] }}</span>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] text-gray-400 uppercase">CNDT</p>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cndt['hex'] }}">{{ $cndt['label'] }}</span>
-                                    </div>
                                 </div>
+                                @if(!empty($certidoes))
+                                    <div class="mt-3">
+                                        <p class="text-[10px] text-gray-400 uppercase">Certidões</p>
+                                        <div class="flex flex-col gap-1 mt-1">
+                                            @foreach($certidoes as $cert)
+                                                {{-- Mobile não tem hover: mostra sigla + status + resumo inline. --}}
+                                                <div class="flex items-start gap-2">
+                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white shrink-0"
+                                                          style="background-color: {{ $cert['hex'] }}">
+                                                        {{ $cert['sigla'] }} {{ $cert['glyph'] }}
+                                                    </span>
+                                                    <span class="text-[11px] text-gray-600 leading-snug">
+                                                        <span class="text-gray-800">{{ $cert['label'] }}</span>@if(!empty($cert['descricao'])) — {{ $cert['descricao'] }}@endif
+                                                    </span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
                                 @if(!empty($resultado['parecer']))
                                     <div class="flex flex-wrap gap-1 mt-3">
                                         @foreach($resultado['parecer'] as $parecer)
@@ -416,14 +478,14 @@
                                     <p class="text-xs text-gray-500 mt-3">{{ $resultado['mensagem_exibivel'] }}</p>
                                 @endif
                                 <button type="button" data-detalhe-toggle="consulta-detalhe-m-{{ $loop->index }}"
-                                        class="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-gray-600 hover:text-gray-900" aria-expanded="false">
-                                    <svg class="detalhe-chevron w-3.5 h-3.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        class="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-gray-600 hover:text-gray-900" aria-expanded="{{ $autoAbrirDetalhe ? 'true' : 'false' }}">
+                                    <svg class="detalhe-chevron w-3.5 h-3.5 transition-transform" @if($autoAbrirDetalhe) style="transform: rotate(90deg)"@endif fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                     </svg>
                                     Ver detalhes da consulta
                                 </button>
-                                <div id="consulta-detalhe-m-{{ $loop->index }}" class="hidden mt-3">
-                                    @include('autenticado.consulta.partials.detalhe-blocos', ['blocos' => $resultado['detalhe_blocos'] ?? [], 'resumo' => $resultado['resumo_texto'] ?? null])
+                                <div id="consulta-detalhe-m-{{ $loop->index }}" class="{{ $autoAbrirDetalhe ? '' : 'hidden ' }}mt-3">
+                                    @include('autenticado.consulta.partials.detalhe-blocos', ['blocos' => $resultado['detalhe_blocos'] ?? [], 'resumo' => $resultado['resumo_texto'] ?? null, 'certidoes' => $resultado['certidoes'] ?? [], 'cabecalho' => ['razao' => $resultado['razao_social'] ?? null, 'documento' => $resultado['documento_formatado'] ?? null, 'uf' => $resultado['uf'] ?? null, 'situacao' => $resultado['situacao_cadastral'] ?? null]])
                                 </div>
                             </div>
                         @endforeach
