@@ -34,6 +34,10 @@ class ProcessarConsultaJob implements ShouldQueue
         // (não resetar a 0% a cada empresa num lote multi-CNPJ). Default = lote de 1 alvo.
         public int $alvoIndice = 1,
         public int $totalAlvos = 1,
+        // Reconsulta: quando não-null, só estas fontes (por chave) são processadas — o resto do
+        // plano é pulado. Usado pelo retry pra re-bater a InfoSimples apenas nas fontes que
+        // falharam, sem custo nas que já deram certo. Default null = processa o plano inteiro.
+        public ?array $somenteFontes = null,
     ) {}
 
     public function handle(
@@ -66,6 +70,11 @@ class ProcessarConsultaJob implements ShouldQueue
         $totalFontes = count($fontes);
         $creditosFalhos = 0;
         foreach ($fontes as $i => $fonte) {
+            // Reconsulta escopada: pula fontes fora da seleção (sem progresso nem chamada externa).
+            if ($this->somenteFontes !== null && ! in_array($fonte->chave(), $this->somenteFontes, true)) {
+                continue;
+            }
+
             // Progresso por GRUPO de etapa da fonte (várias fontes → mesma etapa; sem loop).
             [$nEtapa, $lEtapa] = $this->etapaParaFonte($fonte->chave());
 

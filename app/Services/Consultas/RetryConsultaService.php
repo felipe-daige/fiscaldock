@@ -2,9 +2,16 @@
 
 namespace App\Services\Consultas;
 
+use App\Jobs\ProcessarConsultaJob;
+use App\Models\Cliente;
 use App\Models\ConsultaLote;
 use App\Models\ConsultaResultado;
+use App\Models\Participante;
 use App\Services\Consultas\Persistencia\PersistenciaCnpj;
+use App\Services\CreditService;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Reconsulta de fontes com falha transitória (classe `retry`, ex. código 600 da InfoSimples).
@@ -18,6 +25,7 @@ class RetryConsultaService
     public function __construct(
         private FonteRegistry $registry,
         private PersistenciaCnpj $persistencia,
+        private CreditService $credits,
     ) {}
 
     /**
@@ -103,6 +111,110 @@ class RetryConsultaService
         }
 
         return ['creditos' => $creditos, 'reais' => round($creditos * 0.20, 2)];
+    }
+
+    /**
+     * Cobra o retry (50% off) das fontes selecionadas e re-despacha o job escopado a elas, no
+     * MESMO lote. Valida elegibilidade no backend (nunca confia no frontend). O fechamento
+     * (estorno parcial se re-falhar) é feito pelo FecharRetryService no `then` do batch.
+     *
+     * @param  array<int, array{alvo_tipo:string, alvo_id:int, fonte:string}>  $selecao
+     * @return array{creditos:int}
+     */
+    public function executar(ConsultaLote $lote, array $selecao): array
+    {
+        abort_unless(
+            ConsultaLote::normalizeStatus($lote->status) === ConsultaLote::STATUS_FINALIZADO,
+            422,
+            'Lote ainda em processamento.'
+        );
+
+        $pend = $this->pendentesRetry($lote);
+        $indexElegivel = collect($pend['elegiveis'])
+            ->keyBy(fn ($e) => $e['alvo_tipo'].':'.$e['alvo_id'].':'.$e['fonte']);
+
+        $aplicar = [];
+        $custoTotal = 0;
+        foreach ($selecao as $s) {
+            $k = $s['alvo_tipo'].':'.$s['alvo_id'].':'.$s['fonte'];
+            $e = $indexElegivel->get($k);
+            if (! $e) {
+                throw ValidationException::withMessages([
+                    'selecao' => "Fonte não elegível para reconsulta: {$s['fonte']}.",
+                ]);
+            }
+            $aplicar[] = $e;
+            $custoTotal += (int) $e['preco_creditos'];
+        }
+        abort_if(empty($aplicar), 422, 'Nenhuma fonte elegível selecionada.');
+
+        abort_unless($this->credits->hasEnough($lote->user, $custoTotal), 402, 'Saldo insuficiente para a reconsulta.');
+        $this->credits->deduct($lote->user, $custoTotal, 'consulta_retry', "Reconsulta lote #{$lote->id}", $lote);
+
+        // Agrupa por alvo: incrementa tentativas (trava 1×) + grava envelope de cobrança + monta jobs.
+        $porAlvo = [];
+        foreach ($aplicar as $e) {
+            $porAlvo[$e['alvo_tipo'].':'.$e['alvo_id']][] = $e;
+        }
+
+        $jobs = [];
+        foreach ($porAlvo as $alvoKey => $itens) {
+            [$tipo, $id] = explode(':', $alvoKey);
+            $id = (int) $id;
+            $envelope = [];
+            $fontes = [];
+            foreach ($itens as $e) {
+                $this->persistencia->incrementarTentativaFonte($lote->id, $tipo, $id, $e['fonte']);
+                $envelope[$e['fonte']] = (int) $e['preco_creditos'];
+                $fontes[] = $e['fonte'];
+            }
+            Cache::put("consulta_retry_charge:{$lote->id}:{$tipo}:{$id}", $envelope, 86400);
+            $jobs[] = $this->montarJob($lote, $tipo, $id, $fontes);
+        }
+
+        $alvosFontes = array_map(fn ($e) => [
+            'alvo_tipo' => $e['alvo_tipo'], 'alvo_id' => $e['alvo_id'], 'fonte' => $e['fonte'],
+        ], $aplicar);
+
+        Bus::batch($jobs)
+            ->name("consulta-retry-{$lote->id}")
+            ->then(fn () => app(FecharRetryService::class)->fechar($lote->id, $alvosFontes))
+            ->dispatch();
+
+        return ['creditos' => $custoTotal];
+    }
+
+    private function montarJob(ConsultaLote $lote, string $tipo, int $id, array $fontes): ProcessarConsultaJob
+    {
+        return new ProcessarConsultaJob(
+            loteId: $lote->id,
+            alvoTipo: $tipo,
+            alvoId: $id,
+            userId: $lote->user_id,
+            tabId: (string) $lote->tab_id,
+            consultasIncluidas: $lote->plano->resolvedConsultasIncluidas(),
+            alvo: $this->resolverAlvo($tipo, $id),
+            etapas: $lote->plano->resolvedEtapas(),
+            alvoIndice: 1,
+            totalAlvos: 1,
+            somenteFontes: $fontes,
+        );
+    }
+
+    /**
+     * @return array{cnpj:string, uf:?string, crt:mixed}
+     */
+    private function resolverAlvo(string $tipo, int $id): array
+    {
+        if ($tipo === 'cliente') {
+            $c = Cliente::find($id);
+
+            return ['cnpj' => preg_replace('/[^0-9]/', '', (string) $c?->documento), 'uf' => $c?->uf, 'crt' => null];
+        }
+
+        $p = Participante::find($id);
+
+        return ['cnpj' => preg_replace('/[^0-9]/', '', (string) $p?->documento), 'uf' => $p?->uf, 'crt' => $p?->crt];
     }
 
     private function precoPorFonte(int $custo): int

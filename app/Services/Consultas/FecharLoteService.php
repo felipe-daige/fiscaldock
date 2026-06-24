@@ -61,8 +61,10 @@ class FecharLoteService
     /**
      * Calcula e persiste o Score de Regularidade por alvo consultado no lote —
      * participantes (contrapartes) E clientes (empresas geridas/própria).
+     *
+     * Público para reuso pelo FecharRetryService (settlement da reconsulta) — DRY.
      */
-    private function persistirScores(int $loteId): void
+    public function persistirScores(int $loteId): void
     {
         $resultados = ConsultaResultado::query()
             ->where('consulta_lote_id', $loteId)

@@ -108,3 +108,112 @@ it('precifica somando ceil por fonte', function () {
     ]);
     expect($r['creditos'])->toBe(5);
 });
+
+// ---------------------------------------------------------------------------
+// Task 3 — Job somenteFontes + executar + FecharRetryService (settlement)
+// ---------------------------------------------------------------------------
+
+use App\Jobs\ProcessarConsultaJob;
+use App\Models\MonitoramentoPlano;
+use App\Models\Participante;
+use App\Models\User;
+use App\Services\CreditService;
+use App\Services\Consultas\FecharRetryService;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Cache;
+
+function montarLoteComPlano(string $codigo = 'licitacao'): array
+{
+    $user = User::factory()->create();
+    $participante = Participante::create([
+        'user_id' => $user->id, 'documento' => '19131243000197', 'razao_social' => 'PART', 'uf' => 'SP',
+    ]);
+    $lote = ConsultaLote::create([
+        'user_id' => $user->id,
+        'plano_id' => MonitoramentoPlano::porCodigo($codigo)->id,
+        'status' => ConsultaLote::STATUS_FINALIZADO,
+        'total_participantes' => 1,
+        'creditos_cobrados' => 10,
+        'tab_id' => 'tab-test',
+    ]);
+
+    return [$lote, $participante, $user];
+}
+
+it('executar debita 50% e despacha job escopado às fontes selecionadas', function () {
+    Bus::fake();
+    config()->set('consultas.retry.desconto_pct', 50);
+    [$lote, $p, $user] = montarLoteComPlano();
+    app(CreditService::class)->add($user, 100);
+    gravarFontesErro($lote->id, $p->id, [
+        'cnd_federal' => ['origem' => 'integracao', 'status' => 'retry', 'codigo' => 600, 'tentativas' => 0],
+    ]);
+
+    $preco = (int) ceil(custoFonte('cnd_federal') * 0.5);
+    $saldoAntes = app(CreditService::class)->getBalance($user);
+
+    app(RetryConsultaService::class)->executar($lote->fresh(), [
+        ['alvo_tipo' => 'participante', 'alvo_id' => $p->id, 'fonte' => 'cnd_federal'],
+    ]);
+
+    expect(app(CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes - $preco);
+
+    Bus::assertBatched(fn ($batch) => collect($batch->jobs)->contains(
+        fn ($job) => $job instanceof ProcessarConsultaJob && $job->somenteFontes === ['cnd_federal']
+    ));
+
+    $row = ConsultaResultado::where('consulta_lote_id', $lote->id)->first();
+    $erros = app(PersistenciaCnpj::class)->normalizarFontesErro($row->resultado_dados['_fontes_erro']);
+    expect($erros['cnd_federal']['tentativas'])->toBe(1); // trava 1x antes do dispatch
+});
+
+it('executar recusa fonte inelegível forjada no payload', function () {
+    [$lote, $p, $user] = montarLoteComPlano();
+    app(CreditService::class)->add($user, 100);
+    gravarFontesErro($lote->id, $p->id, [
+        'cndt' => ['origem' => 'integracao', 'status' => 'fatal', 'codigo' => 602, 'tentativas' => 0],
+    ]);
+
+    expect(fn () => app(RetryConsultaService::class)->executar($lote->fresh(), [
+        ['alvo_tipo' => 'participante', 'alvo_id' => $p->id, 'fonte' => 'cndt'],
+    ]))->toThrow(\Illuminate\Validation\ValidationException::class);
+});
+
+it('settlement estorna só a parcela do retry quando a fonte re-falha', function () {
+    config()->set('consultas.retry.desconto_pct', 50);
+    [$lote, $p, $user] = montarLoteComPlano();
+    $preco = (int) ceil(custoFonte('cnd_federal') * 0.5);
+
+    // simula retry cobrado e re-falhado: envelope no cache + _fontes_erro ainda marcado
+    Cache::put("consulta_retry_charge:{$lote->id}:participante:{$p->id}", ['cnd_federal' => $preco], 86400);
+    gravarFontesErro($lote->id, $p->id, [
+        'cnd_federal' => ['origem' => 'integracao', 'status' => 'retry', 'codigo' => 600, 'tentativas' => 1],
+    ]);
+    $saldoAntes = app(CreditService::class)->getBalance($user);
+
+    app(FecharRetryService::class)->fechar($lote->id, [
+        ['alvo_tipo' => 'participante', 'alvo_id' => $p->id, 'fonte' => 'cnd_federal'],
+    ]);
+
+    expect(app(CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes + $preco);
+});
+
+it('settlement não estorna quando a reconsulta teve sucesso (marca limpa)', function () {
+    config()->set('consultas.retry.desconto_pct', 50);
+    [$lote, $p, $user] = montarLoteComPlano();
+    $preco = (int) ceil(custoFonte('cnd_federal') * 0.5);
+
+    Cache::put("consulta_retry_charge:{$lote->id}:participante:{$p->id}", ['cnd_federal' => $preco], 86400);
+    // sucesso → sem _fontes_erro pra cnd_federal (gravar teria limpado)
+    ConsultaResultado::create([
+        'consulta_lote_id' => $lote->id, 'participante_id' => $p->id, 'status' => 'sucesso',
+        'resultado_dados' => ['cnd_federal' => ['status' => 'Negativa']],
+    ]);
+    $saldoAntes = app(CreditService::class)->getBalance($user);
+
+    app(FecharRetryService::class)->fechar($lote->id, [
+        ['alvo_tipo' => 'participante', 'alvo_id' => $p->id, 'fonte' => 'cnd_federal'],
+    ]);
+
+    expect(app(CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes); // receita mantida
+});
