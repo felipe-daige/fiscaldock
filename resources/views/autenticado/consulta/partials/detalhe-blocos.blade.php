@@ -42,22 +42,37 @@
     {{-- ── Identidade (cadastro): largura total, retrátil ───────────────────── --}}
     @if($cadastro)
         @php($cadId = 'cad-'.bin2hex(random_bytes(6)))
+        @php($previewItens = collect($cadastro['itens'] ?? [])->whereIn('label', ['Porte', 'Regime tributário', 'Natureza jurídica', 'Início de atividade'])->values())
         <div class="mb-3 rounded border border-gray-300 bg-white overflow-hidden" style="border-top: 2px solid #1e4679">
             <button type="button" data-detalhe-toggle="{{ $cadId }}" aria-expanded="false"
-                    class="w-full flex items-center justify-between gap-3 px-3 py-2 bg-gray-50 border-b border-gray-200 text-left">
-                <span class="min-w-0">
-                    <span class="block text-[11px] font-semibold text-gray-600 uppercase tracking-widest">{{ $cadastro['titulo'] }}</span>
-                    @if(!empty($cabecalho['razao']) || !empty($cabecalho['documento']) || !empty($cabecalho['situacao']))
-                        <span class="block text-[11px] text-gray-500 truncate mt-0.5">
+                    class="w-full flex items-start justify-between gap-3 px-3 py-2.5 bg-gray-50 hover:bg-gray-100 border-b border-gray-200 text-left transition-colors">
+                <span class="min-w-0 flex-1">
+                    <span class="flex items-center flex-wrap gap-x-2">
+                        <span class="text-[11px] font-semibold text-gray-600 uppercase tracking-widest">{{ $cadastro['titulo'] }}</span>
+                        @if(!empty($cabecalho['situacao']))
+                            <span class="text-[9px] font-bold uppercase tracking-wide text-gray-400">· {{ $cabecalho['situacao'] }}</span>
+                        @endif
+                    </span>
+                    @if(!empty($cabecalho['razao']) || !empty($cabecalho['documento']))
+                        <span class="block text-[12px] text-gray-800 font-medium truncate mt-0.5">
                             @if(!empty($cabecalho['razao'])){{ $cabecalho['razao'] }}@endif
-                            @if(!empty($cabecalho['documento'])) · <span class="font-mono">{{ $cabecalho['documento'] }}</span>@endif
-                            @if(!empty($cabecalho['situacao'])) · {{ $cabecalho['situacao'] }}@endif
+                            @if(!empty($cabecalho['documento'])) <span class="text-gray-300 font-normal">·</span> <span class="font-mono text-[11px] text-gray-500">{{ $cabecalho['documento'] }}</span>@endif
+                        </span>
+                    @endif
+                    @if($previewItens->isNotEmpty())
+                        <span class="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
+                            @foreach($previewItens as $p)
+                                <span class="text-[10px] text-gray-500"><span class="text-gray-400">{{ $p['label'] }}:</span> {{ $p['valor'] }}</span>
+                            @endforeach
                         </span>
                     @endif
                 </span>
-                <svg class="detalhe-chevron w-3.5 h-3.5 text-gray-400 shrink-0 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
+                <span class="flex items-center gap-1 shrink-0 text-gray-400 pt-0.5">
+                    <span class="text-[10px] uppercase tracking-wide hidden sm:inline">Ver tudo</span>
+                    <svg class="detalhe-chevron w-3.5 h-3.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </span>
             </button>
             <div id="{{ $cadId }}" class="hidden px-3 py-3 space-y-3">
                 @if(!empty($cadastro['itens']))
