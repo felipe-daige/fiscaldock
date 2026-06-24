@@ -209,6 +209,15 @@ return [
         'protestos' => (int) env('CONSULTA_CREDITOS_PROTESTOS', 2),
     ],
 
+    // Reconsulta de fontes com falha transitória (classe `retry`, ex. código 600).
+    // 'desconto_pct' = desconto sobre o custoCreditos da fonte na reconsulta (50% off).
+    // 'max_por_fonte' = quantas reconsultas pagas por fonte (1 = "50% válido 1 vez";
+    // 2ª falha → "tente mais tarde", sem novo botão).
+    'retry' => [
+        'desconto_pct' => (int) env('CONSULTAS_RETRY_DESCONTO_PCT', 50),
+        'max_por_fonte' => (int) env('CONSULTAS_RETRY_MAX_POR_FONTE', 1),
+    ],
+
     // Card "Relacionamento & Movimentação Fiscal" no resultado da consulta.
     // 'visivel' = itens por lista (produtos/contrapartes) mostrados antes do "ver mais";
     // 'maximo'  = teto buscado/expandível por lista. CFOPs usam 'visivel' (lista curta).
