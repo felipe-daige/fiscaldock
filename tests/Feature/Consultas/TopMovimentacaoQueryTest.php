@@ -115,3 +115,10 @@ it('ids vazios retornam array vazio', function () {
     expect(app(TopMovimentacaoQuery::class)->produtos(1, 'cliente_id', []))->toBe([]);
     expect(app(TopMovimentacaoQuery::class)->cfops(1, 'cliente_id', []))->toBe([]);
 });
+
+it('não vaza produtos nem cfops entre usuários', function () {
+    $d = tmqSetup();
+    $outro = App\Models\User::factory()->create();
+    expect(app(TopMovimentacaoQuery::class)->produtos($outro->id, 'cliente_id', [$d['cliente']]))->toBe([]);
+    expect(app(TopMovimentacaoQuery::class)->cfops($outro->id, 'cliente_id', [$d['cliente']]))->toBe([]);
+});
