@@ -14,6 +14,9 @@ class ResultadoFonte
 
     public function ehFalhaEstornavel(): bool
     {
-        return in_array($this->status, ['fatal'], true);
+        // Classe `retry` (timeout/instabilidade do provedor, ex. código 600) também é estornável:
+        // o cliente não recebeu o dado, então o crédito volta no fechamento do lote (igual `fatal`).
+        // Base econômica da reconsulta com desconto (docs/superpowers/specs/2026-06-24-reconsulta-fontes-falha-design.md).
+        return in_array($this->status, ['fatal', 'retry'], true);
     }
 }
