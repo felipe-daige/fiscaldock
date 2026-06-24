@@ -140,7 +140,7 @@ class ProcessarConsultaJob implements ShouldQueue
                 // vazio, chave ausente) = falha NA INTEGRAÇÃO. Marca a origem p/ a UI distinguir
                 // de erro interno e de "fora do plano".
                 if (empty($dados) && $resp->status !== 'sucesso') {
-                    $persistencia->marcarErroFonte($this->loteId, $this->alvoTipo, $this->alvoId, $fonte->chave(), 'integracao');
+                    $persistencia->marcarErroFonte($this->loteId, $this->alvoTipo, $this->alvoId, $fonte->chave(), 'integracao', $resp->status, $resp->httpCode);
                 }
             } catch (\Throwable $e) {
                 // Exceção no nosso processamento da fonte = ERRO INTERNO. Não derruba as demais

@@ -278,7 +278,9 @@ it('marca a fonte como falha na INTEGRAÇÃO quando o provedor não retorna resu
 
     $r = ConsultaResultado::where('consulta_lote_id', $loteId)->first();
     expect($r->resultado_dados['cnd_federal'] ?? null)->toBeNull();   // sem blob da fonte
-    expect($r->resultado_dados['_fontes_erro']['cnd_federal'])->toBe('integracao');
+    expect($r->resultado_dados['_fontes_erro']['cnd_federal'])->toMatchArray([
+        'origem' => 'integracao', 'status' => 'retry', 'codigo' => 609, 'tentativas' => 0,
+    ]);
 });
 
 it('marcarErroFonte registra a origem e o sucesso posterior limpa a marca', function () {
@@ -287,7 +289,9 @@ it('marcarErroFonte registra a origem e o sucesso posterior limpa a marca', func
 
     $p->marcarErroFonte($loteId, 'participante', $participanteId, 'cnd_federal', 'interno');
     $r = ConsultaResultado::where('consulta_lote_id', $loteId)->first();
-    expect($r->resultado_dados['_fontes_erro']['cnd_federal'])->toBe('interno');
+    expect($r->resultado_dados['_fontes_erro']['cnd_federal'])->toMatchArray([
+        'origem' => 'interno', 'status' => null,
+    ]);
 
     // re-consulta bem-sucedida da mesma fonte limpa a marca de erro
     $p->gravar($loteId, 'participante', $participanteId, new ResultadoFonte(
