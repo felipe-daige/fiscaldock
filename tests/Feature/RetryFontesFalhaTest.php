@@ -279,3 +279,48 @@ it('POST retry feliz cobra, despacha e responde novo saldo', function () {
 
     Bus::assertBatched(fn ($b) => $b->name === "consulta-retry-{$lote->id}");
 });
+
+// ---------------------------------------------------------------------------
+// Task 6 — Regressão Model A (estorno do 600) + duplo-clique
+// ---------------------------------------------------------------------------
+
+it('código 600 (classe retry) agora acumula estorno no fechamento do lote', function () {
+    [$loteId, $participanteId, $userId] = montarLoteParticipante();
+
+    \Illuminate\Support\Facades\Http::fake([
+        'api.infosimples.com/*' => \Illuminate\Support\Facades\Http::response(['code' => 600, 'code_message' => 'temporariamente indisponível'], 200),
+    ]);
+
+    ProcessarConsultaJob::dispatchSync(
+        loteId: $loteId, alvoTipo: 'participante', alvoId: $participanteId, userId: $userId, tabId: 'tab-test',
+        consultasIncluidas: ['cnd_federal'], alvo: ['cnpj' => '19131243000197'],
+        etapas: ['Preparando consulta', 'Certidões Federais'],
+    );
+
+    // Model A: retry passou a ser estornável → custoCreditos da cnd_federal vai pro estorno.
+    expect((int) Cache::get("consulta_estorno:{$loteId}:participante:{$participanteId}"))
+        ->toBe((int) config('consultas.fontes.cnd_federal', 2));
+});
+
+it('POST retry com lock ativo (duplo-clique) responde 409 sem cobrar duas vezes', function () {
+    Bus::fake();
+    config()->set('consultas.retry.desconto_pct', 50);
+    [$lote, $p, $user] = montarLoteComPlano();
+    app(CreditService::class)->add($user, 100);
+    gravarFontesErro($lote->id, $p->id, [
+        'cnd_federal' => ['origem' => 'integracao', 'status' => 'retry', 'codigo' => 600, 'tentativas' => 0],
+    ]);
+
+    // simula a 1ª requisição ainda processando: lock já tomado
+    Cache::lock("consulta_retry_lock:{$user->id}:{$lote->id}", 10)->get();
+    $saldoAntes = app(CreditService::class)->getBalance($user);
+
+    $this->actingAs($user)
+        ->postJson("/app/consulta/lote/{$lote->id}/retry", [
+            'selecao' => [['alvo_tipo' => 'participante', 'alvo_id' => $p->id, 'fonte' => 'cnd_federal']],
+        ])
+        ->assertStatus(409);
+
+    expect(app(CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes); // não cobrou
+    Bus::assertNothingBatched();
+});
