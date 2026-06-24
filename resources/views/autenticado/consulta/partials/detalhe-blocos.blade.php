@@ -41,7 +41,7 @@
 @else
     {{-- ── Identidade (cadastro): largura total, retrátil ───────────────────── --}}
     @if($cadastro)
-        @php($cadId = 'cad-'.uniqid())
+        @php($cadId = 'cad-'.bin2hex(random_bytes(6)))
         <div class="mb-3 rounded border border-gray-300 bg-white overflow-hidden" style="border-top: 2px solid #1e4679">
             <button type="button" data-detalhe-toggle="{{ $cadId }}" aria-expanded="false"
                     class="w-full flex items-center justify-between gap-3 px-3 py-2 bg-gray-50 border-b border-gray-200 text-left">
@@ -77,7 +77,7 @@
                     </dl>
                 @endif
 
-                @foreach($cadastro['listas'] as $lista)
+                @foreach(($cadastro['listas'] ?? []) as $lista)
                     <div class="rounded border border-gray-100 bg-gray-50 px-3 py-2.5">
                         <p class="text-[9px] text-gray-400 uppercase tracking-wider mb-1.5">{{ $lista['titulo'] }}</p>
                         <ul class="space-y-1">
@@ -128,7 +128,7 @@
                             </dl>
                         @endif
 
-                        @foreach($bloco['listas'] as $lista)
+                        @foreach(($bloco['listas'] ?? []) as $lista)
                             <div>
                                 <p class="text-[9px] text-gray-400 uppercase tracking-wider mb-1">{{ $lista['titulo'] }}</p>
                                 <ul class="space-y-0.5">
