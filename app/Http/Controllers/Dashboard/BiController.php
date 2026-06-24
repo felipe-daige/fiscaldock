@@ -325,8 +325,9 @@ class BiController extends Controller
             abort(503, 'Exportação XLSX indisponível');
         }
 
+        [$ini, $fim] = $this->resolverPeriodo($request);
         $rel = $this->biExport->relatorioCompleto(
-            Auth::id(), $request->get('data_inicio'), $request->get('data_fim'), $request->get('cliente_id')
+            Auth::id(), $ini, $fim, $request->get('cliente_id')
         );
         $filename = 'bi-fiscal-'.now()->format('Ymd').'.xlsx';
 
@@ -339,12 +340,78 @@ class BiController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
+        [$ini, $fim] = $this->resolverPeriodo($request);
         $rel = $this->biExport->relatorioCompleto(
-            Auth::id(), $request->get('data_inicio'), $request->get('data_fim'), $request->get('cliente_id')
+            Auth::id(), $ini, $fim, $request->get('cliente_id')
         );
         $filename = 'bi-fiscal-'.now()->format('Ymd').'.pdf';
 
         return \App\Support\PdfReport::render('reports.bi-executivo', ['relatorio' => $rel])->download($filename);
+    }
+
+    /**
+     * CSV do relatório completo em ZIP — 1 arquivo CSV por seção (CSV é 1 tabela;
+     * o relatório tem 4 seções, então empacota em ZIP).
+     */
+    public function exportarCsvZip(Request $request)
+    {
+        if (! Auth::check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        [$ini, $fim] = $this->resolverPeriodo($request);
+        $rel = $this->biExport->relatorioCompleto(Auth::id(), $ini, $fim, $request->get('cliente_id'));
+
+        $arquivos = [
+            'faturamento' => 'faturamento.csv',
+            'tributos' => 'tributos.csv',
+            'apuracao-notas' => 'declarado-x-computado.csv',
+            'cfop' => 'cfop.csv',
+        ];
+
+        $tmp = tempnam(sys_get_temp_dir(), 'bicsvzip');
+        if ($tmp === false) {
+            throw new \RuntimeException('Falha ao criar arquivo temporário para o ZIP.');
+        }
+
+        $zip = new \ZipArchive;
+        $zip->open($tmp, \ZipArchive::OVERWRITE);
+        foreach ($arquivos as $aba => $nomeArquivo) {
+            $sec = $rel['secoes'][$aba] ?? null;
+            if (! $sec) {
+                continue;
+            }
+            $zip->addFromString($nomeArquivo, CsvExport::build($sec['colunas'], $sec['linhas']));
+        }
+        $zip->close();
+
+        $filename = 'bi-fiscal-'.now()->format('Ymd').'.csv.zip';
+
+        return response()->download($tmp, $filename, [
+            'Content-Type' => 'application/zip',
+        ])->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Resolve a janela [data_inicio, data_fim] do request. Aceita data_inicio/data_fim
+     * explícitos OU o param `meses` (0/1/3/6/12, igual ao #filtro-periodo) computando
+     * server-side — para os botões de export funcionarem por onclick inline sem
+     * depender do bi.js cacheado.
+     */
+    private function resolverPeriodo(Request $request): array
+    {
+        $ini = $request->get('data_inicio');
+        $fim = $request->get('data_fim');
+        if ($ini || $fim) {
+            return [$ini, $fim];
+        }
+
+        $meses = (int) $request->get('meses', 0);
+        if ($meses > 0) {
+            return [now()->subMonths($meses)->toDateString(), now()->toDateString()];
+        }
+
+        return [null, null];
     }
 
     /**

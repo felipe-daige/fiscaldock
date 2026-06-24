@@ -162,20 +162,9 @@
                 window.location.href = `/app/bi/exportar?aba=${encodeURIComponent(aba)}&${params}`;
             });
         });
-        const btnXlsx = document.getElementById('bi-export-xlsx');
-        if (btnXlsx && !btnXlsx._biListenerAdded) {
-            btnXlsx._biListenerAdded = true;
-            btnXlsx.addEventListener('click', () => {
-                window.location.href = '/app/bi/exportar-xlsx?' + getFilterParams();
-            });
-        }
-        const btnPdf = document.getElementById('bi-export-pdf');
-        if (btnPdf && !btnPdf._biListenerAdded) {
-            btnPdf._biListenerAdded = true;
-            btnPdf.addEventListener('click', () => {
-                window.location.href = '/app/bi/exportar-pdf?' + getFilterParams();
-            });
-        }
+        // Botões PDF/Planilha do header usam onclick inline na blade (cache-robusto,
+        // não dependem deste arquivo — bi.js fica 1h em cache sem ?v=). Ver
+        // feedback_bi_js_no_cache_bust.
     }
 
     // Atualiza KPIs do resumo geral via AJAX

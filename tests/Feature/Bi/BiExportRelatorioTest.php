@@ -92,3 +92,22 @@ it('GET /app/bi/exportar-pdf baixa um pdf', function () {
     expect($resp->headers->get('content-type'))->toContain('application/pdf');
     expect(substr($resp->getContent(), 0, 4))->toBe('%PDF');
 });
+
+it('GET /app/bi/exportar-csv-zip baixa um zip', function () {
+    [$uid] = semearBiExport();
+
+    $resp = $this->actingAs(User::find($uid))->get('/app/bi/exportar-csv-zip');
+
+    $resp->assertOk();
+    expect($resp->headers->get('content-type'))->toContain('zip');
+    $resp->assertDownload('bi-fiscal-'.now()->format('Ymd').'.csv.zip');
+});
+
+it('exportar-pdf aceita o param meses (datas computadas server-side)', function () {
+    [$uid] = semearBiExport();
+
+    $resp = $this->actingAs(User::find($uid))->get('/app/bi/exportar-pdf?meses=3');
+
+    $resp->assertOk();
+    expect(substr($resp->getContent(), 0, 4))->toBe('%PDF');
+});

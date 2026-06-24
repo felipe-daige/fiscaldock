@@ -32,13 +32,23 @@
         </tr>
     </table>
 
-    {{-- Faixa de cobertura --}}
+    {{-- Faixa de cobertura (espelha o banner da tela: sem ICMS/IPI E sem PIS/COFINS) --}}
     @if (! empty($cob['parcial']))
-        @php $labelsSemFiscal = collect($cob['meses_sem_fiscal'] ?? [])->pluck('label')->implode(', '); @endphp
+        @php
+            $semFiscal = collect($cob['meses_sem_fiscal'] ?? []);
+            $semContrib = collect($cob['meses_sem_contrib'] ?? []);
+        @endphp
         <div style="background-color:#fffbeb;border:1px solid #fde68a;padding:8px;margin-bottom:12px;">
-            <span style="color:#92400e;font-size:9px;">
-                &#9888; {{ count($cob['meses_sem_fiscal'] ?? []) }} meses sem EFD ICMS/IPI — entradas incompletas: {{ $labelsSemFiscal }}
-            </span>
+            @if ($semFiscal->isNotEmpty())
+                <span style="color:#92400e;font-size:9px;display:block;">
+                    &#9888; {{ $semFiscal->count() }} {{ $semFiscal->count() === 1 ? 'mês' : 'meses' }} sem EFD ICMS/IPI — entradas incompletas: {{ $semFiscal->pluck('label')->implode(', ') }}
+                </span>
+            @endif
+            @if ($semContrib->isNotEmpty())
+                <span style="color:#92400e;font-size:9px;display:block;">
+                    &#9888; {{ $semContrib->count() }} {{ $semContrib->count() === 1 ? 'mês' : 'meses' }} sem EFD PIS/COFINS — receita/tributos incompletos: {{ $semContrib->pluck('label')->implode(', ') }}
+                </span>
+            @endif
         </div>
     @endif
 
