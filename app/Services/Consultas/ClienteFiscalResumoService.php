@@ -103,7 +103,7 @@ class ClienteFiscalResumoService
                     'valor_saida' => round($e['valor_saida'], 2),
                 ])
                 ->sortByDesc(fn ($e) => $e['valor_entrada'] + $e['valor_saida'])
-                ->take(5)
+                ->take(10)
                 ->values()
                 ->all();
 

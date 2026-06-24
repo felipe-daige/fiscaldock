@@ -18,7 +18,7 @@ class TopMovimentacaoQuery
      * @param  array<int, int>  $ids
      * @return array<int, array<int, array{cod_item:string, descricao:string, ncm:?string, valor:float, qtd:int}>>
      */
-    public function produtos(int $userId, string $coluna, array $ids, int $limite = 5): array
+    public function produtos(int $userId, string $coluna, array $ids, int $limite = 10): array
     {
         $this->assertColuna($coluna);
         $ids = array_values(array_unique(array_filter($ids)));
@@ -66,7 +66,7 @@ class TopMovimentacaoQuery
      * @param  array<int, int>  $ids
      * @return array<int, array<int, array{cfop:int, qtd:int}>>
      */
-    public function cfops(int $userId, string $coluna, array $ids, int $limite = 5): array
+    public function cfops(int $userId, string $coluna, array $ids, int $limite = 10): array
     {
         $this->assertColuna($coluna);
         $ids = array_values(array_unique(array_filter($ids)));
