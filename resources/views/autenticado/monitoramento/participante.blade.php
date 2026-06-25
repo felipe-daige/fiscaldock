@@ -885,7 +885,21 @@
                         <div><div class="text-[11px] text-gray-500">Entradas</div><div class="text-[15px] font-bold">{{ $movimentacao['kpis']['entradas_qtd'] }}</div></div>
                         <div><div class="text-[11px] text-gray-500">Saídas</div><div class="text-[15px] font-bold">{{ $movimentacao['kpis']['saidas_qtd'] }}</div></div>
                     </div>
-                    <div id="chart-mov-competencia" style="min-height:220px;"></div>
+                    {{-- Painel Panorama Fiscal reusável (movimento mensal, mix CFOP, concentração, saúde) --}}
+                    <div data-panorama
+                         data-panorama-scope="participante"
+                         data-panorama-id="{{ $participante->id }}"
+                         data-panorama-url="{{ route('app.panorama-fiscal') }}"
+                         class="space-y-2">
+                        <div data-pf-state="loading" class="text-[11px] text-gray-400">Carregando panorama…</div>
+                        <div data-pf-state="error" class="hidden text-[11px] text-red-600">Não foi possível carregar o panorama.</div>
+                        <div data-pf-charts class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div><p class="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Movimento mensal</p><div data-pf-chart="serie" style="min-height:200px;"></div></div>
+                            <div><p class="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Mix de CFOP</p><div data-pf-chart="cfop" style="min-height:200px;"></div></div>
+                            <div><p class="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Concentração de contrapartes</p><div data-pf-chart="concentracao" style="min-height:200px;"></div></div>
+                            <div data-pf-saude class="rounded border border-gray-100 bg-gray-50 px-3 py-2"><p class="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Saúde fiscal</p><div data-pf-saude-body class="text-xs text-gray-600">—</div></div>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Histórico de Consultas --}}
@@ -1055,7 +1069,7 @@
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 uppercase tracking-wide">Custo/Execução</p>
-                                <p class="mt-1 text-sm text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($assinaturaAtiva->plano->custo_creditos ?? 0)))</p>
+                                <p class="mt-1 text-sm text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) ($assinaturaAtiva->plano->custo_creditos ?? 0)))</p>
                             </div>
                             <div class="pt-4 border-t border-gray-200 flex gap-2">
                                 @if($assinaturaAtiva->status === 'ativo')
@@ -1117,7 +1131,7 @@
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Valor gasto</span>
-                            <span class="text-sm font-semibold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($estatisticas['creditos_utilizados'] ?? 0)))</span>
+                            <span class="text-sm font-semibold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) ($estatisticas['creditos_utilizados'] ?? 0)))</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Notas fiscais</span>
@@ -1140,7 +1154,7 @@
                         </div>
                         <div>
                             <p class="text-sm text-gray-500">Saldo disponível</p>
-                            <p class="text-2xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($credits ?? 0)))</p>
+                            <p class="text-2xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) ($credits ?? 0)))</p>
                         </div>
                     </div>
                     <a
@@ -1178,7 +1192,7 @@
                         <option value="">Selecione...</option>
                         @foreach($planos as $plano)
                             <option value="{{ $plano->id }}" data-creditos="{{ $plano->custo_creditos }}">
-                                {{ $plano->nome }} ({{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $plano->custo_creditos)) }}/consulta)
+                                {{ $plano->nome }} ({{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $plano->custo_creditos)) }}/consulta)
                             </option>
                         @endforeach
                     </select>
@@ -1213,6 +1227,8 @@
     </div>
 </div>
 
+<script src="/js/apexcharts.min.js"></script>
+<script src="/js/panorama-fiscal.js?v={{ @filemtime(public_path('js/panorama-fiscal.js')) ?: time() }}"></script>
 <script>
 (function() {
     'use strict';
@@ -1475,37 +1491,9 @@ const formCriarAssinatura = document.getElementById('form-criar-assinatura');
             }
         }
 
-        // Renderizar gráfico de movimentações inline (re-executa em cada swap SPA)
-        renderMovimentacaoChart();
+        // Movimentação agora vem do painel Panorama Fiscal reusável (panorama-fiscal.js, lazy).
 
         console.log('[Monitoramento Participante] Inicialização concluída');
-    }
-
-    function renderMovimentacaoChart() {
-        const el = document.getElementById('chart-mov-competencia');
-        const data = @json($movimentacao ?? null);
-        if (!el || !data || typeof ApexCharts === 'undefined') { return; }
-
-        window._chartMovParticipante && window._chartMovParticipante.destroy();
-
-        const comp = data.por_competencia || [];
-        const chart = new ApexCharts(el, {
-            chart: { type: 'bar', height: 220, toolbar: { show: false } },
-            series: [
-                { name: 'Entrada', data: comp.map((c) => Number(c.entrada)) },
-                { name: 'Saída', data: comp.map((c) => Number(c.saida)) },
-            ],
-            xaxis: { categories: comp.map((c) => c.competencia) },
-            colors: ['#047857', '#dc2626'],
-            plotOptions: { bar: { columnWidth: '55%' } },
-            dataLabels: { enabled: false },
-            legend: { position: 'top' },
-        });
-        chart.render();
-        window._chartMovParticipante = chart;
-
-        window._cleanupFunctions = window._cleanupFunctions || {};
-        window._cleanupFunctions.participanteMovimentacao = () => { chart.destroy(); window._chartMovParticipante = null; };
     }
 
     // Expor globalmente para SPA
