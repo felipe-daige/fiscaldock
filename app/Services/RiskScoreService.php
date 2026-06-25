@@ -318,6 +318,68 @@ class RiskScoreService
     }
 
     /**
+     * Rótulos canônicos das categorias avaliáveis. Ordem = ordem de $this->pesos.
+     * Fonte única — ParticipanteScore::scores_detalhados e a UI consomem daqui.
+     *
+     * @return array<string,string>
+     */
+    public static function categoriaLabels(): array
+    {
+        return [
+            'cadastral' => 'Situação Cadastral',
+            'cnd_federal' => 'CND Federal',
+            'cnd_estadual' => 'CND Estadual',
+            'fgts' => 'FGTS/CRF',
+            'trabalhista' => 'CNDT (Trabalhista)',
+            'compliance' => 'Sanções (CGU/CNJ)',
+        ];
+    }
+
+    /**
+     * Cor (hex) do subscore por faixa de risco. null = não avaliado (neutro).
+     * Replica a closure histórica de risk/show.blade.php — usa `>=` (não `<=`).
+     */
+    public static function hexSubscore(?int $score): string
+    {
+        if ($score === null) {
+            return '#9ca3af';
+        }
+
+        return match (true) {
+            $score >= 80 => '#b91c1c',
+            $score >= 50 => '#ea580c',
+            $score >= 20 => '#d97706',
+            default => '#047857',
+        };
+    }
+
+    /**
+     * Decompõe os subscores em linhas prontas pra exibição (perfil web + PDF).
+     * Fonte única de label + peso + cor por categoria. Ordem fixa = ordem de $this->pesos.
+     *
+     * @param  array<string,int|null>  $scores  saída de calcularScores()
+     * @return array<string, array{label:string, peso_pct:int, score:int|null, avaliado:bool, hex:string}>
+     */
+    public function detalhar(array $scores): array
+    {
+        $labels = self::categoriaLabels();
+        $out = [];
+
+        foreach ($this->pesos as $categoria => $peso) {
+            $valor = $scores[$categoria] ?? null;
+            $out[$categoria] = [
+                'label' => $labels[$categoria] ?? $categoria,
+                'peso_pct' => (int) round($peso * 100),
+                'score' => $valor,
+                'avaliado' => $valor !== null,
+                'hex' => self::hexSubscore($valor),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
      * Retorna os pesos configurados.
      */
     public function getPesos(): array

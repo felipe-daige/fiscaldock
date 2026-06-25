@@ -88,3 +88,49 @@ it('classifica faixas a partir do total', function () {
     expect($this->svc->classificar(70))->toBe('alto');
     expect($this->svc->classificar(90))->toBe('critico');
 });
+
+// ---------- detalhar() / categoriaLabels() / hexSubscore() ----------
+
+it('categoriaLabels cobre exatamente as chaves de getPesos', function () {
+    $labels = \App\Services\RiskScoreService::categoriaLabels();
+    expect(array_keys($labels))->toBe(array_keys($this->svc->getPesos()));
+    expect($labels['cnd_federal'])->toBe('CND Federal');
+});
+
+it('hexSubscore mapeia faixas (replica closure do risk/show)', function () {
+    expect(\App\Services\RiskScoreService::hexSubscore(null))->toBe('#9ca3af');
+    expect(\App\Services\RiskScoreService::hexSubscore(0))->toBe('#047857');
+    expect(\App\Services\RiskScoreService::hexSubscore(19))->toBe('#047857');
+    expect(\App\Services\RiskScoreService::hexSubscore(20))->toBe('#d97706');
+    expect(\App\Services\RiskScoreService::hexSubscore(50))->toBe('#ea580c');
+    expect(\App\Services\RiskScoreService::hexSubscore(80))->toBe('#b91c1c');
+    expect(\App\Services\RiskScoreService::hexSubscore(100))->toBe('#b91c1c');
+});
+
+it('detalhar produz linha por categoria com label, peso_pct, score, avaliado e hex', function () {
+    $scores = $this->svc->calcularScores([
+        'situacao_cadastral' => 'ATIVA',
+        'cnd_federal' => ['status' => 'Positiva'], // irregular => 70
+    ]);
+    $det = $this->svc->detalhar($scores);
+
+    expect(array_keys($det))->toBe(array_keys($this->svc->getPesos()));
+    expect($det['cadastral'])->toMatchArray([
+        'label' => 'Situação Cadastral', 'peso_pct' => 15, 'score' => 0, 'avaliado' => true, 'hex' => '#047857',
+    ]);
+    expect($det['cnd_federal'])->toMatchArray([
+        'label' => 'CND Federal', 'peso_pct' => 20, 'score' => 70, 'avaliado' => true, 'hex' => '#ea580c',
+    ]);
+    // categorias não consultadas => null, não avaliado, hex neutro
+    expect($det['fgts'])->toMatchArray(['score' => null, 'avaliado' => false, 'hex' => '#9ca3af']);
+});
+
+it('detalhar com scores vazio => 6 categorias todas não avaliadas', function () {
+    $det = $this->svc->detalhar([]);
+    expect($det)->toHaveCount(6);
+    foreach ($det as $linha) {
+        expect($linha['avaliado'])->toBeFalse();
+        expect($linha['score'])->toBeNull();
+        expect($linha['hex'])->toBe('#9ca3af');
+    }
+});

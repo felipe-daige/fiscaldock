@@ -158,34 +158,36 @@ class ParticipanteScore extends Model
      */
     public function getScoresDetalhadosAttribute(): array
     {
+        $labels = \App\Services\RiskScoreService::categoriaLabels();
+
         return [
             'cadastral' => [
-                'label' => 'Situação Cadastral',
+                'label' => $labels['cadastral'],
                 'score' => $this->score_cadastral,
                 'avaliado' => $this->score_cadastral !== null,
             ],
             'cnd_federal' => [
-                'label' => 'CND Federal',
+                'label' => $labels['cnd_federal'],
                 'score' => $this->score_cnd_federal,
                 'avaliado' => $this->score_cnd_federal !== null,
             ],
             'cnd_estadual' => [
-                'label' => 'CND Estadual',
+                'label' => $labels['cnd_estadual'],
                 'score' => $this->score_cnd_estadual,
                 'avaliado' => $this->score_cnd_estadual !== null,
             ],
             'fgts' => [
-                'label' => 'FGTS/CRF',
+                'label' => $labels['fgts'],
                 'score' => $this->score_fgts,
                 'avaliado' => $this->score_fgts !== null,
             ],
             'trabalhista' => [
-                'label' => 'CNDT (Trabalhista)',
+                'label' => $labels['trabalhista'],
                 'score' => $this->score_trabalhista,
                 'avaliado' => $this->score_trabalhista !== null,
             ],
             'compliance' => [
-                'label' => 'Sanções (CGU/CNJ)',
+                'label' => $labels['compliance'],
                 'score' => $this->score_compliance,
                 'avaliado' => $this->score_compliance !== null,
             ],
