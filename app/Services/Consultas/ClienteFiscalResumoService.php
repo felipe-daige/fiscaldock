@@ -57,6 +57,7 @@ class ClienteFiscalResumoService
 
         $cfops = $this->top->cfops($userId, 'cliente_id', $ids, $this->panoramaMaximo());
         $produtos = $this->top->produtos($userId, 'cliente_id', $ids, $this->panoramaMaximo());
+        $notas = $this->top->notas($userId, 'cliente_id', $ids, $this->panoramaMaximo());
 
         $acc = [];
         foreach ($volume as $v) {
@@ -119,6 +120,8 @@ class ClienteFiscalResumoService
                 'ultima_nota' => $a['ultima_nota'],
                 'top_cfops' => $cfops[$cid] ?? [],
                 'top_produtos' => $produtos[$cid] ?? [],
+                'top_notas_entrada' => $notas[$cid]['entrada'] ?? [],
+                'top_notas_saida' => $notas[$cid]['saida'] ?? [],
                 'relacionamentos' => $rels,
                 'relacionamentos_titulo' => 'Principais contrapartes',
                 'empresas_count' => count($contra[$cid] ?? []),

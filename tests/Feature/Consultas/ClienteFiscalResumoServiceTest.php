@@ -123,3 +123,11 @@ it('config panorama_fiscal.maximo limita o nº de contrapartes', function () {
     expect($f['relacionamentos'])->toHaveCount(1);
     expect($f['empresas_count'])->toBe(2);  // contagem real preservada (só a lista é capada)
 });
+
+it('cliente: top_notas preenchido sempre (sem flag), ordenado por valor', function () {
+    $d = cfrSetup();
+    $f = app(ClienteFiscalResumoService::class)->paraClientes($d['user']->id, [$d['cliente']])[$d['cliente']];
+    expect($f)->toHaveKeys(['top_notas_entrada', 'top_notas_saida']);
+    expect($f['top_notas_entrada'][0]['valor'])->toEqual(1000.0);  // 1000 > 200; contribuicoes(9999) fora
+    expect($f['top_notas_saida'][0]['valor'])->toEqual(700.0);
+});

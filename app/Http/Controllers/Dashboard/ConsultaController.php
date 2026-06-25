@@ -1873,7 +1873,7 @@ class ConsultaController extends Controller
         $participanteIds = $resultados->pluck('participante_id')->filter()->unique()->values()->all();
         $clienteIds = $resultados->pluck('cliente_id')->filter()->unique()->values()->all();
         $fiscalResumos = app(\App\Services\Consultas\ParticipanteFiscalResumoService::class)
-            ->paraParticipantes($lote->user_id, $participanteIds, comCfops: true, comProdutos: true);
+            ->paraParticipantes($lote->user_id, $participanteIds, comCfops: true, comProdutos: true, comNotas: true);
         $clienteResumos = app(\App\Services\Consultas\ClienteFiscalResumoService::class)
             ->paraClientes($lote->user_id, $clienteIds);
 

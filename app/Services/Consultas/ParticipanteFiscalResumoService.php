@@ -23,7 +23,7 @@ class ParticipanteFiscalResumoService
      * @param  array<int, int>  $participanteIds
      * @return array<int, array<string, mixed>> keyed por participante_id
      */
-    public function paraParticipantes(int $userId, array $participanteIds, bool $comCfops = false, bool $comProdutos = false): array
+    public function paraParticipantes(int $userId, array $participanteIds, bool $comCfops = false, bool $comProdutos = false, bool $comNotas = false): array
     {
         $ids = array_values(array_unique(array_filter($participanteIds)));
         if ($ids === []) {
@@ -54,6 +54,7 @@ class ParticipanteFiscalResumoService
 
         $cfopsPorParticipante = $comCfops ? $this->top->cfops($userId, 'participante_id', $ids, $this->panoramaMaximo()) : [];
         $produtosPorParticipante = $comProdutos ? $this->top->produtos($userId, 'participante_id', $ids, $this->panoramaMaximo()) : [];
+        $notasPorParticipante = $comNotas ? $this->top->notas($userId, 'participante_id', $ids, $this->panoramaMaximo()) : [];
 
         $acc = [];
         foreach ($linhas as $l) {
@@ -113,6 +114,8 @@ class ParticipanteFiscalResumoService
                 'relacionamentos_titulo' => 'Por empresa',
                 'top_cfops' => $cfopsPorParticipante[$pid] ?? [],
                 'top_produtos' => $produtosPorParticipante[$pid] ?? [],
+                'top_notas_entrada' => $notasPorParticipante[$pid]['entrada'] ?? [],
+                'top_notas_saida' => $notasPorParticipante[$pid]['saida'] ?? [],
             ];
         }
 

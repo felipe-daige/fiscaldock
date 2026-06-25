@@ -196,3 +196,19 @@ it('sem comProdutos top_produtos fica vazio', function () {
     $f = app(ParticipanteFiscalResumoService::class)->paraParticipantes($d['user']->id, [$d['forn']])[$d['forn']];
     expect($f['top_produtos'])->toBe([]);
 });
+
+it('participante: top_notas vazio sem comNotas, preenchido (ordenado) com comNotas', function () {
+    $d = pfrSetup();
+
+    $semFlag = app(ParticipanteFiscalResumoService::class)->paraParticipantes($d['user']->id, [$d['forn']]);
+    expect($semFlag[$d['forn']]['top_notas_entrada'])->toBe([]);
+    expect($semFlag[$d['forn']]['top_notas_saida'])->toBe([]);
+
+    $comFlag = app(ParticipanteFiscalResumoService::class)
+        ->paraParticipantes($d['user']->id, [$d['forn']], comNotas: true);
+    $ent = $comFlag[$d['forn']]['top_notas_entrada'];
+    expect($ent)->not->toBeEmpty();
+    expect($ent[0]['valor'])->toEqual(1000.0);   // maior; contribuicoes(9999)/cancelada(8888) excluídas
+    expect($ent[1]['valor'])->toEqual(500.0);
+    expect($ent[0])->toHaveKeys(['modelo', 'numero', 'serie', 'data', 'chave', 'valor']);
+});
