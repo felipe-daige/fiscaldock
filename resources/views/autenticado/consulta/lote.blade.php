@@ -1,5 +1,6 @@
 @php
     $jsVersion = @filemtime(public_path('js/consulta-lote-detalhe.js')) ?: time();
+    $pfJsVersion = @filemtime(public_path('js/panorama-fiscal.js')) ?: time();
     $statusLote = $statusLote ?? \App\Models\ConsultaLote::normalizeStatus($lote->status ?? 'pendente');
     $statusMeta = $statusMeta ?? ['label' => 'Pendente', 'hex' => '#9ca3af'];
     $etapasJson = e(json_encode($etapas ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
@@ -102,7 +103,7 @@
                     <div class="flex-1 flex items-center">
                         <p class="text-sm font-bold text-gray-900">{{ $lote->plano?->nome ?? 'Sem plano' }}</p>
                     </div>
-                    @php $custoPlano = (int) ($lote->plano?->custo_creditos ?? 0); @endphp
+                    @php $custoPlano = (float) ($lote->plano?->custo_creditos ?? 0); @endphp
                     <span class="mt-1 inline-flex items-center self-start gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide" style="background-color: #eef2ff; color: #4338ca">
                         {{ $custoPlano > 0 ? \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($custoPlano)).'/consulta' : 'Grátis' }}
                     </span>
@@ -117,7 +118,7 @@
                 <div class="px-4 py-3 min-h-[96px] flex flex-col">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Custo</p>
                     <div class="flex-1 flex items-center">
-                        <p class="text-lg font-bold text-gray-900">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($lote->creditos_cobrados ?? 0))) }}</p>
+                        <p class="text-lg font-bold text-gray-900">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) ($lote->creditos_cobrados ?? 0))) }}</p>
                     </div>
                     <p class="text-[11px] text-gray-500 mt-1">total cobrado</p>
                 </div>
@@ -308,7 +309,7 @@
                                         <input type="checkbox" checked class="mt-0.5"
                                             data-alvo-tipo="{{ $e['alvo_tipo'] }}" data-alvo-id="{{ $e['alvo_id'] }}" data-fonte="{{ $e['fonte'] }}">
                                         <span class="text-gray-700"><strong>{{ $e['titulo'] }}</strong> — {{ $e['cnpj'] }} ({{ $e['razao'] }}) · erro {{ $e['codigo'] }}
-                                            · <span class="text-amber-700 font-medium">{{ (int) $e['preco_creditos'] }} crédito(s)</span></span>
+                                            · <span class="text-amber-700 font-medium">{{ \App\Support\Dinheiro::brl((float) $e['preco_creditos']) }}</span></span>
                                     </label>
                                 @endforeach
                                 @foreach($retryPendentes['inelegiveis'] as $i)
@@ -318,7 +319,7 @@
                                     </div>
                                 @endforeach
                                 <div class="border-t border-gray-200 pt-3 text-xs text-gray-600">
-                                    Custo: <strong>{{ (int) $retryPendentes['total_preco_creditos'] }} crédito(s)</strong> · Saldo: {{ $credits }}
+                                    Custo: <strong>{{ \App\Support\Dinheiro::brl((float) $retryPendentes['total_preco_creditos']) }}</strong> · Saldo: {{ \App\Support\Dinheiro::brl((float) $credits) }}
                                 </div>
                                 <div class="flex justify-end gap-2">
                                     <button type="button" onclick="document.getElementById('modal-retry-{{ $lote->id }}').classList.add('hidden')" class="text-xs px-3 py-1.5 text-gray-600">Cancelar</button>
@@ -489,7 +490,11 @@
                                     <tr id="consulta-detalhe-d-{{ $loop->index }}" class="{{ $autoAbrirDetalhe ? '' : 'hidden' }}">
                                         <td colspan="7" class="px-4 py-4 bg-gray-50/60 border-t border-gray-100">
                                             @include('autenticado.consulta.partials.detalhe-blocos', ['blocos' => $resultado['detalhe_blocos'] ?? [], 'resumo' => $resultado['resumo_texto'] ?? null, 'certidoes' => $resultado['certidoes'] ?? [], 'cabecalho' => ['razao' => $resultado['razao_social'] ?? null, 'documento' => $resultado['documento_formatado'] ?? null, 'uf' => $resultado['uf'] ?? null, 'situacao' => $resultado['situacao_cadastral'] ?? null]])
-                                            @include('autenticado.consulta.partials.relacionamento-fiscal', ['fiscal' => $resultado['fiscal_resumo'] ?? null])
+                                            @include('autenticado.consulta.partials.panorama-fiscal', [
+                                                'fiscal' => $resultado['fiscal_resumo'] ?? null,
+                                                'escopo' => $resultado['participante_id'] ? 'participante' : ($resultado['cliente_id'] ? 'cliente' : null),
+                                                'escopoId' => $resultado['participante_id'] ?: ($resultado['cliente_id'] ?: null),
+                                            ])
                                         </td>
                                     </tr>
                                 @endforeach
@@ -565,7 +570,11 @@
                                 </button>
                                 <div id="consulta-detalhe-m-{{ $loop->index }}" class="{{ $autoAbrirDetalhe ? '' : 'hidden ' }}mt-3">
                                     @include('autenticado.consulta.partials.detalhe-blocos', ['blocos' => $resultado['detalhe_blocos'] ?? [], 'resumo' => $resultado['resumo_texto'] ?? null, 'certidoes' => $resultado['certidoes'] ?? [], 'cabecalho' => ['razao' => $resultado['razao_social'] ?? null, 'documento' => $resultado['documento_formatado'] ?? null, 'uf' => $resultado['uf'] ?? null, 'situacao' => $resultado['situacao_cadastral'] ?? null]])
-                                    @include('autenticado.consulta.partials.relacionamento-fiscal', ['fiscal' => $resultado['fiscal_resumo'] ?? null])
+                                    @include('autenticado.consulta.partials.panorama-fiscal', [
+                                                'fiscal' => $resultado['fiscal_resumo'] ?? null,
+                                                'escopo' => $resultado['participante_id'] ? 'participante' : ($resultado['cliente_id'] ? 'cliente' : null),
+                                                'escopoId' => $resultado['participante_id'] ?: ($resultado['cliente_id'] ?: null),
+                                            ])
                                 </div>
                             </div>
                         @endforeach
@@ -604,6 +613,8 @@
 
 <script src="/js/progresso-automacao.js?v={{ @filemtime(public_path('js/progresso-automacao.js')) ?: time() }}"></script>
 <script src="/js/consulta-lote-detalhe.js?v={{ $jsVersion }}"></script>
+<script src="/js/apexcharts.min.js"></script>
+<script src="/js/panorama-fiscal.js?v={{ $pfJsVersion }}"></script>
 <script>
 (function() {
     const scrollKey = 'consulta-lote-detalhe-scroll-y';
@@ -653,6 +664,8 @@
             btn.setAttribute('aria-expanded', hidden ? 'false' : 'true');
             var chevron = btn.querySelector('.detalhe-chevron');
             if (chevron) chevron.style.transform = hidden ? '' : 'rotate(90deg)';
+            // Cards de fonte só têm altura mensurável quando a linha do CNPJ está aberta.
+            if (!hidden) ajustarFontesClampadas();
         };
         document.addEventListener('click', detalheToggleHandler);
         window._cleanupFunctions = window._cleanupFunctions || {};
@@ -660,6 +673,61 @@
             document.removeEventListener('click', detalheToggleHandler);
             window.__consultaDetalheToggleBound = false;
         };
+    }
+
+    // "Ver tudo / Ver menos" dos cards de fonte pesados: alterna o clamp de altura (preview ~11rem
+    // → altura total) sem esconder o conteúdo. Delegado no document, 1x, com cleanup (SPA-safe).
+    var FONTE_CLAMP = '11rem';
+    if (!window.__consultaFonteExpandBound) {
+        window.__consultaFonteExpandBound = true;
+        var fonteExpandHandler = function(e) {
+            var btn = e.target.closest('[data-fonte-expand]');
+            if (!btn) return;
+            var wrap = btn.closest('[data-fonte-bloco]');
+            if (!wrap) return;
+            var corpo = wrap.querySelector('[data-fonte-corpo]');
+            if (!corpo) return;
+            var fade = wrap.querySelector('[data-fonte-fade]');
+            var label = btn.querySelector('[data-fonte-expand-label]');
+            var chev = btn.querySelector('.detalhe-chevron');
+            var clamped = corpo.style.maxHeight !== '' && corpo.style.maxHeight !== 'none';
+            if (clamped) {
+                corpo.style.maxHeight = '';
+                if (fade) fade.classList.add('hidden');
+                if (label) label.textContent = 'Ver menos';
+                if (chev) chev.style.transform = 'rotate(180deg)';
+            } else {
+                corpo.style.maxHeight = FONTE_CLAMP;
+                if (fade) fade.classList.remove('hidden');
+                if (label) label.textContent = 'Ver tudo';
+                if (chev) chev.style.transform = '';
+            }
+        };
+        document.addEventListener('click', fonteExpandHandler);
+        window._cleanupFunctions = window._cleanupFunctions || {};
+        window._cleanupFunctions.consultaFonteExpand = function() {
+            document.removeEventListener('click', fonteExpandHandler);
+            window.__consultaFonteExpandBound = false;
+        };
+    }
+
+    // Guard: se o card clampado na verdade cabe no preview, remove fade + botão (nada a expandir).
+    function ajustarFontesClampadas() {
+        document.querySelectorAll('[data-fonte-corpo]').forEach(function(corpo) {
+            if (corpo.style.maxHeight === '' || corpo.style.maxHeight === 'none') return;
+            if (corpo.offsetParent === null) return; // linha do CNPJ fechada → mede 0, não mexer
+            if (corpo.scrollHeight <= corpo.clientHeight + 2) {
+                corpo.style.maxHeight = '';
+                var wrap = corpo.closest('[data-fonte-bloco]') || corpo.parentElement;
+                var fade = wrap.querySelector('[data-fonte-fade]');
+                var btn = wrap.querySelector('[data-fonte-expand]');
+                var footer = wrap.querySelector('[data-fonte-footer]');
+                if (fade) fade.remove();
+                if (btn) btn.remove();
+                // Card cabe e não tem comprovante → rodapé fica vazio: remove pra não sobrar borda.
+                if (footer && !footer.querySelector('a')) footer.remove();
+            }
+        });
     }
 
     restorePaginationScroll();
@@ -673,5 +741,6 @@
     }
 
     tryInit(0);
+    ajustarFontesClampadas();
 })();
 </script>

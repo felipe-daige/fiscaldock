@@ -1,0 +1,135 @@
+{{-- Panorama fiscal reusável do CNPJ (cliente OU participante) no acervo EFD.
+     Shape único de ParticipanteFiscalResumoService / ClienteFiscalResumoService (KPIs/listas
+     embutidos = glance instantâneo) + raiz [data-panorama] que hidrata 4 charts via lazy AJAX
+     (panorama-fiscal.js → GET app.panorama-fiscal). $escopo/$escopoId opcionais (sem eles, só glance). --}}
+@php($fiscal = $fiscal ?? null)
+@php($escopo = $escopo ?? null)
+@php($escopoId = $escopoId ?? null)
+@php($papelHex = ['fornecedor' => '#2563eb', 'cliente' => '#0f766e', 'ambos' => '#7c3aed'])
+@php($papelLabel = ['fornecedor' => 'Fornecedor', 'cliente' => 'Cliente', 'ambos' => 'Fornecedor e cliente'])
+
+<div class="mt-3 border border-gray-200 rounded bg-white overflow-hidden">
+    <div class="px-3 py-2 bg-gray-50 border-b border-gray-200">
+        <span class="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">Relacionamento &amp; Movimentação Fiscal</span>
+    </div>
+
+    @if(empty($fiscal))
+        <div class="px-3 py-2.5">
+            <p class="text-xs text-gray-500">Sem movimentação no acervo fiscal (EFD) deste CNPJ.</p>
+        </div>
+    @else
+        <div class="px-3 py-2.5 space-y-3">
+            <div class="flex flex-wrap items-center gap-2">
+                @if(!empty($fiscal['papel']))
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
+                          style="background-color: {{ $papelHex[$fiscal['papel']] ?? '#374151' }}">{{ $papelLabel[$fiscal['papel']] ?? '—' }}</span>
+                @else
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
+                          style="background-color: #475569">Acervo próprio</span>
+                @endif
+                @if(!empty($fiscal['primeira_nota']) && !empty($fiscal['ultima_nota']))
+                    <span class="text-[11px] text-gray-500 font-mono">
+                        {{ \Carbon\Carbon::parse($fiscal['primeira_nota'])->format('m/Y') }}
+                        – {{ \Carbon\Carbon::parse($fiscal['ultima_nota'])->format('m/Y') }}
+                    </span>
+                @endif
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <div class="rounded border border-gray-100 bg-gray-50 px-2.5 py-1.5">
+                    <p class="text-[10px] text-gray-400 uppercase tracking-wide">Comprado (entradas)</p>
+                    <p class="text-sm font-bold text-gray-900 font-mono">R$ {{ number_format($fiscal['total_comprado'], 2, ',', '.') }}</p>
+                    <p class="text-[10px] text-gray-400">{{ $fiscal['qtd_entrada'] }} nota(s)</p>
+                </div>
+                <div class="rounded border border-gray-100 bg-gray-50 px-2.5 py-1.5">
+                    <p class="text-[10px] text-gray-400 uppercase tracking-wide">Vendido (saídas)</p>
+                    <p class="text-sm font-bold text-gray-900 font-mono">R$ {{ number_format($fiscal['total_vendido'], 2, ',', '.') }}</p>
+                    <p class="text-[10px] text-gray-400">{{ $fiscal['qtd_saida'] }} nota(s)</p>
+                </div>
+            </div>
+
+            {{-- Painel de gráficos: hidrata via lazy AJAX no 1º expand. Só quando há escopo conhecido. --}}
+            @if(!empty($escopo) && !empty($escopoId))
+                <div data-panorama
+                     data-panorama-scope="{{ $escopo }}"
+                     data-panorama-id="{{ $escopoId }}"
+                     data-panorama-url="{{ route('app.panorama-fiscal') }}"
+                     class="space-y-2 border-t border-gray-100 pt-3">
+                    <div data-pf-state="loading" class="hidden text-[11px] text-gray-400">Carregando panorama…</div>
+                    <div data-pf-state="error" class="hidden text-[11px] text-red-600">Não foi possível carregar o panorama.</div>
+                    <div data-pf-charts class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Movimento mensal</p>
+                            <div data-pf-chart="serie" style="min-height:200px;"></div>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Mix de CFOP</p>
+                            <div data-pf-chart="cfop" style="min-height:200px;"></div>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Concentração de contrapartes</p>
+                            <div data-pf-chart="concentracao" style="min-height:200px;"></div>
+                        </div>
+                        <div data-pf-saude class="rounded border border-gray-100 bg-gray-50 px-3 py-2">
+                            <p class="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Saúde fiscal</p>
+                            <div data-pf-saude-body class="text-xs text-gray-600">—</div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @php($pfVisivel = (int) config('consultas.panorama_fiscal.visivel', 10))
+
+            @if(!empty($fiscal['top_produtos']))
+                @php($pfProds = collect($fiscal['top_produtos']))
+                <div data-pf-list>
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <p class="text-[10px] text-gray-400 uppercase tracking-wide">Principais produtos negociados</p>
+                        @include('autenticado.consulta.partials._panorama-seletor', ['count' => $pfProds->count(), 'default' => $pfVisivel])
+                    </div>
+                    <div class="space-y-1">
+                        @foreach($pfProds as $i => $p)
+                            <div data-pf-row @class(['hidden' => $i >= $pfVisivel])>
+                                @include('autenticado.consulta.partials._panorama-produto-linha', ['p' => $p])
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            @if(!empty($fiscal['relacionamentos']))
+                @php($pfRels = collect($fiscal['relacionamentos']))
+                <div data-pf-list>
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <p class="text-[10px] text-gray-400 uppercase tracking-wide">{{ $fiscal['relacionamentos_titulo'] ?? 'Por empresa' }}</p>
+                        @include('autenticado.consulta.partials._panorama-seletor', ['count' => $pfRels->count(), 'default' => $pfVisivel])
+                    </div>
+                    <div class="space-y-1">
+                        @foreach($pfRels as $i => $rel)
+                            <div data-pf-row @class(['hidden' => $i >= $pfVisivel])>
+                                @include('autenticado.consulta.partials._panorama-contraparte-linha', ['rel' => $rel, 'papelHex' => $papelHex, 'papelLabel' => $papelLabel])
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            @if(!empty($fiscal['top_cfops']))
+                @php($pfCfops = collect($fiscal['top_cfops']))
+                <div data-pf-list>
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <p class="text-[10px] text-gray-400 uppercase tracking-wide">Principais CFOPs</p>
+                        @include('autenticado.consulta.partials._panorama-seletor', ['count' => $pfCfops->count(), 'default' => $pfVisivel])
+                    </div>
+                    <div class="space-y-1">
+                        @foreach($pfCfops as $i => $c)
+                            <div data-pf-row @class(['hidden' => $i >= $pfVisivel])>
+                                @include('autenticado.consulta.partials._panorama-cfop-linha', ['c' => $c])
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        </div>
+    @endif
+</div>
