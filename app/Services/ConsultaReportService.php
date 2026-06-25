@@ -128,6 +128,7 @@ class ConsultaReportService
             }
 
             $situacao = trim((string) $resultado->getDado('situacao_cadastral'));
+            $scoreData = $resultado->calcularScore();
 
             return [
                 'participante_id' => $resultado->participante_id,
@@ -149,6 +150,9 @@ class ConsultaReportService
                     ? $this->detalhePresenter->blocos($resultado, $esperadasCert)
                     : [],
                 'fiscal_resumo' => $fiscalResumo,
+                'score_total' => $scoreData['score_total'],
+                'classificacao' => $scoreData['classificacao'],
+                'score_detalhamento' => $this->riskScoreService->detalhar($scoreData['scores']),
             ];
         });
     }

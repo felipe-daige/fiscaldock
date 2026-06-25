@@ -81,6 +81,18 @@
             </div>
         </div>
 
+        {{-- Score de risco (detalhamento) --}}
+        @if(!empty($d['score_detalhamento']))
+            <div class="secao">
+                <div class="secao-header">Score de risco
+                    <span class="meta">{{ $d['score_total'] ?? '—' }} · {{ strtoupper($d['classificacao'] ?? '—') }}</span>
+                </div>
+                <div class="secao-body">
+                    @include('reports.partials._score-detalhamento', ['detalhamento' => $d['score_detalhamento']])
+                </div>
+            </div>
+        @endif
+
         {{-- Parecer --}}
         @if(!empty($d['resumo']))
             <div class="secao"><div class="secao-header">Parecer fiscal</div><div class="secao-body"><div class="list-item">{{ $d['resumo'] }}</div></div></div>

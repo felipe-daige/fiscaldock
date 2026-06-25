@@ -120,6 +120,21 @@ it('PDF do dossiê: crédito IBS/CBS com passo a passo (valores batem com o serv
     expect($html)->toContain($potencial);
 });
 
+it('lote PDF: getDetalhes traz score_detalhamento por CNPJ e _cnpj renderiza categorias', function () {
+    $user = User::factory()->create();
+    [$lote] = dossieLoteComAcervo($user);
+
+    $svc = app(ConsultaReportService::class);
+    $linha = $svc->getDetalhes($lote)->first();
+
+    expect($linha)->toHaveKey('score_detalhamento');
+    expect(array_keys($linha['score_detalhamento']))
+        ->toBe(array_keys(app(\App\Services\RiskScoreService::class)->getPesos()));
+
+    $html = view('reports.consulta-lote', $svc->dadosRelatorio($lote))->render();
+    expect($html)->toContain('Score de risco')->and($html)->toContain('Subscore');
+});
+
 it('PDF do dossiê: CNPJ sem acervo omite panorama com nota', function () {
     $user = User::factory()->create();
     $lote = pdfDetLoteSemAcervo($user);
