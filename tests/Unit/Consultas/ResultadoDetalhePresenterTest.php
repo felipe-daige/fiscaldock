@@ -23,6 +23,27 @@ function bloco(array $blocos, string $chave): ?array
     return null;
 }
 
+it('lida com _fontes_erro no shape objeto (retry) sem TypeError', function () {
+    $resultado = resultadoComDados([
+        'razao_social' => 'ACME LTDA',
+        'situacao_cadastral' => 'ATIVA',
+        '_fontes_erro' => [
+            'cnd_federal' => ['codigo' => 615, 'origem' => 'integracao', 'status' => 'retry', 'tentativas' => 0],
+            'sintegra' => ['codigo' => 609, 'origem' => 'interno', 'status' => 'erro', 'tentativas' => 0],
+        ],
+    ]);
+    $presenter = new ResultadoDetalhePresenter();
+
+    // blocos(): cnd_federal pedido mas ausente → card de falha; origem integracao
+    $cnd = bloco($presenter->blocos($resultado, ['cnd_federal', 'sintegra']), 'cnd_federal');
+    expect($cnd)->not->toBeNull();
+    expect($cnd['badge']['label'])->toBe('Falha na integração');
+
+    // certidoes() strip: sintegra origem interno → erro interno
+    $strip = collect($presenter->certidoes($resultado, ['cnd_federal', 'sintegra']));
+    expect($strip->firstWhere('chave', 'sintegra')['label'])->toBe('Erro interno');
+});
+
 it('monta bloco de dados cadastrais com itens e listas (CNAEs/QSA)', function () {
     $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
         'razao_social' => 'ACME LTDA',
@@ -88,6 +109,30 @@ it('inclui CND Estadual e SINTEGRA que hoje não aparecem na tabela', function (
     expect($sin)->not->toBeNull();
     $itens = collect($sin['itens'])->keyBy('label');
     expect($itens->get('Inscrição estadual')['valor'])->toBe('28.368.441-0');
+});
+
+it('compõe linha-resumo para FGTS e SINTEGRA, que não trazem frase do provedor', function () {
+    $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
+        'endereco' => ['uf' => 'MS'],
+        'crf_fgts' => ['status' => 'REGULAR', 'data_validade' => '16/07/2026'],
+        'sintegra' => ['situacao' => 'HABILITADO', 'inscricao_estadual' => '28.337.553-1', 'uf' => null],
+    ]));
+
+    $fgts = bloco($blocos, 'crf_fgts');
+    expect($fgts['mensagem'])->toContain('regular perante o FGTS');
+    expect($fgts['mensagem'])->toContain('16/07/2026');
+
+    $sin = bloco($blocos, 'sintegra');
+    expect($sin['mensagem'])->toBe('Contribuinte HABILITADO no cadastro SINTEGRA-MS (IE 28.337.553-1).');
+});
+
+it('FGTS irregular ganha linha-resumo de pendência', function () {
+    $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
+        'crf_fgts' => ['status' => 'IRREGULAR'],
+    ]));
+
+    $fgts = bloco($blocos, 'crf_fgts');
+    expect($fgts['mensagem'])->toContain('sem Certificado de Regularidade');
 });
 
 it('completa a UF da CND Estadual a partir do endereço quando a resposta vem sem UF', function () {

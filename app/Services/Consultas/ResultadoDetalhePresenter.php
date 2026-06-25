@@ -4,6 +4,7 @@ namespace App\Services\Consultas;
 
 use App\Models\ConsultaResultado;
 use App\Support\CertidaoBadge;
+use App\Support\Cnpj;
 use App\Support\MensagemPublica;
 
 /**
@@ -58,6 +59,8 @@ class ResultadoDetalhePresenter
         // (ex.: SEFAZ/CND Estadual costuma retornar uf=null, mas foi consultada para a UF do alvo).
         $ufFallback = trim((string) ($dados['endereco']['uf'] ?? $dados['uf'] ?? '')) ?: null;
         $errosFonte = is_array($dados['_fontes_erro'] ?? null) ? $dados['_fontes_erro'] : [];
+        // Quando o alvo é filial, a CND Federal é emitida para a matriz (regra RFB) — explica no card.
+        $notaFederal = $this->notaMatrizFederal($resultado);
 
         if ($cadastro = $this->blocoCadastro($dados)) {
             $blocos[] = $cadastro;
@@ -79,7 +82,7 @@ class ResultadoDetalhePresenter
                 'cgu_cnc' => $this->blocoSancoes($dados[$chave]),
                 'cnj_improbidade' => $this->blocoImprobidade($dados[$chave]),
                 'sintegra' => $this->blocoSintegra($dados[$chave], $ufFallback),
-                default => $this->blocoCertidao($chave, $dados[$chave], $ufFallback),
+                default => $this->blocoCertidao($chave, $dados[$chave], $ufFallback, $chave === 'cnd_federal' ? $notaFederal : null),
             };
 
             if ($bloco) {
@@ -176,8 +179,11 @@ class ResultadoDetalhePresenter
      *
      * @return array{estado: string, label: string, hex: string, descricao: string}
      */
-    private function erroCert(?string $origem): array
+    private function erroCert(string|array|null $origem): array
     {
+        // _fontes_erro migrou pra objeto {origem, codigo, status, tentativas} (feature de retry);
+        // aceita tanto o objeto quanto a string legada.
+        $origem = is_array($origem) ? ($origem['origem'] ?? null) : $origem;
         $interno = $origem === 'interno';
 
         return [
@@ -210,7 +216,7 @@ class ResultadoDetalhePresenter
         return $t !== null ? \Illuminate\Support\Str::limit($t, 140) : null;
     }
 
-    private function blocoFalhou(string $chave, ?string $origem = null): array
+    private function blocoFalhou(string $chave, string|array|null $origem = null): array
     {
         $erro = $this->erroCert($origem);
 
@@ -456,7 +462,7 @@ class ResultadoDetalhePresenter
         return (string) config("consultas.fonte_nome.{$chave}", $chave);
     }
 
-    private function bloco(string $chave, string $titulo, ?array $badge, array $itens, array $listas = [], ?string $mensagem = null, ?string $comprovante = null): array
+    private function bloco(string $chave, string $titulo, ?array $badge, array $itens, array $listas = [], ?string $mensagem = null, ?string $comprovante = null, ?string $nota = null): array
     {
         return [
             'chave' => $chave,
@@ -466,6 +472,7 @@ class ResultadoDetalhePresenter
             'listas' => array_values(array_filter($listas, fn ($l) => ! empty($l['linhas']))),
             'mensagem' => $this->limpar($mensagem),
             'comprovante_url' => $this->urlValida($comprovante),
+            'nota' => $this->limpar($nota),
         ];
     }
 
@@ -496,7 +503,7 @@ class ResultadoDetalhePresenter
             $this->item('Capital social', $this->moeda($d['capital_social'] ?? null)),
             $this->item('Matriz/Filial', isset($d['matriz_filial']) ? ucfirst((string) $d['matriz_filial']) : null),
             $this->item('Início de atividade', $d['data_inicio_atividade'] ?? null),
-            $this->item('Regime tributário', $d['regime_tributario'] ?? null),
+            $this->item('Regime tributário', $d['regime_tributario'] ?? null, ($d['regime_tributario_origem'] ?? null) === 'matriz' ? 'Publicado pela RFB no CNPJ da matriz (regime é da empresa).' : null),
             $this->item('Endereço', $this->endereco($d['endereco'] ?? null)),
             $this->item('Telefone', $d['telefone_1'] ?? null),
         ];
@@ -532,7 +539,7 @@ class ResultadoDetalhePresenter
     // Certidões (CND Federal/Estadual/Municipal, FGTS, CNDT)
     // ──────────────────────────────────────────────────────────────────────────
 
-    private function blocoCertidao(string $chave, array $d, ?string $ufFallback = null): array
+    private function blocoCertidao(string $chave, array $d, ?string $ufFallback = null, ?string $nota = null): array
     {
         $badge = CertidaoBadge::classificar($d, $chave === 'cnd_federal');
 
@@ -554,8 +561,46 @@ class ResultadoDetalhePresenter
         }
 
         $mensagem = $d['mensagem'] ?? ($badge['motivo'] ?? null);
+        // FGTS/Caixa não devolve a frase da certidão (só `situacao`); compõe uma linha-resumo
+        // equivalente à das demais certidões, a partir do status + validade do CRF.
+        if (! $mensagem && $chave === 'crf_fgts') {
+            $mensagem = $this->resumoFgts($d, $badge);
+        }
 
-        return $this->bloco($chave, $this->tituloCertidao($chave, $uf), $badge, $itens, [], $mensagem, $d['comprovante'] ?? null);
+        return $this->bloco($chave, $this->tituloCertidao($chave, $uf), $badge, $itens, [], $mensagem, $d['comprovante'] ?? null, $nota);
+    }
+
+    /** Linha-resumo do CRF FGTS (a Caixa não devolve frase pronta como as demais certidões). */
+    private function resumoFgts(array $d, ?array $badge): ?string
+    {
+        if (($badge['label'] ?? null) === 'Regular') {
+            $validade = $d['data_validade'] ?? null;
+
+            return 'Empregador em situação regular perante o FGTS'
+                .($validade ? " — Certificado de Regularidade (CRF) válido até {$validade}." : '.');
+        }
+
+        return 'Empregador sem Certificado de Regularidade do FGTS válido perante a Caixa.';
+    }
+
+    /**
+     * Texto explicativo (retrátil) para a CND Federal quando o CNPJ consultado é uma filial:
+     * a certidão federal (RFB/PGFN) é unificada por base e só emite para a matriz (regra da Receita).
+     * Retorna null quando o alvo é matriz ou o documento não é um CNPJ completo.
+     */
+    private function notaMatrizFederal(ConsultaResultado $resultado): ?string
+    {
+        $cnpj = $resultado->participante?->documento ?: $resultado->cliente?->documento;
+        if (! $cnpj || ! Cnpj::ehFilial((string) $cnpj)) {
+            return null;
+        }
+
+        $matriz = Cnpj::formatar(Cnpj::matriz((string) $cnpj));
+
+        return "A CND Federal foi emitida para o CNPJ da matriz ({$matriz}), não para a filial consultada. "
+            .'É uma exigência da Receita Federal: a certidão de débitos federais (RFB/PGFN) é unificada por base de CNPJ '
+            .'e só é emitida para a matriz, valendo para a empresa inteira (matriz e filiais). '
+            .'Os demais dados desta consulta — cadastro, CND estadual/municipal, FGTS, SINTEGRA — referem-se ao CNPJ consultado.';
     }
 
     private function tituloCertidao(string $chave, ?string $uf = null): string
@@ -590,7 +635,26 @@ class ResultadoDetalhePresenter
             $this->item('Data da situação', $d['data_situacao'] ?? null),
         ];
 
-        return $this->bloco('sintegra', 'SINTEGRA', $badge, $itens, [], $d['mensagem'] ?? null, $d['comprovante'] ?? null);
+        $uf = trim((string) ($d['uf'] ?? '')) ?: $ufFallback;
+        // SINTEGRA tb não traz frase pronta — compõe a partir de situação/UF/IE.
+        $mensagem = $d['mensagem'] ?? $this->resumoSintegra($d, $uf);
+
+        return $this->bloco('sintegra', 'SINTEGRA', $badge, $itens, [], $mensagem, $d['comprovante'] ?? null);
+    }
+
+    /** Linha-resumo do SINTEGRA (o provedor não devolve frase; deriva de situação/UF/IE). */
+    private function resumoSintegra(array $d, ?string $uf): ?string
+    {
+        $sit = trim((string) ($d['situacao'] ?? ''));
+        if ($sit === '') {
+            return null;
+        }
+
+        $ufTxt = $uf ? '-'.strtoupper($uf) : '';
+        $ie = trim((string) ($d['inscricao_estadual'] ?? ''));
+        $ieTxt = $ie !== '' ? " (IE {$ie})" : '';
+
+        return "Contribuinte {$sit} no cadastro SINTEGRA{$ufTxt}{$ieTxt}.";
     }
 
     // ──────────────────────────────────────────────────────────────────────────
