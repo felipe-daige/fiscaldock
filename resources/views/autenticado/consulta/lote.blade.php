@@ -256,7 +256,8 @@
                         </div>
 
                         @if(!empty($analise['por_fonte']))
-                            <div class="overflow-x-auto">
+                            {{-- Desktop: tabela --}}
+                            <div class="hidden md:block overflow-x-auto">
                                 <table class="min-w-full text-xs">
                                     <thead>
                                         <tr class="border-b border-gray-200 text-[10px] text-gray-400 uppercase tracking-wide">
@@ -270,7 +271,6 @@
                                     </thead>
                                     <tbody class="divide-y divide-gray-100">
                                         @foreach($analise['por_fonte'] as $f)
-                                            @php $tot = max(1, (int) ($f['total'] ?? 0)); @endphp
                                             <tr>
                                                 <td class="py-2 pr-3 text-gray-800">{{ $f['titulo'] }}</td>
                                                 <td class="text-center px-2 font-medium" style="color: {{ ($f['regular'] ?? 0) > 0 ? '#047857' : '#9ca3af' }}">{{ (int) ($f['regular'] ?? 0) }}</td>
@@ -278,17 +278,28 @@
                                                 <td class="text-center px-2 font-medium" style="color: {{ ($f['indeterminado'] ?? 0) > 0 ? '#d97706' : '#9ca3af' }}">{{ (int) ($f['indeterminado'] ?? 0) }}</td>
                                                 <td class="text-center px-2 text-gray-400">{{ (int) ($f['neutro'] ?? 0) }}</td>
                                                 <td class="pl-3">
-                                                    <div class="flex h-2.5 w-full rounded-full overflow-hidden" style="background-color: #f3f4f6">
-                                                        @if((int) ($f['regular'] ?? 0) > 0)<div style="width: {{ round(($f['regular'] / $tot) * 100, 2) }}%; background-color: #047857" title="Regular: {{ (int) $f['regular'] }}"></div>@endif
-                                                        @if((int) ($f['atencao'] ?? 0) > 0)<div style="width: {{ round(($f['atencao'] / $tot) * 100, 2) }}%; background-color: #dc2626" title="Atenção: {{ (int) $f['atencao'] }}"></div>@endif
-                                                        @if((int) ($f['indeterminado'] ?? 0) > 0)<div style="width: {{ round(($f['indeterminado'] / $tot) * 100, 2) }}%; background-color: #d97706" title="Indeterminado: {{ (int) $f['indeterminado'] }}"></div>@endif
-                                                        @if((int) ($f['neutro'] ?? 0) > 0)<div style="width: {{ round(($f['neutro'] / $tot) * 100, 2) }}%; background-color: #9ca3af" title="Não consultado: {{ (int) $f['neutro'] }}"></div>@endif
-                                                    </div>
+                                                    @include('autenticado.consulta.partials._analise-distribuicao', ['f' => $f])
                                                 </td>
                                             </tr>
                                         @endforeach
                                     </tbody>
                                 </table>
+                            </div>
+
+                            {{-- Mobile: lista empilhada por fonte (sem scroll horizontal) --}}
+                            <div class="md:hidden space-y-2">
+                                @foreach($analise['por_fonte'] as $f)
+                                    <div class="border border-gray-100 rounded p-2">
+                                        <p class="text-xs font-medium text-gray-800 mb-1">{{ $f['titulo'] }}</p>
+                                        <div class="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] mb-1.5">
+                                            <span class="font-medium" style="color: {{ ($f['regular'] ?? 0) > 0 ? '#047857' : '#9ca3af' }}">Regular {{ (int) ($f['regular'] ?? 0) }}</span>
+                                            <span class="font-medium" style="color: {{ ($f['atencao'] ?? 0) > 0 ? '#dc2626' : '#9ca3af' }}">Atenção {{ (int) ($f['atencao'] ?? 0) }}</span>
+                                            <span class="font-medium" style="color: {{ ($f['indeterminado'] ?? 0) > 0 ? '#d97706' : '#9ca3af' }}">Indeterm. {{ (int) ($f['indeterminado'] ?? 0) }}</span>
+                                            <span class="text-gray-400">N/Consult. {{ (int) ($f['neutro'] ?? 0) }}</span>
+                                        </div>
+                                        @include('autenticado.consulta.partials._analise-distribuicao', ['f' => $f])
+                                    </div>
+                                @endforeach
                             </div>
                         @endif
                     </div>
