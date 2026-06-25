@@ -37,6 +37,9 @@
                     <td><div class="lbl">Classificação</div><div class="val">{{ ucfirst($score['classificacao'] ?? 'medio') }}</div></td>
                 </tr></table></div>
                 <div class="score-bar" style="margin-top:4px;"><div style="background-color:{{ $scoreHex }};width:{{ max(0,min(100,(int)$score['score_total'])) }}%;height:14px;"></div></div>
+                <div style="margin-top:8px;">
+                    @include('reports.partials._score-detalhamento', ['detalhamento' => $score['detalhamento'] ?? []])
+                </div>
             </td>
         </tr></table>
     </div>

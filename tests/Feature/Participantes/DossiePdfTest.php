@@ -54,6 +54,12 @@ it('a view do dossie renderiza secoes de consulta e movimentacao', function () {
         ->and($html)->toContain('Detalhamento');
 });
 
+it('dossiê PDF mostra detalhamento do score (subscore por categoria)', function () {
+    $dados = app(\App\Services\Participantes\DossieParticipanteBuilder::class)->montar($this->p);
+    $html = view('reports.dossie.participante', $dados)->render();
+    expect($html)->toContain('Subscore')->and($html)->toContain('Peso');
+});
+
 it('dossiê PDF lista principais produtos e CFOP detalhado', function () {
     $user = User::factory()->create();
     $p = Participante::create(['user_id' => $user->id, 'documento' => '07863768000138', 'razao_social' => 'ACME LTDA', 'uf' => 'SP', 'crt' => '3']);

@@ -6,6 +6,7 @@ use App\Models\ConsultaResultado;
 use App\Models\Participante;
 use App\Services\Consultas\Fiscal\TopMovimentacaoQuery;
 use App\Services\Consultas\ResultadoDetalhePresenter;
+use App\Services\RiskScoreService;
 
 /**
  * Monta o payload único do dossiê do participante: consulta (certidões) + score
@@ -17,6 +18,7 @@ final class DossieParticipanteBuilder
         private ParticipanteMovimentacaoService $movimentacao,
         private ResultadoDetalhePresenter $presenter,
         private TopMovimentacaoQuery $top,
+        private RiskScoreService $risk,
     ) {}
 
     public function montar(Participante $p): array
@@ -36,6 +38,8 @@ final class DossieParticipanteBuilder
         $score = $ultima
             ? $ultima->calcularScore()
             : ['scores' => [], 'score_total' => 0, 'classificacao' => 'medio'];
+
+        $score['detalhamento'] = $this->risk->detalhar($score['scores'] ?? []);
 
         return [
             'participante' => $p,

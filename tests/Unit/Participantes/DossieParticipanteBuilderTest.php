@@ -63,6 +63,32 @@ it('inclui dados da ultima consulta sucesso quando existe', function () {
         ->and($d['consulta']['consultado_em'])->not->toBeNull();
 });
 
+it('score inclui detalhamento por categoria (label+peso+avaliado)', function () {
+    $plano = MonitoramentoPlano::ativos()->first() ?? MonitoramentoPlano::create([
+        'nome' => 'Gratuito', 'codigo' => 'gratuito', 'ativo' => true,
+        'creditos_por_consulta' => 0, 'consultas_incluidas' => [], 'etapas' => [],
+    ]);
+    $lote = ConsultaLote::create([
+        'user_id' => $this->user->id, 'plano_id' => $plano->id,
+        'status' => ConsultaLote::STATUS_FINALIZADO, 'total_participantes' => 1, 'creditos_cobrados' => 0,
+        'tab_id' => 'tab-det-'.uniqid(), 'processado_em' => now(),
+    ]);
+    ConsultaResultado::create([
+        'consulta_lote_id' => $lote->id, 'participante_id' => $this->p->id,
+        'status' => ConsultaResultado::STATUS_SUCESSO,
+        'resultado_dados' => ['situacao_cadastral' => 'ATIVA', 'cnd_federal' => ['status' => 'NEGATIVA']],
+        'consultado_em' => now(),
+    ]);
+
+    $d = $this->builder->montar($this->p);
+
+    expect($d['score'])->toHaveKey('detalhamento');
+    expect(array_keys($d['score']['detalhamento']))
+        ->toBe(array_keys(app(\App\Services\RiskScoreService::class)->getPesos()));
+    expect($d['score']['detalhamento']['cadastral']['avaliado'])->toBeTrue();
+    expect($d['score']['detalhamento']['cadastral']['label'])->toBe('Situação Cadastral');
+});
+
 it('inclui top_produtos e top_cfops do acervo EFD do participante', function () {
     // vazio sem acervo
     $vazio = $this->builder->montar($this->p);
