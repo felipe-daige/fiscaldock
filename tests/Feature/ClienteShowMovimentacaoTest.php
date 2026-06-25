@@ -9,6 +9,33 @@ use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
+it('perfil do cliente mostra detalhamento do score quando há consulta', function () {
+    $user = User::factory()->create();
+    $cliente = \App\Models\Cliente::create([
+        'user_id' => $user->id, 'razao_social' => 'CLIENTE Y', 'documento' => '33333333000133',
+        'is_empresa_propria' => false, 'tipo_pessoa' => 'PJ', 'ativo' => true,
+    ]);
+    $plano = \App\Models\MonitoramentoPlano::ativos()->first() ?? \App\Models\MonitoramentoPlano::create([
+        'nome' => 'Gratuito', 'codigo' => 'gratuito', 'ativo' => true,
+        'creditos_por_consulta' => 0, 'consultas_incluidas' => [], 'etapas' => [],
+    ]);
+    $lote = \App\Models\ConsultaLote::create([
+        'user_id' => $user->id, 'plano_id' => $plano->id, 'status' => \App\Models\ConsultaLote::STATUS_FINALIZADO,
+        'total_participantes' => 1, 'creditos_cobrados' => 0, 'tab_id' => 'tabc-'.uniqid(), 'processado_em' => now(),
+    ]);
+    \App\Models\ConsultaResultado::create([
+        'consulta_lote_id' => $lote->id, 'cliente_id' => $cliente->id, 'status' => \App\Models\ConsultaResultado::STATUS_SUCESSO,
+        'consultado_em' => now(),
+        'resultado_dados' => ['situacao_cadastral' => 'ATIVA', 'cnd_federal' => ['status' => 'Negativa']],
+    ]);
+
+    $resp = $this->actingAs($user)->get("/app/cliente/{$cliente->id}");
+    $resp->assertOk();
+    $resp->assertSee('Detalhamento do Score');
+    $resp->assertSee('Situação Cadastral');
+    $resp->assertSee('Peso:');
+});
+
 it('view do cliente lista produtos e CFOPs', function () {
     $this->seed(SubscriptionPlanSeeder::class);
 

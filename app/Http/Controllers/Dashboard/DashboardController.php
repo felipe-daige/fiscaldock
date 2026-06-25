@@ -485,6 +485,16 @@ class DashboardController extends Controller
         $viewData['top_produtos'] = $topMov->produtos((int) Auth::id(), 'cliente_id', [$cliente->id], 10)[$cliente->id] ?? [];
         $viewData['top_cfops'] = $topMov->cfops((int) Auth::id(), 'cliente_id', [$cliente->id], 10)[$cliente->id] ?? [];
 
+        $ultimaConsultaCliente = \App\Models\ConsultaResultado::where('cliente_id', $cliente->id)
+            ->where('status', \App\Models\ConsultaResultado::STATUS_SUCESSO)
+            ->orderByDesc('consultado_em')
+            ->first();
+        $scoreCliente = $ultimaConsultaCliente?->calcularScore();
+        $viewData['score'] = $scoreCliente;
+        $viewData['score_detalhamento'] = $scoreCliente
+            ? app(\App\Services\RiskScoreService::class)->detalhar($scoreCliente['scores'])
+            : [];
+
         if ($this->isAjaxRequest($request)) {
             // Modal requests send Accept: application/json — return JSON for the modal to populate
             if ($request->wantsJson() || $request->expectsJson()) {

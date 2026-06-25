@@ -150,6 +150,17 @@
                     ])
                 </div>
 
+                {{-- Detalhamento do Score --}}
+                <div class="bg-white border border-gray-200 rounded-lg p-4 mt-4">
+                    <h3 class="text-[13px] font-bold text-gray-700 uppercase tracking-wide mb-3">Detalhamento do Score</h3>
+                    @include('autenticado.partials._score-detalhamento', [
+                        'detalhamento' => $score_detalhamento ?? [],
+                        'scoreTotal' => $score['score_total'] ?? null,
+                        'classificacao' => $score['classificacao'] ?? 'nao_avaliado',
+                        'comHeadline' => true,
+                    ])
+                </div>
+
                 @include('autenticado.monitoramento._movimentacao-listas', ['top_produtos' => $top_produtos ?? [], 'top_cfops' => $top_cfops ?? []])
             </div>
 
