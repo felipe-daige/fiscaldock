@@ -43,10 +43,10 @@
     @else
         @php($pfMax = max((float) $fiscal['total_comprado'], (float) $fiscal['total_vendido'], 0.01))
         {{-- Quadro de totais estilo formulário fiscal --}}
-        <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
+        <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-200 border-b border-slate-200">
             <div class="px-3.5 py-2.5">
                 <p class="text-[10px] uppercase tracking-wide text-slate-400">Entradas (comprado)</p>
-                <p class="text-base font-bold text-slate-900 font-mono leading-tight">R$ {{ number_format($fiscal['total_comprado'], 2, ',', '.') }}</p>
+                <p class="text-base font-bold text-slate-900 font-mono leading-tight whitespace-nowrap">R$ {{ number_format($fiscal['total_comprado'], 2, ',', '.') }}</p>
                 <div class="mt-1 h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
                     <div class="h-full rounded-full" style="width: {{ round(100 * (float) $fiscal['total_comprado'] / $pfMax) }}%; background-color: #2563eb"></div>
                 </div>
@@ -54,7 +54,7 @@
             </div>
             <div class="px-3.5 py-2.5">
                 <p class="text-[10px] uppercase tracking-wide text-slate-400">Saídas (vendido)</p>
-                <p class="text-base font-bold text-slate-900 font-mono leading-tight">R$ {{ number_format($fiscal['total_vendido'], 2, ',', '.') }}</p>
+                <p class="text-base font-bold text-slate-900 font-mono leading-tight whitespace-nowrap">R$ {{ number_format($fiscal['total_vendido'], 2, ',', '.') }}</p>
                 <div class="mt-1 h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
                     <div class="h-full rounded-full" style="width: {{ round(100 * (float) $fiscal['total_vendido'] / $pfMax) }}%; background-color: #0f766e"></div>
                 </div>
