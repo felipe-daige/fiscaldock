@@ -196,6 +196,29 @@
             </div>
         </div>
 
+        {{-- Panorama Fiscal reusável do cliente (ledger próprio): movimento mensal, mix CFOP, concentração, saúde --}}
+        <div class="mt-4 bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div class="px-4 py-2 bg-gray-50 border-b border-gray-200">
+                <span class="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">Panorama Fiscal</span>
+            </div>
+            <div class="p-4">
+                <div data-panorama
+                     data-panorama-scope="cliente"
+                     data-panorama-id="{{ $cliente->id }}"
+                     data-panorama-url="{{ route('app.panorama-fiscal') }}"
+                     class="space-y-2">
+                    <div data-pf-state="loading" class="text-[11px] text-gray-400">Carregando panorama…</div>
+                    <div data-pf-state="error" class="hidden text-[11px] text-red-600">Sem movimentação no acervo fiscal deste cliente.</div>
+                    <div data-pf-charts class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div><p class="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Movimento mensal</p><div data-pf-chart="serie" style="min-height:200px;"></div></div>
+                        <div><p class="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Mix de CFOP</p><div data-pf-chart="cfop" style="min-height:200px;"></div></div>
+                        <div><p class="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Concentração de contrapartes</p><div data-pf-chart="concentracao" style="min-height:200px;"></div></div>
+                        <div data-pf-saude class="rounded border border-gray-100 bg-gray-50 px-3 py-2"><p class="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Saúde fiscal</p><div data-pf-saude-body class="text-xs text-gray-600">—</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         @if(!$cliente->is_empresa_propria)
             <div id="modal-excluir-show" class="fixed inset-0 z-50 hidden">
                 <div class="absolute inset-0 bg-black/40" id="modal-excluir-show-overlay"></div>
@@ -281,3 +304,6 @@
         @endif
     </div>
 </div>
+
+<script src="/js/apexcharts.min.js"></script>
+<script src="/js/panorama-fiscal.js?v={{ @filemtime(public_path('js/panorama-fiscal.js')) ?: time() }}"></script>
