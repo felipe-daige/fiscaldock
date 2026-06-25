@@ -20,7 +20,7 @@ return new class extends Migration
             $table->text('descricao');
             $table->json('consultas_incluidas'); // ["cnpj", "simples", "sintegra", "pgfn", "fgts", ...]
             $table->jsonb('etapas')->nullable(); // [{numero, chave, label}] — granularidade do progresso da consulta
-            $table->integer('custo_creditos');
+            $table->decimal('custo_creditos', 8, 2);
             $table->boolean('is_gratuito')->default(false);
             $table->boolean('is_active')->default(true);
             $table->integer('ordem')->default(0);

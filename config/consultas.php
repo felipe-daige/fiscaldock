@@ -194,19 +194,18 @@ return [
         ],
     ],
 
-    // Custo em créditos por fonte paga (usado no estorno preciso). 1 crédito = R$ 0,20.
+    // Custo em R$ por fonte paga (usado no estorno preciso). Saldo agora é em reais.
     'fontes' => [
-        'cnd_federal' => (int) env('CONSULTA_CREDITOS_CND_FEDERAL', 2),
-        'cndt' => (int) env('CONSULTA_CREDITOS_CNDT', 2),
-        'crf_fgts' => (int) env('CONSULTA_CREDITOS_CRF_FGTS', 2),
-        'cnd_estadual' => (int) env('CONSULTA_CREDITOS_CND_ESTADUAL', 2),
-        // SINTEGRA: 2 créditos (R$0,40) cobre o custo InfoSimples R$0,27 com margem ~48%.
-        // Antes 1 crédito (R$0,20) dava prejuízo de R$0,07/chamada.
-        'sintegra' => (int) env('CONSULTA_CREDITOS_SINTEGRA', 2),
-        'cgu_cnc' => (int) env('CONSULTA_CREDITOS_CGU_CNC', 2),
-        'cnj_improbidade' => (int) env('CONSULTA_CREDITOS_CNJ_IMPROBIDADE', 2),
-        'cnd_municipal' => (int) env('CONSULTA_CREDITOS_CND_MUNICIPAL', 2),
-        'protestos' => (int) env('CONSULTA_CREDITOS_PROTESTOS', 2),
+        'cnd_federal' => (float) env('CONSULTA_CREDITOS_CND_FEDERAL', 0.4),
+        'cndt' => (float) env('CONSULTA_CREDITOS_CNDT', 0.4),
+        'crf_fgts' => (float) env('CONSULTA_CREDITOS_CRF_FGTS', 0.4),
+        'cnd_estadual' => (float) env('CONSULTA_CREDITOS_CND_ESTADUAL', 0.4),
+        // SINTEGRA: R$0,40 cobre o custo InfoSimples R$0,27 com margem ~48%.
+        'sintegra' => (float) env('CONSULTA_CREDITOS_SINTEGRA', 0.4),
+        'cgu_cnc' => (float) env('CONSULTA_CREDITOS_CGU_CNC', 0.4),
+        'cnj_improbidade' => (float) env('CONSULTA_CREDITOS_CNJ_IMPROBIDADE', 0.4),
+        'cnd_municipal' => (float) env('CONSULTA_CREDITOS_CND_MUNICIPAL', 0.4),
+        'protestos' => (float) env('CONSULTA_CREDITOS_PROTESTOS', 0.4),
     ],
 
     // Reconsulta de fontes com falha transitória (classe `retry`, ex. código 600).
@@ -224,5 +223,6 @@ return [
     'panorama_fiscal' => [
         'visivel' => (int) env('CONSULTA_PANORAMA_VISIVEL', 10),
         'maximo' => (int) env('CONSULTA_PANORAMA_MAXIMO', 30),
+        'meses' => (int) env('PANORAMA_FISCAL_MESES', 24),
     ],
 ];

@@ -100,6 +100,45 @@ class TopMovimentacaoQuery
             ->all();
     }
 
+    /**
+     * Série mensal de entradas vs saídas (R$) por escopo, dos últimos N meses.
+     *
+     * @param  'participante_id'|'cliente_id'  $coluna
+     * @param  array<int, int>  $ids
+     * @return array<int, array<int, array{mes:string, entradas:float, saidas:float}>>
+     */
+    public function serieMensal(int $userId, string $coluna, array $ids, int $meses = 24): array
+    {
+        $this->assertColuna($coluna);
+        $ids = array_values(array_unique(array_filter($ids)));
+        if ($ids === []) {
+            return [];
+        }
+
+        $linhas = DB::table('efd_notas as n')
+            ->where('n.user_id', $userId)
+            ->where('n.origem_arquivo', 'fiscal')
+            ->where('n.cancelada', false)
+            ->whereIn("n.{$coluna}", $ids)
+            ->whereNotNull('n.data_emissao')
+            ->where('n.data_emissao', '>=', now()->startOfMonth()->subMonths(max(0, $meses - 1)))
+            ->groupBy("n.{$coluna}", DB::raw("TO_CHAR(n.data_emissao, 'YYYY-MM')"))
+            ->selectRaw("n.{$coluna} as escopo_id,
+                TO_CHAR(n.data_emissao, 'YYYY-MM') as mes,
+                COALESCE(SUM(n.valor_total) FILTER (WHERE n.tipo_operacao = 'entrada'), 0) as entradas,
+                COALESCE(SUM(n.valor_total) FILTER (WHERE n.tipo_operacao = 'saida'), 0) as saidas")
+            ->get();
+
+        return $linhas
+            ->groupBy('escopo_id')
+            ->map(fn ($g) => $g->sortBy('mes')->map(fn ($r) => [
+                'mes' => (string) $r->mes,
+                'entradas' => round((float) $r->entradas, 2),
+                'saidas' => round((float) $r->saidas, 2),
+            ])->values()->all())
+            ->all();
+    }
+
     private function assertColuna(string $coluna): void
     {
         if (! in_array($coluna, self::COLUNAS, true)) {
