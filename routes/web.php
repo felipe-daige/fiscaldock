@@ -141,6 +141,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::delete('/app/cliente/{id}', [ClienteController::class, 'destroy'])->name('app.cliente.destroy');
     Route::get('/app/cliente/{id}/notas', [DashboardController::class, 'clienteNotas'])->name('app.cliente.notas');
     Route::get('/app/cliente/{id}/participantes', [DashboardController::class, 'clienteParticipantes'])->name('app.cliente.participantes');
+    Route::get('/app/cliente/{id}/dossie', [DashboardController::class, 'clienteDossiePdf'])->name('app.cliente.dossie');
     Route::get('/app/cliente/{id}', [DashboardController::class, 'clienteDetalhes'])->name('app.cliente.detalhes');
 
     // Participantes (rotas independentes)

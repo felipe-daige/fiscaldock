@@ -532,6 +532,25 @@ class DashboardController extends Controller
     }
 
     /**
+     * Gera e baixa o dossiê completo do cliente em PDF.
+     */
+    public function clienteDossiePdf(Request $request, int $id)
+    {
+        if (! Auth::check()) {
+            return redirect('/login');
+        }
+
+        $cliente = Cliente::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $dados = app(\App\Services\Clientes\DossieClienteBuilder::class)->montar($cliente);
+
+        return \App\Support\PdfReport::render('reports.dossie.cliente', $dados, 'portrait')
+            ->download('dossie_'.preg_replace('/\D/', '', (string) $cliente->documento).'.pdf');
+    }
+
+    /**
      * Notas fiscais unificadas do cliente (AJAX pagination).
      */
     public function clienteNotas(Request $request, int $id)
