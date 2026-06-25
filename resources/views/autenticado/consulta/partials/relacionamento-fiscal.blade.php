@@ -191,6 +191,37 @@
                     </table>
                 </div>
             @endif
+
+            @if(!empty($fiscal['top_notas_entrada']) || !empty($fiscal['top_notas_saida']))
+                @php($pfNotasVisivel = (int) config('consultas.panorama_fiscal.notas_visivel', 5))
+                <div>
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide mb-1">Maiores notas</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        @foreach(['entrada' => 'Entradas (comprado)', 'saida' => 'Saídas (vendido)'] as $tipo => $titulo)
+                            @php($lista = collect($fiscal['top_notas_' . $tipo] ?? []))
+                            <div data-pf-list>
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <p class="text-[10px] text-slate-400">{{ $titulo }}</p>
+                                    @include('autenticado.consulta.partials._panorama-seletor', ['count' => $lista->count(), 'default' => $pfNotasVisivel])
+                                </div>
+                                @if($lista->isEmpty())
+                                    <p class="text-[11px] text-slate-400">—</p>
+                                @else
+                                    <table class="w-full text-[11px] border-collapse">
+                                        <tbody>
+                                            @foreach($lista as $i => $n)
+                                                <tr data-pf-row @class(['hidden' => $i >= $pfNotasVisivel, 'odd:bg-slate-50/60 hover:bg-slate-100/70']) @if(!empty($n['chave'])) title="{{ $n['chave'] }}" @endif>
+                                                    @include('autenticado.consulta.partials._panorama-nota-linha', ['n' => $n])
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </div>
     @endif
 </div>
