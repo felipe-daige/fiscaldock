@@ -299,6 +299,10 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     // Redirect legado: /app/risk/* -> /app/score-fiscal/*
     Route::get('app/risk/{any?}', fn ($any = '') => redirect("/app/score-fiscal/{$any}"))->where('any', '.*');
 
+    // Panorama Fiscal — card de relacionamento/movimentação por participante ou cliente
+    Route::get('app/panorama-fiscal', \App\Http\Controllers\Dashboard\PanoramaFiscalController::class)
+        ->name('app.panorama-fiscal');
+
     // Clearance DF-e
     Route::prefix('app/clearance')->name('app.clearance.')->group(function () {
         Route::redirect('/', '/app/clearance/dashboard', 301);
