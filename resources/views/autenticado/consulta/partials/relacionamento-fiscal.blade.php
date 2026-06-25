@@ -146,22 +146,13 @@
                         <p class="text-[10px] text-slate-400 uppercase tracking-wide">{{ $fiscal['relacionamentos_titulo'] ?? 'Por empresa' }}</p>
                         @include('autenticado.consulta.partials._panorama-seletor', ['count' => $pfRels->count(), 'default' => $pfVisivel])
                     </div>
-                    <table class="w-full text-[11px] border-collapse">
-                        <thead>
-                            <tr class="text-slate-400 uppercase tracking-wide border-b border-slate-200">
-                                <th class="text-left font-medium py-0.5 pr-2">Empresa</th>
-                                <th class="text-left font-medium py-0.5 pr-2 whitespace-nowrap">Papel</th>
-                                <th class="text-right font-medium py-0.5 whitespace-nowrap">Valor</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($pfRels as $i => $rel)
-                                <tr data-pf-row @class(['hidden' => $i >= $pfVisivel, 'odd:bg-slate-50/60 hover:bg-slate-100/70'])>
-                                    @include('autenticado.consulta.partials._panorama-contraparte-linha', ['rel' => $rel, 'papelHex' => $papelHex, 'papelLabel' => $papelLabel])
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                    <div class="divide-y divide-slate-100">
+                        @foreach($pfRels as $i => $rel)
+                            <div data-pf-row @class(['hidden' => $i >= $pfVisivel, 'hover:bg-slate-50'])>
+                                @include('autenticado.consulta.partials._panorama-contraparte-linha', ['rel' => $rel, 'papelHex' => $papelHex, 'papelLabel' => $papelLabel])
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             @endif
 
