@@ -763,6 +763,10 @@ class ParticipanteController extends Controller
         $movimentacao = app(\App\Services\Participantes\ParticipanteMovimentacaoService::class)->kpisEResumoParaPreview($participante);
         $data['movimentacao'] = $movimentacao;
 
+        $topMov = app(\App\Services\Consultas\Fiscal\TopMovimentacaoQuery::class);
+        $data['top_produtos'] = $topMov->produtos($participante->user_id, 'participante_id', [$participante->id], 10)[$participante->id] ?? [];
+        $data['top_cfops'] = $topMov->cfops($participante->user_id, 'participante_id', [$participante->id], 10)[$participante->id] ?? [];
+
         if ($this->isAjaxRequest($request)) {
             $renderedView = view($participanteView, $data)->render();
 

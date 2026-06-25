@@ -886,6 +886,7 @@
                         <div><div class="text-[11px] text-gray-500">Saídas</div><div class="text-[15px] font-bold">{{ $movimentacao['kpis']['saidas_qtd'] }}</div></div>
                     </div>
                     <div id="chart-mov-competencia" style="min-height:220px;"></div>
+                    @include('autenticado.monitoramento._movimentacao-listas', ['top_produtos' => $top_produtos ?? [], 'top_cfops' => $top_cfops ?? []])
                 </div>
 
                 {{-- Histórico de Consultas --}}
@@ -1055,7 +1056,7 @@
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 uppercase tracking-wide">Custo/Execução</p>
-                                <p class="mt-1 text-sm text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($assinaturaAtiva->plano->custo_creditos ?? 0)))</p>
+                                <p class="mt-1 text-sm text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) ($assinaturaAtiva->plano->custo_creditos ?? 0)))</p>
                             </div>
                             <div class="pt-4 border-t border-gray-200 flex gap-2">
                                 @if($assinaturaAtiva->status === 'ativo')
@@ -1117,7 +1118,7 @@
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Valor gasto</span>
-                            <span class="text-sm font-semibold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($estatisticas['creditos_utilizados'] ?? 0)))</span>
+                            <span class="text-sm font-semibold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) ($estatisticas['creditos_utilizados'] ?? 0)))</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Notas fiscais</span>
@@ -1140,7 +1141,7 @@
                         </div>
                         <div>
                             <p class="text-sm text-gray-500">Saldo disponível</p>
-                            <p class="text-2xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($credits ?? 0)))</p>
+                            <p class="text-2xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) ($credits ?? 0)))</p>
                         </div>
                     </div>
                     <a
@@ -1178,7 +1179,7 @@
                         <option value="">Selecione...</option>
                         @foreach($planos as $plano)
                             <option value="{{ $plano->id }}" data-creditos="{{ $plano->custo_creditos }}">
-                                {{ $plano->nome }} ({{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $plano->custo_creditos)) }}/consulta)
+                                {{ $plano->nome }} ({{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $plano->custo_creditos)) }}/consulta)
                             </option>
                         @endforeach
                     </select>
@@ -1213,6 +1214,7 @@
     </div>
 </div>
 
+<script src="/js/apexcharts.min.js"></script>
 <script>
 (function() {
     'use strict';
@@ -1481,14 +1483,29 @@ const formCriarAssinatura = document.getElementById('form-criar-assinatura');
         console.log('[Monitoramento Participante] Inicialização concluída');
     }
 
-    function renderMovimentacaoChart() {
+    function renderMovimentacaoChart(tentativas) {
         const el = document.getElementById('chart-mov-competencia');
         const data = @json($movimentacao ?? null);
-        if (!el || !data || typeof ApexCharts === 'undefined') { return; }
+        if (!el || !data) { return; }
+
+        // SPA: apexcharts.min.js pode ainda estar carregando. Espera e re-tenta em vez de deixar a div 220px vazia.
+        if (typeof ApexCharts === 'undefined') {
+            tentativas = tentativas || 0;
+            if (tentativas < 50) { setTimeout(() => renderMovimentacaoChart(tentativas + 1), 100); }
+            return;
+        }
 
         window._chartMovParticipante && window._chartMovParticipante.destroy();
 
         const comp = data.por_competencia || [];
+
+        // Sem competências (participante sem notas EFD) → mensagem em vez de gráfico vazio.
+        if (comp.length === 0) {
+            el.style.minHeight = '';
+            el.innerHTML = '<div class="flex items-center justify-center h-32 text-gray-400 text-sm">Sem movimentações registradas para este participante.</div>';
+            return;
+        }
+
         const chart = new ApexCharts(el, {
             chart: { type: 'bar', height: 220, toolbar: { show: false } },
             series: [
