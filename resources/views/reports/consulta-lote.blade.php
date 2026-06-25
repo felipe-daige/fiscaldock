@@ -13,6 +13,7 @@
     .muted { color: #6b7280; }
     /* dossiê: certidão empilhada full-width (mais espaço lateral); cada bloco não parte entre páginas */
     .cert { border: 1px solid #e5e7eb; border-left: 3px solid #9ca3af; padding: 5px 8px; margin-bottom: 6px; page-break-inside: avoid; }
+    .badge { white-space: nowrap; }
     .table th {
         background: #f9fafb;
         border-bottom: 1.5px solid #1f2937;
@@ -104,50 +105,28 @@
     {{-- Resultados --}}
     <div class="secao">
         <div class="secao-header">Resultados</div>
+        {{-- Visão geral: certidões/comprovantes completos vivem na página de dossiê de cada CNPJ. --}}
         <table class="table">
             <thead>
                 <tr>
-                    <th style="width: 12%">CNPJ</th>
-                    <th style="width: 15%">Razão Social</th>
-                    <th style="width: 4%">UF</th>
-                    <th style="width: 8%">Situação</th>
-                    <th style="width: 11%">Regime Tributário</th>
-                    @if(in_array('sintegra', $plano->consultas_incluidas ?? []))
-                        <th style="width: 8%">SINTEGRA</th>
-                    @endif
-                    @if(in_array('cnd_federal', $plano->consultas_incluidas ?? []))
-                        <th style="width: 10%">CND Federal</th>
-                    @endif
-                    @if(in_array('crf_fgts', $plano->consultas_incluidas ?? []))
-                        <th style="width: 8%">FGTS</th>
-                    @endif
-                    @if(in_array('cndt', $plano->consultas_incluidas ?? []))
-                        <th style="width: 8%">CNDT</th>
-                    @endif
-                    @if(in_array('tcu_consolidada', $plano->consultas_incluidas ?? []))
-                        <th style="width: 8%">Compliance</th>
-                    @endif
-                    <th style="width: 6%" class="center">Score</th>
-                    <th style="width: 10%">Classificação</th>
+                    <th style="width: 16%">CNPJ</th>
+                    <th style="width: 30%">Razão Social</th>
+                    <th style="width: 5%">UF</th>
+                    <th style="width: 13%">Situação</th>
+                    <th style="width: 16%">Regime Tributário</th>
+                    <th style="width: 8%" class="center">Score</th>
+                    <th style="width: 12%">Classificação</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($resultados as $r)
-                    @php
-                        $situacao = $r['status_consulta'] === 'sucesso' ? ($r['situacao_cadastral'] ?? '-') : 'ERRO';
-                        $complianceLabel = '-';
-                        if ($r['ceis'] === 'Sim' || $r['cnep'] === 'Sim') {
-                            $complianceLabel = 'RESTRITO';
-                        } elseif ($r['tcu_situacao'] || $r['ceis'] === 'Nao') {
-                            $complianceLabel = 'OK';
-                        }
-                    @endphp
+                    @php($situacao = $r['status_consulta'] === 'sucesso' ? ($r['situacao_cadastral'] ?? '-') : 'ERRO')
                     <tr>
                         <td class="mono">{{ $r['documento'] }}</td>
                         <td>
-                            <strong style="color: #111827">{{ \Illuminate\Support\Str::limit($r['razao_social'], 38) }}</strong>
+                            <strong style="color: #111827">{{ \Illuminate\Support\Str::limit($r['razao_social'], 48) }}</strong>
                             @if($r['nome_fantasia'])
-                                <div class="small muted">{{ \Illuminate\Support\Str::limit($r['nome_fantasia'], 36) }}</div>
+                                <div class="small muted">{{ \Illuminate\Support\Str::limit($r['nome_fantasia'], 46) }}</div>
                             @endif
                         </td>
                         <td>{{ $r['uf'] ?: '-' }}</td>
@@ -155,57 +134,6 @@
                             <span class="badge" style="background-color: {{ \App\Support\Reports\ReportTheme::statusHex($situacao) }}">{{ $situacao }}</span>
                         </td>
                         <td>{{ $r['regime_tributario'] ?: '-' }}</td>
-                        @if(in_array('sintegra', $plano->consultas_incluidas ?? []))
-                            <td>
-                                @if($r['sintegra_situacao'])
-                                    <span class="badge" style="background-color: {{ \App\Support\Reports\ReportTheme::statusHex($r['sintegra_situacao']) }}">{{ $r['sintegra_situacao'] }}</span>
-                                @else
-                                    -
-                                @endif
-                            </td>
-                        @endif
-                        @if(in_array('cnd_federal', $plano->consultas_incluidas ?? []))
-                            <td>
-                                @if($r['cnd_federal_status'])
-                                    <span class="badge" style="background-color: {{ \App\Support\Reports\ReportTheme::statusHex($r['cnd_federal_status']) }}">{{ $r['cnd_federal_status'] }}</span>
-                                    @if($r['cnd_federal_validade'])
-                                        <div class="small muted">Val. {{ $r['cnd_federal_validade'] }}</div>
-                                    @endif
-                                @else
-                                    -
-                                @endif
-                            </td>
-                        @endif
-                        @if(in_array('crf_fgts', $plano->consultas_incluidas ?? []))
-                            <td>
-                                @if($r['crf_fgts_status'])
-                                    <span class="badge" style="background-color: {{ \App\Support\Reports\ReportTheme::statusHex($r['crf_fgts_status']) }}">{{ $r['crf_fgts_status'] }}</span>
-                                @else
-                                    -
-                                @endif
-                            </td>
-                        @endif
-                        @if(in_array('cndt', $plano->consultas_incluidas ?? []))
-                            <td>
-                                @if($r['cndt_status'])
-                                    <span class="badge" style="background-color: {{ \App\Support\Reports\ReportTheme::statusHex($r['cndt_status']) }}">{{ $r['cndt_status'] }}</span>
-                                    @if($r['cndt_validade'])
-                                        <div class="small muted">Val. {{ $r['cndt_validade'] }}</div>
-                                    @endif
-                                @else
-                                    -
-                                @endif
-                            </td>
-                        @endif
-                        @if(in_array('tcu_consolidada', $plano->consultas_incluidas ?? []))
-                            <td>
-                                @if($complianceLabel !== '-')
-                                    <span class="badge" style="background-color: {{ \App\Support\Reports\ReportTheme::statusHex($complianceLabel) }}">{{ $complianceLabel }}</span>
-                                @else
-                                    -
-                                @endif
-                            </td>
-                        @endif
                         <td class="center"><strong style="color: #111827">{{ $r['score_total'] }}</strong></td>
                         <td>
                             <span class="badge" style="background-color: {{ \App\Support\Reports\ReportTheme::riscoHex($r['classificacao']) }}">{{ strtoupper($r['classificacao']) }}</span>
