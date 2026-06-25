@@ -161,71 +161,12 @@
                     <div class="p-5">
 
                     @if($score)
-                        <p class="text-[11px] text-gray-500 mb-4">
-                            O score total pondera apenas as categorias efetivamente avaliadas nesta consulta —
-                            categorias não consultadas ou indeterminadas não entram no cálculo.
-                        </p>
-                        <div class="space-y-4">
-                            @foreach($score->scores_detalhados as $key => $item)
-                                @php $avaliado = $item['avaliado'] ?? ($item['score'] !== null); @endphp
-                                @php $ihex = $avaliado ? $scoreColor($item['score']) : '#9ca3af'; @endphp
-                                <div>
-                                    <div class="flex items-center justify-between mb-1">
-                                        <span class="text-sm font-medium text-gray-700">{{ $item['label'] }}</span>
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-[11px] text-gray-500 uppercase tracking-wide">Peso: {{ round(($pesos[$key] ?? 0) * 100) }}%</span>
-                                            @if($avaliado)
-                                                <span class="text-sm font-bold font-mono" style="color: {{ $ihex }}">{{ $item['score'] }}</span>
-                                            @else
-                                                <span class="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Não avaliado</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    <div class="w-full bg-gray-200 rounded h-2">
-                                        @if($avaliado)
-                                            <div class="h-2 rounded" style="width: {{ $item['score'] }}%; background-color: {{ $ihex }}"></div>
-                                        @endif
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-
-                        {{-- Categorias planejadas (sem fonte de dado ainda) --}}
-                        <div class="mt-6 pt-4 border-t border-gray-200">
-                            <h4 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-3">Categorias em breve</h4>
-                            <div class="space-y-2">
-                                @foreach(['ESG (trabalho escravo / IBAMA)', 'Protestos em cartório'] as $futuro)
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-sm text-gray-400">{{ $futuro }}</span>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #6b7280">Em breve</span>
-                                    </div>
-                                @endforeach
-                            </div>
-                            <p class="mt-2 text-[11px] text-gray-400">Essas categorias entrarão no score assim que as fontes oficiais forem integradas.</p>
-                        </div>
-
-                        {{-- Legenda --}}
-                        <div class="mt-6 pt-4 border-t border-gray-200">
-                            <h4 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-3">Legenda dos Scores</h4>
-                            <div class="flex flex-wrap gap-4 text-xs">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-3 h-3 rounded" style="background-color: #047857"></div>
-                                    <span class="text-gray-600">0-20: Baixo Risco</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-3 h-3 rounded" style="background-color: #d97706"></div>
-                                    <span class="text-gray-600">21-50: Médio Risco</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-3 h-3 rounded" style="background-color: #ea580c"></div>
-                                    <span class="text-gray-600">51-80: Alto Risco</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-3 h-3 rounded" style="background-color: #b91c1c"></div>
-                                    <span class="text-gray-600">81-100: Crítico</span>
-                                </div>
-                            </div>
-                        </div>
+                        @include('autenticado.partials._score-detalhamento', [
+                            'detalhamento' => $detalhamento ?? [],
+                            'scoreTotal' => $score->score_total,
+                            'classificacao' => $score->classificacao,
+                            'comHeadline' => false,
+                        ])
 
                         @if($score->ultima_consulta_em)
                         <div class="mt-4 text-[11px] text-gray-500">

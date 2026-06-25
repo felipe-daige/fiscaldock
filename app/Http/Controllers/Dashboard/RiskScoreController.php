@@ -199,10 +199,23 @@ class RiskScoreController extends Controller
         // split emitente/destinatário, que é exclusivo do acervo XML).
         $volumeEfd = (float) $participante->efdNotas()->sum('valor_total');
 
+        $scoreModel = $participante->score;
+        $detalhamento = $scoreModel
+            ? $this->riskScoreService->detalhar([
+                'cadastral' => $scoreModel->score_cadastral,
+                'cnd_federal' => $scoreModel->score_cnd_federal,
+                'cnd_estadual' => $scoreModel->score_cnd_estadual,
+                'fgts' => $scoreModel->score_fgts,
+                'trabalhista' => $scoreModel->score_trabalhista,
+                'compliance' => $scoreModel->score_compliance,
+            ])
+            : [];
+
         $data = [
             'participante' => $participante,
-            'score' => $participante->score,
+            'score' => $scoreModel,
             'pesos' => $this->riskScoreService->getPesos(),
+            'detalhamento' => $detalhamento,
             'volumeEfd' => $volumeEfd,
             'creditoReforma' => $this->creditoReforma->creditoParticipante($participante, $volumeEfd, $participante->score?->score_credito_reforma),
         ];
