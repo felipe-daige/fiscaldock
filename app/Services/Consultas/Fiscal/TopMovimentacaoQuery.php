@@ -100,6 +100,56 @@ class TopMovimentacaoQuery
             ->all();
     }
 
+    /**
+     * Crédito DESTACADO (regime atual) nas ENTRADAS de cada escopo, somando
+     * ICMS+IPI (consolidado C190) e PIS+COFINS (itens). Gate: só conta entradas
+     * cujo comprador (clientes.crt = 3, Regime Normal) credita — Simples/MEI ficam de fora.
+     * "Destacado" ≠ "aproveitado": não aplica CST/CFOP por item (decisão de escopo).
+     *
+     * @param  'participante_id'|'cliente_id'  $coluna
+     * @param  array<int, int>  $ids
+     * @return array<int, float> [escopo_id => destacado], só com total > 0
+     */
+    public function creditosDestacados(int $userId, string $coluna, array $ids): array
+    {
+        $this->assertColuna($coluna);
+        $ids = array_values(array_unique(array_filter($ids)));
+        if ($ids === []) {
+            return [];
+        }
+
+        $base = fn () => DB::table('efd_notas as n')
+            ->join('clientes as cli', 'cli.id', '=', 'n.cliente_id')
+            ->where('n.user_id', $userId)
+            ->where('n.origem_arquivo', 'fiscal')
+            ->where('n.cancelada', false)
+            ->where('n.tipo_operacao', 'entrada')
+            ->where('cli.crt', 3)
+            ->whereIn("n.{$coluna}", $ids);
+
+        $icmsIpi = (clone $base())
+            ->join('efd_notas_consolidados as c', 'c.efd_nota_id', '=', 'n.id')
+            ->groupBy("n.{$coluna}")
+            ->selectRaw("n.{$coluna} as escopo_id, COALESCE(SUM(c.valor_icms + c.valor_ipi), 0) as v")
+            ->pluck('v', 'escopo_id');
+
+        $pisCofins = (clone $base())
+            ->join('efd_notas_itens as i', 'i.efd_nota_id', '=', 'n.id')
+            ->groupBy("n.{$coluna}")
+            ->selectRaw("n.{$coluna} as escopo_id, COALESCE(SUM(COALESCE(i.valor_pis,0) + COALESCE(i.valor_cofins,0)), 0) as v")
+            ->pluck('v', 'escopo_id');
+
+        $out = [];
+        foreach ($ids as $id) {
+            $total = round((float) ($icmsIpi[$id] ?? 0) + (float) ($pisCofins[$id] ?? 0), 2);
+            if ($total > 0) {
+                $out[$id] = $total;
+            }
+        }
+
+        return $out;
+    }
+
     private function assertColuna(string $coluna): void
     {
         if (! in_array($coluna, self::COLUNAS, true)) {
