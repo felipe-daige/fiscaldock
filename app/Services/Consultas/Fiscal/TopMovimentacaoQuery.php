@@ -63,6 +63,44 @@ class TopMovimentacaoQuery
     }
 
     /**
+     * Top itens (itens EFD ⨝ catálogo 0200) agregados por cod_item sobre TODAS as
+     * notas fiscais não canceladas do usuário — versão user-wide do produtos() para
+     * o relatório de portfólio. Lista plana, ordenada por valor desc.
+     *
+     * @return array<int, array{cod_item:string, descricao:string, ncm:?string, valor:float, qtd:int}>
+     */
+    public function produtosPorUsuario(int $userId, int $limite = 15): array
+    {
+        $linhas = DB::table('efd_notas_itens as i')
+            ->join('efd_notas as n', 'n.id', '=', 'i.efd_nota_id')
+            ->leftJoin('efd_catalogo_itens as c', function ($j) {
+                $j->on('c.user_id', '=', 'i.user_id')
+                    ->on('c.cliente_id', '=', 'n.cliente_id')
+                    ->on('c.cod_item', '=', 'i.codigo_item');
+            })
+            ->where('n.user_id', $userId)
+            ->where('n.origem_arquivo', 'fiscal')
+            ->where('n.cancelada', false)
+            ->whereNotNull('i.codigo_item')
+            ->groupBy('i.codigo_item')
+            ->selectRaw('i.codigo_item as cod_item,
+                MAX(c.descr_item) as descr_item, MAX(c.cod_ncm) as cod_ncm,
+                MAX(i.descricao) as descricao_item,
+                COUNT(*) as qtd, COALESCE(SUM(i.valor_total), 0) as valor')
+            ->orderByDesc('valor')
+            ->limit($limite)
+            ->get();
+
+        return $linhas->map(fn ($r) => [
+            'cod_item' => (string) $r->cod_item,
+            'descricao' => (string) ($r->descr_item ?: $r->descricao_item ?: $r->cod_item),
+            'ncm' => $r->cod_ncm !== null && $r->cod_ncm !== '' ? (string) $r->cod_ncm : null,
+            'valor' => round((float) $r->valor, 2),
+            'qtd' => (int) $r->qtd,
+        ])->values()->toArray();
+    }
+
+    /**
      * @param  'participante_id'|'cliente_id'  $coluna
      * @param  array<int, int>  $ids
      * @return array<int, array<int, array{cfop:int, descricao:string, qtd:int, valor:float}>>
