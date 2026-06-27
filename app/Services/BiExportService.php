@@ -83,7 +83,7 @@ class BiExportService
     {
         $resumo = $this->bi->getResumoGeral($userId, $cli, $ini, $fim);
         $efd = $this->bi->getKpisEfd($userId, $ini, $fim);
-        $modo = $cli ? 'cliente' : 'portfolio';
+        $modo = $cli === null ? 'portfolio' : 'cliente';
 
         $titulos = [
             'faturamento' => 'Faturamento mensal',
@@ -144,9 +144,8 @@ class BiExportService
 
     private function datasetParticipantes(int $userId, ?string $ini, ?string $fim, ?int $cli): array
     {
-        $colunas = ['CNPJ/CPF', 'Razão social', 'Regime', 'Situação', 'Volume', 'Qtd notas', 'Ticket médio'];
-
         if ($cli === null) {
+            $colunas = ['CNPJ/CPF', 'Razão social', 'Regime', 'Situação', 'Volume', 'Qtd notas', 'Ticket médio'];
             $linhas = array_map(fn ($r) => [
                 $r['cnpj_cpf'], $r['razao_social'], $r['regime'] ?: '—',
                 ($r['irregular'] ? '⚠ ' : '').($r['situacao'] ?: '—'),

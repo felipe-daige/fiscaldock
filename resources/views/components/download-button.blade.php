@@ -13,7 +13,7 @@
     // "Falha" no browser do usuário apesar do 200). Spinner mostrado até o servidor
     // devolver o arquivo: o controller seta cookie `bi_download=<token>` na resposta e
     // este JS faz poll do cookie pra esconder o overlay (fallback: timeout 40s).
-    // Lê #filtro-cliente / #filtro-periodo (cliente_id + meses, datas server-side).
+    // Lê o select de cliente (id vem da prop clienteSelect, default 'filtro-cliente') e #filtro-periodo (cliente_id + meses, datas server-side).
     // Sem aspas duplas no JS (o atributo onclick já usa aspas duplas).
     // Detecção por PRESENÇA do cookie `bi_download` (não pelo valor): o Laravel
     // criptografa o valor (EncryptCookies), então o JS não consegue ler o token —

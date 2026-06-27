@@ -28,6 +28,7 @@ it('modo cliente omite seções user-wide e marca modo=cliente', function () {
     expect($rel['modo'])->toBe('cliente')
         ->and($rel['secoes'])->toHaveKeys(['participantes', 'top-notas', 'catalogo', 'uf', 'devolucoes'])
         ->and($rel['secoes'])->not->toHaveKey('riscos-notas')
+        ->and($rel['secoes'])->not->toHaveKey('riscos-fornecedores')
         ->and($rel['score_carteira'])->toBeNull()
         ->and($rel['ordem_secoes'])->not->toContain('score-carteira');
 });

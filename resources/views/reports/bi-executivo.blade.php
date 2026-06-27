@@ -62,7 +62,7 @@
     {{-- Seções na ordem definida pelo service --}}
     @foreach ($relatorio['ordem_secoes'] as $chave)
         @if ($chave === 'score-carteira')
-            @php $sc = $relatorio['score_carteira']; @endphp
+            @php $sc = $relatorio['score_carteira'] ?? null; @endphp
             @if ($sc)
                 <h2 style="font-size:11px;font-weight:bold;color:#374151;margin:14px 0 4px;">Score da carteira</h2>
                 <table style="width:100%;border-collapse:collapse;margin-bottom:6px;">
