@@ -820,6 +820,39 @@ class BiService
         })->toArray();
     }
 
+    /**
+     * Maiores notas (base comercial dedup de origem, sem canceladas — já garantido
+     * pelo notasDedup) por valor_total. Respeita cliente quando setado.
+     *
+     * @return array<int, array{data_emissao:?string, chave:?string, razao_social:?string, cnpj_cpf:?string, tipo:string, valor:float}>
+     */
+    public function getTopNotas(int $userId, ?string $dataInicio, ?string $dataFim, ?int $clienteId, int $limit = 15): array
+    {
+        return $this->efd->notasDedup($userId, null, $dataInicio, $dataFim, $clienteId)
+            ->join('participantes as p', 'p.id', '=', 'n.participante_id')
+            ->whereNotNull('n.data_emissao')
+            ->select([
+                'n.data_emissao',
+                'n.chave_acesso',
+                'n.tipo_operacao',
+                'n.valor_total',
+                'p.razao_social',
+                'p.documento as cnpj_cpf',
+            ])
+            ->orderByDesc('n.valor_total')
+            ->limit($limit)
+            ->get()
+            ->map(fn ($row) => [
+                'data_emissao' => $row->data_emissao ? Carbon::parse($row->data_emissao)->format('d/m/Y') : null,
+                'chave' => $row->chave_acesso,
+                'razao_social' => $row->razao_social,
+                'cnpj_cpf' => $row->cnpj_cpf,
+                'tipo' => $row->tipo_operacao === 'entrada' ? 'E' : 'S',
+                'valor' => (float) $row->valor_total,
+            ])
+            ->toArray();
+    }
+
     // =========================================================================
     // Módulo Riscos
     // =========================================================================
