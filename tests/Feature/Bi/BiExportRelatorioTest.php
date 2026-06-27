@@ -134,3 +134,13 @@ it('NÃO seta cookie bi_download sem download_token', function () {
     $resp->assertOk();
     expect(collect($resp->headers->getCookies())->first(fn ($c) => $c->getName() === 'bi_download'))->toBeNull();
 });
+
+it('GET /app/bi/exportar-pdf?cliente_id baixa pdf em modo cliente', function () {
+    [$uid, $cli] = semearBiExport();
+
+    $resp = $this->actingAs(User::find($uid))->get('/app/bi/exportar-pdf?cliente_id='.$cli);
+
+    $resp->assertOk();
+    expect($resp->headers->get('content-type'))->toContain('application/pdf');
+    expect(substr($resp->getContent(), 0, 4))->toBe('%PDF');
+});
