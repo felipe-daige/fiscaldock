@@ -821,6 +821,34 @@ class BiService
     }
 
     /**
+     * Score de risco por participante (do `participante_scores`, 1 linha por
+     * participante persistida pelo FecharLoteService). Mapa keyed por
+     * participante_id; ids sem score ficam ausentes.
+     *
+     * @param  array<int, int>  $participanteIds
+     * @return array<int, array{score_total:?int, classificacao:?string}>
+     */
+    public function scoresPorParticipante(int $userId, array $participanteIds): array
+    {
+        $ids = array_values(array_unique(array_filter($participanteIds)));
+        if ($ids === []) {
+            return [];
+        }
+
+        return DB::table('participante_scores')
+            ->where('user_id', $userId)
+            ->whereIn('participante_id', $ids)
+            ->orderByDesc('id')
+            ->get(['participante_id', 'score_total', 'classificacao'])
+            ->keyBy('participante_id')
+            ->map(fn ($r) => [
+                'score_total' => $r->score_total !== null ? (int) $r->score_total : null,
+                'classificacao' => $r->classificacao,
+            ])
+            ->all();
+    }
+
+    /**
      * Maiores notas (base comercial dedup de origem, sem canceladas — já garantido
      * pelo notasDedup) por valor_total. Respeita cliente quando setado.
      *
