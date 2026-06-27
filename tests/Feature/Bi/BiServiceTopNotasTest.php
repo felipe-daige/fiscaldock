@@ -39,13 +39,18 @@ it('retorna maiores notas por valor, respeitando cliente e ignorando canceladas'
     $mk(['chave_acesso' => str_pad('2', 44, '0'), 'valor_total' => 900.00]);
     $mk(['chave_acesso' => str_pad('3', 44, '0'), 'valor_total' => 5000.00, 'cancelada' => true]); // ignorada
     $mk(['chave_acesso' => str_pad('4', 44, '0'), 'valor_total' => 7000.00, 'cliente_id' => $outro]); // outro cliente
+    $mk(['chave_acesso' => str_pad('5', 44, '0'), 'valor_total' => 500.00, 'tipo_operacao' => 'entrada']);
 
     $top = app(BiService::class)->getTopNotas($user->id, null, null, $cli, 15);
 
-    expect($top)->toHaveCount(2)
+    expect($top)->toHaveCount(3)
         ->and($top[0]['valor'])->toBe(900.00)
         ->and($top[0]['razao_social'])->toBe('ACME LTDA')
         ->and($top[0]['tipo'])->toBe('S')
+        ->and($top[0]['chave'])->toBe(str_pad('2', 44, '0'))
+        ->and($top[0]['cnpj_cpf'])->toBe('11111111000111')
         ->and($top[0]['data_emissao'])->toBe('10/03/2026')
-        ->and($top[1]['valor'])->toBe(100.00);
+        ->and($top[1]['valor'])->toBe(500.00)
+        ->and($top[1]['tipo'])->toBe('E')
+        ->and($top[2]['valor'])->toBe(100.00);
 });
