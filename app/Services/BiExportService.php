@@ -2,11 +2,15 @@
 
 namespace App\Services;
 
+use App\Services\Consultas\Fiscal\TopMovimentacaoQuery;
 use App\Support\CsvExport;
 
 class BiExportService
 {
-    public function __construct(protected BiService $bi) {}
+    public function __construct(
+        protected BiService $bi,
+        protected TopMovimentacaoQuery $topMov,
+    ) {}
 
     private function brl(float $v): string
     {
@@ -71,13 +75,15 @@ class BiExportService
     }
 
     /**
-     * Relatório completo do BI (KPIs + cobertura + as 4 seções) — fonte única
+     * Relatório completo do BI (KPIs + cobertura + seções) — fonte única
      * consumida pelo PDF executivo e pelo XLSX. Reusa dataset() e os getters do BI.
+     * Mode-aware: $cli === null ⇒ portfólio (inclui riscos + score); else ⇒ cliente.
      */
     public function relatorioCompleto(int $userId, ?string $ini, ?string $fim, ?int $cli): array
     {
         $resumo = $this->bi->getResumoGeral($userId, $cli, $ini, $fim);
         $efd = $this->bi->getKpisEfd($userId, $ini, $fim);
+        $modo = $cli ? 'cliente' : 'portfolio';
 
         $titulos = [
             'faturamento' => 'Faturamento mensal',
@@ -91,7 +97,36 @@ class BiExportService
             $secoes[$aba] = ['titulo' => $titulo, 'colunas' => $ds['colunas'], 'linhas' => $ds['linhas']];
         }
 
+        // Seções enriquecidas (P+C)
+        $secoes['participantes'] = $this->datasetParticipantes($userId, $ini, $fim, $cli);
+        $secoes['top-notas'] = $this->datasetTopNotas($userId, $ini, $fim, $cli);
+        $secoes['catalogo'] = $this->datasetCatalogo($userId, $cli);
+        $secoes['uf'] = $this->datasetUf($userId, $ini, $fim, $cli);
+        $secoes['devolucoes'] = $this->datasetDevolucoes($userId, $ini, $fim, $cli);
+
+        $ordem = ['faturamento', 'tributos', 'apuracao-notas', 'cfop', 'participantes', 'top-notas', 'catalogo', 'uf', 'devolucoes'];
+        $scoreCarteira = null;
+
+        // Seções user-wide — só portfólio (sem fonte cliente-scoped)
+        if ($cli === null) {
+            $secoes['riscos-notas'] = $this->datasetRiscoNotas($userId, $ini, $fim);
+            $secoes['riscos-fornecedores'] = $this->datasetRiscoFornecedores($userId, $ini, $fim);
+            $ordem[] = 'riscos-notas';
+            $ordem[] = 'riscos-fornecedores';
+            $ordem[] = 'score-carteira';
+            $sc = $this->bi->getScoreCarteira($userId);
+            $scoreCarteira = [
+                'percentual_regular' => (float) ($sc['percentual_regular'] ?? 0),
+                'irregulares' => (int) ($sc['irregulares'] ?? 0),
+                'participantes_ativos' => (int) ($sc['participantes_ativos'] ?? 0),
+                'percentual_em_risco' => (float) ($sc['percentual_em_risco'] ?? 0),
+                'valor_total_em_risco_brl' => $this->brl((float) ($sc['valor_total_em_risco'] ?? 0)),
+            ];
+        }
+
         return [
+            'modo' => $modo,
+            'ordem_secoes' => $ordem,
             'periodo' => ['inicio' => $ini, 'fim' => $fim, 'cliente_id' => $cli],
             'kpis' => [
                 'faturamento' => $this->brl((float) ($resumo['total_vendas'] ?? 0)),
@@ -103,7 +138,108 @@ class BiExportService
             ],
             'cobertura' => $this->bi->getCoberturaResumo($userId, $ini, $fim, $cli),
             'secoes' => $secoes,
+            'score_carteira' => $scoreCarteira,
         ];
+    }
+
+    private function datasetParticipantes(int $userId, ?string $ini, ?string $fim, ?int $cli): array
+    {
+        $colunas = ['CNPJ/CPF', 'Razão social', 'Regime', 'Situação', 'Volume', 'Qtd notas', 'Ticket médio'];
+
+        if ($cli === null) {
+            $linhas = array_map(fn ($r) => [
+                $r['cnpj_cpf'], $r['razao_social'], $r['regime'] ?: '—',
+                ($r['irregular'] ? '⚠ ' : '').($r['situacao'] ?: '—'),
+                $this->brl($r['total_valor']), $r['total_notas'], $this->brl($r['ticket_medio']),
+            ], $this->bi->getRankingParticipantes($userId, 'S', $ini, $fim, 10));
+
+            return ['titulo' => 'Top participantes (carteira)', 'colunas' => $colunas, 'linhas' => $linhas];
+        }
+
+        // Modo cliente: contrapartes daquele cliente (clientes/saída + fornecedores/entrada)
+        $clientes = $this->bi->getTopClientes($userId, 10, $ini, $fim, $cli);
+        $forn = $this->bi->getTopFornecedores($userId, 10, $ini, $fim, $cli);
+        $colsC = ['Papel', 'CNPJ/CPF', 'Razão social', 'Volume', 'Qtd notas'];
+        $linhas = [];
+        foreach ($clientes as $r) {
+            $linhas[] = ['Cliente', $r['cnpj'], $r['razao_social'] ?: '—', $this->brl($r['total']), $r['qtd_notas']];
+        }
+        foreach ($forn as $r) {
+            $linhas[] = ['Fornecedor', $r['cnpj'], $r['razao_social'] ?: '—', $this->brl($r['total']), $r['qtd_notas']];
+        }
+
+        return ['titulo' => 'Principais contrapartes', 'colunas' => $colsC, 'linhas' => $linhas];
+    }
+
+    private function datasetTopNotas(int $userId, ?string $ini, ?string $fim, ?int $cli): array
+    {
+        $colunas = ['Data', 'Chave', 'Participante', 'Tipo', 'Valor'];
+        $linhas = array_map(fn ($r) => [
+            $r['data_emissao'] ?: '—',
+            $r['chave'] ?: '—',
+            ($r['razao_social'] ?: '—').($r['cnpj_cpf'] ? ' ('.$r['cnpj_cpf'].')' : ''),
+            $r['tipo'] === 'E' ? 'Entrada' : 'Saída',
+            $this->brl($r['valor']),
+        ], $this->bi->getTopNotas($userId, $ini, $fim, $cli, 15));
+
+        return ['titulo' => 'Principais notas', 'colunas' => $colunas, 'linhas' => $linhas];
+    }
+
+    private function datasetCatalogo(int $userId, ?int $cli): array
+    {
+        $colunas = ['Cód item', 'Descrição', 'NCM', 'Valor movimentado', 'Qtd'];
+
+        $itens = $cli === null
+            ? $this->topMov->produtosPorUsuario($userId, 15)
+            : ($this->topMov->produtos($userId, 'cliente_id', [$cli], 15)[$cli] ?? []);
+
+        $linhas = array_map(fn ($r) => [
+            $r['cod_item'], $r['descricao'], $r['ncm'] ?: '—', $this->brl($r['valor']), $r['qtd'],
+        ], $itens);
+
+        return ['titulo' => 'Top itens do catálogo (acumulado)', 'colunas' => $colunas, 'linhas' => $linhas];
+    }
+
+    private function datasetUf(int $userId, ?string $ini, ?string $fim, ?int $cli): array
+    {
+        $colunas = ['UF', 'Faturamento', 'Qtd notas'];
+        $linhas = array_map(fn ($r) => [
+            $r['uf'] ?: '—', $this->brl($r['total']), $r['qtd_notas'],
+        ], $this->bi->getFaturamentoPorUf($userId, $ini, $fim, $cli));
+
+        return ['titulo' => 'Faturamento por UF', 'colunas' => $colunas, 'linhas' => $linhas];
+    }
+
+    private function datasetDevolucoes(int $userId, ?string $ini, ?string $fim, ?int $cli): array
+    {
+        $colunas = ['Mês', 'Valor devoluções', 'Qtd'];
+        $linhas = array_map(fn ($r) => [
+            $r['mes_formatado'] ?: '—', $this->brl($r['valor_devolucoes']), $r['qtd_devolucoes'],
+        ], $this->bi->getDevolucoes($userId, $ini, $fim, $cli));
+
+        return ['titulo' => 'Devoluções', 'colunas' => $colunas, 'linhas' => $linhas];
+    }
+
+    private function datasetRiscoNotas(int $userId, ?string $ini, ?string $fim): array
+    {
+        $colunas = ['Data', 'CNPJ/CPF', 'Razão social', 'Situação', 'Tipo', 'Valor'];
+        $linhas = array_map(fn ($r) => [
+            $r['data_emissao'] ?: '—', $r['cnpj_cpf'], $r['razao_social'] ?: '—',
+            $r['situacao'] ?: '—', $r['tipo_nota'] === 'E' ? 'Entrada' : 'Saída', $this->brl($r['vl_doc']),
+        ], array_slice($this->bi->getNotasEmRisco($userId, $ini, $fim), 0, 20));
+
+        return ['titulo' => 'Notas em risco (participante irregular)', 'colunas' => $colunas, 'linhas' => $linhas];
+    }
+
+    private function datasetRiscoFornecedores(int $userId, ?string $ini, ?string $fim): array
+    {
+        $colunas = ['CNPJ/CPF', 'Razão social', 'Situação', 'Qtd notas', 'Valor em risco'];
+        $linhas = array_map(fn ($r) => [
+            $r['cnpj_cpf'], $r['razao_social'] ?: '—', $r['situacao'] ?: '—',
+            $r['total_notas'], $this->brl($r['valor_em_risco']),
+        ], array_slice($this->bi->getFornecedoresIrregulares($userId, $ini, $fim), 0, 20));
+
+        return ['titulo' => 'Fornecedores irregulares', 'colunas' => $colunas, 'linhas' => $linhas];
     }
 
     /**

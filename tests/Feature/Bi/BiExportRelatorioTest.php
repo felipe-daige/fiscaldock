@@ -38,7 +38,7 @@ it('relatorioCompleto traz kpis, cobertura e as 4 secoes', function () {
 
     expect($rel)->toHaveKeys(['periodo', 'kpis', 'cobertura', 'secoes']);
     expect($rel['kpis'])->toHaveKeys(['faturamento', 'aquisicoes', 'tributos', 'saldo_liquido', 'total_notas', 'aliquota_media']);
-    expect(array_keys($rel['secoes']))->toBe(['faturamento', 'tributos', 'apuracao-notas', 'cfop']);
+    expect($rel['secoes'])->toHaveKeys(['faturamento', 'tributos', 'apuracao-notas', 'cfop']);
     foreach ($rel['secoes'] as $sec) {
         expect($sec)->toHaveKeys(['titulo', 'colunas', 'linhas']);
     }
