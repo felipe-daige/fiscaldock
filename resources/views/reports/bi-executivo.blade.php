@@ -115,7 +115,7 @@
                                             @if ($it['classificacao'])
                                                 <span class="badge" style="background-color:{{ $hex }}">{{ $it['classificacao'] }}{{ $it['score_total'] !== null ? ' '.$it['score_total'] : '' }}</span>
                                             @else
-                                                <span class="muted small">—</span>
+                                                <span class="badge" style="background-color:#9ca3af">nunca consultado</span>
                                             @endif
                                         </td>
                                         <td class="right">
