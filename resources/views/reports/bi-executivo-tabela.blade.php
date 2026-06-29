@@ -2,7 +2,7 @@
     <thead>
         <tr>
             @foreach ($sec['colunas'] as $col)
-                <th>{{ $col }}</th>
+                <th style="white-space:nowrap;">{{ $col }}</th>
             @endforeach
         </tr>
     </thead>
