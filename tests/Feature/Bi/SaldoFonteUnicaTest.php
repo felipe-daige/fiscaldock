@@ -39,8 +39,9 @@ it('getResumoGeral expõe saldo_liquido = vendas − compras', function () {
     semearSaldoFonteUnica($user->id, $cli);
 
     $r = app(BiService::class)->getResumoGeral($user->id);
-    expect($r['saldo_liquido'])->toBe(round($r['total_vendas'] - $r['total_compras'], 2))
-        ->and($r['saldo_liquido'])->toBeGreaterThan(0);
+    // valor concreto (não tautológico): vendas 1000 − compras 400 = 600.
+    expect($r['saldo_liquido'])->toBe(600.0)
+        ->and($r['saldo_liquido'])->toBe(round($r['total_vendas'] - $r['total_compras'], 2));
 });
 
 it('PDF (relatorioCompleto) consome o saldo da fonte única', function () {

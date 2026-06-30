@@ -132,9 +132,8 @@ class BiExportService
                 'faturamento' => $this->brl((float) ($resumo['total_vendas'] ?? 0)),
                 'aquisicoes' => $this->brl((float) ($resumo['total_compras'] ?? 0)),
                 'tributos' => $this->brl((float) ($resumo['total_tributos'] ?? 0)),
-                // F1: saldo reconcilia com os KPIs exibidos (mesma base XML+EFD),
-                // em vez de getKpisEfd (EFD-only) que não fechava.
-                // antes: 'saldo_liquido' => $this->brl((float) ($resumo['total_vendas'] ?? 0) - (float) ($resumo['total_compras'] ?? 0)),
+                // F1: saldo da fonte única (getResumoGeral, base XML+EFD) — reconcilia
+                // com os KPIs exibidos, em vez de getKpisEfd (EFD-only) que não fechava.
                 'saldo_liquido' => $this->brl((float) ($resumo['saldo_liquido'] ?? 0)),
                 'total_notas' => (int) ($resumo['total_notas'] ?? 0),
                 'aliquota_media' => (float) ($resumo['aliquota_media'] ?? 0),

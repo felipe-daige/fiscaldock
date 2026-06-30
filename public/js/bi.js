@@ -186,7 +186,9 @@
             setKpi('kpi-tributacao-arecolher', formatCompactCurrency(resumo.total_a_recolher || 0));
             setKpi('kpi-sec-fornecedores', resumo.total_fornecedores || 0);
             setKpi('kpi-sec-clientes', resumo.total_clientes || 0);
-            // KPIs EFD (Saldo Líquido + barra secundária) — period-aware via /resumo.
+            // Métricas EFD-específicas (barra secundária: notas recebidas, carga bruta,
+            // participantes ativos, em risco, sem itens). O Saldo NÃO vem mais daqui —
+            // migrou pra resumo.* (fonte única XML+EFD) acima.
             const efd = resumo.kpis_efd || {};
             setKpi('kpi-aquisicoes-notas', (efd.total_entradas_notas || 0).toLocaleString('pt-BR') + ' notas recebidas');
             setKpi('kpi-tributacao-efd', formatCompactCurrency(efd.carga_tributaria || 0));
