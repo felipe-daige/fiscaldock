@@ -149,7 +149,7 @@
                             </div>
                         @endif
 
-                        @if ($chave === 'uf' && ($cc['sem_uf'] ?? 0) > 0)
+                        @if ($chave === 'uf' && $modo === 'portfolio' && ($cc['sem_uf'] ?? 0) > 0)
                             <div style="background-color:#fffbeb;border:1px solid #fde68a;padding:6px;font-size:9px;color:#92400e;margin-bottom:6px;">
                                 &#9888; {{ $cc['sem_uf'] }} participantes sem UF no cadastro — distribuição geográfica incompleta (consulte o CNPJ para enriquecer).
                             </div>

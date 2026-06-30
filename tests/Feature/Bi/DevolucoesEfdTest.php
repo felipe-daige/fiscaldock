@@ -44,4 +44,8 @@ it('getDevolucoes inclui devoluções do EFD (C190 CFOP devolução), não só X
     expect($mar)->not->toBeNull()
         ->and($mar['valor_devolucoes'])->toBe(1000.00)
         ->and($mar['qtd_devolucoes'])->toBe(1);
+
+    // filtro de data no lado EFD honrado: período sem a devolução (mar) → vazio.
+    $abr = app(BiService::class)->getDevolucoes($user->id, '2026-04-01', '2026-04-30');
+    expect($abr)->toBeEmpty();
 });

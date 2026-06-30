@@ -177,7 +177,7 @@ return [
         '5408' => 'Transferência de produção do estabelecimento em operação com produto sujeito ao regime de substituição tributária',
         '5409' => 'Transferência de mercadoria adquirida de terceiros em operação com produto sujeito ao regime de substituição tributária',
         '5410' => 'Devolução de compra para industrialização em operação com mercadoria sujeita ao regime de substituição tributária',
-        '5411' => 'Devolução de compra para industrialização em operação com mercadoria sujeita ao regime de substituição tributária',
+        '5411' => 'Devolução de compra para comercialização em operação com mercadoria sujeita ao regime de substituição tributária',
         '5412' => 'Devolução de compra para comercialização em operação com mercadoria sujeita ao regime de substituição tributária',
         '5413' => 'Ressarcimento de ICMS retido por substituição tributária',
         '5414' => 'Remessa de produção do estabelecimento para venda fora do estabelecimento em operação com produto sujeito ao regime de substituição tributária',
