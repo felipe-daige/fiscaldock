@@ -63,6 +63,8 @@ return [
         '1407' => 'Compra de mercadoria para uso ou consumo cuja mercadoria está sujeita ao regime de substituição tributária',
         '1408' => 'Transferência para industrialização em operação com mercadoria sujeita ao regime de substituição tributária',
         '1409' => 'Transferência para comercialização em operação com mercadoria sujeita ao regime de substituição tributária',
+        '1410' => 'Devolução de venda de produção do estabelecimento, em operação com mercadoria sujeita ao regime de substituição tributária',
+        '1411' => 'Devolução de venda de mercadoria adquirida ou recebida de terceiros, em operação com mercadoria sujeita ao regime de substituição tributária',
 
         // Entradas de bens e serviços
         '1551' => 'Compra de bem para o ativo imobilizado',
@@ -111,6 +113,8 @@ return [
         '2303' => 'Transferência de bem do ativo imobilizado (interestadual)',
         '2401' => 'Compra para industrialização em operação com mercadoria sujeita ao regime de substituição tributária (interestadual)',
         '2403' => 'Compra para comercialização em operação com mercadoria sujeita ao regime de substituição tributária (interestadual)',
+        '2410' => 'Devolução de venda de produção do estabelecimento, em operação com mercadoria sujeita ao regime de substituição tributária (interestadual)',
+        '2411' => 'Devolução de venda de mercadoria adquirida ou recebida de terceiros, em operação com mercadoria sujeita ao regime de substituição tributária (interestadual)',
         '2551' => 'Compra de bem para o ativo imobilizado (interestadual)',
         '2556' => 'Compra de material para uso ou consumo (interestadual)',
         '2910' => 'Entrada de bonificação, doação ou brinde (interestadual)',
@@ -157,6 +161,7 @@ return [
         '5205' => 'Anulação de valor relativo à aquisição de serviço de comunicação',
         '5206' => 'Anulação de valor relativo à aquisição de serviço de transporte',
         '5207' => 'Anulação de valor relativo à compra de energia elétrica',
+        '5210' => 'Devolução de compra para utilização na prestação de serviço',
 
         // Transferências
         '5301' => 'Transferência de produção do estabelecimento',
@@ -171,6 +176,7 @@ return [
         '5405' => 'Venda de mercadoria adquirida de terceiros, com cobrança do ICMS por substituição tributária',
         '5408' => 'Transferência de produção do estabelecimento em operação com produto sujeito ao regime de substituição tributária',
         '5409' => 'Transferência de mercadoria adquirida de terceiros em operação com produto sujeito ao regime de substituição tributária',
+        '5410' => 'Devolução de compra para industrialização em operação com mercadoria sujeita ao regime de substituição tributária',
         '5411' => 'Devolução de compra para industrialização em operação com mercadoria sujeita ao regime de substituição tributária',
         '5412' => 'Devolução de compra para comercialização em operação com mercadoria sujeita ao regime de substituição tributária',
         '5413' => 'Ressarcimento de ICMS retido por substituição tributária',
@@ -242,6 +248,7 @@ return [
         '6121' => 'Venda de mercadoria adquirida de terceiros em venda à ordem (interestadual)',
         '6201' => 'Devolução de compra para industrialização (interestadual)',
         '6202' => 'Devolução de compra para comercialização (interestadual)',
+        '6210' => 'Devolução de compra para utilização na prestação de serviço (interestadual)',
         '6301' => 'Transferência de produção do estabelecimento (interestadual)',
         '6302' => 'Transferência de mercadoria adquirida de terceiros (interestadual)',
         '6303' => 'Transferência de bem do ativo imobilizado (interestadual)',
@@ -249,6 +256,8 @@ return [
         '6401' => 'Venda de produção do estabelecimento em operação com produto sujeito ao regime de substituição tributária (interestadual)',
         '6403' => 'Venda de mercadoria adquirida de terceiros em operação com produto sujeito ao regime de substituição tributária (interestadual)',
         '6404' => 'Venda de mercadoria sujeita ao regime de substituição tributária cujo imposto já tenha sido retido anteriormente (interestadual)',
+        '6410' => 'Devolução de compra para industrialização em operação com mercadoria sujeita ao regime de substituição tributária (interestadual)',
+        '6411' => 'Devolução de compra para comercialização em operação com mercadoria sujeita ao regime de substituição tributária (interestadual)',
         '6551' => 'Venda de bem do ativo imobilizado (interestadual)',
         '6556' => 'Venda de material de uso ou consumo (interestadual)',
         '6901' => 'Remessa para industrialização por encomenda (interestadual)',
