@@ -134,7 +134,8 @@ class BiExportService
                 'tributos' => $this->brl((float) ($resumo['total_tributos'] ?? 0)),
                 // F1: saldo reconcilia com os KPIs exibidos (mesma base XML+EFD),
                 // em vez de getKpisEfd (EFD-only) que não fechava.
-                'saldo_liquido' => $this->brl((float) ($resumo['total_vendas'] ?? 0) - (float) ($resumo['total_compras'] ?? 0)),
+                // antes: 'saldo_liquido' => $this->brl((float) ($resumo['total_vendas'] ?? 0) - (float) ($resumo['total_compras'] ?? 0)),
+                'saldo_liquido' => $this->brl((float) ($resumo['saldo_liquido'] ?? 0)),
                 'total_notas' => (int) ($resumo['total_notas'] ?? 0),
                 'aliquota_media' => (float) ($resumo['aliquota_media'] ?? 0),
             ],

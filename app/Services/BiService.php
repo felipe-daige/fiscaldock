@@ -495,6 +495,10 @@ class BiService
             'total_notas' => (int) ($totais->total_notas ?? 0) + $efdNotas,
             'total_vendas' => $totalVendas,
             'total_compras' => $totalCompras,
+            // Saldo Líquido canônico = Faturamento − Aquisições (mesma base XML+EFD
+            // dos KPIs). Fonte ÚNICA consumida pelo PDF, BI screen e Dashboard Notas
+            // — garante que o saldo reconcilia com faturamento−aquisições exibidos.
+            'saldo_liquido' => round($totalVendas - $totalCompras, 2),
             'total_frete' => $efdFrete,
             'total_compras_mercadoria' => $totalCompras - $efdFrete,
             'total_a_recolher' => $efdARecolher,
