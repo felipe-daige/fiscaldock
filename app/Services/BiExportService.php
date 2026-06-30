@@ -83,7 +83,6 @@ class BiExportService
     public function relatorioCompleto(int $userId, ?string $ini, ?string $fim, ?int $cli): array
     {
         $resumo = $this->bi->getResumoGeral($userId, $cli, $ini, $fim);
-        $efd = $this->bi->getKpisEfd($userId, $ini, $fim);
         $modo = $cli === null ? 'portfolio' : 'cliente';
 
         $titulos = [
@@ -133,11 +132,15 @@ class BiExportService
                 'faturamento' => $this->brl((float) ($resumo['total_vendas'] ?? 0)),
                 'aquisicoes' => $this->brl((float) ($resumo['total_compras'] ?? 0)),
                 'tributos' => $this->brl((float) ($resumo['total_tributos'] ?? 0)),
-                'saldo_liquido' => $this->brl((float) ($efd['saldo_liquido'] ?? 0)),
+                // F1: saldo reconcilia com os KPIs exibidos (mesma base XML+EFD),
+                // em vez de getKpisEfd (EFD-only) que não fechava.
+                'saldo_liquido' => $this->brl((float) ($resumo['total_vendas'] ?? 0) - (float) ($resumo['total_compras'] ?? 0)),
                 'total_notas' => (int) ($resumo['total_notas'] ?? 0),
                 'aliquota_media' => (float) ($resumo['aliquota_media'] ?? 0),
             ],
             'cobertura' => $this->bi->getCoberturaResumo($userId, $ini, $fim, $cli),
+            'cobertura_consulta' => $this->bi->coberturaConsultaParticipantes($userId),
+            'a_recolher_brl' => $this->brl((float) ($resumo['total_a_recolher'] ?? 0)),
             'secoes' => $secoes,
             'score_carteira' => $scoreCarteira,
         ];

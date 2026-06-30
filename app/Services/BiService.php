@@ -1065,6 +1065,33 @@ class BiService
         ];
     }
 
+    /**
+     * Cobertura de consulta dos participantes: quantos nunca foram consultados
+     * (situacao_cadastral null) e quantos estão sem UF. Usado para sinalizar
+     * "risco não avaliado" / "UF incompleta" no relatório em vez de vazio enganoso.
+     *
+     * @return array{total:int, consultados:int, sem_consulta:int, sem_uf:int}
+     */
+    public function coberturaConsultaParticipantes(int $userId): array
+    {
+        $row = DB::table('participantes')
+            ->where('user_id', $userId)
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('COUNT(*) FILTER (WHERE situacao_cadastral IS NULL) as sem_consulta')
+            ->selectRaw('COUNT(*) FILTER (WHERE uf IS NULL) as sem_uf')
+            ->first();
+
+        $total = (int) ($row->total ?? 0);
+        $semConsulta = (int) ($row->sem_consulta ?? 0);
+
+        return [
+            'total' => $total,
+            'consultados' => $total - $semConsulta,
+            'sem_consulta' => $semConsulta,
+            'sem_uf' => (int) ($row->sem_uf ?? 0),
+        ];
+    }
+
     public function getGapImportacoes(int $userId): array
     {
         // Gap por COMPETÊNCIA (data_emissao), ancorado ao range real dos dados —
