@@ -10,6 +10,7 @@ use App\Models\Cliente;
 use App\Models\EfdImportacao;
 use App\Models\EfdNota;
 use App\Models\Participante;
+use App\Services\BiService;
 use App\Services\NotasFiscaisAlertService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -23,6 +24,8 @@ class DashboardNotasFiscaisController extends Controller
     private const VIEW = 'autenticado.notas.dashboard';
 
     private const LAYOUT = 'autenticado.layouts.app';
+
+    public function __construct(private BiService $biService) {}
 
     public function index(Request $request)
     {
@@ -104,6 +107,28 @@ class DashboardNotasFiscaisController extends Controller
                 SUM(CASE WHEN tipo_operacao = 'saida' THEN valor_total ELSE 0 END) as valor_saidas
             ")
             ->first();
+
+        // KPIs financeiros do topo = resumo canônico (fonte única do BI/PDF),
+        // escopado por cliente+período. getResumoGeral soma XML+EFD, então o saldo
+        // reconcilia com Faturamento−Aquisições exibidos em todas as telas. Os
+        // filtros finos (tipo_efd/importacao_id/participante_id) NÃO entram aqui —
+        // movem só os breakdowns abaixo (drill-down), não o headline financeiro.
+        //
+        // Período chega como 'YYYY-MM' (inputs type="month"). getResumoGeral compara
+        // data_emissao com `>=`/`<=` literal, então normalizamos pros mesmos limites
+        // que aplicarFiltros usa nos breakdowns (início = dia 1; fim = fim do mês),
+        // senão o `<= 'YYYY-MM'` cortaria o mês inteiro e o KPI divergiria da tabela.
+        $periodoInicio = ! empty($filtros['periodo_inicio']) ? $filtros['periodo_inicio'].'-01' : null;
+        $periodoFim = ! empty($filtros['periodo_fim'])
+            ? Carbon::parse($filtros['periodo_fim'].'-01')->endOfMonth()->format('Y-m-d')
+            : null;
+
+        $resumoCanonico = $this->biService->getResumoGeral(
+            $userId,
+            $filtros['cliente_id'] ?? null,
+            $periodoInicio,
+            $periodoFim,
+        );
 
         // Participantes únicos é HEADCOUNT, não faturamento: conta sobre a base
         // sem o filtro comercial (devolvi mercadoria a um fornecedor → ele ainda é
@@ -193,12 +218,15 @@ class DashboardNotasFiscaisController extends Controller
 
         return response()->json([
             'kpis' => [
+                // total_notas / participantes_unicos seguem como contagem própria
+                // (headcount da base do dashboard). Só os 3 valores financeiros vêm
+                // da fonte única (getResumoGeral) p/ bater com BI/PDF (XML+EFD).
                 'total_notas' => (int) $kpis->total_notas,
-                'valor_entradas' => (float) $kpis->valor_entradas,
-                'valor_saidas' => (float) $kpis->valor_saidas,
-                // Saldo Líquido = Saídas (faturamento) − Entradas (aquisições).
-                // Mesma convenção do BI fiscal (BiService::getKpisEfd); positivo = vendeu mais do que comprou.
-                'saldo' => (float) $kpis->valor_saidas - (float) $kpis->valor_entradas,
+                'valor_entradas' => (float) ($resumoCanonico['total_compras'] ?? 0),
+                'valor_saidas' => (float) ($resumoCanonico['total_vendas'] ?? 0),
+                // Saldo Líquido canônico = Faturamento − Aquisições (mesma base XML+EFD
+                // do BI screen e do PDF). Fonte única: BiService::getResumoGeral.
+                'saldo' => (float) ($resumoCanonico['saldo_liquido'] ?? 0),
                 'participantes_unicos' => $participantesUnicos,
             ],
             'evolucao' => $evolucao,
