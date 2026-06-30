@@ -451,6 +451,7 @@ class BiController extends Controller
         // KPIs EFD (Saldo Líquido + barra secundária) também respeitam o período.
         $resumo['kpis_efd'] = $this->biService->getKpisEfd($userId, $dataInicio, $dataFim);
         $resumo['cobertura'] = $this->biService->getCoberturaResumo($userId, $dataInicio, $dataFim, $clienteId);
+        $resumo['cobertura_consulta'] = $this->biService->coberturaConsultaParticipantes($userId);
 
         return response()->json($resumo);
     }

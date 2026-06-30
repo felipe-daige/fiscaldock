@@ -197,6 +197,7 @@
             setKpi('kpi-sec-risco', efd.notas_em_risco || 0);
             setKpi('kpi-sec-sem-itens', efd.notas_sem_itens || 0);
             renderCobertura(resumo.cobertura);
+            renderCoberturaConsulta(resumo.cobertura_consulta);
         } catch (e) {
             console.error('Erro ao atualizar resumo KPIs:', e);
         }
@@ -236,6 +237,25 @@
             } else {
                 banner.classList.add('hidden');
             }
+        }
+    }
+
+    // Aviso de cobertura de CONSULTA: participantes nunca consultados (risco não
+    // avaliado) e sem UF (distribuição geográfica incompleta). Honestidade — evita
+    // o falso "tudo certo" quando o cadastro não foi enriquecido por consulta CNPJ.
+    function renderCoberturaConsulta(cc) {
+        cc = cc || { total: 0, sem_consulta: 0, sem_uf: 0 };
+        const banner = document.getElementById('bi-cobertura-consulta-banner');
+        const texto = document.getElementById('bi-cobertura-consulta-texto');
+        if (!banner || !texto) return;
+        const partes = [];
+        if ((cc.sem_consulta || 0) > 0) partes.push(`⚠ ${cc.sem_consulta} de ${cc.total} participantes nunca consultados — risco não avaliado`);
+        if ((cc.sem_uf || 0) > 0) partes.push(`${cc.sem_uf} sem UF — distribuição geográfica incompleta`);
+        if (partes.length) {
+            texto.textContent = partes.join(' · ');
+            banner.classList.remove('hidden');
+        } else {
+            banner.classList.add('hidden');
         }
     }
 

@@ -97,6 +97,13 @@
             <p id="bi-cobertura-texto" class="text-[12px] leading-5" style="color: #92400e;"></p>
         </div>
 
+        {{-- Faixa de cobertura de CONSULTA (avisa participantes nunca consultados / sem UF).
+             Sempre começa hidden; renderCoberturaConsulta() (boot via updateResumoKpis) revela
+             só com texto. --}}
+        <div id="bi-cobertura-consulta-banner" class="hidden mb-3" style="background-color:#fffbeb;border:1px solid #fde68a;padding:8px;border-radius:6px;">
+            <span id="bi-cobertura-consulta-texto" style="color:#92400e;font-size:12px;"></span>
+        </div>
+
         {{-- KPIs Consolidados --}}
         @php
         // KPIs exibem o valor exato COM centavos, inclusive grandes (mesmo critério do bi.js).
