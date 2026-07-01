@@ -65,7 +65,11 @@
             valor_op: 'min',
             valor: '',
             qtd_op: 'min',
-            qtd: ''
+            qtd: '',
+            status_consulta: '',
+            regularidade: '',
+            monitorado: '',
+            ordenar: 'razao'
         },
         clientesFilters: {
             busca: '',
@@ -119,6 +123,8 @@
     function init() {
         cacheElements();
         bindEvents();
+        restoreFiltros();
+        renderChips();
 
         // Pre-selecionar participantes da URL (vindos da lista de participantes)
         const urlParams = new URLSearchParams(window.location.search);
@@ -163,7 +169,17 @@
             filtroValor: document.getElementById('filtro-valor'),
             filtroQtdOp: document.getElementById('filtro-qtd-op'),
             filtroQtd: document.getElementById('filtro-qtd'),
-            btnLimparFiltrosParticipantes: document.getElementById('btn-limpar-filtros-participantes'),
+            filtroStatusConsulta: document.getElementById('filtro-status-consulta'),
+            filtroRegularidade: document.getElementById('filtro-regularidade'),
+            filtroMonitorado: document.getElementById('filtro-monitorado'),
+            filtroOrdenar: document.getElementById('filtro-ordenar'),
+            filtrosAvancados: document.getElementById('filtros-avancados'),
+            btnToggleAvancados: document.getElementById('btn-toggle-avancados'),
+            iconAvancados: document.getElementById('icon-avancados'),
+            badgeAvancados: document.getElementById('badge-avancados'),
+            participantesChips: document.getElementById('participantes-chips'),
+            participantesCount: document.getElementById('participantes-count'),
+            btnLimparTudo: document.getElementById('btn-limpar-tudo'),
 
             // Abas
             searchTabs: document.querySelectorAll('.search-tab'),
@@ -267,9 +283,12 @@
         if (elements.filtroValor) elements.filtroValor.addEventListener('input', debounce(onFilterChange, 400));
         if (elements.filtroQtdOp) elements.filtroQtdOp.addEventListener('change', onFilterChange);
         if (elements.filtroQtd) elements.filtroQtd.addEventListener('input', debounce(onFilterChange, 400));
-        if (elements.btnLimparFiltrosParticipantes) {
-            elements.btnLimparFiltrosParticipantes.addEventListener('click', resetParticipantesFilters);
-        }
+        if (elements.filtroStatusConsulta) elements.filtroStatusConsulta.addEventListener('change', onFilterChange);
+        if (elements.filtroRegularidade) elements.filtroRegularidade.addEventListener('change', onFilterChange);
+        if (elements.filtroMonitorado) elements.filtroMonitorado.addEventListener('change', onFilterChange);
+        if (elements.filtroOrdenar) elements.filtroOrdenar.addEventListener('change', onFilterChange);
+        if (elements.btnToggleAvancados) elements.btnToggleAvancados.addEventListener('click', toggleAvancados);
+        if (elements.btnLimparTudo) elements.btnLimparTudo.addEventListener('click', resetParticipantesFilters);
 
         // Abas (event delegation - robusto para SPA re-navigation)
         var searchTabsContainer = document.getElementById('search-tabs');
@@ -419,6 +438,10 @@
             params.append('qtd_op', state.filters.qtd_op || 'min');
             params.append('qtd', state.filters.qtd);
         }
+        if (state.filters.status_consulta) params.append('status_consulta', state.filters.status_consulta);
+        if (state.filters.regularidade) params.append('regularidade', state.filters.regularidade);
+        if (state.filters.monitorado) params.append('monitorado', state.filters.monitorado);
+        if (state.filters.ordenar && state.filters.ordenar !== 'razao') params.append('ordenar', state.filters.ordenar);
 
         try {
             const response = await fetch(`${window.consultaData.routes.getParticipantes}?${params}`, {
@@ -578,6 +601,11 @@
         state.totalPages = pagination.last_page;
         state.totalItems = pagination.total;
 
+        if (elements.participantesCount) {
+            const n = pagination.total;
+            elements.participantesCount.textContent = n + ' participante' + (n !== 1 ? 's' : '') + ' encontrado' + (n !== 1 ? 's' : '');
+        }
+
         const inicio = (pagination.current_page - 1) * pagination.per_page + 1;
         const fim = Math.min(pagination.current_page * pagination.per_page, pagination.total);
 
@@ -618,10 +646,16 @@
         state.filters.valor = elements.filtroValor?.value || '';
         state.filters.qtd_op = elements.filtroQtdOp?.value || 'min';
         state.filters.qtd = elements.filtroQtd?.value || '';
+        state.filters.status_consulta = elements.filtroStatusConsulta?.value || '';
+        state.filters.regularidade = elements.filtroRegularidade?.value || '';
+        state.filters.monitorado = elements.filtroMonitorado?.value || '';
+        state.filters.ordenar = elements.filtroOrdenar?.value || 'razao';
         state.filterContext = null;
         if (elements.participantesContext) {
             elements.participantesContext.classList.add('hidden');
         }
+        renderChips();
+        saveFiltros();
         state.currentPage = 1;
         loadParticipantes();
         syncBulkActionButtons();
@@ -706,12 +740,12 @@
                 if (state.filters.uf) params.append('uf', state.filters.uf);
                 if (state.filters.busca) params.append('busca', state.filters.busca);
                 if (state.filters.relacao) params.append('relacao', state.filters.relacao);
-                if (state.filters.valor !== '') {
-                    params.append('valor_op', state.filters.valor_op);
+                if (state.filters.valor !== '' && state.filters.valor != null && state.filters.valor !== 'undefined') {
+                    params.append('valor_op', state.filters.valor_op || 'min');
                     params.append('valor', state.filters.valor);
                 }
-                if (state.filters.qtd !== '') {
-                    params.append('qtd_op', state.filters.qtd_op);
+                if (state.filters.qtd !== '' && state.filters.qtd != null && state.filters.qtd !== 'undefined') {
+                    params.append('qtd_op', state.filters.qtd_op || 'min');
                     params.append('qtd', state.filters.qtd);
                 }
 
@@ -966,9 +1000,9 @@
             if (elements.resumoCustoUnitario) elements.resumoCustoUnitario.textContent = 'Gratis';
             if (elements.resumoCustoTotal) elements.resumoCustoTotal.textContent = 'Gratis';
         } else {
-            // custo* é em crédito interno (peg R$0,20); exibe em R$
-            if (elements.resumoCustoUnitario) elements.resumoCustoUnitario.textContent = 'R$ ' + (custoUnitario * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            if (elements.resumoCustoTotal) elements.resumoCustoTotal.textContent = 'R$ ' + (custoTotal * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            // custo* já vem em R$
+            if (elements.resumoCustoUnitario) elements.resumoCustoUnitario.textContent = 'R$ ' + (custoUnitario).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (elements.resumoCustoTotal) elements.resumoCustoTotal.textContent = 'R$ ' + (custoTotal).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         // Alerta de creditos insuficientes
@@ -1069,7 +1103,7 @@
             }
 
             state.credits = data.novo_saldo;
-            if (elements.resumoSaldo) elements.resumoSaldo.textContent = 'R$ ' + ((data.novo_saldo || 0) * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (elements.resumoSaldo) elements.resumoSaldo.textContent = 'R$ ' + ((data.novo_saldo || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             const redirectUrl = data.redirect_url || ('/app/consulta/lote/' + data.consulta_lote_id);
             if (redirectUrl) {
@@ -1727,12 +1761,30 @@
         return formatRegularidade(cnd);
     }
 
-    function formatRegimeTributario(regime) {
-        if (regime === null || regime === undefined || regime === '') {
+    function formatRegimeTributario(regime, nota) {
+        var v = (regime == null ? '' : String(regime)).trim();
+        var n = (nota == null ? '' : String(nota)).trim();
+        if (v === '') {
             return '<span class="text-gray-400">-</span>';
         }
-
-        return '<span class="text-gray-700 text-xs whitespace-nowrap">' + escapeHtml(String(regime)) + '</span>';
+        if (v.toLowerCase() === 'não informado') {
+            var m = n.match(/^foi optante do (.+?) até (.+)$/);
+            if (m) {
+                return '<span class="inline-flex flex-col items-center leading-tight text-xs" '
+                     + 'title="Regime atual não publicado pela Receita — exibindo o último regime conhecido; não requer correção.">'
+                     + '<span class="text-gray-600">' + escapeHtml(m[1].trim()) + ' <span class="text-gray-400">(histórico)</span></span>'
+                     + '<span class="text-[10px] text-gray-400">até ' + escapeHtml(m[2].trim()) + '</span></span>';
+            }
+            if (n !== '') {
+                return '<span class="inline-flex flex-col items-center leading-tight text-xs" '
+                     + 'title="Regime atual não publicado pela Receita — não requer correção.">'
+                     + '<span class="text-gray-500">Não informado</span>'
+                     + '<span class="text-[10px] text-gray-400">' + escapeHtml(n) + '</span></span>';
+            }
+            return '<span class="text-gray-500 text-xs underline decoration-dotted decoration-gray-300" '
+                 + 'title="Dado indisponível na fonte — não requer correção.">Não informado pela Receita</span>';
+        }
+        return '<span class="text-gray-700 text-xs whitespace-nowrap">' + escapeHtml(v) + '</span>';
     }
 
     function formatCnpj(cnpj) {
@@ -1797,7 +1849,7 @@
                 + '<td class="px-3 py-2 text-xs text-gray-700">' + (r.participante ? '<a href="/app/participante/' + r.participante.id + '" class="text-blue-700 hover:text-blue-900 hover:underline" title="Ver perfil">' + (r.participante.razao_social || '-') + '</a>' : '-') + '</td>'
                 + '<td class="px-3 py-2 text-xs text-gray-500 text-center">' + ((r.participante && r.participante.uf) || '-') + '</td>'
                 + '<td class="px-3 py-2 text-xs text-center">' + (r.situacao_cadastral ? '<span class="text-xs text-gray-700">' + r.situacao_cadastral + '</span>' : '<span class="text-gray-400">-</span>') + '</td>'
-                + '<td class="px-3 py-2 text-xs text-center">' + formatRegimeTributario(r.regime_tributario) + '</td>'
+                + '<td class="px-3 py-2 text-xs text-center">' + formatRegimeTributario(r.regime_tributario, r.regime_tributario_nota) + '</td>'
                 + '<td class="px-3 py-2 text-xs text-center">' + formatCndFederal(r.cnd_federal) + '</td>'
                 + '<td class="px-3 py-2 text-xs text-center">' + formatRegularidade(r.crf_fgts) + '</td>'
                 + '<td class="px-3 py-2 text-xs text-center">' + formatRegularidade(r.cndt) + '</td>'
@@ -3458,7 +3510,11 @@
             valor_op: 'min',
             valor: '',
             qtd_op: 'min',
-            qtd: ''
+            qtd: '',
+            status_consulta: '',
+            regularidade: '',
+            monitorado: '',
+            ordenar: 'razao'
         };
         state.filterContext = null;
         state.currentPage = 1;
@@ -3475,9 +3531,129 @@
         if (elements.filtroValor) elements.filtroValor.value = '';
         if (elements.filtroQtdOp) elements.filtroQtdOp.value = 'min';
         if (elements.filtroQtd) elements.filtroQtd.value = '';
+        if (elements.filtroStatusConsulta) elements.filtroStatusConsulta.value = '';
+        if (elements.filtroRegularidade) elements.filtroRegularidade.value = '';
+        if (elements.filtroMonitorado) elements.filtroMonitorado.value = '';
+        if (elements.filtroOrdenar) elements.filtroOrdenar.value = 'razao';
         if (elements.participantesContext) elements.participantesContext.classList.add('hidden');
+        try { localStorage.removeItem(FILTROS_STORAGE_KEY); } catch (e) {}
+        renderChips();
 
         loadParticipantes();
+    }
+
+    // ==========================================
+    // Filtros: collapse avançado, chips, contador, persistência
+    // ==========================================
+    var FILTROS_STORAGE_KEY = 'consulta.filtros.participantes';
+    var FILTROS_AVANCADOS = ['origem_tipo','tipo_documento','uf','cliente_id','grupo_id','relacao','regularidade','monitorado','valor','qtd'];
+    var CHIP_LABELS = {
+        status_consulta: { nunca: 'Nunca consultado', desatualizada: 'Desatualizada (+30d)', recente: 'Recente (≤30d)' },
+        regularidade: { regular: 'Regular', irregular: 'Irregular', indeterminada: 'Indeterminada', nao_consultado: 'Não consultado' },
+        monitorado: { sim: 'Monitorado', nao: 'Não monitorado' },
+        relacao: { fornecedor: 'Fornecedor', cliente: 'Cliente', ambos: 'Fornecedor e cliente', sem_movimentacao: 'Sem movimentação' },
+        origem_tipo: { NFE: 'NF-e', NFSE: 'NFS-e', CTE: 'CT-e', SPED_EFD_FISCAL: 'EFD Fiscal', SPED_EFD_CONTRIB: 'EFD Contribuições', MANUAL: 'Manual' },
+        tipo_documento: { PJ: 'Pessoa Jurídica', PF: 'Pessoa Física' }
+    };
+
+    function toggleAvancados() {
+        if (!elements.filtrosAvancados) return;
+        var aberto = !elements.filtrosAvancados.classList.toggle('hidden');
+        if (elements.iconAvancados) elements.iconAvancados.style.transform = aberto ? 'rotate(180deg)' : '';
+    }
+
+    function contarAvancados() {
+        return FILTROS_AVANCADOS.filter(function (k) {
+            return state.filters[k] && state.filters[k] !== '';
+        }).length;
+    }
+
+    function saveFiltros() {
+        try { localStorage.setItem(FILTROS_STORAGE_KEY, JSON.stringify(state.filters)); } catch (e) {}
+    }
+
+    function restoreFiltros() {
+        var saved;
+        try { saved = JSON.parse(localStorage.getItem(FILTROS_STORAGE_KEY) || '{}'); } catch (e) { saved = {}; }
+        if (!saved || typeof saved !== 'object') return;
+
+        var setVal = function (el, v) { if (el && v != null && v !== '') el.value = v; };
+        setVal(elements.filtroBusca, saved.busca);
+        setVal(elements.filtroSituacaoCadastral, saved.situacao_cadastral);
+        setVal(elements.filtroStatusConsulta, saved.status_consulta);
+        setVal(elements.filtroOrdenar, saved.ordenar);
+        setVal(elements.filtroOrigem, saved.origem_tipo);
+        setVal(elements.filtroTipoDocumento, saved.tipo_documento);
+        setVal(elements.filtroUf, saved.uf);
+        setVal(elements.filtroCliente, saved.cliente_id);
+        setVal(elements.filtroGrupo, saved.grupo_id);
+        setVal(elements.filtroRelacao, saved.relacao);
+        setVal(elements.filtroRegularidade, saved.regularidade);
+        setVal(elements.filtroMonitorado, saved.monitorado);
+        setVal(elements.filtroValorOp, saved.valor_op);
+        setVal(elements.filtroValor, saved.valor);
+        setVal(elements.filtroQtdOp, saved.qtd_op);
+        setVal(elements.filtroQtd, saved.qtd);
+
+        // Espelha no state.filters pro primeiro loadParticipantes já aplicar.
+        Object.keys(saved).forEach(function (k) {
+            if (saved[k] != null) state.filters[k] = saved[k];
+        });
+
+        if (contarAvancados() > 0 && elements.filtrosAvancados && elements.filtrosAvancados.classList.contains('hidden')) {
+            toggleAvancados();
+        }
+    }
+
+    function chipRemove(chave) {
+        var map = {
+            busca: elements.filtroBusca, situacao_cadastral: elements.filtroSituacaoCadastral,
+            status_consulta: elements.filtroStatusConsulta, origem_tipo: elements.filtroOrigem,
+            tipo_documento: elements.filtroTipoDocumento, uf: elements.filtroUf,
+            cliente_id: elements.filtroCliente, grupo_id: elements.filtroGrupo,
+            relacao: elements.filtroRelacao, regularidade: elements.filtroRegularidade,
+            monitorado: elements.filtroMonitorado, valor: elements.filtroValor, qtd: elements.filtroQtd
+        };
+        if (map[chave]) map[chave].value = (chave === 'valor' || chave === 'qtd') ? '' : '';
+        onFilterChange();
+    }
+
+    function labelDoChip(chave, valor) {
+        if (CHIP_LABELS[chave] && CHIP_LABELS[chave][valor]) return CHIP_LABELS[chave][valor];
+        if (chave === 'valor') return 'Valor ' + (state.filters.valor_op === 'max' ? '≤ ' : '≥ ') + valor;
+        if (chave === 'qtd') return 'Notas ' + (state.filters.qtd_op === 'max' ? '≤ ' : '≥ ') + valor;
+        if (chave === 'cliente_id') return (elements.filtroCliente && elements.filtroCliente.selectedOptions[0]) ? elements.filtroCliente.selectedOptions[0].textContent : 'Cliente';
+        if (chave === 'grupo_id') return (elements.filtroGrupo && elements.filtroGrupo.selectedOptions[0]) ? elements.filtroGrupo.selectedOptions[0].textContent : 'Grupo';
+        if (chave === 'uf') return valor;
+        if (chave === 'situacao_cadastral') return valor;
+        if (chave === 'busca') return '"' + valor + '"';
+        return valor;
+    }
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    function renderChips() {
+        if (!elements.participantesChips) return;
+        var chaves = ['busca','situacao_cadastral','status_consulta','origem_tipo','tipo_documento','uf','cliente_id','grupo_id','relacao','regularidade','monitorado','valor','qtd'];
+        var ativos = chaves.filter(function (k) { return state.filters[k] && state.filters[k] !== ''; });
+        elements.participantesChips.innerHTML = ativos.map(function (k) {
+            return '<span class="inline-flex items-center gap-1 text-[11px] text-gray-700 rounded px-2 py-0.5" style="background-color:#f3f4f6;">'
+                + escapeHtml(labelDoChip(k, state.filters[k]))
+                + '<button type="button" data-chip="' + k + '" class="text-gray-400 hover:text-gray-700">&times;</button></span>';
+        }).join('');
+        elements.participantesChips.querySelectorAll('[data-chip]').forEach(function (btn) {
+            btn.addEventListener('click', function () { chipRemove(btn.getAttribute('data-chip')); });
+        });
+        if (elements.btnLimparTudo) elements.btnLimparTudo.classList.toggle('hidden', ativos.length === 0);
+        if (elements.badgeAvancados) {
+            var n = contarAvancados();
+            elements.badgeAvancados.textContent = n;
+            elements.badgeAvancados.classList.toggle('hidden', n === 0);
+        }
     }
 
     function resetClientesFilters() {
