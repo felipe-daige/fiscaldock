@@ -96,6 +96,9 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::post('/app/alertas/recalcular', [DashboardController::class, 'alertasRecalcular'])->name('app.alertas.recalcular');
     Route::get('/app/alertas/{id}', [DashboardController::class, 'alertaDetalhes'])->name('app.alertas.show');
 
+    // Status das integrações (read-only, qualquer usuário autenticado)
+    Route::get('/app/status', [\App\Http\Controllers\Dashboard\StatusController::class, 'index'])->name('app.status.index');
+
     // Usuário (Placeholder)
     Route::get('/app/configuracoes', [DashboardController::class, 'configuracoes'])->name('app.configuracoes');
     Route::patch('/app/configuracoes/notificacoes', [DashboardController::class, 'atualizarNotificacaoConfiguracao'])->name('app.configuracoes.notificacoes.update');
@@ -349,6 +352,10 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
             Route::post('/pendencias/{pendencia}/resolver', [\App\Http\Controllers\Dashboard\AdminPendenciaController::class, 'resolver'])->name('pendencias.resolver')->where('pendencia', '[0-9]+');
             Route::post('/pendencias/{pendencia}/reabrir', [\App\Http\Controllers\Dashboard\AdminPendenciaController::class, 'reabrir'])->name('pendencias.reabrir')->where('pendencia', '[0-9]+');
             Route::delete('/pendencias/{pendencia}', [\App\Http\Controllers\Dashboard\AdminPendenciaController::class, 'destroy'])->name('pendencias.destroy')->where('pendencia', '[0-9]+');
+
+            // Status das integrações (gerenciador manual do operador)
+            Route::get('/integracoes', [\App\Http\Controllers\Dashboard\AdminIntegracaoController::class, 'index'])->name('integracoes.index');
+            Route::put('/integracoes/{integracao}', [\App\Http\Controllers\Dashboard\AdminIntegracaoController::class, 'update'])->name('integracoes.update')->where('integracao', '[0-9]+');
         });
 
     // Painel admin — parâmetros comerciais (§6.1, somente operador FiscalDock)

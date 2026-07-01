@@ -33,5 +33,8 @@ class DatabaseSeeder extends Seeder
 
         // Popular planos de monitoramento
         $this->call(MonitoramentoPlanoSeeder::class);
+
+        // Catálogo de status das integrações
+        $this->call(IntegracaoStatusSeeder::class);
     }
 }
