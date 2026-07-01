@@ -11,6 +11,6 @@ it('o modal de export do BI tem o seletor de dossiês e o wiring', function () {
 
     $resp->assertSee('export-pdf-dossies', false)   // id do select
         ->assertSee('Sem dossiês', false)           // opção default
-        ->assertSee('Todos os participantes', false)
+        ->assertSee('Todos (máx. 50', false)         // opção "todos" (com o teto no rótulo)
         ->assertSee('dossies', false);            // param injetado pelo download-button
 });

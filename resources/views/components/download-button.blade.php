@@ -13,7 +13,7 @@
     // Download NATIVO via <iframe> (cookies de sessão vão automático — fetch+blob dava
     // "Falha" no browser do usuário apesar do 200). Spinner mostrado até o servidor
     // devolver o arquivo: o controller seta cookie `bi_download=<token>` na resposta e
-    // este JS faz poll do cookie pra esconder o overlay (fallback: timeout 40s).
+    // este JS faz poll do cookie pra esconder o overlay (fallback: timeout ~260s).
     // Lê o select de cliente (id vem da prop clienteSelect, default 'filtro-cliente') e #filtro-periodo (cliente_id + meses, datas server-side).
     // Sem aspas duplas no JS (o atributo onclick já usa aspas duplas).
     // Detecção por PRESENÇA do cookie `bi_download` (não pelo valor): o Laravel
@@ -51,7 +51,7 @@
         .   "if(document.cookie.indexOf('bi_download=')>-1){"
         .     "clearInterval(t);document.cookie='bi_download=; path=/; max-age=0';"
         .     "if(ov)ov.classList.add('hidden');{$extraOnDone}setTimeout(function(){f.remove();},60000);"
-        .   "}else if(n>160){"
+        .   "}else if(n>1040){"
         .     "clearInterval(t);if(ov)ov.classList.add('hidden');setTimeout(function(){f.remove();},60000);"
         .   "}"
         . "},250);"

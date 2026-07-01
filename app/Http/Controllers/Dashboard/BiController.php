@@ -353,6 +353,11 @@ class BiController extends Controller
         );
         if ($dossies !== null) {
             $viewData['dossies'] = $dossies;
+            // Anexar dossiês multiplica páginas/tabelas no dompdf (~6MB/dossiê de pico) e o
+            // render é síncrono. O export SEM dossiê segue leve; levanta os tetos só aqui.
+            // Cap 50 dossiês/tipo mantém o pior caso ~37s/~300MB (medido).
+            ini_set('memory_limit', '1024M');
+            set_time_limit(240);
         }
 
         $filename = 'bi-fiscal-'.now()->format('Ymd').'.pdf';
