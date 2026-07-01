@@ -139,6 +139,54 @@ class TopMovimentacaoQuery
     }
 
     /**
+     * Top CFOPs de cada escopo (participante) QUEBRADOS por contraparte (cliente_id) — usado
+     * no resumo fiscal p/ mostrar os CFOPs do participante com cada empresa própria/gerida.
+     * Espelha cfops(), mas agrupa também por n.cliente_id → aninhado [escopo][contraparte].
+     * (Método restaurado 2026-07-01: era referenciado por ParticipanteFiscalResumoService mas
+     * a definição tinha se perdido do working tree, quebrando o PDF do lote/resumo fiscal.)
+     *
+     * @param  'participante_id'|'cliente_id'  $coluna
+     * @param  array<int, int>  $ids
+     * @return array<int, array<int, array<int, array{cfop:int, descricao:string, qtd:int, valor:float}>>>
+     */
+    public function cfopsPorContraparte(int $userId, string $coluna, array $ids, int $limite = 5): array
+    {
+        $this->assertColuna($coluna);
+        $ids = array_values(array_unique(array_filter($ids)));
+        if ($ids === []) {
+            return [];
+        }
+
+        $linhas = DB::table('efd_notas_consolidados as c')
+            ->join('efd_notas as n', 'n.id', '=', 'c.efd_nota_id')
+            ->where('n.user_id', $userId)
+            ->where('n.origem_arquivo', 'fiscal')
+            ->where('n.cancelada', false)
+            ->whereIn("n.{$coluna}", $ids)
+            ->whereNotNull('c.cfop')
+            ->whereNotNull('n.cliente_id')
+            ->groupBy("n.{$coluna}", 'n.cliente_id', 'c.cfop')
+            ->selectRaw("n.{$coluna} as escopo_id, n.cliente_id as contraparte_id, c.cfop, COUNT(*) as qtd,
+                COALESCE(SUM(c.valor_operacao), 0) as valor")
+            ->get();
+
+        return $linhas
+            ->groupBy('escopo_id')
+            ->map(fn ($porEscopo) => $porEscopo
+                ->groupBy('contraparte_id')
+                ->map(fn ($g) => $g->sortByDesc('valor')->take($limite)
+                    ->map(fn ($r) => [
+                        'cfop' => (int) $r->cfop,
+                        'descricao' => Cfop::descricao((string) $r->cfop),
+                        'qtd' => (int) $r->qtd,
+                        'valor' => round((float) $r->valor, 2),
+                    ])
+                    ->values()->all())
+                ->all())
+            ->all();
+    }
+
+    /**
      * Maiores notas (por valor) de cada escopo, separadas por tipo_operacao.
      * Top-N por (escopo, tipo) via window function — não puxa todas as notas pro PHP.
      *
