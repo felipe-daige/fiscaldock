@@ -53,6 +53,7 @@ class ParticipanteFiscalResumoService
             ->keyBy('id');
 
         $cfopsPorParticipante = $comCfops ? $this->top->cfops($userId, 'participante_id', $ids, $this->panoramaMaximo()) : [];
+        $cfopsContraPorParticipante = $comCfops ? $this->top->cfopsPorContraparte($userId, 'participante_id', $ids, $this->cfopsPorContraparteNum()) : [];
         $produtosPorParticipante = $comProdutos ? $this->top->produtos($userId, 'participante_id', $ids, $this->panoramaMaximo()) : [];
         $notasPorParticipante = $comNotas ? $this->top->notas($userId, 'participante_id', $ids, $this->panoramaMaximo()) : [];
 
@@ -91,10 +92,11 @@ class ParticipanteFiscalResumoService
 
         $out = [];
         foreach ($acc as $pid => $a) {
-            $relacionamentos = array_map(function (array $e) {
+            $relacionamentos = array_map(function (array $e) use ($pid, $cfopsContraPorParticipante) {
                 $e['papel'] = $this->papelDe($e['valor_entrada'] > 0, $e['valor_saida'] > 0);
                 $e['nome'] = $e['empresa_nome'];
                 $e['is_propria'] = $e['is_empresa_propria'];
+                $e['top_cfops'] = $cfopsContraPorParticipante[$pid][(int) $e['empresa_id']] ?? [];
 
                 return $e;
             }, array_values($a['empresas']));
@@ -186,6 +188,37 @@ class ParticipanteFiscalResumoService
             ->selectRaw('participante_id, COUNT(*) as qtd')
             ->get()
             ->mapWithKeys(fn ($r) => [(int) $r->participante_id => (int) $r->qtd])
+            ->all();
+    }
+
+    /**
+     * Papel + valor + qtd por participante numa única query, para servir os
+     * filtros de relação/valor/qtd e a ordenação por valor/qtd sem 3 scans
+     * separados de efd_notas. Participantes sem nota ficam ausentes.
+     *
+     * @return array<int, array{papel: string, valor: float, qtd: int}>
+     */
+    public function resumoMovimentacao(int $userId): array
+    {
+        return DB::table('efd_notas')
+            ->where('user_id', $userId)
+            ->where('origem_arquivo', 'fiscal')
+            ->where('cancelada', false)
+            ->whereNotNull('participante_id')
+            ->groupBy('participante_id')
+            ->selectRaw("participante_id,
+                bool_or(tipo_operacao = 'entrada') as tem_entrada,
+                bool_or(tipo_operacao = 'saida') as tem_saida,
+                COALESCE(SUM(valor_total), 0) as valor,
+                COUNT(*) as qtd")
+            ->get()
+            ->mapWithKeys(fn ($r) => [
+                (int) $r->participante_id => [
+                    'papel' => $this->papelDe((bool) $r->tem_entrada, (bool) $r->tem_saida),
+                    'valor' => (float) $r->valor,
+                    'qtd' => (int) $r->qtd,
+                ],
+            ])
             ->all();
     }
 }
