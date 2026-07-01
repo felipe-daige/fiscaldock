@@ -845,6 +845,54 @@ class BiService
     }
 
     /**
+     * Participantes ordenados por volume EFD total (entrada+saída, histórico completo,
+     * base comercial dedup). Hidrata os models preservando a ordem por volume desc.
+     *
+     * @return \Illuminate\Support\Collection<int, \App\Models\Participante>
+     */
+    public function participantesPorVolume(int $userId, ?int $clienteId = null, ?int $limite = null): \Illuminate\Support\Collection
+    {
+        $rows = $this->efd->notasDedup($userId, null, null, null, $clienteId)
+            ->join('participantes as p', 'p.id', '=', 'n.participante_id')
+            ->select('n.participante_id', DB::raw('SUM(n.valor_total) as total_valor'))
+            ->groupBy('n.participante_id')
+            ->orderByDesc('total_valor')
+            ->when($limite !== null, fn ($q) => $q->limit($limite))
+            ->get();
+
+        $ids = $rows->pluck('participante_id');
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        $models = \App\Models\Participante::whereIn('id', $ids)->get()->keyBy('id');
+
+        return $ids->map(fn ($id) => $models->get($id))->filter()->values();
+    }
+
+    /**
+     * Clientes ativos do usuário ordenados por volume EFD total desc (histórico
+     * completo). Clientes sem movimento vão ao fim.
+     *
+     * @return \Illuminate\Support\Collection<int, \App\Models\Cliente>
+     */
+    public function clientesPorVolume(int $userId): \Illuminate\Support\Collection
+    {
+        $volume = $this->efd->notasDedup($userId, null, null, null, null)
+            ->whereNotNull('n.cliente_id')
+            ->select('n.cliente_id', DB::raw('SUM(n.valor_total) as total_valor'))
+            ->groupBy('n.cliente_id')
+            ->get()
+            ->pluck('total_valor', 'cliente_id');
+
+        return \App\Models\Cliente::where('user_id', $userId)
+            ->where('ativo', true)
+            ->get()
+            ->sortByDesc(fn ($c) => (float) ($volume[$c->id] ?? 0))
+            ->values();
+    }
+
+    /**
      * Score de risco por participante (do `participante_scores`, 1 linha por
      * participante persistida pelo FecharLoteService). Mapa keyed por
      * participante_id; ids sem score ficam ausentes.
