@@ -242,6 +242,22 @@ class DashboardController extends Controller
         $uf = trim($request->string('uf')->toString());
         $importacao = trim($request->string('importacao')->toString());
 
+        // Regularidade / status de consulta — derivados da última consulta do
+        // participante de mesmo documento (whitelist; valor inválido é ignorado).
+        $regValida = ['regular', 'irregular', 'indeterminada', 'nao_consultado'];
+        $regularidade = in_array($request->string('regularidade')->toString(), $regValida, true)
+            ? $request->string('regularidade')->toString() : null;
+        $stValida = ['nunca', 'desatualizada', 'recente'];
+        $statusConsulta = in_array($request->string('status_consulta')->toString(), $stValida, true)
+            ? $request->string('status_consulta')->toString() : null;
+
+        // Mapa documento(normalizado) → regularidade / última consulta, para os dois
+        // filtros acima. Só monta quando algum deles é usado.
+        $resumoService = app(\App\Services\Consultas\ParticipanteFiscalResumoService::class);
+        $mapaRegularidade = ($regularidade !== null || $statusConsulta !== null)
+            ? $resumoService->mapaRegularidadeCliente($userId)
+            : ['consultados' => [], 'porRegularidade' => [], 'ultimaPorDoc' => []];
+
         $baseQuery = Cliente::where('user_id', $userId)
             ->when($importacao !== '', fn ($query) => $query->whereIn(
                 'id',
@@ -268,6 +284,8 @@ class DashboardController extends Controller
             ->when($regime !== '', fn ($query) => $query->where('regime_tributario', 'ilike', $regime))
             ->when($situacao !== '', fn ($query) => $query->where('situacao_cadastral', 'ilike', $situacao))
             ->when($uf !== '', fn ($query) => $query->where('uf', strtoupper($uf)))
+            ->when($regularidade !== null || $statusConsulta !== null, fn ($query) => $resumoService
+                ->aplicarFiltroRegularidadeCliente($query, $regularidade, $statusConsulta, $mapaRegularidade))
             ->orderByRaw("COALESCE(razao_social, nome, '') asc")
             ->paginate(20)
             ->withQueryString();
@@ -380,6 +398,8 @@ class DashboardController extends Controller
                 'situacao' => $situacao,
                 'uf' => strtoupper($uf),
                 'importacao' => $importacao,
+                'regularidade' => $regularidade,
+                'status_consulta' => $statusConsulta,
             ],
         ];
 
@@ -485,6 +505,46 @@ class DashboardController extends Controller
         $topMov = app(TopMovimentacaoQuery::class);
         $viewData['top_produtos'] = $topMov->produtos((int) Auth::id(), 'cliente_id', [$cliente->id], 10)[$cliente->id] ?? [];
         $viewData['top_cfops'] = $topMov->cfops((int) Auth::id(), 'cliente_id', [$cliente->id], 10)[$cliente->id] ?? [];
+
+        // Principais negociantes: TODAS as contrapartes (participantes) do ledger deste
+        // cliente, do maior volume para o menor (o service já ordena por volume desc),
+        // enriquecidas com o badge de risco (Score Fiscal / não consultado).
+        $resumoFiscalCliente = app(\App\Services\Consultas\ClienteFiscalResumoService::class)
+            ->paraClientes((int) Auth::id(), [$cliente->id], todosRelacionamentos: true);
+        $viewData['negociantes'] = app(\App\Services\Consultas\NegociantesRiscoService::class)
+            ->enriquecer($resumoFiscalCliente[$cliente->id]['relacionamentos'] ?? [], (int) Auth::id());
+        $viewData['negociantesModo'] = 'cliente';
+
+        // Movimentação & análise fiscal do cliente (empresa gerida do contador).
+        $movSvc = app(\App\Services\Clientes\ClienteMovimentacaoService::class);
+        $viewData['movimentacao'] = $movSvc->kpisEResumoParaPreview($cliente);
+
+        // Imposto apurado POR COMPETÊNCIA (declarado nos SPED). 1 mês por ponto — nunca somado
+        // lifetime: somar apurações de meses passados (já vencidas/pagas) viraria uma "dívida"
+        // falsa. NÃO usamos imposto destacado nas notas (mistura débito de saída com crédito de
+        // entrada → incoerente). Reusa o agregador validado do ResumoFiscalService (E116/E250 +
+        // M200/M600).
+        $competencias = \App\Models\EfdNota::where('user_id', (int) Auth::id())
+            ->where('cliente_id', $cliente->id)
+            ->whereNotNull('data_emissao')
+            ->selectRaw("DISTINCT TO_CHAR(data_emissao, 'YYYY-MM') as comp")
+            ->orderByRaw('comp')
+            ->pluck('comp');
+        $resumoSvc = app(\App\Services\ResumoFiscalService::class);
+        $apuracaoPorComp = [];
+        foreach ($competencias as $comp) {
+            $a = $resumoSvc->aRecolherAgregado((int) Auth::id(), $cliente->id, $comp);
+            if (($a['icms'] + $a['pis'] + $a['cofins']) > 0) {
+                $apuracaoPorComp[] = [
+                    'competencia' => $comp,
+                    'icms' => $a['icms'],
+                    'pis' => $a['pis'],
+                    'cofins' => $a['cofins'],
+                ];
+            }
+        }
+        $viewData['apuracaoPorComp'] = $apuracaoPorComp;
+        $viewData['planos'] = \App\Models\MonitoramentoPlano::ativos();
 
         $ultimaConsultaCliente = \App\Models\ConsultaResultado::where('cliente_id', $cliente->id)
             ->where('status', \App\Models\ConsultaResultado::STATUS_SUCESSO)

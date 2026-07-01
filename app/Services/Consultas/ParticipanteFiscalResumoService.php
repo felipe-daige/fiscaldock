@@ -260,4 +260,89 @@ class ParticipanteFiscalResumoService
 
         return $out;
     }
+
+    /**
+     * Mapa por DOCUMENTO (normalizado) da regularidade e última consulta, para
+     * filtrar a lista de CLIENTES (empresas do usuário) pela consulta do
+     * participante de mesmo documento.
+     *
+     * @return array{
+     *     consultados: array<string, true>,
+     *     porRegularidade: array<string, array<string, true>>,
+     *     ultimaPorDoc: array<string, \Illuminate\Support\Carbon>
+     * }
+     */
+    public function mapaRegularidadeCliente(int $userId): array
+    {
+        $pidToDoc = \App\Models\Participante::where('user_id', $userId)
+            ->get(['id', 'documento'])
+            ->mapWithKeys(fn ($p) => [(int) $p->id => preg_replace('/\D/', '', (string) $p->documento)])
+            ->filter()
+            ->all();
+
+        $consultados = [];
+        $porRegularidade = [];
+        foreach ($this->regularidadePorParticipante($userId) as $pid => $classe) {
+            $doc = $pidToDoc[$pid] ?? null;
+            if ($doc) {
+                $consultados[$doc] = true;
+                $porRegularidade[$classe][$doc] = true;
+            }
+        }
+
+        $ultimaPorDoc = [];
+        ConsultaResultado::query()
+            ->whereIn('participante_id', array_keys($pidToDoc))
+            ->where('status', ConsultaResultado::STATUS_SUCESSO)
+            ->orderBy('consultado_em', 'desc')
+            ->get(['participante_id', 'consultado_em'])
+            ->each(function ($res) use (&$ultimaPorDoc, $pidToDoc) {
+                $doc = $pidToDoc[(int) $res->participante_id] ?? null;
+                if ($doc && ! isset($ultimaPorDoc[$doc]) && $res->consultado_em) {
+                    $ultimaPorDoc[$doc] = $res->consultado_em;
+                }
+            });
+
+        return [
+            'consultados' => $consultados,
+            'porRegularidade' => $porRegularidade,
+            'ultimaPorDoc' => $ultimaPorDoc,
+        ];
+    }
+
+    /**
+     * Aplica os filtros de regularidade/status de consulta a uma query de Cliente,
+     * comparando pelo documento normalizado. `$mapa` vem de mapaRegularidadeCliente().
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  array{consultados: array, porRegularidade: array, ultimaPorDoc: array}  $mapa
+     */
+    public function aplicarFiltroRegularidadeCliente($query, ?string $regularidade, ?string $statusConsulta, array $mapa): void
+    {
+        $docNorm = DB::raw("regexp_replace(documento, '[^0-9]', '', 'g')");
+
+        if ($regularidade !== null) {
+            if ($regularidade === 'nao_consultado') {
+                $query->whereNotIn($docNorm, array_keys($mapa['consultados']));
+            } else {
+                $query->whereIn($docNorm, array_keys($mapa['porRegularidade'][$regularidade] ?? []));
+            }
+        }
+
+        if ($statusConsulta !== null) {
+            if ($statusConsulta === 'nunca') {
+                $query->whereNotIn($docNorm, array_keys($mapa['ultimaPorDoc']));
+            } else {
+                $corte = now()->subDays(30);
+                $alvo = [];
+                foreach ($mapa['ultimaPorDoc'] as $doc => $consultadoEm) {
+                    $recente = \Illuminate\Support\Carbon::parse($consultadoEm)->greaterThanOrEqualTo($corte);
+                    if (($statusConsulta === 'recente') === $recente) {
+                        $alvo[] = $doc;
+                    }
+                }
+                $query->whereIn($docNorm, $alvo);
+            }
+        }
+    }
 }

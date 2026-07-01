@@ -33,6 +33,18 @@ class ClienteController extends Controller
         $uf = strtoupper(trim($request->string('uf')->toString()));
         $importacao = trim($request->string('importacao')->toString());
 
+        $regValida = ['regular', 'irregular', 'indeterminada', 'nao_consultado'];
+        $regularidade = in_array($request->string('regularidade')->toString(), $regValida, true)
+            ? $request->string('regularidade')->toString() : null;
+        $stValida = ['nunca', 'desatualizada', 'recente'];
+        $statusConsulta = in_array($request->string('status_consulta')->toString(), $stValida, true)
+            ? $request->string('status_consulta')->toString() : null;
+
+        $resumoService = app(\App\Services\Consultas\ParticipanteFiscalResumoService::class);
+        $mapaRegularidade = ($regularidade !== null || $statusConsulta !== null)
+            ? $resumoService->mapaRegularidadeCliente((int) $user->id)
+            : ['consultados' => [], 'porRegularidade' => [], 'ultimaPorDoc' => []];
+
         $ids = Cliente::where('user_id', $user->id)
             ->where('is_empresa_propria', false)
             ->when($importacao !== '', fn ($query) => $query->whereIn(
@@ -62,6 +74,8 @@ class ClienteController extends Controller
             ->when($regime !== '', fn ($query) => $query->where('regime_tributario', 'ilike', $regime))
             ->when($situacao !== '', fn ($query) => $query->where('situacao_cadastral', 'ilike', $situacao))
             ->when($uf !== '', fn ($query) => $query->where('uf', $uf))
+            ->when($regularidade !== null || $statusConsulta !== null, fn ($query) => $resumoService
+                ->aplicarFiltroRegularidadeCliente($query, $regularidade, $statusConsulta, $mapaRegularidade))
             ->pluck('id');
 
         return response()->json([

@@ -134,6 +134,27 @@
                             >
                         </div>
                     </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
+                        <div>
+                            <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Regularidade (CND)</label>
+                            <select name="regularidade" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                                <option value="">Regularidade: Todas</option>
+                                <option value="regular" {{ ($filtros['regularidade'] ?? '') === 'regular' ? 'selected' : '' }}>Regular</option>
+                                <option value="irregular" {{ ($filtros['regularidade'] ?? '') === 'irregular' ? 'selected' : '' }}>Irregular</option>
+                                <option value="indeterminada" {{ ($filtros['regularidade'] ?? '') === 'indeterminada' ? 'selected' : '' }}>Indeterminada</option>
+                                <option value="nao_consultado" {{ ($filtros['regularidade'] ?? '') === 'nao_consultado' ? 'selected' : '' }}>Não consultado</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Status da consulta</label>
+                            <select name="status_consulta" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                                <option value="">Qualquer status</option>
+                                <option value="nunca" {{ ($filtros['status_consulta'] ?? '') === 'nunca' ? 'selected' : '' }}>Nunca consultado</option>
+                                <option value="desatualizada" {{ ($filtros['status_consulta'] ?? '') === 'desatualizada' ? 'selected' : '' }}>Desatualizada (+30 dias)</option>
+                                <option value="recente" {{ ($filtros['status_consulta'] ?? '') === 'recente' ? 'selected' : '' }}>Recente (até 30 dias)</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4 pt-4 border-t border-gray-200">
                         <div class="flex items-center gap-2">
                             <button type="submit" class="bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium px-4 py-2">Filtrar</button>
@@ -261,7 +282,7 @@
                                             </div>
                                         </td>
                                         <td class="px-3 py-3 text-sm text-gray-700 font-mono truncate" title="{{ $cliente->documento_formatado }}">{{ $cliente->documento_formatado }}</td>
-                                        <td class="hidden lg:table-cell px-3 py-3 text-sm text-gray-700 truncate" title="{{ $cliente->regime_tributario }}">{{ $cliente->regime_tributario ?: '—' }}</td>
+                                        <td class="hidden lg:table-cell px-3 py-3 text-sm text-gray-700 truncate" title="{{ $cliente->regime_tributario }}"><x-regime-tributario :valor="$cliente->regime_tributario" :nota="$cliente->regime_tributario_nota" /></td>
                                         <td class="hidden xl:table-cell px-3 py-3">
                                             <div class="text-sm text-gray-700 truncate" title="{{ $cliente->email ?: '' }}">{{ $cliente->email ?: '-' }}</div>
                                             <div class="text-[11px] text-gray-500 mt-1 truncate">
@@ -389,7 +410,7 @@
                                     </div>
                                     <div>
                                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Regime</p>
-                                        <p class="text-sm text-gray-700 mt-1">{{ $cliente->regime_tributario ?: '—' }}</p>
+                                        <p class="text-sm text-gray-700 mt-1"><x-regime-tributario :valor="$cliente->regime_tributario" :nota="$cliente->regime_tributario_nota" /></p>
                                     </div>
                                 </div>
                                 <div class="px-4 py-3">
@@ -512,6 +533,20 @@
         if (!container || container.dataset.initialized === '1') return;
         container.dataset.initialized = '1';
         var errorRegion = document.getElementById('clientes-error-region');
+
+        // Auto-aplica os filtros ao mudar qualquer select (sem AJAX; form-submit).
+        var formFiltrosClientes = container.querySelector('form[action="/app/clientes"]');
+        if (formFiltrosClientes) {
+            formFiltrosClientes.querySelectorAll('select').forEach(function (sel) {
+                sel.addEventListener('change', function () {
+                    if (typeof formFiltrosClientes.requestSubmit === 'function') {
+                        formFiltrosClientes.requestSubmit();
+                    } else {
+                        formFiltrosClientes.submit();
+                    }
+                });
+            });
+        }
 
         var clientesSelecionados = carregarSelecao();
         var selectAll = document.getElementById('select-all-clientes');
@@ -652,7 +687,7 @@
                     var filtrosForm = container.querySelector('form[action="/app/clientes"]');
 
                     if (filtrosForm) {
-                        ['status', 'tipo', 'regime', 'situacao', 'uf', 'busca', 'importacao'].forEach(function(name) {
+                        ['status', 'tipo', 'regime', 'situacao', 'uf', 'busca', 'importacao', 'regularidade', 'status_consulta'].forEach(function(name) {
                             var field = filtrosForm.querySelector('[name="' + name + '"]');
                             if (field && field.value) params.set(name, field.value);
                         });
