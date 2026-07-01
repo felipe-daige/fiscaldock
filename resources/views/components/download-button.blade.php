@@ -5,6 +5,7 @@
     'extraOnDone' => '',
     'query' => '',
     'clienteSelect' => 'filtro-cliente',
+    'extras' => [],
 ])
 
 @php
@@ -22,6 +23,14 @@
     // `query` opcional injeta params estáticos (ex.: formato=csv) p/ páginas sem os
     // filtros do BI. cliente_id/meses só entram na URL se os selects existirem na
     // página — assim o mesmo componente serve BI (com filtros) e lote (com formato).
+    $extrasPairs = [];
+    foreach ($extras as $elId => $paramName) {
+        $extrasPairs[] = "['".addslashes((string) $elId)."','".addslashes((string) $paramName)."']";
+    }
+    $extrasJs = $extrasPairs === []
+        ? ''
+        : "var ex=[".implode(',', $extrasPairs)."];ex.forEach(function(a){var el=document.getElementById(a[0]);if(el)qs.push(a[1]+'='+encodeURIComponent(el.value||''));});";
+
     $tokExpr = "'d'+Date.now()+Math.floor(Math.random()*1e6)";
     $js = "(function(){"
         . "var ov=document.getElementById('{$overlay}');"
@@ -32,6 +41,7 @@
         . ($query !== '' ? "qs.push('{$query}');" : "")
         . "if(c)qs.push('cliente_id='+(c.value||''));"
         . "if(p)qs.push('meses='+(p.value||0));"
+        . $extrasJs
         . "qs.push('download_token='+tok);"
         . "var u='{$path}?'+qs.join('&');"
         . "document.cookie='bi_download=; path=/; max-age=0';"
@@ -48,4 +58,4 @@
         . "})()";
 @endphp
 
-<button type="button" onclick="{{ $js }}" {{ $attributes }}>{{ $slot }}</button>
+<button type="button" onclick="{!! $js !!}" {{ $attributes }}>{{ $slot }}</button>
