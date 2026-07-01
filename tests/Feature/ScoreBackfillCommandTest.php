@@ -43,7 +43,7 @@ it('backfilla o score das consultas ja feitas, usando o resultado mais recente',
         'consulta_lote_id' => loteConcluido($user)->id,
         'participante_id' => $part->id,
         'status' => ConsultaResultado::STATUS_SUCESSO,
-        'resultado_dados' => ['situacao_cadastral' => 'ATIVA', 'cnd_federal' => ['status' => 'Negativa']],
+        'resultado_dados' => ['situacao_cadastral' => 'ATIVA', 'cnd_federal' => ['status' => 'Negativa'], 'cnd_estadual' => ['status' => 'Negativa']],
         'consultado_em' => now(),
     ]);
 
@@ -64,7 +64,7 @@ it('backfilla tambem o score de clientes consultados', function () {
         'consulta_lote_id' => loteConcluido($user)->id,
         'cliente_id' => $cliente->id,
         'status' => ConsultaResultado::STATUS_SUCESSO,
-        'resultado_dados' => ['situacao_cadastral' => 'ATIVA', 'cnd_federal' => ['status' => 'Negativa']],
+        'resultado_dados' => ['situacao_cadastral' => 'ATIVA', 'cnd_federal' => ['status' => 'Negativa'], 'cnd_estadual' => ['status' => 'Negativa']],
     ]);
 
     $this->artisan('score:backfill')->assertSuccessful();

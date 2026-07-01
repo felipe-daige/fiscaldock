@@ -11,6 +11,7 @@
         'medio' => ['label' => 'MÉDIO', 'hex' => '#d97706'],
         'alto' => ['label' => 'ALTO', 'hex' => '#ea580c'],
         'critico' => ['label' => 'CRÍTICO', 'hex' => '#b91c1c'],
+        'inconclusivo' => ['label' => 'INCONCLUSIVO', 'hex' => '#9ca3af'],
     ];
     $fmtCnpj = function($doc) {
         $d = preg_replace('/\D/', '', (string) $doc);
@@ -203,6 +204,7 @@
                         <option value="medio" {{ ($filtroClassificacao ?? '') === 'medio' ? 'selected' : '' }}>Médio Risco</option>
                         <option value="alto" {{ ($filtroClassificacao ?? '') === 'alto' ? 'selected' : '' }}>Alto Risco</option>
                         <option value="critico" {{ ($filtroClassificacao ?? '') === 'critico' ? 'selected' : '' }}>Crítico</option>
+                        <option value="inconclusivo" {{ ($filtroClassificacao ?? '') === 'inconclusivo' ? 'selected' : '' }}>Risco Não Conclusivo</option>
                     </select>
                 </div>
                 <div class="w-full sm:flex-1 sm:min-w-[240px]">

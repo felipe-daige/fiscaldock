@@ -39,12 +39,16 @@
                 </div>
                 <div class="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
                     @if($score && $score->score_total !== null)
-                        @php $hex = $scoreColor($score->score_total); @endphp
+                        @php $inconclusivo = $score->classificacao === 'inconclusivo'; @endphp
+                        @php $hex = $inconclusivo ? '#9ca3af' : $scoreColor($score->score_total); @endphp
                         <div class="text-center flex-shrink-0">
-                            <div class="text-3xl font-bold font-mono" style="color: {{ $hex }}">{{ $score->score_total }}</div>
+                            <div class="text-3xl font-bold font-mono" style="color: {{ $hex }}">{{ $inconclusivo ? '—' : $score->score_total }}</div>
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white mt-1" style="background-color: {{ $hex }}">
-                                {{ $scoreLabel($score->score_total) }}
+                                {{ $inconclusivo ? 'NÃO CONCLUSIVO' : $scoreLabel($score->score_total) }}
                             </span>
+                            @if($inconclusivo)
+                                <p class="mt-1 text-[10px] text-gray-500 leading-tight max-w-[190px]">Baseado só em cadastro — exige CND Federal + 2 certidões consultadas.</p>
+                            @endif
                         </div>
                     @else
                         <div class="text-center flex-shrink-0">

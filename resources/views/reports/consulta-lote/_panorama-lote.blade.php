@@ -10,7 +10,7 @@
     ['label' => 'Score Médio', 'valor' => $resumo['score_medio'] ?? 0],
 ]])
 
-@php($riscoRows = [['Baixo', (int) ($cls['baixo'] ?? 0), 'baixo'], ['Médio', (int) ($cls['medio'] ?? 0), 'medio'], ['Alto', (int) ($cls['alto'] ?? 0), 'alto'], ['Crítico', (int) ($cls['critico'] ?? 0), 'critico']])
+@php($riscoRows = [['Baixo', (int) ($cls['baixo'] ?? 0), 'baixo'], ['Médio', (int) ($cls['medio'] ?? 0), 'medio'], ['Alto', (int) ($cls['alto'] ?? 0), 'alto'], ['Crítico', (int) ($cls['critico'] ?? 0), 'critico'], ['Não conclusivo', (int) ($cls['inconclusivo'] ?? 0), 'inconclusivo']])
 @php($riscoBase = array_sum(array_map(fn ($r) => $r[1], $riscoRows)))
 <div class="panorama-bloco">
     <div class="list-title">Distribuição de risco</div>

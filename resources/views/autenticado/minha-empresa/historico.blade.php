@@ -92,7 +92,7 @@
                                     </td>
                                     <td class="px-3 py-3 whitespace-nowrap text-center">
                                         @if($consulta->isSucesso())
-                                            <span class="text-lg font-bold font-mono" style="color: {{ $scoreHex }}">{{ $scoreData['score_total'] }}</span>
+                                            <span class="text-lg font-bold font-mono" style="color: {{ $scoreHex }}">{{ ($scoreData['classificacao'] ?? '') === 'inconclusivo' ? 'N/C' : $scoreData['score_total'] }}</span>
                                         @else
                                             <span class="text-gray-400">—</span>
                                         @endif

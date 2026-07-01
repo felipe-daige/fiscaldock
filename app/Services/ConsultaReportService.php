@@ -258,6 +258,7 @@ class ConsultaReportService
             'medio' => 0,
             'alto' => 0,
             'critico' => 0,
+            'inconclusivo' => 0,
         ];
 
         foreach ($resultados->where('status_consulta', 'sucesso') as $r) {

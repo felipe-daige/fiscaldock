@@ -38,6 +38,7 @@ it('persiste o score do participante ao fechar o lote', function () {
         'resultado_dados' => [
             'situacao_cadastral' => 'ATIVA',
             'cnd_federal' => ['status' => 'Negativa'],
+            'cnd_estadual' => ['status' => 'Negativa'], // 2ª certidão → cobertura suficiente
             'cgu_cnc' => ['possui_sancao' => false],
         ],
     ]);
@@ -56,7 +57,9 @@ it('persiste o score do participante ao fechar o lote', function () {
     expect($score->score_protestos)->toBeNull();
 });
 
-it('classifica como critico quando ha sancao e CND positiva', function () {
+it('classifica risco alto quando CND federal e estadual positivas', function () {
+    // Compliance/sanções (CGU) saiu do score; certidão irregular maxa em 70 → 'alto'.
+    // cadastral omitido de propósito p/ não diluir o total (renorm só sobre federal+estadual).
     $user = User::factory()->create();
     $part = Participante::create([
         'user_id' => $user->id, 'documento' => '11222333000182', 'razao_social' => 'BAD LTDA',
@@ -68,16 +71,15 @@ it('classifica como critico quando ha sancao e CND positiva', function () {
         'participante_id' => $part->id,
         'status' => ConsultaResultado::STATUS_SUCESSO,
         'resultado_dados' => [
-            'situacao_cadastral' => 'INAPTA',
             'cnd_federal' => ['status' => 'Positiva'],
-            'cgu_cnc' => ['possui_sancao' => true],
+            'cnd_estadual' => ['status' => 'Positiva'],
         ],
     ]);
 
     app(FecharLoteService::class)->fechar($lote->id);
 
     $score = ParticipanteScore::where('participante_id', $part->id)->first();
-    expect($score->classificacao)->toBe('critico');
+    expect($score->classificacao)->toBe('alto');
 });
 
 it('cria score para resultado de cliente (empresa gerida/propria)', function () {
@@ -91,7 +93,7 @@ it('cria score para resultado de cliente (empresa gerida/propria)', function () 
         'consulta_lote_id' => $lote->id,
         'cliente_id' => $cliente->id,
         'status' => ConsultaResultado::STATUS_SUCESSO,
-        'resultado_dados' => ['situacao_cadastral' => 'ATIVA', 'cnd_federal' => ['status' => 'Negativa']],
+        'resultado_dados' => ['situacao_cadastral' => 'ATIVA', 'cnd_federal' => ['status' => 'Negativa'], 'cnd_estadual' => ['status' => 'Negativa']],
     ]);
 
     app(FecharLoteService::class)->fechar($lote->id);

@@ -106,6 +106,50 @@ class RiskScoreService
         };
     }
 
+    /** Certidões de regularidade que compõem o score (cadastral NÃO é certidão). */
+    private const CERTIDOES_SCORE = ['cnd_federal', 'cnd_estadual', 'fgts', 'trabalhista'];
+
+    /**
+     * Cobertura mínima p/ o score ser conclusivo: CND Federal avaliada + ao menos 2 certidões
+     * de regularidade avaliadas. Cadastral sozinho (ou sem a federal) não basta — ver
+     * classificarComCobertura.
+     *
+     * @param  array<string, int|null>  $scores
+     */
+    public function coberturaSuficiente(array $scores): bool
+    {
+        if (($scores['cnd_federal'] ?? null) === null) {
+            return false;
+        }
+
+        $certAvaliadas = 0;
+        foreach (self::CERTIDOES_SCORE as $c) {
+            if (($scores[$c] ?? null) !== null) {
+                $certAvaliadas++;
+            }
+        }
+
+        return $certAvaliadas >= 2;
+    }
+
+    /**
+     * Classificação com limiar de cobertura: 'nao_avaliado' se nada foi avaliado; 'inconclusivo'
+     * se algo foi avaliado mas sem cobertura mínima (ex.: só cadastro, ou sem CND Federal + 2
+     * certidões) — evita dizer "Baixo Risco" sem regularidade fiscal consultada; caso contrário,
+     * a classificação numérica normal.
+     *
+     * @param  array<string, int|null>  $scores
+     */
+    public function classificarComCobertura(array $scores): string
+    {
+        $total = $this->calcularScoreTotal($scores);
+        if ($total === null) {
+            return 'nao_avaliado';
+        }
+
+        return $this->coberturaSuficiente($scores) ? $this->classificar($total) : 'inconclusivo';
+    }
+
     /**
      * Eixo CRÉDITO IBS/CBS (Reforma Tributária) — ortogonal ao score de conformidade.
      * Fração do imposto que o regime do fornecedor permite virar crédito para o comprador:
@@ -218,7 +262,7 @@ class RiskScoreService
             'medio' => 'yellow',
             'alto' => 'orange',
             'critico' => 'red',
-            default => 'gray', // nao_avaliado e desconhecidos
+            default => 'gray', // inconclusivo, nao_avaliado e desconhecidos
         };
     }
 
@@ -232,6 +276,7 @@ class RiskScoreService
             'medio' => 'Médio Risco',
             'alto' => 'Alto Risco',
             'critico' => 'Risco Crítico',
+            'inconclusivo' => 'Risco Não Conclusivo',
             default => 'Não Avaliado',
         };
     }
@@ -263,7 +308,7 @@ class RiskScoreService
     {
         $scores = $this->calcularScores($dados);
         $scoreTotal = $this->calcularScoreTotal($scores);
-        $classificacao = $this->classificar($scoreTotal);
+        $classificacao = $this->classificarComCobertura($scores);
 
         return ParticipanteScore::updateOrCreate(
             $chaveAlvo,
@@ -305,6 +350,7 @@ class RiskScoreService
                 DB::raw("COUNT(CASE WHEN classificacao = 'medio' THEN 1 END) as medio"),
                 DB::raw("COUNT(CASE WHEN classificacao = 'alto' THEN 1 END) as alto"),
                 DB::raw("COUNT(CASE WHEN classificacao = 'critico' THEN 1 END) as critico"),
+                DB::raw("COUNT(CASE WHEN classificacao = 'inconclusivo' THEN 1 END) as inconclusivo"),
                 DB::raw("COUNT(CASE WHEN classificacao = 'nao_avaliado' OR score_total IS NULL THEN 1 END) as nao_avaliado"),
                 DB::raw('AVG(score_total) as media_score')
             )
@@ -316,6 +362,7 @@ class RiskScoreService
             'medio_risco' => (int) ($totais->medio ?? 0),
             'alto_risco' => (int) ($totais->alto ?? 0),
             'critico' => (int) ($totais->critico ?? 0),
+            'inconclusivo' => (int) ($totais->inconclusivo ?? 0),
             'nao_avaliado' => (int) ($totais->nao_avaliado ?? 0),
             'media_score' => round((float) ($totais->media_score ?? 0), 1),
         ];
