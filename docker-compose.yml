@@ -1,0 +1,190 @@
+name: fiscaldock
+
+services:
+  app:
+    image: felipedaige/fiscaldock:0.0.6-arm64
+    restart: unless-stopped
+    networks:
+      - traefik-public
+      - postgres-internal
+    volumes:
+      - /var/www/html/resources:/var/www/html/resources
+      - /var/www/html/routes:/var/www/html/routes
+      - /var/www/html/app:/var/www/html/app
+      - /var/www/html/config:/var/www/html/config
+      - /var/www/html/database:/var/www/html/database
+      - /var/www/html/public/js:/var/www/html/public/js
+      - /var/www/html/public/css:/var/www/html/public/css
+      - /var/www/html/public/build:/var/www/html/public/build
+      - ./.env:/var/www/html/.env:ro
+      - app_storage:/var/www/html/storage
+      - ./storage/logs:/var/www/html/storage/logs
+      - ./opcache-dev.ini:/usr/local/etc/php/conf.d/zz-opcache-dev.ini:ro
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_URL: ${APP_URL:-https://fiscaldock.com.br}
+      ASSET_URL: ${ASSET_URL:-https://fiscaldock.com.br}
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE:-fiscaldock}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+      CACHE_STORE: ${CACHE_STORE:-database}
+      SESSION_DRIVER: ${SESSION_DRIVER:-database}
+      SESSION_LIFETIME: ${SESSION_LIFETIME:-120}
+      SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-true}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-sync}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-*}
+      TRUSTED_HOSTS: ${TRUSTED_HOSTS:-fiscaldock.com.br,www.fiscaldock.com.br}
+      LOG_CHANNEL: ${LOG_CHANNEL:-stack}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      API_TOKEN: ${API_TOKEN}
+      WEBHOOK_SPED_CONTRIBUICOES_URL: ${WEBHOOK_SPED_CONTRIBUICOES_URL}
+      WEBHOOK_SPED_FISCAL_URL: ${WEBHOOK_SPED_FISCAL_URL}
+      WEBHOOK_SPED_CONTRIBUICOES_COMPLETA_URL: ${WEBHOOK_SPED_CONTRIBUICOES_COMPLETA_URL}
+      WEBHOOK_SPED_FISCAL_COMPLETA_URL: ${WEBHOOK_SPED_FISCAL_COMPLETA_URL}
+      WEBHOOK_MONITORAMENTO_IMPORTACAO_CONTRIBUICOES_URL: ${WEBHOOK_MONITORAMENTO_IMPORTACAO_CONTRIBUICOES_URL}
+      WEBHOOK_MONITORAMENTO_IMPORTACAO_FISCAL_URL: ${WEBHOOK_MONITORAMENTO_IMPORTACAO_FISCAL_URL}
+      WEBHOOK_MONITORAMENTO_CONSULTA_URL: ${WEBHOOK_MONITORAMENTO_CONSULTA_URL}
+      WEBHOOK_IMPORTACAO_XML_URL: ${WEBHOOK_IMPORTACAO_XML_URL}
+      WEBHOOK_CONSULTAS_NOTAS_URL: ${WEBHOOK_CONSULTAS_NOTAS_URL}
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-public"
+      - "traefik.http.routers.fiscaldock-main-http.rule=Host(`fiscaldock.com.br`)"
+      - "traefik.http.routers.fiscaldock-main-http.entrypoints=web"
+      - "traefik.http.routers.fiscaldock-main-http.middlewares=redirect-to-https"
+      - "traefik.http.routers.fiscaldock-main-http.service=fiscaldock-service"
+      - "traefik.http.routers.fiscaldock-www-http.rule=Host(`www.fiscaldock.com.br`)"
+      - "traefik.http.routers.fiscaldock-www-http.entrypoints=web"
+      - "traefik.http.routers.fiscaldock-www-http.middlewares=redirect-to-https"
+      - "traefik.http.routers.fiscaldock-www-http.service=fiscaldock-service"
+      - "traefik.http.routers.fiscaldock-main.rule=Host(`fiscaldock.com.br`)"
+      - "traefik.http.routers.fiscaldock-main.entrypoints=websecure"
+      - "traefik.http.routers.fiscaldock-main.tls=true"
+      - "traefik.http.routers.fiscaldock-main.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.fiscaldock-main.service=fiscaldock-service"
+      - "traefik.http.routers.fiscaldock-www.rule=Host(`www.fiscaldock.com.br`)"
+      - "traefik.http.routers.fiscaldock-www.entrypoints=websecure"
+      - "traefik.http.routers.fiscaldock-www.tls=true"
+      - "traefik.http.routers.fiscaldock-www.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.fiscaldock-www.middlewares=www-to-nonwww"
+      - "traefik.http.routers.fiscaldock-www.service=fiscaldock-service"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+      - "traefik.http.middlewares.www-to-nonwww.redirectregex.regex=^https://www\\.fiscaldock\\.com\\.br(.*)"
+      - "traefik.http.middlewares.www-to-nonwww.redirectregex.replacement=https://fiscaldock.com.br$$1"
+      - "traefik.http.middlewares.www-to-nonwww.redirectregex.permanent=true"
+      - "traefik.http.services.fiscaldock-service.loadbalancer.server.port=80"
+
+  scheduler:
+    image: felipedaige/fiscaldock:0.0.6-arm64
+    restart: unless-stopped
+    command: php artisan schedule:work
+    networks:
+      - postgres-internal
+    volumes:
+      - /var/www/html/app:/var/www/html/app
+      - /var/www/html/config:/var/www/html/config
+      - /var/www/html/database:/var/www/html/database
+      - /var/www/html/routes:/var/www/html/routes
+      - ./.env:/var/www/html/.env:ro
+      - app_storage:/var/www/html/storage
+      - ./storage/logs:/var/www/html/storage/logs
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_URL: ${APP_URL:-https://fiscaldock.com.br}
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE:-fiscaldock}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+      CACHE_STORE: ${CACHE_STORE:-database}
+      SESSION_DRIVER: ${SESSION_DRIVER:-database}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-sync}
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-*}
+      TRUSTED_HOSTS: ${TRUSTED_HOSTS:-fiscaldock.com.br,www.fiscaldock.com.br}
+      LOG_CHANNEL: ${LOG_CHANNEL:-stack}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      API_TOKEN: ${API_TOKEN}
+      WEBHOOK_SPED_CONTRIBUICOES_URL: ${WEBHOOK_SPED_CONTRIBUICOES_URL}
+      WEBHOOK_SPED_FISCAL_URL: ${WEBHOOK_SPED_FISCAL_URL}
+      WEBHOOK_SPED_CONTRIBUICOES_COMPLETA_URL: ${WEBHOOK_SPED_CONTRIBUICOES_COMPLETA_URL}
+      WEBHOOK_SPED_FISCAL_COMPLETA_URL: ${WEBHOOK_SPED_FISCAL_COMPLETA_URL}
+      WEBHOOK_MONITORAMENTO_IMPORTACAO_CONTRIBUICOES_URL: ${WEBHOOK_MONITORAMENTO_IMPORTACAO_CONTRIBUICOES_URL}
+      WEBHOOK_MONITORAMENTO_IMPORTACAO_FISCAL_URL: ${WEBHOOK_MONITORAMENTO_IMPORTACAO_FISCAL_URL}
+      WEBHOOK_MONITORAMENTO_CONSULTA_URL: ${WEBHOOK_MONITORAMENTO_CONSULTA_URL}
+      WEBHOOK_IMPORTACAO_XML_URL: ${WEBHOOK_IMPORTACAO_XML_URL}
+      WEBHOOK_CONSULTAS_NOTAS_URL: ${WEBHOOK_CONSULTAS_NOTAS_URL}
+    depends_on:
+      - app
+
+  worker:
+    image: felipedaige/fiscaldock:0.0.6-arm64
+    restart: unless-stopped
+    # timeout=600: Due Diligence (1 alvo) leva ~3min por causa do throttle InfoSimples
+    # (1 req/s) + latência das fontes gov. tries=3 é seguro: o job é idempotente em retry
+    # (ProcessarConsultaJob pula fontes já persistidas, não re-cobra). Ver project memory.
+    command: php artisan queue:work --verbose --tries=3 --timeout=600
+    networks:
+      - postgres-internal
+    volumes:
+      # Código vivo (mesmo mount seletivo do serviço app) — sem isso o worker roda
+      # o código antigo da imagem e jobs novos viram __PHP_Incomplete_Class.
+      # vendor/ vem da imagem.
+      - /var/www/html/resources:/var/www/html/resources
+      - /var/www/html/routes:/var/www/html/routes
+      - /var/www/html/app:/var/www/html/app
+      - /var/www/html/config:/var/www/html/config
+      - /var/www/html/database:/var/www/html/database
+      - ./.env:/var/www/html/.env:ro
+      - app_storage:/var/www/html/storage
+      - ./storage/logs:/var/www/html/storage/logs
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE:-fiscaldock}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-sync}
+      LOG_CHANNEL: ${LOG_CHANNEL:-stack}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      - app
+    profiles:
+      - worker
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    networks:
+      - postgres-internal
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+
+volumes:
+  app_storage:
+    external: true
+
+networks:
+  traefik-public:
+    external: true
+  postgres-internal:
+    external: true
