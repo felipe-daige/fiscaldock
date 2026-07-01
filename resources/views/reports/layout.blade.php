@@ -39,6 +39,12 @@
         .table tbody tr:nth-child(even) td { background:#fbfbfc; }
         /* Card padrão: hairline + faixa-topo slate (sem caixa pesada) */
         .card-slate { border:1px solid #e5e7eb; border-top:2px solid #1f2937; padding:8px 10px; }
+        /* Ficha de identificação PADRÃO (todos os PDFs): rótulo em cima do valor,
+           sem gap horizontal — formal. Ver reports/dossie/_resumo e consulta-lote/_cnpj. */
+        .ident { width:100%; border-collapse:separate; border-spacing:0; }
+        .ident td { width:50%; vertical-align:top; padding:3px 10px 5px 0; }
+        .ident-k { font-size:6.5px; color:#9ca3af; text-transform:uppercase; letter-spacing:.08em; margin-bottom:1px; }
+        .ident-v { font-size:10px; color:#111827; font-weight:600; }
     </style>
     @stack('estilos')
 </head>
