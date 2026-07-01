@@ -341,13 +341,23 @@ class BiController extends Controller
         }
 
         [$ini, $fim] = $this->resolverPeriodo($request);
-        $rel = $this->biExport->relatorioCompleto(
-            Auth::id(), $ini, $fim, $request->get('cliente_id')
+        $clienteId = $request->get('cliente_id');
+        $rel = $this->biExport->relatorioCompleto(Auth::id(), $ini, $fim, $clienteId);
+
+        $viewData = ['relatorio' => $rel];
+        $dossies = app(\App\Services\Bi\BiDossieAnexoService::class)->montar(
+            (int) Auth::id(),
+            ($clienteId !== null && $clienteId !== '') ? (int) $clienteId : null,
+            (string) $request->get('dossies', ''),
         );
+        if ($dossies !== null) {
+            $viewData['dossies'] = $dossies;
+        }
+
         $filename = 'bi-fiscal-'.now()->format('Ymd').'.pdf';
 
         return $this->comTokenDownload(
-            \App\Support\PdfReport::render('reports.bi-executivo', ['relatorio' => $rel])->download($filename),
+            \App\Support\PdfReport::render('reports.bi-executivo', $viewData)->download($filename),
             $request
         );
     }
