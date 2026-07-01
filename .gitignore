@@ -5,7 +5,6 @@
 .env.production
 .env.development
 .env.local
-docker-compose.yml
 docker-compose.override.yml
 Dockerfile.dev
 docker-stack-resolved.yml
