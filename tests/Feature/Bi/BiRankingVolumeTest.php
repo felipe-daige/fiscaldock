@@ -73,3 +73,9 @@ it('clientesPorVolume ordena clientes ativos por volume desc', function () {
     $ids = app(BiService::class)->clientesPorVolume($u->id)->pluck('id')->all();
     expect($ids)->toBe([$cliA, $cliB]); // A=6000 (p1+p2) > B=3000
 });
+
+it('clientesPorVolume respeita o limite', function () {
+    ['user' => $u, 'cliA' => $cliA] = semearRankingVolume();
+    $ids = app(BiService::class)->clientesPorVolume($u->id, 1)->pluck('id')->all();
+    expect($ids)->toBe([$cliA]); // só o de maior volume
+});

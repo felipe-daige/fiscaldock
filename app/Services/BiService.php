@@ -874,9 +874,10 @@ class BiService
      * Clientes ativos do usuário ordenados por volume EFD total desc (histórico
      * completo). Clientes sem movimento vão ao fim.
      *
+     * @param  int|null  $limite  Quando não-nulo, retorna apenas os N primeiros por volume.
      * @return \Illuminate\Support\Collection<int, \App\Models\Cliente>
      */
-    public function clientesPorVolume(int $userId): \Illuminate\Support\Collection
+    public function clientesPorVolume(int $userId, ?int $limite = null): \Illuminate\Support\Collection
     {
         $volume = $this->efd->notasDedup($userId, null, null, null, null)
             ->whereNotNull('n.cliente_id')
@@ -889,6 +890,8 @@ class BiService
             ->where('ativo', true)
             ->get()
             ->sortByDesc(fn ($c) => (float) ($volume[$c->id] ?? 0))
+            ->values()
+            ->when($limite !== null, fn ($col) => $col->take($limite))
             ->values();
     }
 

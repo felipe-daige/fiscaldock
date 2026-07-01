@@ -59,10 +59,10 @@ it('escopo de cliente inclui só o cliente e seus participantes', function () {
         ->and($out['participantes'])->toHaveCount(2);
 });
 
-it('a opcao todos aplica o teto de 300 e monta', function () {
+it('a opcao todos aplica o teto de 50 e monta', function () {
     ['user' => $u] = semearAnexo();
     $out = app(BiDossieAnexoService::class)->montar($u->id, null, 'todos');
 
-    expect(BiDossieAnexoService::TETO_TODOS)->toBe(300)
+    expect(BiDossieAnexoService::TETO_TODOS)->toBe(50)
         ->and($out['participantes'])->toHaveCount(2);
 });

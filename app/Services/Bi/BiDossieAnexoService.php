@@ -14,8 +14,8 @@ use App\Services\Participantes\DossieParticipanteBuilder;
  */
 final class BiDossieAnexoService
 {
-    /** Teto duro de participantes na opção "todos" — evita PDF/timeout runaway. */
-    public const TETO_TODOS = 300;
+    /** Teto duro de itens (clientes e participantes) na opção "todos" — evita PDF/timeout runaway. Máx. ~35s de render síncrono. */
+    public const TETO_TODOS = 50;
 
     public function __construct(
         private BiService $bi,
@@ -41,7 +41,7 @@ final class BiDossieAnexoService
 
         $clientes = $clienteId !== null
             ? Cliente::where('user_id', $userId)->whereKey($clienteId)->where('ativo', true)->get()
-            : $this->bi->clientesPorVolume($userId);
+            : $this->bi->clientesPorVolume($userId, $limite);
 
         $participantes = $this->bi->participantesPorVolume($userId, $clienteId, $limite);
 
