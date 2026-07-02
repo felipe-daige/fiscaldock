@@ -39,6 +39,15 @@ it('baixa o dossie em pdf do dono', function () {
     $resp->assertHeader('content-type', 'application/pdf');
 });
 
+it('baixa o dossie em xlsx do dono com ?formato=xlsx', function () {
+    if (! \App\Support\Reports\XlsxReport::disponivel()) {
+        $this->markTestSkipped('openspout indisponível neste ambiente');
+    }
+    $resp = $this->actingAs($this->user)->get("/app/participante/{$this->p->id}/dossie?formato=xlsx");
+    $resp->assertOk();
+    expect($resp->headers->get('content-type'))->toContain('spreadsheetml.sheet');
+});
+
 it('bloqueia dossie de participante de outro usuario', function () {
     $outro = User::factory()->trialAtivo()->create();
     $this->actingAs($outro)->get("/app/participante/{$this->p->id}/dossie")->assertNotFound();

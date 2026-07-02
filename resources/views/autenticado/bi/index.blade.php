@@ -46,21 +46,29 @@
 
         {{-- Modal de export de planilha (XLSX completo ou CSV por seção em ZIP) --}}
         <x-modal id="modal-export-bi" titulo="Exportar planilha">
-            <p class="text-[13px] text-gray-600 mb-4">Escolha o formato. O período e o cliente seguem os filtros selecionados.</p>
+            <p class="text-[13px] text-gray-600 mb-3">Escolha o formato. O período e o cliente seguem os filtros selecionados.</p>
+            <label class="block text-[11px] text-gray-500 mb-1">Dossiês de participantes</label>
+            <select id="export-planilha-dossies" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded mb-4">
+                <option value="10" selected>Top 10 por volume</option>
+                <option value="20">Top 20 por volume</option>
+                <option value="50">Top 50 por volume</option>
+            </select>
             <div class="space-y-2">
                 <x-download-button path="/app/bi/exportar-xlsx" filename="bi-fiscal-{{ $dataArq }}.xlsx"
                                    overlay="download-overlay-bi"
+                                   :extras="['export-planilha-dossies' => 'dossies']"
                                    extraOnDone="document.getElementById('modal-export-bi').classList.add('hidden');"
                                    class="block w-full text-left px-4 py-3 rounded border border-gray-300 hover:bg-gray-50">
                     <span class="block text-sm font-semibold text-gray-900">Excel (XLSX)</span>
-                    <span class="block text-[12px] text-gray-500">Relatório completo, uma aba por seção (Resumo, Cobertura, Faturamento, Tributos, Declarado×Computado, CFOP).</span>
+                    <span class="block text-[12px] text-gray-500">Relatório completo, uma aba por seção (Resumo, Cobertura, Faturamento, Tributos, Declarado×Computado, CFOP) + dossiê dos top participantes.</span>
                 </x-download-button>
                 <x-download-button path="/app/bi/exportar-csv-zip" filename="bi-fiscal-{{ $dataArq }}.csv.zip"
                                    overlay="download-overlay-bi"
+                                   :extras="['export-planilha-dossies' => 'dossies']"
                                    extraOnDone="document.getElementById('modal-export-bi').classList.add('hidden');"
                                    class="block w-full text-left px-4 py-3 rounded border border-gray-300 hover:bg-gray-50">
                     <span class="block text-sm font-semibold text-gray-900">CSV (ZIP)</span>
-                    <span class="block text-[12px] text-gray-500">Um arquivo .csv por seção, empacotados num .zip.</span>
+                    <span class="block text-[12px] text-gray-500">Um arquivo .csv por seção (incluindo o dossiê dos top participantes), empacotados num .zip.</span>
                 </x-download-button>
             </div>
         </x-modal>
@@ -79,9 +87,16 @@
                     @endif
                 @endforeach
             </select>
+            <label class="block text-[11px] text-gray-500 mb-1">Dossiês de participantes</label>
+            <select id="export-pdf-dossies" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded mb-4">
+                <option value="10" selected>Top 10 por volume</option>
+                <option value="20">Top 20 por volume</option>
+                <option value="50">Top 50 por volume</option>
+            </select>
             <x-download-button path="/app/bi/exportar-pdf" filename="bi-fiscal-{{ $dataArq }}.pdf"
                                overlay="download-overlay-bi"
                                clienteSelect="export-pdf-cliente"
+                               :extras="['export-pdf-dossies' => 'dossies']"
                                extraOnDone="document.getElementById('modal-export-bi-pdf').classList.add('hidden');"
                                class="block w-full text-center px-4 py-3 rounded bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800">
                 Gerar PDF

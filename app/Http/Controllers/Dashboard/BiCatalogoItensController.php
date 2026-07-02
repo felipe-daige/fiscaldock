@@ -116,6 +116,27 @@ class BiCatalogoItensController extends Controller
     }
 
     /**
+     * Exporta a tabela de itens em XLSX (modelo de design aprovado — números
+     * reais com formato, mesma fonte do CSV/PDF). Gate: entitlement `export` (rota).
+     */
+    public function exportarXlsx(Request $request)
+    {
+        if (! Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        $userId = (int) Auth::id();
+        $filtros = $this->montarFiltros($request);
+        $itens = $this->service->itensAgregados($userId, $filtros);
+
+        return app(\App\Services\Bi\Export\CatalogoItensXlsxBuilder::class)->download(
+            $itens,
+            $this->resumoFiltros($userId, $filtros),
+            'catalogo-itens-'.now()->format('Ymd-His').'.xlsx'
+        );
+    }
+
+    /**
      * Exporta a tabela de itens (resultado do filtro atual, ou todos se sem filtro) em PDF.
      * Gate: entitlement `export` (rota).
      */

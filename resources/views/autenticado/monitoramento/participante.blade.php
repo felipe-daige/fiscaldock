@@ -887,8 +887,12 @@
                 <div class="bg-white border border-gray-200 rounded-lg p-4 mt-4">
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="text-[13px] font-bold text-gray-700 uppercase tracking-wide">Movimentações</h3>
-                        <a href="/app/participante/{{ $participante->id }}/dossie" target="_blank" rel="noopener"
-                           class="text-[11px] font-bold text-white rounded px-3 py-1.5" style="background-color: #1f2937">Baixar dossiê (PDF)</a>
+                        <div class="flex items-center gap-2">
+                            <a href="/app/participante/{{ $participante->id }}/dossie" target="_blank" rel="noopener"
+                               class="text-[11px] font-bold text-white rounded px-3 py-1.5" style="background-color: #1f2937">Baixar dossiê (PDF)</a>
+                            <a href="/app/participante/{{ $participante->id }}/dossie?formato=xlsx" target="_blank" rel="noopener"
+                               class="text-[11px] font-bold text-white rounded px-3 py-1.5" style="background-color: #047857">Planilha (XLSX)</a>
+                        </div>
                     </div>
                     <div class="grid grid-cols-4 gap-3 mb-4">
                         <div><div class="text-[11px] text-gray-500">Total Notas</div><div class="text-[15px] font-bold">{{ $movimentacao['kpis']['total_notas'] }}</div></div>

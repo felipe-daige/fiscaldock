@@ -192,7 +192,7 @@ class CruzamentosConsultasClearanceService
             if ($dado === null) {
                 continue;
             }
-            if (CertidaoBadge::classificar($dado)['label'] === 'Irregular') {
+            if (CertidaoBadge::classificar($dado, true)['label'] === 'Irregular') {
                 $motivos[] = $rotulo;
             }
         }

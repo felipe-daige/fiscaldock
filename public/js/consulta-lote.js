@@ -69,7 +69,7 @@
             status_consulta: '',
             regularidade: '',
             monitorado: '',
-            ordenar: 'razao'
+            ordenar: 'valor'
         },
         clientesFilters: {
             busca: '',
@@ -441,7 +441,7 @@
         if (state.filters.status_consulta) params.append('status_consulta', state.filters.status_consulta);
         if (state.filters.regularidade) params.append('regularidade', state.filters.regularidade);
         if (state.filters.monitorado) params.append('monitorado', state.filters.monitorado);
-        if (state.filters.ordenar && state.filters.ordenar !== 'razao') params.append('ordenar', state.filters.ordenar);
+        if (state.filters.ordenar) params.append('ordenar', state.filters.ordenar);
 
         try {
             const response = await fetch(`${window.consultaData.routes.getParticipantes}?${params}`, {
@@ -3514,7 +3514,7 @@
             status_consulta: '',
             regularidade: '',
             monitorado: '',
-            ordenar: 'razao'
+            ordenar: 'valor'
         };
         state.filterContext = null;
         state.currentPage = 1;
@@ -3534,7 +3534,7 @@
         if (elements.filtroStatusConsulta) elements.filtroStatusConsulta.value = '';
         if (elements.filtroRegularidade) elements.filtroRegularidade.value = '';
         if (elements.filtroMonitorado) elements.filtroMonitorado.value = '';
-        if (elements.filtroOrdenar) elements.filtroOrdenar.value = 'razao';
+        if (elements.filtroOrdenar) elements.filtroOrdenar.value = 'valor';
         if (elements.participantesContext) elements.participantesContext.classList.add('hidden');
         try { localStorage.removeItem(FILTROS_STORAGE_KEY); } catch (e) {}
         renderChips();
@@ -3545,7 +3545,9 @@
     // ==========================================
     // Filtros: collapse avançado, chips, contador, persistência
     // ==========================================
-    var FILTROS_STORAGE_KEY = 'consulta.filtros.participantes';
+    // v2: default de ordenação mudou razao→valor; versão nova invalida filtros salvos
+    // com o default antigo embutido (saveFiltros persiste o state inteiro).
+    var FILTROS_STORAGE_KEY = 'consulta.filtros.participantes.v2';
     var FILTROS_AVANCADOS = ['origem_tipo','tipo_documento','uf','cliente_id','grupo_id','relacao','regularidade','monitorado','valor','qtd'];
     var CHIP_LABELS = {
         status_consulta: { nunca: 'Nunca consultado', desatualizada: 'Desatualizada (+30d)', recente: 'Recente (≤30d)' },

@@ -146,6 +146,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::get('/app/clientes', [DashboardController::class, 'clientes'])->name('app.clientes');
     Route::get('/app/clientes/todos-ids', [ClienteController::class, 'todosIds'])->name('app.clientes.todos-ids');
     Route::delete('/app/clientes/bulk-delete', [ClienteController::class, 'bulkDestroy'])->name('app.clientes.bulk-delete');
+    Route::post('/app/clientes/dossie-lote', [ClienteController::class, 'dossieLote'])->name('app.clientes.dossie-lote');
     Route::get('/app/cliente/{id}/editar', [ClienteController::class, 'edit'])->name('app.cliente.edit');
     Route::put('/app/cliente/{id}', [ClienteController::class, 'update'])->name('app.cliente.update');
     Route::delete('/app/cliente/{id}', [ClienteController::class, 'destroy'])->name('app.cliente.destroy');
@@ -298,6 +299,8 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
             ->middleware(RequiresEntitlement::class.':export')->name('catalogo-itens.exportar');
         Route::get('/catalogo-itens/exportar-pdf', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'exportarPdf'])
             ->middleware(RequiresEntitlement::class.':export')->name('catalogo-itens.exportar-pdf');
+        Route::get('/catalogo-itens/exportar-xlsx', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'exportarXlsx'])
+            ->middleware(RequiresEntitlement::class.':export')->name('catalogo-itens.exportar-xlsx');
         Route::post('/catalogo-itens/alerta/descartar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'descartarAlerta'])->name('catalogo-itens.descartar');
         Route::post('/catalogo-itens/alerta/restaurar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'restaurarAlerta'])->name('catalogo-itens.restaurar');
         Route::get('/cruzamentos', [\App\Http\Controllers\Dashboard\BiCruzamentosController::class, 'index'])->name('cruzamentos');
@@ -322,6 +325,8 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         Route::get('/notas/resultado/{consultaLoteId}', [ClearanceController::class, 'resultadoNotas'])->name('notas.resultado');
         Route::get('/notas/resultado/{consultaLoteId}/pdf', [ClearanceController::class, 'resultadoPdf'])
             ->middleware(RequiresEntitlement::class.':export')->name('notas.resultado-pdf');
+        Route::get('/notas/resultado/{consultaLoteId}/xlsx', [ClearanceController::class, 'resultadoXlsx'])
+            ->middleware(RequiresEntitlement::class.':export')->name('notas.resultado-xlsx');
         Route::get('/buscar', [ClearanceController::class, 'buscarNfe'])->name('buscar');
         Route::post('/buscar/consultar', [ClearanceController::class, 'consultarNfe'])->name('buscar.consultar');
         Route::get('/buscar/resultado/{consultaLoteId}', [ClearanceController::class, 'resultadoUltimaConsulta'])->name('buscar.resultado');

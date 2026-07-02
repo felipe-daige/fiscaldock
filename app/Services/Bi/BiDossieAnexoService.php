@@ -30,6 +30,7 @@ final class BiDossieAnexoService
     public function montar(int $userId, ?int $clienteId, string $opcao): ?array
     {
         $limite = match ($opcao) {
+            '10' => 10,
             '20' => 20,
             '50' => 50,
             'todos' => self::TETO_TODOS,

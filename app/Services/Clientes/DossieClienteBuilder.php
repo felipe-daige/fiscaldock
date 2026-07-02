@@ -4,6 +4,7 @@ namespace App\Services\Clientes;
 
 use App\Models\Cliente;
 use App\Models\ConsultaResultado;
+use App\Models\ParticipanteScore;
 use App\Services\Consultas\Fiscal\TopMovimentacaoQuery;
 use App\Services\Consultas\ResultadoDetalhePresenter;
 use App\Services\RiskScoreService;
@@ -33,6 +34,16 @@ final class DossieClienteBuilder
             ->where('status', ConsultaResultado::STATUS_SUCESSO)
             ->orderByDesc('consultado_em')
             ->first();
+
+        // Consolida com o histórico acumulado (participante_scores.dados_consultados): a
+        // última consulta pode ser parcial (só cadastro / fonte com falha na integração) e
+        // não pode esconder certidão válida de consulta anterior nem rebaixar o score a
+        // 'inconclusivo' — mesma semântica do merge de RiskScoreService::persistirScore.
+        // Mutação só em memória ($ultima não é salvo; o builder segue sem efeitos colaterais).
+        $historico = ParticipanteScore::where('cliente_id', $c->id)->first()?->dados_consultados;
+        if ($ultima && is_array($historico) && $historico !== []) {
+            $ultima->resultado_dados = array_merge($historico, (array) $ultima->resultado_dados);
+        }
 
         $consulta = [
             'tem' => (bool) $ultima,

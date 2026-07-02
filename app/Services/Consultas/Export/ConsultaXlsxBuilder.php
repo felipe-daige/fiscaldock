@@ -28,16 +28,17 @@ final class ConsultaXlsxBuilder
 
         $xlsx = XlsxReport::paraArquivo($path);
 
-        // ── Aba 1: Resumo ────────────────────────────────
+        // ── Aba 1: Resumo (rótulo→valor, números reais — modelo aprovado no BI) ──
         $xlsx->addSheet('Resumo')
+            ->larguras(24, 14)
             ->tituloMarca(ReportTheme::brandName().' — Consulta Lote #'.$loteId)
             ->header(['Indicador', 'Valor'])
-            ->linha(['Total consultado', (string) ($resumo['total'] ?? 0)])
-            ->linha(['Sucesso', (string) ($resumo['sucesso'] ?? 0)])
-            ->linha(['Erros', (string) ($resumo['erro'] ?? 0)])
-            ->linha(['Score médio', (string) ($resumo['score_medio'] ?? 0)])
-            ->linha(['CND Federal OK', (string) ($resumo['cnd_federal']['negativa'] ?? 0)])
-            ->linha(['CND Federal restrita', (string) ($resumo['cnd_federal']['positiva'] ?? 0)]);
+            ->linhaKV('Total consultado', (int) ($resumo['total'] ?? 0), XlsxReport::FMT_INT)
+            ->linhaKV('Sucesso', (int) ($resumo['sucesso'] ?? 0), XlsxReport::FMT_INT)
+            ->linhaKV('Erros', (int) ($resumo['erro'] ?? 0), XlsxReport::FMT_INT)
+            ->linhaKV('Score médio', (float) ($resumo['score_medio'] ?? 0), XlsxReport::FMT_NUM)
+            ->linhaKV('CND Federal OK', (int) ($resumo['cnd_federal']['negativa'] ?? 0), XlsxReport::FMT_INT)
+            ->linhaKV('CND Federal restrita', (int) ($resumo['cnd_federal']['positiva'] ?? 0), XlsxReport::FMT_INT);
 
         // ── Aba 2: Resultados ────────────────────────────
         $xlsx->addSheet('Resultados')->header($colunas);
@@ -52,6 +53,7 @@ final class ConsultaXlsxBuilder
 
         // ── Aba 3: Detalhe por fonte ─────────────────────
         $xlsx->addSheet('Detalhe por fonte')
+            ->larguras(20, 40, 20, 16, 70, 40)
             ->header(['CNPJ', 'Razão Social', 'Fonte', 'Situação', 'Detalhe', 'Comprovante']);
         foreach ($detalhes as $d) {
             if (($d['status_consulta'] ?? null) !== 'sucesso') {

@@ -526,4 +526,43 @@ class ClienteController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Dossiê em lote (PDF): um documento com o dossiê completo de cada cliente
+     * selecionado seguido dos dossiês dos seus participantes. POST (form submit)
+     * porque a lista de ids pode ser longa; a resposta é o download direto.
+     */
+    public function dossieLote(Request $request)
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return redirect('/login');
+        }
+
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1|max:500',
+            'ids.*' => 'integer',
+            'top' => 'nullable|in:10,20,50',
+        ]);
+
+        $dados = app(\App\Services\Clientes\DossieLoteBuilder::class)
+            ->montar((int) $user->id, $validated['ids'], (int) ($validated['top'] ?? 10));
+
+        if ($dados === null) {
+            return redirect()
+                ->route('app.clientes')
+                ->with('export_erro', 'Nenhum cliente válido na seleção para gerar o dossiê.');
+        }
+
+        $dados['gerado_em'] = now()->format('d/m/Y H:i');
+
+        // Mesmo racional do BI com dossiês anexos (BiController::exportarPdf): dossiê
+        // multiplica páginas/tabelas no dompdf (~6MB/dossiê de pico) e o render é
+        // síncrono. Teto de 50 itens no builder mantém o pior caso sob esses limites.
+        ini_set('memory_limit', '1024M');
+        set_time_limit(240);
+
+        return \App\Support\PdfReport::render('reports.dossie.lote', $dados, 'portrait')
+            ->download('dossies_clientes_'.now()->format('Ymd_Hi').'.pdf');
+    }
 }

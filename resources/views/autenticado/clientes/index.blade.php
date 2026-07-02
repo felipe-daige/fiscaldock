@@ -7,12 +7,20 @@
                     <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Clientes</h1>
                     <p class="mt-1 text-xs text-gray-500">Cadastros operacionais, vínculos com participantes e ações da base de clientes.</p>
                 </div>
-                <a href="/app/cliente/novo" data-link class="inline-flex items-center gap-2 px-4 py-2 rounded bg-gray-800 text-white text-sm font-medium transition hover:bg-gray-700">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Novo Cliente
-                </a>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="btn-dossie-lote-header" class="inline-flex items-center gap-2 px-4 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium transition hover:bg-gray-50">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Dossiê PDF
+                    </button>
+                    <a href="/app/cliente/novo" data-link class="inline-flex items-center gap-2 px-4 py-2 rounded bg-gray-800 text-white text-sm font-medium transition hover:bg-gray-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Novo Cliente
+                    </a>
+                </div>
             </div>
 
             <div id="clientes-error-region"></div>
@@ -186,6 +194,7 @@
                     </div>
                     <div class="flex gap-2">
                         <button type="button" id="btn-exportar" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">Exportar</button>
+                        <button type="button" id="btn-dossie-lote" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">Dossiê PDF</button>
                         <button type="button" id="btn-consultar-selecionados" class="px-4 py-2 rounded bg-gray-800 text-white text-sm font-medium transition hover:bg-gray-700">Consultar</button>
                         <button type="button" id="btn-bulk-delete" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm transition hover:bg-red-700">Deletar</button>
                         <button type="button" id="btn-limpar-selecao" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">Limpar</button>
@@ -392,6 +401,38 @@
             <div class="flex justify-end gap-3">
                 <button type="button" id="btn-cancelar-bulk-delete" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">Cancelar</button>
                 <button type="button" id="btn-confirmar-bulk-delete" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm transition hover:bg-red-700">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal-dossie-lote" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-black/50 transition-opacity" id="modal-dossie-lote-overlay"></div>
+        <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6 z-10">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Gerar dossiê (PDF)</h3>
+            <p class="text-sm text-gray-500 mb-4">Um PDF único com o dossiê de cada cliente seguido dos dossiês dos seus participantes de maior volume EFD.</p>
+            <label class="block text-[11px] text-gray-500 mb-1" for="dossie-lote-cliente">Cliente</label>
+            <select id="dossie-lote-cliente" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded mb-4">
+                <option value="selecionados" id="dossie-lote-opt-selecionados" class="hidden">Clientes selecionados</option>
+                <option value="">Todos os clientes (carteira)</option>
+                @foreach($clientesDossie ?? [] as $cli)
+                    @if($cli->is_empresa_propria)
+                        <option value="{{ $cli->id }}">★ {{ $cli->nome ?: $cli->documento }} (Minha Empresa)</option>
+                    @else
+                        <option value="{{ $cli->id }}">{{ $cli->nome ?: $cli->documento }}</option>
+                    @endif
+                @endforeach
+            </select>
+            <label class="block text-[11px] text-gray-500 mb-1" for="dossie-lote-top">Participantes por cliente</label>
+            <select id="dossie-lote-top" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded mb-4">
+                <option value="10" selected>Top 10 por volume</option>
+                <option value="20">Top 20 por volume</option>
+                <option value="50">Top 50 por volume</option>
+            </select>
+            <div class="flex justify-end gap-3">
+                <button type="button" id="btn-cancelar-dossie-lote" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">Cancelar</button>
+                <button type="button" id="btn-confirmar-dossie-lote" class="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-semibold shadow-sm transition hover:bg-gray-800">Gerar PDF</button>
             </div>
         </div>
     </div>
@@ -712,6 +753,128 @@
                         btnConfirmarBulkDelete.disabled = false;
                         btnConfirmarBulkDelete.textContent = 'Excluir';
                     });
+            });
+        }
+
+        // Dossiê em lote: no modal o usuário escolhe o cliente (selecionados, carteira
+        // inteira ou 1 específico) e o top N de participantes por volume. O submit é
+        // form POST (não fetch) para o navegador tratar a resposta como download,
+        // mantendo a página atual intacta.
+        var modalDossieLote = document.getElementById('modal-dossie-lote');
+        var modalDossieLoteOverlay = document.getElementById('modal-dossie-lote-overlay');
+        var btnCancelarDossieLote = document.getElementById('btn-cancelar-dossie-lote');
+        var btnConfirmarDossieLote = document.getElementById('btn-confirmar-dossie-lote');
+        var selectDossieCliente = document.getElementById('dossie-lote-cliente');
+
+        function abrirModalDossieLote() {
+            if (!modalDossieLote) return;
+            // Opção "Clientes selecionados" só existe quando há seleção — e vira o default.
+            var opt = document.getElementById('dossie-lote-opt-selecionados');
+            if (opt) {
+                var total = clientesSelecionados.size;
+                opt.classList.toggle('hidden', total === 0);
+                opt.disabled = total === 0;
+                opt.textContent = 'Clientes selecionados (' + total + ')';
+                if (selectDossieCliente) {
+                    selectDossieCliente.value = total > 0 ? 'selecionados' : '';
+                }
+            }
+            modalDossieLote.classList.remove('hidden');
+        }
+
+        function fecharModalDossieLote() {
+            if (modalDossieLote) modalDossieLote.classList.add('hidden');
+        }
+
+        ['btn-dossie-lote', 'btn-dossie-lote-header'].forEach(function(btnId) {
+            var btn = document.getElementById(btnId);
+            if (btn) btn.addEventListener('click', abrirModalDossieLote);
+        });
+        if (btnCancelarDossieLote) btnCancelarDossieLote.addEventListener('click', fecharModalDossieLote);
+        if (modalDossieLoteOverlay) modalDossieLoteOverlay.addEventListener('click', fecharModalDossieLote);
+
+        function submitDossieLote(ids) {
+            var tokenMeta = document.querySelector('meta[name="csrf-token"]');
+            var topSelect = document.getElementById('dossie-lote-top');
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/app/clientes/dossie-lote';
+            form.style.display = 'none';
+
+            var token = document.createElement('input');
+            token.type = 'hidden';
+            token.name = '_token';
+            token.value = tokenMeta ? tokenMeta.content : '';
+            form.appendChild(token);
+
+            var top = document.createElement('input');
+            top.type = 'hidden';
+            top.name = 'top';
+            top.value = topSelect ? topSelect.value : '10';
+            form.appendChild(top);
+
+            ids.forEach(function(id) {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids[]';
+                input.value = id;
+                form.appendChild(input);
+            });
+
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+            fecharModalDossieLote();
+            if (window.showToast) window.showToast('Gerando dossiê... o download começa em instantes.', 'info');
+        }
+
+        if (btnConfirmarDossieLote) {
+            btnConfirmarDossieLote.addEventListener('click', async function() {
+                var escolha = selectDossieCliente ? selectDossieCliente.value : '';
+
+                if (escolha === 'selecionados') {
+                    if (clientesSelecionados.size === 0) return;
+                    submitDossieLote(Array.from(clientesSelecionados));
+                    return;
+                }
+
+                if (escolha !== '') {
+                    submitDossieLote([escolha]);
+                    return;
+                }
+
+                // Carteira inteira: busca os ids respeitando os filtros ativos da tela
+                // (mesma fonte do "Selecionar todos").
+                btnConfirmarDossieLote.disabled = true;
+                btnConfirmarDossieLote.textContent = 'Carregando...';
+                try {
+                    clearInlineError();
+                    var params = new URLSearchParams();
+                    var filtrosForm = container.querySelector('form[action="/app/clientes"]');
+                    if (filtrosForm) {
+                        ['status', 'tipo', 'regime', 'situacao', 'uf', 'busca', 'importacao', 'regularidade', 'status_consulta'].forEach(function(name) {
+                            var field = filtrosForm.querySelector('[name="' + name + '"]');
+                            if (field && field.value) params.set(name, field.value);
+                        });
+                    }
+                    var url = '/app/clientes/todos-ids' + (params.toString() ? '?' + params.toString() : '');
+                    var res = await fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                    });
+                    var data = await res.json();
+                    if (!data.success) throw new Error('Erro ao buscar clientes');
+                    if (!data.ids || data.ids.length === 0) throw new Error('Nenhum cliente para gerar o dossiê');
+                    submitDossieLote(data.ids);
+                } catch (err) {
+                    console.error('[Clientes] Erro no dossiê em lote:', err);
+                    showInlineError(err.message || 'Erro ao gerar o dossiê em lote', 'clientes-dossie-lote');
+                } finally {
+                    btnConfirmarDossieLote.disabled = false;
+                    btnConfirmarDossieLote.textContent = 'Gerar PDF';
+                }
             });
         }
 

@@ -67,6 +67,13 @@ it('com aplicarIndeterminado, conseguiu_emitir=false vira Indeterminada com moti
     expect($r['motivo'])->toBe('Receita sem dados.');
 });
 
+it('com aplicarIndeterminado, Positiva EMITIDA (nº/data) segue Irregular', function () {
+    expect(CertidaoBadge::classificar(
+        ['status' => 'Positiva', 'conseguiu_emitir' => false, 'certidao_codigo' => '9999', 'emissao_data' => '01/07/2026'],
+        true
+    ))->toMatchArray(['label' => 'Irregular', 'hex' => '#dc2626']);
+});
+
 it('sem aplicarIndeterminado, Positiva continua Irregular', function () {
     expect(CertidaoBadge::classificar(['status' => 'Positiva', 'conseguiu_emitir' => false]))
         ->toMatchArray(['label' => 'Irregular', 'hex' => '#dc2626']);

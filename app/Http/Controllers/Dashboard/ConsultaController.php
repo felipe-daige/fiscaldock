@@ -275,7 +275,8 @@ class ConsultaController extends Controller
 
         // Resumo de movimentação (papel/valor/qtd) — 1 query, serve relação, valor,
         // qtd e ordenação por valor/qtd. Só busca quando algum deles é usado.
-        $ordenar = $validated['ordenar'] ?? 'razao';
+        // Default 'valor': quem mais movimenta é quem mais importa consultar.
+        $ordenar = $validated['ordenar'] ?? 'valor';
         $precisaResumo = ! empty($validated['relacao'])
             || (! empty($validated['valor_op']) && ($validated['valor'] ?? null) !== null)
             || (! empty($validated['qtd_op']) && ($validated['qtd'] ?? null) !== null)
@@ -1967,8 +1968,8 @@ class ConsultaController extends Controller
             $situacaoCadastral = trim((string) $resultado->getDado('situacao_cadastral'));
             $regimeTributario = $resultado->getRegimeTributarioLabel();
             $cndFederal = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('cnd_federal'), true);
-            $fgts = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('crf_fgts'));
-            $cndt = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('cndt'));
+            $fgts = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('crf_fgts'), true);
+            $cndt = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('cndt'), true);
 
             // O alvo pode ser participante OU cliente (escopo "clientes"). O Laravel não
             // atualiza esses cadastros, então caímos no que a própria consulta trouxe

@@ -382,8 +382,17 @@ class DashboardController extends Controller
             ->orderByDesc('created_at')
             ->get(['id', 'filename', 'tipo_efd', 'created_at']);
 
+        // Dropdown do modal de dossiê em lote: lista leve, mesmo shape do filtro do BI.
+        $clientesDossie = Cliente::where('user_id', $userId)
+            ->where('ativo', true)
+            ->select('id', 'nome', 'documento', 'is_empresa_propria')
+            ->orderByDesc('is_empresa_propria')
+            ->orderBy('nome')
+            ->get();
+
         $data = [
             'clientes' => $clientes,
+            'clientesDossie' => $clientesDossie,
             'totalAtivos' => $totalAtivos,
             'totalInativos' => $totalInativos,
             'totalPJ' => $totalPJ,
@@ -506,44 +515,10 @@ class DashboardController extends Controller
         $viewData['top_produtos'] = $topMov->produtos((int) Auth::id(), 'cliente_id', [$cliente->id], 10)[$cliente->id] ?? [];
         $viewData['top_cfops'] = $topMov->cfops((int) Auth::id(), 'cliente_id', [$cliente->id], 10)[$cliente->id] ?? [];
 
-        // Principais negociantes: TODAS as contrapartes (participantes) do ledger deste
-        // cliente, do maior volume para o menor (o service já ordena por volume desc),
-        // enriquecidas com o badge de risco (Score Fiscal / não consultado).
-        $resumoFiscalCliente = app(\App\Services\Consultas\ClienteFiscalResumoService::class)
-            ->paraClientes((int) Auth::id(), [$cliente->id], todosRelacionamentos: true);
-        $viewData['negociantes'] = app(\App\Services\Consultas\NegociantesRiscoService::class)
-            ->enriquecer($resumoFiscalCliente[$cliente->id]['relacionamentos'] ?? [], (int) Auth::id());
-        $viewData['negociantesModo'] = 'cliente';
-
         // Movimentação & análise fiscal do cliente (empresa gerida do contador).
         $movSvc = app(\App\Services\Clientes\ClienteMovimentacaoService::class);
         $viewData['movimentacao'] = $movSvc->kpisEResumoParaPreview($cliente);
 
-        // Imposto apurado POR COMPETÊNCIA (declarado nos SPED). 1 mês por ponto — nunca somado
-        // lifetime: somar apurações de meses passados (já vencidas/pagas) viraria uma "dívida"
-        // falsa. NÃO usamos imposto destacado nas notas (mistura débito de saída com crédito de
-        // entrada → incoerente). Reusa o agregador validado do ResumoFiscalService (E116/E250 +
-        // M200/M600).
-        $competencias = \App\Models\EfdNota::where('user_id', (int) Auth::id())
-            ->where('cliente_id', $cliente->id)
-            ->whereNotNull('data_emissao')
-            ->selectRaw("DISTINCT TO_CHAR(data_emissao, 'YYYY-MM') as comp")
-            ->orderByRaw('comp')
-            ->pluck('comp');
-        $resumoSvc = app(\App\Services\ResumoFiscalService::class);
-        $apuracaoPorComp = [];
-        foreach ($competencias as $comp) {
-            $a = $resumoSvc->aRecolherAgregado((int) Auth::id(), $cliente->id, $comp);
-            if (($a['icms'] + $a['pis'] + $a['cofins']) > 0) {
-                $apuracaoPorComp[] = [
-                    'competencia' => $comp,
-                    'icms' => $a['icms'],
-                    'pis' => $a['pis'],
-                    'cofins' => $a['cofins'],
-                ];
-            }
-        }
-        $viewData['apuracaoPorComp'] = $apuracaoPorComp;
         $viewData['planos'] = \App\Models\MonitoramentoPlano::ativos();
 
         $ultimaConsultaCliente = \App\Models\ConsultaResultado::where('cliente_id', $cliente->id)
@@ -605,10 +580,34 @@ class DashboardController extends Controller
             ->where('user_id', Auth::id())
             ->firstOrFail();
 
+        $arquivo = 'dossie_'.preg_replace('/\D/', '', (string) $cliente->documento).'.pdf';
+
+        // ?top=10|20|50 → inclui os top N participantes por volume EFD junto no PDF
+        // (via pipeline do dossiê em lote com 1 cliente). Sem/0 → só o cliente.
+        $top = (int) $request->query('top', 0);
+        if (in_array($top, \App\Services\Clientes\DossieLoteBuilder::TOPS_VALIDOS, true)) {
+            $dados = app(\App\Services\Clientes\DossieLoteBuilder::class)
+                ->montar((int) Auth::id(), [$cliente->id], $top);
+            $dados['gerado_em'] = now()->format('d/m/Y H:i');
+
+            // Dossiês multiplicam páginas/tabelas no dompdf — mesmos tetos do lote/BI.
+            ini_set('memory_limit', '1024M');
+            set_time_limit(240);
+
+            return \App\Support\PdfReport::render('reports.dossie.lote', $dados, 'portrait')
+                ->download($arquivo);
+        }
+
         $dados = app(\App\Services\Clientes\DossieClienteBuilder::class)->montar($cliente);
 
+        // ?formato=xlsx → planilha no modelo de design aprovado (mesma fonte do PDF)
+        if ($request->query('formato') === 'xlsx') {
+            return app(\App\Services\Dossie\DossieXlsxBuilder::class)
+                ->download($dados, $cliente, str_replace('.pdf', '.xlsx', $arquivo));
+        }
+
         return \App\Support\PdfReport::render('reports.dossie.cliente', $dados, 'portrait')
-            ->download('dossie_'.preg_replace('/\D/', '', (string) $cliente->documento).'.pdf');
+            ->download($arquivo);
     }
 
     /**

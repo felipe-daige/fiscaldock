@@ -306,6 +306,16 @@ class RiskScoreService
      */
     private function persistirScore(array $chaveAlvo, int $userId, array $dados, ?Model $alvo = null): ParticipanteScore
     {
+        // Consulta parcial não pode apagar avaliação anterior: uma consulta só-cadastral
+        // posterior zerava os subscores de certidão já persistidos e todo score virava
+        // 'inconclusivo'. Mescla os dados novos sobre os já consultados — chave presente
+        // na consulta nova prevalece; ausente mantém o dado anterior (a certidão antiga
+        // segue datada: emissão/validade vivem dentro do próprio bloco).
+        $existente = ParticipanteScore::where($chaveAlvo)->first();
+        if ($existente !== null && is_array($existente->dados_consultados)) {
+            $dados = array_merge($existente->dados_consultados, $dados);
+        }
+
         $scores = $this->calcularScores($dados);
         $scoreTotal = $this->calcularScoreTotal($scores);
         $classificacao = $this->classificarComCobertura($scores);

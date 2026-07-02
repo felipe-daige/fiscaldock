@@ -356,3 +356,39 @@ it('analiseLote conta fonte que falhou como neutro (N/Consult)', function () {
     expect($fed)->not->toBeNull();
     expect($fed['neutro'])->toBe(1);
 });
+
+// ── Certidão "sem emissão" (fonte recusou emitir online) ─────────────────────
+
+it('certidão estadual sem emissão vira Indeterminada com nota didática e situação honesta', function () {
+    // Caso real (SEFAZ-MS): status "Positiva" derivado de conseguiu_emitir=false, sem nº/data.
+    $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
+        'endereco' => ['uf' => 'MS'],
+        'cnd_estadual' => [
+            'uf' => null, 'status' => 'Positiva', 'conseguiu_emitir' => false,
+            'certidao_codigo' => null, 'emissao_data' => null,
+            'mensagem' => 'Não foi possível a emissão da sua Certidão Negativa.',
+        ],
+    ]));
+
+    $est = bloco($blocos, 'cnd_estadual');
+    expect($est['badge']['label'])->toBe('Indeterminada');
+    expect($est['nota'])->toContain('SEFAZ-MS');
+    expect($est['nota'])->toContain('não comprova irregularidade');
+    $situacao = collect($est['itens'])->firstWhere('label', 'Situação informada');
+    expect($situacao['valor'])->toBe('Sem emissão online');
+});
+
+it('certidão Positiva EMITIDA segue Irregular, sem nota de sem-emissão', function () {
+    $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
+        'cnd_estadual' => [
+            'status' => 'Positiva', 'conseguiu_emitir' => false,
+            'certidao_codigo' => '2026/123', 'emissao_data' => '02/07/2026',
+        ],
+    ]));
+
+    $est = bloco($blocos, 'cnd_estadual');
+    expect($est['badge']['label'])->toBe('Irregular');
+    expect($est['nota'])->toBeNull();
+    $situacao = collect($est['itens'])->firstWhere('label', 'Situação informada');
+    expect($situacao['valor'])->toBe('Positiva');
+});

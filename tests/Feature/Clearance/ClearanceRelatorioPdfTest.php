@@ -55,6 +55,30 @@ it('gera o PDF executivo do lote para o dono (200 application/pdf)', function ()
     expect(substr((string) $response->getContent(), 0, 4))->toBe('%PDF');
 });
 
+it('gera o XLSX executivo do lote para o dono (200 spreadsheet)', function () {
+    if (! \App\Support\Reports\XlsxReport::disponivel()) {
+        $this->markTestSkipped('openspout indisponível neste ambiente');
+    }
+    $user = User::factory()->trialAtivo()->create(['credits' => 100]);
+    $lote = seedLoteClearance($user);
+
+    $response = actingAs($user)->get("/app/clearance/notas/resultado/{$lote->id}/xlsx");
+
+    $response->assertOk();
+    expect($response->headers->get('content-type'))->toContain('spreadsheetml.sheet');
+});
+
+it('nega o XLSX de lote de outro usuário (404)', function () {
+    $dono = User::factory()->trialAtivo()->create(['credits' => 100]);
+    $lote = seedLoteClearance($dono);
+
+    $intruso = User::factory()->trialAtivo()->create(['credits' => 100]);
+
+    actingAs($intruso)
+        ->get("/app/clearance/notas/resultado/{$lote->id}/xlsx")
+        ->assertNotFound();
+});
+
 it('nega o PDF de lote de outro usuário (404)', function () {
     $dono = User::factory()->trialAtivo()->create(['credits' => 100]);
     $lote = seedLoteClearance($dono);

@@ -114,7 +114,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
             @foreach($fontes as $bloco)
                 @php($acento = $bloco['badge']['hex'] ?? '#9ca3af')
-                <div class="rounded border border-gray-300 bg-white overflow-hidden" style="border-left: 3px solid {{ $acento }}">
+                <div class="min-w-0 rounded border border-gray-300 bg-white overflow-hidden" style="border-left: 3px solid {{ $acento }}">
                     <div class="flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 border-b border-gray-200">
                         <span class="text-[11px] font-semibold text-gray-600 uppercase tracking-wide truncate">{{ $bloco['titulo'] }}</span>
                         @if(!empty($bloco['badge']))
@@ -158,7 +158,17 @@
                         @endforeach
 
                         @if(!empty($bloco['mensagem']))
-                            <p class="text-[11px] text-gray-500 italic leading-snug border-l-2 border-gray-200 pl-2">{{ $bloco['mensagem'] }}</p>
+                            {{-- overflow-wrap:anywhere — mensagens oficiais trazem URLs longas sem espaço,
+                                 que sem quebra alargam a coluna do grid e cortam o card à direita. --}}
+                            <p class="text-[11px] text-gray-500 italic leading-snug border-l-2 border-gray-200 pl-2" style="overflow-wrap: anywhere">{{ $bloco['mensagem'] }}</p>
+                        @endif
+
+                        @if(!empty($bloco['nota']))
+                            {{-- Nota didática (presenter): traduz a mensagem oficial — o que significa,
+                                 onde o contribuinte verifica e o que a recusa NÃO prova. --}}
+                            <div class="rounded border border-blue-100 px-2.5 py-2" style="background-color: #eff6ff">
+                                <p class="text-[11px] leading-snug" style="color: #1e40af; overflow-wrap: anywhere">{{ $bloco['nota'] }}</p>
+                            </div>
                         @endif
 
                         @if(!empty($bloco['comprovante_url']))

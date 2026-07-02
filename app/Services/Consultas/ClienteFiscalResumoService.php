@@ -19,9 +19,11 @@ class ClienteFiscalResumoService
 
     /**
      * @param  array<int, int>  $clienteIds
+     * @param  bool  $todosRelacionamentos  true = relacionamentos sem o teto do panorama
+     *                                      (todas as contrapartes, maior→menor volume).
      * @return array<int, array<string, mixed>> keyed por cliente_id
      */
-    public function paraClientes(int $userId, array $clienteIds): array
+    public function paraClientes(int $userId, array $clienteIds, bool $todosRelacionamentos = false): array
     {
         $ids = array_values(array_unique(array_filter($clienteIds)));
         if ($ids === []) {
@@ -104,7 +106,7 @@ class ClienteFiscalResumoService
                     'valor_saida' => round($e['valor_saida'], 2),
                 ])
                 ->sortByDesc(fn ($e) => $e['valor_entrada'] + $e['valor_saida'])
-                ->take($this->panoramaMaximo())
+                ->when(! $todosRelacionamentos, fn ($col) => $col->take($this->panoramaMaximo()))
                 ->values()
                 ->all();
 

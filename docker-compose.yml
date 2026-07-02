@@ -2,7 +2,7 @@ name: fiscaldock
 
 services:
   app:
-    image: felipedaige/fiscaldock:0.0.6-arm64
+    image: felipedaige/fiscaldock:0.0.8-arm64
     restart: unless-stopped
     networks:
       - traefik-public
@@ -88,7 +88,7 @@ services:
       - "traefik.http.services.fiscaldock-service.loadbalancer.server.port=80"
 
   scheduler:
-    image: felipedaige/fiscaldock:0.0.6-arm64
+    image: felipedaige/fiscaldock:0.0.8-arm64
     restart: unless-stopped
     command: php artisan schedule:work
     networks:
@@ -133,7 +133,7 @@ services:
       - app
 
   worker:
-    image: felipedaige/fiscaldock:0.0.6-arm64
+    image: felipedaige/fiscaldock:0.0.8-arm64
     restart: unless-stopped
     # timeout=600: Due Diligence (1 alvo) leva ~3min por causa do throttle InfoSimples
     # (1 req/s) + latência das fontes gov. tries=3 é seguro: o job é idempotente em retry

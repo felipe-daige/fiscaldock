@@ -276,6 +276,19 @@ it('exporta PDF (200 application/pdf) respeitando o filtro', function () {
     expect(substr((string) $r->getContent(), 0, 4))->toBe('%PDF');
 });
 
+it('exporta XLSX (200 spreadsheet)', function () {
+    if (! \App\Support\Reports\XlsxReport::disponivel()) {
+        $this->markTestSkipped('openspout indisponível neste ambiente');
+    }
+    [$user, $clienteId] = biTrialUserCliente();
+    biCatalogo($user->id, $clienteId, 'XLSKEEP', '11112222');
+    biEfdItemCfop($user->id, $clienteId, str_pad('A', 44, '0', STR_PAD_LEFT), 'XLSKEEP', 5102);
+
+    $r = actingAs($user)->get('/app/bi/catalogo-itens/exportar-xlsx')->assertOk();
+
+    expect($r->headers->get('content-type'))->toContain('spreadsheetml.sheet');
+});
+
 it('mostra os botões de exportar CSV e PDF na tela', function () {
     [$user, $clienteId] = biTrialUserCliente();
     biEfdItemCfop($user->id, $clienteId, str_pad('A', 44, '0', STR_PAD_LEFT), 'X', 5102);

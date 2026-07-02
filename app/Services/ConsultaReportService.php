@@ -198,14 +198,14 @@ class ConsultaReportService
                 'sintegra_situacao' => $dados['sintegra']['situacao'] ?? null,
 
                 // CNDs (chave normalizada de validade = data_validade, não "validade")
-                'cnd_federal_status' => $dados['cnd_federal']['status'] ?? null,
+                'cnd_federal_status' => $this->statusCertidaoExport($dados['cnd_federal'] ?? null),
                 'cnd_federal_validade' => $dados['cnd_federal']['data_validade'] ?? null,
-                'cnd_estadual_status' => $dados['cnd_estadual']['status'] ?? null,
+                'cnd_estadual_status' => $this->statusCertidaoExport($dados['cnd_estadual'] ?? null),
                 'cnd_estadual_validade' => $dados['cnd_estadual']['data_validade'] ?? null,
 
                 // FGTS/Trabalhista
-                'crf_fgts_status' => $dados['crf_fgts']['status'] ?? null,
-                'cndt_status' => $dados['cndt']['status'] ?? null,
+                'crf_fgts_status' => $this->statusCertidaoExport($dados['crf_fgts'] ?? null),
+                'cndt_status' => $this->statusCertidaoExport($dados['cndt'] ?? null),
                 'cndt_validade' => $dados['cndt']['data_validade'] ?? null,
 
                 // Compliance
@@ -230,6 +230,23 @@ class ConsultaReportService
                 'dados_completos' => $dados,
             ];
         });
+    }
+
+    /**
+     * Status de certidão para planilha: quando a fonte não emitiu nada (regra canônica
+     * CndFederal::analisar), o `status` derivado ("Positiva") engana — exporta o fato real.
+     */
+    private function statusCertidaoExport(mixed $cnd): ?string
+    {
+        if (! is_array($cnd)) {
+            return null;
+        }
+
+        if (\App\Support\CndFederal::analisar($cnd)['indeterminado']) {
+            return 'Sem emissão (indeterminada)';
+        }
+
+        return $cnd['status'] ?? null;
     }
 
     /** Emitente do relatório: razão social da empresa própria (CNPJ 14 díg) ou nome do usuário. */
@@ -275,15 +292,17 @@ class ConsultaReportService
             ->map->count()
             ->toArray();
 
-        // Contagem CNDs
+        // Contagem CNDs — classificação canônica (CertidaoBadge): cobre caixa mista
+        // ("Negativa"), "Positiva com efeitos de negativa" (= regular) e ignora
+        // "Sem emissão (indeterminada)". O whereIn literal em caixa alta nunca batia.
         $cndFederalNegativa = $resultados
             ->where('status_consulta', 'sucesso')
-            ->whereIn('cnd_federal_status', ['NEGATIVA', 'REGULAR'])
+            ->filter(fn ($r) => \App\Support\CertidaoBadge::classificar($r['cnd_federal_status'] ?? null)['label'] === 'Regular')
             ->count();
 
         $cndFederalPositiva = $resultados
             ->where('status_consulta', 'sucesso')
-            ->whereIn('cnd_federal_status', ['POSITIVA', 'IRREGULAR'])
+            ->filter(fn ($r) => \App\Support\CertidaoBadge::classificar($r['cnd_federal_status'] ?? null)['label'] === 'Irregular')
             ->count();
 
         // Score médio

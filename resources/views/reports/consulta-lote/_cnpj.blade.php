@@ -56,6 +56,10 @@
                             <div class="msg">{{ $bloco['mensagem'] }}</div>
                         @endif
 
+                        @if(!empty($bloco['nota']))
+                            <div class="msg" style="font-style: normal; color: #1e40af; border-left-color: #bfdbfe;">{{ $bloco['nota'] }}</div>
+                        @endif
+
                         @if(!empty($bloco['comprovante_url']))
                             <div class="comprovante">
                                 <a href="{{ $bloco['comprovante_url'] }}">Baixar certidão / comprovante (PDF)</a>

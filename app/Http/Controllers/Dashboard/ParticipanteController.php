@@ -1294,8 +1294,16 @@ class ParticipanteController extends Controller
 
         $dados = app(\App\Services\Participantes\DossieParticipanteBuilder::class)->montar($participante);
 
+        $arquivo = 'dossie_'.preg_replace('/\D/', '', (string) $participante->documento);
+
+        // ?formato=xlsx → planilha no modelo de design aprovado (mesma fonte do PDF)
+        if ($request->query('formato') === 'xlsx') {
+            return app(\App\Services\Dossie\DossieXlsxBuilder::class)
+                ->download($dados, $participante, $arquivo.'.xlsx');
+        }
+
         return \App\Support\PdfReport::render('reports.dossie.participante', $dados, 'portrait')
-            ->download('dossie_'.preg_replace('/\D/', '', (string) $participante->documento).'.pdf');
+            ->download($arquivo.'.pdf');
     }
 
     /**

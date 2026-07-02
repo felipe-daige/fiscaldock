@@ -949,6 +949,37 @@ class ClearanceController extends Controller
             return $this->redirectToLogin($request);
         }
 
+        [$lote, $relatorio] = $this->montarRelatorioExecutivo($request, $consultaLoteId, 'pdf');
+
+        $pdf = PdfReport::render('autenticado.clearance.pdf.relatorio', ['r' => $relatorio], 'portrait');
+
+        return $pdf->download("clearance-lote-{$lote->id}.pdf");
+    }
+
+    /**
+     * XLSX executivo do resultado do lote — mesma fonte do PDF (RelatorioExecutivoService),
+     * planilha no modelo de design aprovado (docs/bi/export-planilhas.md).
+     * Gate: entitlement `export` (rota). Ownership: lote precisa ser do usuário (404).
+     */
+    public function resultadoXlsx(Request $request, int $consultaLoteId)
+    {
+        if (! Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        [$lote, $relatorio] = $this->montarRelatorioExecutivo($request, $consultaLoteId, 'xlsx');
+
+        return app(\App\Services\Clearance\Export\ClearanceXlsxBuilder::class)
+            ->download($relatorio, "clearance-lote-{$lote->id}.xlsx");
+    }
+
+    /**
+     * Monta o relatório executivo do lote (fonte única do PDF e do XLSX).
+     *
+     * @return array{0: ConsultaLote, 1: array}
+     */
+    private function montarRelatorioExecutivo(Request $request, int $consultaLoteId, string $formato): array
+    {
         $userId = Auth::id();
 
         $lote = ConsultaLote::where('id', $consultaLoteId)
@@ -976,13 +1007,12 @@ class ClearanceController extends Controller
         Log::info('clearance.relatorio_executivo.download', [
             'user_id' => $userId,
             'lote_id' => $lote->id,
+            'formato' => $formato,
             'ip' => $request->ip(),
             'hash' => $relatorio['hash'],
         ]);
 
-        $pdf = PdfReport::render('autenticado.clearance.pdf.relatorio', ['r' => $relatorio], 'portrait');
-
-        return $pdf->download("clearance-lote-{$lote->id}.pdf");
+        return [$lote, $relatorio];
     }
 
     /**

@@ -46,9 +46,10 @@
                     <td><div class="lbl">Classificação</div><div class="val">{{ $scoreInconclusivo ? 'Não conclusivo' : ucfirst($score['classificacao'] ?? 'medio') }}</div></td>
                 </tr></table></div>
                 @if($scoreInconclusivo)
-                    <div style="margin-top:4px;font-size:7.5px;color:#6b7280;">Baseado só em cadastro — score exige CND Federal + 2 certidões consultadas.</div>
+                    <div style="margin-top:4px;font-size:7.5px;color:#6b7280;">Cobertura insuficiente — score conclusivo exige CND Federal + 2 certidões avaliadas.</div>
                 @else
-                    <div class="score-bar" style="margin-top:4px;"><div style="background-color:{{ $scoreHex }};width:{{ max(0,min(100,(int)$score['score_total'])) }}%;height:14px;"></div></div>
+                    {{-- Barra = regularidade (100 − score de risco): baixo risco enche a barra. --}}
+                    <div class="score-bar" style="margin-top:4px;"><div style="background-color:{{ $scoreHex }};width:{{ 100 - max(0,min(100,(int)$score['score_total'])) }}%;height:14px;"></div></div>
                 @endif
                 <div style="margin-top:8px;">
                     @include('reports.partials._score-detalhamento', ['detalhamento' => $score['detalhamento'] ?? []])

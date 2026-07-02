@@ -9,11 +9,15 @@ class CndFederal
     public const HEX_INDETERMINADO = '#d97706';
 
     /**
-     * Analisa o retorno de CND Federal (PGFN/RFB) e isola o caso INDETERMINADO.
+     * Analisa o retorno de uma certidão e isola o caso INDETERMINADO. Nasceu para a
+     * CND Federal (PGFN/RFB), mas a regra vale para qualquer certidão (Estadual,
+     * Municipal, CNDT, FGTS...) — CertidaoBadge a aplica a todas.
      *
      * Regra canônica: INDETERMINADO nunca é irregular — significa que a fonte
-     * oficial não conseguiu emitir a certidão pela internet. A mensagem de
-     * origem é preservada, apenas normalizada na formatação.
+     * oficial não conseguiu emitir a certidão pela internet E não há documento
+     * emitido. Se a certidão foi de fato emitida (nº/data presentes), ela é
+     * conclusiva e o tipo dela manda (Positiva emitida = irregular de verdade).
+     * A mensagem de origem é preservada, apenas normalizada na formatação.
      *
      * Para qualquer outro status retorna indeterminado=false e campos nulos,
      * deixando a classificação (Negativa/Positiva/etc.) a cargo de quem chamou.
@@ -39,8 +43,14 @@ class CndFederal
             && (str_contains($status, 'NEGATIVA') || str_contains($status, 'REGULAR') || str_contains($status, 'HABILITAD'))
             && ! str_contains($status, 'IRREGULAR');
 
+        // Certidão de fato emitida (nº ou data presentes) é conclusiva: uma Positiva EMITIDA
+        // aponta débito real e deve classificar como irregular — indeterminado é só quando a
+        // fonte não emitiu nada (ex.: SEFAZ manda "procure a Agência Fazendária", sem certidão).
+        $emitida = trim((string) ($cnd['certidao_codigo'] ?? '')) !== ''
+            || trim((string) ($cnd['emissao_data'] ?? '')) !== '';
+
         $indeterminado = $status === 'INDETERMINADO'
-            || ($conseguiuEmitir === false && ! $statusRegular);
+            || ($conseguiuEmitir === false && ! $statusRegular && ! $emitida);
 
         if (! $indeterminado) {
             return $vazio;

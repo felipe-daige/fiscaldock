@@ -47,7 +47,7 @@
                                 {{ $inconclusivo ? 'NÃO CONCLUSIVO' : $scoreLabel($score->score_total) }}
                             </span>
                             @if($inconclusivo)
-                                <p class="mt-1 text-[10px] text-gray-500 leading-tight max-w-[190px]">Baseado só em cadastro — exige CND Federal + 2 certidões consultadas.</p>
+                                <p class="mt-1 text-[10px] text-gray-500 leading-tight max-w-[190px]">Cobertura insuficiente — exige CND Federal + 2 certidões avaliadas.</p>
                             @endif
                         </div>
                     @else

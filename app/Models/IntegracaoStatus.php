@@ -14,11 +14,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class IntegracaoStatus extends Model
 {
     public const STATUS_OPERACIONAL = 'operacional';
+
     public const STATUS_DEGRADADO = 'degradado';
+
     public const STATUS_FORA = 'fora';
+
     public const STATUS_MANUTENCAO = 'manutencao';
 
     public const GRUPO_CONSULTAS = 'consultas';
+
     public const GRUPO_PLATAFORMA = 'plataforma';
 
     protected $table = 'integracao_statuses';
@@ -71,6 +75,17 @@ class IntegracaoStatus extends Model
             self::STATUS_FORA => '🔴',
             self::STATUS_MANUTENCAO => '🔵',
         ][$this->status] ?? '⚪';
+    }
+
+    /** Cor sólida do status (hex inline — regra do design system, nunca classe Tailwind). */
+    public function getCorHexAttribute(): string
+    {
+        return [
+            self::STATUS_OPERACIONAL => '#047857',
+            self::STATUS_DEGRADADO => '#d97706',
+            self::STATUS_FORA => '#dc2626',
+            self::STATUS_MANUTENCAO => '#2563eb',
+        ][$this->status] ?? '#9ca3af';
     }
 
     public function getCorClasseAttribute(): string

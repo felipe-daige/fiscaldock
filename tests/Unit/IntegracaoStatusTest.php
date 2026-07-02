@@ -4,7 +4,7 @@ use App\Models\IntegracaoStatus;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
+uses(Tests\TestCase::class, RefreshDatabase::class);
 
 function integracao(array $attrs = []): IntegracaoStatus
 {
@@ -42,6 +42,13 @@ it('accessors label/emoji/corClasse mapeiam por status', function () {
     expect(integracao(['status' => 'fora'])->label)->toBe('Fora do ar');
     expect(integracao(['status' => 'operacional'])->emoji)->toBe('🟢');
     expect(integracao(['status' => 'degradado'])->corClasse)->toContain('amber');
+});
+
+it('accessor corHex mapeia por status com fallback cinza', function () {
+    expect(integracao(['status' => 'operacional'])->corHex)->toBe('#047857');
+    expect(integracao(['status' => 'degradado'])->corHex)->toBe('#d97706');
+    expect(integracao(['status' => 'fora'])->corHex)->toBe('#dc2626');
+    expect(integracao(['status' => 'manutencao'])->corHex)->toBe('#2563eb');
 });
 
 it('relação atualizadoPor resolve o user', function () {

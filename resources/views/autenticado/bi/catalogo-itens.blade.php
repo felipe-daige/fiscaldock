@@ -247,6 +247,7 @@
         <div class="flex items-center justify-between mb-2">
             <p class="text-[12px] text-gray-500">{{ number_format($itens->count(), 0, ',', '.') }} item(ns) · {{ $fmtMoeda($kpis['valor_movimentado']) }}</p>
             <x-acoes-menu label="Exportar" align="right">
+                <x-acoes-item href="{{ route('app.bi.catalogo-itens.exportar-xlsx', request()->query()) }}">Excel (XLSX)</x-acoes-item>
                 <x-acoes-item href="{{ route('app.bi.catalogo-itens.exportar', request()->query()) }}">Excel (CSV)</x-acoes-item>
                 <x-acoes-item href="{{ route('app.bi.catalogo-itens.exportar-pdf', request()->query()) }}">PDF</x-acoes-item>
             </x-acoes-menu>

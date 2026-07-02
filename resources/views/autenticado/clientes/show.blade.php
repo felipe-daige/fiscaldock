@@ -63,6 +63,13 @@
                         <p class="text-[11px] text-gray-500 mt-1">Gerencie o cadastro e acompanhe os vínculos fiscais do cliente.</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
+                        <button
+                            type="button"
+                            id="btn-dossie-cliente"
+                            class="px-3 py-2 text-sm font-medium bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded"
+                        >
+                            Dossiê PDF
+                        </button>
                         <a
                             href="{{ route('app.cliente.edit', $cliente->id) }}"
                             data-link
@@ -208,6 +215,85 @@
                 </div>
             </div>
         </div>
+
+        {{-- Modal do dossiê: o usuário escolhe quantos participantes vinculados
+             entram junto no PDF (nenhum ou top N por volume EFD). --}}
+        <div id="modal-dossie-show" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-black/40" id="modal-dossie-show-overlay"></div>
+            <div class="relative z-10 flex items-center justify-center min-h-screen p-4">
+                <div class="bg-white rounded border border-gray-300 w-full max-w-md overflow-hidden">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dossiê do Cliente</span>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-sm text-gray-700 mb-4">
+                            Dossiê de <strong>{{ $clienteNome }}</strong> em PDF. Escolha quantos participantes vinculados quer ver junto no documento.
+                        </p>
+                        <label class="block text-[11px] text-gray-500 mb-1" for="dossie-show-top">Participantes no dossiê</label>
+                        <select id="dossie-show-top" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
+                            <option value="0">Nenhum — somente o cliente</option>
+                            <option value="10" selected>Top 10 por volume EFD</option>
+                            <option value="20">Top 20 por volume EFD</option>
+                            <option value="50">Top 50 por volume EFD</option>
+                        </select>
+                        <p class="text-[11px] text-gray-400 mt-2">A planilha (XLSX) traz os dados do cliente; a seleção de participantes vale só para o PDF.</p>
+                    </div>
+                    <div class="px-4 py-3 border-t border-gray-200 bg-white flex justify-end gap-2">
+                        <button type="button" id="btn-cancelar-dossie-show" class="px-3 py-2 text-sm font-medium bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded">
+                            Cancelar
+                        </button>
+                        <button type="button" id="btn-dossie-xlsx-show" class="px-3 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #047857" data-id="{{ $cliente->id }}">
+                            Planilha (XLSX)
+                        </button>
+                        <button type="button" id="btn-confirmar-dossie-show" class="px-3 py-2 text-sm font-medium bg-gray-800 text-white hover:bg-gray-700 rounded" data-id="{{ $cliente->id }}">
+                            Gerar PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+        (function() {
+            var btnDossie = document.getElementById('btn-dossie-cliente');
+            var modal = document.getElementById('modal-dossie-show');
+            var overlay = document.getElementById('modal-dossie-show-overlay');
+            var btnCancelar = document.getElementById('btn-cancelar-dossie-show');
+            var btnConfirmar = document.getElementById('btn-confirmar-dossie-show');
+
+            function fecharModal() {
+                if (modal) modal.classList.add('hidden');
+            }
+
+            if (btnDossie) {
+                btnDossie.addEventListener('click', function() {
+                    if (modal) modal.classList.remove('hidden');
+                });
+            }
+            if (overlay) overlay.addEventListener('click', fecharModal);
+            if (btnCancelar) btnCancelar.addEventListener('click', fecharModal);
+
+            if (btnConfirmar) {
+                btnConfirmar.addEventListener('click', function() {
+                    var top = document.getElementById('dossie-show-top');
+                    var valor = top ? top.value : '0';
+                    // GET direto: o navegador trata a resposta como download e a página fica.
+                    window.location.href = '/app/cliente/' + this.dataset.id + '/dossie' + (valor !== '0' ? '?top=' + valor : '');
+                    fecharModal();
+                    if (window.showToast) window.showToast('Gerando dossiê... o download começa em instantes.', 'info');
+                });
+            }
+
+            var btnXlsx = document.getElementById('btn-dossie-xlsx-show');
+            if (btnXlsx) {
+                btnXlsx.addEventListener('click', function() {
+                    window.location.href = '/app/cliente/' + this.dataset.id + '/dossie?formato=xlsx';
+                    fecharModal();
+                    if (window.showToast) window.showToast('Gerando planilha... o download começa em instantes.', 'info');
+                });
+            }
+        })();
+        </script>
 
         @if(!$cliente->is_empresa_propria)
             <div id="modal-excluir-show" class="fixed inset-0 z-50 hidden">

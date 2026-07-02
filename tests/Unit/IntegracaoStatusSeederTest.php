@@ -4,7 +4,7 @@ use App\Models\IntegracaoStatus;
 use Database\Seeders\IntegracaoStatusSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
+uses(Tests\TestCase::class, RefreshDatabase::class);
 
 it('semeia 10 integrações (7 consultas + 3 plataforma)', function () {
     (new IntegracaoStatusSeeder())->run();

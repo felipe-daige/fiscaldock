@@ -327,7 +327,7 @@ class BiController extends Controller
 
         [$ini, $fim] = $this->resolverPeriodo($request);
         $rel = $this->biExport->relatorioCompleto(
-            Auth::id(), $ini, $fim, $request->get('cliente_id')
+            Auth::id(), $ini, $fim, $request->get('cliente_id'), $this->resolverDossiesTop($request)
         );
         $filename = 'bi-fiscal-'.now()->format('Ymd').'.xlsx';
 
@@ -370,7 +370,7 @@ class BiController extends Controller
 
     /**
      * CSV do relatório completo em ZIP — 1 arquivo CSV por seção (CSV é 1 tabela;
-     * o relatório tem 4 seções, então empacota em ZIP).
+     * o relatório tem N seções, então empacota em ZIP). Ver BiCsvZipBuilder.
      */
     public function exportarCsvZip(Request $request)
     {
@@ -379,37 +379,31 @@ class BiController extends Controller
         }
 
         [$ini, $fim] = $this->resolverPeriodo($request);
-        $rel = $this->biExport->relatorioCompleto(Auth::id(), $ini, $fim, $request->get('cliente_id'));
-
-        $arquivos = [
-            'faturamento' => 'faturamento.csv',
-            'tributos' => 'tributos.csv',
-            'apuracao-notas' => 'declarado-x-computado.csv',
-            'cfop' => 'cfop.csv',
-        ];
-
-        $tmp = tempnam(sys_get_temp_dir(), 'bicsvzip');
-        if ($tmp === false) {
-            throw new \RuntimeException('Falha ao criar arquivo temporário para o ZIP.');
-        }
-
-        $zip = new \ZipArchive;
-        $zip->open($tmp, \ZipArchive::OVERWRITE);
-        foreach ($arquivos as $aba => $nomeArquivo) {
-            $sec = $rel['secoes'][$aba] ?? null;
-            if (! $sec) {
-                continue;
-            }
-            $zip->addFromString($nomeArquivo, CsvExport::build($sec['colunas'], $sec['linhas']));
-        }
-        $zip->close();
+        $rel = $this->biExport->relatorioCompleto(
+            Auth::id(), $ini, $fim, $request->get('cliente_id'), $this->resolverDossiesTop($request)
+        );
 
         $filename = 'bi-fiscal-'.now()->format('Ymd').'.csv.zip';
 
         return $this->comTokenDownload(
-            response()->download($tmp, $filename, ['Content-Type' => 'application/zip'])->deleteFileAfterSend(true),
+            app(\App\Services\Bi\Export\BiCsvZipBuilder::class)->download($rel, $filename),
             $request
         );
+    }
+
+    /**
+     * Top N da seção "Dossiê Participantes" nos exports de planilha (XLSX/CSV zip).
+     * Mesmo param `dossies` do PDF (10/20/50); ausente/inválido ⇒ sem a seção
+     * (links antigos sem o param seguem gerando o relatório de sempre).
+     */
+    private function resolverDossiesTop(Request $request): ?int
+    {
+        return match ((string) $request->get('dossies', '')) {
+            '10' => 10,
+            '20' => 20,
+            '50' => 50,
+            default => null,
+        };
     }
 
     /**

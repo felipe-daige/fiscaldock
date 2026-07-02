@@ -397,7 +397,7 @@
                             transform: translateX(-50%); z-index: 60; width: max-content; max-width: 250px;
                             background: #111827; color: #fff; padding: 7px 9px; border-radius: 7px;
                             font-size: 11px; line-height: 1.4; font-weight: 400; text-transform: none;
-                            letter-spacing: normal; text-align: left; white-space: normal;
+                            letter-spacing: normal; text-align: left; white-space: normal; overflow-wrap: anywhere;
                             box-shadow: 0 6px 18px rgba(17,24,39,.22); pointer-events: none;
                         }
                         .cert-tip strong { display: block; font-weight: 700; margin-bottom: 2px; }
@@ -490,7 +490,10 @@
                                                 {{ $resultado['status_label'] }}
                                             </span>
                                             @if(!empty($resultado['mensagem_exibivel']))
-                                                <p class="text-[11px] text-gray-500 mt-1">{{ $resultado['mensagem_exibivel'] }}</p>
+                                                {{-- Trecho curto: o texto integral do órgão fica no card da fonte (detalhe expansível).
+                                                     overflow-wrap:anywhere — mensagens de fonte trazem URLs longas sem espaço;
+                                                     sem isso a palavra inquebrável alarga a tabela além do container (que corta). --}}
+                                                <p class="text-[11px] text-gray-500 mt-1" style="overflow-wrap: anywhere" title="{{ $resultado['mensagem_exibivel'] }}">{{ \Illuminate\Support\Str::limit($resultado['mensagem_exibivel'], 180) }}</p>
                                             @endif
                                         </td>
                                         <td class="px-3 py-3 text-sm text-gray-700">{{ $resultado['consultado_em_label'] ?: '—' }}</td>
@@ -569,7 +572,7 @@
                                     </div>
                                 @endif
                                 @if(!empty($resultado['mensagem_exibivel']))
-                                    <p class="text-xs text-gray-500 mt-3">{{ $resultado['mensagem_exibivel'] }}</p>
+                                    <p class="text-xs text-gray-500 mt-3" style="overflow-wrap: anywhere">{{ \Illuminate\Support\Str::limit($resultado['mensagem_exibivel'], 180) }}</p>
                                 @endif
                                 <button type="button" data-detalhe-toggle="consulta-detalhe-m-{{ $loop->index }}"
                                         class="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-gray-600 hover:text-gray-900" aria-expanded="{{ $autoAbrirDetalhe ? 'true' : 'false' }}">

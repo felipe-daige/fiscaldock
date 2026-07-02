@@ -428,9 +428,9 @@
                                     <div>
                                         <label class="block text-[11px] text-gray-500 mb-1">Ordenar por</label>
                                         <select id="filtro-ordenar" class="w-full px-3 py-2.5 border border-gray-300 rounded text-[13px] text-gray-700 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                                            <option value="valor" selected>Maior valor movimentado</option>
                                             <option value="razao">Razão social (A–Z)</option>
                                             <option value="ultima_consulta">Última consulta (mais antiga)</option>
-                                            <option value="valor">Maior valor movimentado</option>
                                             <option value="qtd">Mais notas</option>
                                         </select>
                                     </div>

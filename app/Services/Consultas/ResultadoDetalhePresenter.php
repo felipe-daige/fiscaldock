@@ -135,9 +135,11 @@ class ResultadoDetalhePresenter
             }
 
             $d = $dados[$chave];
+            // aplicarIndeterminado em TODA certidão: fonte que não emitiu (conseguiu_emitir=false,
+            // sem documento) é INDETERMINADA, nunca irregular — mesma regra canônica da Federal.
             $badge = $chave === 'sintegra'
                 ? CertidaoBadge::classificar(['situacao' => $d['situacao'] ?? null])
-                : CertidaoBadge::classificar($d, $chave === 'cnd_federal');
+                : CertidaoBadge::classificar($d, true);
 
             $estado = $this->bucketHex($badge['hex'] ?? null);
             $uf = $chave === 'cnd_estadual' || $chave === 'cnd_municipal'
@@ -192,7 +194,8 @@ class ResultadoDetalhePresenter
             'hex' => $interno ? CertidaoBadge::HEX_ERRO_INTERNO : CertidaoBadge::HEX_FALHOU,
             'descricao' => $interno
                 ? 'Erro interno no processamento desta consulta.'
-                : 'Não foi possível obter este resultado. Refaça a consulta.',
+                : 'A fonte oficial não respondeu no momento da consulta (instabilidade temporária do órgão). '
+                    .'Nada foi cobrado por esta fonte. Quando elegível, o botão "Reconsultar fontes com falha" refaz só ela, com desconto.',
         ];
     }
 
@@ -263,7 +266,7 @@ class ResultadoDetalhePresenter
             if (! isset($dados[$chave]) || ! is_array($dados[$chave])) {
                 continue;
             }
-            $badge = CertidaoBadge::classificar($dados[$chave], $chave === 'cnd_federal');
+            $badge = CertidaoBadge::classificar($dados[$chave], true);
             $bucket = $this->bucketHex($badge['hex'] ?? null);
             $nome = $this->tituloCertidao($chave);
             match ($bucket) {
@@ -321,7 +324,7 @@ class ResultadoDetalhePresenter
             if (! isset($dados[$chave]) || ! is_array($dados[$chave])) {
                 continue;
             }
-            $bucket = $this->bucketHex(CertidaoBadge::classificar($dados[$chave], $chave === 'cnd_federal')['hex'] ?? null);
+            $bucket = $this->bucketHex(CertidaoBadge::classificar($dados[$chave], true)['hex'] ?? null);
             if ($bucket === 'atencao') {
                 $temPendencia = true;
             } elseif ($bucket === 'indeterminado') {
@@ -532,7 +535,20 @@ class ResultadoDetalhePresenter
             }, is_array($d['regime_tributario_historico'] ?? null) ? $d['regime_tributario_historico'] : [])),
         ];
 
-        return $this->bloco('cadastro', 'Dados cadastrais', null, $itens, $listas);
+        // Badge da situação cadastral — mesma régua do RiskScoreService::scoreCadastral
+        // (ATIVA=0, SUSPENSA=50, INAPTA/BAIXADA/NULA=100): a situação já pesa 15% no
+        // score, então ganha badge em "Regularidade & Score" como as certidões.
+        $badge = null;
+        if ($situacao !== '') {
+            $badge = match (mb_strtoupper($situacao)) {
+                'ATIVA' => ['label' => 'Ativa', 'hex' => CertidaoBadge::HEX_REGULAR],
+                'SUSPENSA' => ['label' => 'Suspensa', 'hex' => CertidaoBadge::HEX_INDETERMINADO],
+                'INAPTA', 'BAIXADA', 'NULA' => ['label' => ucfirst(mb_strtolower($situacao)), 'hex' => CertidaoBadge::HEX_IRREGULAR],
+                default => ['label' => mb_strtoupper($situacao), 'hex' => CertidaoBadge::HEX_OUTRO],
+            };
+        }
+
+        return $this->bloco('cadastro', 'Dados cadastrais', $badge, $itens, $listas);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -541,13 +557,18 @@ class ResultadoDetalhePresenter
 
     private function blocoCertidao(string $chave, array $d, ?string $ufFallback = null, ?string $nota = null): array
     {
-        $badge = CertidaoBadge::classificar($d, $chave === 'cnd_federal');
+        $badge = CertidaoBadge::classificar($d, true);
 
         // CND Estadual/Municipal: a resposta pode vir sem UF — completa com a UF do alvo.
         $uf = trim((string) ($d['uf'] ?? '')) ?: ($chave === 'cnd_estadual' || $chave === 'cnd_municipal' ? $ufFallback : null);
 
+        // O `status` das certidões sem `tipo` é DERIVADO por nós de conseguiu_emitir=false
+        // ("Positiva") — quando a classificação é INDETERMINADA (nada foi emitido), exibir
+        // "Positiva" engana; mostra o fato real: a fonte não emitiu online.
+        $situacaoInformada = ! empty($badge['indeterminado']) ? 'Sem emissão online' : ($d['status'] ?? null);
+
         $itens = [
-            $this->item('Situação informada', $d['status'] ?? null),
+            $this->item('Situação informada', $situacaoInformada),
             $this->item('UF', $uf),
             $this->item('Município', $d['municipio'] ?? null),
             $this->item('Certidão nº', $d['certidao_codigo'] ?? null),
@@ -565,6 +586,13 @@ class ResultadoDetalhePresenter
         // equivalente à das demais certidões, a partir do status + validade do CRF.
         if (! $mensagem && $chave === 'crf_fgts') {
             $mensagem = $this->resumoFgts($d, $badge);
+        }
+
+        // Certidão INDETERMINADA (fonte recusou a emissão online): a mensagem oficial é jurídica
+        // e crua — a nota traduz o que significa, onde o contribuinte verifica e o que NÃO prova.
+        if (! empty($badge['indeterminado'])) {
+            $notaSemEmissao = $this->notaSemEmissao($chave, $uf);
+            $nota = trim(($nota ? $nota.' ' : '').$notaSemEmissao) ?: null;
         }
 
         return $this->bloco($chave, $this->tituloCertidao($chave, $uf), $badge, $itens, [], $mensagem, $d['comprovante'] ?? null, $nota);
@@ -601,6 +629,44 @@ class ResultadoDetalhePresenter
             .'É uma exigência da Receita Federal: a certidão de débitos federais (RFB/PGFN) é unificada por base de CNPJ '
             .'e só é emitida para a matriz, valendo para a empresa inteira (matriz e filiais). '
             .'Os demais dados desta consulta — cadastro, CND estadual/municipal, FGTS, SINTEGRA — referem-se ao CNPJ consultado.';
+    }
+
+    /**
+     * Tradução didática do caso "Indeterminada — sem emissão": por que a fonte oficial recusou
+     * a certidão online, onde o CONTRIBUINTE verifica o detalhe (que não é público) e o aviso de
+     * que a recusa, sozinha, não comprova irregularidade. Complementa a mensagem oficial do órgão.
+     */
+    private function notaSemEmissao(string $chave, ?string $uf): string
+    {
+        $ufU = $uf ? strtoupper($uf) : null;
+
+        return match ($chave) {
+            'cnd_estadual' => 'O que isso significa: a própria SEFAZ'.($ufU ? "-{$ufU}" : '').' recusou a emissão online — '
+                .'o sistema estadual acusa pendência (débito em aberto ou obrigação acessória, como declaração não entregue) '
+                .'em algum estabelecimento da empresa no estado, pois a regra considera matriz e filiais em conjunto. '
+                .'O detalhe da pendência não é público: '.$this->ondeVerificarEstadual($ufU)
+                .' Sem certidão emitida, a recusa por si só não comprova irregularidade fiscal.',
+            'cnd_municipal' => 'O que isso significa: a prefeitura não emitiu a certidão pela internet — pode haver pendência '
+                .'ou situação cadastral municipal que exige verificação. O detalhe é restrito ao contribuinte, no portal da '
+                .'prefeitura ou no atendimento presencial. Sem certidão emitida, a recusa por si só não comprova irregularidade fiscal.',
+            'cnd_federal' => 'O que isso significa: a Receita Federal/PGFN não conseguiu emitir a certidão pela internet — '
+                .'normalmente há pendência ou dados em análise que exigem verificação do próprio contribuinte, pelo e-CAC '
+                .'(cav.receita.fazenda.gov.br) ou em uma unidade da RFB. Sem certidão emitida, a recusa por si só não comprova irregularidade fiscal.',
+            default => 'O que isso significa: a fonte oficial não emitiu a certidão pela internet. O detalhe do motivo é '
+                .'restrito ao próprio contribuinte, no portal do órgão ou no atendimento presencial. Sem certidão emitida, '
+                .'a recusa por si só não comprova irregularidade fiscal.',
+        };
+    }
+
+    /** Onde o contribuinte verifica a pendência estadual — orientação específica por UF quando conhecida. */
+    private function ondeVerificarEstadual(?string $uf): string
+    {
+        return match ($uf) {
+            'MS' => 'só o contribuinte logado no Portal e-Fazenda (efazenda.servicos.ms.gov.br) ou uma Agência Fazendária consegue vê-lo.',
+            'SP' => 'só o contribuinte, no "Relatório de Pendências Fiscais" do portal da SEFAZ-SP (acesso com certificado digital), '
+                .'consegue vê-lo — e a certidão pode ser pedida em papel pelo SIPET, com análise manual.',
+            default => 'só o próprio contribuinte, no portal da SEFAZ (com login ou certificado digital) ou no atendimento presencial, consegue vê-lo.',
+        };
     }
 
     private function tituloCertidao(string $chave, ?string $uf = null): string

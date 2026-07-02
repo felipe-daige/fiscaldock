@@ -145,6 +145,87 @@ it('score_credito_reforma usa o crt do proprio participante (Regime Normal => 0)
     expect($score->score_credito_reforma)->toBe(0);
 });
 
+it('consulta parcial posterior nao apaga subscores de certidoes ja avaliadas', function () {
+    $user = User::factory()->create();
+    $part = Participante::create([
+        'user_id' => $user->id, 'documento' => '11222333000186', 'razao_social' => 'MERGE LTDA',
+    ]);
+
+    // Lote 1: due diligence completo → score conclusivo
+    $lote1 = novoLote($user);
+    ConsultaResultado::create([
+        'consulta_lote_id' => $lote1->id,
+        'participante_id' => $part->id,
+        'status' => ConsultaResultado::STATUS_SUCESSO,
+        'resultado_dados' => [
+            'situacao_cadastral' => 'ATIVA',
+            'cnd_federal' => ['status' => 'Negativa'],
+            'cnd_estadual' => ['status' => 'Negativa'],
+        ],
+    ]);
+    app(FecharLoteService::class)->fechar($lote1->id);
+
+    // Lote 2: consulta só-cadastral — não pode rebaixar o score para 'inconclusivo'
+    $lote2 = novoLote($user);
+    ConsultaResultado::create([
+        'consulta_lote_id' => $lote2->id,
+        'participante_id' => $part->id,
+        'status' => ConsultaResultado::STATUS_SUCESSO,
+        'resultado_dados' => ['situacao_cadastral' => 'ATIVA'],
+    ]);
+    app(FecharLoteService::class)->fechar($lote2->id);
+
+    $score = ParticipanteScore::where('participante_id', $part->id)->first();
+    expect($score->score_cnd_federal)->toBe(0);
+    expect($score->score_cnd_estadual)->toBe(0);
+    expect($score->classificacao)->toBe('baixo');
+    // dados_consultados acumula: cadastro novo + certidões anteriores
+    expect($score->dados_consultados)->toHaveKeys(['situacao_cadastral', 'cnd_federal', 'cnd_estadual']);
+});
+
+it('dossie do cliente usa historico consolidado quando a ultima consulta e parcial', function () {
+    $user = User::factory()->create();
+    $cliente = \App\Models\Cliente::create([
+        'user_id' => $user->id, 'documento' => '99888777000167', 'razao_social' => 'CONSOLIDA LTDA',
+    ]);
+
+    // Lote 1: certidões completas
+    $lote1 = novoLote($user);
+    ConsultaResultado::create([
+        'consulta_lote_id' => $lote1->id,
+        'cliente_id' => $cliente->id,
+        'status' => ConsultaResultado::STATUS_SUCESSO,
+        'resultado_dados' => [
+            'situacao_cadastral' => 'ATIVA',
+            'cnd_federal' => ['status' => 'Negativa'],
+            'cnd_estadual' => ['status' => 'Negativa'],
+        ],
+    ]);
+    app(FecharLoteService::class)->fechar($lote1->id);
+
+    // Lote 2: a federal falhou na integração (fonte sem retorno)
+    $lote2 = novoLote($user);
+    ConsultaResultado::create([
+        'consulta_lote_id' => $lote2->id,
+        'cliente_id' => $cliente->id,
+        'status' => ConsultaResultado::STATUS_SUCESSO,
+        'resultado_dados' => [
+            'situacao_cadastral' => 'ATIVA',
+            'cnd_estadual' => ['status' => 'Negativa'],
+            '_fontes_erro' => ['cnd_federal' => 'timeout'],
+        ],
+    ]);
+    app(FecharLoteService::class)->fechar($lote2->id);
+
+    $dossie = app(\App\Services\Clientes\DossieClienteBuilder::class)->montar($cliente->fresh());
+
+    expect($dossie['score']['classificacao'])->toBe('baixo');
+    // O card da CND Federal vem do histórico (Regular), não "falha na integração".
+    $federal = collect($dossie['consulta']['blocos'])->firstWhere('chave', 'cnd_federal');
+    expect($federal['badge']['label'] ?? null)->not->toBeNull();
+    expect(mb_strtolower($federal['badge']['label']))->not->toContain('falha');
+});
+
 it('marca nao_avaliado quando nada e avaliavel', function () {
     $user = User::factory()->create();
     $part = Participante::create([

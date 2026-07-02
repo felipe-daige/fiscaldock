@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Services\Consultas\Fiscal\TopMovimentacaoQuery;
+use App\Services\Participantes\ParticipanteMovimentacaoService;
 use App\Support\CsvExport;
 use Illuminate\Support\Facades\DB;
 
@@ -11,6 +12,7 @@ class BiExportService
     public function __construct(
         protected BiService $bi,
         protected TopMovimentacaoQuery $topMov,
+        protected ParticipanteMovimentacaoService $movParticipante,
     ) {}
 
     private function brl(float $v): string
@@ -79,8 +81,11 @@ class BiExportService
      * Relatório completo do BI (KPIs + cobertura + seções) — fonte única
      * consumida pelo PDF executivo e pelo XLSX. Reusa dataset() e os getters do BI.
      * Mode-aware: $cli === null ⇒ portfólio (inclui riscos + score); else ⇒ cliente.
+     *
+     * @param  int|null  $dossiesTop  Quando não-nulo, anexa a seção 'dossie-participantes'
+     *                                (top N por volume EFD, mesma seleção do anexo do PDF).
      */
-    public function relatorioCompleto(int $userId, ?string $ini, ?string $fim, ?int $cli): array
+    public function relatorioCompleto(int $userId, ?string $ini, ?string $fim, ?int $cli, ?int $dossiesTop = null): array
     {
         $resumo = $this->bi->getResumoGeral($userId, $cli, $ini, $fim);
         $modo = $cli === null ? 'portfolio' : 'cliente';
@@ -105,6 +110,13 @@ class BiExportService
         $secoes['devolucoes'] = $this->datasetDevolucoes($userId, $ini, $fim, $cli);
 
         $ordem = ['faturamento', 'tributos', 'apuracao-notas', 'contrapartes', 'cfop', 'top-notas', 'catalogo', 'uf', 'devolucoes'];
+
+        if ($dossiesTop !== null) {
+            $secoes['dossie-participantes'] = $this->datasetDossieParticipantes($userId, $cli, $dossiesTop);
+            // Logo após contrapartes: mesmo assunto (quem são os participantes), detalha o resumo.
+            array_splice($ordem, (int) array_search('contrapartes', $ordem, true) + 1, 0, 'dossie-participantes');
+        }
+
         $scoreCarteira = null;
 
         // Seções user-wide — só portfólio (sem fonte cliente-scoped)
@@ -223,6 +235,65 @@ class BiExportService
         return ['titulo' => 'Principais contrapartes', 'modo' => 'cliente', 'itens' => $itens];
     }
 
+    /**
+     * Dossiê achatado dos top N participantes por volume EFD — 1 linha por
+     * participante com os indicadores do Resumo do dossiê (mesma seleção do
+     * anexo de dossiês do PDF: participantesPorVolume, histórico completo,
+     * sem recorte de período). Quem precisa das abas detalhadas usa o export
+     * do dossiê individual. Score/classificação vêm de participante_scores
+     * em lote (mesma fonte das contrapartes); KPIs/impostos custam 3 queries
+     * por participante (N ≤ 50, aceitável no export síncrono).
+     * 'classificacoes' devolve o risco cru por linha para a cor do badge no XLSX.
+     */
+    private function datasetDossieParticipantes(int $userId, ?int $cli, int $top): array
+    {
+        $colunas = [
+            'Razão social', 'CNPJ/CPF', 'Situação cadastral', 'UF', 'Score', 'Classificação',
+            'Total notas', 'Valor movimentado', 'Entradas qtd', 'Entradas valor',
+            'Saídas qtd', 'Saídas valor', 'Período', 'ICMS (EFD)', 'PIS (EFD)', 'COFINS (EFD)',
+            'Alíq. ICMS média %',
+        ];
+
+        $participantes = $this->bi->participantesPorVolume($userId, $cli, $top);
+        $scores = $this->bi->scoresPorParticipante($userId, $participantes->pluck('id')->all());
+
+        $linhas = [];
+        $classificacoes = [];
+        foreach ($participantes as $p) {
+            $k = $this->movParticipante->kpis($p);
+            $imp = $this->movParticipante->impostos($p);
+            $classificacao = $scores[$p->id]['classificacao'] ?? null;
+            $classificacoes[] = $classificacao;
+
+            $linhas[] = [
+                $p->razao_social ?: '—',
+                (string) $p->documento,
+                $p->situacao_cadastral ?? '—',
+                $p->uf ?: '—',
+                $scores[$p->id]['score_total'] ?? '—',
+                $classificacao ? ($classificacao === 'inconclusivo' ? 'não conclusivo' : $classificacao) : 'nunca consultado',
+                (int) $k['total_notas'],
+                $this->brl((float) $k['valor_movimentado']),
+                (int) $k['entradas_qtd'],
+                $this->brl((float) $k['entradas_valor']),
+                (int) $k['saidas_qtd'],
+                $this->brl((float) $k['saidas_valor']),
+                ($k['periodo_inicio'] ?? '—').' a '.($k['periodo_fim'] ?? '—'),
+                $this->brl((float) $imp['icms']),
+                $this->brl((float) $imp['pis']),
+                $this->brl((float) $imp['cofins']),
+                (float) $imp['aliquota_icms_media'],
+            ];
+        }
+
+        return [
+            'titulo' => 'Dossiê dos participantes — top '.$top.' por volume',
+            'colunas' => $colunas,
+            'linhas' => $linhas,
+            'classificacoes' => $classificacoes,
+        ];
+    }
+
     private function datasetTopNotas(int $userId, ?string $ini, ?string $fim, ?int $cli): array
     {
         $colunas = ['Data', 'Chave', 'Participante', 'Tipo', 'Valor'];
@@ -292,6 +363,45 @@ class BiExportService
         ], array_slice($this->bi->getFornecedoresIrregulares($userId, $ini, $fim), 0, 20));
 
         return ['titulo' => 'Fornecedores irregulares', 'colunas' => $colunas, 'linhas' => $linhas];
+    }
+
+    /**
+     * Achata a seção 'contrapartes' (estrutura 'itens') em colunas+linhas
+     * tabulares — consumida pelo XLSX e pelo CSV. 'classificacoes' devolve o
+     * risco cru por linha (na mesma ordem) para a cor do badge no XLSX.
+     *
+     * @return array{colunas: array<int,string>, linhas: array<int,array<int,mixed>>, classificacoes: array<int,?string>}
+     */
+    public function contrapartesTabela(array $sec): array
+    {
+        $modoCliente = ($sec['modo'] ?? '') === 'cliente';
+
+        $colunas = array_values(array_filter([
+            $modoCliente ? 'Papel' : null,
+            'CNPJ/CPF', 'Razão social', 'Classificação', 'Score',
+            'Volume', 'Qtd notas',
+            $modoCliente ? null : 'Ticket médio',
+            'Principais CFOPs',
+        ]));
+
+        $linhas = [];
+        $classificacoes = [];
+        foreach ($sec['itens'] ?? [] as $it) {
+            $classificacoes[] = $it['classificacao'] ?? null;
+            $linhas[] = array_values(array_filter([
+                $modoCliente ? ($it['papel'] ?? '—') : null,
+                $it['cnpj'],
+                $it['razao'],
+                $it['classificacao'] ? ($it['classificacao'] === 'inconclusivo' ? 'não conclusivo' : $it['classificacao']) : 'nunca consultado',
+                $it['score_total'] ?? '—',
+                $it['volume_brl'],
+                $it['notas'],
+                $modoCliente ? null : ($it['ticket_brl'] ?? '—'),
+                count($it['cfops']) ? implode(' · ', $it['cfops']) : '—',
+            ], fn ($v) => $v !== null));
+        }
+
+        return ['colunas' => $colunas, 'linhas' => $linhas, 'classificacoes' => $classificacoes];
     }
 
     /**

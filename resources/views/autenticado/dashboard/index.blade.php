@@ -99,12 +99,6 @@
         </div>
 
         @if(($trialResumo['is_active'] ?? false) || ($trialResumo['is_expired'] ?? false))
-            <style>
-                .trial-banner { animation: trialIn .5s cubic-bezier(.2,.7,.2,1) both; }
-                @keyframes trialIn { from { opacity:0; transform: translateY(-8px); } to { opacity:1; transform:none; } }
-                .trial-banner__cta { transition: transform .15s ease, box-shadow .15s ease; }
-                .trial-banner__cta:hover { transform: translateY(-1px); box-shadow: 0 10px 22px -8px rgba(0,0,0,.4); }
-            </style>
             @php
                 $trialOn = $trialResumo['is_active'] ?? false;
                 $tIni = $trialResumo['started_at'] ?? null;
@@ -116,57 +110,37 @@
                 $tRem = (int) ($trialResumo['remaining'] ?? 0);
                 $tCredPct = $tGranted > 0 ? max(4, min(100, (int) round($tRem / $tGranted * 100))) : 0;
             @endphp
-            <div data-trial-banner class="trial-banner relative overflow-hidden rounded-xl mb-4 sm:mb-6 p-5 sm:p-6"
-                 style="{{ $trialOn
-                    ? 'background: radial-gradient(120% 140% at 100% 0%, #4f46e5 0%, #2563eb 45%, #1e3a8a 100%); box-shadow: 0 18px 40px -20px rgba(37,99,235,.65);'
-                    : 'background: radial-gradient(120% 140% at 100% 0%, #f59e0b 0%, #d97706 50%, #92400e 100%); box-shadow: 0 18px 40px -20px rgba(217,119,6,.55);' }} color:#fff;">
-
-                {{-- glow decorativo --}}
-                <div class="pointer-events-none absolute -top-16 -right-10 rounded-full" style="width:220px; height:220px; background:rgba(255,255,255,.14); filter:blur(8px);"></div>
-                <div class="pointer-events-none absolute -bottom-20 -left-8 rounded-full" style="width:180px; height:180px; background:rgba(255,255,255,.08); filter:blur(6px);"></div>
-
-                <div class="relative flex flex-col lg:flex-row lg:items-center gap-5">
-                    {{-- bloco principal --}}
-                    <div class="flex items-start gap-4 flex-1 min-w-0">
-                        <span class="inline-flex items-center justify-center rounded-xl shrink-0" style="width:48px; height:48px; background:rgba(255,255,255,.16); backdrop-filter:blur(4px);">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                        </span>
-                        <div class="min-w-0">
-                            <span class="inline-block text-[10px] font-bold uppercase tracking-[.14em] rounded-full px-2.5 py-1 mb-1.5" style="background:rgba(255,255,255,.18);">
-                                {{ $trialOn ? 'Período de teste' : 'Teste encerrado' }}
-                            </span>
-                            @if($trialOn)
-                                <p class="font-extrabold leading-none" style="font-size:30px;">{{ $tDiasRest }} <span style="font-size:15px; font-weight:600; opacity:.85;">dia(s) restantes</span></p>
-                                <p class="text-[13px] mt-1.5" style="color:rgba(255,255,255,.82);">Aproveite todos os recursos liberados · expira em {{ optional($tExp)->format('d/m/Y') }}</p>
-                            @else
-                                <p class="font-extrabold leading-tight" style="font-size:20px;">Seu período de teste terminou</p>
-                                <p class="text-[13px] mt-1" style="color:rgba(255,255,255,.85);">Terminou em {{ optional($tExp)->format('d/m/Y') }}. Compre créditos para seguir nas consultas pagas.</p>
-                            @endif
-
-                            {{-- barras de progresso (só no ativo) --}}
-                            @if($trialOn)
-                                <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 max-w-xl">
-                                    <div>
-                                        <div class="flex justify-between text-[10px] font-semibold uppercase tracking-wide mb-1" style="color:rgba(255,255,255,.75);"><span>Tempo</span><span>{{ $tDiasRest }}/{{ $tTotal }}d</span></div>
-                                        <div class="h-1.5 rounded-full overflow-hidden" style="background:rgba(255,255,255,.22);"><div class="h-full rounded-full" style="width:{{ $tPct }}%; background:#fff;"></div></div>
-                                    </div>
-                                    <div>
-                                        <div class="flex justify-between text-[10px] font-semibold uppercase tracking-wide mb-1" style="color:rgba(255,255,255,.75);"><span>Créditos</span><span>{{ $fmtN($tRem) }}/{{ $fmtN($tGranted) }}</span></div>
-                                        <div class="h-1.5 rounded-full overflow-hidden" style="background:rgba(255,255,255,.22);"><div class="h-full rounded-full" style="width:{{ $tCredPct }}%; background:#fff;"></div></div>
-                                    </div>
+            <div data-trial-banner class="bg-white rounded border border-gray-300 overflow-hidden mb-4 sm:mb-6">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
+                    <span class="inline-flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
+                        @unless($trialOn)<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color:#d97706;"></span>@endunless
+                        {{ $trialOn ? 'Período de teste' : 'Teste encerrado' }}
+                    </span>
+                    <a href="/app/planos" data-link class="text-[11px] font-semibold text-gray-700 hover:text-gray-900 whitespace-nowrap">
+                        {{ $trialOn ? 'Ver planos' : 'Comprar créditos' }}
+                    </a>
+                </div>
+                <div class="px-4 py-3">
+                    @if($trialOn)
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-x-8 gap-y-3">
+                            <div class="shrink-0">
+                                <p class="text-lg font-bold text-gray-900 leading-none">{{ $tDiasRest }} {{ $tDiasRest === 1 ? 'dia restante' : 'dias restantes' }}</p>
+                                <p class="text-[11px] text-gray-500 mt-1">Expira em {{ optional($tExp)->format('d/m/Y') }}</p>
+                            </div>
+                            <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 max-w-xl">
+                                <div>
+                                    <div class="flex justify-between text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1"><span>Tempo</span><span>{{ $tDiasRest }}/{{ $tTotal }}d</span></div>
+                                    <div class="rounded-full overflow-hidden" style="height:3px;background-color:#e5e7eb;"><div style="height:100%;width:{{ $tPct }}%;background-color:#1f2937;"></div></div>
                                 </div>
-                            @endif
+                                <div>
+                                    <div class="flex justify-between text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1"><span>Créditos</span><span>{{ $fmtN($tRem) }}/{{ $fmtN($tGranted) }}</span></div>
+                                    <div class="rounded-full overflow-hidden" style="height:3px;background-color:#e5e7eb;"><div style="height:100%;width:{{ $tCredPct }}%;background-color:#1f2937;"></div></div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-
-                    {{-- CTA --}}
-                    <div class="shrink-0">
-                        <a href="/app/planos" data-link class="trial-banner__cta inline-flex items-center gap-1.5 text-[13px] font-bold rounded-lg px-5 py-2.5 whitespace-nowrap"
-                           style="background:#fff; color:{{ $trialOn ? '#1e3a8a' : '#92400e' }};">
-                            {{ $trialOn ? 'Ver planos' : 'Comprar créditos' }}
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-                        </a>
-                    </div>
+                    @else
+                        <p class="text-sm text-gray-700">Seu período de teste terminou em {{ optional($tExp)->format('d/m/Y') }}. Compre créditos para seguir nas consultas pagas.</p>
+                    @endif
                 </div>
             </div>
         @endif
