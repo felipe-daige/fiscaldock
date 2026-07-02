@@ -1,7 +1,11 @@
 @php
     /** @var array $r */
     $fmt = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
-    $sevHex = ['critica' => '#dc2626', 'revisar' => '#d97706', 'ok' => '#047857'];
+    $sevHex = [
+        'critica' => \App\Support\Reports\ReportTheme::IRREGULAR,
+        'revisar' => \App\Support\Reports\ReportTheme::ALERTA,
+        'ok' => \App\Support\Reports\ReportTheme::OK,
+    ];
     $sevLabel = ['critica' => 'Crítica', 'revisar' => 'A revisar', 'ok' => 'Conforme'];
     $vSev = $r['resumo']['veredito']['severidade'] ?? 'ok';
 @endphp

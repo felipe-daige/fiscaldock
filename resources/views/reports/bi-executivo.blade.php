@@ -92,7 +92,6 @@
                     $itens = $sec['itens'];
                     $maxVol = collect($itens)->max('volume') ?: 0;
                     $temPapel = ($sec['modo'] ?? '') === 'cliente';
-                    $badgeHex = ['baixo' => '#16a34a', 'medio' => '#f59e0b', 'alto' => '#ea580c', 'critico' => '#dc2626'];
                 @endphp
                 <div class="secao">
                     <div class="secao-header">{{ $sec['titulo'] }}</div>
@@ -111,7 +110,7 @@
                             </thead>
                             <tbody>
                                 @foreach ($itens as $it)
-                                    @php $hex = $badgeHex[$it['classificacao']] ?? '#9ca3af'; @endphp
+                                    @php $hex = \App\Support\Reports\ReportTheme::riscoHex($it['classificacao']); @endphp
                                     <tr>
                                         @if ($temPapel)<td>{{ $it['papel'] }}</td>@endif
                                         <td class="mono">{{ $it['cnpj'] }}</td>

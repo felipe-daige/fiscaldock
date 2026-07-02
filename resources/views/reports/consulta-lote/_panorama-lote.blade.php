@@ -19,7 +19,12 @@
     @endforeach
 </div>
 
-@php($regRows = [['Regulares', (int) ($cnpjs['regular'] ?? 0), '#047857'], ['Com pendência', (int) ($cnpjs['pendencia'] ?? 0), '#dc2626'], ['Indeterminado', (int) ($cnpjs['indeterminado'] ?? 0), '#d97706'], ['Sem fontes de regularidade', (int) ($cnpjs['sem_info'] ?? 0), '#9ca3af']])
+@php($regRows = [
+    ['Regulares', (int) ($cnpjs['regular'] ?? 0), \App\Support\Reports\ReportTheme::OK],
+    ['Com pendência', (int) ($cnpjs['pendencia'] ?? 0), \App\Support\Reports\ReportTheme::IRREGULAR],
+    ['Indeterminado', (int) ($cnpjs['indeterminado'] ?? 0), \App\Support\Reports\ReportTheme::ALERTA],
+    ['Sem fontes de regularidade', (int) ($cnpjs['sem_info'] ?? 0), \App\Support\Reports\ReportTheme::NEUTRO],
+])
 @php($regBase = array_sum(array_map(fn ($r) => $r[1], $regRows)))
 <div class="panorama-bloco">
     <div class="list-title">Regularidade fiscal</div>

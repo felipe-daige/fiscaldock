@@ -2,10 +2,10 @@
 @php($cnpjs = $analise['cnpjs'] ?? [])
 @php($vereditoCols = [
     ['consultados', (int) ($resumo['total'] ?? 0), '#1f2937'],
-    ['regulares', (int) ($cnpjs['regular'] ?? 0), '#047857'],
-    ['com pendência', (int) ($cnpjs['pendencia'] ?? 0), '#dc2626'],
-    ['indeterminado', (int) ($cnpjs['indeterminado'] ?? 0), '#d97706'],
-    ['sem fontes', (int) ($cnpjs['sem_info'] ?? 0), '#9ca3af'],
+    ['regulares', (int) ($cnpjs['regular'] ?? 0), \App\Support\Reports\ReportTheme::OK],
+    ['com pendência', (int) ($cnpjs['pendencia'] ?? 0), \App\Support\Reports\ReportTheme::IRREGULAR],
+    ['indeterminado', (int) ($cnpjs['indeterminado'] ?? 0), \App\Support\Reports\ReportTheme::ALERTA],
+    ['sem fontes', (int) ($cnpjs['sem_info'] ?? 0), \App\Support\Reports\ReportTheme::NEUTRO],
 ])
 <div class="secao">
     <div class="secao-body" style="padding: 10px 12px;">
