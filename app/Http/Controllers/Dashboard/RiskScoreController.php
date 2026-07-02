@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Concerns\RespondeAjax;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
+use App\Models\ConsultaResultado;
 use App\Models\Participante;
 use App\Models\ParticipanteScore;
+use App\Services\Consultas\ResultadoDetalhePresenter;
 use App\Services\Reforma\CreditoRiscoReformaService;
 use App\Services\RiskScoreService;
 use Illuminate\Http\Request;
@@ -221,6 +223,48 @@ class RiskScoreController extends Controller
         ];
 
         return $this->render($request, 'show', $data);
+    }
+
+    /**
+     * Detalhe expansível da última consulta de um participante (certidões/blocos) — mesmo
+     * conteúdo do "Ver detalhes" da Consulta de CNPJ, carregado sob demanda (AJAX) na listagem
+     * do Score Fiscal. Reusa o partial autenticado.consulta.partials.detalhe-blocos.
+     */
+    public function detalheParticipante(Request $request, int $id)
+    {
+        if (! Auth::check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $participante = Participante::where('user_id', Auth::id())->whereKey($id)->firstOrFail();
+
+        $ultima = ConsultaResultado::where('participante_id', $participante->id)
+            ->where('status', ConsultaResultado::STATUS_SUCESSO)
+            ->orderByDesc('consultado_em')
+            ->first();
+
+        if (! $ultima) {
+            return response()->json(['html' => '<div class="text-xs text-gray-500 py-3">Sem consulta de certidões para este CNPJ. <a href="/app/consulta" data-link class="text-blue-600 hover:underline">Consultar agora</a>.</div>']);
+        }
+
+        // Todas as certidões canônicas → a que não retornou aparece como "não consultada"
+        // (mesmo critério do dossiê/relatório do lote).
+        $esperadas = ['cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'cndt', 'sintegra'];
+        $presenter = app(ResultadoDetalhePresenter::class);
+
+        $html = view('autenticado.consulta.partials.detalhe-blocos', [
+            'blocos' => $presenter->blocos($ultima, $esperadas),
+            'resumo' => $presenter->resumoTextual($ultima),
+            'certidoes' => $presenter->certidoes($ultima, $esperadas),
+            'cabecalho' => [
+                'razao' => $participante->razao_social,
+                'documento' => $participante->cnpj_formatado ?? $participante->documento,
+                'uf' => $participante->uf,
+                'situacao' => $participante->situacao_cadastral,
+            ],
+        ])->render();
+
+        return response()->json(['html' => $html]);
     }
 
     /**

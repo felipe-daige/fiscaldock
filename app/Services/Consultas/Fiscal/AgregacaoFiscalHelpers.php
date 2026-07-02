@@ -47,4 +47,11 @@ trait AgregacaoFiscalHelpers
     {
         return (int) config('consultas.panorama_fiscal.maximo', 30);
     }
+
+    /** Top CFOPs mostrados por contraparte (participante × empresa) no resumo fiscal.
+        (Restaurado 2026-07-01: definição perdida do trait, quebrava o PDF do lote.) */
+    protected function cfopsPorContraparteNum(): int
+    {
+        return (int) config('consultas.panorama_fiscal.cfops_contraparte', 5);
+    }
 }

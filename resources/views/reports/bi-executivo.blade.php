@@ -118,7 +118,7 @@
                                         <td>{{ $it['razao'] }}</td>
                                         <td class="center">
                                             @if ($it['classificacao'])
-                                                <span class="badge" style="background-color:{{ $hex }}">{{ $it['classificacao'] }}{{ $it['score_total'] !== null ? ' '.$it['score_total'] : '' }}</span>
+                                                <span class="badge" style="background-color:{{ $hex }}">{{ $it['classificacao'] === 'inconclusivo' ? 'não conclusivo' : $it['classificacao'].($it['score_total'] !== null ? ' '.$it['score_total'] : '') }}</span>
                                             @else
                                                 <span class="badge" style="background-color:#9ca3af">nunca consultado</span>
                                             @endif

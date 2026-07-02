@@ -119,6 +119,7 @@ class ParticipanteScore extends Model
             'medio' => 'Medio Risco',
             'alto' => 'Alto Risco',
             'critico' => 'Risco Critico',
+            'inconclusivo' => 'Risco Não Conclusivo',
             default => 'Nao Avaliado',
         };
     }

@@ -11,6 +11,7 @@
         'medio' => ['label' => 'MÉDIO', 'hex' => '#d97706'],
         'alto' => ['label' => 'ALTO', 'hex' => '#ea580c'],
         'critico' => ['label' => 'CRÍTICO', 'hex' => '#b91c1c'],
+        'inconclusivo' => ['label' => 'INCONCLUSIVO', 'hex' => '#9ca3af'],
     ];
     $fmtCnpj = function($doc) {
         $d = preg_replace('/\D/', '', (string) $doc);
@@ -75,28 +76,52 @@
                         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #d97706"></span><span class="text-gray-600">21–50 Médio</span></span>
                         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #ea580c"></span><span class="text-gray-600">51–80 Alto</span></span>
                         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #b91c1c"></span><span class="text-gray-600">81–100 Crítico</span></span>
+                        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #9ca3af"></span><span class="text-gray-600">Risco Não Conclusivo (cobertura insuficiente)</span></span>
                     </div>
                 </div>
 
                 <div>
-                    <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">O que entra na nota</p>
-                    <p class="text-xs text-gray-600 leading-relaxed">
-                        Situação cadastral, CND Federal, CND Estadual, FGTS, CNDT (trabalhista) e sanções (CGU/CNJ).
-                        A nota é a <strong>média ponderada só das categorias efetivamente consultadas</strong> — o que não
-                        foi consultado, ou veio indeterminado, não entra no cálculo.
+                    <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">O que entra na nota e o peso de cada fonte</p>
+                    @php
+                        $pesosScore = app(\App\Services\RiskScoreService::class)->getPesos();
+                        $labelsScore = [
+                            'cadastral' => 'Situação cadastral (Receita)',
+                            'cnd_federal' => 'CND Federal (Receita/PGFN)',
+                            'cnd_estadual' => 'CND Estadual (SEFAZ)',
+                            'fgts' => 'FGTS — CRF (Caixa)',
+                            'trabalhista' => 'CNDT (débitos trabalhistas)',
+                        ];
+                    @endphp
+                    <table class="w-full text-xs">
+                        <tbody>
+                            @foreach($pesosScore as $cat => $peso)
+                                <tr class="border-b border-gray-100">
+                                    <td class="py-1.5 text-gray-600">{{ $labelsScore[$cat] ?? $cat }}</td>
+                                    <td class="py-1.5 text-right font-mono font-semibold text-gray-800">{{ round($peso * 100) }}%</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                    <p class="text-[11px] text-gray-500 leading-relaxed mt-2">
+                        A nota é a <strong>média ponderada só das fontes efetivamente consultadas</strong>: os pesos acima são
+                        <strong>renormalizados</strong> sobre o que foi consultado — o que não foi checado (ou veio indeterminado)
+                        sai do cálculo. Cada fonte pontua 0 (regular) a 100 (irregular). Sanções (CGU/CNJ), ESG e protestos
+                        <strong>não entram no score hoje</strong> (sem fonte ativa nos planos).
                     </p>
                 </div>
 
                 <div class="rounded border border-amber-200 bg-amber-50 px-3 py-2">
                     <p class="text-[11px] text-amber-800 leading-relaxed">
-                        <strong>Importante:</strong> a profundidade do score depende do plano da consulta. Uma consulta
-                        apenas cadastral (Gratuito) avalia só a situação cadastral — pode dar <strong>0/Baixo</strong> por
-                        confirmar que a empresa está ativa, sem ter checado certidões. Para um score completo, use
-                        Licitação, Compliance ou Due Diligence.
+                        <strong>Cobertura mínima — por que aparece "Risco Não Conclusivo":</strong> o score só é conclusivo
+                        quando a <strong>CND Federal</strong> + pelo menos <strong>2 certidões</strong> de regularidade
+                        (federal/estadual/FGTS/CNDT) foram consultadas. Uma consulta só cadastral (ex.: Gratuito) confirma
+                        que a empresa está ativa, mas <strong>não mede regularidade fiscal</strong> — então aparece como
+                        <strong>Risco Não Conclusivo</strong> (cinza), e <strong>não "Baixo"</strong>, pra evitar falso conforto.
+                        Para um score real, use um plano que consulta as certidões (Licitação, Compliance ou Due Diligence).
                     </p>
                 </div>
 
-                <p class="text-[11px] text-gray-400">ESG (trabalho escravo / IBAMA) e protestos em cartório entrarão no score em breve.</p>
+                <p class="text-[11px] text-gray-400">ESG (trabalho escravo / IBAMA), sanções (CGU/CNJ) e protestos em cartório entrarão no score quando a fonte estiver ativa.</p>
             </div>
         </details>
 
@@ -203,6 +228,7 @@
                         <option value="medio" {{ ($filtroClassificacao ?? '') === 'medio' ? 'selected' : '' }}>Médio Risco</option>
                         <option value="alto" {{ ($filtroClassificacao ?? '') === 'alto' ? 'selected' : '' }}>Alto Risco</option>
                         <option value="critico" {{ ($filtroClassificacao ?? '') === 'critico' ? 'selected' : '' }}>Crítico</option>
+                        <option value="inconclusivo" {{ ($filtroClassificacao ?? '') === 'inconclusivo' ? 'selected' : '' }}>Risco Não Conclusivo</option>
                     </select>
                 </div>
                 <div class="w-full sm:flex-1 sm:min-w-[240px]">
@@ -355,14 +381,24 @@
                                 @endif
                             </td>
                             <td class="px-3 py-3 whitespace-nowrap text-right text-xs">
+                                @if($sc->participante_id)
+                                    <button type="button" data-detalhe-participante="{{ $sc->participante_id }}" data-detalhe-target="detalhe-row-d-{{ $sc->participante_id }}" class="text-blue-600 hover:underline mr-3">Ver detalhes</button>
+                                @endif
                                 <x-acoes-menu>
                                     @if($sc->participante_id)
-                                        <x-acoes-item href="/app/score-fiscal/participante/{{ $sc->participante_id }}" data-link>Detalhes</x-acoes-item>
+                                        <x-acoes-item href="/app/score-fiscal/participante/{{ $sc->participante_id }}" data-link>Página completa</x-acoes-item>
                                     @endif
                                     <x-acoes-item href="/app/consulta" data-link>Reconsultar</x-acoes-item>
                                 </x-acoes-menu>
                             </td>
                         </tr>
+                        @if($sc->participante_id)
+                            <tr id="detalhe-row-d-{{ $sc->participante_id }}" class="hidden bg-gray-50">
+                                <td colspan="8" class="px-3 py-0">
+                                    <div class="detalhe-content py-3"></div>
+                                </td>
+                            </tr>
+                        @endif
                         @endforeach
                     </tbody>
                 </table>
@@ -406,14 +442,22 @@
                             <span class="text-[11px] text-gray-400">· {{ $sc->ultima_consulta_em->format('d/m/Y') }}</span>
                         @endif
                     </div>
-                    <div class="mt-2 text-xs">
+                    <div class="mt-2 text-xs flex items-center gap-3">
+                        @if($sc->participante_id)
+                            <button type="button" data-detalhe-participante="{{ $sc->participante_id }}" data-detalhe-target="detalhe-row-m-{{ $sc->participante_id }}" class="text-blue-600 hover:underline">Ver detalhes</button>
+                        @endif
                         <x-acoes-menu align="left">
                             @if($sc->participante_id)
-                                <x-acoes-item href="/app/score-fiscal/participante/{{ $sc->participante_id }}" data-link>Detalhes</x-acoes-item>
+                                <x-acoes-item href="/app/score-fiscal/participante/{{ $sc->participante_id }}" data-link>Página completa</x-acoes-item>
                             @endif
                             <x-acoes-item href="/app/consulta" data-link>Reconsultar</x-acoes-item>
                         </x-acoes-menu>
                     </div>
+                    @if($sc->participante_id)
+                        <div id="detalhe-row-m-{{ $sc->participante_id }}" class="hidden mt-2">
+                            <div class="detalhe-content"></div>
+                        </div>
+                    @endif
                 </div>
                 @endforeach
             </div>
@@ -519,4 +563,4 @@
     </div>
 </div>
 
-<script src="{{ asset('js/risk-score.js') }}"></script>
+<script src="{{ asset('js/risk-score.js') }}?v={{ filemtime(public_path('js/risk-score.js')) }}"></script>

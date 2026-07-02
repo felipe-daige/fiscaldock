@@ -51,8 +51,11 @@
 <body>
     @include('reports.partials._header')
     @include('reports.partials._footer')
+    {{-- Marca d'água: removida em 418db6f (chrome executivo), mas o include foi re-adicionado
+         depois sem restaurar o arquivo → guarda com view()->exists p/ não quebrar todo PDF de
+         relatório quando o partial não existe. Renderiza de volta se o arquivo for restaurado. --}}
     @hasSection('sem_marca_dagua')
-    @else
+    @elseif(view()->exists('reports.partials._marca-dagua'))
         @include('reports.partials._marca-dagua')
     @endif
     <main class="pdf-conteudo">

@@ -100,7 +100,7 @@ class ConsultaResultado extends Model
         $service = app(RiskScoreService::class);
         $scores = $service->calcularScores($this->resultado_dados);
         $scoreTotal = $service->calcularScoreTotal($scores);
-        $classificacao = $service->classificar($scoreTotal);
+        $classificacao = $service->classificarComCobertura($scores);
 
         return [
             'scores' => $scores,

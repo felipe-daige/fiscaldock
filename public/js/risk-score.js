@@ -12,6 +12,42 @@
     function init() {
         setupFilters();
         setupConsultarButtons();
+        setupDetalheButtons();
+    }
+
+    // "Ver detalhes" inline por CNPJ (mesmo conteúdo da Consulta de CNPJ), carregado sob demanda.
+    function setupDetalheButtons() {
+        document.querySelectorAll('[data-detalhe-participante]').forEach(btn => {
+            btn.addEventListener('click', () => toggleDetalhe(btn));
+        });
+    }
+
+    async function toggleDetalhe(btn) {
+        const pid = btn.dataset.detalheParticipante;
+        const target = document.getElementById(btn.dataset.detalheTarget);
+        if (!target) return;
+
+        if (!target.classList.contains('hidden')) {
+            target.classList.add('hidden');
+            btn.textContent = 'Ver detalhes';
+            return;
+        }
+        target.classList.remove('hidden');
+        btn.textContent = 'Ocultar detalhes';
+
+        const content = target.querySelector('.detalhe-content');
+        if (!content || content.dataset.loaded) return;
+        content.innerHTML = '<div class="text-xs text-gray-500 py-3">Carregando…</div>';
+        try {
+            const resp = await fetch(`/app/score-fiscal/participante/${pid}/detalhe`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            });
+            const data = await resp.json();
+            content.innerHTML = data.html || '<div class="text-xs text-gray-500 py-3">Sem detalhe.</div>';
+            content.dataset.loaded = '1';
+        } catch (err) {
+            content.innerHTML = '<div class="text-xs text-red-600 py-3">Erro ao carregar detalhe.</div>';
+        }
     }
 
     // Configura filtros
