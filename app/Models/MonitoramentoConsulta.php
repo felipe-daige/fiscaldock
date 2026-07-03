@@ -17,6 +17,7 @@ class MonitoramentoConsulta extends Model
         'user_id',
         'participante_id',
         'cliente_id',
+        'grupo_id',
         'plano_id',
         'assinatura_id',
         'parent_consulta_id',
@@ -79,6 +80,14 @@ class MonitoramentoConsulta extends Model
     public function cliente(): BelongsTo
     {
         return $this->belongsTo(Cliente::class);
+    }
+
+    /**
+     * Grupo consultado (ciclo de assinatura de grupo).
+     */
+    public function grupo(): BelongsTo
+    {
+        return $this->belongsTo(ParticipanteGrupo::class, 'grupo_id');
     }
 
     /**

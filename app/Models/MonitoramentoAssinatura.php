@@ -17,6 +17,7 @@ class MonitoramentoAssinatura extends Model
         'user_id',
         'participante_id',
         'cliente_id',
+        'grupo_id',
         'plano_id',
         'status',
         'frequencia_dias',
@@ -68,11 +69,50 @@ class MonitoramentoAssinatura extends Model
     }
 
     /**
-     * Tipo do alvo monitorado: 'cliente' ou 'participante'.
+     * Grupo monitorado (3º tipo de alvo — dinâmico: cada ciclo consulta os membros atuais).
+     */
+    public function grupo(): BelongsTo
+    {
+        return $this->belongsTo(ParticipanteGrupo::class, 'grupo_id');
+    }
+
+    /**
+     * Tipo do alvo monitorado: 'grupo', 'cliente' ou 'participante'.
      */
     public function alvoTipo(): string
     {
+        if ($this->grupo_id) {
+            return 'grupo';
+        }
+
         return $this->cliente_id ? 'cliente' : 'participante';
+    }
+
+    /**
+     * Membros ATUAIS do grupo monitorado (dinâmico), só CNPJ. Vazia quando o alvo não é grupo.
+     */
+    public function membrosDoGrupo(): \Illuminate\Support\Collection
+    {
+        if (! $this->grupo_id || ! $this->grupo) {
+            return collect();
+        }
+
+        return $this->grupo->participantes()->somenteCnpj()->get();
+    }
+
+    /**
+     * Custo de UM ciclo desta assinatura. Grupo = N membros atuais × custo do plano — é este
+     * valor que o freio §6.2 e a checagem de saldo avaliam antes do disparo.
+     */
+    public function custoCiclo(): int
+    {
+        $unit = (int) ($this->plano->custo_creditos ?? 0);
+
+        if ($this->grupo_id) {
+            return $this->membrosDoGrupo()->count() * $unit;
+        }
+
+        return $unit;
     }
 
     /**

@@ -16,6 +16,9 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('participante_id')->nullable()->constrained('participantes')->onDelete('cascade');
             $table->foreignId('cliente_id')->nullable()->constrained('clientes')->onDelete('cascade');
+            // 3º alvo possível: GRUPO (monitoramento dinâmico — cada ciclo consulta os membros
+            // atuais). Excluir o grupo cancela a assinatura (cascade de negócio).
+            $table->foreignId('grupo_id')->nullable()->constrained('participantes_grupos')->onDelete('cascade');
             $table->foreignId('plano_id')->constrained('monitoramento_planos');
             $table->enum('status', ['ativo', 'pausado', 'cancelado'])->default('ativo');
             $table->integer('frequencia_dias')->default(30); // 30 = mensal
@@ -25,6 +28,7 @@ return new class extends Migration
 
             $table->unique(['participante_id', 'plano_id']); // Um participante só pode ter uma assinatura por plano
             $table->unique(['cliente_id', 'plano_id']);       // Um cliente só pode ter uma assinatura por plano
+            $table->unique(['grupo_id', 'plano_id']);         // Um grupo só pode ter uma assinatura por plano
         });
 
         if (! Schema::hasTable('account_subscriptions')) {

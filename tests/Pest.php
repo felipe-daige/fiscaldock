@@ -39,6 +39,9 @@ pest()->extend(Tests\TestCase::class)
 pest()->extend(Tests\TestCase::class)
     ->in('Unit/Clientes');
 
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit/Monitoramento');
+
 /*
 |--------------------------------------------------------------------------
 | Expectations

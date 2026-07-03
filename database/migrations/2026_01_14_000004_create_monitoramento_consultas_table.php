@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('participante_id')->nullable()->constrained('participantes')->onDelete('cascade');
             $table->foreignId('cliente_id')->nullable()->constrained('clientes')->onDelete('cascade');
+            // Ciclo de assinatura de GRUPO registra o grupo consultado (membros ficam no lote).
+            $table->foreignId('grupo_id')->nullable()->constrained('participantes_grupos')->onDelete('cascade');
             $table->foreignId('plano_id')->constrained('monitoramento_planos');
             $table->foreignId('assinatura_id')->nullable()->constrained('monitoramento_assinaturas')->onDelete('set null');
             $table->foreignId('parent_consulta_id')->nullable()->constrained('monitoramento_consultas')->onDelete('set null');
