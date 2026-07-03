@@ -43,6 +43,20 @@ class ResultadoDetalhePresenter
         'sintegra' => 'SINT',
     ];
 
+    // Órgão oficial dono de cada fonte — nomeado na mensagem de falha p/ deixar claro que a
+    // indisponibilidade é na ORIGEM (governo/Caixa/etc.), não no FiscalDock.
+    private const ORGAO = [
+        'cnd_federal' => 'A Receita Federal/PGFN',
+        'cnd_estadual' => 'A Secretaria da Fazenda Estadual (SEFAZ)',
+        'cnd_municipal' => 'A Prefeitura',
+        'cndt' => 'O Tribunal Superior do Trabalho (TST)',
+        'crf_fgts' => 'A Caixa Econômica Federal',
+        'sintegra' => 'O SINTEGRA (SEFAZ)',
+        'cgu_cnc' => 'A Controladoria-Geral da União (CGU)',
+        'cnj_improbidade' => 'O Conselho Nacional de Justiça (CNJ)',
+        'protestos' => 'O serviço de protestos',
+    ];
+
     /**
      * @param  array<int, string>  $esperadas  chaves de fonte que o plano do lote inclui.
      *                                         Quando informado, certidões pedidas mas ausentes
@@ -118,7 +132,7 @@ class ResultadoDetalhePresenter
                     continue; // fora do plano e ausente → não mostra
                 }
 
-                $erro = $this->erroCert($errosFonte[$chave] ?? null);
+                $erro = $this->erroCert($errosFonte[$chave] ?? null, $chave);
                 $strip[] = [
                     'chave' => $chave,
                     'sigla' => $sigla,
@@ -181,21 +195,45 @@ class ResultadoDetalhePresenter
      *
      * @return array{estado: string, label: string, hex: string, descricao: string}
      */
-    private function erroCert(string|array|null $origem): array
+    private function erroCert(string|array|null $origem, ?string $chave = null): array
     {
         // _fontes_erro migrou pra objeto {origem, codigo, status, tentativas} (feature de retry);
         // aceita tanto o objeto quanto a string legada.
+        $codigo = is_array($origem) ? (int) ($origem['codigo'] ?? 0) : 0;
+        $status = is_array($origem) ? (string) ($origem['status'] ?? '') : '';
         $origem = is_array($origem) ? ($origem['origem'] ?? null) : $origem;
-        $interno = $origem === 'interno';
+
+        if ($origem === 'interno') {
+            return [
+                'estado' => 'erro_interno',
+                'label' => 'Erro interno',
+                'hex' => CertidaoBadge::HEX_ERRO_INTERNO,
+                'descricao' => 'Erro interno no processamento desta consulta.',
+            ];
+        }
+
+        // 615 (e demais códigos de retry da InfoSimples) = o site do órgão oficial está fora do ar.
+        // Nomeia o órgão dono da fonte e deixa claro que a indisponibilidade é NA ORIGEM (governo/
+        // Caixa/etc.), não no FiscalDock. Mantém estado/hex de falha de integração p/ o rollup do lote.
+        if ($status === 'retry' || $codigo === 615) {
+            $orgao = self::ORGAO[$chave] ?? 'O órgão oficial responsável';
+
+            return [
+                'estado' => 'erro_integracao',
+                'label' => 'Órgão fora do ar',
+                'hex' => CertidaoBadge::HEX_FALHOU,
+                'descricao' => $orgao.' está fora do ar no momento — a indisponibilidade é no '
+                    .'sistema do próprio órgão, não no FiscalDock. Já tentamos algumas vezes '
+                    .'automaticamente sem retorno. Refaça a consulta mais tarde; se o problema '
+                    .'persistir, entre em contato com o suporte.',
+            ];
+        }
 
         return [
-            'estado' => $interno ? 'erro_interno' : 'erro_integracao',
-            'label' => $interno ? 'Erro interno' : 'Falha na integração',
-            'hex' => $interno ? CertidaoBadge::HEX_ERRO_INTERNO : CertidaoBadge::HEX_FALHOU,
-            'descricao' => $interno
-                ? 'Erro interno no processamento desta consulta.'
-                : 'A fonte oficial não respondeu no momento da consulta (instabilidade temporária do órgão). '
-                    .'Nada foi cobrado por esta fonte. Quando elegível, o botão "Reconsultar fontes com falha" refaz só ela, com desconto.',
+            'estado' => 'erro_integracao',
+            'label' => 'Erro com o site de consultas do provedor',
+            'hex' => CertidaoBadge::HEX_FALHOU,
+            'descricao' => 'O site de consultas oficial está instável no momento. Refaça a consulta.',
         ];
     }
 
@@ -221,7 +259,7 @@ class ResultadoDetalhePresenter
 
     private function blocoFalhou(string $chave, string|array|null $origem = null): array
     {
-        $erro = $this->erroCert($origem);
+        $erro = $this->erroCert($origem, $chave);
 
         return $this->bloco(
             $chave,
@@ -234,7 +272,7 @@ class ResultadoDetalhePresenter
     }
 
     /** Buckets canônicos por cor do badge (usados na análise agregada e no rollup por CNPJ). */
-    private const RANK = ['atencao' => 3, 'indeterminado' => 2, 'regular' => 1, 'neutro' => 0];
+    private const RANK = ['atencao' => 3, 'indeterminado' => 2, 'regular' => 1, 'neutro' => 0, 'falha' => 0];
 
     /**
      * Resumo escrito (1 parágrafo) da situação de UM participante — leitura rápida do que a
@@ -364,6 +402,10 @@ class ResultadoDetalhePresenter
 
         $fonteAgg = [];
         $cnpjs = ['regular' => 0, 'pendencia' => 0, 'indeterminado' => 0, 'sem_info' => 0];
+        // Falhas de integração (retry/fatal/erro interno) são contadas por FONTE, não por CNPJ:
+        // não dizem nada sobre regularidade (consulta nem rodou), mas precisam aparecer no gráfico
+        // distintas de "não consultado". O rollup por CNPJ (regular/pendência/...) ignora falha.
+        $falhasFontes = 0;
 
         foreach ($rows as $row) {
             $blocos = $row['detalhe_blocos'] ?? [];
@@ -381,11 +423,15 @@ class ResultadoDetalhePresenter
                     $fonteAgg[$chave] = [
                         'chave' => $chave,
                         'titulo' => $b['titulo'] ?? $this->nomeFonte($chave),
-                        'regular' => 0, 'atencao' => 0, 'indeterminado' => 0, 'neutro' => 0, 'total' => 0,
+                        'regular' => 0, 'atencao' => 0, 'indeterminado' => 0, 'falha' => 0, 'neutro' => 0, 'total' => 0,
                     ];
                 }
                 $fonteAgg[$chave][$bucket]++;
                 $fonteAgg[$chave]['total']++;
+
+                if ($bucket === 'falha') {
+                    $falhasFontes++;
+                }
 
                 $piorRank = max($piorRank, self::RANK[$bucket]);
             }
@@ -410,11 +456,12 @@ class ResultadoDetalhePresenter
             'total' => $total,
             'por_fonte' => $porFonte,
             'cnpjs' => $cnpjs,
-            'texto' => $this->textoAnalise($total, $cnpjs),
+            'falhas' => $falhasFontes,
+            'texto' => $this->textoAnalise($total, $cnpjs, $falhasFontes),
         ];
     }
 
-    private function textoAnalise(int $total, array $cnpjs): string
+    private function textoAnalise(int $total, array $cnpjs, int $falhas = 0): string
     {
         if ($total === 0) {
             return 'Nenhum CNPJ consultado neste lote.';
@@ -437,7 +484,11 @@ class ResultadoDetalhePresenter
 
         $detalhe = $partes ? ': '.$this->juntar($partes).'.' : '.';
 
-        return "{$total} {$plural}{$detalhe}";
+        $sufixoFalha = $falhas > 0
+            ? ' '.$falhas.' '.($falhas > 1 ? 'consultas falharam' : 'consulta falhou').' por instabilidade e podem ser reconsultadas.'
+            : '';
+
+        return "{$total} {$plural}{$detalhe}{$sufixoFalha}";
     }
 
     private function juntar(array $partes): string
@@ -456,6 +507,7 @@ class ResultadoDetalhePresenter
             CertidaoBadge::HEX_REGULAR => 'regular',
             CertidaoBadge::HEX_IRREGULAR => 'atencao',
             CertidaoBadge::HEX_INDETERMINADO => 'indeterminado',
+            CertidaoBadge::HEX_FALHOU, CertidaoBadge::HEX_ERRO_INTERNO => 'falha',
             default => 'neutro',
         };
     }

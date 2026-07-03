@@ -11,14 +11,14 @@ use App\Services\Consultas\Persistencia\PersistenciaCnpj;
 use App\Services\CreditService;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Reconsulta de fontes com falha transitória (classe `retry`, ex. código 600 da InfoSimples).
  *
  * A fonte que falhou já foi estornada no fechamento do lote (ver ResultadoFonte::ehFalhaEstornavel),
- * então a reconsulta cobra apenas um percentual do custo da fonte (desconto), válido um número
- * limitado de vezes por fonte. Só `status='retry'` é elegível — `fatal`/`interno` não.
+ * então a reconsulta cobra o preço do PLANO com desconto, por CNPJ afetado. Retry é ilimitado
+ * (re-falha total = estorno → líquido zero). Elegíveis: `retry` e `erro_participante` —
+ * `fatal`/`interno` não.
  */
 class RetryConsultaService
 {
@@ -29,20 +29,25 @@ class RetryConsultaService
     ) {}
 
     /**
-     * Varre os resultados do lote e separa as fontes em falha entre elegíveis (retry, dentro do
-     * limite de tentativas) e inelegíveis (fatal / interno / esgotado), com preço já calculado.
+     * Varre os resultados do lote e separa as fontes em falha entre elegíveis (retry) e
+     * inelegíveis (fatal / interno), com o preço por CNPJ (plano × desconto) já calculado.
      *
      * @return array{
      *   elegiveis: array<int, array<string, mixed>>,
      *   inelegiveis: array<int, array<string, mixed>>,
+     *   motivos: array<string, array<string, mixed>>,
+     *   alvos: array<int, array<string, mixed>>,
+     *   persistentes: array<int, array<string, mixed>>,
+     *   suporte: ?array{contexto:string, mensagem:string},
+     *   desconto_pct_efetivo: int,
      *   total_preco_creditos: int
      * }
      */
     public function pendentesRetry(ConsultaLote $lote): array
     {
-        $maxPorFonte = (int) config('consultas.retry.max_por_fonte', 1);
         $elegiveis = [];
         $inelegiveis = [];
+        $motivos = [];
 
         $rows = ConsultaResultado::where('consulta_lote_id', $lote->id)
             ->with(['participante', 'cliente'])
@@ -69,22 +74,28 @@ class RetryConsultaService
                     'fonte' => $chave,
                     'titulo' => $this->titulo($chave),
                     'codigo' => $e['codigo'],
+                    'tentativas' => (int) $e['tentativas'],
                     'custo_creditos' => $custo,
                 ];
 
+                // Retry ILIMITADO: falhas `retry` (instabilidade) e `erro_participante` (fonte
+                // recusou os dados do CNPJ, ex. 620) seguem elegíveis independente de quantas
+                // vezes já foram reconsultadas — o botão coexiste com o "Comunicar com o suporte".
+                // Só `fatal` (problema da NOSSA conta/infra no provedor) e `interno` ficam fora.
                 $elegivel = $e['origem'] === 'integracao'
-                    && $e['status'] === 'retry'
-                    && (int) $e['tentativas'] < $maxPorFonte
+                    && in_array($e['status'], ['retry', 'erro_participante'], true)
                     && $fonte !== null;
 
                 if ($elegivel) {
                     $base['preco_creditos'] = $this->precoPorFonte($custo);
+                    $info = $this->motivoDe((int) $e['codigo']);
+                    $base['motivo'] = $info['motivo'];
+                    $motivos[$info['motivo']] ??= array_diff_key($info, ['motivo' => null]);
                     $elegiveis[] = $base;
                 } else {
                     $base['motivo'] = match (true) {
                         $e['status'] === 'fatal' => 'fatal',
                         $e['origem'] === 'interno' => 'interno',
-                        (int) $e['tentativas'] >= $maxPorFonte => 'esgotado',
                         default => 'indisponivel',
                     };
                     $inelegiveis[] = $base;
@@ -92,10 +103,56 @@ class RetryConsultaService
             }
         }
 
+        // Cobrança da reconsulta = preço do PLANO com desconto, por CNPJ afetado (≥1 fonte
+        // elegível). Não é soma por fonte. O backend reconsulta só as fontes com erro.
+        $precoPlano = $this->precoPlanoRetry($lote);
+        // Desconto efetivo exibido = preço real cobrado vs custo do plano. Pode diferir do
+        // desconto nominal (config) porque `precoPlanoRetry` arredonda p/ inteiro (ledger integer).
+        $custoPlano = (int) ($lote->plano?->custo_creditos ?? 0);
+        $descontoEfetivoPct = $custoPlano > 0
+            ? (int) round((1 - $precoPlano / $custoPlano) * 100)
+            : (int) config('consultas.retry.desconto_pct', 50);
+        $alvos = [];
+        foreach ($elegiveis as $e) {
+            $k = $e['alvo_tipo'].':'.$e['alvo_id'];
+            $alvos[$k] ??= [
+                'alvo_tipo' => $e['alvo_tipo'],
+                'alvo_id' => $e['alvo_id'],
+                'cnpj' => $e['cnpj'],
+                'razao' => $e['razao'],
+                'fontes' => [],
+                'preco_creditos' => $precoPlano,
+            ];
+            $alvos[$k]['fontes'][] = $e['titulo'];
+        }
+        $alvos = array_values($alvos);
+
+        // Suporte: fontes JÁ reconsultadas ≥1× e que ainda falham (tentativas≥1) → oferece
+        // "Comunicar com o suporte" COEXISTINDO com o Reconsultar (que segue disponível, ilimitado).
+        $persistentes = array_values(array_filter(
+            array_merge($elegiveis, $inelegiveis),
+            fn ($x) => ($x['tentativas'] ?? 0) >= 1,
+        ));
+        $suporte = null;
+        if ($persistentes) {
+            $fontes = array_values(array_unique(array_map(fn ($i) => $i['titulo'], $persistentes)));
+            $codigos = array_values(array_unique(array_filter(array_map(fn ($i) => (string) $i['codigo'], $persistentes))));
+            $cnpjsAfetados = count(array_unique(array_map(fn ($i) => $i['alvo_tipo'].':'.$i['alvo_id'], $persistentes)));
+            $suporte = [
+                'contexto' => \Illuminate\Support\Str::limit("Lote #{$lote->id} · ".implode(', ', $fontes).' · '.$cnpjsAfetados.' CNPJ(s)', 120, ''),
+                'mensagem' => \Illuminate\Support\Str::limit('Fonte(s) sem resultado após a reconsulta (código InfoSimples '.implode('/', $codigos).'): '.implode(', ', $fontes).'. Os CNPJs continuam sem certidão. Podem verificar?', 500, ''),
+            ];
+        }
+
         return [
             'elegiveis' => $elegiveis,
             'inelegiveis' => $inelegiveis,
-            'total_preco_creditos' => array_sum(array_column($elegiveis, 'preco_creditos')),
+            'motivos' => $motivos,
+            'alvos' => $alvos,
+            'persistentes' => $persistentes,
+            'suporte' => $suporte,
+            'desconto_pct_efetivo' => $descontoEfetivoPct,
+            'total_preco_creditos' => array_sum(array_column($alvos, 'preco_creditos')),
         ];
     }
 
@@ -114,14 +171,14 @@ class RetryConsultaService
     }
 
     /**
-     * Cobra o retry (50% off) das fontes selecionadas e re-despacha o job escopado a elas, no
-     * MESMO lote. Valida elegibilidade no backend (nunca confia no frontend). O fechamento
-     * (estorno parcial se re-falhar) é feito pelo FecharRetryService no `then` do batch.
+     * Cobra (plano × desconto) por CNPJ afetado e re-despacha a reconsulta SÓ das fontes que
+     * falharam de cada CNPJ. Backend-autoritativo: não recebe seleção do front — recalcula os
+     * CNPJs/fontes elegíveis. O settlement (estorno se o CNPJ não obtiver nenhum sucesso) é feito
+     * pelo FecharRetryService no `finally` do batch.
      *
-     * @param  array<int, array{alvo_tipo:string, alvo_id:int, fonte:string}>  $selecao
      * @return array{creditos:int}
      */
-    public function executar(ConsultaLote $lote, array $selecao): array
+    public function executar(ConsultaLote $lote): array
     {
         abort_unless(
             ConsultaLote::normalizeStatus($lote->status) === ConsultaLote::STATUS_FINALIZADO,
@@ -130,56 +187,63 @@ class RetryConsultaService
         );
 
         $pend = $this->pendentesRetry($lote);
-        $indexElegivel = collect($pend['elegiveis'])
-            ->keyBy(fn ($e) => $e['alvo_tipo'].':'.$e['alvo_id'].':'.$e['fonte']);
+        abort_if(empty($pend['alvos']), 422, 'Nenhum CNPJ elegível para reconsulta.');
 
-        $aplicar = [];
-        $custoTotal = 0;
-        foreach ($selecao as $s) {
-            $k = $s['alvo_tipo'].':'.$s['alvo_id'].':'.$s['fonte'];
-            $e = $indexElegivel->get($k);
-            if (! $e) {
-                throw ValidationException::withMessages([
-                    'selecao' => "Fonte não elegível para reconsulta: {$s['fonte']}.",
-                ]);
-            }
-            $aplicar[] = $e;
-            $custoTotal += (int) $e['preco_creditos'];
-        }
-        abort_if(empty($aplicar), 422, 'Nenhuma fonte elegível selecionada.');
-
+        $custoTotal = (int) $pend['total_preco_creditos'];
         abort_unless($this->credits->hasEnough($lote->user, $custoTotal), 402, 'Saldo insuficiente para a reconsulta.');
         $this->credits->deduct($lote->user, $custoTotal, 'consulta_retry', "Reconsulta lote #{$lote->id}", $lote);
 
-        // Agrupa por alvo: incrementa tentativas (trava 1×) + grava envelope de cobrança + monta jobs.
-        $porAlvo = [];
-        foreach ($aplicar as $e) {
-            $porAlvo[$e['alvo_tipo'].':'.$e['alvo_id']][] = $e;
-        }
+        // Tela de processamento: vira o lote p/ `processando` com tab_id novo (strip limpo). A view
+        // já renderiza o card de progresso + SSE a partir do status; os jobs escrevem em
+        // progresso:{user}:{tab}. SÓ após validações + deduct (senão o lote ficaria preso sem job).
+        // Tudo daqui até o dispatch num try: se o batch não for despachado (falha de fila/DB), o
+        // `finally` nunca registra → reverte o flip e estorna o débito p/ o lote não ficar preso.
+        try {
+            $lote->tab_id = (string) \Illuminate\Support\Str::uuid();
+            $lote->status = ConsultaLote::STATUS_PROCESSANDO;
+            $lote->save();
 
-        $jobs = [];
-        foreach ($porAlvo as $alvoKey => $itens) {
-            [$tipo, $id] = explode(':', $alvoKey);
-            $id = (int) $id;
-            $envelope = [];
-            $fontes = [];
-            foreach ($itens as $e) {
-                $this->persistencia->incrementarTentativaFonte($lote->id, $tipo, $id, $e['fonte']);
-                $envelope[$e['fonte']] = (int) $e['preco_creditos'];
-                $fontes[] = $e['fonte'];
+            // Fontes elegíveis (chaves) por alvo.
+            $fontesPorAlvo = [];
+            foreach ($pend['elegiveis'] as $e) {
+                $fontesPorAlvo[$e['alvo_tipo'].':'.$e['alvo_id']][] = $e['fonte'];
             }
-            Cache::put("consulta_retry_charge:{$lote->id}:{$tipo}:{$id}", $envelope, 86400);
-            $jobs[] = $this->montarJob($lote, $tipo, $id, $fontes);
+
+            $jobs = [];
+            $alvosFontes = [];
+            foreach ($pend['alvos'] as $alvo) {
+                $tipo = $alvo['alvo_tipo'];
+                $id = (int) $alvo['alvo_id'];
+                $fontes = $fontesPorAlvo[$tipo.':'.$id] ?? [];
+                foreach ($fontes as $f) {
+                    $this->persistencia->incrementarTentativaFonte($lote->id, $tipo, $id, $f);
+                    $alvosFontes[] = ['alvo_tipo' => $tipo, 'alvo_id' => $id, 'fonte' => $f];
+                }
+                // Envelope de cobrança per-alvo = preço do plano (escalar), p/ estorno integral se zero-sucesso.
+                Cache::put("consulta_retry_charge:{$lote->id}:{$tipo}:{$id}", (int) $alvo['preco_creditos'], 86400);
+                $jobs[] = $this->montarJob($lote, $tipo, $id, $fontes);
+            }
+
+            // `finally` (não `then`): roda no sucesso E na falha → o lote nunca fica preso em
+            // `processando` e o settlement (estorno se zero-sucesso) sempre acontece.
+            Bus::batch($jobs)
+                ->name("consulta-retry-{$lote->id}")
+                ->finally(fn () => app(FecharRetryService::class)->fechar($lote->id, $alvosFontes))
+                ->dispatch();
+        } catch (\Throwable $e) {
+            // Nenhum job foi enfileirado → estorna o débito e restaura o terminal (não fica preso).
+            $this->credits->add(
+                $lote->user,
+                $custoTotal,
+                type: 'consulta_retry_refund',
+                description: "Estorno — falha ao despachar reconsulta do lote #{$lote->id}",
+                source: $lote,
+            );
+            $lote->status = ConsultaLote::STATUS_CONCLUIDO;
+            $lote->save();
+
+            throw $e;
         }
-
-        $alvosFontes = array_map(fn ($e) => [
-            'alvo_tipo' => $e['alvo_tipo'], 'alvo_id' => $e['alvo_id'], 'fonte' => $e['fonte'],
-        ], $aplicar);
-
-        Bus::batch($jobs)
-            ->name("consulta-retry-{$lote->id}")
-            ->then(fn () => app(FecharRetryService::class)->fechar($lote->id, $alvosFontes))
-            ->dispatch();
 
         return ['creditos' => $custoTotal];
     }
@@ -215,6 +279,32 @@ class RetryConsultaService
         $p = Participante::find($id);
 
         return ['cnpj' => preg_replace('/[^0-9]/', '', (string) $p?->documento), 'uf' => $p?->uf, 'crt' => $p?->crt];
+    }
+
+    /**
+     * Resolve o código InfoSimples (classe retry) para o motivo acionável + apresentação.
+     * Código não mapeado cai no fallback `tecnica_pontual` (nunca fica sem orientação).
+     *
+     * @return array{motivo:string,rotulo:string,aguardar_minutos:int,icone:string,orientacao:string}
+     */
+    public function motivoDe(int $codigo): array
+    {
+        $motivo = (string) config("consultas.retry.codigo_motivo.{$codigo}", 'tecnica_pontual');
+        $apresentacao = (array) config("consultas.retry.motivos.{$motivo}", []);
+
+        return ['motivo' => $motivo] + $apresentacao;
+    }
+
+    /**
+     * Preço da reconsulta por CNPJ = custo do plano consultado com o desconto de retry aplicado.
+     * Inteiro (ledger `credit_transactions.amount` é integer); arredonda p/ cima (nunca subcobra).
+     */
+    public function precoPlanoRetry(ConsultaLote $lote): int
+    {
+        $pct = (int) config('consultas.retry.desconto_pct', 50);
+        $custoPlano = (float) ($lote->plano?->custo_creditos ?? 0);
+
+        return (int) ceil($custoPlano * (100 - $pct) / 100);
     }
 
     private function precoPorFonte(int $custo): int

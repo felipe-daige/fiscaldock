@@ -125,9 +125,16 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        {{-- Coluna lateral estreita e fixa (19rem) — mesmo grid do perfil do cliente --}}
+        <style>
+            .perfil-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
+            @media (min-width: 1024px) {
+                .perfil-grid { grid-template-columns: minmax(0, 1fr) 19rem; }
+            }
+        </style>
+        <div class="perfil-grid">
             {{-- Coluna Principal --}}
-            <div class="lg:col-span-2 space-y-4 sm:space-y-6">
+            <div class="space-y-4 sm:space-y-6 min-w-0">
                 {{-- Dados Cadastrais --}}
                 <div class="bg-white rounded border border-gray-300 overflow-hidden">
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
@@ -1026,7 +1033,7 @@
             </div>
 
             {{-- Coluna Lateral --}}
-            <div class="space-y-4 sm:space-y-6">
+            <div class="space-y-4 sm:space-y-6 min-w-0">
                 {{-- Assinatura Ativa --}}
                 @if($assinaturaAtiva)
                     <div class="bg-white rounded border border-gray-300 overflow-hidden">
@@ -1038,14 +1045,14 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="p-4 sm:p-6 space-y-4">
-                            <div>
-                                <p class="text-xs text-gray-500 uppercase tracking-wide">Plano</p>
-                                <p class="mt-1 text-sm font-semibold text-gray-900">{{ $assinaturaAtiva->plano->nome ?? '-' }}</p>
+                        <div class="p-4 space-y-3">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="text-sm text-gray-600">Plano</span>
+                                <span class="text-sm font-semibold text-gray-900">{{ $assinaturaAtiva->plano->nome ?? '-' }}</span>
                             </div>
-                            <div>
-                                <p class="text-xs text-gray-500 uppercase tracking-wide">Frequência</p>
-                                <p class="mt-1 text-sm text-gray-900">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="text-sm text-gray-600">Frequência</span>
+                                <span class="text-sm font-semibold text-gray-900">
                                     @php
                                         $frequencias = [
                                             'diario' => 'Diaria',
@@ -1055,25 +1062,25 @@
                                         ];
                                     @endphp
                                     {{ $frequencias[$assinaturaAtiva->frequencia] ?? ucfirst($assinaturaAtiva->frequencia) }}
-                                </p>
+                                </span>
                             </div>
-                            <div>
-                                <p class="text-xs text-gray-500 uppercase tracking-wide">Próxima Execução</p>
-                                <p class="mt-1 text-sm text-gray-900">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="text-sm text-gray-600">Próxima Execução</span>
+                                <span class="text-sm font-semibold text-gray-900">
                                     {{ $assinaturaAtiva->proxima_execucao_em ? $assinaturaAtiva->proxima_execucao_em->format('d/m/Y H:i') : '-' }}
-                                </p>
+                                </span>
                             </div>
-                            <div>
-                                <p class="text-xs text-gray-500 uppercase tracking-wide">Última Execução</p>
-                                <p class="mt-1 text-sm text-gray-900">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="text-sm text-gray-600">Última Execução</span>
+                                <span class="text-sm font-semibold text-gray-900">
                                     {{ $assinaturaAtiva->ultima_execucao_em ? $assinaturaAtiva->ultima_execucao_em->format('d/m/Y H:i') : 'Nunca' }}
-                                </p>
+                                </span>
                             </div>
-                            <div>
-                                <p class="text-xs text-gray-500 uppercase tracking-wide">Custo/Execução</p>
-                                <p class="mt-1 text-sm text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) ($assinaturaAtiva->plano->custo_creditos ?? 0)))</p>
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="text-sm text-gray-600">Custo/Execução</span>
+                                <span class="text-sm font-semibold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) ($assinaturaAtiva->plano->custo_creditos ?? 0)))</span>
                             </div>
-                            <div class="pt-4 border-t border-gray-200 flex gap-2">
+                            <div class="pt-3 border-t border-gray-200 flex gap-2">
                                 @if($assinaturaAtiva->status === 'ativo')
                                     <button
                                         type="button"
@@ -1118,7 +1125,7 @@
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Estatísticas</span>
                     </div>
-                    <div class="p-4 sm:p-6 space-y-4">
+                    <div class="p-4 space-y-3">
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Total de consultas</span>
                             <span class="text-sm font-semibold text-gray-900">{{ $estatisticas['total_consultas'] ?? 0 }}</span>
@@ -1147,7 +1154,7 @@
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Saldo</span>
                     </div>
-                    <div class="p-6">
+                    <div class="p-4">
                     <div class="flex items-center gap-3 mb-4">
                         <div class="w-10 h-10 rounded border border-gray-300 bg-gray-50 flex items-center justify-center">
                             <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1156,7 +1163,7 @@
                         </div>
                         <div>
                             <p class="text-sm text-gray-500">Saldo disponível</p>
-                            <p class="text-2xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) ($credits ?? 0)))</p>
+                            <p class="text-xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) ($credits ?? 0)))</p>
                         </div>
                     </div>
                     <a

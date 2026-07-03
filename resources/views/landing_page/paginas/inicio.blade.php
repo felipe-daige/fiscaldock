@@ -147,13 +147,59 @@
     color: #fde68a;
     white-space: nowrap;
 }
+.hero-gratis-tag {
+    display: inline-block;
+    vertical-align: 0.18em;
+    margin-left: 0.15rem;
+    padding: 0.14rem 0.45rem;
+    border-radius: 0.375rem;
+    font-family: 'Instrument Sans', system-ui, sans-serif;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #ffffff;
+    background-color: #059669;
+}
 .hero-fact-label {
     display: block;
     margin-top: 0.3rem;
     font-size: 0.75rem;
     line-height: 1.35;
-    color: rgba(255, 255, 255, 0.62);
+    color: rgba(255, 255, 255, 0.75);
     max-width: 12rem;
+}
+
+/* Chips de prova no mobile — versão estática dos floaties do mockup */
+.hero-proof-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+/* >=1024px os floaties do mockup assumem esse papel (este bloco vence o
+   lg:hidden do build por ordem de cascata, então esconde via media query) */
+@media (min-width: 1024px) {
+    .hero-proof-chips { display: none; }
+}
+.hero-proof-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(11, 22, 44, 0.55);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.88);
+    white-space: nowrap;
+}
+.hpc-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 9999px;
+    flex-shrink: 0;
 }
 
 /* CTA secundário do hero */
@@ -238,6 +284,280 @@
     height: 1rem;
     flex-shrink: 0;
     margin-top: 1px;
+}
+
+/* ── FAQ (dúvidas) — acordeão nativo details/summary ── */
+.faq-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.5rem;
+    align-items: start;
+}
+@media (min-width: 1024px) {
+    .faq-grid {
+        grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+        gap: 4rem;
+    }
+}
+.faq-intro {
+    position: sticky;
+    top: calc(var(--landing-header-height, 88px) + 1.5rem);
+}
+@media (max-width: 1023.98px) {
+    .faq-intro { position: static; }
+}
+.faq-help {
+    margin-top: 1.75rem;
+    padding: 1.25rem 1.35rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.9rem;
+    background: #f9fafb;
+}
+.faq-help-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.6rem;
+}
+.faq-help-link {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #1e4fa0;
+    text-decoration: none;
+    padding: 0.3rem 0;
+}
+.faq-help-link:hover { text-decoration: underline; }
+.faq-help-link svg { transition: transform 0.15s ease; }
+.faq-help-link:hover svg { transform: translateX(3px); }
+
+.faq-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.9rem;
+    background: #ffffff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.faq-item + .faq-item { margin-top: 0.75rem; }
+.faq-item:hover { border-color: #cbd5e1; }
+.faq-item[open] {
+    border-color: #bfd0e8;
+    box-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.18);
+}
+.faq-item summary {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 1.05rem 1.25rem;
+    cursor: pointer;
+    list-style: none;
+    -webkit-tap-highlight-color: transparent;
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary:focus-visible {
+    outline: 2px solid #1e4fa0;
+    outline-offset: 2px;
+    border-radius: 0.9rem;
+}
+.faq-num {
+    flex-shrink: 0;
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    padding-top: 0.1rem;
+}
+.faq-item[open] .faq-num { color: #1e4fa0; }
+.faq-q {
+    flex: 1;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.35;
+}
+.faq-icon {
+    position: relative;
+    flex-shrink: 0;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 9999px;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    transition: transform 0.25s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+.faq-icon::before,
+.faq-icon::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background: #64748b;
+    border-radius: 2px;
+    transition: background-color 0.2s ease;
+}
+.faq-icon::before {
+    width: 0.65rem;
+    height: 1.5px;
+    transform: translate(-50%, -50%);
+}
+.faq-icon::after {
+    width: 1.5px;
+    height: 0.65rem;
+    transform: translate(-50%, -50%);
+}
+.faq-item[open] .faq-icon {
+    transform: rotate(45deg);
+    background: #1e4fa0;
+    border-color: #1e4fa0;
+}
+.faq-item[open] .faq-icon::before,
+.faq-item[open] .faq-icon::after { background: #ffffff; }
+.faq-a {
+    padding: 0 1.25rem 1.15rem;
+    margin-left: calc(0.9rem + 1.6em);
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: #4b5563;
+    animation: faqAnswerIn 0.25s ease both;
+}
+@keyframes faqAnswerIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: none; }
+}
+@media (max-width: 639.98px) {
+    .faq-item summary { padding: 0.95rem 1rem; gap: 0.7rem; }
+    .faq-a { padding: 0 1rem 1rem; margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .faq-a { animation: none; }
+}
+
+/* ── Faixas escuras interstitiais (métricas, segurança, contato) ──
+   Mesma identidade do radar-vivo: gradiente profundo + malha blueprint */
+.lp-blueprint {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(to right, rgba(148, 197, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(148, 197, 255, 0.06) 1px, transparent 1px);
+    background-size: 46px 46px;
+    -webkit-mask-image: radial-gradient(120% 130% at 50% 0%, #000 25%, transparent 80%);
+    mask-image: radial-gradient(120% 130% at 50% 0%, #000 25%, transparent 80%);
+}
+
+/* Métricas — números no mesmo desenho dos fatos do hero */
+.metricas-band {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem 1.5rem;
+}
+@media (min-width: 1024px) {
+    .metricas-band {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .metrica + .metrica {
+        border-left: 1px solid rgba(255, 255, 255, 0.12);
+        padding-left: 2.25rem;
+    }
+}
+.metrica-num {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 2.5rem;
+    font-weight: 600;
+    line-height: 1;
+    color: #fde68a;
+    font-optical-sizing: auto;
+}
+.metrica-label {
+    margin-top: 0.55rem;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.72);
+    max-width: 13rem;
+}
+
+/* Segurança/LGPD — ícone em chip + texto, pareado com as métricas */
+.seg-band {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.75rem 1.5rem;
+}
+@media (min-width: 1024px) {
+    .seg-band {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .seg-item + .seg-item {
+        border-left: 1px solid rgba(255, 255, 255, 0.12);
+        padding-left: 2.25rem;
+    }
+}
+.seg-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+}
+.seg-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 0.7rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.13);
+}
+.seg-icon svg {
+    width: 1.15rem;
+    height: 1.15rem;
+    color: #fde68a;
+}
+.seg-title {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.3;
+}
+.seg-sub {
+    margin-top: 0.2rem;
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+/* CTA final — chips de registro (monospace, remetem ao SPED) */
+.contato-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+.contato-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.38rem 0.8rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.06);
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.85);
+    white-space: nowrap;
+}
+.contato-chip svg {
+    width: 0.8rem;
+    height: 0.8rem;
+    color: #fde68a;
+    flex-shrink: 0;
 }
 
 /* ===== Vida na página: reveal no scroll, spotlight e radar ao vivo ===== */
@@ -1228,11 +1548,318 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
     pointer-events: none;
 }
 
-.hero-mockup {
+/* Palco do mockup: define a largura do card e ancora os floaties nele */
+.hero-stage {
     position: relative;
     z-index: 1;
-    width: min(100%, 56rem);
-    height: auto;
+    width: min(100%, 30rem);
+}
+
+/* ===== Mockup DOM: janela de browser com o painel de riscos =====
+   Substitui o PNG de 800px (borrava em retina e mostrava um gráfico
+   genérico). DOM escala nítido em qualquer largura/densidade. */
+.hero-browser {
+    width: 100%;
+    border-radius: 0.9rem;
+    overflow: hidden;
+    background: #ffffff;
+    box-shadow:
+        0 40px 80px -24px rgba(2, 8, 23, 0.55),
+        0 0 0 1px rgba(255, 255, 255, 0.08);
+    text-align: left;
+}
+.hb-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.42rem;
+    padding: 0.65rem 0.9rem;
+    background: #eef2f7;
+    border-bottom: 1px solid #e2e8f0;
+}
+.hb-dot {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 9999px;
+    flex-shrink: 0;
+}
+.hb-url {
+    margin-left: 0.55rem;
+    flex: 1;
+    max-width: 18rem;
+    padding: 0.24rem 0.7rem;
+    border-radius: 0.45rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 0.66rem;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.hb-body {
+    padding: 1.1rem 1.15rem 0.95rem;
+}
+.hb-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.9rem;
+}
+.hb-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #0f172a;
+    line-height: 1.2;
+}
+.hb-sub {
+    margin-top: 0.2rem;
+    font-size: 0.72rem;
+    color: #64748b;
+}
+.hb-pill {
+    flex-shrink: 0;
+    padding: 0.28rem 0.65rem;
+    border-radius: 9999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.hb-rows {
+    border: 1px solid #e8edf3;
+    border-radius: 0.65rem;
+    overflow: hidden;
+}
+.hb-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.6rem 0.8rem;
+}
+.hb-row + .hb-row {
+    border-top: 1px solid #eef2f7;
+}
+.hb-row-main {
+    min-width: 0;
+}
+.hb-row-nome {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.hb-row-meta {
+    display: block;
+    font-size: 0.66rem;
+    color: #94a3b8;
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.hb-chip {
+    flex-shrink: 0;
+    padding: 0.22rem 0.6rem;
+    border-radius: 9999px;
+    font-size: 0.66rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.hb-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.8rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #047857;
+}
+
+/* ===== Encenação da consulta: linhas resolvem uma a uma (CSS puro) =====
+   Cada .hb-swap empilha o chip "Consultando…" e o resultado na mesma célula;
+   no --hb-delay o pendente sai e o resultado entra. */
+.hb-swap {
+    display: inline-grid;
+    flex-shrink: 0;
+}
+.hb-swap > * {
+    grid-area: 1 / 1;
+    justify-self: end;
+    align-self: center;
+}
+.hb-pending {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background-color: #eef2f7;
+    color: #64748b;
+    animation: hbPendingOut 0.22s ease var(--hb-delay, 1s) forwards;
+}
+.hb-pending::before {
+    content: "";
+    width: 0.62em;
+    height: 0.62em;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    border: 1.5px solid currentColor;
+    border-top-color: transparent;
+    animation: hbSpin 0.7s linear infinite;
+}
+.hb-result {
+    opacity: 0;
+    transform: scale(0.8);
+    animation: hbResultIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) var(--hb-delay, 1s) forwards;
+}
+@keyframes hbSpin {
+    to { transform: rotate(360deg); }
+}
+@keyframes hbPendingOut {
+    to { opacity: 0; visibility: hidden; }
+}
+@keyframes hbResultIn {
+    to { opacity: 1; transform: none; }
+}
+
+/* Fila de investigação: a linha começa esmaecida (aguardando), acende
+   quando chega a vez dela, um facho varre a linha durante a consulta e
+   um flash na cor do veredito marca o momento da detecção */
+.hb-row {
+    position: relative;
+    overflow: hidden;
+}
+.hb-rows .hb-row {
+    animation: hbRowWake 0.3s ease calc(var(--hb-delay, 1s) - 0.5s) both;
+}
+@keyframes hbRowWake {
+    from { opacity: 0.45; }
+    to   { opacity: 1; }
+}
+.hb-row::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -35%;
+    width: 30%;
+    background: linear-gradient(to right,
+        rgba(30, 90, 154, 0) 0%,
+        rgba(30, 90, 154, 0.12) 50%,
+        rgba(30, 90, 154, 0) 100%);
+    transform: skewX(-12deg);
+    opacity: 0;
+    pointer-events: none;
+    animation: hbRowScan 0.5s ease-out calc(var(--hb-delay, 1s) - 0.5s) 1 both;
+}
+@keyframes hbRowScan {
+    0%   { left: -35%; opacity: 0; }
+    15%  { opacity: 1; }
+    100% { left: 105%; opacity: 0; }
+}
+.hb-row::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: var(--hb-flash, transparent);
+    opacity: 0;
+    pointer-events: none;
+    animation: hbRowFlash 0.55s ease var(--hb-delay, 1s) 1;
+}
+@keyframes hbRowFlash {
+    0%   { opacity: 0; }
+    30%  { opacity: 0.16; }
+    100% { opacity: 0; }
+}
+
+/* Barra de progresso do cruzamento — avança a cada fonte respondida */
+.hb-progress {
+    height: 3px;
+    border-radius: 9999px;
+    background: #eef2f7;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+}
+.hb-progress > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #1e5a9a;
+    width: 0%;
+    animation:
+        hbProgress 2.9s linear forwards,
+        hbProgressDone 0.4s ease 2.9s forwards;
+}
+@keyframes hbProgress {
+    0%    { width: 4%; }
+    17%   { width: 16%; }
+    34.5% { width: 34%; }
+    50%   { width: 52%; }
+    65.5% { width: 72%; }
+    81%   { width: 100%; }
+    100%  { width: 100%; }
+}
+@keyframes hbProgressDone {
+    to { background: #059669; }
+}
+
+/* Rodapé de conclusão só aparece depois da última linha resolver */
+.hb-footer {
+    opacity: 0;
+    animation: hbResultIn 0.4s ease 2.9s forwards;
+}
+
+/* Varredura de radar em loop sobre as linhas — mantém o painel "vivo" */
+.hb-rows {
+    position: relative;
+}
+.hb-rows::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -40%;
+    height: 36%;
+    background: linear-gradient(to bottom,
+        rgba(30, 90, 154, 0) 0%,
+        rgba(30, 90, 154, 0.07) 50%,
+        rgba(30, 90, 154, 0) 100%);
+    pointer-events: none;
+    opacity: 0;
+    animation: hbSweep 6s ease-in-out 3.4s infinite;
+}
+@keyframes hbSweep {
+    0%        { top: -40%; opacity: 0; }
+    8%        { opacity: 1; }
+    42%       { top: 110%; opacity: 1; }
+    50%, 100% { top: 110%; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hb-pending { display: none; }
+    .hb-result,
+    .hb-footer {
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    .hb-rows::after,
+    .hb-row::before,
+    .hb-row::after { display: none; }
+    .hb-rows .hb-row {
+        animation: none;
+        opacity: 1;
+    }
+    .hb-progress > span {
+        animation: none;
+        width: 100%;
+        background: #059669;
+    }
 }
 
 .official-sources-section {
@@ -1328,23 +1955,29 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
     100% { transform: scale(2); opacity: 0; }
 }
 
-/* Revelação orquestrada no load */
+/* Revelação orquestrada no load — a copy anima só transform (headline e CTA
+   nunca ficam invisíveis esperando animação); fade fica restrito ao visual */
 @keyframes heroReveal {
     from { opacity: 0; transform: translateY(16px); }
     to   { opacity: 1; transform: none; }
 }
-.hero-copy > * {
-    animation: heroReveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+@keyframes heroRise {
+    from { transform: translateY(14px); }
+    to   { transform: none; }
 }
-.hero-copy > *:nth-child(1) { animation-delay: 0.05s; }
-.hero-copy > *:nth-child(2) { animation-delay: 0.13s; }
-.hero-copy > *:nth-child(3) { animation-delay: 0.21s; }
-.hero-copy > *:nth-child(4) { animation-delay: 0.29s; }
-.hero-copy > *:nth-child(5) { animation-delay: 0.37s; }
-.hero-copy > *:nth-child(6) { animation-delay: 0.45s; }
+.hero-copy > * {
+    animation: heroRise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.hero-copy > *:nth-child(1) { animation-delay: 0.02s; }
+.hero-copy > *:nth-child(2) { animation-delay: 0.06s; }
+.hero-copy > *:nth-child(3) { animation-delay: 0.10s; }
+.hero-copy > *:nth-child(4) { animation-delay: 0.14s; }
+.hero-copy > *:nth-child(5) { animation-delay: 0.18s; }
+.hero-copy > *:nth-child(6) { animation-delay: 0.22s; }
+.hero-copy > *:nth-child(7) { animation-delay: 0.26s; }
 .hero-visual {
-    animation: heroReveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
-    animation-delay: 0.22s;
+    animation: heroReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: 0.12s;
 }
 
 /* Cartões flutuantes sobre o mockup (prova do produto em ação) */
@@ -1410,17 +2043,17 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
     animation: heroPulse 2.2s ease-out infinite;
 }
 .hero-float--alert {
-    top: 7%;
-    left: 1%;
-    animation: heroReveal 0.7s 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    top: -11%;
+    left: -32%;
+    animation: heroReveal 0.6s 1.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 .hero-float--ok {
-    bottom: 13%;
-    right: 1%;
-    animation: heroReveal 0.7s 1.0s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    bottom: -10%;
+    right: -18%;
+    animation: heroReveal 0.6s 3.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
-.hero-float--alert .hf-inner { animation: heroDrift 7s 1.4s ease-in-out infinite; }
-.hero-float--ok .hf-inner    { animation: heroDrift 8.5s 1.8s ease-in-out infinite; }
+.hero-float--alert .hf-inner { animation: heroDrift 7s 2.0s ease-in-out infinite; }
+.hero-float--ok .hf-inner    { animation: heroDrift 8.5s 3.7s ease-in-out infinite; }
 @keyframes heroDrift {
     0%, 100% { transform: translateY(0); }
     50%      { transform: translateY(-7px); }
@@ -1586,11 +2219,11 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
     }
 
     .hero-visual {
-        justify-content: flex-end;
+        justify-content: center;
     }
 
-    .hero-mockup {
-        width: min(100%, 40rem);
+    .hero-stage {
+        width: min(100%, 26rem);
     }
 }
 
@@ -1613,7 +2246,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
     }
 
     .hero-visual {
-        justify-content: flex-end;
+        justify-content: center;
     }
 }
 
@@ -1653,20 +2286,17 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
     }
 
     .hero-visual {
-        min-height: 38rem;
-        justify-content: flex-end;
-        padding-right: 1.5rem;
+        min-height: 34rem;
+        justify-content: center;
+        padding-right: 0;
     }
 
     .hero-visual-glow {
-        inset: 6% 2% 8% 18%;
-        transform: scale(1.08);
+        inset: 6% 6% 8% 10%;
     }
 
-    .hero-mockup {
-        width: min(72rem, 100%);
-        transform: translateX(4%) scale(1.08);
-        transform-origin: center right;
+    .hero-stage {
+        width: min(100%, 30rem);
     }
 }
 
@@ -1676,7 +2306,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
     }
 
     .hero-shell {
-        max-width: min(95vw, 132rem);
+        max-width: min(92vw, 120rem);
         min-height: calc(100svh - var(--landing-header-height) - 16.75rem);
     }
 
@@ -1698,24 +2328,23 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
     }
 
     .hero-visual {
-        min-height: 42rem;
-        padding-right: 2.5rem;
+        min-height: 36rem;
+        padding-right: 0;
     }
 
     .hero-visual-glow {
-        inset: 6% 4% 8% 18%;
-        transform: scale(1.1);
+        inset: 6% 8% 8% 12%;
     }
 
-    .hero-mockup {
-        width: clamp(64rem, 56vw, 78rem);
-        transform: none;
+    .hero-stage {
+        width: min(100%, 31rem);
+        transform: scale(1.08);
     }
 }
 
 @media (min-width: 2200px) {
     .hero-shell {
-        max-width: min(95vw, 156rem);
+        max-width: min(90vw, 128rem);
     }
 
     .hero-grid {
@@ -1737,16 +2366,16 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
     }
 
     .hero-visual {
-        padding-right: clamp(2.5rem, 3vw, 5rem);
+        padding-right: 0;
     }
 
     .hero-visual-glow {
-        inset: 6% 6% 8% 16%;
-        transform: scale(1.05);
+        inset: 6% 10% 8% 14%;
     }
 
-    .hero-mockup {
-        width: clamp(77rem, 52vw, 96rem);
+    .hero-stage {
+        width: min(100%, 31rem);
+        transform: scale(1.16);
     }
 }
 
@@ -1762,11 +2391,11 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
     }
 
     .hero-visual {
-        min-height: 32rem;
+        min-height: 28rem;
     }
 
-    .hero-mockup {
-        width: clamp(48rem, 50vw, 70rem);
+    .hero-stage {
+        width: min(100%, 26rem);
     }
 }
 
@@ -1784,8 +2413,8 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
         justify-content: center;
     }
 
-    .hero-mockup {
-        width: min(100%, 34rem);
+    .hero-stage {
+        width: min(100%, 30rem);
         margin-inline: auto;
     }
 
@@ -1819,7 +2448,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
                 <!-- Badge -->
                 <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold mb-4">
                     <span class="hero-badge-dot w-2 h-2 rounded-full bg-blue-400"></span>
-                    Radar de riscos fiscais para escritórios contábeis
+                    <span>Radar de riscos fiscais<span class="hidden sm:inline">&nbsp;para escritórios contábeis</span></span>
                 </div>
 
                 <!-- Título -->
@@ -1847,16 +2476,28 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
                 </div>
 
                 <!-- Frase de apoio -->
-                <p class="mt-3 text-sm text-white/70 max-w-2xl">
-                    Sem cartão de crédito, sem mensalidade — o saldo grátis dá para importar e auditar clientes reais.
+                <p class="mt-3 text-sm text-white/80 max-w-2xl">
+                    Você começa com <strong class="text-white">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(config('trial.creditos'))) de saldo grátis</strong> — sem cartão de crédito, sem mensalidade. Dá para importar e auditar clientes reais.
                 </p>
 
+                <!-- Prova visual compacta para mobile/tablet (os floaties do mockup só aparecem >=1024px) -->
+                <div class="hero-proof-chips lg:hidden" aria-hidden="true">
+                    <span class="hero-proof-chip">
+                        <span class="hpc-dot" style="background-color: #f87171;"></span>
+                        Fornecedor inapto detectado
+                    </span>
+                    <span class="hero-proof-chip">
+                        <span class="hpc-dot" style="background-color: #34d399;"></span>
+                        CND Federal emitida
+                    </span>
+                </div>
+
                 <!-- Fatos do produto (trial vem de config/trial.php — nunca hardcodar) -->
-                <div class="mt-8 mb-12 lg:mb-16">
+                <div class="mt-8 lg:mb-16">
                     <div class="hero-facts">
                         <div class="hero-fact">
-                            <span class="hero-fact-num">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(config('trial.creditos')))</span>
-                            <span class="hero-fact-label">de saldo grátis no cadastro, válido por {{ config('trial.validade_dias') }} dias</span>
+                            <span class="hero-fact-num">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(config('trial.creditos'))) <span class="hero-gratis-tag">grátis</span></span>
+                            <span class="hero-fact-label">já entram na sua conta ao se cadastrar — sem pagar nada, válidos por {{ config('trial.validade_dias') }} dias</span>
                         </div>
                         <div class="hero-fact">
                             <span class="hero-fact-num">9 fontes</span>
@@ -1870,17 +2511,80 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
                 </div>
             </div>
 
-            <!-- Coluna Direita: Mockup -->
+            <!-- Coluna Direita: Mockup do painel (DOM — nítido em qualquer densidade de tela) -->
             <div class="hero-visual">
                 <div class="hero-visual-glow" aria-hidden="true"></div>
-                <img
-                    src="{{ asset('binary_files/mockups/macbook-mockup.png') }}"
-                    alt="Dashboard do FiscalDock em um notebook"
-                    loading="eager"
-                    fetchpriority="high"
-                    decoding="async"
-                    class="hero-mockup w-full h-auto drop-shadow-2xl"
-                >
+                <div class="hero-stage">
+                <div class="hero-browser" role="img"
+                     aria-label="Painel do FiscalDock mostrando riscos fiscais detectados entre os participantes do SPED">
+                    <div class="hb-bar">
+                        <span class="hb-dot" style="background-color: #f87171;"></span>
+                        <span class="hb-dot" style="background-color: #fbbf24;"></span>
+                        <span class="hb-dot" style="background-color: #34d399;"></span>
+                        <span class="hb-url">app.fiscaldock.com.br/consulta</span>
+                    </div>
+                    <div class="hb-body">
+                        <div class="hb-head">
+                            <div>
+                                <div class="hb-title">Radar de riscos — EFD mar/2026</div>
+                                <div class="hb-sub">142 participantes cruzados com 9 fontes oficiais</div>
+                            </div>
+                            <span class="hb-swap" style="--hb-delay: 2.7s;">
+                                <span class="hb-pill hb-pending">Cruzando fontes…</span>
+                                <span class="hb-pill hb-result" style="background-color: #fef3c7; color: #92400e;">4 riscos ativos</span>
+                            </span>
+                        </div>
+                        <div class="hb-progress" aria-hidden="true"><span></span></div>
+                        <div class="hb-rows">
+                            <div class="hb-row" style="--hb-delay: 1.0s; --hb-flash: #ef4444;">
+                                <div class="hb-row-main">
+                                    <span class="hb-row-nome">Transportes Alfa Ltda</span>
+                                    <span class="hb-row-meta">12.345.678/0001-90 · Receita Federal</span>
+                                </div>
+                                <span class="hb-swap">
+                                    <span class="hb-chip hb-pending">Consultando</span>
+                                    <span class="hb-chip hb-result" style="background-color: #fee2e2; color: #b91c1c;">Inapto</span>
+                                </span>
+                            </div>
+                            <div class="hb-row" style="--hb-delay: 1.45s; --hb-flash: #f59e0b;">
+                                <div class="hb-row-main">
+                                    <span class="hb-row-nome">Metalúrgica Boreal S.A.</span>
+                                    <span class="hb-row-meta">98.765.432/0001-10 · PGFN</span>
+                                </div>
+                                <span class="hb-swap">
+                                    <span class="hb-chip hb-pending">Consultando</span>
+                                    <span class="hb-chip hb-result" style="background-color: #fef3c7; color: #b45309;">CND vencida</span>
+                                </span>
+                            </div>
+                            <div class="hb-row" style="--hb-delay: 1.9s; --hb-flash: #ef4444;">
+                                <div class="hb-row-main">
+                                    <span class="hb-row-nome">Comercial Delta ME</span>
+                                    <span class="hb-row-meta">45.678.901/0001-22 · SEFAZ</span>
+                                </div>
+                                <span class="hb-swap">
+                                    <span class="hb-chip hb-pending">Consultando</span>
+                                    <span class="hb-chip hb-result" style="background-color: #fee2e2; color: #b91c1c;">Nota cancelada</span>
+                                </span>
+                            </div>
+                            <div class="hb-row" style="--hb-delay: 2.35s; --hb-flash: #10b981;">
+                                <div class="hb-row-main">
+                                    <span class="hb-row-nome">Indústria Vetor Ltda</span>
+                                    <span class="hb-row-meta">11.222.333/0001-44 · SINTEGRA</span>
+                                </div>
+                                <span class="hb-swap">
+                                    <span class="hb-chip hb-pending">Consultando</span>
+                                    <span class="hb-chip hb-result" style="background-color: #d1fae5; color: #047857;">Regular</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="hb-footer">
+                            <svg width="13" height="13" fill="none" stroke="#047857" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Cruzamento concluído em 4 min — 138 participantes regulares
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Cartões flutuantes: o produto pegando risco em tempo real -->
                 <div class="hero-floaties" aria-hidden="true">
@@ -1913,6 +2617,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
                             </div>
                         </div>
                     </div>
+                </div>
                 </div>
             </div>
         </div>
@@ -2582,24 +3287,28 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
 </section>
 
 <!-- Métricas Banner -->
-<section id="metricas" class="relative py-8 sm:py-10" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(255,255,255,0.05);">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-            <div>
-                <div class="text-3xl sm:text-4xl font-extrabold" style="color: #ffffff;" data-count="9">9</div>
-                <p class="mt-2 text-xs sm:text-sm font-medium" style="color: rgba(255,255,255,0.55);">Fontes oficiais em uma consulta só</p>
+<section id="metricas" class="relative py-12 sm:py-14 overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 55%, #0f172a 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(255,255,255,0.05);">
+    <div class="lp-blueprint" aria-hidden="true"></div>
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center mb-8 sm:mb-10">
+            <p class="landing-kicker landing-kicker--dark" style="margin-bottom: 0;">O produto em números</p>
+        </div>
+        <div class="metricas-band">
+            <div class="metrica">
+                <div class="metrica-num" data-count="9">9</div>
+                <p class="metrica-label">fontes oficiais consultadas em uma consulta só</p>
             </div>
-            <div>
-                <div class="text-3xl sm:text-4xl font-extrabold" style="color: #ffffff;" data-count="7">7</div>
-                <p class="mt-2 text-xs sm:text-sm font-medium" style="color: rgba(255,255,255,0.55);">Alertas automáticos em cada SPED importado</p>
+            <div class="metrica">
+                <div class="metrica-num" data-count="7">7</div>
+                <p class="metrica-label">alertas automáticos em cada SPED importado</p>
             </div>
-            <div>
-                <div class="text-3xl sm:text-4xl font-extrabold" style="color: #ffffff;" data-count="44">44</div>
-                <p class="mt-2 text-xs sm:text-sm font-medium" style="color: rgba(255,255,255,0.55);">Dígitos conferidos nota a nota, direto na SEFAZ</p>
+            <div class="metrica">
+                <div class="metrica-num" data-count="44">44</div>
+                <p class="metrica-label">dígitos conferidos nota a nota, direto na SEFAZ</p>
             </div>
-            <div>
-                <div class="text-3xl sm:text-4xl font-extrabold" style="color: #ffffff;">1</div>
-                <p class="mt-2 text-xs sm:text-sm font-medium" style="color: rgba(255,255,255,0.55);">Painel para todos os clientes do escritório</p>
+            <div class="metrica">
+                <div class="metrica-num">1</div>
+                <p class="metrica-label">painel para todos os clientes do escritório</p>
             </div>
         </div>
     </div>
@@ -2860,36 +3569,56 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
 </section>
 
 <!-- Seguranca e LGPD Banner -->
-<section id="seguranca-lgpd" class="relative py-8 sm:py-10" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(255,255,255,0.05);">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
-            <div>
-                <svg class="w-6 h-6 mx-auto mb-2" style="color: rgba(255,255,255,0.55);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                </svg>
-                <div class="text-sm font-semibold text-white">Controle de Acesso</div>
-                <p class="mt-1 text-xs" style="color: rgba(255,255,255,0.45);">Por perfil e empresa</p>
+<section id="seguranca-lgpd" class="relative py-12 sm:py-14 overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 55%, #0f172a 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(255,255,255,0.05);">
+    <div class="lp-blueprint" aria-hidden="true"></div>
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center mb-8 sm:mb-10">
+            <p class="landing-kicker landing-kicker--dark" style="margin-bottom: 0;">Segurança e LGPD</p>
+        </div>
+        <div class="seg-band">
+            <div class="seg-item">
+                <span class="seg-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </span>
+                <div>
+                    <div class="seg-title">Controle de acesso</div>
+                    <p class="seg-sub">Por perfil e por empresa — cada usuário vê só o que precisa</p>
+                </div>
             </div>
-            <div>
-                <svg class="w-6 h-6 mx-auto mb-2" style="color: rgba(255,255,255,0.55);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                </svg>
-                <div class="text-sm font-semibold text-white">Auditoria Completa</div>
-                <p class="mt-1 text-xs" style="color: rgba(255,255,255,0.45);">Registro de todas as ações</p>
+            <div class="seg-item">
+                <span class="seg-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                    </svg>
+                </span>
+                <div>
+                    <div class="seg-title">Auditoria completa</div>
+                    <p class="seg-sub">Registro de todas as ações da equipe</p>
+                </div>
             </div>
-            <div>
-                <svg class="w-6 h-6 mx-auto mb-2" style="color: rgba(255,255,255,0.55);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                </svg>
-                <div class="text-sm font-semibold text-white">Dados Criptografados</div>
-                <p class="mt-1 text-xs" style="color: rgba(255,255,255,0.45);">Segregação por cliente</p>
+            <div class="seg-item">
+                <span class="seg-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                    </svg>
+                </span>
+                <div>
+                    <div class="seg-title">Dados criptografados</div>
+                    <p class="seg-sub">Em trânsito e em repouso, com segregação por cliente</p>
+                </div>
             </div>
-            <div>
-                <svg class="w-6 h-6 mx-auto mb-2" style="color: rgba(255,255,255,0.55);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                </svg>
-                <div class="text-sm font-semibold text-white">Conformidade LGPD</div>
-                <p class="mt-1 text-xs" style="color: rgba(255,255,255,0.45);">Boas práticas de tratamento</p>
+            <div class="seg-item">
+                <span class="seg-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                </span>
+                <div>
+                    <div class="seg-title">Conformidade LGPD</div>
+                    <p class="seg-sub">Boas práticas de tratamento de dados</p>
+                </div>
             </div>
         </div>
     </div>
@@ -2897,96 +3626,102 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
 <!-- Dúvidas Section -->
 <section id="duvidas" class="bg-white pt-8 pb-20 sm:pt-10 sm:pb-24 lg:pt-12 lg:pb-28">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12 sm:mb-14 lg:mb-16">
-            <p class="landing-kicker">09 · Perguntas frequentes</p>
-            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight mb-4">Tire suas dúvidas antes de começar</h2>
-            <p class="text-sm sm:text-base text-gray-500 max-w-2xl mx-auto">
-                Respostas diretas para as perguntas mais comuns de contadores e escritórios contábeis
-            </p>
-        </div>
+        <div class="faq-grid">
 
-        <div class="max-w-3xl mx-auto">
-            <div class="duvidas-item border border-gray-200 rounded-xl mb-3 transition-colors overflow-hidden hover:bg-gray-50/50">
-                <button class="duvidas-question w-full text-left px-5 py-4 text-sm font-bold text-gray-900 flex justify-between items-center">
-                    <span>Preciso cancelar meu sistema contábil para usar o FiscalDock?</span>
-                    <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </button>
-                <div class="duvidas-answer hidden">
-                    <div class="px-5 py-4 text-sm text-gray-600 border-t border-gray-100">
+            <!-- Intro + ajuda (sticky no desktop) -->
+            <div class="faq-intro">
+                <p class="landing-kicker">09 · Perguntas frequentes</p>
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight mb-4">Tire suas dúvidas antes de começar</h2>
+                <p class="text-sm sm:text-base text-gray-500">
+                    Respostas diretas para as perguntas mais comuns de contadores e escritórios contábeis.
+                </p>
+
+                <div class="faq-help">
+                    <p class="faq-help-title">Não achou sua resposta?</p>
+                    <a href="/duvidas" class="faq-help-link">
+                        Ver todas as dúvidas
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    </a>
+                    <a href="{{ route('agendar') }}" class="faq-help-link">
+                        Falar com um especialista
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Acordeão nativo (details/summary — expande sem JS) -->
+            <div>
+                <details class="faq-item" open>
+                    <summary>
+                        <span class="faq-num">01</span>
+                        <span class="faq-q">Preciso cancelar meu sistema contábil para usar o FiscalDock?</span>
+                        <span class="faq-icon" aria-hidden="true"></span>
+                    </summary>
+                    <div class="faq-a">
                         Não. O FiscalDock complementa Domínio, Alterdata, Contmatic e qualquer outro sistema. Você continua usando normalmente — basta exportar o SPED do seu sistema e importar no FiscalDock. Sem integração técnica, sem configuração.
                     </div>
-                </div>
-            </div>
+                </details>
 
-            <div class="duvidas-item border border-gray-200 rounded-xl mb-3 transition-colors overflow-hidden hover:bg-gray-50/50">
-                <button class="duvidas-question w-full text-left px-5 py-4 text-sm font-bold text-gray-900 flex justify-between items-center">
-                    <span>Como funciona o saldo pré-pago?</span>
-                    <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </button>
-                <div class="duvidas-answer hidden">
-                    <div class="px-5 py-4 text-sm text-gray-600 border-t border-gray-100">
+                <details class="faq-item">
+                    <summary>
+                        <span class="faq-num">02</span>
+                        <span class="faq-q">Como funciona o saldo pré-pago?</span>
+                        <span class="faq-icon" aria-hidden="true"></span>
+                    </summary>
+                    <div class="faq-a">
                         Você adiciona saldo em reais e usa conforme a necessidade. Cada tipo de consulta (CNPJ, CND, verificação de nota) tem preço fixo por produto. Sem mensalidade fixa e sem surpresas — pague só pelo que usar.
                     </div>
-                </div>
-            </div>
+                </details>
 
-            <div class="duvidas-item border border-gray-200 rounded-xl mb-3 transition-colors overflow-hidden hover:bg-gray-50/50">
-                <button class="duvidas-question w-full text-left px-5 py-4 text-sm font-bold text-gray-900 flex justify-between items-center">
-                    <span>Quais fontes de dados o FiscalDock consulta?</span>
-                    <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </button>
-                <div class="duvidas-answer hidden">
-                    <div class="px-5 py-4 text-sm text-gray-600 border-t border-gray-100">
+                <details class="faq-item">
+                    <summary>
+                        <span class="faq-num">03</span>
+                        <span class="faq-q">Quais fontes de dados o FiscalDock consulta?</span>
+                        <span class="faq-icon" aria-hidden="true"></span>
+                    </summary>
+                    <div class="faq-a">
                         Receita Federal, SEFAZ (todos os estados), PGFN, SINTEGRA e CEIS. Todos os dados vêm de fontes oficiais do governo, consultados em tempo real. Nenhuma informação é estimada ou inferida.
                     </div>
-                </div>
-            </div>
+                </details>
 
-            <div class="duvidas-item border border-gray-200 rounded-xl mb-3 transition-colors overflow-hidden hover:bg-gray-50/50">
-                <button class="duvidas-question w-full text-left px-5 py-4 text-sm font-bold text-gray-900 flex justify-between items-center">
-                    <span>Meus dados e os de meus clientes ficam seguros?</span>
-                    <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </button>
-                <div class="duvidas-answer hidden">
-                    <div class="px-5 py-4 text-sm text-gray-600 border-t border-gray-100">
+                <details class="faq-item">
+                    <summary>
+                        <span class="faq-num">04</span>
+                        <span class="faq-q">Meus dados e os de meus clientes ficam seguros?</span>
+                        <span class="faq-icon" aria-hidden="true"></span>
+                    </summary>
+                    <div class="faq-a">
                         Sim. Controle de acesso por perfil e empresa, segregação completa entre clientes, criptografia em trânsito e repouso, e conformidade com LGPD. Cada usuário vê apenas os dados que precisa.
                     </div>
-                </div>
-            </div>
+                </details>
 
-            <div class="duvidas-item border border-gray-200 rounded-xl mb-3 transition-colors overflow-hidden hover:bg-gray-50/50">
-                <button class="duvidas-question w-full text-left px-5 py-4 text-sm font-bold text-gray-900 flex justify-between items-center">
-                    <span>Posso testar antes de adicionar saldo?</span>
-                    <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </button>
-                <div class="duvidas-answer hidden">
-                    <div class="px-5 py-4 text-sm text-gray-600 border-t border-gray-100">
+                <details class="faq-item">
+                    <summary>
+                        <span class="faq-num">05</span>
+                        <span class="faq-q">Posso testar antes de adicionar saldo?</span>
+                        <span class="faq-icon" aria-hidden="true"></span>
+                    </summary>
+                    <div class="faq-a">
                         Sim. Ao criar a conta você recebe @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(config('trial.creditos'))) de saldo grátis, válido por {{ config('trial.validade_dias') }} dias — sem cartão de crédito. Dá para importar SPEDs reais, ver os participantes extraídos, explorar os dashboards e rodar consultas de verdade. Quando o saldo acabar, você adiciona mais só se fizer sentido.
                     </div>
-                </div>
+                </details>
             </div>
         </div>
     </div>
 </section>
 
 <!-- CTA Final -->
-<section id="contato" class="relative py-16 sm:py-20 overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e5a9a 50%, #0f172a 100%);">
+<section id="contato" class="relative py-16 sm:py-20 lg:py-24 overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 55%, #0f172a 100%);">
+    <div class="lp-blueprint" aria-hidden="true"></div>
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-        <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-4">
+        <p class="landing-kicker landing-kicker--dark">10 · Comece agora</p>
+        <h2 class="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-4">
             Da próxima vez, descubra antes do fisco
         </h2>
-        <p class="text-base text-white/90 max-w-2xl mx-auto mb-8">
-            Crie a conta, importe um SPED real e veja o diagnóstico em minutos — com @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(config('trial.creditos'))) de saldo grátis para testar por {{ config('trial.validade_dias') }} dias
+        <p class="text-base max-w-2xl mx-auto mb-8" style="color: rgba(255,255,255,0.85);">
+            Crie a conta, importe um SPED real e veja o diagnóstico em minutos — com
+            <strong class="text-white">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(config('trial.creditos'))) de saldo grátis</strong>
+            para testar por {{ config('trial.validade_dias') }} dias.
         </p>
 
         <form action="{{ route('landing.lead.banner') }}" method="POST"
@@ -3009,7 +3744,22 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
             <p class="mt-3 text-xs text-red-200">{{ $message }}</p>
         @enderror
 
-        <p class="mt-5 flex flex-col items-center justify-center gap-2 text-xs sm:flex-row" style="color: rgba(255,255,255,0.88);">
+        <div class="contato-chips mt-6">
+            <span class="contato-chip">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                Sem cartão de crédito
+            </span>
+            <span class="contato-chip">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                Sem mensalidade
+            </span>
+            <span class="contato-chip">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(config('trial.creditos'))) grátis no cadastro
+            </span>
+        </div>
+
+        <p class="mt-6 flex flex-col items-center justify-center gap-2 text-xs sm:flex-row" style="color: rgba(255,255,255,0.88);">
             <span>Prefere falar com alguém?</span>
             <a href="/agendar"
                data-link
@@ -3017,8 +3767,6 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
                 Falar com um especialista
             </a>
         </p>
-
-        <p class="mt-3 text-xs" style="color: rgba(255,255,255,0.7);">Sem cartão de crédito · Sem mensalidade</p>
     </div>
 </section>
 

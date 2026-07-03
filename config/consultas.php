@@ -210,12 +210,48 @@ return [
     ],
 
     // Reconsulta de fontes com falha transitória (classe `retry`, ex. código 600).
-    // 'desconto_pct' = desconto sobre o custoCreditos da fonte na reconsulta (50% off).
-    // 'max_por_fonte' = quantas reconsultas pagas por fonte (1 = "50% válido 1 vez";
-    // 2ª falha → "tente mais tarde", sem novo botão).
+    // 'desconto_pct' = desconto sobre o preço do PLANO na reconsulta (cobrada por CNPJ afetado).
+    // Retry é ilimitado: falha total é estornada, então retentar não custa nada líquido.
     'retry' => [
         'desconto_pct' => (int) env('CONSULTAS_RETRY_DESCONTO_PCT', 50),
-        'max_por_fonte' => (int) env('CONSULTAS_RETRY_MAX_POR_FONTE', 1),
+
+        // Códigos InfoSimples das classes reconsultáveis (`retry` + `erro_participante`)
+        // agrupados em motivos acionáveis (o que o usuário FAZ muda). Usado pela tela do
+        // lote p/ orientar a reconsulta.
+        // 'codigo_motivo': código InfoSimples → motivo. 'motivos': apresentação por motivo.
+        'codigo_motivo' => [
+            605 => 'origem_instavel', 613 => 'origem_instavel', 614 => 'origem_instavel',
+            615 => 'origem_instavel', 618 => 'origem_instavel',
+            600 => 'tecnica_pontual', 610 => 'tecnica_pontual',
+            609 => 'origem_persistente',
+            608 => 'dados_participante', 619 => 'dados_participante', 620 => 'dados_participante',
+        ],
+        'motivos' => [
+            'origem_instavel' => [
+                'rotulo' => 'Fonte oficial instável',
+                'aguardar_minutos' => 30,
+                'icone' => '⏳',
+                'orientacao' => 'A fonte oficial (ex.: Receita Federal) está fora do ar ou lenta. Aguarde ~30 min e reconsulte.',
+            ],
+            'tecnica_pontual' => [
+                'rotulo' => 'Falha técnica pontual',
+                'aguardar_minutos' => 2,
+                'icone' => '↻',
+                'orientacao' => 'Falha momentânea do provedor. Pode reconsultar já.',
+            ],
+            'origem_persistente' => [
+                'rotulo' => 'Fonte com problema persistente',
+                'aguardar_minutos' => 60,
+                'icone' => '⌛',
+                'orientacao' => 'A fonte não respondeu após várias tentativas. Aguarde ~60 min e reconsulte.',
+            ],
+            'dados_participante' => [
+                'rotulo' => 'Fonte recusou os dados do CNPJ',
+                'aguardar_minutos' => 0,
+                'icone' => '⚠',
+                'orientacao' => 'A fonte oficial recusou a consulta com os dados deste CNPJ. Confira o cadastro (CNPJ/UF/situação) e reconsulte — se persistir, comunique o suporte.',
+            ],
+        ],
     ],
 
     // Card "Relacionamento & Movimentação Fiscal" no resultado da consulta.

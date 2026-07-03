@@ -63,6 +63,15 @@ class ProcessarConsultaJob implements ShouldQueue
         $fontes = $registry->fontesDe($this->consultasIncluidas);
         usort($fontes, fn ($a, $b) => $this->etapaParaFonte($a->chave())[0] <=> $this->etapaParaFonte($b->chave())[0]);
 
+        // Reconsulta escopada: processa SÓ as fontes selecionadas. Filtrar ANTES do loop faz o
+        // índice/total do progresso refletirem o escopo do retry (ex.: "1 de 1"), não o plano todo.
+        if ($this->somenteFontes !== null) {
+            $fontes = array_values(array_filter(
+                $fontes,
+                fn ($fonte) => in_array($fonte->chave(), $this->somenteFontes, true),
+            ));
+        }
+
         // Idempotência de retry: fontes pagas já persistidas numa tentativa anterior não são
         // re-consultadas (evita re-cobrar InfoSimples se o worker matar/re-executar o job).
         $jaPersistidas = $persistencia->chavesPersistidas($this->loteId, $this->alvoTipo, $this->alvoId);
@@ -70,11 +79,6 @@ class ProcessarConsultaJob implements ShouldQueue
         $totalFontes = count($fontes);
         $creditosFalhos = 0;
         foreach ($fontes as $i => $fonte) {
-            // Reconsulta escopada: pula fontes fora da seleção (sem progresso nem chamada externa).
-            if ($this->somenteFontes !== null && ! in_array($fonte->chave(), $this->somenteFontes, true)) {
-                continue;
-            }
-
             // Progresso por GRUPO de etapa da fonte (várias fontes → mesma etapa; sem loop).
             [$nEtapa, $lEtapa] = $this->etapaParaFonte($fonte->chave());
 

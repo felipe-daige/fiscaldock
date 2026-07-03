@@ -178,7 +178,7 @@ function initInicio() {
             '#para-quem-e .persona-col',
             '#diferenciais .diff-panel',
             '#na-pratica .scenario-card',
-            '#duvidas .duvidas-item',
+            '#duvidas .faq-item',
         ];
 
         const alvos = [];

@@ -102,8 +102,15 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <div class="xl:col-span-2 space-y-6">
+        {{-- Coluna lateral estreita e fixa (19rem) — o conteúdo principal fica com o resto do grid --}}
+        <style>
+            .perfil-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
+            @media (min-width: 1024px) {
+                .perfil-grid { grid-template-columns: minmax(0, 1fr) 19rem; }
+            }
+        </style>
+        <div class="perfil-grid">
+            <div class="space-y-6 min-w-0">
                 <div class="bg-white rounded border border-gray-300 overflow-hidden">
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dados Cadastrais</span>
@@ -171,23 +178,23 @@
                 @include('autenticado.monitoramento._movimentacao-listas', ['top_produtos' => $top_produtos ?? [], 'top_cfops' => $top_cfops ?? []])
             </div>
 
-            <div class="space-y-6">
+            <div class="space-y-6 min-w-0">
                 <div class="bg-white rounded border border-gray-300 overflow-hidden">
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Situação do Cadastro</span>
                     </div>
-                    <div class="p-4 space-y-4">
-                        <div>
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Tipo de Pessoa</p>
+                    <div class="p-4 space-y-3">
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="text-sm text-gray-600">Tipo de Pessoa</span>
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoPessoaBadge['hex'] }}">{{ $tipoPessoaBadge['label'] }}</span>
                         </div>
-                        <div>
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Status</p>
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="text-sm text-gray-600">Status</span>
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusBadge['hex'] }}">{{ $statusBadge['label'] }}</span>
                         </div>
                         @if($cliente->is_empresa_propria)
-                            <div>
-                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Classificação</p>
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="text-sm text-gray-600">Classificação</span>
                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $empresaBadge['hex'] }}">{{ $empresaBadge['label'] }}</span>
                             </div>
                         @endif
@@ -198,18 +205,18 @@
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Metadados</span>
                     </div>
-                    <div class="divide-y divide-gray-200">
-                        <div class="px-4 py-3">
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Criado em</p>
-                            <p class="text-sm text-gray-700">{{ $cliente->created_at?->format('d/m/Y H:i') ?? '-' }}</p>
+                    <div class="p-4 space-y-3">
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="text-sm text-gray-600">Criado em</span>
+                            <span class="text-sm font-semibold text-gray-900">{{ $cliente->created_at?->format('d/m/Y H:i') ?? '-' }}</span>
                         </div>
-                        <div class="px-4 py-3">
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Documento</p>
-                            <p class="text-sm text-gray-700 font-mono">{{ $cliente->documento_formatado }}</p>
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="text-sm text-gray-600">Documento</span>
+                            <span class="text-sm font-semibold text-gray-900 font-mono">{{ $cliente->documento_formatado }}</span>
                         </div>
-                        <div class="px-4 py-3">
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Base fiscal</p>
-                            <p class="text-sm text-gray-700">{{ number_format($totalNotas, 0, ',', '.') }} notas disponíveis</p>
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="text-sm text-gray-600">Base fiscal</span>
+                            <span class="text-sm font-semibold text-gray-900">{{ number_format($totalNotas, 0, ',', '.') }} notas</span>
                         </div>
                     </div>
                 </div>

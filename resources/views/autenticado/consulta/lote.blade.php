@@ -21,7 +21,9 @@
     data-detail-url="{{ request()->fullUrlWithoutQuery(['page_resultados', 'per_page_resultados']) }}"
     data-await-result="{{ $aguardaPersistencia ? '1' : '0' }}"
     data-etapas="{{ $etapasJson }}"
-    data-iniciado-em="{{ optional($lote->created_at)->timestamp }}"
+    {{-- Cronômetro conta do início do processamento ATUAL: na reconsulta o lote foi virado p/
+         processando (updated_at), não da consulta original (created_at) — senão marcaria horas. --}}
+    data-iniciado-em="{{ optional($statusLote === 'processando' ? $lote->updated_at : $lote->created_at)->timestamp }}"
 >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div class="mb-4 sm:mb-6 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -224,19 +226,42 @@
             @if(!empty($analise))
                 @php $cn = $analise['cnpjs'] ?? []; @endphp
                 @php $retryElegiveis = $retryPendentes['elegiveis'] ?? []; @endphp
+                @php $retryAlvos = $retryPendentes['alvos'] ?? []; @endphp
                 <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3 flex-wrap">
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Análise da Consulta</span>
-                        @if(!empty($retryElegiveis))
-                            <button type="button"
-                                onclick="document.getElementById('modal-retry-{{ $lote->id }}').classList.remove('hidden')"
-                                class="text-[11px] font-semibold px-3 py-1.5 rounded text-white"
-                                style="background-color: #d97706">
-                                ↻ Reconsultar {{ count($retryElegiveis) }} fonte(s) com falha — 50% off
-                            </button>
-                        @endif
+                        {{-- Reconsultar (retry ilimitado) e Comunicar com o suporte COEXISTEM: o
+                             suporte aparece quando uma fonte já foi reconsultada ≥1× e ainda falha. --}}
+                        <div class="flex items-center gap-2 flex-wrap">
+                            @if(!empty($retryAlvos))
+                                <button type="button"
+                                    onclick="document.getElementById('modal-retry-{{ $lote->id }}').classList.remove('hidden')"
+                                    class="text-[11px] font-semibold px-3 py-1.5 rounded text-white"
+                                    style="background-color: #d97706">
+                                    ↻ Reconsultar {{ count($retryAlvos) }} CNPJ(s) com falha — plano {{ $retryPendentes['desconto_pct_efetivo'] ?? 50 }}% off
+                                </button>
+                            @endif
+                            @if(!empty($retryPendentes['suporte']))
+                                <a href="{{ route('app.suporte.index', ['contexto' => $retryPendentes['suporte']['contexto'], 'mensagem' => $retryPendentes['suporte']['mensagem'], 'url' => route('app.consulta.lote.show', ['id' => $lote->id])]) }}"
+                                    data-link
+                                    class="text-[11px] font-semibold px-3 py-1.5 rounded text-white"
+                                    style="background-color: #1f2937">
+                                    Comunicar com o suporte
+                                </a>
+                            @endif
+                        </div>
                     </div>
                     <div class="p-4 space-y-4">
+                        @if(!empty($retryPendentes['motivos']))
+                            <div class="space-y-1.5">
+                                @foreach($retryPendentes['motivos'] as $m)
+                                    <div class="flex items-start gap-2 rounded px-3 py-2 text-[11px] leading-snug" style="background-color: #fffbeb; border: 1px solid #fcd34d; color: #92400e">
+                                        <span class="shrink-0">{{ $m['icone'] }}</span>
+                                        <span>{{ $m['orientacao'] }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
                         <div>
                             <p class="text-sm text-gray-800 leading-relaxed">{{ $analise['texto'] }}</p>
                             <div class="flex flex-wrap gap-2 mt-3">
@@ -252,6 +277,13 @@
                                         </span>
                                     @endif
                                 @endforeach
+                                {{-- Falhas de integração são por FONTE (não por CNPJ): consulta que não
+                                     rodou por instabilidade do provedor, reconsultável. Fora do rollup. --}}
+                                @if((int) ($analise['falhas'] ?? 0) > 0)
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium text-white" style="background-color: #b45309" title="Fontes que falharam por instabilidade do provedor — podem ser reconsultadas.">
+                                        {{ (int) $analise['falhas'] }} {{ (int) $analise['falhas'] > 1 ? 'consultas com falha' : 'consulta com falha' }}
+                                    </span>
+                                @endif
                             </div>
                         </div>
 
@@ -265,6 +297,7 @@
                                             <th class="text-center px-2 whitespace-nowrap">Regular</th>
                                             <th class="text-center px-2 whitespace-nowrap">Atenção</th>
                                             <th class="text-center px-2 whitespace-nowrap">Indeterm.</th>
+                                            <th class="text-center px-2 whitespace-nowrap">Falha</th>
                                             <th class="text-center px-2 whitespace-nowrap">N/Consult.</th>
                                             <th class="text-left pl-3 w-2/5">Distribuição</th>
                                         </tr>
@@ -276,6 +309,7 @@
                                                 <td class="text-center px-2 font-medium" style="color: {{ ($f['regular'] ?? 0) > 0 ? '#047857' : '#9ca3af' }}">{{ (int) ($f['regular'] ?? 0) }}</td>
                                                 <td class="text-center px-2 font-medium" style="color: {{ ($f['atencao'] ?? 0) > 0 ? '#dc2626' : '#9ca3af' }}">{{ (int) ($f['atencao'] ?? 0) }}</td>
                                                 <td class="text-center px-2 font-medium" style="color: {{ ($f['indeterminado'] ?? 0) > 0 ? '#d97706' : '#9ca3af' }}">{{ (int) ($f['indeterminado'] ?? 0) }}</td>
+                                                <td class="text-center px-2 font-medium" style="color: {{ ($f['falha'] ?? 0) > 0 ? '#b45309' : '#9ca3af' }}">{{ (int) ($f['falha'] ?? 0) }}</td>
                                                 <td class="text-center px-2 text-gray-400">{{ (int) ($f['neutro'] ?? 0) }}</td>
                                                 <td class="pl-3">
                                                     @include('autenticado.consulta.partials._analise-distribuicao', ['f' => $f])
@@ -295,6 +329,7 @@
                                             <span class="font-medium" style="color: {{ ($f['regular'] ?? 0) > 0 ? '#047857' : '#9ca3af' }}">Regular {{ (int) ($f['regular'] ?? 0) }}</span>
                                             <span class="font-medium" style="color: {{ ($f['atencao'] ?? 0) > 0 ? '#dc2626' : '#9ca3af' }}">Atenção {{ (int) ($f['atencao'] ?? 0) }}</span>
                                             <span class="font-medium" style="color: {{ ($f['indeterminado'] ?? 0) > 0 ? '#d97706' : '#9ca3af' }}">Indeterm. {{ (int) ($f['indeterminado'] ?? 0) }}</span>
+                                            <span class="font-medium" style="color: {{ ($f['falha'] ?? 0) > 0 ? '#b45309' : '#9ca3af' }}">Falha {{ (int) ($f['falha'] ?? 0) }}</span>
                                             <span class="text-gray-400">N/Consult. {{ (int) ($f['neutro'] ?? 0) }}</span>
                                         </div>
                                         @include('autenticado.consulta.partials._analise-distribuicao', ['f' => $f])
@@ -313,14 +348,15 @@
                                 <button type="button" onclick="document.getElementById('modal-retry-{{ $lote->id }}').classList.add('hidden')" class="text-gray-400 text-xl leading-none">&times;</button>
                             </div>
                             <form id="form-retry-{{ $lote->id }}" class="p-4 space-y-3">
-                                <p class="text-[11px] text-gray-500">Reconsulta apenas as fontes que falharam por instabilidade do provedor, com 50% de desconto (válido 1× por fonte).</p>
-                                @foreach($retryPendentes['elegiveis'] as $e)
-                                    <label class="flex items-start gap-2 text-xs">
-                                        <input type="checkbox" checked class="mt-0.5"
-                                            data-alvo-tipo="{{ $e['alvo_tipo'] }}" data-alvo-id="{{ $e['alvo_id'] }}" data-fonte="{{ $e['fonte'] }}">
-                                        <span class="text-gray-700"><strong>{{ $e['titulo'] }}</strong> — {{ $e['cnpj'] }} ({{ $e['razao'] }}) · erro {{ $e['codigo'] }}
-                                            · <span class="text-amber-700 font-medium">{{ \App\Support\Dinheiro::brl((float) $e['preco_creditos']) }}</span></span>
-                                    </label>
+                                <p class="text-[11px] text-gray-500">Reconsulta os CNPJs com fontes que falharam por instabilidade, no plano <strong>{{ $lote->plano->nome }}</strong> com {{ $retryPendentes['desconto_pct_efetivo'] ?? 50 }}% de desconto. Reconsultamos apenas as fontes que falharam de cada CNPJ.</p>
+                                @foreach($retryPendentes['alvos'] ?? [] as $a)
+                                    <div class="flex items-start justify-between gap-2 text-xs border border-gray-100 rounded p-2">
+                                        <div class="text-gray-700">
+                                            <strong>{{ $a['cnpj'] }}</strong> <span class="text-gray-500">({{ $a['razao'] }})</span>
+                                            <span class="block text-[11px] text-gray-400 mt-0.5">Reconsultaremos: {{ implode(', ', $a['fontes']) }}</span>
+                                        </div>
+                                        <span class="text-amber-700 font-medium whitespace-nowrap">{{ (int) $a['preco_creditos'] }} créditos ({{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $a['preco_creditos'])) }})</span>
+                                    </div>
                                 @endforeach
                                 @foreach($retryPendentes['inelegiveis'] as $i)
                                     <div class="flex items-start gap-2 text-xs text-gray-400">
@@ -328,8 +364,13 @@
                                         <span>{{ $i['titulo'] }} — {{ $i['cnpj'] }}</span>
                                     </div>
                                 @endforeach
+                                @php
+                                    $pricing = app(\App\Services\PricingCatalogService::class);
+                                    $custoRetryCreditos = (int) $retryPendentes['total_preco_creditos'];
+                                    $saldoAposCreditos = (int) $credits - $custoRetryCreditos;
+                                @endphp
                                 <div class="border-t border-gray-200 pt-3 text-xs text-gray-600">
-                                    Custo: <strong>{{ \App\Support\Dinheiro::brl((float) $retryPendentes['total_preco_creditos']) }}</strong> · Saldo: {{ \App\Support\Dinheiro::brl((float) $credits) }}
+                                    Custo: <strong>{{ $custoRetryCreditos }} créditos ({{ \App\Support\Dinheiro::brl($pricing->creditsToCurrency($custoRetryCreditos)) }})</strong> · Saldo: {{ (int) $credits }} <span class="text-gray-400">→</span> <strong style="color: {{ $saldoAposCreditos < 0 ? '#dc2626' : '#047857' }}">{{ $saldoAposCreditos }} créditos</strong>
                                 </div>
                                 <div class="flex justify-end gap-2">
                                     <button type="button" onclick="document.getElementById('modal-retry-{{ $lote->id }}').classList.add('hidden')" class="text-xs px-3 py-1.5 text-gray-600">Cancelar</button>
@@ -345,10 +386,6 @@
                         form.dataset.bound = '1';
                         form.addEventListener('submit', function (ev) {
                             ev.preventDefault();
-                            var selecao = Array.from(form.querySelectorAll('input[type=checkbox]:checked')).map(function (c) {
-                                return { alvo_tipo: c.dataset.alvoTipo, alvo_id: parseInt(c.dataset.alvoId, 10), fonte: c.dataset.fonte };
-                            });
-                            if (!selecao.length) return;
                             var btn = form.querySelector('button[type=submit]');
                             if (btn) { btn.disabled = true; btn.textContent = 'Reconsultando…'; }
                             fetch('{{ route('app.consulta.lote.retry', ['id' => $lote->id]) }}', {
@@ -358,7 +395,7 @@
                                     'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
                                     'X-Requested-With': 'XMLHttpRequest'
                                 },
-                                body: JSON.stringify({ selecao: selecao })
+                                body: JSON.stringify({})
                             }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
                               .then(function (res) {
                                   if (res.ok && res.j.redirect_url) { window.location = res.j.redirect_url; }
@@ -388,25 +425,102 @@
                         </div>
                     </div>
 
-                    {{-- Tooltip rápido (CSS puro, sem delay) dos badges de certidão. Wrapper sem
-                         overflow-x-auto pra não cortar o balão (tabela de 7 colunas cabe no desktop). --}}
+                    {{-- Tooltip rápido (sem delay) dos badges de certidão. O `.cert-tip` no markup é só
+                         a FONTE do conteúdo (fica display:none); o balão real é um singleton no <body>
+                         com position:fixed — sobrepõe qualquer card/overflow (o container do card tem
+                         overflow-hidden) e, se o texto não couber acima do chip, abre para baixo. --}}
                     <style>
                         .cert-chip { position: relative; cursor: default; }
-                        .cert-tip {
-                            display: none; position: absolute; left: 50%; bottom: calc(100% + 7px);
-                            transform: translateX(-50%); z-index: 60; width: max-content; max-width: 250px;
+                        .cert-tip { display: none; }
+                        #cert-tip-float {
+                            display: none; position: fixed; z-index: 9999; max-width: 280px;
                             background: #111827; color: #fff; padding: 7px 9px; border-radius: 7px;
                             font-size: 11px; line-height: 1.4; font-weight: 400; text-transform: none;
                             letter-spacing: normal; text-align: left; white-space: normal; overflow-wrap: anywhere;
-                            box-shadow: 0 6px 18px rgba(17,24,39,.22); pointer-events: none;
+                            box-shadow: 0 6px 18px rgba(17,24,39,.22); pointer-events: none; overflow: hidden;
                         }
-                        .cert-tip strong { display: block; font-weight: 700; margin-bottom: 2px; }
-                        .cert-tip::after {
-                            content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
-                            border: 5px solid transparent; border-top-color: #111827;
+                        #cert-tip-float strong { display: block; font-weight: 700; margin-bottom: 2px; }
+                        #cert-tip-arrow {
+                            display: none; position: fixed; z-index: 9999; width: 0; height: 0;
+                            border: 5px solid transparent; pointer-events: none;
                         }
-                        .cert-chip:hover .cert-tip { display: block; }
                     </style>
+                    <script>
+                    (function () {
+                        if (window.__certTipInit) return; // página pode ser re-renderizada via AJAX (data-link)
+                        window.__certTipInit = true;
+
+                        var MARGIN = 8, GAP = 7;
+                        var float = null, arrow = null, atual = null;
+
+                        function ensure() {
+                            if (float) return;
+                            float = document.createElement('div');
+                            float.id = 'cert-tip-float';
+                            arrow = document.createElement('div');
+                            arrow.id = 'cert-tip-arrow';
+                            document.body.appendChild(float);
+                            document.body.appendChild(arrow);
+                        }
+
+                        function hide() {
+                            atual = null;
+                            if (float) { float.style.display = 'none'; arrow.style.display = 'none'; }
+                        }
+
+                        function show(chip) {
+                            var src = chip.querySelector('.cert-tip');
+                            if (!src || !src.innerHTML.trim()) { hide(); return; }
+                            ensure();
+                            atual = chip;
+
+                            float.innerHTML = src.innerHTML;
+                            float.style.display = 'block';
+                            float.style.visibility = 'hidden';
+                            float.style.maxHeight = '';
+                            float.style.left = '0px';
+                            float.style.top = '0px';
+
+                            var vw = window.innerWidth, vh = window.innerHeight;
+                            var r = chip.getBoundingClientRect();
+                            var espacoAcima = r.top - GAP - MARGIN;
+                            var espacoAbaixo = vh - r.bottom - GAP - MARGIN;
+                            var th = float.offsetHeight;
+
+                            // Prefere acima; vira pra baixo quando o texto não cabe e há mais espaço lá.
+                            var acima = th <= espacoAcima || espacoAcima >= espacoAbaixo;
+                            var maxH = Math.max(40, acima ? espacoAcima : espacoAbaixo);
+                            if (th > maxH) {
+                                float.style.maxHeight = maxH + 'px';
+                                th = float.offsetHeight;
+                            }
+
+                            var tw = float.offsetWidth;
+                            var left = Math.round(Math.min(Math.max(MARGIN, r.left + r.width / 2 - tw / 2), vw - tw - MARGIN));
+                            var top = Math.round(acima ? r.top - GAP - th : r.bottom + GAP);
+                            float.style.left = left + 'px';
+                            float.style.top = top + 'px';
+                            float.style.visibility = 'visible';
+
+                            // Seta segue o centro do chip, presa à largura do balão.
+                            var setaLeft = Math.round(Math.min(Math.max(r.left + r.width / 2 - 5, left + 4), left + tw - 14));
+                            arrow.style.left = setaLeft + 'px';
+                            arrow.style.top = (acima ? r.top - GAP : r.bottom + GAP - 5) + 'px';
+                            arrow.style.borderTopColor = acima ? '#111827' : 'transparent';
+                            arrow.style.borderBottomColor = acima ? 'transparent' : '#111827';
+                            arrow.style.display = 'block';
+                        }
+
+                        document.addEventListener('mouseover', function (e) {
+                            var chip = e.target.closest ? e.target.closest('.cert-chip') : null;
+                            if (chip === atual) return;
+                            if (chip) { show(chip); } else if (atual) { hide(); }
+                        });
+                        window.addEventListener('scroll', hide, true);
+                        window.addEventListener('resize', hide);
+                        document.addEventListener('click', hide, true);
+                    })();
+                    </script>
 
                     @php $autoAbrirDetalhe = $resultados->total() === 1; @endphp
                     <div class="hidden md:block overflow-visible">
