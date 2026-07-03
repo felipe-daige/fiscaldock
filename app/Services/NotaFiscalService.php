@@ -500,6 +500,17 @@ class NotaFiscalService
     {
         $query = XmlNota::doUsuario($userId);
 
+        // Dedup EFD × XML (mesma regra do NotaItemUnificadoService: EFD vence). A mesma
+        // nota pode existir nos 2 acervos (declarada via XML + escriturada no SPED); na
+        // visão unificada (sem filtro origem) o lado XML só entra quando a chave não
+        // existe em efd_notas. Com origem=xml explícito o acervo XML aparece completo.
+        if (empty($filtros['origem'])) {
+            $query->whereRaw(
+                'NOT EXISTS (SELECT 1 FROM efd_notas en WHERE en.user_id = ? AND en.chave_acesso = xml_notas.chave_acesso)',
+                [$userId]
+            );
+        }
+
         // O filtro de importação aponta para uma importação EFD; notas XML não
         // pertencem a ela, então são removidas da listagem/KPIs quando ativo.
         if (! empty($filtros['importacao_id'])) {
