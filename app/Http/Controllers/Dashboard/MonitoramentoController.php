@@ -114,6 +114,81 @@ class MonitoramentoController extends Controller
     /**
      * Monitoramento de clientes - visualiza status dos clientes monitorados.
      */
+    /**
+     * Painel de monitoramento: gestão dos monitorados (consulta contínua sobre participante,
+     * cliente ou grupo) + gestão de grupos embutida. Substitui a antiga view /grupos.
+     */
+    public function painel(Request $request)
+    {
+        $painelView = self::AUTH_VIEW_PREFIX.'painel';
+
+        if (! view()->exists($painelView)) {
+            abort(404);
+        }
+
+        if (! Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        $user = Auth::user();
+
+        $assinaturas = MonitoramentoAssinatura::with(['participante', 'cliente', 'grupo.participantes', 'plano'])
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['ativo', 'pausado'])
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function (MonitoramentoAssinatura $a) {
+                $ultima = $a->consultas()->whereNotNull('executado_em')->orderByDesc('executado_em')->first();
+
+                return [
+                    'id' => $a->id,
+                    'alvo_tipo' => $a->alvoTipo(),
+                    'alvo_nome' => $a->grupo_id ? ($a->grupo?->nome ?? '—') : ($a->alvo()?->razao_social ?? '—'),
+                    'alvo_doc' => $a->grupo_id ? null : \App\Support\Cnpj::formatar((string) ($a->alvo()?->documento ?? '')),
+                    'membros' => $a->grupo_id ? $a->membrosDoGrupo()->count() : null,
+                    'plano_nome' => $a->plano?->nome,
+                    'frequencia' => $a->frequencia,
+                    'status' => $a->status,
+                    'custo_ciclo' => $a->custoCiclo(),
+                    'ultima' => $ultima ? [
+                        'executado_em' => $ultima->executado_em?->format('d/m/Y H:i'),
+                        'situacao' => $ultima->situacao_geral,
+                        'status' => $ultima->status,
+                        'lote_id' => $ultima->consulta_lote_id,
+                    ] : null,
+                    'proxima_em' => $a->proxima_execucao_em?->format('d/m/Y'),
+                ];
+            });
+
+        $grupos = ParticipanteGrupo::doUsuario($user->id)
+            ->withCount('participantes')
+            ->orderBy('nome')
+            ->get();
+        $gruposMonitorados = MonitoramentoAssinatura::where('user_id', $user->id)
+            ->whereIn('status', ['ativo', 'pausado'])
+            ->whereNotNull('grupo_id')->pluck('grupo_id')->all();
+
+        $planos = MonitoramentoPlano::all()
+            ->filter(fn ($p) => (bool) $p->is_active)
+            ->sortBy('custo_creditos')->values()
+            ->map(fn ($p) => ['id' => $p->id, 'nome' => $p->nome, 'custo' => (int) $p->custo_creditos])
+            ->all();
+
+        $data = [
+            'assinaturas' => $assinaturas,
+            'grupos' => $grupos,
+            'gruposMonitorados' => $gruposMonitorados,
+            'planos' => $planos,
+            'credits' => $this->creditService->getBalance($user),
+        ];
+
+        if ($this->isAjaxRequest($request)) {
+            return response(view($painelView, $data)->render())->header('Content-Type', 'text/html');
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, array_merge(['initialView' => $painelView], $data));
+    }
+
     public function clientes(Request $request)
     {
         $clientesView = self::AUTH_VIEW_PREFIX.'clientes';

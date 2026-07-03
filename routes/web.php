@@ -186,6 +186,9 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     // Rotas de Monitoramento
     Route::prefix('app/monitoramento')->name('app.monitoramento.')->group(function () {
 
+        // Painel: gestão dos monitorados (consulta contínua) + grupos embutidos (2026-07-03)
+        Route::get('/painel', [MonitoramentoController::class, 'painel'])->name('painel');
+
         Route::get('/historico', [MonitoramentoController::class, 'historico'])->name('historico');
         Route::get('/clientes', [MonitoramentoController::class, 'clientes'])->name('clientes');
         // SSE para acompanhar resultado de consultas em tempo real
