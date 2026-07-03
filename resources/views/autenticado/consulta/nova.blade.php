@@ -2,23 +2,33 @@
 <div class="bg-gray-100 min-h-screen" id="consultas-nova-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {{-- Header Section --}}
-        <div class="flex items-start justify-between gap-4 mb-4 sm:mb-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Nova Consulta</h1>
-                    <p class="text-xs text-gray-500 mt-1">Selecione participantes, escolha o produto de consulta e execute consultas fiscais em lote.</p>
-                </div>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4 sm:mb-6">
+            <div class="min-w-0">
+                <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Nova Consulta</h1>
+                <p class="text-xs text-gray-500 mt-1">Selecione participantes, escolha o produto de consulta e execute consultas fiscais em lote.</p>
             </div>
-            <a
-                href="/app/consulta/historico"
-                class="inline-flex items-center gap-2 px-4 py-2 rounded border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-                data-link
-            >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                Histórico
-            </a>
+            <div class="grid w-full grid-cols-2 gap-2 sm:w-auto sm:flex sm:items-center sm:justify-end flex-shrink-0">
+                <a
+                    href="/app/consulta/planos"
+                    class="inline-flex min-w-0 items-center justify-center gap-1.5 rounded border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-50 sm:gap-2 sm:px-4 sm:text-sm"
+                    data-link
+                >
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    <span class="truncate">Planos</span>
+                </a>
+                <a
+                    href="/app/consulta/historico"
+                    class="inline-flex min-w-0 items-center justify-center gap-1.5 rounded border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-50 sm:gap-2 sm:px-4 sm:text-sm"
+                    data-link
+                >
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="truncate">Histórico</span>
+                </a>
+            </div>
         </div>
         @php
             $gratuitoCap = $gratuitoCap ?? null;

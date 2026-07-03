@@ -132,17 +132,16 @@
 
     {{-- CONSULTAS --}}
     <x-sidebar.section title="CONSULTAS">
-        <x-sidebar.group title="Consulta CNPJ" :open="request()->is('app/consulta/*')">
+        {{-- Link direto (sem submenu): Histórico e Planos são alcançados pelos botões
+             no header de /app/consulta/nova — mesmo padrão de Clientes/Participantes. --}}
+        <x-sidebar.item href="/app/consulta/nova">
             <x-slot:icon>
                 <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
             </x-slot:icon>
-
-            <x-sidebar.group-item href="/app/consulta/nova">Nova Consulta</x-sidebar.group-item>
-            <x-sidebar.group-item href="/app/consulta/historico">Histórico</x-sidebar.group-item>
-            <x-sidebar.group-item href="/app/consulta/planos" pill="Novo">Planos</x-sidebar.group-item>
-        </x-sidebar.group>
+            Consulta CNPJ
+        </x-sidebar.item>
 
         <x-sidebar.group title="Monitoramento" :open="request()->is('app/monitoramento/*')">
             <x-slot:icon>
@@ -178,27 +177,25 @@
             Empresa
         </x-sidebar.item>
 
-        <x-sidebar.group title="Clientes" :open="request()->is('app/clientes*') || request()->is('app/cliente/*')">
+        <x-sidebar.item href="/app/clientes">
             <x-slot:icon>
                 <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                 </svg>
             </x-slot:icon>
 
-            <x-sidebar.group-item href="/app/clientes">Listagem</x-sidebar.group-item>
-            <x-sidebar.group-item href="/app/cliente/novo">Novo Cliente</x-sidebar.group-item>
-        </x-sidebar.group>
+            Clientes
+        </x-sidebar.item>
 
-        <x-sidebar.group title="Participantes" :open="request()->is('app/participantes*') || request()->is('app/participante/*')">
+        <x-sidebar.item href="/app/participantes">
             <x-slot:icon>
                 <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                 </svg>
             </x-slot:icon>
 
-            <x-sidebar.group-item href="/app/participantes">Listagem</x-sidebar.group-item>
-            <x-sidebar.group-item href="/app/participante/novo">Novo Participante</x-sidebar.group-item>
-        </x-sidebar.group>
+            Participantes
+        </x-sidebar.item>
     </x-sidebar.section>
 
     <x-slot:footer>
