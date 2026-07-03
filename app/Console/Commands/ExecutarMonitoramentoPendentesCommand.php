@@ -35,7 +35,7 @@ class ExecutarMonitoramentoPendentesCommand extends Command
         EntitlementService $entitlements,
     ): void {
         foreach (MonitoramentoAssinatura::pendentesExecucao() as $assinatura) {
-            $custo = (int) ($assinatura->plano->custo_creditos ?? 0);
+            $custo = $assinatura->custoCiclo();
 
             // Freio de consumo do auto-monitor (§6.2): pausa e avisa ao atingir o cap do ciclo,
             // nunca afeta consulta ad-hoc nem trava lote em curso.
@@ -95,7 +95,7 @@ class ExecutarMonitoramentoPendentesCommand extends Command
                 continue;
             }
 
-            $custo = (int) ($assinatura->plano->custo_creditos ?? 0);
+            $custo = $assinatura->custoCiclo();
 
             if ($entitlements->monitoramentoCapEstourado($assinatura->user, $custo)) {
                 $assinatura->pausar();

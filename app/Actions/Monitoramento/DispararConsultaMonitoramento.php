@@ -24,14 +24,18 @@ class DispararConsultaMonitoramento
     public function execute(MonitoramentoAssinatura $assinatura, ?MonitoramentoConsulta $parent = null): MonitoramentoConsulta
     {
         $plano = $assinatura->plano;
-        $custo = (int) ($plano->custo_creditos ?? 0);
         $user = $assinatura->user;
-        $alvoModel = $assinatura->alvo();
+
+        // Grupo é DINÂMICO: membros avaliados agora; custo do ciclo = N × plano (custoCiclo).
+        $ehGrupo = $assinatura->alvoTipo() === 'grupo';
+        $membros = $ehGrupo ? $assinatura->membrosDoGrupo() : collect();
+        $custo = $assinatura->custoCiclo();
 
         $consulta = MonitoramentoConsulta::create([
             'user_id' => $assinatura->user_id,
             'participante_id' => $assinatura->participante_id,
             'cliente_id' => $assinatura->cliente_id,
+            'grupo_id' => $assinatura->grupo_id,
             'plano_id' => $assinatura->plano_id,
             'assinatura_id' => $assinatura->id,
             'parent_consulta_id' => $parent?->id,
@@ -40,11 +44,34 @@ class DispararConsultaMonitoramento
             'creditos_cobrados' => $custo,
         ]);
 
+        // Grupo sem membros: ciclo em vazio — não cobra, não cria lote; a próxima execução
+        // segue agendada pelo chamador (agendarProximaExecucao no comando).
+        if ($ehGrupo && $membros->isEmpty()) {
+            $consulta->update(['status' => 'sucesso', 'creditos_cobrados' => 0, 'executado_em' => now()]);
+
+            return $consulta;
+        }
+
         if ($custo > 0 && ! $this->creditService->deduct($user, $custo, 'monitoramento_assinatura', "Monitoramento contínuo — assinatura #{$assinatura->id}", $consulta)) {
             $consulta->marcarErro('saldo_insuficiente', 'Saldo insuficiente no disparo do ciclo.');
 
             return $consulta;
         }
+
+        // Alvos do lote: membros do grupo, ou o alvo único — mesmo shape do executar da consulta.
+        $alvos = $ehGrupo
+            ? $membros->map(fn ($p) => [
+                'tipo' => 'participante', 'id' => $p->id,
+                'cnpj' => preg_replace('/[^0-9]/', '', (string) $p->documento),
+                'uf' => $p->uf ?? null, 'crt' => $p->crt ?? null,
+            ])->values()
+            : collect([[
+                'tipo' => $assinatura->alvoTipo(),
+                'id' => $assinatura->alvo()->id,
+                'cnpj' => preg_replace('/[^0-9]/', '', (string) $assinatura->alvo()->documento),
+                'uf' => $assinatura->alvo()->uf ?? null,
+                'crt' => $assinatura->participante_id ? ($assinatura->alvo()->crt ?? null) : null,
+            ]]);
 
         $tabId = (string) Str::uuid();
         $lote = ConsultaLote::create([
@@ -52,36 +79,32 @@ class DispararConsultaMonitoramento
             'cliente_id' => $assinatura->cliente_id,
             'plano_id' => $plano->id,
             'status' => ConsultaLote::STATUS_PROCESSANDO,
-            'total_participantes' => 1,
+            'total_participantes' => $alvos->count(),
             'creditos_cobrados' => $custo,
             'tab_id' => $tabId,
         ]);
-        if ($assinatura->participante_id) {
-            $lote->participantes()->attach([$assinatura->participante_id]);
+        $participanteIds = $alvos->where('tipo', 'participante')->pluck('id')->all();
+        if ($participanteIds) {
+            $lote->participantes()->attach($participanteIds);
         }
         $consulta->update(['consulta_lote_id' => $lote->id]);
 
-        $alvo = [
-            'cnpj' => preg_replace('/[^0-9]/', '', (string) $alvoModel->documento),
-            'uf' => $alvoModel->uf ?? null,
-            'crt' => $assinatura->participante_id ? ($alvoModel->crt ?? null) : null,
-        ];
-
-        $job = new ProcessarConsultaJob(
+        $totalAlvos = $alvos->count();
+        $jobs = $alvos->values()->map(fn ($alvo, $i) => new ProcessarConsultaJob(
             loteId: $lote->id,
-            alvoTipo: $assinatura->alvoTipo(),
-            alvoId: $alvoModel->id,
+            alvoTipo: $alvo['tipo'],
+            alvoId: $alvo['id'],
             userId: $user->id,
             tabId: $tabId,
             consultasIncluidas: $plano->consultas_incluidas,
-            alvo: $alvo,
+            alvo: ['cnpj' => $alvo['cnpj'], 'uf' => $alvo['uf'], 'crt' => $alvo['crt']],
             etapas: $plano->resolvedEtapas(),
-            alvoIndice: 1,
-            totalAlvos: 1,
-        );
+            alvoIndice: $i + 1,
+            totalAlvos: $totalAlvos,
+        ))->all();
 
         $consultaId = $consulta->id;
-        Bus::batch([$job])
+        Bus::batch($jobs)
             ->name("monitoramento-lote-{$lote->id}")
             ->then(function () use ($lote, $consultaId) {
                 app(FecharLoteService::class)->fechar($lote->id, resumo: ['engine' => 'laravel', 'origem' => 'monitoramento']);
