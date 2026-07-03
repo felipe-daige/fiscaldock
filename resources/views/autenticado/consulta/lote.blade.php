@@ -252,9 +252,13 @@
                             @if(!empty($reconsultaTudo))
                                 <button type="button"
                                     onclick="document.getElementById('modal-reconsulta-{{ $lote->id }}').classList.remove('hidden')"
-                                    class="text-[11px] font-semibold px-3 py-1.5 rounded text-white"
+                                    class="inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded text-white"
                                     style="background-color: #334155">
-                                    ⟳ Consultar novamente
+                                    <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+                                        <polyline points="21 3 21 9 15 9" />
+                                    </svg>
+                                    Consultar novamente
                                 </button>
                             @endif
                         </div>
