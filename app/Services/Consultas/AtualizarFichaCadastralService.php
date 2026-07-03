@@ -74,6 +74,17 @@ class AtualizarFichaCadastralService
             }
         }
 
+        // A nota do regime anda JUNTO com o regime (o loop acima pula nulls de propósito):
+        // consulta nova com regime direto (sem nota) precisa LIMPAR a nota antiga, senão a
+        // ficha exibiria "Lucro Real — foi optante do Simples..." de uma consulta passada.
+        if (! empty($dados['regime_tributario']) && in_array('regime_tributario_nota', $fillable, true)) {
+            $nota = $dados['regime_tributario_nota'] ?? null;
+            if ($alvo->regime_tributario_nota !== $nota) {
+                $alvo->regime_tributario_nota = $nota;
+                $mudou = true;
+            }
+        }
+
         if (in_array('ultima_consulta_em', $fillable, true)) {
             $alvo->ultima_consulta_em = now();
             $mudou = true;

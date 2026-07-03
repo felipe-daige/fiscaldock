@@ -26,6 +26,7 @@ class Participante extends Model
         'nome_fantasia',
         'situacao_cadastral',
         'regime_tributario',
+        'regime_tributario_nota',
         'uf',
         'cep',
         'municipio',

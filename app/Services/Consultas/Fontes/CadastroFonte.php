@@ -132,6 +132,7 @@ class CadastroFonte implements Fonte
             'mei' => (bool) ($raw['opcao_pelo_mei'] ?? false),
             // Derivados do cadastro (minhareceita) — usados pelo plano Validação.
             'regime_tributario' => $this->regimeTributario($raw),
+            'regime_tributario_nota' => $this->notaRegime($raw),
             'historico_simples' => [
                 'optante' => (bool) ($raw['opcao_pelo_simples'] ?? false),
                 'data_opcao' => $raw['data_opcao_pelo_simples'] ?? null,
@@ -173,6 +174,66 @@ class CadastroFonte implements Fonte
         }
 
         return 'Não informado'; // RFB não publica regime p/ este CNPJ (nem Simples/MEI)
+    }
+
+    /**
+     * Nota exibida junto do regime (x-regime-tributario). Só quando o regime atual ficou
+     * "Não informado" mas houve opção pelo Simples no passado — paridade com as notas
+     * legadas "foi optante do Simples Nacional até <data>" que o n8n gravava.
+     */
+    private function notaRegime(array $raw): ?string
+    {
+        if ($this->regimeTributario($raw) !== 'Não informado') {
+            return null;
+        }
+
+        $exclusao = trim((string) ($raw['data_exclusao_do_simples'] ?? ''));
+        if ($exclusao === '') {
+            return null;
+        }
+
+        try {
+            return 'foi optante do Simples Nacional até '.\Carbon\Carbon::parse($exclusao)->format('d/m/Y');
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /** True quando o cadastro veio sem regime real (candidato ao fallback pela matriz). */
+    public function regimeIndefinido(array $dados): bool
+    {
+        return ($dados['regime_tributario'] ?? null) === 'Não informado';
+    }
+
+    /**
+     * Completa o regime de uma FILIAL com o da matriz. O regime (Lucro Real/Presumido/
+     * Arbitrado) é da pessoa jurídica inteira, mas a RFB só publica os arquivos de forma
+     * de tributação para o CNPJ da matriz — filial vinha "Não informado" mesmo consultada.
+     * `regime_tributario_origem = 'matriz'` já é reconhecido pelo ResultadoDetalhePresenter.
+     */
+    public function aplicarRegimeDaMatriz(array $dados, array $rawMatriz): array
+    {
+        $regime = $this->regimeTributario($rawMatriz);
+
+        if ($regime === 'Não informado') {
+            // Matriz também sem regime publicado — aproveita ao menos a nota histórica dela.
+            $dados['regime_tributario_nota'] ??= $this->notaRegime($rawMatriz);
+
+            return $dados;
+        }
+
+        $dados['regime_tributario'] = $regime;
+        $dados['regime_tributario_origem'] = 'matriz';
+        $dados['regime_tributario_nota'] = 'regime da matriz (RFB)';
+
+        if (empty($dados['regime_tributario_historico'])) {
+            $dados['regime_tributario_historico'] = array_map(fn ($r) => [
+                'ano' => $r['ano'] ?? null,
+                'forma' => $this->humanizarRegime((string) ($r['forma_de_tributacao'] ?? '')),
+            ], is_array($rawMatriz['regime_tributario'] ?? null) ? $rawMatriz['regime_tributario'] : []);
+        }
+
+        return $dados;
     }
 
     /** "LUCRO REAL" → "Lucro Real". */

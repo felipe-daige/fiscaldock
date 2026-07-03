@@ -23,6 +23,7 @@ return new class extends Migration
             // Dados Receita Federal
             $table->string('situacao_cadastral', 50)->nullable()->after('bairro');
             $table->string('regime_tributario', 50)->nullable()->after('situacao_cadastral');
+            $table->string('regime_tributario_nota')->nullable()->after('regime_tributario');
             $table->string('cnpj_matriz', 14)->nullable()->after('regime_tributario');
             $table->string('suframa', 20)->nullable()->after('cnpj_matriz');
             $table->string('codigo_municipal', 10)->nullable()->after('suframa');
@@ -62,6 +63,7 @@ return new class extends Migration
                 'bairro',
                 'situacao_cadastral',
                 'regime_tributario',
+                'regime_tributario_nota',
                 'cnpj_matriz',
                 'suframa',
                 'codigo_municipal',

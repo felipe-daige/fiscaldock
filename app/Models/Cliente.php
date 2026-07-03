@@ -32,6 +32,7 @@ class Cliente extends Model
         'bairro',
         'situacao_cadastral',
         'regime_tributario',
+        'regime_tributario_nota',
         'cnpj_matriz',
         'suframa',
         'codigo_municipal',

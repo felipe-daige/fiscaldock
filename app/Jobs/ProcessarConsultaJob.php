@@ -137,6 +137,26 @@ class ProcessarConsultaJob implements ShouldQueue
                     if (! empty($dados['endereco']['municipio'])) {
                         $alvo['municipio'] = $dados['endereco']['municipio'];
                     }
+
+                    // Regime tributário é da PJ inteira, mas a RFB só publica no CNPJ da
+                    // matriz — filial consultada ficava "Não informado". 1 chamada extra
+                    // (grátis, minhareceita) pra matriz completa o regime; falha aqui não
+                    // derruba o cadastro (fica "Não informado" como antes).
+                    $cnpjAlvo = \App\Support\Cnpj::digitos((string) ($alvo['cnpj'] ?? ''));
+                    if ($fonte instanceof \App\Services\Consultas\Fontes\CadastroFonte
+                        && $resp->status === 'sucesso'
+                        && $fonte->regimeIndefinido($dados)
+                        && \App\Support\Cnpj::ehFilial($cnpjAlvo)) {
+                        try {
+                            $throttle->aguardar($fonte->provider());
+                            $respMatriz = $provider->consultar('', ['cnpj' => \App\Support\Cnpj::matriz($cnpjAlvo)]);
+                            if ($respMatriz->status === 'sucesso') {
+                                $dados = $fonte->aplicarRegimeDaMatriz($dados, $respMatriz->raw);
+                            }
+                        } catch (\Throwable $e) {
+                            report($e);
+                        }
+                    }
                 }
 
                 $resultado = new ResultadoFonte(

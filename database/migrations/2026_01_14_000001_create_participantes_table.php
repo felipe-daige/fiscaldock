@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('nome_fantasia')->nullable();
             $table->string('situacao_cadastral')->nullable();
             $table->string('regime_tributario')->nullable();
+            $table->string('regime_tributario_nota')->nullable();
             $table->string('uf', 2)->nullable();
             $table->string('cnpj_matriz', 14)->nullable()->index();
             $table->string('inscricao_estadual')->nullable();
