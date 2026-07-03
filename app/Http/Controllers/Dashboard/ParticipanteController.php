@@ -14,6 +14,7 @@ use App\Models\MonitoramentoConsulta;
 use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\XmlNota;
+use App\Services\Consultas\ResultadoDetalhePresenter;
 use App\Services\CreditService;
 use App\Services\NotaFiscalService;
 use App\Services\ParecerFiscalService;
@@ -33,9 +34,22 @@ class ParticipanteController extends Controller
 
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
 
+    /** Rótulo curto por fonte p/ os badges compactos da listagem (espelha /app/clientes). */
+    private const FONTE_CURTA = [
+        'cnd_federal' => 'Federal',
+        'cnd_estadual' => 'Estadual',
+        'cnd_municipal' => 'Municipal',
+        'crf_fgts' => 'FGTS',
+        'cndt' => 'CNDT',
+        'sintegra' => 'Sintegra',
+        'cgu_cnc' => 'Sanções',
+        'cnj_improbidade' => 'Improbidade',
+    ];
+
     public function __construct(
         protected CreditService $creditService,
         protected NotaFiscalService $notaFiscalService,
+        protected ResultadoDetalhePresenter $detalhePresenter,
     ) {}
 
     /**
@@ -366,7 +380,9 @@ class ParticipanteController extends Controller
         // Filtros
         $importacaoId = $request->get('importacao');
         $clienteId = $request->get('cliente');
-        $origemTipo = $request->get('origem');
+        // Origem é DERIVADA (importacao_efd_id/origem_tipo) — o n8n não preenche origem_tipo,
+        // então filtrar pelo valor cru nunca casava nada. Whitelist de grupos derivados.
+        $origemTipo = in_array($request->get('origem'), ['efd', 'xml', 'manual'], true) ? $request->get('origem') : null;
         $busca = $request->get('busca');
         $regimeTributario = $request->get('regime');
         $situacaoCadastral = $request->get('situacao');
@@ -384,12 +400,14 @@ class ParticipanteController extends Controller
         $regValida = ['regular', 'irregular', 'indeterminada', 'nao_consultado'];
         $regularidade = in_array($request->get('regularidade'), $regValida, true) ? $request->get('regularidade') : null;
         $monitorado = in_array($request->get('monitorado'), ['sim', 'nao'], true) ? $request->get('monitorado') : null;
+        $ordem = in_array($request->get('ordem'), ['movimentacao', 'recentes', 'nome'], true) ? $request->get('ordem') : 'movimentacao';
 
         $resumoService = app(\App\Services\Consultas\ParticipanteFiscalResumoService::class);
 
-        // Papel de cada participante com movimentação (1 query) — serve o filtro de
-        // relação E o badge por linha.
-        $papeis = $resumoService->papelPorParticipante($userId);
+        // Papel + valor + qtd de cada participante com movimentação (1 query) — serve o
+        // filtro de relação, o badge de papel E a coluna de movimentação por linha.
+        $resumoMov = $resumoService->resumoMovimentacao($userId);
+        $papeis = array_map(fn (array $r) => $r['papel'], $resumoMov);
 
         // Regularidade por participante (só quando o filtro é usado).
         $regularidadeMap = $regularidade !== null ? $resumoService->regularidadePorParticipante($userId) : [];

@@ -13,6 +13,18 @@ it('expõe metadados da fonte CND Federal', function () {
     expect($f->params([])['preferencia_emissao'])->toBe('2via');
 });
 
+it('consulta pela matriz quando o alvo é filial (PGFN só emite pela matriz)', function () {
+    $f = new CndFederalFonte();
+
+    // Filiais reais que retornaram 620 ("A certidão deve ser emitida para o CNPJ da matriz").
+    expect($f->params(['cnpj' => '07903169001768'])['cnpj'])->toBe('07903169000109');
+    expect($f->params(['cnpj' => '15.527.906/0035-85'])['cnpj'])->toBe('15527906000136');
+
+    // Matriz e documento não-CNPJ (CPF) passam intactos.
+    expect($f->params(['cnpj' => '19131243000197'])['cnpj'])->toBe('19131243000197');
+    expect($f->params(['cnpj' => '52998224725'])['cnpj'])->toBe('52998224725');
+});
+
 it('normaliza sucesso mapeando tipo→status e campos da certidão', function () {
     $raw = ['code' => 200, 'data' => [[
         'tipo' => 'Positiva com efeitos de negativa',

@@ -2,6 +2,8 @@
 
 namespace App\Services\Consultas\Fontes;
 
+use App\Support\Cnpj;
+
 class CndFederalFonte extends FonteCertidaoInfoSimples
 {
     public function chave(): string
@@ -21,7 +23,17 @@ class CndFederalFonte extends FonteCertidaoInfoSimples
 
     public function params(array $alvo): array
     {
-        return parent::params($alvo) + ['preferencia_emissao' => '2via'];
+        $params = parent::params($alvo) + ['preferencia_emissao' => '2via'];
+
+        // A CND RFB/PGFN é unificada por base e só é emitida para a MATRIZ (regra da Receita).
+        // Consultar a filial retorna 620 ("A certidão deve ser emitida para o CNPJ da matriz"),
+        // cobrado pela InfoSimples e irrecuperável por retry. A certidão da matriz vale para
+        // todos os estabelecimentos; ResultadoDetalhePresenter::notaMatrizFederal explica no card.
+        if (Cnpj::ehFilial($params['cnpj'])) {
+            $params['cnpj'] = Cnpj::matriz($params['cnpj']);
+        }
+
+        return $params;
     }
 
     protected function mapearSucesso(array $data): array
