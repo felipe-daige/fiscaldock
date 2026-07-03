@@ -249,6 +249,14 @@
                                     Comunicar com o suporte
                                 </a>
                             @endif
+                            @if(!empty($reconsultaTudo))
+                                <button type="button"
+                                    onclick="document.getElementById('modal-reconsulta-{{ $lote->id }}').classList.remove('hidden')"
+                                    class="text-[11px] font-semibold px-3 py-1.5 rounded text-white"
+                                    style="background-color: #334155">
+                                    ⟳ Consultar novamente
+                                </button>
+                            @endif
                         </div>
                     </div>
                     <div class="p-4 space-y-4">
@@ -406,6 +414,87 @@
                               }).catch(function () {
                                   alert('Falha de rede. Tente novamente.');
                                   if (btn) { btn.disabled = false; btn.textContent = 'Confirmar reconsulta'; }
+                              });
+                        });
+                    })();
+                    </script>
+                @endif
+
+                {{-- Reconsulta TOTAL ("Consultar novamente"): plano escolhível, preço integral,
+                     cria LOTE NOVO via executar (histórico preservado). Só em status terminal. --}}
+                @if(!empty($reconsultaTudo))
+                    <div id="modal-reconsulta-{{ $lote->id }}" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color: rgba(17,24,39,.5)">
+                        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[85vh] overflow-y-auto">
+                            <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                                <span class="text-sm font-semibold text-gray-800">Consultar novamente</span>
+                                <button type="button" onclick="document.getElementById('modal-reconsulta-{{ $lote->id }}').classList.add('hidden')" class="text-gray-400 text-xl leading-none">&times;</button>
+                            </div>
+                            <form id="form-reconsulta-{{ $lote->id }}" class="p-4 space-y-3">
+                                <p class="text-[11px] text-gray-500">Refaz a consulta dos <strong>{{ $reconsultaTudo['total_alvos'] }} CNPJ(s)</strong> deste lote no plano escolhido, a preço integral. Cria uma <strong>nova consulta</strong> — esta permanece no histórico.</p>
+                                <div>
+                                    <label class="text-[11px] text-gray-500 block mb-1">Plano</label>
+                                    <select id="select-reconsulta-plano-{{ $lote->id }}" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
+                                        @foreach($reconsultaTudo['planos'] as $pl)
+                                            <option value="{{ $pl['id'] }}"{{ $pl['id'] === (int) $lote->plano_id ? ' selected' : '' }} data-creditos="{{ $pl['creditos_unit'] }}" data-rotulo="{{ $pl['rotulo_preco'] }}">
+                                                {{ $pl['nome'] }} — {{ $pl['rotulo_preco'] }}/CNPJ
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="border-t border-gray-200 pt-3 text-xs text-gray-600">
+                                    Custo: <strong id="custo-reconsulta-{{ $lote->id }}"></strong> · Saldo: {{ (int) $credits }} créditos
+                                </div>
+                                <div class="flex justify-end gap-2">
+                                    <button type="button" onclick="document.getElementById('modal-reconsulta-{{ $lote->id }}').classList.add('hidden')" class="text-xs px-3 py-1.5 text-gray-600">Cancelar</button>
+                                    <button type="submit" class="text-xs px-3 py-1.5 rounded text-white" style="background-color: #047857">Confirmar consulta</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <script>
+                    (function () {
+                        var form = document.getElementById('form-reconsulta-{{ $lote->id }}');
+                        if (!form || form.dataset.bound) return;
+                        form.dataset.bound = '1';
+                        var alvos = {!! json_encode(['participante_ids' => $reconsultaTudo['participante_ids'], 'cliente_ids' => $reconsultaTudo['cliente_ids']]) !!};
+                        var totalAlvos = {{ (int) $reconsultaTudo['total_alvos'] }};
+                        var sel = document.getElementById('select-reconsulta-plano-{{ $lote->id }}');
+                        var custoEl = document.getElementById('custo-reconsulta-{{ $lote->id }}');
+                        function atualizaCusto() {
+                            var opt = sel.options[sel.selectedIndex];
+                            var unit = parseInt(opt.dataset.creditos || '0', 10);
+                            custoEl.textContent = totalAlvos + ' × ' + opt.dataset.rotulo + ' = ' + (totalAlvos * unit) + ' créditos';
+                        }
+                        sel.addEventListener('change', atualizaCusto);
+                        atualizaCusto();
+                        form.addEventListener('submit', function (ev) {
+                            ev.preventDefault();
+                            var btn = form.querySelector('button[type=submit]');
+                            if (btn) { btn.disabled = true; btn.textContent = 'Consultando…'; }
+                            var tabId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'rc-' + Date.now();
+                            fetch('{{ route('app.consulta.nova.executar') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                body: JSON.stringify({
+                                    participante_ids: alvos.participante_ids,
+                                    cliente_ids: alvos.cliente_ids,
+                                    plano_id: parseInt(sel.value, 10),
+                                    tab_id: tabId
+                                })
+                            }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+                              .then(function (res) {
+                                  if (res.ok && res.j.redirect_url) { window.location = res.j.redirect_url; }
+                                  else {
+                                      alert((res.j && (res.j.message || res.j.error)) || 'Não foi possível iniciar a consulta.');
+                                      if (btn) { btn.disabled = false; btn.textContent = 'Confirmar consulta'; }
+                                  }
+                              }).catch(function () {
+                                  alert('Falha de rede. Tente novamente.');
+                                  if (btn) { btn.disabled = false; btn.textContent = 'Confirmar consulta'; }
                               });
                         });
                     })();

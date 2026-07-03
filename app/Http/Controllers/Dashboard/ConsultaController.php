@@ -1683,6 +1683,54 @@ class ConsultaController extends Controller
             }
         }
 
+        // "Consultar novamente" (reconsulta total, preço integral): lote terminal expõe os alvos
+        // ainda válidos + planos ativos com preço, e o modal posta pro executar (lote NOVO —
+        // histórico preservado). Backend-autoritativo: executar re-valida ownership/plano/saldo.
+        $reconsultaTudo = null;
+        if ($statusLote === ConsultaLote::STATUS_FINALIZADO) {
+            $rows = ConsultaResultado::where('consulta_lote_id', $lote->id)
+                ->get(['participante_id', 'cliente_id']);
+
+            $participanteIds = Participante::where('user_id', $user->id)
+                ->somenteCnpj()
+                ->whereIn('id', $rows->pluck('participante_id')->filter()->unique()->values())
+                ->pluck('id')->values()->all();
+
+            $clienteIds = Cliente::where('user_id', $user->id)
+                ->whereIn('id', $rows->pluck('cliente_id')->filter()->unique()->values())
+                ->whereRaw("length(regexp_replace(coalesce(documento, ''), '[^0-9]', '', 'g')) = 14")
+                ->pluck('id')->values()->all();
+
+            $totalAlvos = count($participanteIds) + count($clienteIds);
+            if ($totalAlvos > 0) {
+                // is_active resolve via PlanoCatalog (accessor) — filtrar em PHP, não em SQL (DB stale).
+                $planos = MonitoramentoPlano::all()
+                    ->filter(fn ($p) => (bool) $p->is_active)
+                    ->sortBy('custo_creditos')
+                    ->values()
+                    ->map(function ($p) use ($user) {
+                        $unit = $this->pricingCatalogService->getProductCreditsByPlan($p, $user);
+
+                        return [
+                            'id' => $p->id,
+                            'codigo' => $p->codigo,
+                            'nome' => $p->nome,
+                            'creditos_unit' => $unit,
+                            'rotulo_preco' => $unit.' créditos ('.\App\Support\Dinheiro::brl(
+                                $this->pricingCatalogService->creditsToCurrency($unit)
+                            ).')',
+                        ];
+                    })->all();
+
+                $reconsultaTudo = [
+                    'participante_ids' => $participanteIds,
+                    'cliente_ids' => $clienteIds,
+                    'total_alvos' => $totalAlvos,
+                    'planos' => $planos,
+                ];
+            }
+        }
+
         $data = [
             'lote' => $lote,
             'statusLote' => $statusLote,
@@ -1693,6 +1741,7 @@ class ConsultaController extends Controller
             'resultados' => $resultados,
             'temResultadosNoLote' => $temResultadosNoLote,
             'aguardaPersistencia' => $aguardaPersistencia,
+            'reconsultaTudo' => $reconsultaTudo,
             'credits' => $this->creditService->getBalance($user),
             'retryPendentes' => $temResultadosNoLote
                 ? app(\App\Services\Consultas\RetryConsultaService::class)->pendentesRetry($lote)
