@@ -9,6 +9,7 @@ use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoConsulta;
 use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
+use App\Models\ParticipanteGrupo;
 use App\Services\CreditService;
 use App\Services\Entitlements\EntitlementService;
 use App\Services\PricingCatalogService;
@@ -336,7 +337,10 @@ class MonitoramentoController extends Controller
             $clienteIds = [$clienteId];
         }
 
-        if ((empty($participanteIds) && empty($clienteIds)) || empty($planoId)) {
+        // Grupo como alvo (monitoramento contínuo de grupo — dinâmico: membros avaliados a cada ciclo).
+        $grupoId = $request->input('grupo_id');
+
+        if ((empty($participanteIds) && empty($clienteIds) && empty($grupoId)) || empty($planoId)) {
             return response()->json([
                 'success' => false,
                 'error' => 'Dados incompletos. Selecione participantes ou clientes e um plano.',
@@ -370,6 +374,25 @@ class MonitoramentoController extends Controller
                 return response()->json([
                     'success' => false,
                     'error' => 'Cliente não encontrado ou sem permissão.',
+                ], Response::HTTP_FORBIDDEN);
+            }
+        }
+
+        // Ownership do grupo — e alvo exclusivo (grupo não combina com participantes/clientes
+        // no mesmo request; a semântica de cobrança/dedup é por assinatura de grupo).
+        $grupo = null;
+        if ($grupoId) {
+            if (! empty($participanteIds) || ! empty($clienteIds)) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Monitore o grupo OU alvos individuais — não os dois no mesmo pedido.',
+                ], Response::HTTP_BAD_REQUEST);
+            }
+            $grupo = ParticipanteGrupo::where('id', $grupoId)->where('user_id', $user->id)->first();
+            if (! $grupo) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Grupo não encontrado ou sem permissão.',
                 ], Response::HTTP_FORBIDDEN);
             }
         }
@@ -494,6 +517,33 @@ class MonitoramentoController extends Controller
 
                 $assinaturasCriadas++;
                 $ativos++;
+            }
+
+            if ($grupo) {
+                $assinaturaExistente = MonitoramentoAssinatura::where('grupo_id', $grupo->id)
+                    ->where('user_id', $user->id)
+                    ->whereIn('status', ['ativo', 'pausado'])
+                    ->first();
+
+                if ($assinaturaExistente) {
+                    $jaExistentes++;
+                } elseif ($limiteCnpjs !== null && $ativos >= $limiteCnpjs) {
+                    $bloqueadosPorLimite++;
+                } else {
+                    $frequenciaDias = $this->frequenciaParaDias($frequencia);
+
+                    MonitoramentoAssinatura::create([
+                        'user_id' => $user->id,
+                        'grupo_id' => $grupo->id,
+                        'plano_id' => $plano->id,
+                        'frequencia_dias' => $frequenciaDias,
+                        'status' => 'ativo',
+                        'proxima_execucao_em' => Carbon::now()->addDays($frequenciaDias)->setTime(8, 0, 0),
+                    ]);
+
+                    $assinaturasCriadas++;
+                    $ativos++;
+                }
             }
 
             DB::commit();
