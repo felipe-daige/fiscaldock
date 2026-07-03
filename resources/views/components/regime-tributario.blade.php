@@ -1,23 +1,31 @@
 @props(['valor' => null, 'nota' => null])
 
 @php
-    // Componente restaurado 2026-07-01 (era untracked e foi wipeado; app não bootava sem ele
-    // pois muitas views usam <x-regime-tributario>). Reconciliar se o agente do regime tiver
-    // uma versão mais rica.
+    // Regime em 2 linhas: valor principal + nota curta embaixo (cinza). Nada de nota inline
+    // com "—" — em coluna estreita com truncate a nota era cortada. Tooltip carrega o texto
+    // completo. Espelha o formatRegimeTributario do consulta-lote.js.
     $valorTxt = trim((string) $valor);
     $notaTxt = trim((string) $nota);
-    // Nota histórica "foi optante do <REGIME> até <DATA>" → exibe o regime histórico + a data.
+    // Nota histórica "foi optante do <REGIME> até <DATA>" → regime histórico + data.
     // O valor canônico ($valor) segue "Não informado" — a nota só enriquece o display.
     $hist = ($notaTxt !== '' && preg_match('/^foi optante do (.+?) at[ée] (.+)$/iu', $notaTxt, $m))
         ? ['regime' => trim($m[1]), 'ate' => trim($m[2])]
         : null;
+    // "regime da matriz (RFB)" → rótulo curto padronizado.
+    $notaCurta = preg_match('/matriz/iu', $notaTxt) ? 'Regime da matriz (RFB)' : $notaTxt;
     $display = $valorTxt !== '' ? $valorTxt : 'Não informado';
 @endphp
 
 @if($hist)
-    <span {{ $attributes }} title="{{ $notaTxt }}">{{ $hist['regime'] }} <span style="color:#9ca3af;">(histórico)</span> · até {{ $hist['ate'] }}</span>
+    <span {{ $attributes->merge(['class' => 'inline-flex flex-col leading-tight']) }} title="Regime atual não publicado pela Receita — último regime conhecido: {{ $notaTxt }}">
+        <span>{{ $hist['regime'] }} <span style="color:#9ca3af;">(histórico)</span></span>
+        <span class="text-[11px]" style="color:#9ca3af;">até {{ $hist['ate'] }}</span>
+    </span>
 @elseif($notaTxt !== '')
-    <span {{ $attributes }} title="{{ $notaTxt }}">{{ $display }} <span style="color:#9ca3af;font-size:.85em;">— {{ $notaTxt }}</span></span>
+    <span {{ $attributes->merge(['class' => 'inline-flex flex-col leading-tight']) }} title="{{ $display }} — {{ $notaTxt }}">
+        <span>{{ $display }}</span>
+        <span class="text-[11px]" style="color:#9ca3af;">{{ $notaCurta }}</span>
+    </span>
 @else
     <span {{ $attributes }}>{{ $display }}</span>
 @endif

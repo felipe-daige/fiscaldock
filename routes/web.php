@@ -161,6 +161,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         Route::get('/participantes', [ParticipanteController::class, 'index'])->name('participantes');
         Route::get('/participantes/todos-ids', [ParticipanteController::class, 'todosIds'])->name('participantes.todos-ids');
         Route::delete('/participantes/bulk-delete', [ParticipanteController::class, 'bulkExcluir'])->name('participantes.bulk-delete');
+        Route::post('/participantes/dossie-lote', [ParticipanteController::class, 'dossieLote'])->name('participantes.dossie-lote');
         Route::post('/participantes/associar-grupo', [ParticipanteGrupoController::class, 'associar'])->name('participantes.associar-grupo');
         Route::get('/participantes/por-importacao/{id}', [ParticipanteController::class, 'porImportacao'])->name('participantes.por-importacao');
         Route::post('/participantes/por-ids', [ParticipanteController::class, 'porIds'])->name('participantes.por-ids');

@@ -1,29 +1,27 @@
 {{-- Clientes - Autenticado --}}
-<div class="bg-gray-100 min-h-screen" id="clientes-container">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <div class="space-y-6">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                    <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Clientes</h1>
-                    <p class="mt-1 text-xs text-gray-500">Cadastros operacionais, vínculos com participantes e ações da base de clientes.</p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button type="button" id="btn-dossie-lote-header" class="inline-flex items-center gap-2 px-4 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium transition hover:bg-gray-50">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        Dossiê PDF
-                    </button>
-                    <a href="/app/cliente/novo" data-link class="inline-flex items-center gap-2 px-4 py-2 rounded bg-gray-800 text-white text-sm font-medium transition hover:bg-gray-700">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Novo Cliente
-                    </a>
-                </div>
-            </div>
+<x-cadastro-lista-layout
+    container-id="clientes-container"
+    titulo="Clientes"
+    subtitulo="Cadastros operacionais, vínculos com participantes e ações da base de clientes."
+>
+    <x-slot:acoes>
+        <button type="button" id="btn-dossie-lote-header" class="inline-flex min-w-0 items-center justify-center gap-1.5 rounded border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-50 sm:gap-2 sm:px-4 sm:text-sm">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <span class="truncate sm:hidden">Dossiê</span>
+            <span class="hidden sm:inline">Dossiê PDF</span>
+        </button>
+        <a href="/app/cliente/novo" data-link class="inline-flex min-w-0 items-center justify-center gap-1.5 rounded bg-gray-800 px-3 py-2 text-xs font-medium text-white transition hover:bg-gray-700 sm:gap-2 sm:px-4 sm:text-sm">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            <span class="truncate sm:hidden">Novo</span>
+            <span class="hidden sm:inline">Novo Cliente</span>
+        </a>
+    </x-slot:acoes>
 
-            <div id="clientes-error-region"></div>
+            <div id="clientes-error-region" class="hidden"></div>
 
             <div class="bg-white rounded border border-gray-300 overflow-hidden">
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
@@ -53,7 +51,7 @@
                 </div>
             </div>
 
-            <form method="GET" action="/app/clientes" class="bg-white rounded border border-gray-300 overflow-hidden">
+            <form id="form-filtros-clientes" method="GET" action="/app/clientes" class="bg-white rounded border border-gray-300 overflow-hidden">
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                     <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
                 </div>
@@ -67,13 +65,19 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                         <div>
                             <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Buscar</label>
-                            <input
-                                type="text"
-                                name="busca"
-                                value="{{ $filtros['busca'] ?? '' }}"
-                                placeholder="Nome, CNPJ ou CPF..."
-                                class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
-                            >
+                            <div class="relative">
+                                <input
+                                    type="text"
+                                    name="busca"
+                                    id="busca-clientes"
+                                    value="{{ $filtros['busca'] ?? '' }}"
+                                    placeholder="Nome, CNPJ ou CPF..."
+                                    class="w-full border border-gray-300 rounded text-[13px] py-2.5 pl-10 pr-4 focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                >
+                                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
                         </div>
                         <div>
                             <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Status da consulta</label>
@@ -102,6 +106,14 @@
                                 <option value="BAIXADA" {{ ($filtros['situacao'] ?? '') === 'BAIXADA' ? 'selected' : '' }}>Baixada</option>
                                 <option value="SUSPENSA" {{ ($filtros['situacao'] ?? '') === 'SUSPENSA' ? 'selected' : '' }}>Suspensa</option>
                                 <option value="INAPTA" {{ ($filtros['situacao'] ?? '') === 'INAPTA' ? 'selected' : '' }}>Inapta</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Ordenar por</label>
+                            <select name="ordem" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                                <option value="movimentacao" {{ ($filtros['ordem'] ?? 'movimentacao') === 'movimentacao' ? 'selected' : '' }}>Maior movimentação</option>
+                                <option value="recentes" {{ ($filtros['ordem'] ?? '') === 'recentes' ? 'selected' : '' }}>Mais recentes</option>
+                                <option value="nome" {{ ($filtros['ordem'] ?? '') === 'nome' ? 'selected' : '' }}>Nome (A–Z)</option>
                             </select>
                         </div>
                     </div>
@@ -174,62 +186,82 @@
                 </div>
             </form>
 
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4 text-sm">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                     <button type="button" id="btn-selecionar-todos-clientes" class="text-gray-700 hover:text-gray-900 font-medium underline">
                         Selecionar todos (<span id="total-filtrado-clientes">{{ $clientes->total() }}</span>)
                     </button>
                     <button type="button" id="btn-limpar-selecao-clientes" class="text-gray-500 hover:text-gray-700 hidden">Limpar seleção</button>
                 </div>
-                <span id="total-selecionados-clientes-info" class="text-xs text-gray-500 hidden">
+                <span id="total-selecionados-clientes-info" class="text-xs text-gray-500 hidden sm:text-right">
                     <span id="total-selecionados-clientes">0</span> selecionados (todas as páginas)
                 </span>
             </div>
 
             <div id="acoes-lote" class="hidden bg-white border border-gray-300 rounded p-4">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex min-w-0 items-center gap-3">
                         <span class="inline-flex items-center justify-center w-8 h-8 rounded text-white text-sm font-bold" id="clientes-selecionados-count" style="background-color: #374151">0</span>
                         <span class="text-sm font-medium text-gray-900"><span id="clientes-selecionados-label">clientes selecionados</span></span>
                     </div>
-                    <div class="flex gap-2">
-                        <button type="button" id="btn-exportar" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">Exportar</button>
-                        <button type="button" id="btn-dossie-lote" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">Dossiê PDF</button>
-                        <button type="button" id="btn-consultar-selecionados" class="px-4 py-2 rounded bg-gray-800 text-white text-sm font-medium transition hover:bg-gray-700">Consultar</button>
-                        <button type="button" id="btn-bulk-delete" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm transition hover:bg-red-700">Deletar</button>
-                        <button type="button" id="btn-limpar-selecao" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">Limpar</button>
+                    <div class="grid grid-cols-2 gap-2 sm:flex">
+                        <button type="button" id="btn-exportar" class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium transition hover:bg-gray-50 sm:px-4">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Exportar
+                        </button>
+                        <button type="button" id="btn-dossie-lote" class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium transition hover:bg-gray-50 sm:px-4">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Dossiê PDF
+                        </button>
+                        <button type="button" id="btn-consultar-selecionados" class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded bg-gray-800 text-white text-sm font-medium transition hover:bg-gray-700 sm:px-4">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            Consultar
+                        </button>
+                        <button type="button" id="btn-bulk-delete" class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded border text-white text-sm font-medium transition hover:opacity-90 sm:px-4" style="background-color: #b91c1c; border-color: #b91c1c">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                            Deletar
+                        </button>
+                        <button type="button" id="btn-limpar-selecao" class="px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium transition hover:bg-gray-50 sm:px-4">Limpar</button>
                     </div>
                 </div>
             </div>
 
             <div id="clientes-list-view" class="bg-white rounded border border-gray-300 overflow-hidden">
-                @if(isset($clientes) && $clientes->count() > 0)
-                    <div class="overflow-x-auto">
-                        <table class="w-full table-fixed">
+                <div class="overflow-x-auto">
+                        {{-- min-w: sem ele o table-fixed espreme a coluna de nome a ~0 no mobile em vez
+                             de acionar o scroll horizontal do overflow-x-auto --}}
+                        <table class="w-full min-w-[960px] table-fixed">
                             <thead>
                                 <tr class="border-b border-gray-300">
                                     <th class="w-10 px-3 py-2.5 text-left bg-gray-50">
-                                        <input type="checkbox" id="select-all-clientes" class="w-4 h-4 rounded border-gray-300 text-gray-700 focus:ring-gray-400">
+                                        <input type="checkbox" id="select-all-clientes" class="w-4 h-4 rounded border-gray-300 text-gray-700 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                                     </th>
                                     <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Cliente</th>
-                                    <th class="w-[150px] px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Documento</th>
-                                    <th class="hidden lg:table-cell w-[140px] px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Regime</th>
-                                    <th class="hidden xl:table-cell w-[190px] px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Contato</th>
-                                    <th class="w-[90px] px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Particip.</th>
-                                    <th class="w-[280px] px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Certidões</th>
-                                    <th class="w-[72px] px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ações</th>
+                                    <th class="w-[160px] px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Movimentação</th>
+                                    <th class="hidden lg:table-cell w-[140px] px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Regime</th>
+                                    <th class="w-[280px] px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Situação / Certidões</th>
+                                    <th class="w-[140px] px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participantes</th>
+                                    <th class="w-20 px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ações</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100">
-                                @foreach($clientes as $cliente)
+                            <tbody class="divide-y divide-gray-100" id="clientes-tbody">
+                                @forelse($clientes as $cliente)
                                     <tr class="hover:bg-gray-50/50 transition-colors cliente-row" data-cliente-id="{{ $cliente->id }}">
                                         <td class="px-3 py-3">
                                             @unless($cliente->is_empresa_propria)
-                                                <input type="checkbox" class="cliente-checkbox w-4 h-4 rounded border-gray-300 text-gray-700 focus:ring-gray-400" data-id="{{ $cliente->id }}">
+                                                <input type="checkbox" class="cliente-checkbox w-4 h-4 rounded border-gray-300 text-gray-700 focus:ring-1 focus:ring-gray-400 focus:border-gray-400" data-id="{{ $cliente->id }}">
                                             @endunless
                                         </td>
                                         <td class="px-3 py-3">
-                                            <div class="flex items-center gap-2 flex-wrap min-w-0">
+                                            <div class="flex items-center gap-2 min-w-0">
                                                 <a
                                                     href="/app/cliente/{{ $cliente->id }}"
                                                     data-link
@@ -238,11 +270,11 @@
                                                 >
                                                     {{ $cliente->razao_social ?? $cliente->nome ?? '-' }}
                                                 </a>
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cliente->tipo_pessoa === 'PJ' ? '#374151' : '#9ca3af' }}">
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white flex-shrink-0" style="background-color: {{ $cliente->tipo_pessoa === 'PJ' ? '#374151' : '#9ca3af' }}">
                                                     {{ $cliente->tipo_pessoa }}
                                                 </span>
                                                 @if($cliente->is_empresa_propria)
-                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Empresa Própria</span>
+                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white flex-shrink-0" style="background-color: #047857">Empresa Própria</span>
                                                 @endif
                                             </div>
                                             @if($cliente->nome_fantasia)
@@ -266,7 +298,10 @@
                                                     </a>
                                                 </div>
                                             @endif
-                                            <div class="mt-2 flex items-center gap-2 flex-wrap">
+                                            <div class="text-[11px] font-mono text-gray-500 mt-1" title="{{ $cliente->documento_formatado }}">
+                                                {{ $cliente->documento_formatado }}
+                                            </div>
+                                            <div class="mt-1 flex items-center gap-2 flex-wrap">
                                                 <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cliente->consulta_status_hex }}">
                                                     {{ $cliente->consulta_status_label }}
                                                 </span>
@@ -275,37 +310,48 @@
                                                 {{ $cliente->consulta_status_meta }}
                                             </div>
                                         </td>
-                                        <td class="px-3 py-3 text-sm text-gray-700 font-mono truncate" title="{{ $cliente->documento_formatado }}">{{ $cliente->documento_formatado }}</td>
-                                        <td class="hidden lg:table-cell px-3 py-3 text-sm text-gray-700 truncate" title="{{ $cliente->regime_tributario }}"><x-regime-tributario :valor="$cliente->regime_tributario" :nota="$cliente->regime_tributario_nota" /></td>
-                                        <td class="hidden xl:table-cell px-3 py-3">
-                                            <div class="text-sm text-gray-700 truncate" title="{{ $cliente->email ?: '' }}">{{ $cliente->email ?: '-' }}</div>
-                                            <div class="text-[11px] text-gray-500 mt-1 truncate">
-                                                {{ $cliente->telefone ?: 'Sem telefone' }}
-                                                @if($cliente->uf)
-                                                    <span class="mx-1">·</span>{{ $cliente->uf }}
-                                                @endif
+                                        <td class="px-3 py-3 text-right align-middle">
+                                            @if(($cliente->mov_qtd ?? 0) > 0)
+                                                <div class="text-sm font-semibold text-gray-900 whitespace-nowrap" title="Valor total movimentado nas notas desta empresa (EFD + XML, sem duplicar a mesma nota; entradas + saídas)">
+                                                    R$ {{ number_format($cliente->mov_valor, 2, ',', '.') }}
+                                                </div>
+                                                <div class="text-[11px] mt-0.5 whitespace-nowrap">
+                                                    <span style="color:#2563eb" title="Entradas (compras)">↓ {{ number_format($cliente->mov_entradas, 0, ',', '.') }}</span>
+                                                    <span class="text-gray-300 mx-0.5">·</span>
+                                                    <span style="color:#047857" title="Saídas (vendas)">↑ {{ number_format($cliente->mov_saidas, 0, ',', '.') }}</span>
+                                                </div>
+                                                <div class="text-[11px] text-gray-500 mt-0.5 whitespace-nowrap">
+                                                    {{ number_format($cliente->mov_qtd, 0, ',', '.') }} {{ $cliente->mov_qtd === 1 ? 'nota' : 'notas' }}@if($cliente->mov_ultima_nota) · até {{ $cliente->mov_ultima_nota }}@endif
+                                                </div>
+                                            @else
+                                                <span class="text-[11px] text-gray-400">Sem notas fiscais</span>
+                                            @endif
+                                        </td>
+                                        <td class="hidden lg:table-cell px-3 py-3 text-center text-sm text-gray-700">
+                                            <x-regime-tributario :valor="$cliente->regime_tributario" :nota="$cliente->regime_tributario_nota" />
+                                        </td>
+                                        <td class="px-3 py-3 text-center">
+                                            <div class="flex flex-col items-center gap-1" title="{{ $cliente->situacao_cadastral ?? '' }}">
+                                                <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                                                    @if(($cliente->situacao_cadastral ?? '') === 'ATIVA')
+                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857" title="Situação cadastral (Receita Federal)">Ativa</span>
+                                                    @elseif($cliente->situacao_cadastral)
+                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #d97706" title="Situação cadastral (Receita Federal)">{{ $cliente->situacao_cadastral }}</span>
+                                                    @else
+                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #9ca3af" title="Situação cadastral">{{ $cliente->ativo ? 'Ativo' : 'Inativo' }}</span>
+                                                    @endif
+                                                    @forelse($cliente->certidoes_badges ?? [] as $b)
+                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: {{ $b['hex'] }}" title="{{ $b['titulo'] }}: {{ $b['label'] }}">{{ $b['curto'] }}</span>
+                                                    @empty
+                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #9ca3af">Sem certidões consultadas</span>
+                                                    @endforelse
+                                                </div>
                                             </div>
                                         </td>
-                                        <td class="px-3 py-3 text-sm text-gray-700">
+                                        <td class="px-3 py-3 text-center text-sm text-gray-700">
                                             {{ number_format($cliente->participantes_count ?? 0, 0, ',', '.') }}
                                         </td>
-                                        <td class="px-3 py-3">
-                                            <div class="flex items-center gap-1.5 flex-wrap">
-                                                @if(($cliente->situacao_cadastral ?? '') === 'ATIVA')
-                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857" title="Situação cadastral (Receita Federal)">Ativa</span>
-                                                @elseif($cliente->situacao_cadastral)
-                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #d97706" title="Situação cadastral (Receita Federal)">{{ $cliente->situacao_cadastral }}</span>
-                                                @else
-                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #9ca3af" title="Situação cadastral">{{ $cliente->ativo ? 'Ativo' : 'Inativo' }}</span>
-                                                @endif
-                                                @forelse($cliente->certidoes_badges ?? [] as $b)
-                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: {{ $b['hex'] }}" title="{{ $b['titulo'] }}: {{ $b['label'] }}">{{ $b['curto'] }}</span>
-                                                @empty
-                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #9ca3af">Sem certidões consultadas</span>
-                                                @endforelse
-                                            </div>
-                                        </td>
-                                        <td class="px-3 py-3 text-right">
+                                        <td class="px-3 py-3 text-right align-middle">
                                             <x-acoes-menu trigger="kebab">
                                                 <x-acoes-item href="/app/cliente/{{ $cliente->id }}/editar" data-link>Editar</x-acoes-item>
                                                 @unless($cliente->is_empresa_propria)
@@ -317,11 +363,29 @@
                                             </x-acoes-menu>
                                         </td>
                                     </tr>
-                                @endforeach
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="px-6 py-12 text-center">
+                                            <div class="flex flex-col items-center">
+                                                <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                                </svg>
+                                                <h3 class="text-lg font-semibold text-gray-900 mb-2 uppercase tracking-wide">Nenhum cliente encontrado</h3>
+                                                <p class="text-sm text-gray-600 mb-4">Ajuste os filtros ou cadastre um novo cliente.</p>
+                                                <a href="/app/cliente/novo" data-link class="inline-flex items-center gap-2 px-4 py-2 rounded bg-gray-800 text-white text-sm font-medium transition hover:bg-gray-700">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                    </svg>
+                                                    Cadastrar Cliente
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
-                @else
+                {{-- Estado vazio agora é renderizado pelo @forelse acima.
                     <div class="text-center py-12 px-6">
                         <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -335,13 +399,9 @@
                             Cadastrar Cliente
                         </a>
                     </div>
-                @endif
-            </div>
-
-            @if(isset($clientes) && $clientes->count() > 0)
-
+                --}}
                 @if($clientes->hasPages())
-                    <div class="bg-white rounded border border-gray-300 px-4 py-3">
+                    <div class="border-t border-gray-300 px-4 py-3">
                         <div class="flex items-center justify-between gap-3">
                             <p class="text-[10px] text-gray-500 uppercase tracking-wide">
                                 Mostrando {{ $clientes->firstItem() }}-{{ $clientes->lastItem() }} de {{ $clientes->total() }}
@@ -352,31 +412,29 @@
                         </div>
                     </div>
                 @endif
-            @endif
-        </div>
-    </div>
-</div>
+            </div>
+</x-cadastro-lista-layout>
 
 <div id="modal-excluir" class="hidden fixed inset-0 z-50 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
         <div class="fixed inset-0 bg-black/50 transition-opacity" id="modal-excluir-overlay"></div>
-        <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6 z-10">
+        <div class="relative bg-white rounded border border-gray-300 max-w-md w-full p-6 z-10">
             <div class="flex items-center gap-3 mb-4">
-                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="flex-shrink-0 w-10 h-10 rounded border border-gray-300 flex items-center justify-center">
+                    <svg class="w-5 h-5" style="color: #b91c1c" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                     </svg>
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900">Excluir cliente?</h3>
             </div>
             <div class="mb-4">
-                <p class="text-sm text-gray-700 mb-2"><span class="font-medium" id="modal-excluir-documento"></span> - <span id="modal-excluir-nome"></span></p>
+                <p class="text-sm text-gray-700 mb-2"><span class="font-medium" id="modal-excluir-documento"></span> — <span id="modal-excluir-nome"></span></p>
                 <p class="text-sm text-gray-500">O cliente será removido permanentemente. Os participantes vinculados serão mantidos.</p>
                 <p class="text-sm text-red-600 font-medium mt-2">Esta ação não pode ser desfeita.</p>
             </div>
             <div class="flex justify-end gap-3">
-                <button type="button" id="btn-cancelar-exclusao" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">Cancelar</button>
-                <button type="button" id="btn-confirmar-exclusao" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm transition hover:bg-red-700">Excluir</button>
+                <button type="button" id="btn-cancelar-exclusao" class="px-4 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium transition hover:bg-gray-50">Cancelar</button>
+                <button type="button" id="btn-confirmar-exclusao" class="px-4 py-2 rounded text-white text-sm font-medium transition hover:opacity-90" style="background-color: #b91c1c">Excluir</button>
             </div>
         </div>
     </div>
@@ -385,10 +443,10 @@
 <div id="modal-bulk-delete" class="hidden fixed inset-0 z-50 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
         <div class="fixed inset-0 bg-black/50 transition-opacity" id="modal-bulk-delete-overlay"></div>
-        <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6 z-10">
+        <div class="relative bg-white rounded border border-gray-300 max-w-md w-full p-6 z-10">
             <div class="flex items-center gap-3 mb-4">
-                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="flex-shrink-0 w-10 h-10 rounded border border-gray-300 flex items-center justify-center">
+                    <svg class="w-5 h-5" style="color: #b91c1c" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                     </svg>
                 </div>
@@ -399,8 +457,8 @@
                 <p class="text-sm text-red-600 font-medium">Esta ação não pode ser desfeita.</p>
             </div>
             <div class="flex justify-end gap-3">
-                <button type="button" id="btn-cancelar-bulk-delete" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">Cancelar</button>
-                <button type="button" id="btn-confirmar-bulk-delete" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm transition hover:bg-red-700">Excluir</button>
+                <button type="button" id="btn-cancelar-bulk-delete" class="px-4 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium transition hover:bg-gray-50">Cancelar</button>
+                <button type="button" id="btn-confirmar-bulk-delete" class="px-4 py-2 rounded text-white text-sm font-medium transition hover:opacity-90" style="background-color: #b91c1c">Excluir</button>
             </div>
         </div>
     </div>
@@ -409,7 +467,7 @@
 <div id="modal-dossie-lote" class="hidden fixed inset-0 z-50 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
         <div class="fixed inset-0 bg-black/50 transition-opacity" id="modal-dossie-lote-overlay"></div>
-        <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6 z-10">
+        <div class="relative bg-white rounded border border-gray-300 max-w-md w-full p-6 z-10">
             <h3 class="text-lg font-semibold text-gray-900 mb-2">Gerar dossiê (PDF)</h3>
             <p class="text-sm text-gray-500 mb-4">Um PDF único com o dossiê de cada cliente seguido dos dossiês dos seus participantes de maior volume EFD.</p>
             <label class="block text-[11px] text-gray-500 mb-1" for="dossie-lote-cliente">Cliente</label>
@@ -431,8 +489,8 @@
                 <option value="50">Top 50 por volume</option>
             </select>
             <div class="flex justify-end gap-3">
-                <button type="button" id="btn-cancelar-dossie-lote" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">Cancelar</button>
-                <button type="button" id="btn-confirmar-dossie-lote" class="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-semibold shadow-sm transition hover:bg-gray-800">Gerar PDF</button>
+                <button type="button" id="btn-cancelar-dossie-lote" class="px-4 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium transition hover:bg-gray-50">Cancelar</button>
+                <button type="button" id="btn-confirmar-dossie-lote" class="px-4 py-2 rounded bg-gray-800 text-white text-sm font-medium transition hover:bg-gray-700">Gerar PDF</button>
             </div>
         </div>
     </div>
@@ -894,6 +952,7 @@
 
         function showInlineError(message, action) {
             if (window.showInlineError) {
+                if (errorRegion) errorRegion.classList.remove('hidden');
                 window.showInlineError(errorRegion, {
                     message: message,
                     context: {
@@ -910,6 +969,7 @@
         function clearInlineError() {
             if (window.clearInlineError) {
                 window.clearInlineError(errorRegion);
+                if (errorRegion) errorRegion.classList.add('hidden');
             }
         }
     }

@@ -2,43 +2,34 @@
 @php
     $currentListUrl = $currentListUrl ?? request()->getRequestUri();
 @endphp
-<div class="bg-gray-100 min-h-screen" id="monitoramento-participantes-importados-container">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {{-- Page Header --}}
-        <div class="mb-4 sm:mb-8">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div class="min-w-0">
-                    <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Participantes</h1>
-                    <p class="mt-1 max-w-2xl text-xs text-gray-500">Base operacional de participantes vinculados às importações e consultas.</p>
-                </div>
-                <div class="grid w-full grid-cols-2 gap-2 sm:w-auto sm:flex sm:items-center sm:justify-end">
-                    <a
-                        href="/app/participante/novo"
-                        class="inline-flex min-w-0 items-center justify-center gap-1.5 rounded bg-gray-800 px-3 py-2 text-xs font-medium text-white transition hover:bg-gray-700 sm:gap-2 sm:px-4 sm:text-sm"
-                        data-link
-                    >
-                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        <span class="truncate sm:hidden">Novo</span>
-                        <span class="hidden sm:inline">Novo Participante</span>
-                    </a>
-                    <a
-                        href="/app/dashboard"
-                        class="inline-flex min-w-0 items-center justify-center gap-1.5 rounded border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-50 sm:gap-2 sm:px-4 sm:text-sm"
-                        data-link
-                    >
-                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                        </svg>
-                        <span class="truncate">Voltar</span>
-                    </a>
-                </div>
-            </div>
-        </div>
+<x-cadastro-lista-layout
+    container-id="monitoramento-participantes-importados-container"
+    titulo="Participantes"
+    subtitulo="Base operacional de participantes vinculados às importações e consultas."
+>
+    <x-slot:acoes>
+        <button type="button" id="btn-dossie-lote-header" class="inline-flex min-w-0 items-center justify-center gap-1.5 rounded border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-50 sm:gap-2 sm:px-4 sm:text-sm">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <span class="truncate sm:hidden">Dossiê</span>
+            <span class="hidden sm:inline">Dossiê PDF</span>
+        </button>
+        <a
+            href="/app/participante/novo"
+            class="inline-flex min-w-0 items-center justify-center gap-1.5 rounded bg-gray-800 px-3 py-2 text-xs font-medium text-white transition hover:bg-gray-700 sm:gap-2 sm:px-4 sm:text-sm"
+            data-link
+        >
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            <span class="truncate sm:hidden">Novo</span>
+            <span class="hidden sm:inline">Novo Participante</span>
+        </a>
+    </x-slot:acoes>
 
         {{-- Estatísticas --}}
-        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+        <div class="bg-white rounded border border-gray-300 overflow-hidden">
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo Operacional</span>
             </div>
@@ -67,7 +58,7 @@
         </div>
 
         {{-- Filtros --}}
-        <form id="form-filtros" method="GET" action="/app/participantes" class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+        <form id="form-filtros" method="GET" action="/app/participantes" class="bg-white rounded border border-gray-300 overflow-hidden">
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
             </div>
@@ -122,6 +113,14 @@
                         <option value="BAIXADA" {{ ($filtros['situacao'] ?? '') == 'BAIXADA' ? 'selected' : '' }}>Baixada</option>
                         <option value="SUSPENSA" {{ ($filtros['situacao'] ?? '') == 'SUSPENSA' ? 'selected' : '' }}>Suspensa</option>
                         <option value="INAPTA" {{ ($filtros['situacao'] ?? '') == 'INAPTA' ? 'selected' : '' }}>Inapta</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Ordenar por</label>
+                    <select name="ordem" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        <option value="movimentacao" {{ ($filtros['ordem'] ?? 'movimentacao') === 'movimentacao' ? 'selected' : '' }}>Maior movimentação</option>
+                        <option value="recentes" {{ ($filtros['ordem'] ?? '') === 'recentes' ? 'selected' : '' }}>Mais recentes</option>
+                        <option value="nome" {{ ($filtros['ordem'] ?? '') === 'nome' ? 'selected' : '' }}>Nome (A–Z)</option>
                     </select>
                 </div>
             </div>
@@ -189,9 +188,9 @@
                     <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Origem</label>
                     <select name="origem" id="filtro-origem" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         <option value="">Todas as origens</option>
-                        @foreach($origens ?? [] as $ori)
-                            <option value="{{ $ori }}" {{ ($filtros['origem'] ?? '') == $ori ? 'selected' : '' }}>
-                                {{ str_replace('_', ' ', $ori) }}
+                        @foreach($origens ?? [] as $oriValor => $oriLabel)
+                            <option value="{{ $oriValor }}" {{ ($filtros['origem'] ?? '') == $oriValor ? 'selected' : '' }}>
+                                {{ $oriLabel }}
                             </option>
                         @endforeach
                     </select>
@@ -233,7 +232,7 @@
         </form>
 
         {{-- Barra de selecao global --}}
-        <div class="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                 <button type="button" id="btn-selecionar-todos-filtro" class="text-gray-700 hover:text-gray-900 font-medium underline">
                     Selecionar todos (<span id="total-filtrado">{{ $participantes->total() }}</span>)
@@ -248,7 +247,7 @@
         </div>
 
         {{-- Acoes em lote (aparece quando ha selecao) --}}
-        <div id="acoes-lote" class="hidden bg-white border border-gray-300 rounded p-4 mb-6">
+        <div id="acoes-lote" class="hidden bg-white border border-gray-300 rounded p-4">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex min-w-0 items-center gap-3">
                     <span class="inline-flex items-center justify-center w-8 h-8 rounded text-white text-sm font-bold" id="count-selecionados" style="background-color: #374151">0</span>
@@ -260,6 +259,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
                         Exportar
+                    </button>
+                    <button type="button" id="btn-dossie-lote" class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium transition hover:bg-gray-50 sm:px-4">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Dossiê PDF
                     </button>
                     <button type="button" id="btn-monitorar-selecionados" class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded bg-gray-800 text-white text-sm font-medium transition hover:bg-gray-700 sm:px-4">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -283,16 +288,18 @@
         {{-- Lista de Participantes --}}
         <div id="participantes-list-view" class="bg-white rounded border border-gray-300 overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full table-fixed">
+                {{-- min-w: sem ele o table-fixed espreme a coluna de nome a ~0 no mobile em vez
+                     de acionar o scroll horizontal do overflow-x-auto --}}
+                <table class="w-full min-w-[960px] table-fixed">
                     <thead>
                         <tr class="border-b border-gray-300">
                             <th class="w-10 px-3 py-2.5 text-left bg-gray-50">
                                 <input type="checkbox" id="select-all" class="w-4 h-4 rounded border-gray-300 text-gray-700 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                             </th>
                             <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participante</th>
+                            <th class="w-[160px] px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Movimentação</th>
                             <th class="hidden lg:table-cell w-[140px] px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Regime</th>
-                            <th class="w-[260px] px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Situação / CND</th>
-                            <th class="w-[220px] px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Status de Consulta</th>
+                            <th class="w-[280px] px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Situação / Certidões</th>
                             <th class="w-[140px] px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Origem</th>
                             <th class="w-20 px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ações</th>
                         </tr>
@@ -302,14 +309,6 @@
                             @php
                                 $isCpf = $part->is_cpf;
                                 $participanteUrl = '/app/participante/'.$part->id.'?return_to='.urlencode($currentListUrl);
-                                $origemLabel = match($part->origem_tipo) {
-                                    'SPED_EFD_FISCAL' => ['label' => 'EFD Fiscal', 'color' => '#4338ca'],
-                                    'SPED_EFD_CONTRIB' => ['label' => 'EFD Contrib', 'color' => '#7c3aed'],
-                                    'NFE' => ['label' => 'NF-e', 'color' => '#0f766e'],
-                                    'NFSE' => ['label' => 'NFS-e', 'color' => '#0891b2'],
-                                    'MANUAL' => ['label' => 'Manual', 'color' => '#6b7280'],
-                                    default => ['label' => $part->origem_tipo, 'color' => '#6b7280'],
-                                };
                             @endphp
                             <tr class="hover:bg-gray-50/50 transition-colors cursor-pointer" data-participante-id="{{ $part->id }}" data-href="{{ $participanteUrl }}">
                                 <td class="px-3 py-3">
@@ -360,52 +359,54 @@
                                         <div class="text-[11px] text-gray-500 mt-1">Cadastro bloqueado para seleção em lote</div>
                                     @endif
                                 </td>
+                                <td class="px-3 py-3 text-right align-middle">
+                                    @if(($part->mov_qtd ?? 0) > 0)
+                                        <div class="text-sm font-semibold text-gray-900 whitespace-nowrap" title="Valor total movimentado nas notas EFD (entradas + saídas, todas as empresas)">
+                                            R$ {{ number_format($part->mov_valor, 2, ',', '.') }}
+                                        </div>
+                                        <div class="text-[11px] text-gray-500 mt-0.5 whitespace-nowrap">
+                                            {{ number_format($part->mov_qtd, 0, ',', '.') }} {{ $part->mov_qtd === 1 ? 'nota' : 'notas' }}
+                                        </div>
+                                    @else
+                                        <span class="text-[11px] text-gray-400">Sem movimentação</span>
+                                    @endif
+                                </td>
                                 <td class="hidden lg:table-cell px-3 py-3 text-center text-sm text-gray-700">
-                                    <div class="truncate" title="{{ $part->regime_tributario }}"><x-regime-tributario :valor="$part->regime_tributario" :nota="$part->regime_tributario_nota" /></div>
+                                    <x-regime-tributario :valor="$part->regime_tributario" :nota="$part->regime_tributario_nota" />
                                 </td>
                                 <td class="px-3 py-3 text-center">
                                     <div class="flex flex-col items-center gap-1" title="{{ $part->situacao_cadastral ?? '' }}">
-                                        @if($part->situacao_cadastral)
-                                            <div class="flex items-center justify-center gap-2 flex-wrap">
-                                                @if($part->situacao_cadastral === 'ATIVA')
-                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857">
-                                                        Ativa
-                                                    </span>
-                                                @else
-                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #d97706">
-                                                        {{ $part->situacao_cadastral }}
-                                                    </span>
-                                                @endif
-                                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $part->cnd_federal_status_hex }}">
-                                                    {{ $part->cnd_federal_status_label }}
+                                        <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                                            @if($part->situacao_cadastral === 'ATIVA')
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857">
+                                                    Ativa
                                                 </span>
-                                            </div>
-                                        @else
-                                            <div class="flex flex-col items-center gap-1">
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #9ca3af">
-                                                    Sem Mov.
+                                            @elseif($part->situacao_cadastral)
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #d97706">
+                                                    {{ $part->situacao_cadastral }}
                                                 </span>
-                                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $part->cnd_federal_status_hex }}">
-                                                    {{ $part->cnd_federal_status_label }}
+                                            @endif
+                                            @forelse($part->certidoes_badges ?? [] as $b)
+                                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $b['hex'] }}" title="{{ $b['titulo'] }}: {{ $b['label'] }}">
+                                                    {{ $b['curto'] }}
                                                 </span>
+                                            @empty
+                                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">
+                                                    Sem certidões consultadas
+                                                </span>
+                                            @endforelse
+                                        </div>
+                                        @if($part->cnd_federal_status_label !== 'Não consultada')
+                                            <div class="text-[11px] text-gray-500 leading-tight text-center">
+                                                CND Federal: {{ $part->cnd_federal_status_label }} — {{ $part->cnd_federal_meta }}
                                             </div>
                                         @endif
-                                        <div class="text-[11px] text-gray-500 leading-tight text-center">
-                                            {{ $part->cnd_federal_meta }}
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-3 py-3 text-center">
-                                    <div class="flex flex-col items-center">
-                                        <div class="text-[11px] text-gray-500 leading-tight text-center">
-                                            {{ $part->consulta_status_meta }}
-                                        </div>
                                     </div>
                                 </td>
                                 <td class="px-3 py-3 text-center">
                                     <div class="min-w-0 flex flex-col items-center px-1">
-                                        <span class="inline-flex max-w-full items-center justify-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemLabel['color'] }}">
-                                            {{ $origemLabel['label'] }}
+                                        <span class="inline-flex max-w-full items-center justify-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $part->origem_hex }}">
+                                            {{ $part->origem_label }}
                                         </span>
                                         <div class="text-[11px] text-gray-500 mt-1 leading-tight text-center" title="Base: {{ $part->created_at?->format('d/m/Y') ?? '-' }}">
                                             Base: {{ $part->created_at?->format('d/m/Y') ?? '-' }}
@@ -456,16 +457,18 @@
             {{-- Pagination --}}
             @if(isset($participantes) && $participantes->hasPages())
                 <div class="border-t border-gray-300 px-4 py-3">
-                    {{ $participantes->links() }}
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="text-[10px] text-gray-500 uppercase tracking-wide">
+                            Mostrando {{ $participantes->firstItem() }}-{{ $participantes->lastItem() }} de {{ $participantes->total() }}
+                        </p>
+                        <div>
+                            {{ $participantes->links() }}
+                        </div>
+                    </div>
                 </div>
             @endif
         </div>
-
-
-    </div>
-
-    </div>
-</div>
+</x-cadastro-lista-layout>
 
 {{-- Modais (fora do container para overlay correto) --}}
 
@@ -533,6 +536,26 @@
                 <button type="button" id="btn-confirmar-bulk-delete" class="px-4 py-2 rounded text-white text-sm font-medium transition hover:opacity-90" style="background-color: #b91c1c">
                     Excluir
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Modal de dossiê em lote (espelha o de /app/clientes) --}}
+<div id="modal-dossie-lote" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-black/50 transition-opacity" id="modal-dossie-lote-overlay"></div>
+        <div class="relative bg-white rounded border border-gray-300 max-w-md w-full p-6 z-10">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Gerar dossiê (PDF)</h3>
+            <p class="text-sm text-gray-500 mb-4">Um PDF único com o dossiê completo de cada participante (cadastro, movimentação EFD, certidões e score), ordenado por volume.</p>
+            <label class="block text-[11px] text-gray-500 mb-1" for="dossie-lote-escopo">Participantes</label>
+            <select id="dossie-lote-escopo" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded mb-4">
+                <option value="selecionados" id="dossie-lote-opt-selecionados" class="hidden">Participantes selecionados</option>
+                <option value="">Todos os participantes (filtros atuais)</option>
+            </select>
+            <div class="flex justify-end gap-3">
+                <button type="button" id="btn-cancelar-dossie-lote" class="px-4 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium transition hover:bg-gray-50">Cancelar</button>
+                <button type="button" id="btn-confirmar-dossie-lote" class="px-4 py-2 rounded bg-gray-800 text-white text-sm font-medium transition hover:bg-gray-700">Gerar PDF</button>
             </div>
         </div>
     </div>
@@ -903,6 +926,114 @@
                 } finally {
                     btnConfirmarBulkDelete.disabled = false;
                     btnConfirmarBulkDelete.textContent = 'Excluir';
+                }
+            });
+        }
+
+        // === Dossiê em lote (espelha /app/clientes) ===
+        // Submit é form POST (não fetch) para o navegador tratar a resposta como
+        // download, mantendo a página atual intacta.
+        var modalDossieLote = document.getElementById('modal-dossie-lote');
+        var modalDossieLoteOverlay = document.getElementById('modal-dossie-lote-overlay');
+        var btnCancelarDossieLote = document.getElementById('btn-cancelar-dossie-lote');
+        var btnConfirmarDossieLote = document.getElementById('btn-confirmar-dossie-lote');
+        var selectDossieEscopo = document.getElementById('dossie-lote-escopo');
+
+        function abrirModalDossieLote() {
+            if (!modalDossieLote) return;
+            // Opção "Participantes selecionados" só existe quando há seleção — e vira o default.
+            var opt = document.getElementById('dossie-lote-opt-selecionados');
+            if (opt) {
+                var total = selectedIds.size;
+                opt.classList.toggle('hidden', total === 0);
+                opt.disabled = total === 0;
+                opt.textContent = 'Participantes selecionados (' + total + ')';
+                if (selectDossieEscopo) {
+                    selectDossieEscopo.value = total > 0 ? 'selecionados' : '';
+                }
+            }
+            modalDossieLote.classList.remove('hidden');
+        }
+
+        function fecharModalDossieLote() {
+            if (modalDossieLote) modalDossieLote.classList.add('hidden');
+        }
+
+        ['btn-dossie-lote', 'btn-dossie-lote-header'].forEach(function(btnId) {
+            var btn = document.getElementById(btnId);
+            if (btn) btn.addEventListener('click', abrirModalDossieLote);
+        });
+        if (btnCancelarDossieLote) btnCancelarDossieLote.addEventListener('click', fecharModalDossieLote);
+        if (modalDossieLoteOverlay) modalDossieLoteOverlay.addEventListener('click', fecharModalDossieLote);
+
+        function submitDossieLote(ids) {
+            var tokenMeta = document.querySelector('meta[name="csrf-token"]');
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/app/participantes/dossie-lote';
+            form.style.display = 'none';
+
+            var token = document.createElement('input');
+            token.type = 'hidden';
+            token.name = '_token';
+            token.value = tokenMeta ? tokenMeta.content : '';
+            form.appendChild(token);
+
+            ids.forEach(function(id) {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids[]';
+                input.value = id;
+                form.appendChild(input);
+            });
+
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+            fecharModalDossieLote();
+            if (window.showToast) window.showToast('Gerando dossiê... o download começa em instantes.', 'info');
+        }
+
+        if (btnConfirmarDossieLote) {
+            btnConfirmarDossieLote.addEventListener('click', async function() {
+                var escolha = selectDossieEscopo ? selectDossieEscopo.value : '';
+
+                if (escolha === 'selecionados') {
+                    if (selectedIds.size === 0) return;
+                    submitDossieLote(Array.from(selectedIds));
+                    return;
+                }
+
+                // Todos os participantes respeitando os filtros ativos da tela
+                // (mesma fonte do "Selecionar todos").
+                btnConfirmarDossieLote.disabled = true;
+                btnConfirmarDossieLote.textContent = 'Carregando...';
+                try {
+                    var params = new URLSearchParams();
+                    var formF = document.getElementById('form-filtros');
+                    if (formF) {
+                        ['importacao', 'cliente', 'origem', 'tipo_documento', 'busca', 'regime', 'situacao', 'uf', 'relacao', 'status_consulta', 'regularidade', 'monitorado'].forEach(function(name) {
+                            var field = formF.querySelector('[name="' + name + '"]');
+                            if (field && field.value) params.set(name, field.value);
+                        });
+                    }
+                    var url = '/app/participantes/todos-ids' + (params.toString() ? '?' + params.toString() : '');
+                    var res = await fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                    });
+                    var data = await res.json();
+                    if (!data.success) throw new Error('Erro ao buscar participantes');
+                    if (!data.ids || data.ids.length === 0) throw new Error('Nenhum participante para gerar o dossiê');
+                    submitDossieLote(data.ids.slice(0, 500));
+                } catch (err) {
+                    console.error('[Participantes] Erro no dossiê em lote:', err);
+                    window.showToast && window.showToast(err.message || 'Erro ao gerar o dossiê em lote', 'error');
+                } finally {
+                    btnConfirmarDossieLote.disabled = false;
+                    btnConfirmarDossieLote.textContent = 'Gerar PDF';
                 }
             });
         }

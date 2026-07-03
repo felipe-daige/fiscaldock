@@ -250,6 +250,8 @@ class DashboardController extends Controller
         $stValida = ['nunca', 'desatualizada', 'recente'];
         $statusConsulta = in_array($request->string('status_consulta')->toString(), $stValida, true)
             ? $request->string('status_consulta')->toString() : null;
+        $ordem = in_array($request->get('ordem'), ['movimentacao', 'nome', 'recentes'], true)
+            ? $request->get('ordem') : 'movimentacao';
 
         // Mapa documento(normalizado) → regularidade / última consulta, para os dois
         // filtros acima. Só monta quando algum deles é usado.
@@ -285,10 +287,58 @@ class DashboardController extends Controller
             ->when($situacao !== '', fn ($query) => $query->where('situacao_cadastral', 'ilike', $situacao))
             ->when($uf !== '', fn ($query) => $query->where('uf', strtoupper($uf)))
             ->when($regularidade !== null || $statusConsulta !== null, fn ($query) => $resumoService
-                ->aplicarFiltroRegularidadeCliente($query, $regularidade, $statusConsulta, $mapaRegularidade))
-            ->orderByRaw("COALESCE(razao_social, nome, '') asc")
-            ->paginate(20)
-            ->withQueryString();
+                ->aplicarFiltroRegularidadeCliente($query, $regularidade, $statusConsulta, $mapaRegularidade));
+
+        // Notas unificadas EFD+XML por empresa, DEDUPLICADAS por chave de acesso: a mesma
+        // nota costuma existir nas duas origens (importada por XML e depois via SPED, ou
+        // vice-versa) — em prod 10/10 notas XML eram duplicatas do EFD. EFD (fiscal, não
+        // cancelada) vence; XML só entra quando a chave não está no EFD do usuário.
+        $notasUnificadas = fn () => \Illuminate\Support\Facades\DB::table('efd_notas')
+            ->where('user_id', $userId)
+            ->where('origem_arquivo', 'fiscal')
+            ->where('cancelada', false)
+            ->selectRaw('cliente_id, tipo_operacao, valor_total, data_emissao')
+            ->unionAll(
+                \Illuminate\Support\Facades\DB::table('xml_notas as x')
+                    ->where('x.user_id', $userId)
+                    ->whereNotExists(fn ($sub) => $sub->select(\Illuminate\Support\Facades\DB::raw(1))
+                        ->from('efd_notas as e')
+                        ->whereColumn('e.chave_acesso', 'x.chave_acesso')
+                        ->where('e.user_id', $userId)
+                        ->where('e.origem_arquivo', 'fiscal')
+                        ->where('e.cancelada', false))
+                    ->selectRaw("x.cliente_id, CASE WHEN x.tipo_nota = 0 THEN 'entrada' ELSE 'saida' END as tipo_operacao, x.valor_total, x.data_emissao")
+            );
+
+        // Ordenação: default por volume movimentado desc (empresa própria e clientes mais
+        // relevantes primeiro), como em /app/participantes. Agregado via joinSub (1 scan).
+        match ($ordem) {
+            'nome' => $clientes = $clientes->orderByRaw("COALESCE(razao_social, nome, '') asc"),
+            'recentes' => $clientes = $clientes->orderBy('created_at', 'desc'),
+            default => $clientes = $clientes
+                ->leftJoinSub(
+                    \Illuminate\Support\Facades\DB::query()->fromSub($notasUnificadas(), 'n')
+                        ->groupBy('cliente_id')
+                        ->selectRaw('cliente_id, SUM(valor_total) as valor'),
+                    'mov', 'mov.cliente_id', '=', 'clientes.id'
+                )
+                // select() zera as colunas do withCount lá de cima — re-aplica depois.
+                ->select('clientes.*')
+                ->withCount('participantes')
+                ->orderByRaw('COALESCE(mov.valor, 0) desc')
+                ->orderByRaw("COALESCE(razao_social, nome, '') asc"),
+        };
+
+        $clientes = $clientes->paginate(20)->withQueryString();
+
+        // Movimentação por empresa (entradas × saídas + última emissão) — só das
+        // empresas da página (1 query agregada sobre o union deduplicado).
+        $movPorCliente = \Illuminate\Support\Facades\DB::query()->fromSub($notasUnificadas(), 'n')
+            ->whereIn('cliente_id', $clientes->getCollection()->pluck('id'))
+            ->groupBy('cliente_id', 'tipo_operacao')
+            ->selectRaw('cliente_id, tipo_operacao, COUNT(*) as qtd, SUM(valor_total) as valor, MAX(data_emissao) as ultima')
+            ->get()
+            ->groupBy('cliente_id');
 
         $agora = Carbon::now();
         $documentosClientes = $clientes->getCollection()
@@ -313,10 +363,38 @@ class DashboardController extends Controller
             ->unique('participante_id')
             ->keyBy('participante_id');
 
-        $clientes->getCollection()->transform(function (Cliente $cliente) use ($agora, $participantesPorDocumento, $ultimosResultadosClientes) {
+        // Consultas com ESCOPO CLIENTE gravam cliente_id direto no resultado (sem passar por
+        // participante). Sem este caminho, cliente consultado aparecia "Não Consultado"/sem
+        // certidões na lista quando não existia participante consultado de mesmo documento.
+        $ultimosResultadosPorClienteId = ConsultaResultado::query()
+            ->whereIn('cliente_id', $clientes->getCollection()->pluck('id'))
+            ->where('status', ConsultaResultado::STATUS_SUCESSO)
+            ->orderBy('consultado_em', 'desc')
+            ->get()
+            ->unique('cliente_id')
+            ->keyBy('cliente_id');
+
+        $clientes->getCollection()->transform(function (Cliente $cliente) use ($agora, $participantesPorDocumento, $ultimosResultadosClientes, $ultimosResultadosPorClienteId, $movPorCliente) {
+            $mov = $movPorCliente->get($cliente->id, collect());
+            $entrada = $mov->firstWhere('tipo_operacao', 'entrada');
+            $saida = $mov->firstWhere('tipo_operacao', 'saida');
+            $ultimaNota = $mov->max('ultima');
+            $cliente->setAttribute('mov_valor', (float) ($entrada->valor ?? 0) + (float) ($saida->valor ?? 0));
+            $cliente->setAttribute('mov_qtd', (int) ($entrada->qtd ?? 0) + (int) ($saida->qtd ?? 0));
+            $cliente->setAttribute('mov_entradas', (float) ($entrada->valor ?? 0));
+            $cliente->setAttribute('mov_saidas', (float) ($saida->valor ?? 0));
+            $cliente->setAttribute('mov_ultima_nota', $ultimaNota ? Carbon::parse($ultimaNota)->format('m/Y') : null);
+
             $documento = preg_replace('/\D/', '', (string) $cliente->documento);
             $participante = $participantesPorDocumento->get($documento);
-            $ultimoResultado = $participante ? $ultimosResultadosClientes->get($participante->id) : null;
+            $viaParticipante = $participante ? $ultimosResultadosClientes->get($participante->id) : null;
+            $viaCliente = $ultimosResultadosPorClienteId->get($cliente->id);
+            // Dois caminhos possíveis (consulta do participante de mesmo documento OU consulta
+            // com escopo cliente) — vence a mais recente.
+            $ultimoResultado = collect([$viaParticipante, $viaCliente])
+                ->filter()
+                ->sortByDesc('consultado_em')
+                ->first();
             $ultimaConsulta = $ultimoResultado?->consultado_em;
 
             $consultaStatusLabel = 'Não Consultado';
@@ -409,6 +487,7 @@ class DashboardController extends Controller
                 'importacao' => $importacao,
                 'regularidade' => $regularidade,
                 'status_consulta' => $statusConsulta,
+                'ordem' => $ordem,
             ],
         ];
 

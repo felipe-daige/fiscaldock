@@ -22,6 +22,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
@@ -425,7 +426,7 @@ class ParticipanteController extends Controller
             ])
             ->when($importacaoId, fn ($q) => $q->where('importacao_efd_id', $importacaoId))
             ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
-            ->when($origemTipo, fn ($q) => $q->where('origem_tipo', $origemTipo))
+            ->when($origemTipo, fn ($q) => $this->aplicarFiltroOrigem($q, $origemTipo))
             ->when($busca, function ($q) use ($busca) {
                 $q->where(function ($sub) use ($busca) {
                     $sub->where('documento', 'like', "%{$busca}%")
@@ -476,8 +477,29 @@ class ParticipanteController extends Controller
             ->when($monitorado, function ($q) use ($monitorado) {
                 $ativa = fn ($sub) => $sub->whereIn('status', ['ativo', 'pausado']);
                 $monitorado === 'sim' ? $q->whereHas('assinaturas', $ativa) : $q->whereDoesntHave('assinaturas', $ativa);
-            })
-            ->orderBy('created_at', 'desc');
+            });
+
+        // Ordenação: default por volume movimentado (mesmos filtros fiscais do resumo),
+        // pra trazer os participantes mais relevantes primeiro. Agregado via joinSub (1 scan
+        // de efd_notas) — subquery correlacionada no ORDER BY custava ~2s com base real.
+        match ($ordem) {
+            'recentes' => $participantesQuery->orderBy('created_at', 'desc'),
+            'nome' => $participantesQuery->orderByRaw('razao_social asc nulls last'),
+            default => $participantesQuery
+                ->leftJoinSub(
+                    DB::table('efd_notas')
+                        ->where('user_id', $userId)
+                        ->where('origem_arquivo', 'fiscal')
+                        ->where('cancelada', false)
+                        ->whereNotNull('participante_id')
+                        ->groupBy('participante_id')
+                        ->selectRaw('participante_id, SUM(valor_total) as valor'),
+                    'mov', 'mov.participante_id', '=', 'participantes.id'
+                )
+                ->select('participantes.*')
+                ->orderByRaw('COALESCE(mov.valor, 0) desc')
+                ->orderBy('participantes.created_at', 'desc'),
+        };
 
         $participantes = $participantesQuery->paginate(20)->withQueryString();
         $agora = Carbon::now();
@@ -490,8 +512,8 @@ class ParticipanteController extends Controller
             ->unique('participante_id')
             ->keyBy('participante_id');
 
-        $participantes->getCollection()->transform(function (Participante $participante) use ($agora, $ultimosResultados, $papeis) {
-            $papel = $papeis[$participante->id] ?? null;
+        $participantes->getCollection()->transform(function (Participante $participante) use ($agora, $ultimosResultados, $resumoMov) {
+            $papel = $resumoMov[$participante->id]['papel'] ?? null;
             $papelBadge = match ($papel) {
                 'fornecedor' => ['label' => 'Fornecedor', 'hex' => '#2563eb'],
                 'cliente' => ['label' => 'Cliente', 'hex' => '#7c3aed'],
@@ -500,6 +522,12 @@ class ParticipanteController extends Controller
             };
             $participante->setAttribute('papel_badge_label', $papelBadge['label'] ?? null);
             $participante->setAttribute('papel_badge_hex', $papelBadge['hex'] ?? null);
+            $participante->setAttribute('mov_valor', (float) ($resumoMov[$participante->id]['valor'] ?? 0));
+            $participante->setAttribute('mov_qtd', (int) ($resumoMov[$participante->id]['qtd'] ?? 0));
+
+            $origem = $this->origemBadge($participante);
+            $participante->setAttribute('origem_label', $origem['label']);
+            $participante->setAttribute('origem_hex', $origem['hex']);
 
             $assinatura = $participante->assinaturas->first();
             $ultimaConsulta = $participante->ultima_consulta_em;
@@ -576,6 +604,27 @@ class ParticipanteController extends Controller
                 $assinaturaHex = $assinatura->status === 'ativo' ? '#1f2937' : '#6b7280';
             }
 
+            // Badge compacto de TODAS as fontes que a última consulta trouxe (CND Federal/
+            // Estadual/Municipal, FGTS, CNDT, SINTEGRA, sanções CGU, improbidade CNJ). A cor
+            // reflete a regularidade classificada pela fonte única (CertidaoBadge via presenter).
+            $certidoesBadges = [];
+            if ($ultimoResultado) {
+                foreach ($this->detalhePresenter->blocos($ultimoResultado) as $bloco) {
+                    $chave = $bloco['chave'] ?? '';
+                    if ($chave === 'cadastro' || empty($bloco['badge'])) {
+                        continue;
+                    }
+                    $certidoesBadges[] = [
+                        'fonte' => $chave,
+                        'curto' => self::FONTE_CURTA[$chave] ?? ($bloco['titulo'] ?? $chave),
+                        'titulo' => $bloco['titulo'] ?? $chave,
+                        'label' => $bloco['badge']['label'] ?? '—',
+                        'hex' => $bloco['badge']['hex'] ?? '#9ca3af',
+                    ];
+                }
+            }
+            $participante->setAttribute('certidoes_badges', $certidoesBadges);
+
             $participante->setAttribute('consulta_status', $consultaStatus);
             $participante->setAttribute('consulta_status_label', $consultaStatusLabel);
             $participante->setAttribute('consulta_status_hex', $consultaStatusHex);
@@ -609,8 +658,12 @@ class ParticipanteController extends Controller
             ->orderBy('razao_social')
             ->get();
 
-        // Tipos de origem disponíveis
-        $origens = ['SPED_EFD_FISCAL', 'SPED_EFD_CONTRIB', 'NFE', 'NFSE', 'MANUAL'];
+        // Grupos de origem derivados (origem_tipo cru não é confiável — n8n não preenche)
+        $origens = [
+            'efd' => 'Importação EFD',
+            'xml' => 'Importação XML',
+            'manual' => 'Cadastro manual',
+        ];
 
         // UFs distintas para o filtro
         $ufs = Participante::where('user_id', $userId)
@@ -645,6 +698,7 @@ class ParticipanteController extends Controller
                 'status_consulta' => $statusConsulta,
                 'regularidade' => $regularidade,
                 'monitorado' => $monitorado,
+                'ordem' => $ordem,
             ],
             'credits' => $this->creditService->getBalance($user),
         ];
@@ -673,7 +727,7 @@ class ParticipanteController extends Controller
             ->somenteCnpj()
             ->when($request->importacao, fn ($q, $v) => $q->where('importacao_efd_id', $v))
             ->when($request->cliente, fn ($q, $v) => $q->where('cliente_id', $v))
-            ->when($request->origem, fn ($q, $v) => $q->where('origem_tipo', $v))
+            ->when(in_array($request->origem, ['efd', 'xml', 'manual'], true), fn ($q) => $this->aplicarFiltroOrigem($q, $request->origem))
             ->when($request->busca, fn ($q, $v) => $q->where(function ($sub) use ($v) {
                 $sub->where('documento', 'like', "%{$v}%")
                     ->orWhere('razao_social', 'ilike', "%{$v}%");
@@ -1322,6 +1376,108 @@ class ParticipanteController extends Controller
 
         return \App\Support\PdfReport::render('reports.dossie.participante', $dados, 'portrait')
             ->download($arquivo.'.pdf');
+    }
+
+    /**
+     * Aplica o filtro de origem por grupo DERIVADO (efd|xml|manual). origem_tipo cru não é
+     * confiável (o n8n não preenche na importação EFD), então EFD é inferido pelo vínculo
+     * com a importação; valores legados SPED_* continuam aceitos.
+     */
+    private function aplicarFiltroOrigem($query, string $origem): void
+    {
+        match ($origem) {
+            'efd' => $query->where(fn ($s) => $s
+                ->whereNotNull('importacao_efd_id')
+                ->orWhere('origem_tipo', 'ilike', 'SPED%')),
+            'xml' => $query->whereNull('importacao_efd_id')
+                ->whereIn(DB::raw('upper(origem_tipo)'), ['XML', 'NFE', 'NFSE']),
+            'manual' => $query->where('origem_tipo', 'MANUAL'),
+            default => null,
+        };
+    }
+
+    /**
+     * Badge de origem derivado dos dados reais (importação vinculada > origem_tipo legado).
+     *
+     * @return array{label: string, hex: string}
+     */
+    private function origemBadge(Participante $participante): array
+    {
+        $tipo = strtoupper(trim((string) $participante->origem_tipo));
+
+        if ($participante->importacao_efd_id || str_starts_with($tipo, 'SPED')) {
+            $tipoEfd = $participante->importacaoEfd?->tipo_efd;
+
+            return match (true) {
+                $tipoEfd === 'EFD PIS/COFINS', $tipo === 'SPED_EFD_CONTRIB' => ['label' => 'EFD PIS/COFINS', 'hex' => '#7c3aed'],
+                $tipoEfd === 'EFD ICMS/IPI', $tipo === 'SPED_EFD_FISCAL' => ['label' => 'EFD ICMS/IPI', 'hex' => '#4338ca'],
+                default => ['label' => 'EFD', 'hex' => '#4338ca'],
+            };
+        }
+
+        return match ($tipo) {
+            'XML', 'NFE' => ['label' => 'XML NF-e', 'hex' => '#0f766e'],
+            'NFSE' => ['label' => 'XML NFS-e', 'hex' => '#0891b2'],
+            'MANUAL' => ['label' => 'Manual', 'hex' => '#6b7280'],
+            default => ['label' => 'Não informada', 'hex' => '#9ca3af'],
+        };
+    }
+
+    /**
+     * Gera um PDF único com o dossiê de cada participante selecionado.
+     * Espelha ClienteController::dossieLote (mesmo teto, mesmo racional de render síncrono).
+     */
+    public function dossieLote(Request $request)
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return redirect('/login');
+        }
+
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1|max:500',
+            'ids.*' => 'integer',
+        ]);
+
+        $teto = \App\Services\Clientes\DossieLoteBuilder::TETO_ITENS;
+
+        // Ordena por volume EFD desc — mesmo critério da listagem, e é o que decide
+        // quem entra quando a seleção passa do teto.
+        $participantes = Participante::where('user_id', (int) $user->id)
+            ->whereIn('id', $validated['ids'])
+            ->orderByDesc(
+                EfdNota::selectRaw('COALESCE(SUM(valor_total), 0)')
+                    ->whereColumn('participante_id', 'participantes.id')
+                    ->where('user_id', (int) $user->id)
+                    ->where('origem_arquivo', 'fiscal')
+                    ->where('cancelada', false)
+            )
+            ->limit($teto + 1)
+            ->get();
+
+        if ($participantes->isEmpty()) {
+            return redirect()
+                ->route('app.participantes')
+                ->with('export_erro', 'Nenhum participante válido na seleção para gerar o dossiê.');
+        }
+
+        $truncado = $participantes->count() > $teto;
+        $builder = app(\App\Services\Participantes\DossieParticipanteBuilder::class);
+        $dossies = $participantes->take($teto)
+            ->map(fn (Participante $p) => $builder->montar($p))
+            ->values()
+            ->all();
+
+        // Dossiê multiplica páginas/tabelas no dompdf e o render é síncrono — mesmos
+        // limites do dossiê em lote de clientes.
+        ini_set('memory_limit', '1024M');
+        set_time_limit(240);
+
+        return \App\Support\PdfReport::render('reports.dossie.participantes-lote', [
+            'dossies' => $dossies,
+            'truncado' => $truncado,
+            'gerado_em' => now()->format('d/m/Y H:i'),
+        ], 'portrait')->download('dossies_participantes_'.now()->format('Ymd_Hi').'.pdf');
     }
 
     /**

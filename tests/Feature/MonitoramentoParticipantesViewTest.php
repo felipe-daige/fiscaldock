@@ -10,7 +10,7 @@ use function Pest\Laravel\actingAs;
 
 uses(RefreshDatabase::class);
 
-it('mantem sem mov acima de nao consultada e amplia a coluna de origem na listagem de participantes', function () {
+it('exibe origem derivada, movimentacao e strip de certidoes na listagem de participantes', function () {
     $user = User::factory()->create();
 
     Participante::create([
@@ -27,9 +27,9 @@ it('mantem sem mov acima de nao consultada e amplia a coluna de origem na listag
     $response
         ->assertOk()
         ->assertSee('Participantes')
-        ->assertSee('EFD Contrib')
-        ->assertSee('w-[140px]', false)
-        ->assertSeeInOrder(['Sem Mov.', 'Não consultada']);
+        ->assertSee('EFD PIS/COFINS')
+        ->assertSee('Movimentação')
+        ->assertSeeInOrder(['Sem movimentação', 'Sem certidões consultadas']);
 });
 
 it('propaga return_to nos acessos a ficha do participante na listagem filtrada', function () {
