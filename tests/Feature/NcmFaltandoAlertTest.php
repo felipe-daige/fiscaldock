@@ -73,3 +73,42 @@ it('mercadoria COM NCM não dispara o alerta', function () {
 
     expect(ncmAlerta($this->user->id))->toBeNull();
 });
+
+it('alerta de notas herda o cliente quando o usuário tem notas de um só cliente', function () {
+    ($this->cat)('MERC', '00', null);
+    ($this->item)('MERC');
+
+    app(\App\Services\AlertaCentralService::class)->recalcular($this->user->id);
+
+    $alerta = \App\Models\Alerta::where('user_id', $this->user->id)->where('tipo', 'ncm_faltando')->first();
+    expect($alerta)->not->toBeNull()
+        ->and($alerta->cliente_id)->toBe($this->cliente); // único cliente com notas → atribuído
+});
+
+it('alerta de notas fica sem cliente quando as notas cruzam vários clientes', function () {
+    ($this->cat)('MERC', '00', null);
+    ($this->item)('MERC');
+
+    // Segundo cliente com nota (de mercadoria sem NCM também) → ambiguidade → cliente_id null.
+    $cliente2 = DB::table('clientes')->insertGetId([
+        'user_id' => $this->user->id, 'razao_social' => 'OUTRA EMPRESA', 'documento' => '00000000000281',
+        'is_empresa_propria' => false, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $nota2 = EfdNota::create([
+        'user_id' => $this->user->id, 'cliente_id' => $cliente2, 'importacao_id' => $this->imp->id,
+        'numero' => 2, 'serie' => '1', 'data_emissao' => '2024-01-16', 'valor_desconto' => 0, 'cancelada' => false,
+        'chave_acesso' => str_pad('B', 44, '0', STR_PAD_LEFT), 'modelo' => '55', 'tipo_operacao' => 'saida',
+        'origem_arquivo' => 'fiscal', 'valor_total' => 100,
+    ]);
+    DB::table('efd_notas_itens')->insert([
+        'efd_nota_id' => $nota2->id, 'user_id' => $this->user->id, 'numero_item' => 1,
+        'codigo_item' => 'MERC', 'quantidade' => 1, 'valor_total' => 50, 'cfop' => 5102,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    app(\App\Services\AlertaCentralService::class)->recalcular($this->user->id);
+
+    $alerta = \App\Models\Alerta::where('user_id', $this->user->id)->where('tipo', 'ncm_faltando')->first();
+    expect($alerta)->not->toBeNull()
+        ->and($alerta->cliente_id)->toBeNull();
+});

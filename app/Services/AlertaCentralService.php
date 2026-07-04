@@ -130,6 +130,11 @@ class AlertaCentralService
         // 1. Alertas de notas fiscais (7 detectores do NotasFiscaisAlertService)
         $resultado = $this->notasFiscaisAlertService->detectar($userId, []);
 
+        // Os detectores agregam por usuário (não por cliente). Quando TODAS as notas EFD do
+        // usuário são de um único cliente, o alerta é inequivocamente daquele cliente — atribui
+        // pra aparecer no filtro/rótulo por cliente. Se cruzam vários, fica null (não mis-atribui).
+        $clienteUnicoNotas = $this->clienteUnicoDasNotas($userId);
+
         foreach ($resultado['alertas'] as $alerta) {
             if (($alerta['tipo'] ?? '') === 'paid' || ($alerta['total_afetados'] ?? 0) <= 0) {
                 continue;
@@ -146,6 +151,7 @@ class AlertaCentralService
                 'total_afetados' => $alerta['total_afetados'],
                 'detalhes' => $alerta['detalhes'],
                 'categoria' => 'notas_fiscais',
+                'cliente_id' => $clienteUnicoNotas,
             ];
 
             $existing = Alerta::where('user_id', $userId)->where('hash', $hash)->first();
@@ -852,6 +858,23 @@ class AlertaCentralService
         }
 
         return null;
+    }
+
+    /**
+     * cliente_id se TODAS as notas EFD do usuário forem de um único cliente; senão null.
+     * Usado pra atribuir os alertas de notas (agregados por usuário) ao cliente quando
+     * inequívoco. Contador com vários clientes com notas → null (sem mis-atribuição).
+     */
+    private function clienteUnicoDasNotas(int $userId): ?int
+    {
+        $clientes = DB::table('efd_notas')
+            ->where('user_id', $userId)
+            ->whereNotNull('cliente_id')
+            ->distinct()
+            ->limit(2)
+            ->pluck('cliente_id');
+
+        return $clientes->count() === 1 ? (int) $clientes->first() : null;
     }
 
     /** Maior severidade entre duas (baixa < media < alta). */
