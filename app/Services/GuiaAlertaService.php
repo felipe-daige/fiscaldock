@@ -71,7 +71,7 @@ class GuiaAlertaService
             'titulo_o_que_e' => 'O que isso significa?',
             'texto_o_que_e' => 'Encontramos algumas inconsistências em nossos registros ou integrações automáticas.',
             'titulo_acao' => 'Como resolver',
-            'texto_acao' => 'Siga os protocolos internos para revisar as informações listadas abaixo e marque o alerta como resolvido ao concluir.',
+            'texto_acao' => 'Corrija a origem (no ERP/sistema fiscal e, quando for o caso, gere e reimporte o SPED) e marque como resolvido. O alerta é recalculado a partir dos dados: some sozinho quando o problema não for mais detectado — e reaparece se você marcar resolvido mas o problema persistir. Use "Ignorar" só para dispensar de vez um alerta que não se aplica.',
             'cta_text' => 'Marcar como Resolvido',
             'cta_url' => null,
             // Transparência auditável: fonte de dados, gatilho, janela de tempo e limiar de cada

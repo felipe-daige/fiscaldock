@@ -200,9 +200,9 @@
             <div class="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <span class="text-sm text-gray-700"><span id="alertas-bulk-count" class="font-semibold">0</span> selecionado(s)</span>
                 <div class="flex items-center gap-2">
-                    <button data-bulk="resolvido" class="alerta-bulk-action inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded" style="background-color:#047857">Resolver</button>
-                    <button data-bulk="visto" class="alerta-bulk-action inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-gray-800 rounded hover:bg-gray-700">Marcar visto</button>
-                    <button data-bulk="ignorado" class="alerta-bulk-action inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">Ignorar</button>
+                    <button data-bulk="resolvido" class="alerta-bulk-action inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded" style="background-color:#047857" title="Marcar como resolvido. Se o problema ainda aparecer nos próximos dados, o alerta reaparece.">Resolver</button>
+                    <button data-bulk="visto" class="alerta-bulk-action inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-gray-800 rounded hover:bg-gray-700" title="Marcar como visto (sem resolver).">Marcar visto</button>
+                    <button data-bulk="ignorado" class="alerta-bulk-action inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50" title="Dispensar permanentemente. Não reaparece mesmo que o problema persista.">Ignorar</button>
                     <button id="alertas-bulk-clear" class="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-800">Limpar</button>
                 </div>
             </div>
@@ -1152,7 +1152,7 @@
             html += '</a>';
         }
         if (alerta.status !== 'ignorado') {
-            html += '<button class="alerta-action-btn inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors" data-alerta-id="' + alerta.id + '" data-action="ignorado" title="Ignorar alerta">';
+            html += '<button class="alerta-action-btn inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors" data-alerta-id="' + alerta.id + '" data-action="ignorado" title="Dispensar permanentemente (não reaparece mesmo que o problema persista)">';
             html += '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
             html += '<span class="hidden sm:inline">Ignorar</span>';
             html += '</button>';

@@ -158,7 +158,10 @@ class AlertaCentralService
 
             if ($existing) {
                 $updateData = $data;
-                if (! in_array($existing->status, ['resolvido', 'ignorado'])) {
+                // "Resolvido" REATIVA se o problema persiste nos dados (o usuário achou que
+                // resolveu, mas o detector ainda o encontra) — impede esconder problema real.
+                // Só "Ignorado" é silêncio permanente (dispensa deliberada).
+                if ($existing->status !== 'ignorado') {
                     $updateData['status'] = 'ativo';
                 }
                 $existing->update($updateData);
@@ -194,7 +197,8 @@ class AlertaCentralService
 
                 if ($existing) {
                     $updateData = $data;
-                    if (! in_array($existing->status, ['resolvido', 'ignorado'])) {
+                    // Resolvido reativa se ainda detectado; só Ignorado é permanente.
+                    if ($existing->status !== 'ignorado') {
                         $updateData['status'] = 'ativo';
                     }
                     $existing->update($updateData);
@@ -235,7 +239,10 @@ class AlertaCentralService
 
             if ($existing) {
                 $updateData = $data;
-                if (! in_array($existing->status, ['resolvido', 'ignorado'])) {
+                // "Resolvido" REATIVA se o problema persiste nos dados (o usuário achou que
+                // resolveu, mas o detector ainda o encontra) — impede esconder problema real.
+                // Só "Ignorado" é silêncio permanente (dispensa deliberada).
+                if ($existing->status !== 'ignorado') {
                     $updateData['status'] = 'ativo';
                 }
                 $existing->update($updateData);
@@ -281,7 +288,10 @@ class AlertaCentralService
 
             if ($existing) {
                 $updateData = $data;
-                if (! in_array($existing->status, ['resolvido', 'ignorado'])) {
+                // "Resolvido" REATIVA se o problema persiste nos dados (o usuário achou que
+                // resolveu, mas o detector ainda o encontra) — impede esconder problema real.
+                // Só "Ignorado" é silêncio permanente (dispensa deliberada).
+                if ($existing->status !== 'ignorado') {
                     $updateData['status'] = 'ativo';
                 }
                 $existing->update($updateData);
@@ -311,7 +321,10 @@ class AlertaCentralService
 
             if ($existing) {
                 $updateData = $data;
-                if (! in_array($existing->status, ['resolvido', 'ignorado'])) {
+                // "Resolvido" REATIVA se o problema persiste nos dados (o usuário achou que
+                // resolveu, mas o detector ainda o encontra) — impede esconder problema real.
+                // Só "Ignorado" é silêncio permanente (dispensa deliberada).
+                if ($existing->status !== 'ignorado') {
                     $updateData['status'] = 'ativo';
                 }
                 $existing->update($updateData);
@@ -349,7 +362,10 @@ class AlertaCentralService
 
             if ($existing) {
                 $updateData = $data;
-                if (! in_array($existing->status, ['resolvido', 'ignorado'])) {
+                // "Resolvido" REATIVA se o problema persiste nos dados (o usuário achou que
+                // resolveu, mas o detector ainda o encontra) — impede esconder problema real.
+                // Só "Ignorado" é silêncio permanente (dispensa deliberada).
+                if ($existing->status !== 'ignorado') {
                     $updateData['status'] = 'ativo';
                 }
                 $existing->update($updateData);
@@ -1022,7 +1038,8 @@ class AlertaCentralService
         $existing = Alerta::where('user_id', $userId)->where('hash', $hash)->first();
 
         if ($existing) {
-            if (! in_array($existing->status, ['resolvido', 'ignorado'], true)) {
+            // Mudança de situação re-detectada reativa "resolvido"; só "ignorado" é permanente.
+            if ($existing->status !== 'ignorado') {
                 $data['status'] = 'ativo';
             }
             $existing->update($data);

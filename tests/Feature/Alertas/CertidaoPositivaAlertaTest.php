@@ -144,6 +144,44 @@ it('valor comprado usa só fiscal+entrada, com janelas total e 12 meses', functi
         ->and($alerta->descricao)->toContain('R$ 7.000,00');         // total
 });
 
+it('Resolvido REATIVA quando o problema ainda persiste no recalcular', function () {
+    $pid = ($this->mkParticipante)('AINDA DEVE', '55555555000155');
+    ParticipanteScore::create([
+        'user_id' => $this->user->id, 'participante_id' => $pid,
+        'score_cnd_estadual' => 70, 'classificacao' => 'alto',
+        'dados_consultados' => ['cnd_estadual' => ['status' => 'Positiva']],
+    ]);
+
+    $this->svc->recalcular($this->user->id);
+    $alerta = Alerta::where('tipo', 'certidao_positiva')->where('participante_id', $pid)->first();
+
+    // Usuário marca resolvido SEM resolver de fato (certidão segue positiva).
+    $alerta->update(['status' => 'resolvido', 'resolvido_em' => now()]);
+
+    $this->svc->recalcular($this->user->id);
+
+    // Problema persiste nos dados → reativa (não deixa esconder problema real).
+    expect($alerta->fresh()->status)->toBe('ativo');
+});
+
+it('Ignorado permanece silenciado mesmo com o problema persistindo', function () {
+    $pid = ($this->mkParticipante)('DISPENSADO', '66666666000166');
+    ParticipanteScore::create([
+        'user_id' => $this->user->id, 'participante_id' => $pid,
+        'score_cnd_estadual' => 70, 'classificacao' => 'alto',
+        'dados_consultados' => ['cnd_estadual' => ['status' => 'Positiva']],
+    ]);
+
+    $this->svc->recalcular($this->user->id);
+    $alerta = Alerta::where('tipo', 'certidao_positiva')->where('participante_id', $pid)->first();
+
+    $alerta->update(['status' => 'ignorado']);
+    $this->svc->recalcular($this->user->id);
+
+    // Ignorar = dispensa deliberada e permanente.
+    expect($alerta->fresh()->status)->toBe('ignorado');
+});
+
 it('resolve o alerta quando a certidão deixa de ser positiva numa reconsulta', function () {
     $pid = ($this->mkParticipante)('FORNECEDOR REGULARIZOU', '33333333000133');
     $score = ParticipanteScore::create([
