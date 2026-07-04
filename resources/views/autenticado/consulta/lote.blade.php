@@ -140,8 +140,14 @@
             </div>
         </div>
 
-        @if(in_array($statusLote, ['pendente', 'processando'], true))
-            <div id="consulta-lote-progresso-card" class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
+        @php
+            // A reconsulta reusa o MESMO card de progresso do processamento inicial (padrão do
+            // projeto — ver ProgressoAutomacao). Fica oculto até o JS revelar no submit do retry,
+            // assim o usuário vê a barra "de verdade" sem perder a análise/resultados já visíveis.
+            $temRetryPossivel = $statusLote === 'finalizado' && ! $aguardaPersistencia && ! empty($retryPendentes['alvos'] ?? []);
+        @endphp
+        @if(in_array($statusLote, ['pendente', 'processando'], true) || $temRetryPossivel)
+            <div id="consulta-lote-progresso-card" class="bg-white rounded border border-gray-300 overflow-hidden mb-4{{ $temRetryPossivel ? ' hidden' : '' }}">
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
                     <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Andamento da Consulta</span>
                     <span id="consulta-lote-percent" class="text-[10px] text-gray-500 font-mono">0%</span>
@@ -177,10 +183,12 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded border border-gray-300 p-6 text-center">
-                <p class="text-sm text-gray-500">O resultado consolidado aparecerá aqui assim que o processamento terminar.</p>
-                <p class="text-xs text-gray-400 mt-1">Você pode fechar esta aba e voltar depois pelo histórico sem perder o lote.</p>
-            </div>
+            @unless($temRetryPossivel)
+                <div class="bg-white rounded border border-gray-300 p-6 text-center">
+                    <p class="text-sm text-gray-500">O resultado consolidado aparecerá aqui assim que o processamento terminar.</p>
+                    <p class="text-xs text-gray-400 mt-1">Você pode fechar esta aba e voltar depois pelo histórico sem perder o lote.</p>
+                </div>
+            @endunless
         @endif
 
         @if($statusLote === 'erro')
@@ -195,6 +203,10 @@
         @endif
 
         @if($statusLote === 'finalizado' && ! $aguardaPersistencia)
+            {{-- Envolve TODO o resultado anterior (resumo, análise, tabela de participantes) num
+                 único wrapper: durante a reconsulta o JS esconde isto por completo e mostra só o
+                 card de progresso acima — a tela de carregamento fica só o carregamento mesmo. --}}
+            <div id="consulta-lote-resultado-anterior">
             <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                     <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resultado Consolidado</span>
@@ -235,6 +247,7 @@
                         <div class="flex items-center gap-2 flex-wrap">
                             @if(!empty($retryAlvos))
                                 <button type="button"
+                                    id="btn-abrir-retry-{{ $lote->id }}"
                                     onclick="document.getElementById('modal-retry-{{ $lote->id }}').classList.remove('hidden')"
                                     class="text-[11px] font-semibold px-3 py-1.5 rounded text-white"
                                     style="background-color: #d97706">
@@ -396,6 +409,34 @@
                         var form = document.getElementById('form-retry-{{ $lote->id }}');
                         if (!form || form.dataset.bound) return;
                         form.dataset.bound = '1';
+
+                        var abrirBtn = document.getElementById('btn-abrir-retry-{{ $lote->id }}');
+
+                        // Reaproveita o MESMO card "Andamento da Consulta" e o mesmo JS
+                        // (consulta-lote-detalhe.js) do processamento inicial, em vez de inventar uma
+                        // barra própria — assim a reconsulta mostra a barra/etapas/checklist padrão do
+                        // projeto. O resultado anterior fica oculto enquanto reconsulta: a tela de
+                        // carregamento deve mostrar só o carregamento (a página recarrega ao concluir).
+                        function iniciarAcompanhamentoRetry(tabId) {
+                            var root = document.getElementById('consulta-lote-detalhe-root');
+                            var card = document.getElementById('consulta-lote-progresso-card');
+                            var resultadoAnterior = document.getElementById('consulta-lote-resultado-anterior');
+                            if (!root || !card || typeof window.initConsultaLoteDetalhe !== 'function') {
+                                window.location.reload();
+                                return;
+                            }
+                            if (resultadoAnterior) resultadoAnterior.classList.add('hidden');
+                            card.classList.remove('hidden');
+                            root.dataset.status = 'processando';
+                            root.dataset.iniciadoEm = String(Math.floor(Date.now() / 1000));
+                            // A reconsulta troca o tab_id do lote (novo batch) — sem atualizar aqui, o
+                            // SSE fica ouvindo o canal antigo e nunca recebe o progresso real, caindo
+                            // pro polling de 5 em 5s (parece "travado"/demorado pra iniciar).
+                            if (tabId) root.dataset.tabId = tabId;
+                            delete root.dataset.initialized;
+                            window.initConsultaLoteDetalhe();
+                        }
+
                         form.addEventListener('submit', function (ev) {
                             ev.preventDefault();
                             var btn = form.querySelector('button[type=submit]');
@@ -410,8 +451,11 @@
                                 body: JSON.stringify({})
                             }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
                               .then(function (res) {
-                                  if (res.ok && res.j.redirect_url) { window.location = res.j.redirect_url; }
-                                  else {
+                                  if (res.ok) {
+                                      document.getElementById('modal-retry-{{ $lote->id }}').classList.add('hidden');
+                                      if (abrirBtn) abrirBtn.classList.add('hidden');
+                                      iniciarAcompanhamentoRetry(res.j && res.j.tab_id);
+                                  } else {
                                       alert((res.j && (res.j.message || res.j.error)) || 'Não foi possível reconsultar.');
                                       if (btn) { btn.disabled = false; btn.textContent = 'Confirmar reconsulta'; }
                                   }
@@ -828,6 +872,7 @@
                     <p class="mt-2 text-sm text-gray-700">O lote foi finalizado, mas ainda não há linhas individuais disponíveis para exibição.</p>
                 </div>
             @endif
+            </div>
         @endif
     </div>
 </div>
