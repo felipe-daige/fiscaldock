@@ -199,13 +199,17 @@ class MonitoramentoAssinatura extends Model
     }
 
     /**
-     * Retorna assinaturas pendentes de execução.
+     * Assinaturas pendentes de execução, baratas primeiro: o cap do freio §6.2 cobre o
+     * máximo de alvos e um grupo caro não bloqueia a fila (custo de grupo é dinâmico —
+     * membros atuais × custo do plano — por isso o sort é em PHP, não no SQL).
      */
     public static function pendentesExecucao()
     {
         return static::where('status', 'ativo')
             ->whereNotNull('proxima_execucao_em')
             ->where('proxima_execucao_em', '<=', now())
-            ->get();
+            ->get()
+            ->sortBy(fn (self $a) => $a->custoCiclo())
+            ->values();
     }
 }

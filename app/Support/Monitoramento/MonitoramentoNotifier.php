@@ -15,8 +15,6 @@ interface MonitoramentoNotifier
 
     public function assinaturaPausadaPorFalhas(MonitoramentoAssinatura $assinatura): void;
 
-    public function assinaturaPausadaPorLimiteConsumo(MonitoramentoAssinatura $assinatura): void;
-
     /** Freio §6.2 v2: N assinaturas adiadas neste ciclo (nada pausado; retomam no próximo ciclo). */
     public function freioAtuou(\App\Models\User $user, int $assinaturasAdiadas, \Illuminate\Support\Carbon $proximoCiclo): void;
 

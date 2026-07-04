@@ -76,9 +76,9 @@ it('cap <= 0 (Free sem inclusos) não aciona o freio', function () {
     expect($svc->monitoramentoCapEstourado($user, 10))->toBeFalse();
 });
 
-it('o motor pausa a assinatura e não dispara ao estourar o cap de consumo', function () {
+it('o motor ADIA a assinatura sem pausar ao estourar o cap de consumo', function () {
     Bus::fake();
-    $user = User::factory()->create(['credits' => 100]); // saldo sobrando — não é o saldo que pausa
+    $user = User::factory()->create(['credits' => 100]); // saldo sobrando — não é o saldo que segura
     fase5Assinar($user, 'essencial', ['ultimo_grant_em' => now()->subDay(), 'limite_consumo_automatico' => 5]);
     DB::table('credit_transactions')->insert([
         'user_id' => $user->id, 'amount' => -5, 'balance_after' => 95,
@@ -87,14 +87,15 @@ it('o motor pausa a assinatura e não dispara ao estourar o cap de consumo', fun
     $p = fase5Participante($user);
     $a = MonitoramentoAssinatura::create([
         'user_id' => $user->id, 'participante_id' => $p->id,
-        'plano_id' => MonitoramentoPlano::porCodigo('licitacao')->id, // custo 10
+        'plano_id' => MonitoramentoPlano::porCodigo('licitacao')->id, // custo 20
         'status' => 'ativo', 'frequencia_dias' => 30, 'proxima_execucao_em' => now()->subDay(),
     ]);
 
     $this->artisan('monitoramento:executar-pendentes')->assertSuccessful();
 
-    expect($a->fresh()->status)->toBe('pausado');
-    expect(MonitoramentoConsulta::where('assinatura_id', $a->id)->count())->toBe(0);
+    expect($a->fresh()->status)->toBe('ativo')
+        ->and($a->fresh()->proxima_execucao_em->isPast())->toBeTrue()
+        ->and(MonitoramentoConsulta::where('assinatura_id', $a->id)->count())->toBe(0);
 });
 
 // ---- Gating de CNPJs monitorados ----

@@ -40,6 +40,7 @@ it('sweep 1: saldo insuficiente pausa a assinatura sem disparar', function () {
     $this->artisan('monitoramento:executar-pendentes')->assertSuccessful();
 
     expect($a->fresh()->status)->toBe('pausado')
+        ->and($a->fresh()->pausada_motivo)->toBe('saldo')
         ->and(MonitoramentoConsulta::where('assinatura_id', $a->id)->count())->toBe(0);
 });
 
@@ -77,5 +78,6 @@ it('sweep 2: cadeia de 4 erros (retryCount 3) pausa a assinatura', function () {
 
     $this->artisan('monitoramento:executar-pendentes')->assertSuccessful();
 
-    expect($a->fresh()->status)->toBe('pausado');
+    expect($a->fresh()->status)->toBe('pausado')
+        ->and($a->fresh()->pausada_motivo)->toBe('falhas');
 });

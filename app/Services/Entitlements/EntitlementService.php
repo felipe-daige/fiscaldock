@@ -104,6 +104,12 @@ class EntitlementService
         return $anchor ? \Illuminate\Support\Carbon::parse($anchor) : now()->startOfMonth();
     }
 
+    /** Fim do ciclo de consumo do monitor: início + 1 mês (próxima renovação/grant esperado). */
+    public function fimCicloMonitoramento(User $user): \Illuminate\Support\Carbon
+    {
+        return $this->cicloInicioMonitoramento($user)->copy()->addMonth();
+    }
+
     /** Créditos já consumidos pelo auto-monitor no ciclo corrente (deduções type=monitoramento_assinatura). */
     public function consumoMonitoramentoNoCiclo(User $user): int
     {
