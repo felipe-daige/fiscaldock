@@ -1038,11 +1038,18 @@ class DashboardController extends Controller
 
         abort_if($total === 0, 404, 'Nenhum alerta ativo para exportar.');
 
+        // Materialidade do recorte exportado (soma o valor em risco dos alertas incluídos).
+        $valorRiscoTotal = array_sum(array_map(
+            fn ($g) => (float) $g['alertas']->sum('valor_risco'),
+            $grupos
+        ));
+
         $arquivo = 'alertas-'.now()->format('Y-m-d').'.pdf';
 
         return \App\Support\PdfReport::render('reports.alertas', [
             'grupos' => $grupos,
             'total' => $total,
+            'valorRiscoTotal' => round($valorRiscoTotal, 2),
             'geradoEm' => now(),
             'hashDoc' => \App\Support\PdfReport::hashDocumento(Auth::id(), 'alertas', $total),
         ], 'portrait')->download($arquivo);
