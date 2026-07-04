@@ -74,6 +74,47 @@ it('alerta resolvido NÃO renderiza o modal de resolução', function () {
         ->assertDontSee('Confirmar e resolver');
 });
 
+it('alerta resolvido mostra estado + Reabrir, sem botão de resolver', function () {
+    $alerta = Alerta::create([
+        'user_id' => $this->user->id,
+        'tipo' => 'notas_duplicadas',
+        'categoria' => 'notas_fiscais',
+        'severidade' => 'media',
+        'titulo' => 'Notas duplicadas',
+        'descricao' => 'd',
+        'status' => 'resolvido',
+        'resolvido_em' => now(),
+        'hash' => hash('sha256', 'rr'.uniqid('', true)),
+    ]);
+
+    $this->actingAs($this->user)
+        ->get('/app/alertas/'.$alerta->id)
+        ->assertOk()
+        ->assertDontSee('Resolver Alerta')   // sem botão de abrir o modal de resolução
+        ->assertSee('Resolvido em')
+        ->assertSee('btn-reabrir-alerta', false);
+});
+
+it('reabrir alerta resolvido limpa resolvido_em e registra reaberto', function () {
+    $alerta = Alerta::create([
+        'user_id' => $this->user->id,
+        'tipo' => 'notas_duplicadas',
+        'categoria' => 'notas_fiscais',
+        'severidade' => 'media',
+        'titulo' => 'Notas duplicadas',
+        'descricao' => 'd',
+        'status' => 'resolvido',
+        'resolvido_em' => now()->subDay(),
+        'hash' => hash('sha256', 'rea'.uniqid('', true)),
+    ]);
+
+    app(App\Services\AlertaCentralService::class)->marcarStatus($alerta->id, $this->user->id, 'ativo', null);
+
+    $alerta->refresh();
+    expect($alerta->status)->toBe('ativo')
+        ->and($alerta->resolvido_em)->toBeNull();
+});
+
 it('a listagem anexa o cta do guia em cada alerta', function () {
     Alerta::create([
         'user_id' => $this->user->id,

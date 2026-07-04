@@ -507,6 +507,11 @@ class AlertaCentralService
             $alerta->resolvido_em = now();
         }
 
+        // Reabrir: limpa o carimbo de resolução (senão a UI mostra data antiga).
+        if ($status === 'ativo') {
+            $alerta->resolvido_em = null;
+        }
+
         if ($notas !== null) {
             $alerta->notas = $notas;
         }
@@ -541,6 +546,10 @@ class AlertaCentralService
 
                 if ($status === 'resolvido') {
                     $alerta->resolvido_em = now();
+                }
+
+                if ($status === 'ativo') {
+                    $alerta->resolvido_em = null;
                 }
 
                 if ($notas !== null) {

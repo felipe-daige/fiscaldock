@@ -66,11 +66,23 @@
                     </button>
                 </div>
                 @else
-                <div class="flex-shrink-0">
-                    <span class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white rounded" style="background-color: #047857">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Resolvido em {{ $alerta->resolvido_em ? $alerta->resolvido_em->format('d/m/Y H:i') : '-' }}
-                    </span>
+                <div class="flex-shrink-0 flex flex-col items-stretch sm:items-end gap-2">
+                    @if($alerta->status === 'resolvido')
+                        <span class="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-semibold text-white rounded" style="background-color: #047857">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Resolvido em {{ $alerta->resolvido_em ? $alerta->resolvido_em->format('d/m/Y H:i') : '-' }}
+                        </span>
+                    @else
+                        <span class="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-semibold text-white rounded" style="background-color: #9ca3af">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            Ignorado
+                        </span>
+                    @endif
+                    {{-- Reabrir: volta para ativo (registra "reaberto" na auditoria) --}}
+                    <button type="button" id="btn-reabrir-alerta" class="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Reabrir
+                    </button>
                 </div>
                 @endif
             </div>
@@ -778,6 +790,39 @@
                 alert('Erro na requisição. Verifique sua conexão.');
                 btnConfirm.disabled = false;
                 btnConfirm.innerHTML = btnConfirmHtml;
+            }
+        });
+    })();
+</script>
+@endif
+
+{{-- Reabrir alerta resolvido/ignorado (volta para ativo) --}}
+@if(in_array($alerta->status, ['resolvido', 'ignorado'], true))
+<script>
+    (function(){
+        const btn = document.getElementById('btn-reabrir-alerta');
+        if(!btn) return;
+        const originalHtml = btn.innerHTML;
+        btn.addEventListener('click', async function() {
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="animate-spin h-4 w-4 mr-1 inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Reabrindo...';
+            try {
+                const meta = document.querySelector('meta[name="csrf-token"]');
+                const response = await fetch('/app/alertas/{{ $alerta->id }}/status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': meta ? meta.content : '', 'Accept': 'application/json' },
+                    body: JSON.stringify({ status: 'ativo' })
+                });
+                if(response.ok) {
+                    if (window.SPA && window.SPA.navigate) window.SPA.navigate('/app/alertas');
+                    else window.location.href = '/app/alertas';
+                } else {
+                    alert('Não foi possível reabrir o alerta. Tente novamente.');
+                    btn.disabled = false; btn.innerHTML = originalHtml;
+                }
+            } catch(e) {
+                alert('Erro na requisição. Verifique sua conexão.');
+                btn.disabled = false; btn.innerHTML = originalHtml;
             }
         });
     })();
