@@ -825,8 +825,9 @@
             html += severidadeDot(maxSev);
             html += '<h3 class="text-sm font-medium text-gray-900 truncate">' + escapeHtml(formatTipoLabel(tipo)) + '</h3>';
             html += '<span class="hidden sm:inline-flex">' + categoriaBadge(primeiro.categoria) + '</span>';
-            if (items.length === 1 && primeiro.cliente && primeiro.cliente.razao_social) {
-                html += '<span class="hidden sm:inline text-xs text-gray-400">— ' + escapeHtml(primeiro.cliente.razao_social) + '</span>';
+            var clienteGrupo = clienteComumDoGrupo(items);
+            if (clienteGrupo) {
+                html += '<span class="hidden sm:inline text-xs text-gray-400 truncate">— ' + escapeHtml(clienteGrupo) + '</span>';
             }
             html += '</div>';
             html += '<div class="flex items-center gap-2 flex-shrink-0">';
@@ -950,6 +951,10 @@
                 html += '<span class="text-gray-500">' + cat.icon + '</span>';
                 html += '<h3 class="text-sm font-medium text-gray-900 truncate">' + escapeHtml(cat.label) + '</h3>';
                 html += '<span class="hidden sm:inline-flex">' + categoriaBadge(cat.categoria) + '</span>';
+                var clienteCat = clienteComumDoGrupo(items);
+                if (clienteCat) {
+                    html += '<span class="hidden sm:inline text-xs text-gray-400 truncate">— ' + escapeHtml(clienteCat) + '</span>';
+                }
                 html += '</div>';
                 html += '<div class="flex items-center gap-2 flex-shrink-0">';
                 html += '<span class="text-xs text-gray-500">' + totalAfetados + ' afetados</span>';
@@ -1060,6 +1065,22 @@
     }
 
     // ─── Render: Alert Card ───────────────────────────────────
+
+    // Razão social do cliente COMUM a todos os alertas do grupo (ou null se divergem/ausente).
+    // Usado no cabeçalho dos grupos: "Situação Cadastral Irregular · Compliance — HIDRATOP".
+    function clienteComumDoGrupo(items) {
+        if (!items || !items.length) return null;
+        var idRef = null;
+        var nomeRef = null;
+        for (var i = 0; i < items.length; i++) {
+            var a = items[i];
+            var nome = (a.cliente && a.cliente.razao_social) || null;
+            if (!a.cliente_id || !nome) return null; // algum sem cliente → não é grupo de 1 cliente
+            if (idRef === null) { idRef = a.cliente_id; nomeRef = nome; }
+            else if (a.cliente_id !== idRef) return null; // clientes diferentes
+        }
+        return nomeRef;
+    }
 
     // Chip do cliente ao qual o alerta se refere (só quando há cliente vinculado).
     // Alertas agregados por usuário (notas/importação/nunca_consultado) não têm cliente único.
