@@ -20,6 +20,7 @@ class MonitoramentoAssinatura extends Model
         'grupo_id',
         'plano_id',
         'status',
+        'pausada_motivo',
         'frequencia_dias',
         'proxima_execucao_em',
         'ultima_execucao_em',
@@ -169,11 +170,12 @@ class MonitoramentoAssinatura extends Model
     }
 
     /**
-     * Pausa a assinatura.
+     * Pausa a assinatura registrando o motivo: 'manual' | 'saldo' | 'falhas'.
+     * Cap de consumo estourado NÃO pausa (freio §6.2 v2 adia o disparo).
      */
-    public function pausar(): void
+    public function pausar(string $motivo = 'manual'): void
     {
-        $this->update(['status' => 'pausado']);
+        $this->update(['status' => 'pausado', 'pausada_motivo' => $motivo]);
     }
 
     /**
@@ -183,6 +185,7 @@ class MonitoramentoAssinatura extends Model
     {
         $this->update([
             'status' => 'ativo',
+            'pausada_motivo' => null,
             'proxima_execucao_em' => now(),
         ]);
     }

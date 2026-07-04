@@ -21,6 +21,7 @@ return new class extends Migration
             $table->foreignId('grupo_id')->nullable()->constrained('participantes_grupos')->onDelete('cascade');
             $table->foreignId('plano_id')->constrained('monitoramento_planos');
             $table->enum('status', ['ativo', 'pausado', 'cancelado'])->default('ativo');
+            $table->string('pausada_motivo')->nullable(); // manual | saldo | falhas — null quando ativa
             $table->integer('frequencia_dias')->default(30); // 30 = mensal
             $table->timestamp('proxima_execucao_em')->nullable();
             $table->timestamp('ultima_execucao_em')->nullable();

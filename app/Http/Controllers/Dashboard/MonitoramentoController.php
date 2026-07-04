@@ -711,7 +711,7 @@ class MonitoramentoController extends Controller
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        $assinatura->update(['status' => 'pausado']);
+        $assinatura->pausar('manual');
 
         Log::info('Assinatura pausada', [
             'user_id' => $user->id,
@@ -761,6 +761,7 @@ class MonitoramentoController extends Controller
 
         $assinatura->update([
             'status' => 'ativo',
+            'pausada_motivo' => null,
             'proxima_execucao_em' => $proximaExecucao,
         ]);
 
