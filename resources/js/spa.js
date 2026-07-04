@@ -10,6 +10,23 @@ document.addEventListener('DOMContentLoaded', () => {
         listeners: []
     };
 
+    // Registro de scripts externos já carregados, por PATH normalizado (sem querystring).
+    // Evita double-load quando a view versiona o src com ?v=filemtime (cache-busting): sem
+    // isso o dedup por src exato tratava `/js/bi.js?v=1` e `/js/bi.js` como scripts distintos,
+    // e o tag do load inicial (fora do <head>) não era encontrado na re-navegação → recarga +
+    // listeners/gráficos duplicados. Semeado no boot com todo <script src> já presente.
+    const _scriptsCarregados = new Set();
+    const _normalizarScriptSrc = (src) => {
+        try {
+            return new URL(src, window.location.origin).pathname;
+        } catch (e) {
+            return String(src).split('?')[0];
+        }
+    };
+    document.querySelectorAll('script[src]').forEach((s) => {
+        _scriptsCarregados.add(_normalizarScriptSrc(s.getAttribute('src')));
+    });
+
     // Funcao para atualizar CSRF token apos navegacao SPA
     async function atualizarCsrfToken() {
         try {
@@ -608,11 +625,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                // Script externo com src - carregar dinamicamente
+                // Script externo com src - carregar dinamicamente.
+                // Dedup por PATH normalizado (ignora ?v=): já carregado (inclusive no load
+                // inicial, fora do <head>) não recarrega — evita double-load e listeners dobrados.
                 if (script.src) {
                     const scriptSrc = script.getAttribute('src');
-                    const existente = document.head.querySelector('script[src="' + scriptSrc + '"]');
-                    if (!existente) {
+                    const scriptPath = _normalizarScriptSrc(scriptSrc);
+                    if (!_scriptsCarregados.has(scriptPath)) {
+                        _scriptsCarregados.add(scriptPath);
                         const novoScript = document.createElement('script');
                         novoScript.src = scriptSrc;
                         // Collect a promise for each NEW external script
