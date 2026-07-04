@@ -174,8 +174,15 @@ class ExecutarMonitoramentoPendentesCommand extends Command
     /** Cache::add é atômico: true só na primeira vez da chave no ciclo. */
     private function umaVezPorCiclo(string $key, EntitlementService $entitlements, User $user): bool
     {
-        $ttl = max(60, (int) now()->diffInSeconds($entitlements->fimCicloMonitoramento($user), false));
+        $fim = $entitlements->fimCicloMonitoramento($user);
 
-        return Cache::add($key, true, $ttl);
+        // Âncora do ciclo pode estar >1 mês estagnada (assinatura sem grant recente):
+        // fimCiclo já passou e o diff fica negativo. Cai no período nominal de 1 mês
+        // pra manter a cadência 1×/ciclo em vez de reexpirar a cada run diário.
+        $ttl = now()->lt($fim)
+            ? (int) now()->diffInSeconds($fim, false)
+            : 60 * 60 * 24 * 30;
+
+        return Cache::add($key, true, max(60, $ttl));
     }
 }

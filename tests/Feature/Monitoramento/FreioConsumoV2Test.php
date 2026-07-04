@@ -181,3 +181,20 @@ it('saldo insuficiente segue pausando, com motivo saldo', function () {
     expect($a->fresh()->status)->toBe('pausado')
         ->and($a->fresh()->pausada_motivo)->toBe('saldo');
 });
+
+it('freioAtuou segue 1x/ciclo mesmo com âncora do ciclo estagnada (>1 mês) entre runs', function () {
+    Bus::fake();
+    $user = User::factory()->create(['credits' => 100]);
+    // âncora 2 meses atrás => fimCiclo no passado => TTL degenerado era 60s
+    freioAssinar($user, ['limite_consumo_automatico' => 5, 'ultimo_grant_em' => now()->subMonths(2)]);
+    freioConsumoNoCiclo($user, 5); // custo do plano > cap 5 => adia
+    freioAssinatura($user, freioParticipante($user)); // custo 20
+
+    $spy = $this->spy(MonitoramentoNotifier::class);
+
+    $this->artisan('monitoramento:executar-pendentes')->assertSuccessful();
+    $this->travelTo(now()->addMinutes(5)); // além dos 60s do TTL degenerado
+    $this->artisan('monitoramento:executar-pendentes')->assertSuccessful();
+
+    $spy->shouldHaveReceived('freioAtuou')->once();
+});
