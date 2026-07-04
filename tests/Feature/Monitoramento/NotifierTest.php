@@ -33,3 +33,28 @@ it('registra alerta in-app quando a situação piora', function () {
         'categoria' => 'monitoramento',
     ]);
 });
+
+it('freioAtuou registra alerta de conta 1 linha por usuário', function () {
+    $user = User::factory()->create();
+
+    app(MonitoramentoNotifier::class)->freioAtuou($user, 3, now()->addDays(10));
+
+    assertDatabaseHas('alertas', [
+        'user_id' => $user->id,
+        'tipo' => 'monitoramento_freio_atuou',
+        'categoria' => 'monitoramento',
+        'severidade' => 'media',
+    ]);
+});
+
+it('consumoProximoDoLimite registra alerta de 80% com valores em R$', function () {
+    $user = User::factory()->create();
+
+    app(MonitoramentoNotifier::class)->consumoProximoDoLimite($user, 8, 10);
+
+    assertDatabaseHas('alertas', [
+        'user_id' => $user->id,
+        'tipo' => 'monitoramento_consumo_80',
+        'severidade' => 'media',
+    ]);
+});

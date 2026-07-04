@@ -4,11 +4,18 @@ namespace App\Support\Monitoramento;
 
 use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoConsulta;
+use App\Models\User;
 use App\Services\AlertaCentralService;
+use App\Services\PricingCatalogService;
+use App\Support\Dinheiro;
+use Illuminate\Support\Carbon;
 
 class AlertaCentralNotifier implements MonitoramentoNotifier
 {
-    public function __construct(private AlertaCentralService $alertas) {}
+    public function __construct(
+        private AlertaCentralService $alertas,
+        private PricingCatalogService $precos,
+    ) {}
 
     public function assinaturaPausadaSemSaldo(MonitoramentoAssinatura $assinatura): void
     {
@@ -52,6 +59,31 @@ class AlertaCentralNotifier implements MonitoramentoNotifier
             'descricao' => "O monitoramento contínuo de {$nome} foi pausado porque o consumo automático atingiu o limite definido para o ciclo. Aumente o limite de consumo ou reative a assinatura para continuar.",
             'participante_id' => $assinatura->participante_id,
             'cliente_id' => $assinatura->cliente_id,
+        ]);
+    }
+
+    public function freioAtuou(User $user, int $assinaturasAdiadas, Carbon $proximoCiclo): void
+    {
+        $this->alertas->registrarAlertaMonitoramento([
+            'user_id' => $user->id,
+            'tipo' => 'monitoramento_freio_atuou',
+            'severidade' => 'media',
+            'titulo' => 'Freio de consumo atuou no monitoramento automático',
+            'descricao' => "{$assinaturasAdiadas} assinatura(s) de monitoramento aguardando o próximo ciclo (a partir de {$proximoCiclo->format('d/m/Y')}): o consumo automático atingiu o limite definido. Nada foi pausado — as consultas retomam sozinhas. Aumente o limite no painel de monitoramento se quiser antecipar.",
+        ]);
+    }
+
+    public function consumoProximoDoLimite(User $user, int $consumoCreditos, int $capCreditos): void
+    {
+        $consumoBrl = Dinheiro::brl($this->precos->creditsToCurrency($consumoCreditos));
+        $capBrl = Dinheiro::brl($this->precos->creditsToCurrency($capCreditos));
+
+        $this->alertas->registrarAlertaMonitoramento([
+            'user_id' => $user->id,
+            'tipo' => 'monitoramento_consumo_80',
+            'severidade' => 'media',
+            'titulo' => 'Monitoramento automático chegou a 80% do limite do ciclo',
+            'descricao' => "O monitoramento automático já consumiu {$consumoBrl} de {$capBrl} neste ciclo. Ao atingir o limite, as próximas consultas aguardam o próximo ciclo.",
         ]);
     }
 

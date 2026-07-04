@@ -17,6 +17,12 @@ interface MonitoramentoNotifier
 
     public function assinaturaPausadaPorLimiteConsumo(MonitoramentoAssinatura $assinatura): void;
 
+    /** Freio §6.2 v2: N assinaturas adiadas neste ciclo (nada pausado; retomam no próximo ciclo). */
+    public function freioAtuou(\App\Models\User $user, int $assinaturasAdiadas, \Illuminate\Support\Carbon $proximoCiclo): void;
+
+    /** Consumo automático do ciclo atingiu >= 80% do cap. */
+    public function consumoProximoDoLimite(\App\Models\User $user, int $consumoCreditos, int $capCreditos): void;
+
     public function situacaoPiorou(MonitoramentoConsulta $consulta, ?MonitoramentoConsulta $anterior): void;
 
     public function situacaoMelhorou(MonitoramentoConsulta $consulta, ?MonitoramentoConsulta $anterior): void;
