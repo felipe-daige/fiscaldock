@@ -117,7 +117,7 @@
                         {{ $trialOn ? 'Período de teste' : 'Teste encerrado' }}
                     </span>
                     <a href="/app/planos" data-link class="text-[11px] font-semibold text-gray-700 hover:text-gray-900 whitespace-nowrap">
-                        {{ $trialOn ? 'Ver planos' : 'Comprar créditos' }}
+                        {{ $trialOn ? 'Ver planos' : 'Adicionar saldo' }}
                     </a>
                 </div>
                 <div class="px-4 py-3">
@@ -133,13 +133,13 @@
                                     <div class="rounded-full overflow-hidden" style="height:3px;background-color:#e5e7eb;"><div style="height:100%;width:{{ $tPct }}%;background-color:#1f2937;"></div></div>
                                 </div>
                                 <div>
-                                    <div class="flex justify-between text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1"><span>Créditos</span><span>{{ $fmtN($tRem) }}/{{ $fmtN($tGranted) }}</span></div>
+                                    <div class="flex justify-between text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1"><span>Saldo</span><span>@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $tRem))/@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $tGranted))</span></div>
                                     <div class="rounded-full overflow-hidden" style="height:3px;background-color:#e5e7eb;"><div style="height:100%;width:{{ $tCredPct }}%;background-color:#1f2937;"></div></div>
                                 </div>
                             </div>
                         </div>
                     @else
-                        <p class="text-sm text-gray-700">Seu período de teste terminou em {{ optional($tExp)->format('d/m/Y') }}. Compre créditos para seguir nas consultas pagas.</p>
+                        <p class="text-sm text-gray-700">Seu período de teste terminou em {{ optional($tExp)->format('d/m/Y') }}. Adicione saldo para seguir nas consultas pagas.</p>
                     @endif
                 </div>
             </div>

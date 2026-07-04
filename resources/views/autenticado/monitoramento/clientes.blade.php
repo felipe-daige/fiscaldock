@@ -51,8 +51,12 @@
                 </div>
                 <div class="flex flex-wrap items-end gap-3">
                     <div>
-                        <label class="block text-[11px] text-gray-500 mb-1">Teto personalizado (créditos)</label>
-                        <input type="number" id="input-limite-consumo" min="0" max="1000000" value="{{ $limiteAtual }}" placeholder="Padrão do plano" class="text-[13px] py-2.5 px-3 border border-gray-300 rounded w-48">
+                        <label class="block text-[11px] text-gray-500 mb-1">Teto personalizado (R$)</label>
+                        {{-- O usuário digita R$; o JS converte pra créditos (unidade interna do backend) no envio. --}}
+                        <input type="number" id="input-limite-consumo" min="0" max="{{ app(\App\Services\PricingCatalogService::class)->creditsToCurrency(1000000) }}" step="0.01"
+                               value="{{ $limiteAtual !== null && $limiteAtual !== '' ? app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $limiteAtual) : '' }}"
+                               data-credit-unit-price="{{ app(\App\Services\PricingCatalogService::class)->creditUnitPrice() }}"
+                               placeholder="Padrão do plano" class="text-[13px] py-2.5 px-3 border border-gray-300 rounded w-48">
                     </div>
                     <button id="btn-salvar-limite" type="button" class="px-3 py-2.5 rounded bg-gray-800 hover:bg-gray-700 text-white text-[13px] font-semibold transition">Salvar</button>
                     <span id="limite-feedback" class="text-[12px]"></span>
@@ -127,9 +131,14 @@
 
     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
+    // Input em R$; backend fala créditos → converter na ida (÷ preço unitário) e na volta (×).
+    const unitPrice = parseFloat(input.dataset.creditUnitPrice) || 0.20;
+    const brl = (creditos) => 'R$ ' + (Math.round(creditos * unitPrice * 100) / 100)
+        .toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
     btn.addEventListener('click', async function () {
-        const raw = input.value.trim();
-        const limite = raw === '' ? null : parseInt(raw, 10);
+        const raw = input.value.trim().replace(',', '.');
+        const limite = raw === '' ? null : Math.round(parseFloat(raw) / unitPrice);
 
         if (limite !== null && (isNaN(limite) || limite < 0 || limite > 1000000)) {
             feedback.textContent = 'Valor inválido.';
@@ -154,7 +163,7 @@
             });
             const data = await resp.json();
             if (resp.ok && data.success) {
-                feedback.textContent = '✓ Teto atualizado (' + Number(data.cap_efetivo).toLocaleString('pt-BR') + ' cr/ciclo).';
+                feedback.textContent = '✓ Teto atualizado (' + brl(Number(data.cap_efetivo)) + '/ciclo).';
                 feedback.style.color = '#047857';
             } else {
                 feedback.textContent = data.error || data.message || 'Não foi possível salvar.';

@@ -94,6 +94,7 @@
         etapaLabelAtual: '',
         eventSource: null,
         credits: window.consultaData?.credits || 0,
+        creditUnitPrice: window.consultaData?.creditUnitPrice || 0.20,
         isExecuting: false,
         activeAlertTooltipId: null,
         alertTooltipCloseTimer: null,
@@ -975,6 +976,14 @@
     }
 
     /**
+     * Converte CRÉDITOS pra R$ formatado (espelha PricingCatalogService::creditsToCurrency).
+     */
+    function creditosEmBrl(creditos) {
+        const reais = Math.round((creditos || 0) * state.creditUnitPrice * 100) / 100;
+        return 'R$ ' + reais.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    /**
      * Atualiza resumo de custos.
      */
     function updateResumo() {
@@ -1000,9 +1009,11 @@
             if (elements.resumoCustoUnitario) elements.resumoCustoUnitario.textContent = 'Gratis';
             if (elements.resumoCustoTotal) elements.resumoCustoTotal.textContent = 'Gratis';
         } else {
-            // custo* já vem em R$
-            if (elements.resumoCustoUnitario) elements.resumoCustoUnitario.textContent = 'R$ ' + (custoUnitario).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            if (elements.resumoCustoTotal) elements.resumoCustoTotal.textContent = 'R$ ' + (custoTotal).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            // custo* está em CRÉDITOS — converter pra R$ na exibição (créditos × creditUnitPrice),
+            // igual aos badges dos planos (creditsToCurrency no blade). Antes colava "R$" no número
+            // de créditos cru e inflava o preço exibido (Compliance 25 créditos virava "R$ 25,00").
+            if (elements.resumoCustoUnitario) elements.resumoCustoUnitario.textContent = creditosEmBrl(custoUnitario);
+            if (elements.resumoCustoTotal) elements.resumoCustoTotal.textContent = creditosEmBrl(custoTotal);
         }
 
         // Alerta de creditos insuficientes
@@ -1103,7 +1114,8 @@
             }
 
             state.credits = data.novo_saldo;
-            if (elements.resumoSaldo) elements.resumoSaldo.textContent = 'R$ ' + ((data.novo_saldo || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            // novo_saldo vem em CRÉDITOS — converter pra R$ como no render inicial do blade.
+            if (elements.resumoSaldo) elements.resumoSaldo.textContent = creditosEmBrl(data.novo_saldo || 0);
 
             const redirectUrl = data.redirect_url || ('/app/consulta/lote/' + data.consulta_lote_id);
             if (redirectUrl) {

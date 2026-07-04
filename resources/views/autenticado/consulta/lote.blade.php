@@ -367,7 +367,7 @@
                                             <strong>{{ $a['cnpj'] }}</strong> <span class="text-gray-500">({{ $a['razao'] }})</span>
                                             <span class="block text-[11px] text-gray-400 mt-0.5">Reconsultaremos: {{ implode(', ', $a['fontes']) }}</span>
                                         </div>
-                                        <span class="text-amber-700 font-medium whitespace-nowrap">{{ (int) $a['preco_creditos'] }} créditos ({{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $a['preco_creditos'])) }})</span>
+                                        <span class="text-amber-700 font-medium whitespace-nowrap">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $a['preco_creditos'])) }}</span>
                                     </div>
                                 @endforeach
                                 @foreach($retryPendentes['inelegiveis'] as $i)
@@ -382,7 +382,7 @@
                                     $saldoAposCreditos = (int) $credits - $custoRetryCreditos;
                                 @endphp
                                 <div class="border-t border-gray-200 pt-3 text-xs text-gray-600">
-                                    Custo: <strong>{{ $custoRetryCreditos }} créditos ({{ \App\Support\Dinheiro::brl($pricing->creditsToCurrency($custoRetryCreditos)) }})</strong> · Saldo: {{ (int) $credits }} <span class="text-gray-400">→</span> <strong style="color: {{ $saldoAposCreditos < 0 ? '#dc2626' : '#047857' }}">{{ $saldoAposCreditos }} créditos</strong>
+                                    Custo: <strong>{{ \App\Support\Dinheiro::brl($pricing->creditsToCurrency($custoRetryCreditos)) }}</strong> · Saldo: {{ \App\Support\Dinheiro::brl($pricing->creditsToCurrency((int) $credits)) }} <span class="text-gray-400">→</span> <strong style="color: {{ $saldoAposCreditos < 0 ? '#dc2626' : '#047857' }}">{{ \App\Support\Dinheiro::brl($pricing->creditsToCurrency($saldoAposCreditos)) }}</strong>
                                 </div>
                                 <div class="flex justify-end gap-2">
                                     <button type="button" onclick="document.getElementById('modal-retry-{{ $lote->id }}').classList.add('hidden')" class="text-xs px-3 py-1.5 text-gray-600">Cancelar</button>
@@ -446,7 +446,7 @@
                                     </select>
                                 </div>
                                 <div class="border-t border-gray-200 pt-3 text-xs text-gray-600">
-                                    Custo: <strong id="custo-reconsulta-{{ $lote->id }}"></strong> · Saldo: {{ (int) $credits }} créditos
+                                    Custo: <strong id="custo-reconsulta-{{ $lote->id }}"></strong> · Saldo: {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $credits)) }}
                                 </div>
                                 <div class="flex justify-end gap-2">
                                     <button type="button" onclick="document.getElementById('modal-reconsulta-{{ $lote->id }}').classList.add('hidden')" class="text-xs px-3 py-1.5 text-gray-600">Cancelar</button>
@@ -464,10 +464,15 @@
                         var totalAlvos = {{ (int) $reconsultaTudo['total_alvos'] }};
                         var sel = document.getElementById('select-reconsulta-plano-{{ $lote->id }}');
                         var custoEl = document.getElementById('custo-reconsulta-{{ $lote->id }}');
+                        var unitPrice = {{ app(\App\Services\PricingCatalogService::class)->creditUnitPrice() }};
+                        function brl(creditos) {
+                            var reais = Math.round(creditos * unitPrice * 100) / 100;
+                            return 'R$ ' + reais.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        }
                         function atualizaCusto() {
                             var opt = sel.options[sel.selectedIndex];
                             var unit = parseInt(opt.dataset.creditos || '0', 10);
-                            custoEl.textContent = totalAlvos + ' × ' + opt.dataset.rotulo + ' = ' + (totalAlvos * unit) + ' créditos';
+                            custoEl.textContent = totalAlvos + ' × ' + opt.dataset.rotulo + ' = ' + brl(totalAlvos * unit);
                         }
                         sel.addEventListener('change', atualizaCusto);
                         atualizaCusto();

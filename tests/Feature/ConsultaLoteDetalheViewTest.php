@@ -465,7 +465,7 @@ it('exibe detalhe expansível com TODAS as fontes consultadas, inclusive as ause
         ->assertSee('data-detalhe-toggle="consulta-detalhe-d-0"', false)
         ->assertSee('Ver detalhes da consulta')
         // resumo escrito por CNPJ
-        ->assertSee('Resumo da análise')
+        ->assertSee('Parecer da análise')
         ->assertSee('Situação cadastral ATIVA')
         ->assertSee('Sem sanções na CGU.')
         // análise agregada do lote (texto + tabela + gráfico)

@@ -1716,9 +1716,9 @@ class ConsultaController extends Controller
                             'codigo' => $p->codigo,
                             'nome' => $p->nome,
                             'creditos_unit' => $unit,
-                            'rotulo_preco' => $unit.' créditos ('.\App\Support\Dinheiro::brl(
+                            'rotulo_preco' => \App\Support\Dinheiro::brl(
                                 $this->pricingCatalogService->creditsToCurrency($unit)
-                            ).')',
+                            ),
                         ];
                     })->all();
 

@@ -17,7 +17,7 @@ it('mostra banner de trial no dashboard e widget na sidebar para usuário em tri
     expect($html)->toContain('restantes');
     // widget da sidebar
     expect($html)->toContain('data-trial-widget');
-    expect($html)->toContain('Trial ativo');
+    expect($html)->toContain('Ver planos'); // CTA do widget (o rótulo 'Trial ativo' saiu no redesign)
 });
 
 it('não mostra banner nem widget de trial para usuário fora do trial', function () {

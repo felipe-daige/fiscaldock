@@ -235,7 +235,14 @@
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div class="border border-gray-300 rounded p-3">
                                 <p class="text-sm font-semibold text-gray-900">Preço por CNPJ consultado</p>
-                                <p class="text-[11px] text-gray-500 mt-1">Escada comercial atual: Validação {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(3)) }}, Licitação {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(4)) }}, Compliance {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(5)) }} por CNPJ.</p>
+                                {{-- Escada derivada dos planos reais (custo em créditos → R$) — antes eram literais desatualizados. --}}
+                                @php
+                                    $escadaTxt = collect($planosDetalhados)
+                                        ->filter(fn ($x) => ! $x['gratuito'] && ! ($x['coming_soon'] ?? false))
+                                        ->map(fn ($x) => $x['nome'].' '.\App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $x['creditos'])))
+                                        ->implode(', ');
+                                @endphp
+                                <p class="text-[11px] text-gray-500 mt-1">Escada comercial atual: {{ $escadaTxt }} por CNPJ.</p>
                             </div>
                             <div class="border border-gray-300 rounded p-3">
                                 <p class="text-sm font-semibold text-gray-900">Cobrança só na confirmação</p>
@@ -1044,7 +1051,7 @@
 
                                                 @if($pd['promo'])
                                                     <div class="mt-3 bg-white rounded border border-gray-300 border-l-4 p-3 text-sm text-gray-700" style="border-left-color: #d97706">
-                                                        Promoção: de {{ $pd['preco_original'] }} por {{ \App\Support\Dinheiro::brl((float) $pd['creditos']) }}/CNPJ
+                                                        Promoção: de {{ $pd['preco_original'] }} por {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $pd['creditos'])) }}/CNPJ
                                                     </div>
                                                 @endif
                                             </div>
@@ -1152,6 +1159,9 @@
 <script>
     window.consultaData = {
         credits: {{ $credits ?? 0 }},
+        // Preço do crédito em R$ (override admin §6.1 ou default 0,20). O JS precisa dele pra
+        // exibir custo/saldo em R$ — `credits` e `data-custo` são CRÉDITOS, nunca reais.
+        creditUnitPrice: {{ app(\App\Services\PricingCatalogService::class)->creditUnitPrice() }},
         csrfToken: '{{ csrf_token() }}',
         routes: {
             getParticipantes: '/app/consulta/nova/participantes',

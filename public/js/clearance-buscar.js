@@ -6,6 +6,10 @@ function initClearanceBuscar() {
 
     const config = window.BUSCAR_NFE_CONFIG || {};
     const CUSTO = Number(config.custo || 14);
+    // Preço do crédito em R$ — vem do backend (respeita override do admin). CUSTO é em créditos.
+    const CREDIT_UNIT_PRICE = Number(config.creditUnitPrice || 0.20);
+    const brl = (creditos) => 'R$ ' + (Math.round((creditos || 0) * CREDIT_UNIT_PRICE * 100) / 100)
+        .toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const ENDPOINTS = config.endpoints || {};
     const BADGE_CORES = config.cores || {};
     const DEFAULT_CLIENTE_ID = config.defaultClienteId ? String(config.defaultClienteId) : '';
@@ -169,7 +173,7 @@ function initClearanceBuscar() {
 
     function atualizarSaldo(novoSaldo) {
         if (typeof novoSaldo !== 'number') return;
-        if (saldoLabel) saldoLabel.textContent = 'R$ ' + (novoSaldo * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        if (saldoLabel) saldoLabel.textContent = brl(novoSaldo);
         if (saldoBadge) {
             const suficiente = novoSaldo >= CUSTO;
             saldoBadge.style.backgroundColor = suficiente ? '#047857' : '#dc2626';
@@ -377,7 +381,7 @@ function initClearanceBuscar() {
             if (response.status === 402) {
                 mostrarErro(
                     'Saldo insuficiente',
-                    `Esta consulta custa R$ ${((data.custo_necessario || CUSTO) * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Saldo atual: R$ ${((data.saldo_atual ?? 0) * 0.20).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`,
+                    `Esta consulta custa ${brl(data.custo_necessario || CUSTO)}. Saldo atual: ${brl(data.saldo_atual ?? 0)}.`,
                     false
                 );
                 inFlight = false;

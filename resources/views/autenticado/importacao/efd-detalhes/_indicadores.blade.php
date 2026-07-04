@@ -34,7 +34,7 @@
  <div class="px-4 py-3">
  <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Performance</p>
  <p class="text-lg font-bold text-gray-900">{{ $importacao->tempo_processamento ?? '0s' }}</p>
- <p class="text-[11px] text-gray-500">{{ $importacao->creditos_cobrados ?? 0 }} créditos cobrados</p>
+ <p class="text-[11px] text-gray-500">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($importacao->creditos_cobrados ?? 0))) cobrado</p>
  </div>
  </div>
 </div>

@@ -162,7 +162,7 @@ it('hub de monitoramento mostra o card de freio para quem tem assinatura', funct
     actingAs($user)->get(route('app.monitoramento.clientes'))
         ->assertOk()
         ->assertSee('Freio de consumo do auto-monitor')
-        ->assertSee('Teto personalizado (créditos)');
+        ->assertSee('Teto personalizado (R$)');
 });
 
 it('hub de monitoramento mostra versão informativa do freio para usuário sem assinatura', function () {
@@ -172,7 +172,7 @@ it('hub de monitoramento mostra versão informativa do freio para usuário sem a
         ->assertOk()
         ->assertSee('Freio de consumo do auto-monitor')        // cabeçalho sempre visível
         ->assertSee('O freio se ativa com uma assinatura')     // nota informativa
-        ->assertDontSee('Teto personalizado (créditos)');      // sem o campo editável
+        ->assertDontSee('Teto personalizado (R$)');      // sem o campo editável
 });
 
 // ---- Fase 5.1: gating de frequência e profundidade ----

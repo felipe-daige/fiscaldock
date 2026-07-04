@@ -383,8 +383,8 @@
                     <div class="border border-gray-300 rounded px-4 py-3">
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Custo mensal</p>
                         <div class="flex items-baseline gap-2 mt-1">
-                            <span class="text-lg font-bold text-gray-900" id="calc-creditos">100</span>
-                            <span class="text-[11px] text-gray-500">créditos</span>
+                            <span class="text-lg font-bold text-gray-900" id="calc-creditos">—</span>
+                            <span class="text-[11px] text-gray-500">/mês</span>
                         </div>
                     </div>
                 </div>
@@ -414,13 +414,16 @@
         const calcPlano = document.getElementById('calc-plano');
         const calcCreditos = document.getElementById('calc-creditos');
 
+        // Valores em CRÉDITOS internamente; a exibição é sempre em R$ (créditos × preço unitário).
+        const unitPrice = {{ app(\App\Services\PricingCatalogService::class)->creditUnitPrice() }};
+
         function calcular() {
             const cnpjs = parseInt(calcCnpjs.value, 10) || 0;
             const frequencia = parseInt(calcFrequencia.value, 10) || 1;
             const plano = parseInt(calcPlano.value, 10) || 0;
-            const total = cnpjs * frequencia * plano;
+            const totalReais = Math.round(cnpjs * frequencia * plano * unitPrice * 100) / 100;
 
-            calcCreditos.textContent = total.toLocaleString('pt-BR');
+            calcCreditos.textContent = 'R$ ' + totalReais.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         if (calcCnpjs) calcCnpjs.addEventListener('input', calcular);

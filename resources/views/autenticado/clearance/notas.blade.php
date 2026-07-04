@@ -69,7 +69,8 @@
     data-tem-mais-pagina="{{ $notas->lastPage() > 1 ? '1' : '0' }}"
     data-saldo-atual="{{ $saldoAtual }}"
     data-custo-basico="{{ $custosTiers['basico'] }}"
-    data-custo-full="{{ $custosTiers['full'] }}">
+    data-custo-full="{{ $custosTiers['full'] }}"
+    data-credit-unit-price="{{ app(\App\Services\PricingCatalogService::class)->creditUnitPrice() }}">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div class="mb-4 sm:mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>

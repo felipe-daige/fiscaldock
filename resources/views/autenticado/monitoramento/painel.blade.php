@@ -66,7 +66,7 @@
                                     @endif
                                 </td>
                                 <td class="px-2 text-gray-500">{{ $a['proxima_em'] ?? '—' }}</td>
-                                <td class="px-2 text-right text-gray-700 whitespace-nowrap">{{ $a['custo_ciclo'] }} créditos ({{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $a['custo_ciclo'])) }})</td>
+                                <td class="px-2 text-right text-gray-700 whitespace-nowrap">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $a['custo_ciclo'])) }}</td>
                                 <td class="px-2">
                                     <span class="inline-flex px-1.5 py-0.5 rounded text-white text-[10px]" style="background-color: {{ $a['status'] === 'ativo' ? '#047857' : '#9ca3af' }}">{{ $a['status'] }}</span>
                                 </td>
@@ -150,7 +150,7 @@
                         <label class="text-[11px] text-gray-500 block mb-1">Plano</label>
                         <select id="mon-plano" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
                             @foreach($planos as $pl)
-                                <option value="{{ $pl['id'] }}">{{ $pl['nome'] }} — {{ $pl['custo'] }} créditos/CNPJ</option>
+                                <option value="{{ $pl['id'] }}">{{ $pl['nome'] }} — {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $pl['custo'])) }}/CNPJ</option>
                             @endforeach
                         </select>
                     </div>

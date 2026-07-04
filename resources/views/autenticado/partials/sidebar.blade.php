@@ -230,9 +230,12 @@
                     <svg class="sidebar__user-avatar" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
+                    @php $__saldoBrl = app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($__u?->credits ?? 0)); @endphp
                     <span class="min-w-0 flex-1">
                         <span class="sidebar__user-name">{{ Auth::user()->name ?? 'Usuário' }}</span>
-                        <span class="sidebar__user-role">Conta</span>
+                        {{-- Saldo no lugar do rótulo estático "Conta" — não ocupa espaço extra --}}
+                        <span data-sidebar-saldo class="sidebar__user-role" style="color: #047857;"
+                              title="Saldo disponível">@brl($__saldoBrl)</span>
                     </span>
                     <svg class="sidebar__group-arrow transition-transform duration-200 group-open/user-details:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>

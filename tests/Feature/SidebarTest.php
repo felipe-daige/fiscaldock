@@ -18,7 +18,7 @@ it('sidebar expõe a navegação de Monitoramento e pílulas Novo', function () 
 
     expect($html)->toContain('Monitoramento')
         ->toContain('/app/monitoramento/clientes')
-        ->toContain('/app/monitoramento/grupos')
+        ->toContain('/app/monitoramento/painel')
         ->toContain('Novo'); // pílula de item recém-lançado
 });
 
@@ -68,11 +68,11 @@ it('sidebar leva direto a nova consulta e mantém historico/planos no cabeçalho
     $html = actingAs($user)->get('/app/dashboard')->assertOk()->getContent();
 
     expect($html)
-        ->toContain('href="/app/consulta/nova" data-link data-sidebar-link')
+        ->toContain('href="/app/consulta/painel" data-link data-sidebar-link')
         ->not->toContain('href="/app/consulta/historico" data-link data-sidebar-link')
         ->not->toContain('href="/app/consulta/planos" data-link data-sidebar-link');
 
-    actingAs($user)->get('/app/consulta/nova')
+    actingAs($user)->get('/app/consulta/painel')
         ->assertOk()
         ->assertSee('href="/app/consulta/historico"', false)
         ->assertSee('href="/app/consulta/planos"', false);

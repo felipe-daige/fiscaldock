@@ -117,7 +117,7 @@
                         </div>
                         @if($trialAtivo)
                             <div class="rounded border border-gray-200 px-3 py-2 text-[12px] text-gray-700">
-                                Trial ativo — {{ $trialCreditosRestantes ?? 0 }} créditos
+                                Trial ativo — @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($trialCreditosRestantes ?? 0))) em saldo promocional
                                 @if($trialExpiraEm) · expira {{ $trialExpiraEm->format('d/m/Y') }} @endif
                             </div>
                         @endif
