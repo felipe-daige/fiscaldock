@@ -228,5 +228,7 @@ it('criar assinatura dentro do cap não traz aviso', function () {
     ]);
 
     $resp->assertOk();
-    expect($resp->json('aviso'))->toBeNull();
+    $json = $resp->json();
+    expect($json)->toHaveKey('aviso')
+        ->and($json['aviso'])->toBeNull();
 });

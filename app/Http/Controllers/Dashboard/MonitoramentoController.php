@@ -14,6 +14,7 @@ use App\Services\CreditService;
 use App\Services\Entitlements\EntitlementService;
 use App\Services\PricingCatalogService;
 use App\Support\CndFederal;
+use App\Support\Dinheiro;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -648,7 +649,7 @@ class MonitoramentoController extends Controller
                 'bloqueados_limite' => $bloqueadosPorLimite,
                 'aviso' => $algumaExcedeCap
                     ? 'Atenção: o custo de um ciclo desse monitoramento excede seu limite de consumo automático ('
-                        .\App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($capConsumo))
+                        .Dinheiro::brl($this->pricingCatalogService->creditsToCurrency($capConsumo))
                         .'/ciclo). As consultas dele vão aguardar até o limite ser aumentado.'
                     : null,
             ]);
