@@ -633,34 +633,59 @@
     </div>
 </div>
 
-{{-- MODAL DE RESOLUCAO --}}
+{{-- MODAL DE RESOLUÇÃO — só faz sentido para alerta ainda ativo --}}
+@if($alerta->status === 'ativo')
 <div id="modal-resolver-alerta" class="hidden relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm"></div>
+    <div id="modal-resolver-backdrop" class="fixed inset-0 bg-gray-900/75 transition-opacity backdrop-blur-sm"></div>
     <div class="fixed inset-0 z-10 overflow-y-auto">
         <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <div class="relative transform overflow-hidden rounded bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-gray-300">
-                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4 border-b border-gray-100">
-                    <div class="sm:flex sm:items-start">
-                        <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded bg-gray-100 sm:mx-0 sm:h-10 sm:w-10">
-                            <svg class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+            <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-gray-300">
+                {{-- Header --}}
+                <div class="bg-white px-5 pt-5 pb-4 border-b border-gray-100">
+                    <div class="flex items-start gap-3">
+                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full" style="background-color:#ecfdf5">
+                            <svg class="h-5 w-5" style="color:#047857" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         </div>
-                        <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                            <h3 class="text-lg font-semibold leading-6 text-gray-900" id="modal-title">Confirmar Solução do Alerta</h3>
-                            <div class="mt-2">
-                                <p class="text-sm text-gray-600">Ao confirmar, este alerta será marcado como <strong>Resolvido</strong> e sairá da fila de acompanhamento. Recomendamos que você tenha certeza de que a questão original (ex: notas corrigidas ou consulta conferida) foi resolvida adequadamente.</p>
-                            </div>
-                            <div class="mt-4">
-                                <label for="alerta-nota-resolucao" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas de resolução (opcional)</label>
-                                <textarea id="alerta-nota-resolucao" rows="2" class="mt-1 block w-full rounded border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-gray-400 sm:text-sm" placeholder="Ex: Feito no ERP do cliente dia 25..."></textarea>
-                            </div>
+                        <div class="min-w-0 flex-1">
+                            <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">Marcar alerta como resolvido</h3>
+                            {{-- Contexto do alerta sendo resolvido --}}
+                            <p class="mt-1 text-sm text-gray-500 truncate">{{ $alerta->titulo }}</p>
                         </div>
                     </div>
                 </div>
-                <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                    <button type="button" id="btn-confirmar-resolucao" class="inline-flex w-full justify-center rounded bg-gray-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-700 focus:outline-none sm:ml-3 sm:w-auto transition-colors">Confirmar e Resolver</button>
-                    <button type="button" onclick="document.getElementById('modal-resolver-alerta').classList.remove('hidden'); document.getElementById('modal-resolver-alerta').classList.add('hidden')" class="mt-3 inline-flex w-full justify-center rounded bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto transition-colors">Cancelar</button>
+
+                {{-- Body --}}
+                <div class="bg-white px-5 py-4 space-y-4">
+                    {{-- Faixa "rede de segurança": alinhada ao comportamento (resolvido reativa) --}}
+                    <div class="flex gap-2.5 rounded border px-3 py-2.5" style="border-color:#bfdbfe;background-color:#eff6ff">
+                        <svg class="w-4 h-4 flex-shrink-0 mt-0.5" style="color:#2563eb" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <p class="text-[13px] leading-5 text-gray-700">
+                            Pode marcar sem medo: os alertas são recalculados a partir dos seus dados.
+                            Se o problema <strong>ainda aparecer</strong> na próxima verificação, o alerta
+                            <strong>reaparece sozinho</strong> — resolver não esconde um problema que não foi corrigido.
+                        </p>
+                    </div>
+
+                    @if(!empty($guia['texto_acao']))
+                    <div>
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Como resolver de verdade</p>
+                        <p class="text-[13px] text-gray-600 leading-5">{{ $guia['texto_acao'] }}</p>
+                    </div>
+                    @endif
+
+                    <div>
+                        <label for="alerta-nota-resolucao" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Nota de resolução (opcional)</label>
+                        <textarea id="alerta-nota-resolucao" rows="2" class="block w-full rounded border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 text-sm" placeholder="Ex: corrigido no ERP e reimportado o SPED em 04/07"></textarea>
+                    </div>
+                </div>
+
+                {{-- Footer --}}
+                <div class="bg-gray-50 px-5 py-3 flex flex-col sm:flex-row-reverse gap-2">
+                    <button type="button" id="btn-confirmar-resolucao" class="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 rounded px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90 focus:outline-none transition-opacity" style="background-color:#047857">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Confirmar e resolver
+                    </button>
+                    <button type="button" class="js-fechar-modal-resolver mt-0 inline-flex w-full sm:w-auto justify-center rounded bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-none transition-colors">Cancelar</button>
                 </div>
             </div>
         </div>
@@ -669,8 +694,18 @@
 
 <script>
     (function(){
+        const modal = document.getElementById('modal-resolver-alerta');
         const btnConfirm = document.getElementById('btn-confirmar-resolucao');
-        if(!btnConfirm) return;
+        if(!modal || !btnConfirm) return;
+
+        function fecharModal() { modal.classList.add('hidden'); }
+        // Fechar: botão Cancelar, clique no backdrop, tecla Esc.
+        modal.querySelectorAll('.js-fechar-modal-resolver').forEach(function(b){ b.addEventListener('click', fecharModal); });
+        var backdrop = document.getElementById('modal-resolver-backdrop');
+        if (backdrop) backdrop.addEventListener('click', fecharModal);
+        document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.classList.contains('hidden')) fecharModal(); });
+
+        const btnConfirmHtml = btnConfirm.innerHTML;
 
         btnConfirm.addEventListener('click', async function() {
             btnConfirm.disabled = true;
@@ -703,13 +738,14 @@
                     const error = await response.json();
                     alert('Ocorreu um erro ao resolver o alerta: ' + (error.message || 'Tente novamente.'));
                     btnConfirm.disabled = false;
-                    btnConfirm.innerHTML = 'Confirmar e Resolver';
+                    btnConfirm.innerHTML = btnConfirmHtml;
                 }
             } catch(e) {
                 alert('Erro na requisição. Verifique sua conexão.');
                 btnConfirm.disabled = false;
-                btnConfirm.innerHTML = 'Confirmar e Resolver';
+                btnConfirm.innerHTML = btnConfirmHtml;
             }
         });
     })();
 </script>
+@endif

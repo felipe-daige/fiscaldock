@@ -34,6 +34,46 @@ it('detalhe do alerta agregado nunca_consultado mostra CTA pra participantes', f
         ->assertSee('/app/participantes');
 });
 
+it('detalhe de alerta ativo mostra o modal de resolução com a rede de segurança', function () {
+    $alerta = Alerta::create([
+        'user_id' => $this->user->id,
+        'tipo' => 'notas_duplicadas',
+        'categoria' => 'notas_fiscais',
+        'severidade' => 'media',
+        'titulo' => 'Notas duplicadas',
+        'descricao' => 'd',
+        'status' => 'ativo',
+        'total_afetados' => 3,
+        'hash' => hash('sha256', 'mod'.uniqid('', true)),
+    ]);
+
+    $this->actingAs($this->user)
+        ->get('/app/alertas/'.$alerta->id)
+        ->assertOk()
+        ->assertSee('modal-resolver-alerta', false)          // modal presente
+        ->assertSee('Marcar alerta como resolvido')          // título novo
+        ->assertSee('reaparece sozinho');                    // copy da rede de segurança
+});
+
+it('alerta resolvido NÃO renderiza o modal de resolução', function () {
+    $alerta = Alerta::create([
+        'user_id' => $this->user->id,
+        'tipo' => 'notas_duplicadas',
+        'categoria' => 'notas_fiscais',
+        'severidade' => 'media',
+        'titulo' => 'Notas duplicadas',
+        'descricao' => 'd',
+        'status' => 'resolvido',
+        'resolvido_em' => now(),
+        'hash' => hash('sha256', 'res'.uniqid('', true)),
+    ]);
+
+    $this->actingAs($this->user)
+        ->get('/app/alertas/'.$alerta->id)
+        ->assertOk()
+        ->assertDontSee('Confirmar e resolver');
+});
+
 it('a listagem anexa o cta do guia em cada alerta', function () {
     Alerta::create([
         'user_id' => $this->user->id,
