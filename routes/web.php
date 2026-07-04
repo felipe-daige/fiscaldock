@@ -209,8 +209,9 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         Route::post('/assinatura/{id}/reativar', [MonitoramentoController::class, 'reativarAssinatura'])->name('assinatura.reativar');
         Route::delete('/assinatura/{id}', [MonitoramentoController::class, 'cancelarAssinatura'])->name('assinatura.cancelar');
 
-        // Grupos de participantes
-        Route::get('/grupos', [ParticipanteGrupoController::class, 'index'])->name('grupos');
+        // Grupos de participantes — a gestão migrou pro painel (2026-07-03). GET antigo
+        // redireciona; o CRUD (POST/PUT/DELETE + participantes) fica: o painel o consome.
+        Route::get('/grupos', fn () => redirect()->route('app.monitoramento.painel', [], 301))->name('grupos');
         Route::post('/grupos', [ParticipanteGrupoController::class, 'store'])->name('grupos.criar');
         Route::get('/grupos/{id}/participantes', [ParticipanteGrupoController::class, 'participantes'])->name('grupos.participantes');
         Route::put('/grupos/{id}', [ParticipanteGrupoController::class, 'update'])->name('grupos.editar');
@@ -408,8 +409,11 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
 
     // CONSULTA (estrutura unificada)
     Route::prefix('app/consulta')->name('app.consulta.')->group(function () {
-        // Nova Consulta
-        Route::get('/nova', [ConsultaController::class, 'index'])->name('nova');
+        // Painel de consulta (ex-"Nova Consulta"). O route name 'nova' fica na rota /painel de
+        // propósito: name é identidade interna (dezenas de refs app.consulta.nova.*), URI é o
+        // endereço público. Os endpoints AJAX seguem sob /nova/* — só a página HTML mudou.
+        Route::get('/painel', [ConsultaController::class, 'index'])->name('nova');
+        Route::get('/nova', fn () => redirect('/app/consulta/painel', 301));
         Route::get('/nova/participantes', [ConsultaController::class, 'getParticipantes'])->name('nova.participantes');
         Route::get('/nova/participantes/grupo/{id}', [ConsultaController::class, 'getParticipantesGrupo'])->name('nova.participantes.grupo');
         Route::post('/nova/calcular-custo', [ConsultaController::class, 'calcularCusto'])->name('nova.calcular-custo');

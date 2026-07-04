@@ -43,3 +43,15 @@ it('painel não vaza assinaturas de outro usuário', function () {
         ->assertOk()
         ->assertDontSee('Alheio Secreto');
 });
+
+it('/app/monitoramento/grupos redireciona 301 pro painel', function () {
+    actingAs(User::factory()->create())
+        ->get('/app/monitoramento/grupos')
+        ->assertRedirect(route('app.monitoramento.painel'));
+});
+
+it('/app/consulta/painel serve a tela e /app/consulta/nova redireciona', function () {
+    $user = User::factory()->create();
+    actingAs($user)->get('/app/consulta/painel')->assertOk();
+    actingAs($user)->get('/app/consulta/nova')->assertRedirect('/app/consulta/painel');
+});

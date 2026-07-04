@@ -6,7 +6,6 @@ use App\Http\Controllers\Concerns\RespondeAjax;
 use App\Http\Controllers\Controller;
 use App\Models\Participante;
 use App\Models\ParticipanteGrupo;
-use App\Services\CreditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -15,67 +14,6 @@ use Symfony\Component\HttpFoundation\Response;
 class ParticipanteGrupoController extends Controller
 {
     use RespondeAjax;
-
-    private const AUTH_VIEW_PREFIX = 'autenticado.monitoramento.';
-
-    private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
-
-    public function __construct(
-        private readonly CreditService $creditService,
-    ) {}
-
-    /**
-     * Lista grupos de participantes.
-     */
-    public function index(Request $request)
-    {
-        $gruposView = self::AUTH_VIEW_PREFIX.'grupos';
-
-        if (! Auth::check()) {
-            return $this->redirectToLogin($request);
-        }
-
-        $user = Auth::user();
-        $userId = (int) $user->id;
-
-        $busca = trim($request->string('busca')->toString());
-        $tipo = trim($request->string('tipo')->toString());
-
-        // Buscar grupos do usuário com contagem de participantes
-        $grupos = ParticipanteGrupo::where('user_id', $userId)
-            ->when($busca !== '', fn ($query) => $query->where('nome', 'ilike', "%{$busca}%"))
-            ->when($tipo !== '', function ($query) use ($tipo) {
-                if ($tipo === 'manual') {
-                    $query->where('is_auto', false);
-                } elseif ($tipo === 'auto') {
-                    $query->where('is_auto', true);
-                }
-            })
-            ->withCount('participantes')
-            ->orderBy('nome')
-            ->paginate(20)
-            ->withQueryString();
-
-        $data = [
-            'grupos' => $grupos,
-            'coresPredefinidas' => ParticipanteGrupo::CORES_PREDEFINIDAS,
-            'credits' => $this->creditService->getBalance($user),
-            'filtros' => [
-                'busca' => $busca,
-                'tipo' => $tipo,
-            ],
-        ];
-
-        if ($this->isAjaxRequest($request)) {
-            $renderedView = view($gruposView, $data)->render();
-
-            return response($renderedView)->header('Content-Type', 'text/html');
-        }
-
-        return view(self::AUTH_LAYOUT_VIEW, array_merge([
-            'initialView' => $gruposView,
-        ], $data));
-    }
 
     public function participantes(Request $request, $id)
     {

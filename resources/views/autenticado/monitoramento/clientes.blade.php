@@ -89,12 +89,12 @@
                     </div>
                     <p class="text-[11px] text-gray-500">Consultas e re-monitoramentos já executados.</p>
                 </a>
-                <a href="/app/monitoramento/grupos" data-link class="block border border-gray-200 rounded p-4 hover:border-gray-400 hover:shadow-sm transition">
+                <a href="/app/monitoramento/painel" data-link class="block border border-gray-200 rounded p-4 hover:border-gray-400 hover:shadow-sm transition">
                     <div class="flex items-center gap-2 mb-1">
                         <svg class="w-5 h-5 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                        <span class="text-sm font-semibold text-gray-900">Grupos</span>
+                        <span class="text-sm font-semibold text-gray-900">Painel de Monitoramento</span>
                     </div>
-                    <p class="text-[11px] text-gray-500">Organize participantes em grupos para monitorar em lote.</p>
+                    <p class="text-[11px] text-gray-500">Gerencie monitorados e grupos num só lugar.</p>
                 </a>
             </div>
         </div>

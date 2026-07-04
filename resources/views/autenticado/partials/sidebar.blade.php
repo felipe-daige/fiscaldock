@@ -133,8 +133,8 @@
     {{-- CONSULTAS --}}
     <x-sidebar.section title="CONSULTAS">
         {{-- Link direto (sem submenu): Histórico e Planos são alcançados pelos botões
-             no header de /app/consulta/nova — mesmo padrão de Clientes/Participantes. --}}
-        <x-sidebar.item href="/app/consulta/nova">
+             no header de /app/consulta/painel — mesmo padrão de Clientes/Participantes. --}}
+        <x-sidebar.item href="/app/consulta/painel">
             <x-slot:icon>
                 <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -151,9 +151,9 @@
                 </svg>
             </x-slot:icon>
 
-            <x-sidebar.group-item href="/app/monitoramento/clientes" pill="Novo">Clientes</x-sidebar.group-item>
+            <x-sidebar.group-item href="/app/monitoramento/painel" pill="Novo">Painel</x-sidebar.group-item>
+            <x-sidebar.group-item href="/app/monitoramento/clientes">Clientes</x-sidebar.group-item>
             <x-sidebar.group-item href="/app/monitoramento/historico">Histórico</x-sidebar.group-item>
-            <x-sidebar.group-item href="/app/monitoramento/grupos">Grupos</x-sidebar.group-item>
         </x-sidebar.group>
 
         <x-sidebar.item href="/app/score-fiscal">
