@@ -49,9 +49,10 @@
             <p class="text-[13px] text-gray-600 mb-3">Escolha o formato. O período e o cliente seguem os filtros selecionados.</p>
             <label class="block text-[11px] text-gray-500 mb-1">Dossiês de participantes</label>
             <select id="export-planilha-dossies" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded mb-4">
-                <option value="10" selected>Top 10 por volume</option>
-                <option value="20">Top 20 por volume</option>
-                <option value="50">Top 50 por volume</option>
+                <option value="">Sem dossiês (mais rápido)</option>
+                <option value="10">Top 10 por volume</option>
+                <option value="20" selected>Top 20 por volume</option>
+                <option value="50">Todos (máx. 50 por volume)</option>
             </select>
             <div class="space-y-2">
                 <x-download-button path="/app/bi/exportar-xlsx" filename="bi-fiscal-{{ $dataArq }}.xlsx"
@@ -89,9 +90,10 @@
             </select>
             <label class="block text-[11px] text-gray-500 mb-1">Dossiês de participantes</label>
             <select id="export-pdf-dossies" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded mb-4">
-                <option value="10" selected>Top 10 por volume</option>
-                <option value="20">Top 20 por volume</option>
-                <option value="50">Top 50 por volume</option>
+                <option value="">Sem dossiês (mais rápido)</option>
+                <option value="10">Top 10 por volume</option>
+                <option value="20" selected>Top 20 por volume</option>
+                <option value="50">Todos (máx. 50 por volume)</option>
             </select>
             <x-download-button path="/app/bi/exportar-pdf" filename="bi-fiscal-{{ $dataArq }}.pdf"
                                overlay="download-overlay-bi"

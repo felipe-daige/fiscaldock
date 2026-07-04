@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Alerta;
 use App\Models\Participante;
+use App\Models\ParticipanteScore;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -16,6 +17,106 @@ class AlertaCentralService
         private NotasFiscaisAlertService $notasFiscaisAlertService,
         private GuiaAlertaService $guiaAlertaService,
     ) {}
+
+    /**
+     * Classes de alerta da Central (espelha `tabTipos` em central.blade.php).
+     * Cada classe agrupa os `tipo`s exibidos numa aba. Fonte única usada pela
+     * exportação em PDF (modal de seleção + relatório).
+     *
+     * @var array<string, array{label: string, cor: string, tipos: string[]}>
+     */
+    public const CLASSES = [
+        'notas_fiscais' => [
+            'label' => 'Notas Fiscais',
+            'cor' => '#374151',
+            'tipos' => ['notas_duplicadas', 'notas_sem_participante', 'notas_valor_zerado', 'notas_sem_itens', 'notas_data_futura'],
+        ],
+        'pis_cofins' => [
+            'label' => 'PIS/COFINS',
+            'cor' => '#6d28d9',
+            'tipos' => ['pis_cofins_incompleto'],
+        ],
+        'compliance' => [
+            'label' => 'Compliance',
+            'cor' => '#4338ca',
+            'tipos' => ['situacao_irregular', 'certidao_positiva', 'consulta_vencida', 'nunca_consultado', 'cnpj_situacao_irregular', 'participante_inativo', 'participante_sem_ie'],
+        ],
+        'fornecedores' => [
+            'label' => 'Fornecedores',
+            'cor' => '#b45309',
+            'tipos' => ['fornecedor_irregular'],
+        ],
+        'importacao' => [
+            'label' => 'Importação',
+            'cor' => '#0f766e',
+            'tipos' => ['gap_importacao', 'gap_temporal'],
+        ],
+    ];
+
+    private const CLASSE_OUTROS = ['label' => 'Outros', 'cor' => '#6b7280'];
+
+    /**
+     * Alertas ativos do usuário agrupados por classe (na ordem de `CLASSES`),
+     * opcionalmente restritos a um conjunto de IDs. Só inclui classes com ≥1 alerta.
+     * Reusado pelo modal de exportação e pela geração do PDF.
+     *
+     * @param  int[]|null  $ids
+     * @return array<int, array{key: string, label: string, cor: string, alertas: Collection<int, Alerta>}>
+     */
+    public function alertasAtivosAgrupados(int $userId, ?array $ids = null): array
+    {
+        $query = Alerta::doUsuario($userId)->ativos()
+            ->with(['participante:id,razao_social,documento', 'cliente:id,razao_social']);
+
+        if ($ids !== null) {
+            $query->whereIn('id', $ids);
+        }
+
+        $alertas = $query
+            ->orderByRaw("CASE severidade WHEN 'alta' THEN 3 WHEN 'media' THEN 2 WHEN 'baixa' THEN 1 ELSE 0 END DESC")
+            ->orderByDesc('created_at')
+            ->get();
+
+        // Índice tipo → classe (com fallback "outros").
+        $tipoParaClasse = [];
+        foreach (self::CLASSES as $key => $meta) {
+            foreach ($meta['tipos'] as $tipo) {
+                $tipoParaClasse[$tipo] = $key;
+            }
+        }
+
+        // tipo mapeado vence; senão cai na `categoria` do alerta (se for uma classe conhecida); senão "outros".
+        $porClasse = $alertas->groupBy(function (Alerta $a) use ($tipoParaClasse) {
+            if (isset($tipoParaClasse[$a->tipo])) {
+                return $tipoParaClasse[$a->tipo];
+            }
+
+            return isset(self::CLASSES[$a->categoria]) ? $a->categoria : 'outros';
+        });
+
+        $grupos = [];
+        foreach (self::CLASSES as $key => $meta) {
+            if ($porClasse->has($key)) {
+                $grupos[] = [
+                    'key' => $key,
+                    'label' => $meta['label'],
+                    'cor' => $meta['cor'],
+                    'alertas' => $porClasse->get($key)->values(),
+                ];
+            }
+        }
+
+        if ($porClasse->has('outros')) {
+            $grupos[] = [
+                'key' => 'outros',
+                'label' => self::CLASSE_OUTROS['label'],
+                'cor' => self::CLASSE_OUTROS['cor'],
+                'alertas' => $porClasse->get('outros')->values(),
+            ];
+        }
+
+        return $grupos;
+    }
 
     /**
      * Recalcula todos os alertas para o usuário.
@@ -156,6 +257,7 @@ class AlertaCentralService
                 'categoria' => 'compliance',
                 'severidade' => 'alta',
                 'participante_id' => $f->participante_id,
+                'cliente_id' => $f->cliente_id,
                 'titulo' => "Fornecedor irregular com {$f->total_notas} nota(s) — R$ {$valorFormatado} em risco",
                 'descricao' => "{$f->razao_social} ({$f->documento}) esta com situacao {$f->situacao_cadastral} e possui {$f->total_notas} nota(s) fiscal(is) vinculadas totalizando R$ {$valorFormatado}.",
                 'total_afetados' => (int) $f->total_notas,
@@ -168,6 +270,36 @@ class AlertaCentralService
                     'valor_em_risco' => (float) $f->valor_em_risco,
                 ],
             ];
+
+            $existing = Alerta::where('user_id', $userId)->where('hash', $hash)->first();
+
+            if ($existing) {
+                $updateData = $data;
+                if (! in_array($existing->status, ['resolvido', 'ignorado'])) {
+                    $updateData['status'] = 'ativo';
+                }
+                $existing->update($updateData);
+                $atualizados++;
+            } else {
+                Alerta::create(array_merge($data, [
+                    'user_id' => $userId,
+                    'hash' => $hash,
+                    'status' => 'ativo',
+                ]));
+                $novos++;
+            }
+        }
+
+        // 3b. Certidões positivas (fornecedores E clientes) — 1 alerta por CNPJ, agrupando
+        // as certidões irregulares. Fonte: participante_scores (cobre participante e cliente,
+        // já mescla consultas parciais). Complementa `fornecedor_irregular` (que só olha
+        // situação cadastral) — aqui o gatilho é a certidão positiva.
+        $certidoesPositivas = $this->detectarCertidoesPositivas($userId);
+        foreach ($certidoesPositivas as $alvo) {
+            $hash = hash('sha256', "$userId:certidao_positiva:{$alvo['tipo_alvo']}:{$alvo['alvo_id']}");
+            $allHashes[] = $hash;
+
+            $data = $this->buildCertidaoPositivaAlertData($alvo);
 
             $existing = Alerta::where('user_id', $userId)->where('hash', $hash)->first();
 
@@ -558,14 +690,242 @@ class AlertaCentralService
             ->whereRaw("UPPER(p.situacao_cadastral) NOT IN ('02', 'ATIVA')")
             ->select([
                 'p.id as participante_id',
+                'p.cliente_id',
                 'p.documento',
                 'p.razao_social',
                 'p.situacao_cadastral',
                 DB::raw('COUNT(n.id) as total_notas'),
                 DB::raw('SUM(n.valor_total) as valor_em_risco'),
             ])
-            ->groupBy('p.id', 'p.documento', 'p.razao_social', 'p.situacao_cadastral')
+            ->groupBy('p.id', 'p.cliente_id', 'p.documento', 'p.razao_social', 'p.situacao_cadastral')
             ->get();
+    }
+
+    /** Coluna de subscore ↔ chave(s) no dados_consultados ↔ rótulo, por certidão de regularidade. */
+    private const CERTIDOES_MAP = [
+        'cnd_federal' => ['score' => 'score_cnd_federal', 'chaves' => ['cnd_federal'], 'label' => 'CND Federal'],
+        'cnd_estadual' => ['score' => 'score_cnd_estadual', 'chaves' => ['cnd_estadual'], 'label' => 'CND Estadual'],
+        'fgts' => ['score' => 'score_fgts', 'chaves' => ['crf_fgts', 'fgts'], 'label' => 'FGTS/CRF'],
+        'trabalhista' => ['score' => 'score_trabalhista', 'chaves' => ['cndt'], 'label' => 'CNDT (Trabalhista)'],
+    ];
+
+    /**
+     * Alvos (fornecedores e clientes) com ≥1 certidão de regularidade IRREGULAR (Positiva).
+     * Lê de participante_scores (subscore de certidão > 0 = irregular; cobre participante e
+     * cliente e já mescla consultas parciais). Anexa valor comprado quando o alvo é fornecedor.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function detectarCertidoesPositivas(int $userId): array
+    {
+        $scores = ParticipanteScore::where('user_id', $userId)
+            ->where(function ($q) {
+                foreach (self::CERTIDOES_MAP as $m) {
+                    $q->orWhere($m['score'], '>', 0);
+                }
+            })
+            ->with([
+                'participante:id,razao_social,documento,cliente_id',
+                'cliente:id,razao_social,documento',
+            ])
+            ->get();
+
+        $participanteIds = $scores->pluck('participante_id')->filter()->unique()->values()->all();
+        $compras = $participanteIds ? $this->comprasPorParticipanteIds($userId, $participanteIds) : [];
+
+        $alvos = [];
+        foreach ($scores as $s) {
+            $certidoes = [];
+            $severidade = null;
+
+            foreach (self::CERTIDOES_MAP as $categoria => $m) {
+                if ((int) ($s->{$m['score']} ?? 0) <= 0) {
+                    continue;
+                }
+                $sev = RiskScoreService::GRAVIDADE_CERTIDAO[$categoria]['severidade'];
+                $certidoes[] = [
+                    'chave' => $categoria,
+                    'label' => $m['label'],
+                    'status' => $this->statusCertidaoDados($s->dados_consultados, $m['chaves']),
+                    'severidade' => $sev,
+                ];
+                $severidade = $this->maiorSeveridade($severidade, $sev);
+            }
+
+            if ($certidoes === []) {
+                continue;
+            }
+
+            // Precedência: score de participante (fornecedor) vence score de cliente.
+            // `cliente_id` do alerta = cliente do participante (score de participante não guarda
+            // cliente_id) — senão o filtro de alertas por cliente exclui este alerta.
+            if ($s->participante_id && $s->participante) {
+                $tipoAlvo = 'participante';
+                $alvoId = $s->participante_id;
+                $razao = $s->participante->razao_social;
+                $documento = $s->participante->documento;
+                $clienteIdAlerta = $s->participante->cliente_id;
+            } elseif ($s->cliente_id && $s->cliente) {
+                $tipoAlvo = 'cliente';
+                $alvoId = $s->cliente_id;
+                $razao = $s->cliente->razao_social;
+                $documento = $s->cliente->documento;
+                $clienteIdAlerta = $s->cliente_id;
+            } else {
+                continue; // score órfão (alvo removido)
+            }
+
+            $alvos[] = [
+                'tipo_alvo' => $tipoAlvo,
+                'alvo_id' => $alvoId,
+                'participante_id' => $s->participante_id,
+                'cliente_id' => $clienteIdAlerta,
+                'razao_social' => $razao,
+                'documento' => $documento,
+                'certidoes' => $certidoes,
+                'severidade' => $severidade ?? 'media',
+                'valor_total' => $compras[$s->participante_id]['valor_total'] ?? null,
+                'valor_12m' => $compras[$s->participante_id]['valor_12m'] ?? null,
+                'valor_5anos' => $compras[$s->participante_id]['valor_5anos'] ?? null,
+                'qtd_notas' => $compras[$s->participante_id]['qtd'] ?? null,
+                'qtd_12m' => $compras[$s->participante_id]['qtd_12m'] ?? null,
+            ];
+        }
+
+        return $alvos;
+    }
+
+    /**
+     * Valor COMPRADO por participante (fornecedor), em três janelas por `data_emissao`:
+     *  - 12 meses → risco "vivo" (relação corrente): principal para triagem;
+     *  - 5 anos (decadência tributária, CTN) → exposição sujeita a glosa de crédito. Créditos de
+     *    compras fora dessa janela em regra escapam à revisão do Fisco;
+     *  - total → contexto histórico e reconciliação com o Cruzamentos (que é all-time).
+     * Semântica idêntica ao Cruzamentos: `origem_arquivo='fiscal'` + `tipo_operacao='entrada'`,
+     * sem recorte de cliente. (5 anos a partir da emissão é aproximação — o marco exato de
+     * decadência varia entre CTN art. 150 §4º e 173; suficiente para triagem.)
+     */
+    private function comprasPorParticipanteIds(int $userId, array $ids): array
+    {
+        $desde12m = now()->subMonths(12)->toDateString();
+        $desde5anos = now()->subYears(5)->toDateString();
+
+        return DB::table('efd_notas as n')
+            ->where('n.user_id', $userId)
+            ->where('n.origem_arquivo', 'fiscal')
+            ->where('n.tipo_operacao', 'entrada')
+            ->whereIn('n.participante_id', $ids)
+            ->groupBy('n.participante_id')
+            ->selectRaw('n.participante_id')
+            ->selectRaw('COUNT(n.id) as qtd')
+            ->selectRaw('SUM(n.valor_total) as valor_total')
+            ->selectRaw('SUM(CASE WHEN n.data_emissao >= ? THEN n.valor_total ELSE 0 END) as valor_12m', [$desde12m])
+            ->selectRaw('SUM(CASE WHEN n.data_emissao >= ? THEN 1 ELSE 0 END) as qtd_12m', [$desde12m])
+            ->selectRaw('SUM(CASE WHEN n.data_emissao >= ? THEN n.valor_total ELSE 0 END) as valor_5anos', [$desde5anos])
+            ->get()
+            ->keyBy('participante_id')
+            ->map(fn ($r) => [
+                'valor_total' => (float) $r->valor_total,
+                'valor_12m' => (float) $r->valor_12m,
+                'valor_5anos' => (float) $r->valor_5anos,
+                'qtd' => (int) $r->qtd,
+                'qtd_12m' => (int) $r->qtd_12m,
+            ])
+            ->all();
+    }
+
+    /** Extrai o texto de status da certidão do dados_consultados (bloco aninhado ou string). */
+    private function statusCertidaoDados(?array $dados, array $chaves): ?string
+    {
+        if (! is_array($dados)) {
+            return null;
+        }
+
+        foreach ($chaves as $chave) {
+            $bloco = $dados[$chave] ?? null;
+            if (is_array($bloco) && ! empty($bloco['status'])) {
+                return (string) $bloco['status'];
+            }
+            if (is_string($bloco) && $bloco !== '') {
+                return $bloco;
+            }
+        }
+
+        return null;
+    }
+
+    /** Maior severidade entre duas (baixa < media < alta). */
+    private function maiorSeveridade(?string $atual, string $nova): string
+    {
+        $rank = ['baixa' => 1, 'media' => 2, 'alta' => 3];
+
+        if ($atual === null) {
+            return $nova;
+        }
+
+        return ($rank[$nova] ?? 0) > ($rank[$atual] ?? 0) ? $nova : $atual;
+    }
+
+    /**
+     * Monta o alerta agregado de certidão positiva (1 por CNPJ).
+     *
+     * @param  array<string, mixed>  $alvo
+     * @return array<string, mixed>
+     */
+    private function buildCertidaoPositivaAlertData(array $alvo): array
+    {
+        $labels = array_map(fn ($c) => $c['label'], $alvo['certidoes']);
+        $qtdCertidoes = count($alvo['certidoes']);
+        $tipoTxt = $alvo['tipo_alvo'] === 'cliente' ? 'Cliente' : 'Fornecedor';
+        $listaCert = implode(', ', $labels);
+
+        $descricao = "{$alvo['razao_social']} ({$alvo['documento']}) possui "
+            .($qtdCertidoes === 1 ? 'certidão positiva' : "{$qtdCertidoes} certidões positivas")
+            .": {$listaCert}. Certidão positiva indica débito(s) exigível(is) na fonte oficial.";
+
+        // Compras (fornecedor): 12m = risco vivo; 5 anos = exposição sujeita a glosa (decadência);
+        // total = contexto/reconciliação com o Cruzamentos.
+        if (($alvo['valor_total'] ?? null) !== null && $alvo['valor_total'] > 0) {
+            $recenteFmt = number_format((float) ($alvo['valor_12m'] ?? 0), 2, ',', '.');
+            $glosavelFmt = number_format((float) ($alvo['valor_5anos'] ?? 0), 2, ',', '.');
+            $totalFmt = number_format((float) $alvo['valor_total'], 2, ',', '.');
+            $qtdNotas = $alvo['qtd_notas'];
+
+            if (($alvo['valor_12m'] ?? 0) > 0) {
+                $descricao .= " Você comprou R$ {$recenteFmt} desse fornecedor nos últimos 12 meses"
+                    ." — R$ {$glosavelFmt} na janela de 5 anos (exposição sujeita a glosa de crédito),"
+                    ." R$ {$totalFmt} no total ({$qtdNotas} nota(s)).";
+            } elseif (($alvo['valor_5anos'] ?? 0) > 0) {
+                $descricao .= " Sem compras nos últimos 12 meses, mas R$ {$glosavelFmt} na janela de 5 anos"
+                    ." (exposição sujeita a glosa de crédito). Total histórico: R$ {$totalFmt}.";
+            } else {
+                $descricao .= " Você comprou R$ {$totalFmt} desse fornecedor no total ({$qtdNotas} nota(s)),"
+                    .' mas nada nos últimos 5 anos — fora da janela de decadência, sem exposição a glosa.';
+            }
+        }
+
+        return [
+            'tipo' => 'certidao_positiva',
+            'categoria' => 'compliance',
+            'severidade' => $alvo['severidade'],
+            'participante_id' => $alvo['participante_id'],
+            'cliente_id' => $alvo['cliente_id'],
+            'titulo' => "{$tipoTxt} com certidão positiva — {$alvo['razao_social']}",
+            'descricao' => $descricao,
+            // "afetados" = nº de certidões positivas (não de notas); a exposição em notas vai no detalhe.
+            'total_afetados' => $qtdCertidoes,
+            'detalhes' => [
+                'tipo_alvo' => $alvo['tipo_alvo'],
+                'razao_social' => $alvo['razao_social'],
+                'documento' => $alvo['documento'],
+                'certidoes' => $alvo['certidoes'],
+                'valor_total' => $alvo['valor_total'],
+                'valor_12m' => $alvo['valor_12m'],
+                'valor_5anos' => $alvo['valor_5anos'],
+                'qtd_notas' => $alvo['qtd_notas'],
+                'qtd_12m' => $alvo['qtd_12m'],
+            ],
+        ];
     }
 
     /**

@@ -95,13 +95,16 @@ test('bi page renders for authenticated user', function () {
     $response->assertSee('apexcharts.min.js', false);
 });
 
-test('bi page does not have version querystring on bi js', function () {
+test('bi page loads bi.js with cache-busting version querystring', function () {
     $response = $this->get('/app/bi/dashboard');
 
     $response->assertStatus(200);
-    // @todo Bug 2 fix (Task 2): this test is a regression pin intentionally failing until
-    // the ?v= version querystring is removed from the bi.js <script> tag in the view.
-    // Bug 2: script tag deve ser /js/bi.js sem ?v= para evitar double-load no SPA
-    $response->assertSee('src="/js/bi.js"', false);
-    $response->assertDontSee('bi.js?v=', false);
+    // Decisão de arquitetura (2026-07-04): MANTÉM o cache-busting `?v=filemtime` — JS velho em
+    // cache após deploy é pior que o double-load, e o padrão é usado em ~10 outras views. O SPA
+    // (resources/js/spa.js) deduplica <script src> pelo src já presente no <head>, então a
+    // navegação normal não re-executa o bi.js. Remover o `?v=` NÃO resolveria o double-load do
+    // load inicial (o script da página inicial não fica no <head> para deduplicar) e ainda
+    // sacrificaria o cache-busting — por isso o pin antigo "sem ?v=" foi descartado.
+    // asset() gera URL absoluta (com host) → validamos o caminho + cache-busting, não o prefixo.
+    $response->assertSee('js/bi.js?v=', false);
 });

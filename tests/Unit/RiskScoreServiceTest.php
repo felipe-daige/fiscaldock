@@ -54,7 +54,7 @@ it('esg e protestos foram removidos do calculo', function () {
     expect($scores)->not->toHaveKey('esg');
     expect($scores)->not->toHaveKey('protestos');
     expect(array_keys($this->svc->getPesos()))
-        ->toBe(['cadastral', 'cnd_federal', 'cnd_estadual', 'fgts', 'trabalhista', 'compliance']);
+        ->toBe(['cadastral', 'cnd_federal', 'cnd_estadual', 'fgts', 'trabalhista']);
 });
 
 // ---------- total com renormalizacao dinamica (so categorias presentes) ----------
@@ -125,9 +125,9 @@ it('detalhar produz linha por categoria com label, peso_pct, score, avaliado e h
     expect($det['fgts'])->toMatchArray(['score' => null, 'avaliado' => false, 'hex' => '#9ca3af']);
 });
 
-it('detalhar com scores vazio => 6 categorias todas não avaliadas', function () {
+it('detalhar com scores vazio => 5 categorias todas não avaliadas', function () {
     $det = $this->svc->detalhar([]);
-    expect($det)->toHaveCount(6);
+    expect($det)->toHaveCount(5);
     foreach ($det as $linha) {
         expect($linha['avaliado'])->toBeFalse();
         expect($linha['score'])->toBeNull();

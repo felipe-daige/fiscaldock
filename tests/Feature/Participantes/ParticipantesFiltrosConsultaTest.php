@@ -35,6 +35,7 @@ function resultadoParaPart(User $user, Participante $p, string $cndStatus): void
         'status' => ConsultaResultado::STATUS_SUCESSO,
         'resultado_dados' => ['cnd_federal' => ['status' => $cndStatus]], 'consultado_em' => now(),
     ]);
+    app(\App\Services\RiskScoreService::class)->atualizarScore($p, ['cnd_federal' => ['status' => $cndStatus]]);
 }
 
 it('filtra participantes por status_consulta = nunca', function () {

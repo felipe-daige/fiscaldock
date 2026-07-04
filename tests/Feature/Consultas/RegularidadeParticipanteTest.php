@@ -36,6 +36,8 @@ function resultadoComCnd(ConsultaLote $lote, Participante $p, array $cndFederal)
         'resultado_dados' => ['cnd_federal' => $cndFederal],
         'consultado_em' => now(),
     ]);
+    // Projeta o score (fonte que regularidadePorParticipante passou a ler).
+    app(\App\Services\RiskScoreService::class)->atualizarScore($p, ['cnd_federal' => $cndFederal]);
 }
 
 it('classifica participante por regularidade da ultima consulta', function () {
@@ -70,6 +72,8 @@ it('usa apenas a ultima consulta sucesso por participante', function () {
         'resultado_dados' => ['cnd_federal' => ['status' => 'Positiva']],
         'consultado_em' => now()->subDays(10),
     ]);
+    // Score antigo (Positiva) primeiro; o novo (Negativa) mescla por cima → vale o novo.
+    app(\App\Services\RiskScoreService::class)->atualizarScore($p, ['cnd_federal' => ['status' => 'Positiva']]);
 
     $loteNovo = loteRegularidade($user);
     resultadoComCnd($loteNovo, $p, ['status' => 'Negativa']);

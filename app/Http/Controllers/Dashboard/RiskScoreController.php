@@ -77,10 +77,14 @@ class RiskScoreController extends Controller
         // aparece nas listas pelo lado `cliente`. Mesma regra do DashboardDataService.
         $excluirParticipanteProprio = fn ($q) => $q->whereDoesntHave('participante', fn ($p) => $p->where('origem_tipo', 'PROPRIO'));
 
-        // CONSULTADOS: têm score (participante OU cliente). Ordem por risco (maior 1º), null ao fim.
+        // CONSULTADOS: têm score (participante OU cliente). Ordem por CLASSIFICAÇÃO primeiro
+        // (crítico → baixo), depois pelo score numérico. A classificação leva o piso por certidão
+        // positiva (RiskScoreService::pisoPorCertidoes) — sem ordenar por ela, um fornecedor com
+        // certidão positiva ficaria "Alto Risco" porém afundado no fim (score ponderado baixo).
         $consultadosQuery = ParticipanteScore::where('user_id', $userId)
             ->with(['participante', 'cliente'])
             ->tap($excluirParticipanteProprio)
+            ->orderByRaw("CASE classificacao WHEN 'critico' THEN 5 WHEN 'alto' THEN 4 WHEN 'medio' THEN 3 WHEN 'baixo' THEN 2 WHEN 'inconclusivo' THEN 1 ELSE 0 END DESC")
             ->orderByRaw('score_total desc nulls last')
             ->orderByDesc('ultima_consulta_em');
 

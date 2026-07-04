@@ -49,16 +49,21 @@ class GuiaAlertaService
     {
         // Placeholder dinâmico: rotas que dependem do alerta concreto.
         if ($ctaUrl === ':participante') {
-            return $alerta->participante_id
-                ? '/app/participante/'.$alerta->participante_id
-                : '/app/participantes';
+            if ($alerta->participante_id) {
+                return '/app/participante/'.$alerta->participante_id;
+            }
+            if ($alerta->cliente_id) {
+                return '/app/cliente/'.$alerta->cliente_id;
+            }
+
+            return '/app/participantes';
         }
 
         return $ctaUrl;
     }
 
     /**
-     * @return array{titulo_o_que_e:string, texto_o_que_e:string, titulo_acao:string, texto_acao:string, cta_text:string, cta_url:?string}
+     * @return array{titulo_o_que_e:string, texto_o_que_e:string, titulo_acao:string, texto_acao:string, cta_text:string, cta_url:?string, metodologia:?string}
      */
     private function base(): array
     {
@@ -69,6 +74,9 @@ class GuiaAlertaService
             'texto_acao' => 'Siga os protocolos internos para revisar as informações listadas abaixo e marque o alerta como resolvido ao concluir.',
             'cta_text' => 'Marcar como Resolvido',
             'cta_url' => null,
+            // Transparência auditável: fonte de dados, gatilho, janela de tempo e limiar de cada
+            // alerta. Renderizado como "Como calculamos" no detalhe. Racional completo: docs/alertas/README.md.
+            'metodologia' => null,
         ];
     }
 
@@ -85,6 +93,17 @@ class GuiaAlertaService
                     'texto_acao' => 'Acesse a consulta agora e verifique a situação cadastral na Receita Federal. Ao concluir com sucesso, o alerta some sozinho do painel (ou resolva manualmente).',
                     'cta_text' => 'Ir para Consulta',
                     'cta_url' => ':participante',
+                    'metodologia' => 'Fonte: cadastro de participantes que têm notas EFD, cruzado com a data da última consulta (participante_scores.ultima_consulta_em). Gatilho: participante nunca consultado, ou última consulta há mais de 90 dias. A empresa própria é excluída do "nunca consultado".',
+                ],
+            ],
+            [
+                'tipos' => ['certidao_positiva'],
+                'guia' => [
+                    'texto_o_que_e' => 'Uma ou mais certidões de regularidade (CND Federal, Estadual, FGTS ou Trabalhista) deste fornecedor/cliente estão POSITIVAS — indicam débito(s) exigível(is) na fonte oficial. Certidão positiva é risco fiscal concreto, não apenas cadastral.',
+                    'texto_acao' => 'Verifique as certidões no perfil, confirme os débitos junto ao fornecedor/cliente e avalie o impacto (crédito, contratação, licitação). Uma nova consulta regularizada faz o alerta sumir sozinho.',
+                    'cta_text' => 'Ver perfil e certidões',
+                    'cta_url' => ':participante',
+                    'metodologia' => 'Fonte: última consulta de regularidade persistida (participante_scores). Gatilho: ao menos uma certidão (CND Federal, Estadual, FGTS/CRF ou CNDT) classificada como POSITIVA pelo padrão CertidaoBadge — "Negativa" e "Positiva com efeitos de negativa" contam como REGULARES; só "Positiva" pura dispara. Severidade: CND Federal/Estadual = alta; FGTS/CNDT = média (mesma gravidade que aplica o piso no Score de Risco). Valor comprado = soma de entradas fiscais (efd_notas, origem ICMS/IPI, tipo_operacao "entrada"), em três janelas por data de emissão: ÚLTIMOS 12 MESES (exposição corrente / risco vivo), 5 ANOS (janela de decadência do CTN — exposição sujeita a glosa de crédito) e TOTAL histórico (contexto, reconcilia com o Cruzamentos). Débito antigo sem compra recente aparece como baixa exposição; compra fora dos 5 anos é sinalizada como sem exposição a glosa. Racional do período: docs/alertas/README.md.',
                 ],
             ],
             [
@@ -94,6 +113,7 @@ class GuiaAlertaService
                     'texto_acao' => 'Recomende ao responsável financeiro interromper operações comerciais e bloquear o cadastro no ERP até a total regularização. Abra a ficha do participante para conferir os detalhes.',
                     'cta_text' => 'Ver participante',
                     'cta_url' => ':participante',
+                    'metodologia' => 'Fonte: participantes.situacao_cadastral (Receita Federal, atualizada pelo monitoramento). Gatilho: situação NÃO pertence a {\'02\', \'ATIVA\'} — ex.: Baixada, Inapta, Suspensa (o código "02" da Receita é ATIVA e não dispara). No "fornecedor_irregular", cruza com notas EFD e soma o valor em risco = entradas fiscais, deduplicando a mesma NF-e entre ICMS/IPI e PIS/COFINS e excluindo canceladas.',
                 ],
             ],
             [
@@ -103,6 +123,7 @@ class GuiaAlertaService
                     'texto_acao' => 'Confira a listagem abaixo no seu ERP/Contábil, cancele e apague o registro excedente para os livros refletirem a realidade, e gere novo SPED.',
                     'cta_text' => '',
                     'cta_url' => null,
+                    'metodologia' => 'Fonte: efd_notas do usuário. Gatilho: duas ou mais notas com a mesma combinação de numeração + série + modelo + participante. A contagem exibida é o número de notas excedentes (duplicatas além da primeira).',
                 ],
             ],
             [
@@ -112,6 +133,7 @@ class GuiaAlertaService
                     'texto_acao' => 'Acesse os dados da(s) nota(s) afetada(s) no seu ERP. Revise se os itens foram integrados corretamente e se os CFOPs estão de acordo com o padrão SEFAZ.',
                     'cta_text' => '',
                     'cta_url' => null,
+                    'metodologia' => 'Fonte: efd_notas e efd_notas_itens. Gatilho: nota com valor total zerado, sem itens vinculados, com CFOP incoerente com o tipo de operação (entrada/saída cruzados) ou participante sem CNPJ válido. A contagem é o total de notas afetadas.',
                 ],
             ],
             [
@@ -121,6 +143,7 @@ class GuiaAlertaService
                     'texto_acao' => 'Faça o upload do(s) arquivo(s) SPED (EFD ICMS/IPI ou Contribuições) dos meses indicados abaixo dentro da plataforma.',
                     'cta_text' => 'Ir para Importações SPED',
                     'cta_url' => '/app/importacao/efd',
+                    'metodologia' => 'Fonte: efd_importacoes concluídas, contadas por COMPETÊNCIA (periodo_inicio/periodo_fim), não pela data de upload. Janela: últimos 12 meses. Gatilho: mês da janela sem nenhuma EFD (ICMS/IPI ou Contribuições). Lista os meses faltantes.',
                 ],
             ],
             [
@@ -130,6 +153,7 @@ class GuiaAlertaService
                     'texto_acao' => 'Provável erro no cadastro de produtos ou no mapeamento Tributário/NCM do ERP fiscal. Revise o cadastro e gere novo SPED.',
                     'cta_text' => '',
                     'cta_url' => null,
+                    'metodologia' => 'Fonte: itens de EFD Contribuições. Gatilho: proporção elevada de itens sem detalhamento de imposto ou sem alíquota base. Indica cadastro de produto ou mapeamento tributário/NCM incompleto no ERP de origem.',
                 ],
             ],
         ];

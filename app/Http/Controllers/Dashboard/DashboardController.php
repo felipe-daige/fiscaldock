@@ -985,6 +985,67 @@ class DashboardController extends Controller
         ]);
     }
 
+    /**
+     * Opções para o modal de exportação: alertas ativos agrupados por classe.
+     * Payload enxuto (só o necessário pra montar os checkboxes).
+     */
+    public function alertasExportarOpcoes(Request $request)
+    {
+        if (! Auth::check()) {
+            return response()->json(['success' => false, 'redirect' => '/login']);
+        }
+
+        $grupos = $this->alertaCentralService->alertasAtivosAgrupados(Auth::id());
+
+        $classes = array_map(function (array $grupo) {
+            return [
+                'key' => $grupo['key'],
+                'label' => $grupo['label'],
+                'cor' => $grupo['cor'],
+                'alertas' => $grupo['alertas']->map(fn (Alerta $a) => [
+                    'id' => $a->id,
+                    'titulo' => $a->titulo,
+                    'severidade' => $a->severidade,
+                    'cliente' => $a->cliente?->razao_social ?? $a->participante?->razao_social,
+                ])->all(),
+            ];
+        }, $grupos);
+
+        return response()->json(['classes' => $classes]);
+    }
+
+    /**
+     * Gera o PDF da Central de Alertas com os alertas selecionados no modal.
+     * Recebe `ids[]` (subconjunto dos ativos); sem `ids`, exporta todos os ativos.
+     */
+    public function alertasExportarPdf(Request $request)
+    {
+        if (! Auth::check()) {
+            return redirect('/login');
+        }
+
+        $validado = $request->validate([
+            'ids' => ['sometimes', 'array'],
+            'ids.*' => ['integer'],
+        ]);
+
+        $ids = $validado['ids'] ?? null;
+        $grupos = $this->alertaCentralService->alertasAtivosAgrupados(Auth::id(), $ids);
+
+        $total = array_sum(array_map(fn ($g) => $g['alertas']->count(), $grupos));
+
+        abort_if($total === 0, 404, 'Nenhum alerta ativo para exportar.');
+
+        $arquivo = 'alertas-'.now()->format('Y-m-d').'.pdf';
+
+        return \App\Support\PdfReport::render('reports.alertas', [
+            'grupos' => $grupos,
+            'total' => $total,
+            'geradoEm' => now(),
+            'hashDoc' => \App\Support\PdfReport::hashDocumento(Auth::id(), 'alertas', $total),
+        ], 'portrait')->download($arquivo);
+    }
+
     public function alertaDetalhes(Request $request, int $id)
     {
         if (! Auth::check()) {

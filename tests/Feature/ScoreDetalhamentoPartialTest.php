@@ -14,6 +14,8 @@ it('renderiza detalhamento web com headline, categorias, peso e legenda', functi
         ->and($html)->toContain('CND Federal')
         ->and($html)->toContain('Peso: 20%')
         ->and($html)->toContain('background-color: #ea580c')
+        ->and($html)->toContain('Regular')               // cadastral score 0 = regular (não fica barra vazia)
+        ->and($html)->toContain('width: 100%')           // regular preenche 100% (verde), não 0%
         ->and($html)->toContain('Não avaliado')          // fgts null
         ->and($html)->toContain('Categorias em breve')
         ->and($html)->toContain('Legenda');

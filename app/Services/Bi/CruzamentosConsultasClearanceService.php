@@ -2,8 +2,7 @@
 
 namespace App\Services\Bi;
 
-use App\Models\ConsultaResultado;
-use App\Support\CertidaoBadge;
+use App\Models\ParticipanteScore;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -20,7 +19,12 @@ use Illuminate\Support\Facades\DB;
  * Volume de compras = entradas do EFD ICMS/IPI (`origem_arquivo = 'fiscal'`, evita a
  * dupla-contagem com a gêmea PIS/COFINS). XML = fase 2.
  *
- * Classificação de regularidade pelo classificador canônico CertidaoBadge.
+ * FONTE ÚNICA (2026-07-04): lê a regularidade de `participante_scores` — a projeção canônica
+ * de `consulta_resultados` (gravada no fecho do lote via RiskScoreService::atualizarScore).
+ * É a MESMA fonte do Score de Risco e do alerta `certidao_positiva`, então as três telas não
+ * divergem. Certidão irregular = subscore de certidão > 0 (classificação já feita pelo
+ * CertidaoBadge dentro do RiskScoreService). Situação cadastral e sanção CGU vêm do
+ * `dados_consultados` persistido junto ao score. Ver docs/alertas/README.md ("fonte única").
  */
 class CruzamentosConsultasClearanceService
 {
@@ -31,14 +35,14 @@ class CruzamentosConsultasClearanceService
      */
     public function fornecedoresIrregularesComCompras(int $userId, array $filtros = []): Collection
     {
-        $resultados = $this->resultadosMaisRecentesPorParticipante($userId);
+        $scores = $this->scoresPorParticipante($userId);
 
-        $candidatos = $resultados
-            ->map(fn (ConsultaResultado $r) => [
-                'participante_id' => $r->participante_id,
-                'razao_social' => $r->participante?->razao_social ?? '—',
-                'documento' => $r->participante?->documento ?? '—',
-                'motivos' => $this->motivosIrregularidade($r),
+        $candidatos = $scores
+            ->map(fn (ParticipanteScore $s) => [
+                'participante_id' => $s->participante_id,
+                'razao_social' => $s->participante?->razao_social ?? '—',
+                'documento' => $s->participante?->documento ?? '—',
+                'motivos' => $this->motivosIrregularidade($s),
             ])
             ->filter(fn (array $linha) => $linha['motivos'] !== []);
 
@@ -50,17 +54,17 @@ class CruzamentosConsultasClearanceService
      */
     public function fornecedoresSancionadosComCompras(int $userId, array $filtros = []): Collection
     {
-        $resultados = $this->resultadosMaisRecentesPorParticipante($userId);
+        $scores = $this->scoresPorParticipante($userId);
 
-        $candidatos = $resultados
-            ->map(function (ConsultaResultado $r) {
-                $cgu = $r->getDado('cgu_cnc');
+        $candidatos = $scores
+            ->map(function (ParticipanteScore $s) {
+                $cgu = ($s->dados_consultados ?? [])['cgu_cnc'] ?? null;
                 $temSancao = is_array($cgu) && ($cgu['possui_sancao'] ?? false);
 
                 return [
-                    'participante_id' => $r->participante_id,
-                    'razao_social' => $r->participante?->razao_social ?? '—',
-                    'documento' => $r->participante?->documento ?? '—',
+                    'participante_id' => $s->participante_id,
+                    'razao_social' => $s->participante?->razao_social ?? '—',
+                    'documento' => $s->participante?->documento ?? '—',
                     'bases' => $temSancao ? array_values(array_filter((array) ($cgu['bases_com_registro'] ?? []))) : [],
                     '_sancionado' => $temSancao,
                 ];
@@ -112,7 +116,7 @@ class CruzamentosConsultasClearanceService
      */
     public function diagnostico(int $userId): array
     {
-        $idsConsultados = $this->resultadosMaisRecentesPorParticipante($userId)
+        $idsConsultados = $this->scoresPorParticipante($userId)
             ->pluck('participante_id')->filter()->unique();
 
         $fornecedoresEntrada = DB::table('efd_notas')
@@ -146,53 +150,45 @@ class CruzamentosConsultasClearanceService
     }
 
     /**
-     * Último resultado de consulta (sucesso) por participante, no escopo do usuário.
+     * Score de regularidade (última consulta, projeção canônica) por participante consultado,
+     * no escopo do usuário. Uma linha por participante — `participante_scores` é UNIQUE por alvo
+     * e já guarda a versão mais recente mesclada.
      *
-     * @return Collection<int, ConsultaResultado>
+     * @return Collection<int, ParticipanteScore>
      */
-    private function resultadosMaisRecentesPorParticipante(int $userId): Collection
+    private function scoresPorParticipante(int $userId): Collection
     {
-        return ConsultaResultado::query()
-            ->select('consulta_resultados.*')
-            ->join('consulta_lotes', 'consulta_lotes.id', '=', 'consulta_resultados.consulta_lote_id')
-            ->where('consulta_lotes.user_id', $userId)
-            ->where('consulta_resultados.status', ConsultaResultado::STATUS_SUCESSO)
-            ->whereNotNull('consulta_resultados.participante_id')
+        return ParticipanteScore::where('user_id', $userId)
+            ->whereNotNull('participante_id')
             ->with('participante')
-            ->orderBy('consulta_resultados.consultado_em', 'desc')
-            ->orderBy('consulta_resultados.id', 'desc')
-            ->get()
-            ->groupBy('participante_id')
-            ->map(fn (Collection $g) => $g->first())
-            ->values();
+            ->get();
     }
 
     /**
-     * Motivos de irregularidade do fornecedor (certidões positivas + situação cadastral).
+     * Motivos de irregularidade do fornecedor (certidões positivas + situação cadastral),
+     * derivados do score canônico: subscore de certidão > 0 = irregular (classificação já feita
+     * pelo CertidaoBadge dentro do RiskScoreService); situação vem do `dados_consultados`.
      *
      * @return array<int, string>
      */
-    private function motivosIrregularidade(ConsultaResultado $r): array
+    private function motivosIrregularidade(ParticipanteScore $s): array
     {
         $motivos = [];
 
-        $situacao = strtoupper(trim((string) $r->getSituacaoCadastral()));
+        $dados = is_array($s->dados_consultados) ? $s->dados_consultados : [];
+        $situacao = strtoupper(trim((string) ($dados['situacao_cadastral'] ?? '')));
         if (in_array($situacao, self::SITUACOES_IRREGULARES, true)) {
             $motivos[] = "Situação cadastral: {$situacao}";
         }
 
         $certidoes = [
-            'cnd_federal' => 'CND Federal positiva',
-            'cnd_estadual' => 'CND Estadual positiva',
-            'cndt' => 'CNDT positiva (débitos trabalhistas)',
+            'score_cnd_federal' => 'CND Federal positiva',
+            'score_cnd_estadual' => 'CND Estadual positiva',
+            'score_trabalhista' => 'CNDT positiva (débitos trabalhistas)',
         ];
 
-        foreach ($certidoes as $chave => $rotulo) {
-            $dado = $r->getDado($chave);
-            if ($dado === null) {
-                continue;
-            }
-            if (CertidaoBadge::classificar($dado, true)['label'] === 'Irregular') {
+        foreach ($certidoes as $coluna => $rotulo) {
+            if ((int) ($s->{$coluna} ?? 0) > 0) {
                 $motivos[] = $rotulo;
             }
         }
@@ -257,13 +253,13 @@ class CruzamentosConsultasClearanceService
      */
     private function situacaoPorCnpj(int $userId): array
     {
-        return $this->resultadosMaisRecentesPorParticipante($userId)
-            ->mapWithKeys(function (ConsultaResultado $r) {
-                $cnpj = preg_replace('/\D/', '', (string) ($r->participante?->documento ?? ''));
+        return $this->scoresPorParticipante($userId)
+            ->mapWithKeys(function (ParticipanteScore $s) {
+                $cnpj = preg_replace('/\D/', '', (string) ($s->participante?->documento ?? ''));
                 if ($cnpj === '') {
                     return [];
                 }
-                $motivos = $this->motivosIrregularidade($r);
+                $motivos = $this->motivosIrregularidade($s);
 
                 return [$cnpj => $motivos === [] ? 'Regular' : implode(' · ', $motivos)];
             })

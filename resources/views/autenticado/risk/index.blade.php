@@ -110,6 +110,16 @@
                     </p>
                 </div>
 
+                <div class="rounded border px-3 py-2" style="border-color:#fecaca;background-color:#fef2f2;">
+                    <p class="text-[11px] leading-relaxed" style="color:#991b1b;">
+                        <strong>Piso por certidão positiva:</strong> uma certidão <strong>Positiva</strong> (débito exigível) força uma
+                        <strong>classificação mínima</strong>, mesmo que a média ponderada dê baixa — um débito conhecido não é "baixo risco".
+                        CND <strong>Federal ou Estadual</strong> positiva → no mínimo <strong>Alto</strong>; <strong>FGTS ou CNDT</strong> positiva →
+                        no mínimo <strong>Médio</strong>; situação <strong>Inapta/Baixada/Nula</strong> → <strong>Crítico</strong>. Por isso um CNPJ pode
+                        aparecer como "Alto Risco" com nota numérica baixa: a certidão positiva domina a classificação (o número segue visível para ordenar).
+                    </p>
+                </div>
+
                 <div class="rounded border border-amber-200 bg-amber-50 px-3 py-2">
                     <p class="text-[11px] text-amber-800 leading-relaxed">
                         <strong>Cobertura mínima — por que aparece "Risco Não Conclusivo":</strong> o score só é conclusivo

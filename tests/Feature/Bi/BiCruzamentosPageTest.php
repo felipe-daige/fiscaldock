@@ -7,6 +7,7 @@ use App\Models\EfdImportacao;
 use App\Models\EfdNota;
 use App\Models\Participante;
 use App\Models\User;
+use App\Services\RiskScoreService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use function Pest\Laravel\actingAs;
@@ -34,6 +35,7 @@ function seedFornecedorIrregularComCompra(User $user): void
         'consulta_lote_id' => $lote->id, 'participante_id' => $forn->id, 'status' => 'sucesso',
         'resultado_dados' => ['cnd_federal' => ['status' => 'Positiva']], 'consultado_em' => now(),
     ]);
+    app(RiskScoreService::class)->atualizarScore($forn, ['cnd_federal' => ['status' => 'Positiva']]);
     EfdNota::create([
         'user_id' => $user->id, 'cliente_id' => $cliente->id, 'participante_id' => $forn->id,
         'importacao_id' => $imp->id, 'chave_acesso' => '35240000000000000000000000000000000000040001',
@@ -90,6 +92,7 @@ it('explica que a tela vazia é cobertura de dado, não bug (CNPJ consultado nã
         'consulta_lote_id' => $lote->id, 'participante_id' => $p->id, 'status' => 'sucesso',
         'resultado_dados' => ['cnd_federal' => ['status' => 'Negativa']], 'consultado_em' => now(),
     ]);
+    app(RiskScoreService::class)->atualizarScore($p, ['cnd_federal' => ['status' => 'Negativa']]);
     EfdNota::create([
         'user_id' => $user->id, 'cliente_id' => $cliente->id, 'participante_id' => $p->id,
         'importacao_id' => $imp->id, 'chave_acesso' => '35240000000000000000000000000000000000099001',

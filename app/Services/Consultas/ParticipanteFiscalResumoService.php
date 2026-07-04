@@ -3,6 +3,7 @@
 namespace App\Services\Consultas;
 
 use App\Models\ConsultaResultado;
+use App\Models\ParticipanteScore;
 use App\Services\Consultas\Fiscal\AgregacaoFiscalHelpers;
 use App\Services\Consultas\Fiscal\TopMovimentacaoQuery;
 use App\Support\CertidaoBadge;
@@ -225,25 +226,26 @@ class ParticipanteFiscalResumoService
     }
 
     /**
-     * Classificação de regularidade da ÚLTIMA consulta sucesso por participante,
-     * pra filtrar a lista. Base = CND Federal via CertidaoBadge (canônico:
-     * 611/indeterminado tem precedência). Participante sem consulta sucesso fica
-     * ausente do retorno (o caller trata como "não consultado").
+     * Classificação de regularidade por participante, pra filtrar a lista. Base = CND Federal
+     * via CertidaoBadge (canônico: 611/indeterminado tem precedência). Participante sem CND
+     * Federal avaliada fica ausente do retorno (o caller trata como "não consultado").
+     *
+     * FONTE ÚNICA (2026-07-04): lê de `participante_scores.dados_consultados` — a projeção
+     * canônica (mesclada) das consultas, MESMA fonte do Score, Alertas e Cruzamentos. Antes lia
+     * o último `consulta_resultados` cru, que perdia a certidão anterior quando a última consulta
+     * era só-cadastral (divergência com o score, que preserva). Ver docs/alertas/README.md.
      *
      * @return array<int, string> [participante_id => 'regular'|'irregular'|'indeterminada']
      */
     public function regularidadePorParticipante(int $userId): array
     {
-        $ultimos = ConsultaResultado::query()
-            ->whereHas('participante', fn ($q) => $q->where('user_id', $userId))
-            ->where('status', ConsultaResultado::STATUS_SUCESSO)
-            ->orderBy('consultado_em', 'desc')
-            ->get()
-            ->unique('participante_id');
+        $scores = ParticipanteScore::where('user_id', $userId)
+            ->whereNotNull('participante_id')
+            ->get(['participante_id', 'dados_consultados']);
 
         $out = [];
-        foreach ($ultimos as $resultado) {
-            $cnd = $resultado->getCndFederal();
+        foreach ($scores as $score) {
+            $cnd = ($score->dados_consultados ?? [])['cnd_federal'] ?? null;
             if ($cnd === null) {
                 continue;
             }
@@ -251,7 +253,7 @@ class ParticipanteFiscalResumoService
             // Regular/Irregular explícitos; qualquer outro rótulo (Indeterminada,
             // Indisponível, Não encontrada, 611) cai em "indeterminada" — bucket
             // de triagem "precisa olhar".
-            $out[(int) $resultado->participante_id] = match ($classe['label']) {
+            $out[(int) $score->participante_id] = match ($classe['label']) {
                 'Regular' => 'regular',
                 'Irregular' => 'irregular',
                 default => 'indeterminada',

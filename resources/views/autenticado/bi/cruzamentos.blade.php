@@ -9,6 +9,30 @@
             <p class="text-xs text-gray-500 mt-0.5">Risco do fornecedor (regularidade e sanções das consultas de CNPJ) cruzado com o quanto você comprou dele nas notas.</p>
         </div>
 
+        {{-- Como interpretamos: transparência + alinhamento de fonte com Score e Alertas --}}
+        <details class="bg-white rounded border border-gray-300 border-l-4 mb-5 group" style="border-left-color: #2563eb;">
+            <summary class="cursor-pointer px-4 py-3 flex items-center justify-between list-none hover:bg-gray-50">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span class="text-sm font-semibold text-gray-900">Como interpretamos esta tela</span>
+                </div>
+                <span class="text-[11px] font-semibold text-gray-500 group-open:hidden">Abrir</span>
+                <span class="text-[11px] font-semibold text-gray-500 hidden group-open:inline">Fechar</span>
+            </summary>
+            <div class="border-t border-gray-200 px-4 py-4 space-y-2">
+                <p class="text-xs text-gray-600 leading-relaxed">
+                    <strong>Irregular</strong> = a última consulta de CNPJ apontou <strong>certidão positiva</strong> (CND Federal/Estadual ou CNDT com débito)
+                    ou <strong>situação cadastral</strong> não ativa (Baixada, Inapta, Suspensa, Nula). <strong>Sancionado</strong> = registro no CGU/CEIS.
+                    A regularidade vem da <strong>mesma fonte</strong> do <a href="{{ route('app.risk.index') }}" data-link class="text-blue-600 hover:underline">Score de Risco</a>
+                    e da <a href="{{ route('app.alertas') }}" data-link class="text-blue-600 hover:underline">Central de Alertas</a> — as três telas não divergem.
+                </p>
+                <p class="text-xs text-gray-600 leading-relaxed">
+                    <strong>Compras</strong> = soma das <strong>entradas fiscais</strong> (notas de ICMS/IPI, sem dupla contagem com PIS/COFINS), no total histórico.
+                    É o quanto você comprou daquele fornecedor. A tela só mostra quem foi <strong>consultado</strong> e também é <strong>fornecedor</strong> nas suas notas.
+                </p>
+            </div>
+        </details>
+
         {{-- Diagnóstico de cobertura: explica quando o cruzamento aparece (e por que pode estar vazio) --}}
         <div class="bg-white rounded border border-gray-300 border-l-4 p-3 mb-5" style="border-left-color: #0b1f3a">
             <div class="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm">

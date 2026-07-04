@@ -24,6 +24,12 @@
                 </div>
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                     <span id="alerta-ultima-atualizacao" class="text-[10px] text-gray-500 uppercase tracking-wide hidden sm:inline"></span>
+                    <button id="btn-exportar-alertas" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 rounded text-sm font-medium transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-2-2m2 2l2-2m4 4H6a2 2 0 01-2-2V6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v10a2 2 0 01-2 2z"/>
+                        </svg>
+                        Exportar PDF
+                    </button>
                     <button id="btn-recalcular" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium transition-colors">
                         <svg id="recalcular-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -224,6 +230,200 @@
     </div>
 </div>
 
+{{-- Modal de exportação de alertas em PDF --}}
+<div id="modal-exportar-alertas" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-exportar-titulo" role="dialog" aria-modal="true">
+    <div class="flex min-h-screen items-end sm:items-center justify-center p-0 sm:p-4">
+        <div id="modal-exportar-backdrop" class="fixed inset-0 bg-gray-900/50 transition-opacity"></div>
+        <div class="relative bg-white rounded-t-lg sm:rounded-lg shadow-xl w-full sm:max-w-lg max-h-[85vh] flex flex-col">
+            {{-- Header --}}
+            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+                <div>
+                    <h3 id="modal-exportar-titulo" class="text-sm font-bold text-gray-900 uppercase tracking-wide">Exportar Alertas em PDF</h3>
+                    <p class="text-[11px] text-gray-500 mt-0.5">Selecione as classes e os alertas a incluir no relatório.</p>
+                </div>
+                <button id="modal-exportar-fechar" class="text-gray-400 hover:text-gray-700 p-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            {{-- Body --}}
+            <div id="modal-exportar-body" class="flex-1 overflow-y-auto px-5 py-4">
+                <div id="modal-exportar-loading" class="flex items-center justify-center py-10 text-gray-400 text-sm">
+                    <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    Carregando alertas...
+                </div>
+                <div id="modal-exportar-classes" class="space-y-3 hidden"></div>
+                <div id="modal-exportar-vazio" class="hidden py-10 text-center text-sm text-gray-500">Nenhum alerta ativo para exportar.</div>
+            </div>
+            {{-- Footer --}}
+            <div class="flex items-center justify-between gap-3 px-5 py-4 border-t border-gray-200">
+                <span id="modal-exportar-contador" class="text-xs text-gray-500"><span class="font-semibold">0</span> selecionado(s)</span>
+                <div class="flex items-center gap-2">
+                    <button id="modal-exportar-cancelar" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900">Cancelar</button>
+                    <button id="modal-exportar-gerar" class="px-5 py-2 bg-gray-800 text-white text-sm font-medium rounded hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Gerar PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    var modal = document.getElementById('modal-exportar-alertas');
+    if (!modal) return;
+
+    var btnAbrir = document.getElementById('btn-exportar-alertas');
+    var elLoading = document.getElementById('modal-exportar-loading');
+    var elClasses = document.getElementById('modal-exportar-classes');
+    var elVazio = document.getElementById('modal-exportar-vazio');
+    var elContador = document.getElementById('modal-exportar-contador');
+    var btnGerar = document.getElementById('modal-exportar-gerar');
+    var carregado = false;
+
+    function esc(str) {
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/[&<>"']/g, function(m) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+        });
+    }
+
+    var sevCor = { alta: '#dc2626', media: '#d97706', baixa: '#9ca3af' };
+
+    function abrir() {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        if (!carregado) carregar();
+    }
+
+    function fechar() {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    async function carregar() {
+        elLoading.classList.remove('hidden');
+        elClasses.classList.add('hidden');
+        elVazio.classList.add('hidden');
+        try {
+            var r = await fetch('/app/alertas/exportar/opcoes', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            });
+            var data = await r.json();
+            renderClasses(data.classes || []);
+            carregado = true;
+        } catch (e) {
+            elLoading.textContent = 'Erro ao carregar alertas.';
+            return;
+        }
+        elLoading.classList.add('hidden');
+    }
+
+    function renderClasses(classes) {
+        if (!classes.length) {
+            elVazio.classList.remove('hidden');
+            atualizarContador();
+            return;
+        }
+        var html = '';
+        classes.forEach(function(cls) {
+            html += '<div class="border border-gray-200 rounded overflow-hidden" data-classe="' + esc(cls.key) + '">';
+            html += '  <label class="flex items-center gap-2 px-3 py-2 bg-gray-50 cursor-pointer">';
+            html += '    <input type="checkbox" class="exp-classe-check h-4 w-4" checked>';
+            html += '    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + esc(cls.cor) + '">' + esc(cls.label) + '</span>';
+            html += '    <span class="text-xs text-gray-500 ml-auto">' + cls.alertas.length + '</span>';
+            html += '  </label>';
+            html += '  <div class="divide-y divide-gray-100">';
+            cls.alertas.forEach(function(a) {
+                html += '<label class="flex items-start gap-2 px-3 py-2 pl-8 cursor-pointer hover:bg-gray-50">';
+                html += '  <input type="checkbox" class="exp-alerta-check h-4 w-4 mt-0.5" value="' + a.id + '" checked>';
+                html += '  <span class="w-2 h-2 rounded-full flex-shrink-0 mt-1.5" style="background-color: ' + (sevCor[a.severidade] || '#9ca3af') + '"></span>';
+                html += '  <span class="flex-1 min-w-0">';
+                html += '    <span class="block text-xs font-medium text-gray-800">' + esc(a.titulo) + '</span>';
+                if (a.cliente) html += '<span class="block text-[10px] text-gray-400 truncate">' + esc(a.cliente) + '</span>';
+                html += '  </span>';
+                html += '</label>';
+            });
+            html += '  </div>';
+            html += '</div>';
+        });
+        elClasses.innerHTML = html;
+        elClasses.classList.remove('hidden');
+        wireCheckboxes();
+        atualizarContador();
+    }
+
+    function wireCheckboxes() {
+        elClasses.querySelectorAll('[data-classe]').forEach(function(bloco) {
+            var master = bloco.querySelector('.exp-classe-check');
+            var filhos = bloco.querySelectorAll('.exp-alerta-check');
+            master.addEventListener('change', function() {
+                filhos.forEach(function(f) { f.checked = master.checked; });
+                atualizarContador();
+            });
+            filhos.forEach(function(f) {
+                f.addEventListener('change', function() {
+                    var marcados = Array.prototype.filter.call(filhos, function(x) { return x.checked; }).length;
+                    master.checked = marcados === filhos.length;
+                    master.indeterminate = marcados > 0 && marcados < filhos.length;
+                    atualizarContador();
+                });
+            });
+        });
+    }
+
+    function idsSelecionados() {
+        return Array.prototype.map.call(
+            elClasses.querySelectorAll('.exp-alerta-check:checked'),
+            function(c) { return c.value; }
+        );
+    }
+
+    function atualizarContador() {
+        var n = idsSelecionados().length;
+        elContador.querySelector('span').textContent = n;
+        btnGerar.disabled = n === 0;
+    }
+
+    function gerar() {
+        var ids = idsSelecionados();
+        if (!ids.length) return;
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/app/alertas/exportar';
+        form.style.display = 'none';
+
+        var csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = '_token';
+        csrf.value = document.querySelector('meta[name="csrf-token"]').content;
+        form.appendChild(csrf);
+
+        ids.forEach(function(id) {
+            var inp = document.createElement('input');
+            inp.type = 'hidden';
+            inp.name = 'ids[]';
+            inp.value = id;
+            form.appendChild(inp);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+        form.remove();
+        fechar();
+    }
+
+    btnAbrir && btnAbrir.addEventListener('click', abrir);
+    document.getElementById('modal-exportar-fechar').addEventListener('click', fechar);
+    document.getElementById('modal-exportar-cancelar').addEventListener('click', fechar);
+    document.getElementById('modal-exportar-backdrop').addEventListener('click', fechar);
+    btnGerar.addEventListener('click', gerar);
+})();
+</script>
+
 <script src="/js/apexcharts.min.js"></script>
 <script>
 (function() {
@@ -244,7 +444,7 @@
         todos: null,
         notas_fiscais: ['notas_duplicadas', 'notas_sem_participante', 'notas_valor_zerado', 'notas_sem_itens', 'notas_data_futura'],
         pis_cofins: ['pis_cofins_incompleto'],
-        compliance: ['situacao_irregular', 'consulta_vencida', 'nunca_consultado', 'cnpj_situacao_irregular', 'participante_inativo', 'participante_sem_ie'],
+        compliance: ['situacao_irregular', 'certidao_positiva', 'consulta_vencida', 'nunca_consultado', 'cnpj_situacao_irregular', 'participante_inativo', 'participante_sem_ie'],
         fornecedores: ['fornecedor_irregular'],
         importacao: ['gap_importacao', 'gap_temporal']
     };
@@ -971,6 +1171,8 @@
             html += renderTabelaNotas(detalhes);
         } else if (tipo === 'participante_inativo' || tipo === 'participante_sem_ie' || tipo === 'cnpj_situacao_irregular' || tipo === 'situacao_irregular' || tipo === 'consulta_vencida' || tipo === 'nunca_consultado') {
             html += renderTabelaCompliance(detalhes);
+        } else if (tipo === 'certidao_positiva') {
+            html += renderCertidaoPositiva(detalhes);
         } else if (tipo === 'fornecedor_irregular') {
             html += renderFornecedorIrregular(detalhes);
         } else if (tipo === 'gap_importacao') {
@@ -1149,6 +1351,68 @@
         if (detalhes.mensagem) {
             html += '<p class="text-xs text-gray-500 mt-2">' + escapeHtml(detalhes.mensagem) + '</p>';
         }
+        return html;
+    }
+
+    function renderCertidaoPositiva(detalhes) {
+        var sevCor = { alta: '#dc2626', media: '#d97706', baixa: '#9ca3af' };
+        var alvoId = detalhes.participante_id || detalhes.cliente_id;
+        var alvoUrl = detalhes.participante_id ? ('/app/participante/' + detalhes.participante_id)
+            : (detalhes.cliente_id ? ('/app/cliente/' + detalhes.cliente_id) : null);
+
+        var html = '<div class="bg-white rounded border border-gray-300 p-4">';
+
+        // Cabeçalho: alvo + link
+        html += '<div class="flex items-start justify-between gap-3 mb-3">';
+        html += '<div class="min-w-0">';
+        if (detalhes.razao_social) {
+            html += '<p class="text-sm font-medium text-gray-900">' + escapeHtml(detalhes.razao_social) + '</p>';
+        }
+        if (detalhes.documento) {
+            html += '<p class="text-xs text-gray-500 mt-0.5">CNPJ: ' + formatCnpj(detalhes.documento) + '</p>';
+        }
+        html += '</div>';
+        if (alvoUrl) {
+            html += '<a href="' + alvoUrl + '" data-link class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors flex-shrink-0">';
+            html += '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
+            html += 'Ver perfil</a>';
+        }
+        html += '</div>';
+
+        // Certidões positivas
+        var certidoes = Array.isArray(detalhes.certidoes) ? detalhes.certidoes : [];
+        html += '<p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Certidões positivas</p>';
+        html += '<div class="space-y-1.5 mb-3">';
+        certidoes.forEach(function(c) {
+            var cor = sevCor[c.severidade] || '#9ca3af';
+            html += '<div class="flex items-center justify-between gap-3 border border-gray-100 rounded px-3 py-1.5">';
+            html += '<div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full" style="background-color:' + cor + '"></span>';
+            html += '<span class="text-sm text-gray-800">' + escapeHtml(c.label || '—') + '</span></div>';
+            html += '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:' + cor + '">' + escapeHtml(c.status || 'Positiva') + '</span>';
+            html += '</div>';
+        });
+        html += '</div>';
+
+        // Exposição de compras (só quando é fornecedor com notas)
+        if (Number(detalhes.valor_total) > 0) {
+            html += '<p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Exposição de compras</p>';
+            html += '<div class="grid grid-cols-3 gap-3">';
+            var cards = [
+                { label: '12 meses', value: formatarMoeda(detalhes.valor_12m), sub: 'risco corrente', cls: 'text-gray-900' },
+                { label: '5 anos', value: formatarMoeda(detalhes.valor_5anos), sub: 'sujeito a glosa', cls: 'text-amber-700' },
+                { label: 'Total', value: formatarMoeda(detalhes.valor_total), sub: (detalhes.qtd_notas || 0) + ' nota(s)', cls: 'text-gray-900' }
+            ];
+            cards.forEach(function(c) {
+                html += '<div class="bg-gray-50 rounded border border-gray-200 p-2.5">';
+                html += '<p class="text-[10px] text-gray-400 uppercase tracking-wide">' + c.label + '</p>';
+                html += '<p class="text-sm font-bold ' + c.cls + '">' + c.value + '</p>';
+                html += '<p class="text-[10px] text-gray-400">' + escapeHtml(c.sub) + '</p>';
+                html += '</div>';
+            });
+            html += '</div>';
+        }
+
+        html += '</div>';
         return html;
     }
 

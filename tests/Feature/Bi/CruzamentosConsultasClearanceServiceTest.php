@@ -8,6 +8,7 @@ use App\Models\EfdNota;
 use App\Models\Participante;
 use App\Models\User;
 use App\Services\Bi\CruzamentosConsultasClearanceService;
+use App\Services\RiskScoreService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -38,18 +39,21 @@ function montarCenarioCruzamento(): array
         'total_participantes' => 3, 'creditos_cobrados' => 30, 'tab_id' => 'tab-cruz', 'processado_em' => now(),
     ]);
 
-    ConsultaResultado::create([
-        'consulta_lote_id' => $lote->id, 'participante_id' => $A->id, 'status' => 'sucesso',
-        'resultado_dados' => ['cnd_federal' => ['status' => 'Positiva']], 'consultado_em' => now(),
-    ]);
-    ConsultaResultado::create([
-        'consulta_lote_id' => $lote->id, 'participante_id' => $B->id, 'status' => 'sucesso',
-        'resultado_dados' => ['cgu_cnc' => ['possui_sancao' => true, 'bases_com_registro' => ['CEIS']]], 'consultado_em' => now(),
-    ]);
-    ConsultaResultado::create([
-        'consulta_lote_id' => $lote->id, 'participante_id' => $C->id, 'status' => 'sucesso',
-        'resultado_dados' => ['cnd_federal' => ['status' => 'Negativa']], 'consultado_em' => now(),
-    ]);
+    // Persiste o resultado E projeta o score canônico (participante_scores) — o Cruzamentos
+    // lê da projeção, não do resultado cru. atualizarScore reproduz o fecho do lote real.
+    $risk = app(RiskScoreService::class);
+    $dadosPorParticipante = [
+        [$A, ['cnd_federal' => ['status' => 'Positiva']]],
+        [$B, ['cgu_cnc' => ['possui_sancao' => true, 'bases_com_registro' => ['CEIS']]]],
+        [$C, ['cnd_federal' => ['status' => 'Negativa']]],
+    ];
+    foreach ($dadosPorParticipante as [$participante, $dados]) {
+        ConsultaResultado::create([
+            'consulta_lote_id' => $lote->id, 'participante_id' => $participante->id, 'status' => 'sucesso',
+            'resultado_dados' => $dados, 'consultado_em' => now(),
+        ]);
+        $risk->atualizarScore($participante, $dados);
+    }
 
     foreach ([[$A, 40001, 1000.00], [$A, 40002, 500.00], [$B, 40003, 2000.00], [$C, 40004, 300.00]] as [$p, $num, $valor]) {
         EfdNota::create([

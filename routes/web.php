@@ -101,7 +101,9 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::post('/app/alertas/{id}/status', [DashboardController::class, 'alertasMarcarStatus'])->name('app.alertas.status');
     Route::post('/app/alertas/status-lote', [DashboardController::class, 'alertasMarcarStatusLote'])->name('app.alertas.status-lote');
     Route::post('/app/alertas/recalcular', [DashboardController::class, 'alertasRecalcular'])->name('app.alertas.recalcular');
-    Route::get('/app/alertas/{id}', [DashboardController::class, 'alertaDetalhes'])->name('app.alertas.show');
+    Route::get('/app/alertas/exportar/opcoes', [DashboardController::class, 'alertasExportarOpcoes'])->name('app.alertas.exportar.opcoes');
+    Route::post('/app/alertas/exportar', [DashboardController::class, 'alertasExportarPdf'])->name('app.alertas.exportar');
+    Route::get('/app/alertas/{id}', [DashboardController::class, 'alertaDetalhes'])->whereNumber('id')->name('app.alertas.show');
 
     // Status das integrações (read-only, qualquer usuário autenticado)
     Route::get('/app/status', [\App\Http\Controllers\Dashboard\StatusController::class, 'index'])->name('app.status.index');

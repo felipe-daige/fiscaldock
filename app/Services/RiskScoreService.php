@@ -41,6 +41,32 @@ class RiskScoreService
     ];
 
     /**
+     * Gravidade de uma certidão de regularidade quando IRREGULAR (Positiva). Fonte única
+     * consumida pelo piso de classificação (aqui) e pela severidade do alerta de certidão
+     * positiva (AlertaCentralService). Sem um piso, uma única certidão positiva era diluída
+     * pela média ponderada e classificava o fornecedor como "baixo risco" — ver
+     * docs/score-fiscal/README.md.
+     *
+     * @var array<string, array{severidade: string, piso: string}>
+     */
+    public const GRAVIDADE_CERTIDAO = [
+        'cnd_federal' => ['severidade' => 'alta', 'piso' => 'alto'],
+        'cnd_estadual' => ['severidade' => 'alta', 'piso' => 'alto'],
+        'fgts' => ['severidade' => 'media', 'piso' => 'medio'],
+        'trabalhista' => ['severidade' => 'media', 'piso' => 'medio'],
+    ];
+
+    /** Severidade de classificação por ordem crescente — base do "maior vence" no piso. */
+    private const RANK_CLASSIFICACAO = [
+        'nao_avaliado' => 0,
+        'inconclusivo' => 1,
+        'baixo' => 2,
+        'medio' => 3,
+        'alto' => 4,
+        'critico' => 5,
+    ];
+
+    /**
      * Subscores por categoria a partir do `resultado_dados` (shape aninhado real).
      * Cada valor é 0..100 (0 = ótimo, 100 = pior) OU null = não avaliado.
      *
@@ -142,12 +168,57 @@ class RiskScoreService
      */
     public function classificarComCobertura(array $scores): string
     {
+        // Piso por certidão irregular (Positiva) vence a média ponderada e a cobertura:
+        // um débito conhecido nunca é "baixo risco" nem "inconclusivo".
+        $piso = $this->pisoPorCertidoes($scores);
         $total = $this->calcularScoreTotal($scores);
+
         if ($total === null) {
-            return 'nao_avaliado';
+            // Nada ponderável avaliado; se algo irregular foi avaliado, o piso ainda vale.
+            return $piso ?? 'nao_avaliado';
         }
 
-        return $this->coberturaSuficiente($scores) ? $this->classificar($total) : 'inconclusivo';
+        $base = $this->coberturaSuficiente($scores) ? $this->classificar($total) : 'inconclusivo';
+
+        if ($piso !== null && self::RANK_CLASSIFICACAO[$piso] > self::RANK_CLASSIFICACAO[$base]) {
+            return $piso;
+        }
+
+        return $base;
+    }
+
+    /**
+     * Piso de classificação derivado das certidões/situação IRREGULARES avaliadas.
+     * Retorna a classificação mínima ('critico'|'alto'|'medio') ou null se nada irregular.
+     * Cadastral INAPTA/BAIXADA/NULA (100) → 'critico'; SUSPENSA (50) → 'alto'.
+     *
+     * @param  array<string, int|null>  $scores
+     */
+    public function pisoPorCertidoes(array $scores): ?string
+    {
+        $piso = null;
+        $aplicar = function (string $candidato) use (&$piso) {
+            if ($piso === null || self::RANK_CLASSIFICACAO[$candidato] > self::RANK_CLASSIFICACAO[$piso]) {
+                $piso = $candidato;
+            }
+        };
+
+        $cad = $scores['cadastral'] ?? null;
+        if ($cad !== null && $cad >= 100) {
+            $aplicar('critico');
+        } elseif ($cad !== null && $cad >= 50) {
+            $aplicar('alto');
+        }
+
+        // Subscore de certidão: 0 = regular, penalidade (>0) = irregular, null = não avaliado.
+        foreach (self::GRAVIDADE_CERTIDAO as $categoria => $gravidade) {
+            $valor = $scores[$categoria] ?? null;
+            if ($valor !== null && $valor > 0) {
+                $aplicar($gravidade['piso']);
+            }
+        }
+
+        return $piso;
     }
 
     /**
@@ -392,7 +463,8 @@ class RiskScoreService
             'cnd_estadual' => 'CND Estadual',
             'fgts' => 'FGTS/CRF',
             'trabalhista' => 'CNDT (Trabalhista)',
-            'compliance' => 'Sanções (CGU/CNJ)',
+            // 'compliance' (Sanções CGU/CNJ) fora: removido de $pesos e do detalhamento
+            // (fonte fora dos planos ativos). score_compliance segue persistido p/ uso futuro.
         ];
     }
 

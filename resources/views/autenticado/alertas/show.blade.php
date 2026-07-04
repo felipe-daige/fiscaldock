@@ -171,10 +171,71 @@
                     @endif
                 </div>
             </div>
+
+            {{-- Como calculamos: transparência auditável (fonte, gatilho, janela, limiar) --}}
+            @if(!empty($guia['metodologia']))
+            <div class="mt-6 pt-5 border-t border-gray-100">
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Como calculamos
+                </h3>
+                <p class="text-sm text-gray-600 leading-relaxed">{{ $guia['metodologia'] }}</p>
+            </div>
+            @endif
             </div>
         </div>
 
-        {{-- Registros Afetados (Interface Melhorada) --}}
+        {{-- Certidão positiva: apresentação dedicada (certidões + exposição de compras) --}}
+        @if($alerta->tipo === 'certidao_positiva')
+        @php
+            $detCert = is_string($alerta->detalhes) ? json_decode($alerta->detalhes, true) : ($alerta->detalhes ?? []);
+            $detCert = is_array($detCert) ? $detCert : [];
+            $sevHex = ['alta' => '#dc2626', 'media' => '#d97706', 'baixa' => '#9ca3af'];
+            $vTotal = (float) ($detCert['valor_total'] ?? 0);
+        @endphp
+        <div class="mt-6 sm:mt-8 bg-white rounded border border-gray-300 overflow-hidden">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <h3 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Certidões positivas encontradas</h3>
+            </div>
+            <div class="p-4 space-y-2">
+                @foreach(($detCert['certidoes'] ?? []) as $cert)
+                    @php $hex = $sevHex[$cert['severidade'] ?? ''] ?? '#9ca3af'; @endphp
+                    <div class="flex items-center justify-between gap-3 border border-gray-100 rounded px-3 py-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: {{ $hex }}"></span>
+                            <span class="text-sm font-medium text-gray-900">{{ $cert['label'] ?? '—' }}</span>
+                        </div>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $hex }}">{{ $cert['status'] ?? 'Positiva' }}</span>
+                    </div>
+                @endforeach
+            </div>
+
+            @if($vTotal > 0)
+            <div class="border-t border-gray-200 px-4 py-3">
+                <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-3">Exposição de compras deste fornecedor</p>
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <p class="text-[10px] text-gray-400 uppercase tracking-wide">Últimos 12 meses</p>
+                        <p class="text-sm font-bold text-gray-900">R$ {{ number_format((float) ($detCert['valor_12m'] ?? 0), 2, ',', '.') }}</p>
+                        <p class="text-[10px] text-gray-400">risco corrente</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-gray-400 uppercase tracking-wide">Últimos 5 anos</p>
+                        <p class="text-sm font-bold" style="color:#b45309;">R$ {{ number_format((float) ($detCert['valor_5anos'] ?? 0), 2, ',', '.') }}</p>
+                        <p class="text-[10px] text-gray-400">sujeito a glosa (decadência)</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-gray-400 uppercase tracking-wide">Total histórico</p>
+                        <p class="text-sm font-bold text-gray-900">R$ {{ number_format($vTotal, 2, ',', '.') }}</p>
+                        <p class="text-[10px] text-gray-400">{{ (int) ($detCert['qtd_notas'] ?? 0) }} nota(s)</p>
+                    </div>
+                </div>
+            </div>
+            @endif
+        </div>
+        @endif
+
+        {{-- Registros Afetados (Interface Melhorada) — genérico, exceto tipos com apresentação dedicada --}}
         @php
             $dados = is_string($alerta->detalhes) ? json_decode($alerta->detalhes, true) : $alerta->detalhes;
             
@@ -369,7 +430,7 @@
             }
         @endphp
 
-        @if(!empty($dados))
+        @if(!empty($dados) && $alerta->tipo !== 'certidao_positiva')
         <div class="mt-6 sm:mt-8 bg-white rounded border border-gray-300 overflow-hidden">
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="flex items-center gap-3">

@@ -41,6 +41,7 @@ function clienteComConsulta(User $user, string $documento, string $razao, ?strin
             'resultado_dados' => ['cnd_federal' => ['status' => $cndStatus]],
             'consultado_em' => now()->subDays($diasAtras),
         ]);
+        app(\App\Services\RiskScoreService::class)->atualizarScore($participante, ['cnd_federal' => ['status' => $cndStatus]]);
     }
 
     return $cliente;

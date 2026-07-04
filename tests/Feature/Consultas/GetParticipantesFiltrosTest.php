@@ -100,6 +100,8 @@ it('filtra por regularidade = irregular', function () {
         'status' => ConsultaResultado::STATUS_SUCESSO,
         'resultado_dados' => ['cnd_federal' => ['status' => 'Negativa']], 'consultado_em' => now(),
     ]);
+    app(\App\Services\RiskScoreService::class)->atualizarScore($irregular, ['cnd_federal' => ['status' => 'Positiva']]);
+    app(\App\Services\RiskScoreService::class)->atualizarScore($regular, ['cnd_federal' => ['status' => 'Negativa']]);
 
     $ids = collect(getParticipantesReq($user, ['regularidade' => 'irregular'])->json('data'))->pluck('id');
     expect($ids)->toContain($irregular->id)->not->toContain($regular->id);
@@ -120,6 +122,7 @@ it('filtra por regularidade = nao_consultado', function () {
         'status' => ConsultaResultado::STATUS_SUCESSO,
         'resultado_dados' => ['cnd_federal' => ['status' => 'Negativa']], 'consultado_em' => now(),
     ]);
+    app(\App\Services\RiskScoreService::class)->atualizarScore($consultado, ['cnd_federal' => ['status' => 'Negativa']]);
 
     $ids = collect(getParticipantesReq($user, ['regularidade' => 'nao_consultado'])->json('data'))->pluck('id');
     expect($ids)->toContain($novo->id)->not->toContain($consultado->id);

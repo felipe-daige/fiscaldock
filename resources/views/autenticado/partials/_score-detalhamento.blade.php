@@ -29,22 +29,32 @@
 
     <div class="space-y-4">
         @foreach($detalhamento as $item)
-            @php $avaliado = $item['avaliado'] ?? false; @endphp
+            @php
+                $avaliado = $item['avaliado'] ?? false;
+                $score = (int) ($item['score'] ?? 0);
+                $regular = $avaliado && $score === 0;
+                // Barra = regularidade (100 − subscore de risco), MESMA fórmula do PDF
+                // (reports/partials/_score-detalhamento): regular (0) enche de verde; irregular
+                // encolhe. Se enchesse pelo risco, o caso bom (0) viraria barra vazia = "sem dado".
+                $largura = 100 - max(0, min(100, $score));
+            @endphp
             <div>
                 <div class="flex items-center justify-between mb-1">
                     <span class="text-sm font-medium text-gray-700">{{ $item['label'] }}</span>
                     <div class="flex items-center gap-2">
                         <span class="text-[11px] text-gray-500 uppercase tracking-wide">Peso: {{ $item['peso_pct'] }}%</span>
-                        @if($avaliado)
+                        @if($regular)
+                            <span class="text-[11px] font-bold uppercase tracking-wide" style="color: {{ $item['hex'] }}">Regular</span>
+                        @elseif($avaliado)
                             <span class="text-sm font-bold font-mono" style="color: {{ $item['hex'] }}">{{ $item['score'] }}</span>
                         @else
                             <span class="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Não avaliado</span>
                         @endif
                     </div>
                 </div>
-                <div class="w-full bg-gray-200 rounded h-2">
+                <div class="w-full rounded h-2 {{ $avaliado ? 'bg-gray-200' : 'bg-gray-100 border border-dashed border-gray-300' }}">
                     @if($avaliado)
-                        <div class="h-2 rounded" style="width: {{ max(0, min(100, (int) $item['score'])) }}%; background-color: {{ $item['hex'] }}"></div>
+                        <div class="h-2 rounded" style="width: {{ $largura }}%; background-color: {{ $item['hex'] }}"></div>
                     @endif
                 </div>
             </div>
