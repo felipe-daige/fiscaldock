@@ -1061,26 +1061,33 @@
 
     // ─── Render: Alert Card ───────────────────────────────────
 
+    // Chip do cliente ao qual o alerta se refere (só quando há cliente vinculado).
+    // Alertas agregados por usuário (notas/importação/nunca_consultado) não têm cliente único.
+    function clienteChip(alerta) {
+        var nome = (alerta.cliente && alerta.cliente.razao_social) || null;
+        if (!alerta.cliente_id || !nome) return '';
+        var icone = '<svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>';
+        return '<a href="/app/cliente/' + alerta.cliente_id + '" data-link onclick="event.stopPropagation()" ' +
+            'class="inline-flex items-center gap-1 max-w-[220px] px-2 py-0.5 rounded text-[11px] font-medium text-gray-600 bg-gray-100 border border-gray-200 hover:bg-gray-200 transition-colors" ' +
+            'title="Cliente: ' + escapeHtml(nome) + '">' +
+            icone + '<span class="truncate">' + escapeHtml(nome) + '</span></a>';
+    }
+
     function renderAlertaCard(alerta) {
         var html = '<div class="px-4 sm:px-5 py-4 border-b border-gray-100 last:border-b-0">';
         html += '<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">';
         html += '<div class="min-w-0">';
-        html += '<div class="flex items-center gap-2 mb-1">';
+        html += '<div class="flex flex-wrap items-center gap-2 mb-1">';
         html += '<input type="checkbox" class="alerta-bulk-check w-4 h-4 flex-shrink-0 accent-gray-700 cursor-pointer" data-id="' + alerta.id + '" onclick="event.stopPropagation()" title="Selecionar">';
         html += severidadeDot(alerta.severidade);
         html += '<span class="text-sm font-medium text-gray-900">' + escapeHtml(formatTipoLabel(alerta.tipo)) + '</span>';
         html += severidadeBadge(alerta.severidade);
+        html += clienteChip(alerta);
         html += '</div>';
         html += '<p class="text-sm text-gray-600">' + escapeHtml(alerta.descricao || '') + '</p>';
 
-        // Links para perfil do cliente e participante
+        // Links para perfil (o cliente já aparece como chip no cabeçalho; aqui só o participante)
         var links = [];
-        var clienteNome = (alerta.cliente && alerta.cliente.razao_social) || null;
-        if (alerta.cliente_id && clienteNome) {
-            links.push('<span class="inline-flex items-center gap-1"><svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>' + profileLink('cliente', alerta.cliente_id, clienteNome) + '</span>');
-        } else if (clienteNome) {
-            links.push('Cliente: ' + escapeHtml(clienteNome));
-        }
         if (alerta.participante_id) {
             var pNome = (alerta.participante && alerta.participante.razao_social) || (alerta.detalhes && alerta.detalhes.razao_social) || 'Ver participante';
             links.push('<span class="inline-flex items-center gap-1"><svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>' + profileLink('participante', alerta.participante_id, pNome) + '</span>');
@@ -1129,7 +1136,7 @@
             html += '<span class="hidden sm:inline">Ignorar</span>';
             html += '</button>';
         }
-        html += '<button class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-400 bg-gray-100 rounded cursor-not-allowed opacity-60" disabled title="Em breve — integracao WhatsApp">';
+        html += '<button class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-400 bg-gray-100 rounded cursor-not-allowed opacity-60" disabled title="Em breve — integração WhatsApp">';
         html += '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>';
         html += '<svg class="w-3 h-3 -ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>';
         html += '</button>';
@@ -1674,6 +1681,9 @@
             gap_temporal: 'Gap Temporal de Importação',
             pis_cofins_incompleto: 'PIS/COFINS Incompleto',
             situacao_irregular: 'Situação Cadastral Irregular',
+            certidao_positiva: 'Certidão Positiva',
+            fornecedor_irregular: 'Fornecedor Irregular',
+            ncm_faltando: 'NCM Faltando',
             consulta_vencida: 'Consulta Vencida',
             nunca_consultado: 'Nunca Consultado'
         };
