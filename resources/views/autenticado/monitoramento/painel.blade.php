@@ -568,7 +568,10 @@
             var assinatura = function (extra) {
                 extra.plano_id = parseInt(document.getElementById('mon-plano').value, 10);
                 extra.frequencia = document.getElementById('mon-frequencia').value;
-                return painelPost('{{ route('app.monitoramento.assinatura.criar') }}', 'POST', extra);
+                return painelPost('{{ route('app.monitoramento.assinatura.criar') }}', 'POST', extra).then(function (j) {
+                    if (j && j.aviso) { alert(j.aviso); }
+                    return j;
+                });
             };
             var associar = function (grupoId) {
                 return painelPost('{{ route('app.participantes.associar-grupo') }}', 'POST', { grupo_id: grupoId, participantes: pIds });

@@ -481,6 +481,11 @@ class MonitoramentoController extends Controller
             ], Response::HTTP_FORBIDDEN);
         }
 
+        // Freio §6.2 v2: alvo cujo ciclo excede o cap não é erro (o freio adia, não pausa),
+        // mas o usuário precisa saber que essas consultas vão esperar o limite subir.
+        $capConsumo = $this->entitlements->consumptionCap($user);
+        $algumaExcedeCap = false;
+
         try {
             DB::beginTransaction();
 
@@ -521,7 +526,7 @@ class MonitoramentoController extends Controller
                 $proximaExecucao = Carbon::now()->addDays($frequenciaDias)->setTime(8, 0, 0);
 
                 // Criar assinatura
-                MonitoramentoAssinatura::create([
+                $nova = MonitoramentoAssinatura::create([
                     'user_id' => $user->id,
                     'participante_id' => $participante->id,
                     'plano_id' => $plano->id,
@@ -529,6 +534,10 @@ class MonitoramentoController extends Controller
                     'status' => 'ativo',
                     'proxima_execucao_em' => $proximaExecucao,
                 ]);
+
+                if ($capConsumo > 0 && $nova->custoCiclo() > $capConsumo) {
+                    $algumaExcedeCap = true;
+                }
 
                 $assinaturasCriadas++;
                 $ativos++;
@@ -554,7 +563,7 @@ class MonitoramentoController extends Controller
 
                 $frequenciaDias = $this->frequenciaParaDias($frequencia);
 
-                MonitoramentoAssinatura::create([
+                $nova = MonitoramentoAssinatura::create([
                     'user_id' => $user->id,
                     'cliente_id' => $cliente->id,
                     'plano_id' => $plano->id,
@@ -562,6 +571,10 @@ class MonitoramentoController extends Controller
                     'status' => 'ativo',
                     'proxima_execucao_em' => Carbon::now()->addDays($frequenciaDias)->setTime(8, 0, 0),
                 ]);
+
+                if ($capConsumo > 0 && $nova->custoCiclo() > $capConsumo) {
+                    $algumaExcedeCap = true;
+                }
 
                 $assinaturasCriadas++;
                 $ativos++;
@@ -580,7 +593,7 @@ class MonitoramentoController extends Controller
                 } else {
                     $frequenciaDias = $this->frequenciaParaDias($frequencia);
 
-                    MonitoramentoAssinatura::create([
+                    $nova = MonitoramentoAssinatura::create([
                         'user_id' => $user->id,
                         'grupo_id' => $grupo->id,
                         'plano_id' => $plano->id,
@@ -588,6 +601,10 @@ class MonitoramentoController extends Controller
                         'status' => 'ativo',
                         'proxima_execucao_em' => Carbon::now()->addDays($frequenciaDias)->setTime(8, 0, 0),
                     ]);
+
+                    if ($capConsumo > 0 && $nova->custoCiclo() > $capConsumo) {
+                        $algumaExcedeCap = true;
+                    }
 
                     $assinaturasCriadas++;
                     $ativos++;
@@ -629,6 +646,11 @@ class MonitoramentoController extends Controller
                 'criadas' => $assinaturasCriadas,
                 'ja_existentes' => $jaExistentes,
                 'bloqueados_limite' => $bloqueadosPorLimite,
+                'aviso' => $algumaExcedeCap
+                    ? 'Atenção: o custo de um ciclo desse monitoramento excede seu limite de consumo automático ('
+                        .\App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($capConsumo))
+                        .'/ciclo). As consultas dele vão aguardar até o limite ser aumentado.'
+                    : null,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();

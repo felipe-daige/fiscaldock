@@ -13,6 +13,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use function Pest\Laravel\actingAs;
 
 uses(RefreshDatabase::class);
 
@@ -197,4 +198,35 @@ it('freioAtuou segue 1x/ciclo mesmo com âncora do ciclo estagnada (>1 mês) ent
     $this->artisan('monitoramento:executar-pendentes')->assertSuccessful();
 
     $spy->shouldHaveReceived('freioAtuou')->once();
+});
+
+it('criar assinatura com custo de ciclo acima do cap retorna aviso (mas cria)', function () {
+    $user = User::factory()->create(['credits' => 100]);
+    freioAssinar($user, ['limite_consumo_automatico' => 5]); // cap 5 < custo 20
+    $p = freioParticipante($user);
+
+    $resp = actingAs($user)->postJson(route('app.monitoramento.assinatura.criar'), [
+        'participante_id' => $p->id,
+        'plano_id' => MonitoramentoPlano::porCodigo('licitacao')->id,
+        'frequencia' => 'mensal',
+    ]);
+
+    $resp->assertOk()->assertJson(['success' => true]);
+    expect($resp->json('aviso'))->not->toBeNull()
+        ->and(MonitoramentoAssinatura::where('user_id', $user->id)->count())->toBe(1);
+});
+
+it('criar assinatura dentro do cap não traz aviso', function () {
+    $user = User::factory()->create(['credits' => 100]);
+    freioAssinar($user, ['limite_consumo_automatico' => 50]);
+    $p = freioParticipante($user);
+
+    $resp = actingAs($user)->postJson(route('app.monitoramento.assinatura.criar'), [
+        'participante_id' => $p->id,
+        'plano_id' => MonitoramentoPlano::porCodigo('licitacao')->id,
+        'frequencia' => 'mensal',
+    ]);
+
+    $resp->assertOk();
+    expect($resp->json('aviso'))->toBeNull();
 });
