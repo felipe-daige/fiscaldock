@@ -8,12 +8,12 @@
                 <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Histórico de Consultas</h1>
                 <p class="text-xs text-gray-500 mt-1">Visualize todas as consultas realizadas.</p>
             </div>
-            <a href="/app/dashboard" data-link
+            <a href="/app/monitoramento/painel" data-link
                class="inline-flex items-center gap-2 px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                 </svg>
-                Voltar
+                Voltar ao painel
             </a>
         </div>
 

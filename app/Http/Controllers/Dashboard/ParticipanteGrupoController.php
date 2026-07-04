@@ -26,6 +26,23 @@ class ParticipanteGrupoController extends Controller
             ->where('user_id', $userId)
             ->firstOrFail();
 
+        // Painel de monitoramento (modal "membros") consome JSON; os demais callers
+        // continuam recebendo o partial HTML paginado.
+        if ($request->wantsJson()) {
+            $membros = $grupo->participantes()
+                ->where('participantes.user_id', $userId)
+                ->orderByRaw("COALESCE(participantes.razao_social, participantes.nome_fantasia, participantes.documento, '') asc")
+                ->get()
+                ->map(fn ($p) => [
+                    'id' => $p->id,
+                    'nome' => $p->razao_social ?? $p->nome_fantasia ?? '—',
+                    'documento' => \App\Support\Cnpj::formatar((string) $p->documento),
+                ])
+                ->values();
+
+            return response()->json(['success' => true, 'participantes' => $membros]);
+        }
+
         $participantes = $grupo->participantes()
             ->where('participantes.user_id', $userId)
             ->withCount('efdNotas')

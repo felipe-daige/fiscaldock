@@ -44,6 +44,29 @@ it('painel não vaza assinaturas de outro usuário', function () {
         ->assertDontSee('Alheio Secreto');
 });
 
+it('grupos/{id}/participantes devolve JSON de membros pro modal do painel', function () {
+    $user = User::factory()->create();
+    $grupo = ParticipanteGrupo::create(['user_id' => $user->id, 'nome' => 'Grupo Membros']);
+    $p = Participante::create(['user_id' => $user->id, 'documento' => '11222333000181', 'razao_social' => 'Membro Um', 'uf' => 'SP']);
+    $grupo->participantes()->attach($p->id);
+
+    // Membro de outro usuário anexado ao grupo não pode vazar.
+    $outro = Participante::create(['user_id' => User::factory()->create()->id, 'documento' => '99888777000166', 'razao_social' => 'Alheio', 'uf' => 'SP']);
+    $grupo->participantes()->attach($outro->id);
+
+    $resp = actingAs($user)->getJson(route('app.monitoramento.grupos.participantes', ['id' => $grupo->id]));
+
+    $resp->assertOk()
+        ->assertJson(['success' => true])
+        ->assertJsonCount(1, 'participantes')
+        ->assertJsonPath('participantes.0.nome', 'Membro Um');
+
+    // Grupo alheio → 404
+    actingAs(User::factory()->create())
+        ->getJson(route('app.monitoramento.grupos.participantes', ['id' => $grupo->id]))
+        ->assertNotFound();
+});
+
 it('/app/monitoramento/grupos redireciona 301 pro painel', function () {
     actingAs(User::factory()->create())
         ->get('/app/monitoramento/grupos')

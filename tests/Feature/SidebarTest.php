@@ -8,18 +8,19 @@ use function Pest\Laravel\actingAs;
 uses(RefreshDatabase::class);
 
 /**
- * Sidebar: garante que a navegação de Monitoramento existe e que os marcadores
- * "Novo" + a ocultação da busca avulsa desabilitada não regridam.
+ * Sidebar: Monitoramento é um item único que leva ao painel (2026-07-04). A antiga
+ * submenu (Painel/Clientes/Histórico) foi consolidada — histórico e trava vivem no painel.
  */
-it('sidebar expõe a navegação de Monitoramento e pílulas Novo', function () {
+it('sidebar expõe Monitoramento como item único apontando pro painel', function () {
     $user = User::factory()->trialAtivo()->create();
 
     $html = actingAs($user)->get('/app/dashboard')->assertOk()->getContent();
 
-    expect($html)->toContain('Monitoramento')
-        ->toContain('/app/monitoramento/clientes')
-        ->toContain('/app/monitoramento/painel')
-        ->toContain('Novo'); // pílula de item recém-lançado
+    expect($html)
+        ->toContain('Monitoramento')
+        ->toContain('href="/app/monitoramento/painel" data-link data-sidebar-link')
+        ->not->toContain('/app/monitoramento/clientes')   // submenu removido
+        ->not->toContain('/app/monitoramento/historico');  // alcançado por botão no painel
 });
 
 it('sidebar leva direto às listagens e mantém o cadastro nos cabeçalhos', function () {

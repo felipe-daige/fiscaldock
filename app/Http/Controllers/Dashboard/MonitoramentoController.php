@@ -150,6 +150,8 @@ class MonitoramentoController extends Controller
                     'frequencia' => $a->frequencia,
                     'status' => $a->status,
                     'custo_ciclo' => $a->custoCiclo(),
+                    // Estimativa mensal: ciclos que cabem em 30 dias × custo do ciclo.
+                    'custo_mes' => (int) round($a->custoCiclo() * 30 / max(1, (int) $a->frequencia_dias)),
                     'ultima' => $ultima ? [
                         'executado_em' => $ultima->executado_em?->format('d/m/Y H:i'),
                         'situacao' => $ultima->situacao_geral,
@@ -187,35 +189,6 @@ class MonitoramentoController extends Controller
         }
 
         return view(self::AUTH_LAYOUT_VIEW, array_merge(['initialView' => $painelView], $data));
-    }
-
-    public function clientes(Request $request)
-    {
-        $clientesView = self::AUTH_VIEW_PREFIX.'clientes';
-
-        if (! view()->exists($clientesView)) {
-            abort(404);
-        }
-
-        if (! Auth::check()) {
-            return $this->redirectToLogin($request);
-        }
-
-        $user = Auth::user();
-
-        $data = [
-            'credits' => $this->creditService->getBalance($user),
-        ];
-
-        if ($this->isAjaxRequest($request)) {
-            $renderedView = view($clientesView, $data)->render();
-
-            return response($renderedView)->header('Content-Type', 'text/html');
-        }
-
-        return view(self::AUTH_LAYOUT_VIEW, array_merge([
-            'initialView' => $clientesView,
-        ], $data));
     }
 
     /**

@@ -192,7 +192,9 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         Route::get('/painel', [MonitoramentoController::class, 'painel'])->name('painel');
 
         Route::get('/historico', [MonitoramentoController::class, 'historico'])->name('historico');
-        Route::get('/clientes', [MonitoramentoController::class, 'clientes'])->name('clientes');
+        // View de "clientes" removida (2026-07-04): a trava de consumo migrou pro painel
+        // e o histórico é alcançado por botão lá. GET antigo redireciona pra não quebrar bookmark.
+        Route::get('/clientes', fn () => redirect()->route('app.monitoramento.painel', [], 301))->name('clientes');
         // SSE para acompanhar resultado de consultas em tempo real
         Route::get('/consulta/stream', [MonitoramentoController::class, 'streamConsultas'])->name('consulta.stream');
         Route::get('/consulta/{id}', [MonitoramentoController::class, 'consultaDetalhes'])->name('consulta');
