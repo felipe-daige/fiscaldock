@@ -61,6 +61,9 @@ return new class extends Migration
                 $table->string('titulo', 255);
                 $table->text('descricao');
                 $table->integer('total_afetados')->default(0);
+                // Materialidade: valor fiscal em risco do alerta (0 quando não monetário).
+                // Permite KPI "R$ em risco" e ordenação por risco sem parsear o jsonb `detalhes`.
+                $table->decimal('valor_risco', 15, 2)->default(0);
                 $table->jsonb('detalhes')->nullable();
                 $table->string('status', 20)->default('ativo');
                 $table->smallInteger('prioridade')->default(0);
@@ -76,6 +79,13 @@ return new class extends Migration
                 $table->index(['user_id', 'severidade']);
                 $table->index('cliente_id');
                 $table->unique(['user_id', 'hash']);
+            });
+        }
+
+        // Coluna de materialidade em bancos onde `alertas` já existia (idempotente).
+        if (Schema::hasTable('alertas') && ! Schema::hasColumn('alertas', 'valor_risco')) {
+            Schema::table('alertas', function (Blueprint $table) {
+                $table->decimal('valor_risco', 15, 2)->default(0);
             });
         }
 

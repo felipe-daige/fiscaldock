@@ -275,6 +275,7 @@ class AlertaCentralService
                 'titulo' => "Fornecedor irregular com {$f->total_notas} nota(s) — R$ {$valorFormatado} em risco",
                 'descricao' => "{$f->razao_social} ({$f->documento}) esta com situacao {$f->situacao_cadastral} e possui {$f->total_notas} nota(s) fiscal(is) vinculadas totalizando R$ {$valorFormatado}.",
                 'total_afetados' => (int) $f->total_notas,
+                'valor_risco' => (float) $f->valor_em_risco,
                 'detalhes' => [
                     'participante_id' => $f->participante_id,
                     'razao_social' => $f->razao_social,
@@ -425,10 +426,33 @@ class AlertaCentralService
             $query->where('cliente_id', $filtros['cliente_id']);
         }
 
+        // Busca textual: título/descrição do alerta + razão social/documento do cliente e do
+        // participante vinculados. Cobre "acha os alertas da BRENCO" numa carteira grande.
+        if (! empty($filtros['busca'])) {
+            $termo = trim((string) $filtros['busca']);
+            $docLimpo = preg_replace('/\D/', '', $termo);
+            $query->where(function ($q) use ($termo, $docLimpo) {
+                $q->where('titulo', 'ilike', "%{$termo}%")
+                    ->orWhere('descricao', 'ilike', "%{$termo}%")
+                    ->orWhereHas('cliente', fn ($c) => $c->where('razao_social', 'ilike', "%{$termo}%"))
+                    ->orWhereHas('participante', function ($p) use ($termo, $docLimpo) {
+                        $p->where('razao_social', 'ilike', "%{$termo}%");
+                        if ($docLimpo !== '') {
+                            $p->orWhere('documento', 'like', "%{$docLimpo}%");
+                        }
+                    });
+            });
+        }
+
         $query->with([
             'participante:id,razao_social,documento',
             'cliente:id,razao_social',
         ]);
+
+        // Ordenação: por materialidade (R$ em risco) quando pedido; senão por prioridade/severidade.
+        if (($filtros['ordem'] ?? null) === 'risco') {
+            $query->orderByDesc('valor_risco');
+        }
 
         $query->orderByDesc('prioridade')
             ->orderByRaw("CASE severidade WHEN 'alta' THEN 3 WHEN 'media' THEN 2 WHEN 'baixa' THEN 1 ELSE 0 END DESC")
@@ -463,6 +487,9 @@ class AlertaCentralService
 
         $totalAtivos = array_sum($porSeveridade);
 
+        // Materialidade: soma do valor fiscal em risco dos alertas ativos (glosa + créditos).
+        $valorRiscoTotal = (float) (clone $base)->sum('valor_risco');
+
         $novosHoje = Alerta::doUsuario($userId)
             ->ativos()
             ->whereDate('created_at', today())
@@ -484,6 +511,7 @@ class AlertaCentralService
                 'importacao' => $porCategoria['importacao'] ?? 0,
             ],
             'novos_hoje' => $novosHoje,
+            'valor_risco_total' => round($valorRiscoTotal, 2),
             'ultima_atualizacao' => $ultimaAtualizacao,
         ];
     }
@@ -979,6 +1007,8 @@ class AlertaCentralService
             'descricao' => $descricao,
             // "afetados" = nº de certidões positivas (não de notas); a exposição em notas vai no detalhe.
             'total_afetados' => $qtdCertidoes,
+            // Materialidade = exposição sujeita a glosa (janela de 5 anos / decadência).
+            'valor_risco' => (float) ($alvo['valor_5anos'] ?? 0),
             'detalhes' => [
                 'tipo_alvo' => $alvo['tipo_alvo'],
                 'razao_social' => $alvo['razao_social'],

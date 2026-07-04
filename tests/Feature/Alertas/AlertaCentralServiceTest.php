@@ -223,6 +223,40 @@ it('obter resumo retorna contagens corretas', function () {
     expect($resumo['por_categoria']['compliance'])->toBe(1);
 });
 
+it('obter resumo soma o valor em risco dos alertas ativos', function () {
+    Alerta::create(['user_id' => $this->user->id, 'tipo' => 'fornecedor_irregular', 'categoria' => 'compliance', 'severidade' => 'alta', 'titulo' => 'A', 'descricao' => 'A', 'status' => 'ativo', 'valor_risco' => 1000.50, 'hash' => hash('sha256', 'vr1')]);
+    Alerta::create(['user_id' => $this->user->id, 'tipo' => 'certidao_positiva', 'categoria' => 'compliance', 'severidade' => 'alta', 'titulo' => 'B', 'descricao' => 'B', 'status' => 'ativo', 'valor_risco' => 2500.00, 'hash' => hash('sha256', 'vr2')]);
+    // Resolvido não conta.
+    Alerta::create(['user_id' => $this->user->id, 'tipo' => 'x', 'categoria' => 'compliance', 'severidade' => 'alta', 'titulo' => 'C', 'descricao' => 'C', 'status' => 'resolvido', 'valor_risco' => 9999.00, 'hash' => hash('sha256', 'vr3')]);
+
+    $resumo = $this->service->obterResumo($this->user->id);
+
+    expect($resumo['valor_risco_total'])->toBe(3500.50);
+});
+
+it('obter alertas ordena por valor em risco quando pedido', function () {
+    Alerta::create(['user_id' => $this->user->id, 'tipo' => 'a', 'categoria' => 'compliance', 'severidade' => 'baixa', 'titulo' => 'Pequeno', 'descricao' => 'A', 'status' => 'ativo', 'valor_risco' => 100, 'hash' => hash('sha256', 'ord1')]);
+    Alerta::create(['user_id' => $this->user->id, 'tipo' => 'b', 'categoria' => 'compliance', 'severidade' => 'baixa', 'titulo' => 'Grande', 'descricao' => 'B', 'status' => 'ativo', 'valor_risco' => 50000, 'hash' => hash('sha256', 'ord2')]);
+
+    $alertas = $this->service->obterAlertas($this->user->id, ['ordem' => 'risco']);
+
+    expect($alertas->items()[0]->titulo)->toBe('Grande'); // maior risco primeiro
+});
+
+it('obter alertas busca por título e por documento do participante', function () {
+    $cliente = \App\Models\Cliente::create(['user_id' => $this->user->id, 'razao_social' => 'CLIENTE X', 'documento' => '00000000000100', 'is_empresa_propria' => true]);
+    $part = \App\Models\Participante::create(['user_id' => $this->user->id, 'cliente_id' => $cliente->id, 'razao_social' => 'BRENCO ENERGIA', 'documento' => '08070566001769']);
+    Alerta::create(['user_id' => $this->user->id, 'tipo' => 'certidao_positiva', 'categoria' => 'compliance', 'severidade' => 'alta', 'titulo' => 'Fornecedor com certidão positiva — BRENCO ENERGIA', 'descricao' => 'x', 'status' => 'ativo', 'participante_id' => $part->id, 'hash' => hash('sha256', 'bus1')]);
+    Alerta::create(['user_id' => $this->user->id, 'tipo' => 'notas_duplicadas', 'categoria' => 'notas_fiscais', 'severidade' => 'media', 'titulo' => 'Notas duplicadas', 'descricao' => 'y', 'status' => 'ativo', 'hash' => hash('sha256', 'bus2')]);
+
+    // por razão social no título
+    expect($this->service->obterAlertas($this->user->id, ['busca' => 'brenco'])->total())->toBe(1);
+    // por documento do participante (com máscara)
+    expect($this->service->obterAlertas($this->user->id, ['busca' => '08.070.566/0017-69'])->total())->toBe(1);
+    // termo que não existe
+    expect($this->service->obterAlertas($this->user->id, ['busca' => 'inexistente'])->total())->toBe(0);
+});
+
 it('obter alertas filtra por severidade', function () {
     Alerta::create(['user_id' => $this->user->id, 'tipo' => 'a', 'categoria' => 'notas_fiscais', 'severidade' => 'alta', 'titulo' => 'A', 'descricao' => 'A', 'status' => 'ativo', 'hash' => hash('sha256', 'alta1')]);
     Alerta::create(['user_id' => $this->user->id, 'tipo' => 'b', 'categoria' => 'notas_fiscais', 'severidade' => 'media', 'titulo' => 'B', 'descricao' => 'B', 'status' => 'ativo', 'hash' => hash('sha256', 'media1')]);

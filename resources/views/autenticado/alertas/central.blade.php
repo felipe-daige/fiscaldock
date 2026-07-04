@@ -58,6 +58,15 @@
                     <span id="kpi-novos-hoje" class="hidden px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151"></span>
                 </div>
             </div>
+            {{-- Materialidade: valor fiscal em risco (o número que o contador leva ao cliente) --}}
+            <div id="kpi-valor-risco-wrapper" class="hidden px-4 sm:px-6 py-3 border-b border-gray-200 flex items-center gap-3" style="background-color:#fef2f2">
+                <svg class="w-5 h-5 flex-shrink-0" style="color:#b91c1c" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div class="min-w-0">
+                    <p class="text-[10px] font-semibold uppercase tracking-wide" style="color:#991b1b">Valor fiscal em risco</p>
+                    <p class="text-xl sm:text-2xl font-bold" style="color:#991b1b" id="kpi-valor-risco">R$ 0,00</p>
+                </div>
+                <p class="text-[11px] text-gray-500 ml-auto hidden sm:block max-w-[280px] text-right">Soma da exposição a glosa de crédito (fornecedores irregulares + certidões positivas), na janela de decadência.</p>
+            </div>
             <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-200">
                 <div id="kpi-total" class="p-4 sm:p-6 cursor-pointer hover:bg-gray-50/50 transition-colors" data-filtro-severidade="">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Total de Alertas</p>
@@ -157,6 +166,24 @@
             </div>
             <div class="p-4 sm:p-5">
             <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-end gap-3">
+                {{-- Busca textual (CNPJ, razão social, cliente, título) --}}
+                <div class="flex-1 min-w-[200px] basis-full sm:basis-auto">
+                    <label for="alerta-filtro-busca" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Buscar</label>
+                    <div class="relative">
+                        <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input id="alerta-filtro-busca" type="text" placeholder="CNPJ, razão social, cliente…" class="w-full pl-9 pr-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                    </div>
+                </div>
+
+                {{-- Ordenação --}}
+                <div class="flex-1 min-w-[130px]">
+                    <label for="alerta-filtro-ordem" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Ordenar por</label>
+                    <select id="alerta-filtro-ordem" class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        <option value="">Severidade</option>
+                        <option value="risco">Valor em risco (R$)</option>
+                    </select>
+                </div>
+
                 {{-- Severidade --}}
                 <div class="flex-1 min-w-[120px]">
                     <label for="alerta-filtro-severidade" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Severidade</label>
@@ -439,7 +466,7 @@
     var resumoData = @json($resumo ?? []);
     var alertasData = null;
     var evolucaoChart = null;
-    var filtros = { severidade: '', cliente_id: '', status: 'ativo' };
+    var filtros = { severidade: '', cliente_id: '', status: 'ativo', busca: '', ordem: '' };
     var tabAtual = 'todos';
     var paginaAtual = 1;
     var isRecalculando = false;
@@ -579,6 +606,19 @@
             atualizacaoEl.textContent = 'Última atualização ' + formatarDataHora(resumo.ultima_atualizacao);
             atualizacaoEl.classList.remove('hidden');
         }
+
+        // Materialidade: só exibe a faixa quando há valor em risco (> 0).
+        var riscoWrap = document.getElementById('kpi-valor-risco-wrapper');
+        var riscoEl = document.getElementById('kpi-valor-risco');
+        var valorRisco = Number(resumo.valor_risco_total || 0);
+        if (riscoWrap && riscoEl) {
+            if (valorRisco > 0) {
+                riscoEl.textContent = formatarMoeda(valorRisco);
+                riscoWrap.classList.remove('hidden');
+            } else {
+                riscoWrap.classList.add('hidden');
+            }
+        }
     }
 
     // ─── Evolution Chart ──────────────────────────────────────
@@ -711,6 +751,8 @@
         if (filtros.severidade) params.append('severidade', filtros.severidade);
         if (filtros.cliente_id) params.append('cliente_id', filtros.cliente_id);
         if (filtros.status) params.append('status', filtros.status);
+        if (filtros.busca) params.append('busca', filtros.busca);
+        if (filtros.ordem) params.append('ordem', filtros.ordem);
         params.append('page', page);
 
         try {
@@ -1905,15 +1947,25 @@
     }
 
     function setupFiltros() {
-        var btnFiltrar = document.getElementById('btn-filtrar-alertas');
-        if (btnFiltrar) {
-            btnFiltrar.addEventListener('click', function() {
-                filtros.severidade = document.getElementById('alerta-filtro-severidade').value;
-                filtros.cliente_id = document.getElementById('alerta-filtro-cliente').value;
-                filtros.status = document.getElementById('alerta-filtro-status').value;
-                loadAlertas(1);
-            });
+        function aplicarFiltros() {
+            filtros.severidade = document.getElementById('alerta-filtro-severidade').value;
+            filtros.cliente_id = document.getElementById('alerta-filtro-cliente').value;
+            filtros.status = document.getElementById('alerta-filtro-status').value;
+            var buscaEl = document.getElementById('alerta-filtro-busca');
+            var ordemEl = document.getElementById('alerta-filtro-ordem');
+            filtros.busca = buscaEl ? buscaEl.value.trim() : '';
+            filtros.ordem = ordemEl ? ordemEl.value : '';
+            loadAlertas(1);
         }
+
+        var btnFiltrar = document.getElementById('btn-filtrar-alertas');
+        if (btnFiltrar) btnFiltrar.addEventListener('click', aplicarFiltros);
+
+        // Busca: Enter aplica na hora; ordenação reaplica ao trocar.
+        var buscaEl = document.getElementById('alerta-filtro-busca');
+        if (buscaEl) buscaEl.addEventListener('keydown', function(e) { if (e.key === 'Enter') aplicarFiltros(); });
+        var ordemEl = document.getElementById('alerta-filtro-ordem');
+        if (ordemEl) ordemEl.addEventListener('change', aplicarFiltros);
     }
 
     function setupTabs() {

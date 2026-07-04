@@ -25,6 +25,7 @@ class Alerta extends Model
         'descricao',
         'detalhes',
         'total_afetados',
+        'valor_risco',
         'prioridade',
         'status',
         'notificado_em',
@@ -39,6 +40,7 @@ class Alerta extends Model
         return [
             'detalhes' => 'array',
             'total_afetados' => 'integer',
+            'valor_risco' => 'decimal:2',
             'prioridade' => 'integer',
             'notificado_em' => 'datetime',
             'visto_em' => 'datetime',
