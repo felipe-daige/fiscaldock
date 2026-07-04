@@ -185,6 +185,40 @@
             </div>
         </div>
 
+        {{-- Histórico deste alerta (auditoria: quem, quando, de→para) --}}
+        @php
+            $auditorias = $alerta->auditorias()->with('user:id,name')->limit(50)->get();
+            $acaoHexDet = [
+                'criado' => '#6b7280', 'resolvido' => '#047857', 'auto_resolvido' => '#059669',
+                'ignorado' => '#9ca3af', 'visto' => '#374151', 'reaberto' => '#d97706', 'reativado' => '#b45309',
+            ];
+        @endphp
+        @if($auditorias->isNotEmpty())
+        <div class="mt-6 sm:mt-8 bg-white rounded border border-gray-300 overflow-hidden">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Histórico deste alerta</span>
+                <a href="/app/alertas/historico" data-link class="text-[11px] text-gray-500 hover:text-gray-800 hover:underline">Ver histórico completo</a>
+            </div>
+            <div class="p-4">
+                @foreach($auditorias as $ev)
+                    @php $hex = $acaoHexDet[$ev->acao] ?? '#6b7280'; @endphp
+                    <div class="flex items-start gap-3 py-2 {{ !$loop->last ? 'border-b border-gray-100' : '' }}">
+                        <span class="mt-1.5 w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: {{ $hex }}"></span>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $hex }}">{{ $ev->acaoLabel() }}</span>
+                                <span class="text-[11px] text-gray-500">por <span class="font-medium text-gray-700">{{ $ev->atorLabel() }}</span> · {{ $ev->created_at?->format('d/m/Y H:i') }}</span>
+                            </div>
+                            @if($ev->notas)
+                                <p class="mt-1 text-[12px] text-gray-600">{{ $ev->notas }}</p>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
         {{-- Certidão positiva: apresentação dedicada (certidões + exposição de compras) --}}
         @if($alerta->tipo === 'certidao_positiva')
         @php

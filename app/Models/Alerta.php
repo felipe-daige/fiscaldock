@@ -2,9 +2,13 @@
 
 namespace App\Models;
 
+use App\Observers\AlertaObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[ObservedBy([AlertaObserver::class])]
 class Alerta extends Model
 {
     protected $table = 'alertas';
@@ -62,6 +66,11 @@ class Alerta extends Model
     public function importacao(): BelongsTo
     {
         return $this->belongsTo(EfdImportacao::class, 'importacao_id');
+    }
+
+    public function auditorias(): HasMany
+    {
+        return $this->hasMany(AlertaAuditoria::class)->orderByDesc('created_at');
     }
 
     // Scopes

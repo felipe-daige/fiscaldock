@@ -136,6 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         '/app/notas': null, // IIFE inline na view, sem init function
         '/app/notas/dashboard': null, // IIFE inline na view
         '/app/alertas': null, // IIFE inline na view
+        '/app/alertas/historico': null, // página estática (filtros via GET form)
         '/app/clearance/dashboard': null, // Clearance dashboard — IIFE inline
         '/app/clearance/notas': 'initClearanceNotas', // Clearance notas — reinicializa via initClearanceNotas no SPA
         '/app/clearance/buscar': 'initClearanceBuscar', // Clearance busca avulsa — reinicializa via initClearanceBuscar no SPA

@@ -1046,6 +1046,60 @@ class DashboardController extends Controller
         ], 'portrait')->download($arquivo);
     }
 
+    /**
+     * Histórico/auditoria de ações sobre alertas (quem, quando, de→para, nota).
+     * Escopado ao usuário (via alertas.user_id). Filtros: ação, cliente, período.
+     */
+    public function alertasHistorico(Request $request)
+    {
+        if (! Auth::check()) {
+            if ($this->isAjaxRequest($request)) {
+                return response()->json(['success' => false, 'redirect' => '/login']);
+            }
+
+            return redirect('/login');
+        }
+
+        $userId = Auth::id();
+
+        $acaoValida = ['criado', 'resolvido', 'ignorado', 'visto', 'reaberto', 'auto_resolvido', 'reativado'];
+        $acao = in_array($request->query('acao'), $acaoValida, true) ? $request->query('acao') : null;
+        $clienteParam = $request->query('cliente_id');
+        $clienteId = ($clienteParam !== null && ctype_digit((string) $clienteParam)) ? (int) $clienteParam : null;
+        $periodo = in_array($request->query('periodo'), ['30', '90', '365'], true) ? (int) $request->query('periodo') : null;
+
+        $query = \App\Models\AlertaAuditoria::query()
+            ->whereHas('alerta', fn ($q) => $q->where('user_id', $userId))
+            ->with(['alerta:id,tipo,titulo,categoria,cliente_id', 'alerta.cliente:id,razao_social'])
+            ->when($acao, fn ($q) => $q->where('acao', $acao))
+            ->when($periodo, fn ($q) => $q->where('created_at', '>=', now()->subDays($periodo)))
+            ->when($clienteId, fn ($q) => $q->whereHas('alerta', fn ($a) => $a->where('cliente_id', $clienteId)))
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
+
+        $eventos = $query->paginate(30)->withQueryString();
+
+        $clientes = Cliente::where('user_id', $userId)
+            ->select('id', 'razao_social')
+            ->orderBy('razao_social')
+            ->get();
+
+        $data = [
+            'eventos' => $eventos,
+            'clientes' => $clientes,
+            'filtroAcao' => $acao,
+            'filtroCliente' => $clienteId,
+            'filtroPeriodo' => $periodo,
+        ];
+        $viewName = self::AUTH_VIEW_PREFIX.'alertas.historico';
+
+        if ($this->isAjaxRequest($request)) {
+            return view($viewName, $data);
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, array_merge(['initialView' => $viewName], $data));
+    }
+
     public function alertaDetalhes(Request $request, int $id)
     {
         if (! Auth::check()) {

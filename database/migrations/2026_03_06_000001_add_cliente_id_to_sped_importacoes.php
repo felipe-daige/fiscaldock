@@ -79,6 +79,26 @@ return new class extends Migration
             });
         }
 
+        // Auditoria de alertas: 1 linha por transição de status (append-only).
+        // user_id null = evento do sistema (auto-resolve/reativação no recalcular).
+        // ator_nome é snapshot (sobrevive à exclusão do usuário). Idempotente.
+        if (! Schema::hasTable('alerta_auditorias')) {
+            Schema::create('alerta_auditorias', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('alerta_id')->constrained('alertas')->cascadeOnDelete();
+                $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+                $table->string('acao', 20);            // criado, resolvido, ignorado, visto, reaberto, auto_resolvido, reativado
+                $table->string('de_status', 20)->nullable();
+                $table->string('para_status', 20)->nullable();
+                $table->string('ator_nome', 120)->nullable(); // snapshot; null/"Sistema" = automático
+                $table->text('notas')->nullable();
+                $table->timestamp('created_at')->nullable();
+
+                $table->index(['alerta_id', 'created_at']);
+                $table->index(['user_id', 'created_at']);
+            });
+        }
+
         // Backstop: duas importações CONCLUÍDAS do mesmo período/cliente/tipo nunca coexistem.
         // NULLS NOT DISTINCT (PG15+) faz cliente_id NULL colidir entre si (uploads sem cliente).
         if (DB::getDriverName() === 'pgsql') {
@@ -101,6 +121,7 @@ return new class extends Migration
                 $table->dropColumn(['cnpj', 'periodo_inicio', 'periodo_fim', 'arquivo_hash']);
             });
         }
+        Schema::dropIfExists('alerta_auditorias');
         Schema::dropIfExists('alertas');
         if (Schema::hasColumn('efd_notas', 'origem_arquivo')) {
             Schema::table('efd_notas', function (Blueprint $table) {

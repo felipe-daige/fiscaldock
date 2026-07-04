@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Alerta;
 use App\Models\Participante;
 use App\Models\ParticipanteScore;
+use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -380,14 +381,19 @@ class AlertaCentralService
             }
         }
 
-        // 4. Auto-resolver alertas que não foram mais detectados
-        $resolvidos = Alerta::where('user_id', $userId)
+        // 4. Auto-resolver alertas que não foram mais detectados. Save por-modelo (não bulk
+        // update) pra o observer registrar a auditoria "auto_resolvido" (Sistema).
+        $aResolver = Alerta::where('user_id', $userId)
             ->where('status', 'ativo')
             ->whereNotIn('hash', $allHashes)
-            ->update([
-                'status' => 'resolvido',
-                'resolvido_em' => now(),
-            ]);
+            ->get();
+
+        foreach ($aResolver as $alerta) {
+            $alerta->status = 'resolvido';
+            $alerta->resolvido_em = now();
+            $alerta->save();
+        }
+        $resolvidos = $aResolver->count();
 
         return [
             'novos' => $novos,
@@ -505,7 +511,10 @@ class AlertaCentralService
             $alerta->notas = $notas;
         }
 
-        $alerta->save();
+        // Auditoria: atribui a transição ao usuário (impersonação bloqueia writes → ator real).
+        AlertaAuditoriaService::comAtor($userId, $this->nomeDoAtor($userId), $notas, function () use ($alerta) {
+            $alerta->save();
+        });
 
         return $alerta;
     }
@@ -522,23 +531,25 @@ class AlertaCentralService
             ->where('user_id', $userId)
             ->get();
 
-        foreach ($alertas as $alerta) {
-            $alerta->status = $status;
+        AlertaAuditoriaService::comAtor($userId, $this->nomeDoAtor($userId), $notas, function () use ($alertas, $status, $notas) {
+            foreach ($alertas as $alerta) {
+                $alerta->status = $status;
 
-            if ($status === 'visto' && $alerta->visto_em === null) {
-                $alerta->visto_em = now();
+                if ($status === 'visto' && $alerta->visto_em === null) {
+                    $alerta->visto_em = now();
+                }
+
+                if ($status === 'resolvido') {
+                    $alerta->resolvido_em = now();
+                }
+
+                if ($notas !== null) {
+                    $alerta->notas = $notas;
+                }
+
+                $alerta->save();
             }
-
-            if ($status === 'resolvido') {
-                $alerta->resolvido_em = now();
-            }
-
-            if ($notas !== null) {
-                $alerta->notas = $notas;
-            }
-
-            $alerta->save();
-        }
+        });
 
         return $alertas->count();
     }
@@ -891,6 +902,12 @@ class AlertaCentralService
             ->pluck('cliente_id');
 
         return $clientes->count() === 1 ? (int) $clientes->first() : null;
+    }
+
+    /** Nome do ator (usuário) para o snapshot da auditoria. */
+    private function nomeDoAtor(int $userId): ?string
+    {
+        return User::whereKey($userId)->value('name');
     }
 
     /** Maior severidade entre duas (baixa < media < alta). */
