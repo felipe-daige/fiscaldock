@@ -215,6 +215,15 @@ return [
     'retry' => [
         'desconto_pct' => (int) env('CONSULTAS_RETRY_DESCONTO_PCT', 50),
 
+        // Auto-retry DENTRO do job: fonte que falha com classe `retry` (transitória, não
+        // cobrada) é retentada ao fim do alvo, após um cooldown contado desde a falha.
+        // `erro_participante`/`fatal` não entram (re-falha determinística / problema de conta).
+        // 0 tentativas desliga. Recuperar a fonte cancela o estorno dela no fechamento.
+        'auto' => [
+            'max_tentativas' => (int) env('CONSULTAS_AUTO_RETRY_TENTATIVAS', 1),
+            'cooldown_segundos' => (int) env('CONSULTAS_AUTO_RETRY_COOLDOWN', 30),
+        ],
+
         // Códigos InfoSimples das classes reconsultáveis (`retry` + `erro_participante`)
         // agrupados em motivos acionáveis (o que o usuário FAZ muda). Usado pela tela do
         // lote p/ orientar a reconsulta.

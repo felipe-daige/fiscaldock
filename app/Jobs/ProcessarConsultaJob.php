@@ -2,6 +2,9 @@
 
 namespace App\Jobs;
 
+use App\Services\Consultas\Contracts\ConsultaProvider;
+use App\Services\Consultas\Contracts\Fonte;
+use App\Services\Consultas\Dto\RespostaProvider;
 use App\Services\Consultas\Dto\ResultadoFonte;
 use App\Services\Consultas\FonteRegistry;
 use App\Services\Consultas\Persistencia\PersistenciaCnpj;
@@ -78,6 +81,7 @@ class ProcessarConsultaJob implements ShouldQueue
 
         $totalFontes = count($fontes);
         $creditosFalhos = 0;
+        $retentaveis = [];
         foreach ($fontes as $i => $fonte) {
             // Progresso por GRUPO de etapa da fonte (várias fontes → mesma etapa; sem loop).
             [$nEtapa, $lEtapa] = $this->etapaParaFonte($fonte->chave());
@@ -121,71 +125,192 @@ class ProcessarConsultaJob implements ShouldQueue
                 continue;
             }
 
-            $throttle->aguardar($fonte->provider());
+            $resultado = $this->consultarFonte($fonte, $alvo, $throttle, $persistencia);
 
-            try {
-                $provider = $this->resolverProvider($fonte->provider());
-                $resp = $provider->consultar($fonte->slugPara($alvo), $fonte->params($alvo));
+            if ($resultado?->ehFalhaEstornavel()) {
+                $creditosFalhos += $resultado->custoCreditos;
+            }
 
-                $dados = $fonte->normalizar($resp->raw, $resp->status);
-
-                // UF e município do cadastro são autoritativos p/ as fontes UF/cidade-dependentes.
-                if ($fonte->chave() === 'cadastro') {
-                    if (! empty($dados['endereco']['uf'])) {
-                        $alvo['uf'] = $dados['endereco']['uf'];
-                    }
-                    if (! empty($dados['endereco']['municipio'])) {
-                        $alvo['municipio'] = $dados['endereco']['municipio'];
-                    }
-
-                    // Regime tributário é da PJ inteira, mas a RFB só publica no CNPJ da
-                    // matriz — filial consultada ficava "Não informado". 1 chamada extra
-                    // (grátis, minhareceita) pra matriz completa o regime; falha aqui não
-                    // derruba o cadastro (fica "Não informado" como antes).
-                    $cnpjAlvo = \App\Support\Cnpj::digitos((string) ($alvo['cnpj'] ?? ''));
-                    if ($fonte instanceof \App\Services\Consultas\Fontes\CadastroFonte
-                        && $resp->status === 'sucesso'
-                        && $fonte->regimeIndefinido($dados)
-                        && \App\Support\Cnpj::ehFilial($cnpjAlvo)) {
-                        try {
-                            $throttle->aguardar($fonte->provider());
-                            $respMatriz = $provider->consultar('', ['cnpj' => \App\Support\Cnpj::matriz($cnpjAlvo)]);
-                            if ($respMatriz->status === 'sucesso') {
-                                $dados = $fonte->aplicarRegimeDaMatriz($dados, $respMatriz->raw);
-                            }
-                        } catch (\Throwable $e) {
-                            report($e);
-                        }
-                    }
-                }
-
-                $resultado = new ResultadoFonte(
-                    $fonte->chave(), $dados,
-                    $resp->status, $fonte->custoCreditos(), $resp->mensagem,
-                );
-                $persistencia->gravar($this->loteId, $this->alvoTipo, $this->alvoId, $resultado);
-
-                if ($resultado->ehFalhaEstornavel()) {
-                    $creditosFalhos += $resultado->custoCreditos;
-                }
-
-                // Fonte pedida que não produziu resultado (retry/fatal/erro_participante → blob
-                // vazio, chave ausente) = falha NA INTEGRAÇÃO. Marca a origem p/ a UI distinguir
-                // de erro interno e de "fora do plano".
-                if (empty($dados) && $resp->status !== 'sucesso') {
-                    $persistencia->marcarErroFonte($this->loteId, $this->alvoTipo, $this->alvoId, $fonte->chave(), 'integracao', $resp->status, $resp->httpCode);
-                }
-            } catch (\Throwable $e) {
-                // Exceção no nosso processamento da fonte = ERRO INTERNO. Não derruba as demais
-                // fontes do alvo (antes uma exceção matava o job inteiro).
-                report($e);
-                $persistencia->marcarErroFonte($this->loteId, $this->alvoTipo, $this->alvoId, $fonte->chave(), 'interno');
+            // Falha transitória (classe `retry`) entra na passada de auto-retry ao fim do alvo.
+            // Cadastro fica fora: as fontes UF-dependentes já rodaram com o alvo sem a mutação,
+            // então retentá-lo tarde demais não corrige nada.
+            if ($resultado?->status === 'retry' && $fonte->chave() !== 'cadastro') {
+                $retentaveis[] = ['fonte' => $fonte, 'falhouEm' => microtime(true)];
             }
         }
+
+        $creditosFalhos = $this->retentarFontes($retentaveis, $alvo, $throttle, $persistencia, $creditosFalhos, $totalFontes, $total);
+
+        // Fecha o progresso DESTE alvo em pctGlobal(total, total). Sem isso a última emissão
+        // parava em (N-1)/N — e num retry escopado a 1 fonte a ÚNICA emissão era 0%, deixando
+        // a barra parada durante a reconsulta inteira. Multi-alvo segue monotônico: o fechamento
+        // do alvo K coincide com o ponto de partida do alvo K+1.
+        [$nFim, $lFim] = $totalFontes > 0
+            ? $this->etapaParaFonte($fontes[$totalFontes - 1]->chave())
+            : [$total, 'Consulta'];
+        $this->progresso(
+            etapa: $nFim, total: $total, label: $lFim, status: 'processando',
+            progresso: $this->pctGlobal($totalFontes, max(1, $totalFontes)),
+            mensagem: $this->prefixoAlvo().'Fontes consultadas ('.$totalFontes.' de '.$totalFontes.')',
+            fonteNome: $totalFontes > 0 ? $this->nomeFonte($fontes[$totalFontes - 1]->chave()) : null,
+            fonteIndice: $totalFontes, fonteTotal: $totalFontes,
+        );
 
         // Estorno preciso: total por participante (overwrite = idempotente em retry do job).
         // Somado por FecharLoteService ao fechar o lote. Ver project_camada_consultas_laravel.
         Cache::put("consulta_estorno:{$this->loteId}:{$this->alvoTipo}:{$this->alvoId}", $creditosFalhos, 86400);
+    }
+
+    /**
+     * Consulta UMA fonte e persiste o desfecho (resultado, marca de erro de integração ou de
+     * erro interno). Retorna null quando a fonte estourou exceção nossa (já marcada como
+     * 'interno'). $alvo é mutável: o cadastro grava UF/município autoritativos nele.
+     */
+    private function consultarFonte(Fonte $fonte, array &$alvo, ThrottleProvider $throttle, PersistenciaCnpj $persistencia): ?ResultadoFonte
+    {
+        try {
+            $provider = $this->resolverProvider($fonte->provider());
+            $resp = $this->consultarProvider($fonte, $alvo, $provider, $throttle);
+
+            $dados = $fonte->normalizar($resp->raw, $resp->status);
+
+            // UF e município do cadastro são autoritativos p/ as fontes UF/cidade-dependentes.
+            if ($fonte->chave() === 'cadastro') {
+                if (! empty($dados['endereco']['uf'])) {
+                    $alvo['uf'] = $dados['endereco']['uf'];
+                }
+                if (! empty($dados['endereco']['municipio'])) {
+                    $alvo['municipio'] = $dados['endereco']['municipio'];
+                }
+
+                // Regime tributário é da PJ inteira, mas a RFB só publica no CNPJ da
+                // matriz — filial consultada ficava "Não informado". 1 chamada extra
+                // (grátis, minhareceita) pra matriz completa o regime; falha aqui não
+                // derruba o cadastro (fica "Não informado" como antes).
+                $cnpjAlvo = \App\Support\Cnpj::digitos((string) ($alvo['cnpj'] ?? ''));
+                if ($fonte instanceof \App\Services\Consultas\Fontes\CadastroFonte
+                    && $resp->status === 'sucesso'
+                    && $fonte->regimeIndefinido($dados)
+                    && \App\Support\Cnpj::ehFilial($cnpjAlvo)) {
+                    try {
+                        $throttle->aguardar($fonte->provider());
+                        $respMatriz = $provider->consultar('', ['cnpj' => \App\Support\Cnpj::matriz($cnpjAlvo)]);
+                        if ($respMatriz->status === 'sucesso') {
+                            $dados = $fonte->aplicarRegimeDaMatriz($dados, $respMatriz->raw);
+                        }
+                    } catch (\Throwable $e) {
+                        report($e);
+                    }
+                }
+            }
+
+            $resultado = new ResultadoFonte(
+                $fonte->chave(), $dados,
+                $resp->status, $fonte->custoCreditos(), $resp->mensagem,
+            );
+            $persistencia->gravar($this->loteId, $this->alvoTipo, $this->alvoId, $resultado);
+
+            // Fonte pedida que não produziu resultado (retry/fatal/erro_participante → blob
+            // vazio, chave ausente) = falha NA INTEGRAÇÃO. Marca a origem p/ a UI distinguir
+            // de erro interno e de "fora do plano".
+            if (empty($dados) && $resp->status !== 'sucesso') {
+                $persistencia->marcarErroFonte($this->loteId, $this->alvoTipo, $this->alvoId, $fonte->chave(), 'integracao', $resp->status, $resp->httpCode);
+            }
+
+            return $resultado;
+        } catch (\Throwable $e) {
+            // Exceção no nosso processamento da fonte = ERRO INTERNO. Não derruba as demais
+            // fontes do alvo (antes uma exceção matava o job inteiro).
+            report($e);
+            $persistencia->marcarErroFonte($this->loteId, $this->alvoTipo, $this->alvoId, $fonte->chave(), 'interno');
+
+            return null;
+        }
+    }
+
+    /**
+     * Chamada ao provedor com DEDUP intra-lote: requisições idênticas (provider+slug+params)
+     * dentro do mesmo lote reutilizam a resposta de SUCESSO já obtida — ex.: CND Federal de N
+     * filiais normaliza pro MESMO CNPJ de matriz (N chamadas pagas viram 1). Só sucesso é
+     * cacheado (falha transitória de um alvo não contamina o outro); lote novo re-consulta.
+     */
+    private function consultarProvider(Fonte $fonte, array $alvo, ConsultaProvider $provider, ThrottleProvider $throttle): RespostaProvider
+    {
+        $slug = $fonte->slugPara($alvo);
+        $params = $fonte->params($alvo);
+        $chaveDedup = "consulta_dedup:{$this->loteId}:".md5($fonte->provider().'|'.$slug.'|'.json_encode($params));
+
+        $hit = Cache::get($chaveDedup);
+        if (is_array($hit)) {
+            return new RespostaProvider($hit['status'], (int) $hit['httpCode'], (array) $hit['raw'], $hit['mensagem'] ?? null);
+        }
+
+        $throttle->aguardar($fonte->provider());
+        $resp = $provider->consultar($slug, $params);
+
+        if ($resp->status === 'sucesso') {
+            Cache::put($chaveDedup, [
+                'status' => $resp->status,
+                'httpCode' => $resp->httpCode,
+                'raw' => $resp->raw,
+                'mensagem' => $resp->mensagem,
+            ], 21600);
+        }
+
+        return $resp;
+    }
+
+    /**
+     * Auto-retry das fontes que falharam com classe `retry` (transitória): re-tenta cada uma
+     * até consultas.retry.auto.max_tentativas vezes, respeitando um cooldown contado desde a
+     * falha (o tempo já gasto nas fontes seguintes abate a espera). Ajusta o estorno: fonte
+     * recuperada deixa de ser estornada; re-falha não conta duas vezes.
+     *
+     * @param  array<int, array{fonte: Fonte, falhouEm: float}>  $retentaveis
+     * @return int créditos falhos ajustados
+     */
+    private function retentarFontes(array $retentaveis, array $alvo, ThrottleProvider $throttle, PersistenciaCnpj $persistencia, int $creditosFalhos, int $totalFontes, int $totalEtapas): int
+    {
+        $maxTentativas = (int) config('consultas.retry.auto.max_tentativas', 1);
+        $cooldown = (int) config('consultas.retry.auto.cooldown_segundos', 30);
+
+        for ($t = 1; $t <= $maxTentativas && $retentaveis; $t++) {
+            $aindaFalhando = [];
+            foreach ($retentaveis as $r) {
+                /** @var Fonte $fonte */
+                $fonte = $r['fonte'];
+
+                $espera = $cooldown - (microtime(true) - $r['falhouEm']);
+                if ($espera > 0) {
+                    usleep((int) ($espera * 1_000_000));
+                }
+
+                [$nEtapa, $lEtapa] = $this->etapaParaFonte($fonte->chave());
+                $nomeFonte = $this->nomeFonte($fonte->chave());
+                // % da última fonte do alvo (o maior já emitido) — mantém a barra monotônica.
+                $this->progresso(
+                    etapa: $nEtapa, total: $totalEtapas, label: $lEtapa, status: 'processando',
+                    progresso: $this->pctGlobal(max(0, $totalFontes - 1), $totalFontes),
+                    mensagem: $this->prefixoAlvo()."Nova tentativa: {$nomeFonte} ({$t} de {$maxTentativas})",
+                    fonteNome: $nomeFonte, fonteIndice: $totalFontes, fonteTotal: $totalFontes,
+                );
+
+                $persistencia->incrementarTentativaFonte($this->loteId, $this->alvoTipo, $this->alvoId, $fonte->chave());
+                $resultado = $this->consultarFonte($fonte, $alvo, $throttle, $persistencia);
+
+                if ($resultado?->status === 'retry') {
+                    $aindaFalhando[] = ['fonte' => $fonte, 'falhouEm' => microtime(true)];
+                } elseif ($resultado !== null && ! $resultado->ehFalhaEstornavel()) {
+                    // Recuperou (sucesso/nao_encontrado/indeterminado/erro_participante): o dado
+                    // foi entregue/cobrado — cancela o estorno contado na 1ª falha.
+                    $creditosFalhos = max(0, $creditosFalhos - $resultado->custoCreditos);
+                }
+                // retry→fatal mantém o estorno já contado; retry→exceção interna (null) idem.
+            }
+            $retentaveis = $aindaFalhando;
+        }
+
+        return $creditosFalhos;
     }
 
     private function resolverProvider(string $nome)

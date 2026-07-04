@@ -211,7 +211,8 @@ class RetryConsultaService
 
             $jobs = [];
             $alvosFontes = [];
-            foreach ($pend['alvos'] as $alvo) {
+            $totalAlvos = count($pend['alvos']);
+            foreach (array_values($pend['alvos']) as $i => $alvo) {
                 $tipo = $alvo['alvo_tipo'];
                 $id = (int) $alvo['alvo_id'];
                 $fontes = $fontesPorAlvo[$tipo.':'.$id] ?? [];
@@ -221,7 +222,9 @@ class RetryConsultaService
                 }
                 // Envelope de cobrança per-alvo = preço do plano (escalar), p/ estorno integral se zero-sucesso.
                 Cache::put("consulta_retry_charge:{$lote->id}:{$tipo}:{$id}", (int) $alvo['preco_creditos'], 86400);
-                $jobs[] = $this->montarJob($lote, $tipo, $id, $fontes);
+                // Índice/total REAIS: com 1/1 hardcodado, o 2º CNPJ repostava 0% depois do 100%
+                // do 1º (a barra da UI não tem clamp anti-retrocesso).
+                $jobs[] = $this->montarJob($lote, $tipo, $id, $fontes, $i + 1, $totalAlvos);
             }
 
             // `finally` (não `then`): roda no sucesso E na falha → o lote nunca fica preso em
@@ -248,7 +251,7 @@ class RetryConsultaService
         return ['creditos' => $custoTotal];
     }
 
-    private function montarJob(ConsultaLote $lote, string $tipo, int $id, array $fontes): ProcessarConsultaJob
+    private function montarJob(ConsultaLote $lote, string $tipo, int $id, array $fontes, int $alvoIndice = 1, int $totalAlvos = 1): ProcessarConsultaJob
     {
         return new ProcessarConsultaJob(
             loteId: $lote->id,
@@ -259,8 +262,8 @@ class RetryConsultaService
             consultasIncluidas: $lote->plano->resolvedConsultasIncluidas(),
             alvo: $this->resolverAlvo($tipo, $id),
             etapas: $lote->plano->resolvedEtapas(),
-            alvoIndice: 1,
-            totalAlvos: 1,
+            alvoIndice: $alvoIndice,
+            totalAlvos: $totalAlvos,
             somenteFontes: $fontes,
         );
     }

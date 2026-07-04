@@ -266,6 +266,7 @@ it('marca a fonte como falha na INTEGRAÇÃO quando o provedor não retorna resu
     [$loteId, $participanteId, $userId] = montarLoteParticipante();
     config()->set('consultas.infosimples_ativo', true);
     config()->set('consultas.providers.infosimples.token', 'tok');
+    config()->set('consultas.retry.auto.max_tentativas', 0); // isola a marca (sem auto-retry)
 
     // code 609 = retry → normalizar devolve [] → chave ausente; marca origem 'integracao'
     Http::fake(['api.infosimples.com/*' => Http::response(['code' => 609, 'code_message' => 'temporário'], 200)]);
@@ -281,6 +282,104 @@ it('marca a fonte como falha na INTEGRAÇÃO quando o provedor não retorna resu
     expect($r->resultado_dados['_fontes_erro']['cnd_federal'])->toMatchArray([
         'origem' => 'integracao', 'status' => 'retry', 'codigo' => 609, 'tentativas' => 0,
     ]);
+});
+
+it('auto-retry recupera fonte transitória (609→200): blob persistido, marca limpa e sem estorno', function () {
+    [$loteId, $participanteId, $userId] = montarLoteParticipante();
+    config()->set('consultas.infosimples_ativo', true);
+    config()->set('consultas.providers.infosimples.token', 'tok');
+    config()->set('consultas.retry.auto.cooldown_segundos', 0);
+
+    Http::fake(['api.infosimples.com/*' => Http::sequence()
+        ->push(['code' => 609, 'code_message' => 'temporário'], 200)
+        ->push(['code' => 200, 'data' => [['tipo' => 'Negativa']]], 200)]);
+
+    ProcessarConsultaJob::dispatchSync(
+        loteId: $loteId, alvoTipo: 'participante', alvoId: $participanteId, userId: $userId, tabId: 'tab-test',
+        consultasIncluidas: ['cnd_federal'], alvo: ['cnpj' => '19131243000197'],
+        etapas: ['Preparando', 'Federais'],
+    );
+
+    Http::assertSentCount(2);
+    $r = ConsultaResultado::where('consulta_lote_id', $loteId)->first();
+    expect($r->resultado_dados['cnd_federal']['status'])->toBe('Negativa');
+    expect($r->resultado_dados['_fontes_erro'] ?? null)->toBeNull(); // sucesso limpou a marca
+    // fonte entregue → nada a estornar
+    expect((int) Cache::get("consulta_estorno:{$loteId}:participante:{$participanteId}"))->toBe(0);
+});
+
+it('auto-retry re-falha (609→609): 1 marca com tentativas=1 e estorno contado UMA vez', function () {
+    [$loteId, $participanteId, $userId] = montarLoteParticipante();
+    config()->set('consultas.infosimples_ativo', true);
+    config()->set('consultas.providers.infosimples.token', 'tok');
+    config()->set('consultas.retry.auto.cooldown_segundos', 0);
+
+    Http::fake(['api.infosimples.com/*' => Http::response(['code' => 609, 'code_message' => 'temporário'], 200)]);
+
+    ProcessarConsultaJob::dispatchSync(
+        loteId: $loteId, alvoTipo: 'participante', alvoId: $participanteId, userId: $userId, tabId: 'tab-test',
+        consultasIncluidas: ['cnd_federal'], alvo: ['cnpj' => '19131243000197'],
+        etapas: ['Preparando', 'Federais'],
+    );
+
+    Http::assertSentCount(2); // original + 1 auto-retry (max_tentativas default 1)
+    $r = ConsultaResultado::where('consulta_lote_id', $loteId)->first();
+    expect($r->resultado_dados['_fontes_erro']['cnd_federal'])->toMatchArray([
+        'origem' => 'integracao', 'status' => 'retry', 'codigo' => 609, 'tentativas' => 1,
+    ]);
+    expect((int) Cache::get("consulta_estorno:{$loteId}:participante:{$participanteId}"))
+        ->toBe((int) config('consultas.fontes.cnd_federal', 2)); // não conta 2×
+});
+
+it('auto-retry NÃO retenta erro_participante (620, cobrado e determinístico)', function () {
+    [$loteId, $participanteId, $userId] = montarLoteParticipante();
+    config()->set('consultas.infosimples_ativo', true);
+    config()->set('consultas.providers.infosimples.token', 'tok');
+    config()->set('consultas.retry.auto.cooldown_segundos', 0);
+
+    Http::fake(['api.infosimples.com/*' => Http::response(['code' => 620, 'code_message' => 'dados do CNPJ recusados'], 200)]);
+
+    ProcessarConsultaJob::dispatchSync(
+        loteId: $loteId, alvoTipo: 'participante', alvoId: $participanteId, userId: $userId, tabId: 'tab-test',
+        consultasIncluidas: ['cnd_federal'], alvo: ['cnpj' => '19131243000197'],
+        etapas: ['Preparando', 'Federais'],
+    );
+
+    Http::assertSentCount(1); // sem re-tentativa
+    $r = ConsultaResultado::where('consulta_lote_id', $loteId)->first();
+    expect($r->resultado_dados['_fontes_erro']['cnd_federal']['tentativas'])->toBe(0);
+    // erro_participante não é estornável (a InfoSimples cobra a chamada)
+    expect((int) Cache::get("consulta_estorno:{$loteId}:participante:{$participanteId}"))->toBe(0);
+});
+
+it('dedup intra-lote: chamada idêntica (CND Federal de 2 filiais da mesma matriz) sai 1× do provedor', function () {
+    [$loteId, $participanteId, $userId] = montarLoteParticipante();
+    $participante2Id = \Illuminate\Support\Facades\DB::table('participantes')->insertGetId([
+        'user_id' => $userId, 'documento' => '19131243000278', 'razao_social' => 'FILIAL 2',
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    config()->set('consultas.infosimples_ativo', true);
+    config()->set('consultas.providers.infosimples.token', 'tok');
+
+    Http::fake(['api.infosimples.com/*' => Http::response(['code' => 200, 'data' => [['tipo' => 'Negativa']]], 200)]);
+
+    // Duas filiais da MESMA raiz: a fonte normaliza ambas pro CNPJ da matriz → params idênticos.
+    ProcessarConsultaJob::dispatchSync(
+        loteId: $loteId, alvoTipo: 'participante', alvoId: $participanteId, userId: $userId, tabId: 'tab-test',
+        consultasIncluidas: ['cnd_federal'], alvo: ['cnpj' => '19131243000278'],
+        etapas: ['Preparando', 'Federais'], alvoIndice: 1, totalAlvos: 2,
+    );
+    ProcessarConsultaJob::dispatchSync(
+        loteId: $loteId, alvoTipo: 'participante', alvoId: $participante2Id, userId: $userId, tabId: 'tab-test',
+        consultasIncluidas: ['cnd_federal'], alvo: ['cnpj' => '19131243000359'],
+        etapas: ['Preparando', 'Federais'], alvoIndice: 2, totalAlvos: 2,
+    );
+
+    Http::assertSentCount(1); // 2ª filial reutilizou a resposta cacheada do lote
+    $r1 = ConsultaResultado::where('consulta_lote_id', $loteId)->where('participante_id', $participanteId)->firstOrFail();
+    $r2 = ConsultaResultado::where('consulta_lote_id', $loteId)->where('participante_id', $participante2Id)->firstOrFail();
+    expect($r1->resultado_dados['cnd_federal']['status'])->toBe('Negativa');
+    expect($r2->resultado_dados['cnd_federal']['status'])->toBe('Negativa');
 });
 
 it('marcarErroFonte registra a origem e o sucesso posterior limpa a marca', function () {
@@ -300,4 +399,55 @@ it('marcarErroFonte registra a origem e o sucesso posterior limpa a marca', func
     $r->refresh();
     expect($r->resultado_dados['_fontes_erro'] ?? null)->toBeNull();
     expect($r->resultado_dados['cnd_federal']['status'])->toBe('Negativa');
+});
+
+it('retry de 1 fonte: progresso termina em 100 (barra não fica presa em 0)', function () {
+    [$loteId, $participanteId, $userId] = montarLoteParticipante();
+    config()->set('consultas.infosimples_ativo', true);
+    config()->set('consultas.providers.infosimples.token', 'tok');
+
+    Http::fake(['api.infosimples.com/*' => Http::response(['code' => 200, 'data' => [['tipo' => 'Negativa']]], 200)]);
+
+    // Cenário da reconsulta: somenteFontes com UMA fonte. Antes do fix, a única emissão de
+    // progresso era pctGlobal(0,1)=0 — a barra ficava em 0% durante toda a reconsulta.
+    ProcessarConsultaJob::dispatchSync(
+        loteId: $loteId, alvoTipo: 'participante', alvoId: $participanteId, userId: $userId, tabId: 'tab-retry',
+        consultasIncluidas: ['situacao_cadastral', 'cnd_federal'], alvo: ['cnpj' => '19131243000197'],
+        etapas: ['Preparando consulta', 'Certidões Federais'],
+        somenteFontes: ['cnd_federal'],
+    );
+
+    $cache = Cache::get("progresso:{$userId}:tab-retry");
+    expect($cache)->not->toBeNull();
+    expect((int) $cache['progresso'])->toBe(100);
+});
+
+it('progresso avança após cada fonte e é monotônico (consulta cheia)', function () {
+    [$loteId, $participanteId, $userId] = montarLoteParticipante();
+    config()->set('consultas.infosimples_ativo', true);
+    config()->set('consultas.providers.infosimples.token', 'tok');
+
+    Http::fake([
+        'minhareceita.org/*' => Http::response(['razao_social' => 'X', 'descricao_situacao_cadastral' => 'ATIVA', 'situacao_cadastral' => 2, 'uf' => 'SP', 'qsa' => [], 'cnaes_secundarios' => []], 200),
+        'api.infosimples.com/*' => Http::response(['code' => 200, 'data' => [['tipo' => 'Negativa']]], 200),
+    ]);
+
+    $valores = [];
+    Event::listen(KeyWritten::class, function (KeyWritten $e) use (&$valores, $userId) {
+        if ($e->key === "progresso:{$userId}:tab-mono" && isset($e->value['progresso'])) {
+            $valores[] = (int) $e->value['progresso'];
+        }
+    });
+
+    ProcessarConsultaJob::dispatchSync(
+        loteId: $loteId, alvoTipo: 'participante', alvoId: $participanteId, userId: $userId, tabId: 'tab-mono',
+        consultasIncluidas: ['situacao_cadastral', 'cnd_federal'], alvo: ['cnpj' => '19131243000197'],
+        etapas: ['Preparando consulta', 'Cadastrais', 'Certidões Federais'],
+    );
+
+    expect($valores)->not->toBeEmpty();
+    expect(end($valores))->toBe(100);
+    $ordenado = $valores;
+    sort($ordenado);
+    expect($valores)->toBe($ordenado); // nunca retrocede (UI não tem clamp)
 });
