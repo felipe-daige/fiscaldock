@@ -115,3 +115,22 @@ it('sidebar traz os elementos de scroll fade no nav', function () {
         ->toContain('sidebar__nav-fade--top')
         ->toContain('sidebar__nav-fade--bottom');
 });
+
+it('sidebar funde Clearance como grupo dentro de INTELIGÊNCIA', function () {
+    $user = User::factory()->trialAtivo()->create();
+
+    $html = actingAs($user)->get('/app/dashboard')->assertOk()->getContent();
+
+    expect($html)
+        // seção própria morreu
+        ->not->toContain('<div class="sidebar__section-title">CLEARANCE NF-e</div>')
+        // virou grupo expansível (título do grupo)
+        ->toContain('Clearance NF-e')
+        // destinos agora são group-items
+        ->toContain('href="/app/clearance/dashboard"')
+        ->toContain('href="/app/clearance/notas"');
+
+    // /app/clearance/dashboard aparece como group-item, não como item de seção
+    $trecho = substr($html, strpos($html, 'href="/app/clearance/dashboard"') - 200, 400);
+    expect($trecho)->toContain('data-sidebar-group-item');
+});
