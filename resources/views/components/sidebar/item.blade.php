@@ -2,9 +2,10 @@
 
 @php
     $pillVisivel = $pill && (! $pillUntil || now()->lte(\Illuminate\Support\Carbon::parse($pillUntil)->endOfDay()));
+    $rotulo = trim(strip_tags($slot));
 @endphp
 
-<a href="{{ $href }}" data-link data-sidebar-link {{ $attributes->merge(['class' => 'sidebar__item']) }}>
+<a href="{{ $href }}" data-link data-sidebar-link title="{{ $rotulo }}" {{ $attributes->merge(['class' => 'sidebar__item']) }}>
     @if($icon)
         {{ $icon }}
     @endif
