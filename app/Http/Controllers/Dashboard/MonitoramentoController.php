@@ -133,7 +133,10 @@ class MonitoramentoController extends Controller
 
         $user = Auth::user();
 
+        // Cap e consumo do ciclo calculados 1x fora do map — monitoramentoCapEstourado
+        // re-consultaria subscription + SUM(credit_transactions) por assinatura (N+1).
         $capConsumo = $this->entitlements->consumptionCap($user);
+        $consumoCiclo = $this->entitlements->consumoMonitoramentoNoCiclo($user);
         $fimCiclo = $this->entitlements->fimCicloMonitoramento($user);
 
         $assinaturas = MonitoramentoAssinatura::with(['participante', 'cliente', 'grupo.participantes', 'plano'])
@@ -141,7 +144,7 @@ class MonitoramentoController extends Controller
             ->whereIn('status', ['ativo', 'pausado'])
             ->orderByDesc('created_at')
             ->get()
-            ->map(function (MonitoramentoAssinatura $a) use ($fimCiclo, $user) {
+            ->map(function (MonitoramentoAssinatura $a) use ($fimCiclo, $capConsumo, $consumoCiclo) {
                 $ultima = $a->consultas()->whereNotNull('executado_em')->orderByDesc('executado_em')->first();
 
                 return [
@@ -157,7 +160,8 @@ class MonitoramentoController extends Controller
                     // Derivado, zero coluna: ativa + vencida + freio seguraria o disparo agora.
                     'aguardando_ciclo' => $a->status === 'ativo'
                         && $a->proxima_execucao_em?->isPast()
-                        && $this->entitlements->monitoramentoCapEstourado($user, $a->custoCiclo()),
+                        && $capConsumo > 0
+                        && ($consumoCiclo + max(0, $a->custoCiclo())) > $capConsumo,
                     // Vai disparar (e gastar) dentro do ciclo de consumo corrente? Alimenta a projeção.
                     'vence_no_ciclo' => $a->status === 'ativo'
                         && $a->proxima_execucao_em !== null
