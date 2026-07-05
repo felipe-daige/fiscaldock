@@ -353,24 +353,4 @@ class ParticipanteGrupoController extends Controller
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
-    /**
-     * Redireciona para login.
-     */
-    private function redirectToLogin(Request $request)
-    {
-        if ($this->isAjaxRequest($request)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Você não está logado',
-                'redirect' => '/login',
-            ]);
-        }
-
-        return redirect('/login');
-    }
-
-    /**
-     * Verifica se a requisição é AJAX.
-     */
 }

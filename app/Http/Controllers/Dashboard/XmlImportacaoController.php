@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Concerns\RespondeAjax;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
-use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\XmlImportacao;
 use App\Models\XmlNota;
@@ -586,56 +585,6 @@ class XmlImportacaoController extends Controller
         }
 
         return XmlNota::where('user_id', $userId)->where('chave_acesso', $chave)->first();
-    }
-
-    /**
-     * Conta XMLs dentro de um arquivo ZIP.
-     *
-     * Exclui arquivos na pasta __MACOSX (resource forks do Mac).
-     * Usa fallback com comando unzip se ZipArchive falhar.
-     * Retorna -1 se não conseguir contar (n8n fará a contagem).
-     *
-     * @param  string  $zipPath  Caminho para o arquivo ZIP
-     * @return int Quantidade de XMLs encontrados, ou -1 se indisponível
-     */
-    private function contarXmlsNoZip(string $zipPath): int
-    {
-        $zip = new ZipArchive;
-        $result = $zip->open($zipPath);
-
-        if ($result !== true) {
-            // Tentar fallback com unzip
-            $fallback = $this->validarZipComUnzip($zipPath);
-            if ($fallback['success']) {
-                return $fallback['total_xmls'] ?? 0;
-            }
-
-            // Verificar magic bytes como último recurso
-            $content = @file_get_contents($zipPath, false, null, 0, 4);
-            if ($content && $this->isValidZipMagicBytes($content)) {
-                Log::info('contarXmlsNoZip: ZIP aceito via magic bytes, contagem será feita pelo n8n', [
-                    'zipPath' => $zipPath,
-                ]);
-
-                return -1; // -1 indica que n8n fará a contagem
-            }
-
-            return 0;
-        }
-
-        $count = 0;
-        for ($i = 0; $i < $zip->numFiles; $i++) {
-            $name = $zip->getNameIndex($i);
-            if ($name &&
-                str_ends_with(strtolower($name), '.xml') &&
-                ! str_starts_with($name, '__MACOSX/')) {
-                $count++;
-            }
-        }
-
-        $zip->close();
-
-        return $count;
     }
 
     /**

@@ -720,7 +720,7 @@ class DataReceiverController extends Controller
 
         // Enriquecer dados com informações do cliente se fornecido
         if (! empty($validated['cliente_id'])) {
-            $cliente = \App\Models\Cliente::find($validated['cliente_id']);
+            $cliente = Cliente::find($validated['cliente_id']);
             if ($cliente) {
                 $dados = $cacheData['dados'];
                 if (is_array($dados)) {
