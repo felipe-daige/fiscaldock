@@ -72,6 +72,7 @@
             'contactLabel' => config('support.contact_label'),
         ]);
     </script>
+    <script>window.paletteRegistry = @json(\App\Support\PaletteRegistry::build(auth()->user()));</script>
     <script src="{{ asset('js/error-inline.js') }}?v={{ filemtime(public_path('js/error-inline.js')) }}"></script>
     <script src="{{ asset('js/nota-catalogo.js') }}?v={{ filemtime(public_path('js/nota-catalogo.js')) }}"></script>
 </body>
