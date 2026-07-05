@@ -58,19 +58,23 @@ class AlertaCentralService
 
     /**
      * Alertas ativos do usuário agrupados por classe (na ordem de `CLASSES`),
-     * opcionalmente restritos a um conjunto de IDs. Só inclui classes com ≥1 alerta.
-     * Reusado pelo modal de exportação e pela geração do PDF.
+     * opcionalmente restritos a um conjunto de IDs e/ou a um cliente. Só inclui
+     * classes com ≥1 alerta. Reusado pela geração do PDF (escopo por cliente).
      *
      * @param  int[]|null  $ids
      * @return array<int, array{key: string, label: string, cor: string, alertas: Collection<int, Alerta>}>
      */
-    public function alertasAtivosAgrupados(int $userId, ?array $ids = null): array
+    public function alertasAtivosAgrupados(int $userId, ?array $ids = null, ?int $clienteId = null): array
     {
         $query = Alerta::doUsuario($userId)->ativos()
             ->with(['participante:id,razao_social,documento', 'cliente:id,razao_social']);
 
         if ($ids !== null) {
             $query->whereIn('id', $ids);
+        }
+
+        if ($clienteId !== null) {
+            $query->where('cliente_id', $clienteId);
         }
 
         $alertas = $query

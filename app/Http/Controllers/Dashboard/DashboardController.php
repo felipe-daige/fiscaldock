@@ -988,37 +988,8 @@ class DashboardController extends Controller
     }
 
     /**
-     * Opções para o modal de exportação: alertas ativos agrupados por classe.
-     * Payload enxuto (só o necessário pra montar os checkboxes).
-     */
-    public function alertasExportarOpcoes(Request $request)
-    {
-        if (! Auth::check()) {
-            return response()->json(['success' => false, 'redirect' => '/login']);
-        }
-
-        $grupos = $this->alertaCentralService->alertasAtivosAgrupados(Auth::id());
-
-        $classes = array_map(function (array $grupo) {
-            return [
-                'key' => $grupo['key'],
-                'label' => $grupo['label'],
-                'cor' => $grupo['cor'],
-                'alertas' => $grupo['alertas']->map(fn (Alerta $a) => [
-                    'id' => $a->id,
-                    'titulo' => $a->titulo,
-                    'severidade' => $a->severidade,
-                    'cliente' => $a->cliente?->razao_social ?? $a->participante?->razao_social,
-                ])->all(),
-            ];
-        }, $grupos);
-
-        return response()->json(['classes' => $classes]);
-    }
-
-    /**
-     * Gera o PDF da Central de Alertas com os alertas selecionados no modal.
-     * Recebe `ids[]` (subconjunto dos ativos); sem `ids`, exporta todos os ativos.
+     * Gera o PDF da Central de Alertas (padrão de export do design system:
+     * download nativo via <x-download-button>). Escopo por cliente opcional (`cliente_id`).
      */
     public function alertasExportarPdf(Request $request)
     {
@@ -1026,13 +997,10 @@ class DashboardController extends Controller
             return redirect('/login');
         }
 
-        $validado = $request->validate([
-            'ids' => ['sometimes', 'array'],
-            'ids.*' => ['integer'],
-        ]);
+        $clienteParam = $request->query('cliente_id');
+        $clienteId = ($clienteParam !== null && ctype_digit((string) $clienteParam)) ? (int) $clienteParam : null;
 
-        $ids = $validado['ids'] ?? null;
-        $grupos = $this->alertaCentralService->alertasAtivosAgrupados(Auth::id(), $ids);
+        $grupos = $this->alertaCentralService->alertasAtivosAgrupados(Auth::id(), null, $clienteId);
 
         $total = array_sum(array_map(fn ($g) => $g['alertas']->count(), $grupos));
 
@@ -1046,13 +1014,31 @@ class DashboardController extends Controller
 
         $arquivo = 'alertas-'.now()->format('Y-m-d').'.pdf';
 
-        return \App\Support\PdfReport::render('reports.alertas', [
+        $pdf = \App\Support\PdfReport::render('reports.alertas', [
             'grupos' => $grupos,
             'total' => $total,
             'valorRiscoTotal' => round($valorRiscoTotal, 2),
             'geradoEm' => now(),
             'hashDoc' => \App\Support\PdfReport::hashDocumento(Auth::id(), 'alertas', $total),
-        ], 'portrait')->download($arquivo);
+        ], 'portrait');
+
+        // Cookie de download p/ o spinner do <x-download-button> saber que o arquivo chegou.
+        return $this->comTokenDownload($pdf->download($arquivo), $request);
+    }
+
+    /**
+     * Anexa o cookie `bi_download=<token>` à resposta de download quando o request traz
+     * `download_token` — o spinner do <x-download-button> faz poll da PRESENÇA do cookie
+     * pra saber que o arquivo chegou (mesmo mecanismo do BI). httpOnly=false: o JS lê.
+     */
+    private function comTokenDownload($response, Request $request)
+    {
+        $token = $request->get('download_token');
+        if ($token) {
+            $response->headers->setCookie(cookie('bi_download', (string) $token, 1, '/', null, null, false));
+        }
+
+        return $response;
     }
 
     /**

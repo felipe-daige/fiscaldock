@@ -30,7 +30,7 @@
                         </svg>
                         Histórico
                     </a>
-                    <button id="btn-exportar-alertas" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 rounded text-sm font-medium transition-colors">
+                    <button type="button" id="btn-exportar-alertas" onclick="document.getElementById('modal-export-alertas-pdf').classList.remove('hidden')" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 rounded text-sm font-medium transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-2-2m2 2l2-2m4 4H6a2 2 0 01-2-2V6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v10a2 2 0 01-2 2z"/>
                         </svg>
@@ -263,199 +263,26 @@
     </div>
 </div>
 
-{{-- Modal de exportação de alertas em PDF --}}
-<div id="modal-exportar-alertas" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-exportar-titulo" role="dialog" aria-modal="true">
-    <div class="flex min-h-screen items-end sm:items-center justify-center p-0 sm:p-4">
-        <div id="modal-exportar-backdrop" class="fixed inset-0 bg-gray-900/50 transition-opacity"></div>
-        <div class="relative bg-white rounded-t-lg sm:rounded-lg shadow-xl w-full sm:max-w-lg max-h-[85vh] flex flex-col">
-            {{-- Header --}}
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-                <div>
-                    <h3 id="modal-exportar-titulo" class="text-sm font-bold text-gray-900 uppercase tracking-wide">Exportar Alertas em PDF</h3>
-                    <p class="text-[11px] text-gray-500 mt-0.5">Selecione as classes e os alertas a incluir no relatório.</p>
-                </div>
-                <button id="modal-exportar-fechar" class="text-gray-400 hover:text-gray-700 p-1">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            {{-- Body --}}
-            <div id="modal-exportar-body" class="flex-1 overflow-y-auto px-5 py-4">
-                <div id="modal-exportar-loading" class="flex items-center justify-center py-10 text-gray-400 text-sm">
-                    <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                    </svg>
-                    Carregando alertas...
-                </div>
-                <div id="modal-exportar-classes" class="space-y-3 hidden"></div>
-                <div id="modal-exportar-vazio" class="hidden py-10 text-center text-sm text-gray-500">Nenhum alerta ativo para exportar.</div>
-            </div>
-            {{-- Footer --}}
-            <div class="flex items-center justify-between gap-3 px-5 py-4 border-t border-gray-200">
-                <span id="modal-exportar-contador" class="text-xs text-gray-500"><span class="font-semibold">0</span> selecionado(s)</span>
-                <div class="flex items-center gap-2">
-                    <button id="modal-exportar-cancelar" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900">Cancelar</button>
-                    <button id="modal-exportar-gerar" class="px-5 py-2 bg-gray-800 text-white text-sm font-medium rounded hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Gerar PDF</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+{{-- Export PDF — padrão do design system (download nativo + spinner via cookie) --}}
+<x-download-overlay id="download-overlay-alertas" texto="Gerando relatório…" />
 
-<script>
-(function() {
-    'use strict';
-
-    var modal = document.getElementById('modal-exportar-alertas');
-    if (!modal) return;
-
-    var btnAbrir = document.getElementById('btn-exportar-alertas');
-    var elLoading = document.getElementById('modal-exportar-loading');
-    var elClasses = document.getElementById('modal-exportar-classes');
-    var elVazio = document.getElementById('modal-exportar-vazio');
-    var elContador = document.getElementById('modal-exportar-contador');
-    var btnGerar = document.getElementById('modal-exportar-gerar');
-    var carregado = false;
-
-    function esc(str) {
-        if (str === null || str === undefined) return '';
-        return String(str).replace(/[&<>"']/g, function(m) {
-            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
-        });
-    }
-
-    var sevCor = { alta: '#dc2626', media: '#d97706', baixa: '#9ca3af' };
-
-    function abrir() {
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        if (!carregado) carregar();
-    }
-
-    function fechar() {
-        modal.classList.add('hidden');
-        document.body.style.overflow = '';
-    }
-
-    async function carregar() {
-        elLoading.classList.remove('hidden');
-        elClasses.classList.add('hidden');
-        elVazio.classList.add('hidden');
-        try {
-            var r = await fetch('/app/alertas/exportar/opcoes', {
-                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
-            });
-            var data = await r.json();
-            renderClasses(data.classes || []);
-            carregado = true;
-        } catch (e) {
-            elLoading.textContent = 'Erro ao carregar alertas.';
-            return;
-        }
-        elLoading.classList.add('hidden');
-    }
-
-    function renderClasses(classes) {
-        if (!classes.length) {
-            elVazio.classList.remove('hidden');
-            atualizarContador();
-            return;
-        }
-        var html = '';
-        classes.forEach(function(cls) {
-            html += '<div class="border border-gray-200 rounded overflow-hidden" data-classe="' + esc(cls.key) + '">';
-            html += '  <label class="flex items-center gap-2 px-3 py-2 bg-gray-50 cursor-pointer">';
-            html += '    <input type="checkbox" class="exp-classe-check h-4 w-4" checked>';
-            html += '    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + esc(cls.cor) + '">' + esc(cls.label) + '</span>';
-            html += '    <span class="text-xs text-gray-500 ml-auto">' + cls.alertas.length + '</span>';
-            html += '  </label>';
-            html += '  <div class="divide-y divide-gray-100">';
-            cls.alertas.forEach(function(a) {
-                html += '<label class="flex items-start gap-2 px-3 py-2 pl-8 cursor-pointer hover:bg-gray-50">';
-                html += '  <input type="checkbox" class="exp-alerta-check h-4 w-4 mt-0.5" value="' + a.id + '" checked>';
-                html += '  <span class="w-2 h-2 rounded-full flex-shrink-0 mt-1.5" style="background-color: ' + (sevCor[a.severidade] || '#9ca3af') + '"></span>';
-                html += '  <span class="flex-1 min-w-0">';
-                html += '    <span class="block text-xs font-medium text-gray-800">' + esc(a.titulo) + '</span>';
-                if (a.cliente) html += '<span class="block text-[10px] text-gray-400 truncate">' + esc(a.cliente) + '</span>';
-                html += '  </span>';
-                html += '</label>';
-            });
-            html += '  </div>';
-            html += '</div>';
-        });
-        elClasses.innerHTML = html;
-        elClasses.classList.remove('hidden');
-        wireCheckboxes();
-        atualizarContador();
-    }
-
-    function wireCheckboxes() {
-        elClasses.querySelectorAll('[data-classe]').forEach(function(bloco) {
-            var master = bloco.querySelector('.exp-classe-check');
-            var filhos = bloco.querySelectorAll('.exp-alerta-check');
-            master.addEventListener('change', function() {
-                filhos.forEach(function(f) { f.checked = master.checked; });
-                atualizarContador();
-            });
-            filhos.forEach(function(f) {
-                f.addEventListener('change', function() {
-                    var marcados = Array.prototype.filter.call(filhos, function(x) { return x.checked; }).length;
-                    master.checked = marcados === filhos.length;
-                    master.indeterminate = marcados > 0 && marcados < filhos.length;
-                    atualizarContador();
-                });
-            });
-        });
-    }
-
-    function idsSelecionados() {
-        return Array.prototype.map.call(
-            elClasses.querySelectorAll('.exp-alerta-check:checked'),
-            function(c) { return c.value; }
-        );
-    }
-
-    function atualizarContador() {
-        var n = idsSelecionados().length;
-        elContador.querySelector('span').textContent = n;
-        btnGerar.disabled = n === 0;
-    }
-
-    function gerar() {
-        var ids = idsSelecionados();
-        if (!ids.length) return;
-        var form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/app/alertas/exportar';
-        form.style.display = 'none';
-
-        var csrf = document.createElement('input');
-        csrf.type = 'hidden';
-        csrf.name = '_token';
-        csrf.value = document.querySelector('meta[name="csrf-token"]').content;
-        form.appendChild(csrf);
-
-        ids.forEach(function(id) {
-            var inp = document.createElement('input');
-            inp.type = 'hidden';
-            inp.name = 'ids[]';
-            inp.value = id;
-            form.appendChild(inp);
-        });
-
-        document.body.appendChild(form);
-        form.submit();
-        form.remove();
-        fechar();
-    }
-
-    btnAbrir && btnAbrir.addEventListener('click', abrir);
-    document.getElementById('modal-exportar-fechar').addEventListener('click', fechar);
-    document.getElementById('modal-exportar-cancelar').addEventListener('click', fechar);
-    document.getElementById('modal-exportar-backdrop').addEventListener('click', fechar);
-    btnGerar.addEventListener('click', gerar);
-})();
-</script>
+<x-modal id="modal-export-alertas-pdf" titulo="Exportar alertas em PDF">
+    <p class="text-[13px] text-gray-600 mb-3">Gera o relatório dos alertas ativos, com a materialidade (valor fiscal em risco) por classe e alerta. Escolha o escopo.</p>
+    <label class="block text-[11px] text-gray-500 mb-1">Cliente</label>
+    <select id="export-alertas-cliente" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded mb-4">
+        <option value="">Todos os clientes (carteira)</option>
+        @foreach($clientes ?? [] as $clienteOpt)
+            <option value="{{ $clienteOpt->id }}">{{ $clienteOpt->razao_social }}</option>
+        @endforeach
+    </select>
+    <x-download-button path="/app/alertas/exportar-pdf" filename="alertas-{{ now()->format('Y-m-d') }}.pdf"
+                       overlay="download-overlay-alertas"
+                       clienteSelect="export-alertas-cliente"
+                       extraOnDone="document.getElementById('modal-export-alertas-pdf').classList.add('hidden');"
+                       class="block w-full text-center px-4 py-3 rounded bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800">
+        Gerar PDF
+    </x-download-button>
+</x-modal>
 
 <script src="/js/apexcharts.min.js"></script>
 <script>

@@ -303,3 +303,30 @@ it('redireciona para login quando nao autenticado', function () {
     $response = $this->get('/app/alertas');
     $response->assertRedirect('/login');
 });
+
+it('exportar-pdf gera PDF via GET (padrão download) e seta o cookie de download', function () {
+    Alerta::create(['user_id' => $this->user->id, 'tipo' => 'notas_duplicadas', 'categoria' => 'notas_fiscais', 'severidade' => 'media', 'titulo' => 'Dup', 'descricao' => 'x', 'status' => 'ativo', 'hash' => hash('sha256', 'exp1')]);
+
+    $response = $this->get('/app/alertas/exportar-pdf?download_token=d123');
+
+    $response->assertOk();
+    expect($response->headers->get('content-type'))->toContain('application/pdf');
+    $response->assertCookie('bi_download', 'd123');
+});
+
+it('exportar-pdf com cliente_id só inclui alertas daquele cliente', function () {
+    $cliente = Cliente::create(['user_id' => $this->user->id, 'documento' => '11222333000181', 'razao_social' => 'Cliente A', 'is_empresa_propria' => true]);
+    Alerta::create(['user_id' => $this->user->id, 'cliente_id' => $cliente->id, 'tipo' => 'certidao_positiva', 'categoria' => 'compliance', 'severidade' => 'alta', 'titulo' => 'Do cliente A', 'descricao' => 'x', 'status' => 'ativo', 'hash' => hash('sha256', 'exp2')]);
+    Alerta::create(['user_id' => $this->user->id, 'cliente_id' => null, 'tipo' => 'gap_importacao', 'categoria' => 'importacao', 'severidade' => 'media', 'titulo' => 'Sem cliente', 'descricao' => 'y', 'status' => 'ativo', 'hash' => hash('sha256', 'exp3')]);
+
+    // Agrupamento escopado ao cliente traz só o alerta dele.
+    $grupos = $this->service->alertasAtivosAgrupados($this->user->id, null, $cliente->id);
+    $total = array_sum(array_map(fn ($g) => $g['alertas']->count(), $grupos));
+    expect($total)->toBe(1);
+
+    $this->get('/app/alertas/exportar-pdf?cliente_id='.$cliente->id)->assertOk();
+});
+
+it('exportar-pdf sem alertas ativos retorna 404', function () {
+    $this->get('/app/alertas/exportar-pdf')->assertNotFound();
+});
