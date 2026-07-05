@@ -209,6 +209,25 @@
             </div>
         </div>
 
+        {{-- Panorama fiscal (movimentação + contrapartes/negociantes) da empresa própria. --}}
+        <div class="mb-6 sm:mb-8">
+            @include('autenticado.consulta.partials.relacionamento-fiscal', [
+                'fiscal' => $fiscalResumo,
+                'cabecalho' => ['razao' => $empresaNome, 'documento' => $documento, 'uf' => $empresa->uf],
+            ])
+        </div>
+
+        {{-- Notas fiscais recentes (base unificada XML+EFD), paginação AJAX. --}}
+        <div class="mb-6 sm:mb-8">
+            @include('autenticado.partials.notas-fiscais-card', [
+                'notas' => $notasFiscais,
+                'totalNotas' => $notasFiscais->total(),
+                'ajaxUrl' => $notasAjaxUrl,
+                'contexto' => 'cliente',
+                'entityId' => $empresa->id,
+            ])
+        </div>
+
         <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6 sm:mb-8">
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Alertas Operacionais</span>

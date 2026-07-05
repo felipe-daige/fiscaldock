@@ -472,6 +472,16 @@ test('kpi de notas conta base unificada XML e EFD', function () {
     $response->assertSee('5 notas registradas');
 });
 
+test('dashboard renderiza secao fiscal e card de notas', function () {
+    empresaPropria($this->user);
+
+    $response = $this->get('/app/minha-empresa');
+
+    $response->assertOk();
+    $response->assertSee('Notas Fiscais');   // card de notas sempre presente
+    $response->assertSee('Movimentação Fiscal'); // header do panorama (mesmo vazio)
+});
+
 test('sem consulta mostra CTA de primeira consulta e usa /painel', function () {
     empresaPropria($this->user);
 

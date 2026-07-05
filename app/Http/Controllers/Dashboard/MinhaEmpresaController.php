@@ -87,6 +87,15 @@ class MinhaEmpresaController extends Controller
             ->listarUnificadas((int) $user->id, [], 1, 1)
             ->total();
 
+        // Panorama fiscal (movimentação + contrapartes/negociantes) da empresa própria,
+        // mesmo shape do card de cliente. Null quando não há movimento no acervo EFD.
+        $fiscalResumo = app(\App\Services\Consultas\ClienteFiscalResumoService::class)
+            ->paraClientes((int) $user->id, [$empresa->id], true)[$empresa->id] ?? null;
+
+        // Notas recentes (base unificada XML+EFD) vinculadas ao CNPJ próprio, paginação AJAX.
+        $notasFiscais = app(\App\Services\NotaFiscalService::class)
+            ->listarUnificadas((int) $user->id, ['cliente_id' => $empresa->id], 5, 1, '/app/cliente/'.$empresa->id.'/notas');
+
         $data = [
             'empresa' => $empresa,
             'participante' => $participante,
@@ -98,6 +107,9 @@ class MinhaEmpresaController extends Controller
             'alertas' => $alertas,
             'totalParticipantes' => $totalParticipantes,
             'totalNotas' => $totalNotas,
+            'fiscalResumo' => $fiscalResumo,
+            'notasFiscais' => $notasFiscais,
+            'notasAjaxUrl' => '/app/cliente/'.$empresa->id.'/notas',
             'certificado' => app(CertificadoDigitalService::class)->status($empresa),
         ];
 
