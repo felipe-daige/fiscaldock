@@ -40,8 +40,8 @@ class AlertaCentralService
         'compliance' => [
             'label' => 'Compliance',
             'cor' => '#4338ca',
-            'tipos' => ['situacao_irregular', 'certidao_positiva', 'consulta_vencida', 'nunca_consultado', 'cnpj_situacao_irregular', 'participante_inativo', 'participante_sem_ie'],
-        ],
+            'tipos' => ['situacao_irregular', 'certidao_positiva', 'certidao_vencendo', 'consulta_vencida', 'nunca_consultado', 'cnpj_situacao_irregular', 'participante_inativo', 'participante_sem_ie'],
+        ], // certidao_vencendo: certidão regular perto do vencimento (prazo)
         'fornecedores' => [
             'label' => 'Fornecedores',
             'cor' => '#b45309',
@@ -345,6 +345,34 @@ class AlertaCentralService
             }
         }
 
+        // 3c. Certidões REGULARES vencendo (≤30 dias) ou já vencidas — 1 alerta por CNPJ.
+        // Avisa ANTES de virar problema (renovar a certidão a tempo). Popula vence_em.
+        $certidoesVencendo = $this->detectarCertidoesVencendo($userId);
+        foreach ($certidoesVencendo as $alvo) {
+            $hash = hash('sha256', "$userId:certidao_vencendo:{$alvo['tipo_alvo']}:{$alvo['alvo_id']}");
+            $allHashes[] = $hash;
+
+            $data = $this->buildCertidaoVencendoAlertData($alvo);
+
+            $existing = Alerta::where('user_id', $userId)->where('hash', $hash)->first();
+
+            if ($existing) {
+                $updateData = $data;
+                if ($existing->status !== 'ignorado') {
+                    $updateData['status'] = 'ativo';
+                }
+                $existing->update($updateData);
+                $atualizados++;
+            } else {
+                Alerta::create(array_merge($data, [
+                    'user_id' => $userId,
+                    'hash' => $hash,
+                    'status' => 'ativo',
+                ]));
+                $novos++;
+            }
+        }
+
         $gapImportacoes = $this->detectarGapImportacoes($userId);
         if ($gapImportacoes) {
             $hash = hash('sha256', "$userId:gap_importacao");
@@ -453,9 +481,12 @@ class AlertaCentralService
             'cliente:id,razao_social',
         ]);
 
-        // Ordenação: por materialidade (R$ em risco) quando pedido; senão por prioridade/severidade.
+        // Ordenação: por materialidade (R$) ou prazo quando pedido; senão prioridade/severidade.
         if (($filtros['ordem'] ?? null) === 'risco') {
             $query->orderByDesc('valor_risco');
+        } elseif (($filtros['ordem'] ?? null) === 'prazo') {
+            // Prazo mais próximo/vencido primeiro; alertas sem prazo ao fim.
+            $query->orderByRaw('vence_em asc nulls last');
         }
 
         $query->orderByDesc('prioridade')
@@ -867,6 +898,165 @@ class AlertaCentralService
         }
 
         return $alvos;
+    }
+
+    /** Janela (dias) para avisar que uma certidão regular está vencendo. */
+    private const CERTIDAO_VENCENDO_DIAS = 30;
+
+    /**
+     * Alvos (fornecedores e clientes) com ≥1 certidão de regularidade REGULAR cuja
+     * `data_validade` já venceu ou vence dentro de CERTIDAO_VENCENDO_DIAS. Lê de
+     * participante_scores (só certidões avaliadas e não irregulares — a positiva já vira
+     * `certidao_positiva`). O prazo do alerta = certidão que vence primeiro (mais urgente).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function detectarCertidoesVencendo(int $userId): array
+    {
+        $hoje = now()->startOfDay();
+        $limite = $hoje->copy()->addDays(self::CERTIDAO_VENCENDO_DIAS);
+
+        $scores = ParticipanteScore::where('user_id', $userId)
+            ->whereNotNull('dados_consultados')
+            ->with([
+                'participante:id,razao_social,documento,cliente_id',
+                'cliente:id,razao_social,documento',
+            ])
+            ->get();
+
+        $alvos = [];
+        foreach ($scores as $s) {
+            $vencendo = [];
+            foreach (self::CERTIDOES_MAP as $categoria => $m) {
+                // Só certidões REGULARES (subscore 0). Irregular/positiva vai pra certidao_positiva.
+                if ((int) ($s->{$m['score']} ?? 0) !== 0) {
+                    continue;
+                }
+                $validade = $this->dataValidadeCertidao($s->dados_consultados, $m['chaves']);
+                if ($validade === null || $validade->gt($limite)) {
+                    continue;
+                }
+                $vencendo[] = [
+                    'label' => $m['label'],
+                    'validade' => $validade,
+                    'vencida' => $validade->lt($hoje),
+                    'dias' => $hoje->diffInDays($validade, false),
+                ];
+            }
+
+            if ($vencendo === []) {
+                continue;
+            }
+
+            // Ordena por validade (mais urgente primeiro) — define o prazo e a severidade do alerta.
+            usort($vencendo, fn ($a, $b) => $a['validade'] <=> $b['validade']);
+
+            if ($s->participante_id && $s->participante) {
+                $tipoAlvo = 'participante';
+                $alvoId = $s->participante_id;
+                $razao = $s->participante->razao_social;
+                $documento = $s->participante->documento;
+                $clienteIdAlerta = $s->participante->cliente_id;
+            } elseif ($s->cliente_id && $s->cliente) {
+                $tipoAlvo = 'cliente';
+                $alvoId = $s->cliente_id;
+                $razao = $s->cliente->razao_social;
+                $documento = $s->cliente->documento;
+                $clienteIdAlerta = $s->cliente_id;
+            } else {
+                continue;
+            }
+
+            $alvos[] = [
+                'tipo_alvo' => $tipoAlvo,
+                'alvo_id' => $alvoId,
+                'participante_id' => $s->participante_id,
+                'cliente_id' => $clienteIdAlerta,
+                'razao_social' => $razao,
+                'documento' => $documento,
+                'certidoes' => $vencendo,
+            ];
+        }
+
+        return $alvos;
+    }
+
+    /**
+     * Monta o alerta de certidão vencendo (1 por CNPJ). Severidade: vencida ou ≤7 dias = alta;
+     * senão média. `vence_em` = certidão que vence primeiro.
+     *
+     * @param  array<string, mixed>  $alvo
+     * @return array<string, mixed>
+     */
+    private function buildCertidaoVencendoAlertData(array $alvo): array
+    {
+        $primeira = $alvo['certidoes'][0];
+        $tipoTxt = $alvo['tipo_alvo'] === 'cliente' ? 'Cliente' : 'Fornecedor';
+        $labels = implode(', ', array_map(fn ($c) => $c['label'], $alvo['certidoes']));
+
+        $venceEm = $primeira['validade'];
+        $vencida = $primeira['vencida'];
+        $dias = (int) $primeira['dias'];
+
+        $severidade = ($vencida || $dias <= 7) ? 'alta' : 'media';
+
+        if ($vencida) {
+            $prazoTxt = 'venceu em '.$venceEm->format('d/m/Y');
+        } elseif ($dias === 0) {
+            $prazoTxt = 'vence hoje ('.$venceEm->format('d/m/Y').')';
+        } else {
+            $prazoTxt = "vence em {$dias} dia(s) — ".$venceEm->format('d/m/Y');
+        }
+
+        $descricao = "{$alvo['razao_social']} ({$alvo['documento']}): a certidão {$primeira['label']} {$prazoTxt}."
+            .(count($alvo['certidoes']) > 1 ? ' Outras certidões no período: '.$labels.'.' : '')
+            .' Renove antes do vencimento para manter a regularidade em dia.';
+
+        return [
+            'tipo' => 'certidao_vencendo',
+            'categoria' => 'compliance',
+            'severidade' => $severidade,
+            'participante_id' => $alvo['participante_id'],
+            'cliente_id' => $alvo['cliente_id'],
+            'titulo' => "{$tipoTxt} com certidão vencendo — {$alvo['razao_social']}",
+            'descricao' => $descricao,
+            'total_afetados' => count($alvo['certidoes']),
+            'vence_em' => $venceEm->toDateString(),
+            'detalhes' => [
+                'tipo_alvo' => $alvo['tipo_alvo'],
+                'razao_social' => $alvo['razao_social'],
+                'documento' => $alvo['documento'],
+                'certidoes' => array_map(fn ($c) => [
+                    'label' => $c['label'],
+                    'validade' => $c['validade']->format('d/m/Y'),
+                    'vencida' => $c['vencida'],
+                    'dias' => (int) $c['dias'],
+                ], $alvo['certidoes']),
+            ],
+        ];
+    }
+
+    /** Extrai e parseia a `data_validade` (formato d/m/Y) de um bloco de certidão. Null se ausente/inválida. */
+    private function dataValidadeCertidao(?array $dados, array $chaves): ?\Carbon\Carbon
+    {
+        if (! is_array($dados)) {
+            return null;
+        }
+
+        foreach ($chaves as $chave) {
+            $bloco = $dados[$chave] ?? null;
+            $raw = is_array($bloco) ? ($bloco['data_validade'] ?? null) : null;
+            if (! is_string($raw) || trim($raw) === '') {
+                continue;
+            }
+            try {
+                return Carbon::createFromFormat('d/m/Y', trim($raw))->startOfDay();
+            } catch (\Throwable) {
+                continue;
+            }
+        }
+
+        return null;
     }
 
     /**

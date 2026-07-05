@@ -32,7 +32,7 @@
                     </a>
                     <button type="button" id="btn-exportar-alertas" onclick="document.getElementById('modal-export-alertas-pdf').classList.remove('hidden')" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 rounded text-sm font-medium transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-2-2m2 2l2-2m4 4H6a2 2 0 01-2-2V6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v10a2 2 0 01-2 2z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                         Exportar PDF
                     </button>
@@ -181,6 +181,7 @@
                     <select id="alerta-filtro-ordem" class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         <option value="">Severidade</option>
                         <option value="risco">Valor em risco (R$)</option>
+                        <option value="prazo">Prazo (vencimento)</option>
                     </select>
                 </div>
 
@@ -304,7 +305,7 @@
         todos: null,
         notas_fiscais: ['notas_duplicadas', 'notas_sem_participante', 'notas_valor_zerado', 'notas_sem_itens', 'notas_data_futura'],
         pis_cofins: ['pis_cofins_incompleto'],
-        compliance: ['situacao_irregular', 'certidao_positiva', 'consulta_vencida', 'nunca_consultado', 'cnpj_situacao_irregular', 'participante_inativo', 'participante_sem_ie'],
+        compliance: ['situacao_irregular', 'certidao_positiva', 'certidao_vencendo', 'consulta_vencida', 'nunca_consultado', 'cnpj_situacao_irregular', 'participante_inativo', 'participante_sem_ie'],
         fornecedores: ['fornecedor_irregular'],
         importacao: ['gap_importacao', 'gap_temporal']
     };
@@ -969,6 +970,22 @@
             icone + '<span class="truncate">' + escapeHtml(nome) + '</span></a>';
     }
 
+    // Chip de prazo/vencimento (só quando o alerta tem vence_em). Vermelho se vencido/≤7 dias.
+    function prazoChip(alerta) {
+        if (!alerta.vence_em) return '';
+        var venc = new Date(alerta.vence_em + 'T00:00:00');
+        if (isNaN(venc.getTime())) return '';
+        var hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+        var dias = Math.round((venc - hoje) / 86400000);
+        var texto, cor;
+        if (dias < 0) { texto = 'Vencido em ' + venc.toLocaleDateString('pt-BR'); cor = '#b91c1c'; }
+        else if (dias === 0) { texto = 'Vence hoje'; cor = '#b91c1c'; }
+        else if (dias <= 7) { texto = 'Vence em ' + dias + ' dia(s)'; cor = '#dc2626'; }
+        else { texto = 'Vence em ' + dias + ' dias'; cor = '#d97706'; }
+        var icone = '<svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+        return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide text-white" style="background-color:' + cor + '" title="' + texto + ' (' + venc.toLocaleDateString('pt-BR') + ')">' + icone + texto + '</span>';
+    }
+
     function renderAlertaCard(alerta) {
         var html = '<div class="px-4 sm:px-5 py-4 border-b border-gray-100 last:border-b-0">';
         html += '<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">';
@@ -978,6 +995,7 @@
         html += severidadeDot(alerta.severidade);
         html += '<span class="text-sm font-medium text-gray-900">' + escapeHtml(formatTipoLabel(alerta.tipo)) + '</span>';
         html += severidadeBadge(alerta.severidade);
+        html += prazoChip(alerta);
         html += clienteChip(alerta);
         html += '</div>';
         html += '<p class="text-sm text-gray-600">' + escapeHtml(alerta.descricao || '') + '</p>';
@@ -1594,6 +1612,7 @@
             pis_cofins_incompleto: 'PIS/COFINS Incompleto',
             situacao_irregular: 'Situação Cadastral Irregular',
             certidao_positiva: 'Certidão Positiva',
+            certidao_vencendo: 'Certidão Vencendo',
             fornecedor_irregular: 'Fornecedor Irregular',
             ncm_faltando: 'NCM Faltando',
             consulta_vencida: 'Consulta Vencida',

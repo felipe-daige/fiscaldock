@@ -64,6 +64,8 @@ return new class extends Migration
                 // Materialidade: valor fiscal em risco do alerta (0 quando não monetário).
                 // Permite KPI "R$ em risco" e ordenação por risco sem parsear o jsonb `detalhes`.
                 $table->decimal('valor_risco', 15, 2)->default(0);
+                // Prazo/vencimento do alerta (certidão vencendo, SPED do mês). Null = sem prazo.
+                $table->date('vence_em')->nullable();
                 $table->jsonb('detalhes')->nullable();
                 $table->string('status', 20)->default('ativo');
                 $table->smallInteger('prioridade')->default(0);
@@ -82,10 +84,15 @@ return new class extends Migration
             });
         }
 
-        // Coluna de materialidade em bancos onde `alertas` já existia (idempotente).
+        // Colunas de materialidade e prazo em bancos onde `alertas` já existia (idempotente).
         if (Schema::hasTable('alertas') && ! Schema::hasColumn('alertas', 'valor_risco')) {
             Schema::table('alertas', function (Blueprint $table) {
                 $table->decimal('valor_risco', 15, 2)->default(0);
+            });
+        }
+        if (Schema::hasTable('alertas') && ! Schema::hasColumn('alertas', 'vence_em')) {
+            Schema::table('alertas', function (Blueprint $table) {
+                $table->date('vence_em')->nullable();
             });
         }
 

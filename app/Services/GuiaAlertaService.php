@@ -107,6 +107,16 @@ class GuiaAlertaService
                 ],
             ],
             [
+                'tipos' => ['certidao_vencendo'],
+                'guia' => [
+                    'texto_o_que_e' => 'Uma certidão de regularidade (CND Federal, Estadual, FGTS ou Trabalhista) hoje REGULAR está prestes a vencer (ou já venceu). Certidão vencida deixa de comprovar a regularidade — trava licitação, contrato e crédito até ser renovada.',
+                    'texto_acao' => 'Emita a nova certidão junto ao órgão (Receita/PGFN, SEFAZ, Caixa, TST) antes do vencimento. Ao registrar a nova consulta com a certidão renovada, o alerta some sozinho.',
+                    'cta_text' => 'Ver perfil e certidões',
+                    'cta_url' => ':participante',
+                    'metodologia' => 'Fonte: última consulta de regularidade persistida (participante_scores). Gatilho: certidão REGULAR (subscore 0) cuja data_validade já passou ou vence dentro de 30 dias. Só entram certidões efetivamente avaliadas e regulares — as positivas viram o alerta "Certidão Positiva". O prazo do alerta (vence_em) é a certidão que vence primeiro; severidade alta quando vencida ou faltando ≤7 dias, média caso contrário. Racional: docs/alertas/README.md.',
+                ],
+            ],
+            [
                 'tipos' => ['situacao_irregular', 'cnpj_situacao_irregular', 'participante_inativo', 'participante_sem_ie', 'fornecedor_irregular'],
                 'guia' => [
                     'texto_o_que_e' => 'Este participante está com pendências cadastrais na Receita Federal (ex.: Baixada, Inapta, Suspensa). Operar com este CNPJ pode causar rejeições de notas fiscais e pesadas multas.',

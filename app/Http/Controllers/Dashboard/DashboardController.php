@@ -897,7 +897,7 @@ class DashboardController extends Controller
             'categoria' => $request->input('categoria'),
             'cliente_id' => $request->input('cliente_id'),
             'busca' => $request->input('busca'),
-            'ordem' => $request->input('ordem') === 'risco' ? 'risco' : null,
+            'ordem' => in_array($request->input('ordem'), ['risco', 'prazo'], true) ? $request->input('ordem') : null,
         ];
 
         $alertas = $this->alertaCentralService->obterAlertas($userId, $filtros);
