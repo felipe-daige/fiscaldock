@@ -63,10 +63,12 @@
         'info' => 'border-l-blue-500',
     ];
 
+    $temConsulta = (bool) $ultimaConsulta;
     $acoes = [
         [
-            'label' => 'Atualizar Consultas',
-            'href' => '/app/consulta/nova' . ($participante ? '?participante=' . $participante->id : ''),
+            // Sem consulta ainda: CTA de ativação. Com consulta: atualizar.
+            'label' => $temConsulta ? 'Atualizar Consultas' : 'Fazer 1ª consulta',
+            'href' => '/app/consulta/painel' . ($participante ? '?participante=' . $participante->id : ''),
             'primary' => true,
         ],
         [

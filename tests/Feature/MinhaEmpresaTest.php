@@ -472,6 +472,16 @@ test('kpi de notas conta base unificada XML e EFD', function () {
     $response->assertSee('5 notas registradas');
 });
 
+test('sem consulta mostra CTA de primeira consulta e usa /painel', function () {
+    empresaPropria($this->user);
+
+    $response = $this->get('/app/minha-empresa');
+
+    $response->assertOk();
+    $response->assertSee('Fazer 1ª consulta');
+    $response->assertSee('/app/consulta/painel', false);
+});
+
 test('score alto usa cor distinta do medio', function () {
     $cliente = empresaPropria($this->user);
     \App\Models\ParticipanteScore::create([
