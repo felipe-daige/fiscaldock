@@ -96,6 +96,15 @@ class MinhaEmpresaController extends Controller
         $notasFiscais = app(\App\Services\NotaFiscalService::class)
             ->listarUnificadas((int) $user->id, ['cliente_id' => $empresa->id], 5, 1, '/app/cliente/'.$empresa->id.'/notas');
 
+        // Assinatura de monitoramento contínuo da empresa própria (alvo cliente OU participante).
+        $monitoramento = \App\Models\MonitoramentoAssinatura::where('user_id', $user->id)
+            ->where('status', 'ativo')
+            ->where(function ($query) use ($empresa, $participante) {
+                $query->where('cliente_id', $empresa->id)
+                    ->orWhere('participante_id', $participante->id);
+            })
+            ->first();
+
         $data = [
             'empresa' => $empresa,
             'participante' => $participante,
@@ -110,6 +119,7 @@ class MinhaEmpresaController extends Controller
             'fiscalResumo' => $fiscalResumo,
             'notasFiscais' => $notasFiscais,
             'notasAjaxUrl' => '/app/cliente/'.$empresa->id.'/notas',
+            'monitoramento' => $monitoramento,
             'certificado' => app(CertificadoDigitalService::class)->status($empresa),
         ];
 

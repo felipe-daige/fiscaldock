@@ -472,6 +472,33 @@ test('kpi de notas conta base unificada XML e EFD', function () {
     $response->assertSee('5 notas registradas');
 });
 
+test('empresa nao monitorada mostra CTA de monitorar', function () {
+    empresaPropria($this->user);
+
+    $response = $this->get('/app/minha-empresa');
+
+    $response->assertOk();
+    $response->assertSee('Monitorar minha empresa');
+});
+
+test('empresa monitorada mostra badge MONITORADA', function () {
+    $cliente = empresaPropria($this->user);
+    $plano = MonitoramentoPlano::porCodigo('gratuito') ?? MonitoramentoPlano::firstOrFail();
+
+    \App\Models\MonitoramentoAssinatura::create([
+        'user_id' => $this->user->id,
+        'cliente_id' => $cliente->id,
+        'plano_id' => $plano->id,
+        'status' => 'ativo',
+    ]);
+
+    $response = $this->get('/app/minha-empresa');
+
+    $response->assertOk();
+    $response->assertSee('MONITORADA');
+    $response->assertDontSee('Monitorar minha empresa');
+});
+
 test('dashboard renderiza secao fiscal e card de notas', function () {
     empresaPropria($this->user);
 
