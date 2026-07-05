@@ -154,22 +154,30 @@ it('definir cap sem assinatura retorna 409', function () {
         ->assertStatus(409);
 });
 
-// ---- Fase 5.2: UI do freio no hub de monitoramento ----
+// ---- Fase 5.2: UI do freio — card migrou pro painel (consolidação 2026-07-04);
+// a rota antiga "clientes" virou redirect 301 pro painel ----
 
-it('hub de monitoramento mostra o card de freio para quem tem assinatura', function () {
+it('rota antiga do hub redireciona pro painel', function () {
+    $user = User::factory()->create();
+
+    actingAs($user)->get(route('app.monitoramento.clientes'))
+        ->assertRedirect(route('app.monitoramento.painel'));
+});
+
+it('painel mostra o card de freio para quem tem assinatura', function () {
     $user = User::factory()->create();
     fase5Assinar($user, 'essencial', ['limite_consumo_automatico' => 42]);
 
-    actingAs($user)->get(route('app.monitoramento.clientes'))
+    actingAs($user)->get(route('app.monitoramento.painel'))
         ->assertOk()
         ->assertSee('Freio de consumo do auto-monitor')
         ->assertSee('Teto personalizado (R$)');
 });
 
-it('hub de monitoramento mostra versão informativa do freio para usuário sem assinatura', function () {
+it('painel mostra versão informativa do freio para usuário sem assinatura', function () {
     $user = User::factory()->create(); // Free puro, sem assinatura da conta
 
-    actingAs($user)->get(route('app.monitoramento.clientes'))
+    actingAs($user)->get(route('app.monitoramento.painel'))
         ->assertOk()
         ->assertSee('Freio de consumo do auto-monitor')        // cabeçalho sempre visível
         ->assertSee('O freio se ativa com uma assinatura')     // nota informativa
